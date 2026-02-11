@@ -16,24 +16,27 @@ package mongodb
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "mongodb"
+const SourceType string = "mongodb"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -47,12 +50,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name string `yaml:"name" validate:"required"`
-	Kind string `yaml:"kind" validate:"required"`
+	Type string `yaml:"type" validate:"required"`
 	Uri  string `yaml:"uri" validate:"required"` // MongoDB Atlas connection URI
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -81,8 +84,8 @@ type Source struct {
 	Client *mongo.Client
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -93,9 +96,204 @@ func (s *Source) MongoClient() *mongo.Client {
 	return s.Client
 }
 
+func parseData(ctx context.Context, cur *mongo.Cursor) ([]any, error) {
+	var data = []any{}
+	err := cur.All(ctx, &data)
+	if err != nil {
+		return nil, err
+	}
+	var final []any
+	for _, item := range data {
+		tmp, _ := bson.MarshalExtJSON(item, false, false)
+		var tmp2 any
+		err = json.Unmarshal(tmp, &tmp2)
+		if err != nil {
+			return nil, err
+		}
+		final = append(final, tmp2)
+	}
+	return final, err
+}
+
+func (s *Source) Aggregate(ctx context.Context, pipelineString string, canonical, readOnly bool, database, collection string) ([]any, error) {
+	var pipeline = []bson.M{}
+	err := bson.UnmarshalExtJSON([]byte(pipelineString), canonical, &pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	if readOnly {
+		//fail if we do a merge or an out
+		for _, stage := range pipeline {
+			for key := range stage {
+				if key == "$merge" || key == "$out" {
+					return nil, fmt.Errorf("this is not a read-only pipeline: %+v", stage)
+				}
+			}
+		}
+	}
+
+	cur, err := s.MongoClient().Database(database).Collection(collection).Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	res, err := parseData(ctx, cur)
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return []any{}, nil
+	}
+	return res, err
+}
+
+func (s *Source) Find(ctx context.Context, filterString, database, collection string, opts *options.FindOptionsBuilder) ([]any, error) {
+	var filter = bson.D{}
+	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	if err != nil {
+		return nil, err
+	}
+
+	cur, err := s.MongoClient().Database(database).Collection(collection).Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+	return parseData(ctx, cur)
+}
+
+func (s *Source) FindOne(ctx context.Context, filterString, database, collection string, opts *options.FindOneOptionsBuilder) ([]any, error) {
+	var filter = bson.D{}
+	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	if err != nil {
+		return nil, err
+	}
+
+	res := s.MongoClient().Database(database).Collection(collection).FindOne(ctx, filter, opts)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	var data any
+	err = res.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	var final []any
+	tmp, _ := bson.MarshalExtJSON(data, false, false)
+	var tmp2 any
+	err = json.Unmarshal(tmp, &tmp2)
+	if err != nil {
+		return nil, err
+	}
+	final = append(final, tmp2)
+
+	return final, err
+}
+
+func (s *Source) InsertMany(ctx context.Context, jsonData string, canonical bool, database, collection string) ([]any, error) {
+	var data = []any{}
+	err := bson.UnmarshalExtJSON([]byte(jsonData), canonical, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.MongoClient().Database(database).Collection(collection).InsertMany(ctx, data, options.InsertMany())
+	if err != nil {
+		return nil, err
+	}
+	return res.InsertedIDs, nil
+}
+
+func (s *Source) InsertOne(ctx context.Context, jsonData string, canonical bool, database, collection string) (any, error) {
+	var data any
+	err := bson.UnmarshalExtJSON([]byte(jsonData), canonical, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.MongoClient().Database(database).Collection(collection).InsertOne(ctx, data, options.InsertOne())
+	if err != nil {
+		return nil, err
+	}
+	return res.InsertedID, nil
+}
+
+func (s *Source) UpdateMany(ctx context.Context, filterString string, canonical bool, updateString, database, collection string, upsert bool) ([]any, error) {
+	var filter = bson.D{}
+	err := bson.UnmarshalExtJSON([]byte(filterString), canonical, &filter)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
+	}
+	var update = bson.D{}
+	err = bson.UnmarshalExtJSON([]byte(updateString), false, &update)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
+	}
+
+	res, err := s.MongoClient().Database(database).Collection(collection).UpdateMany(ctx, filter, update, options.UpdateMany().SetUpsert(upsert))
+	if err != nil {
+		return nil, fmt.Errorf("error updating collection: %w", err)
+	}
+	return []any{res.ModifiedCount, res.UpsertedCount, res.MatchedCount}, nil
+}
+
+func (s *Source) UpdateOne(ctx context.Context, filterString string, canonical bool, updateString, database, collection string, upsert bool) (any, error) {
+	var filter = bson.D{}
+	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
+	}
+	var update = bson.D{}
+	err = bson.UnmarshalExtJSON([]byte(updateString), canonical, &update)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
+	}
+
+	res, err := s.MongoClient().Database(database).Collection(collection).UpdateOne(ctx, filter, update, options.UpdateOne().SetUpsert(upsert))
+	if err != nil {
+		return nil, fmt.Errorf("error updating collection: %w", err)
+	}
+	return res.ModifiedCount, nil
+}
+
+func (s *Source) DeleteMany(ctx context.Context, filterString, database, collection string) (any, error) {
+	var filter = bson.D{}
+	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.MongoClient().Database(database).Collection(collection).DeleteMany(ctx, filter, options.DeleteMany())
+	if err != nil {
+		return nil, err
+	}
+
+	if res.DeletedCount == 0 {
+		return nil, errors.New("no document found")
+	}
+	return res.DeletedCount, nil
+}
+
+func (s *Source) DeleteOne(ctx context.Context, filterString, database, collection string) (any, error) {
+	var filter = bson.D{}
+	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.MongoClient().Database(database).Collection(collection).DeleteOne(ctx, filter, options.DeleteOne())
+	if err != nil {
+		return nil, err
+	}
+	return res.DeletedCount, nil
+}
+
 func initMongoDBClient(ctx context.Context, tracer trace.Tracer, name, uri string) (*mongo.Client, error) {
 	// Start a tracing span
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)
@@ -105,7 +303,7 @@ func initMongoDBClient(ctx context.Context, tracer trace.Tracer, name, uri strin
 
 	// Create a new MongoDB client
 	clientOpts := options.Client().ApplyURI(uri).SetAppName(userAgent)
-	client, err := mongo.Connect(ctx, clientOpts)
+	client, err := mongo.Connect(clientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create MongoDB client: %w", err)
 	}

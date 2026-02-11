@@ -91,8 +91,8 @@ visible to the LLM.
     https://cloud.google.com/alloydb/docs/parameterized-secure-views-overview
 
 {{< notice tip >}} Make sure to enable the `parameterized_views` extension
-before running this tool. You can do so by running this command in the AlloyDB
-studio:
+to utilize PSV feature (`nlConfigParameters`) with this tool. You can do so by
+running this command in the AlloyDB studio:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS parameterized_views;
@@ -103,29 +103,29 @@ CREATE EXTENSION IF NOT EXISTS parameterized_views;
 ## Example
 
 ```yaml
-tools:
-  ask_questions:
-    kind: alloydb-ai-nl
-    source: my-alloydb-source
-    description: "Ask questions to check information about flights"
-    nlConfig: "cymbal_air_nl_config"
-    nlConfigParameters:
-      - name: user_email
-        type: string
-        description: User ID of the logged in user.
-        # note: we strongly recommend using features like Authenticated or
-        # Bound parameters to prevent the LLM from seeing these params and
-        # specifying values it shouldn't in the tool input
-        authServices:
-          - name: my_google_service
-            field: email
+kind: tools
+name: ask_questions
+type: alloydb-ai-nl
+source: my-alloydb-source
+description: "Ask questions to check information about flights"
+nlConfig: "cymbal_air_nl_config"
+nlConfigParameters:
+  - name: user_email
+    type: string
+    description: User ID of the logged in user.
+    # note: we strongly recommend using features like Authenticated or
+    # Bound parameters to prevent the LLM from seeing these params and
+    # specifying values it shouldn't in the tool input
+    authServices:
+      - name: my_google_service
+        field: email
 ```
 
 ## Reference
 
 | **field**          |                **type**                 | **required** | **description**                                                          |
 |--------------------|:---------------------------------------:|:------------:|--------------------------------------------------------------------------|
-| kind               |                 string                  |     true     | Must be "alloydb-ai-nl".                                                 |
+| type               |                 string                  |     true     | Must be "alloydb-ai-nl".                                                 |
 | source             |                 string                  |     true     | Name of the AlloyDB source the natural language query should execute on. |
 | description        |                 string                  |     true     | Description of the tool that is passed to the LLM.                       |
 | nlConfig           |                 string                  |     true     | The name of the  `nl_config` in AlloyDB                                  |

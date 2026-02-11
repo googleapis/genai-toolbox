@@ -27,12 +27,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-delete-documents"
+const resourceType string = "firestore-delete-documents"
 const documentPathsKey string = "documentPaths"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -46,11 +46,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	DeleteDocuments(context.Context, []string) ([]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,8 +60,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -94,7 +95,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected an array", documentPathsKey)
 	}
-
 	if len(documentPathsRaw) == 0 {
 		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
 	}
@@ -126,49 +126,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
 		}
 	}
-
-	// Create a BulkWriter to handle multiple deletions efficiently
-	bulkWriter := source.FirestoreClient().BulkWriter(ctx)
-
-	// Keep track of jobs for each document
-	jobs := make([]*firestoreapi.BulkWriterJob, len(documentPaths))
-
-	// Add all delete operations to the BulkWriter
-	for i, path := range documentPaths {
-		docRef := source.FirestoreClient().Doc(path)
-		job, err := bulkWriter.Delete(docRef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add delete operation for document %q: %w", path, err)
-		}
-		jobs[i] = job
-	}
-
-	// End the BulkWriter to execute all operations
-	bulkWriter.End()
-
-	// Collect results
-	results := make([]any, len(documentPaths))
-	for i, job := range jobs {
-		docData := make(map[string]any)
-		docData["path"] = documentPaths[i]
-
-		// Wait for the job to complete and get the result
-		_, err := job.Results()
-		if err != nil {
-			docData["success"] = false
-			docData["error"] = err.Error()
-		} else {
-			docData["success"] = true
-		}
-
-		results[i] = docData
-	}
-
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.DeleteDocuments(ctx, documentPaths)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -193,4 +151,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

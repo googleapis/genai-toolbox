@@ -27,14 +27,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-add-documents"
+const resourceType string = "firestore-add-documents"
 const collectionPathKey string = "collectionPath"
 const documentDataKey string = "documentData"
 const returnDocumentDataKey string = "returnData"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -48,11 +48,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	AddDocuments(context.Context, string, any, bool) (map[string]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -61,8 +62,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -128,30 +129,26 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
 
 	mapParams := params.AsMap()
-
 	// Get collection path
 	collectionPath, ok := mapParams[collectionPathKey].(string)
 	if !ok || collectionPath == "" {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", collectionPathKey)
 	}
-
 	// Validate collection path
 	if err := util.ValidateCollectionPath(collectionPath); err != nil {
 		return nil, fmt.Errorf("invalid collection path: %w", err)
 	}
-
 	// Get document data
 	documentDataRaw, ok := mapParams[documentDataKey]
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", documentDataKey)
 	}
-
 	// Convert the document data from JSON format to Firestore format
 	// The client is passed to handle referenceValue types
 	documentData, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
@@ -164,34 +161,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
 		returnData = val
 	}
-
-	// Get the collection reference
-	collection := source.FirestoreClient().Collection(collectionPath)
-
-	// Add the document to the collection
-	docRef, writeResult, err := collection.Add(ctx, documentData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add document: %w", err)
-	}
-
-	// Build the response
-	response := map[string]any{
-		"documentPath": docRef.Path,
-		"createTime":   writeResult.UpdateTime.Format("2006-01-02T15:04:05.999999999Z"),
-	}
-
-	// Add document data if requested
-	if returnData {
-		// Convert the document data back to simple JSON format
-		simplifiedData := util.FirestoreValueToJSON(documentData)
-		response["documentData"] = simplifiedData
-	}
-
-	return response, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.AddDocuments(ctx, collectionPath, documentData, returnData)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -216,4 +186,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

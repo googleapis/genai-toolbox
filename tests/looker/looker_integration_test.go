@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	LookerSourceKind   = "looker"
+	LookerSourceType   = "looker"
 	LookerBaseUrl      = os.Getenv("LOOKER_BASE_URL")
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
@@ -62,7 +62,7 @@ func getLookerVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":          LookerSourceKind,
+		"type":          LookerSourceType,
 		"base_url":      LookerBaseUrl,
 		"verify_ssl":    (LookerVerifySsl == "true"),
 		"client_id":     LookerClientId,
@@ -93,162 +93,167 @@ func TestLooker(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"get_models": map[string]any{
-				"kind":        "looker-get-models",
+				"type":        "looker-get-models",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_explores": map[string]any{
-				"kind":        "looker-get-explores",
+				"type":        "looker-get-explores",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_dimensions": map[string]any{
-				"kind":        "looker-get-dimensions",
+				"type":        "looker-get-dimensions",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_measures": map[string]any{
-				"kind":        "looker-get-measures",
+				"type":        "looker-get-measures",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_filters": map[string]any{
-				"kind":        "looker-get-filters",
+				"type":        "looker-get-filters",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_parameters": map[string]any{
-				"kind":        "looker-get-parameters",
+				"type":        "looker-get-parameters",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query": map[string]any{
-				"kind":        "looker-query",
+				"type":        "looker-query",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query_sql": map[string]any{
-				"kind":        "looker-query-sql",
+				"type":        "looker-query-sql",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query_url": map[string]any{
-				"kind":        "looker-query-url",
+				"type":        "looker-query-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_looks": map[string]any{
-				"kind":        "looker-get-looks",
+				"type":        "looker-get-looks",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"make_look": map[string]any{
-				"kind":        "looker-make-look",
+				"type":        "looker-make-look",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_dashboards": map[string]any{
-				"kind":        "looker-get-dashboards",
+				"type":        "looker-get-dashboards",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"make_dashboard": map[string]any{
-				"kind":        "looker-make-dashboard",
+				"type":        "looker-make-dashboard",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"add_dashboard_filter": map[string]any{
-				"kind":        "looker-add-dashboard-filter",
+				"type":        "looker-add-dashboard-filter",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"add_dashboard_element": map[string]any{
-				"kind":        "looker-add-dashboard-element",
+				"type":        "looker-add-dashboard-element",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"conversational_analytics": map[string]any{
-				"kind":        "looker-conversational-analytics",
+				"type":        "looker-conversational-analytics",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"health_pulse": map[string]any{
-				"kind":        "looker-health-pulse",
+				"type":        "looker-health-pulse",
 				"source":      "my-instance",
 				"description": "Checks the health of a Looker instance by running a series of checks on the system.",
 			},
 			"health_analyze": map[string]any{
-				"kind":        "looker-health-analyze",
+				"type":        "looker-health-analyze",
 				"source":      "my-instance",
 				"description": "Provides analysis of a Looker instance's projects, models, or explores.",
 			},
 			"health_vacuum": map[string]any{
-				"kind":        "looker-health-vacuum",
+				"type":        "looker-health-vacuum",
 				"source":      "my-instance",
 				"description": "Vacuums unused content from a Looker instance.",
 			},
 			"dev_mode": map[string]any{
-				"kind":        "looker-dev-mode",
+				"type":        "looker-dev-mode",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_projects": map[string]any{
-				"kind":        "looker-get-projects",
+				"type":        "looker-get-projects",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_project_files": map[string]any{
-				"kind":        "looker-get-project-files",
+				"type":        "looker-get-project-files",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_project_file": map[string]any{
-				"kind":        "looker-get-project-file",
+				"type":        "looker-get-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"create_project_file": map[string]any{
-				"kind":        "looker-create-project-file",
+				"type":        "looker-create-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"update_project_file": map[string]any{
-				"kind":        "looker-update-project-file",
+				"type":        "looker-update-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"delete_project_file": map[string]any{
-				"kind":        "looker-delete-project-file",
+				"type":        "looker-delete-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"validate_project": map[string]any{
+				"type":        "looker-validate-project",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"generate_embed_url": map[string]any{
-				"kind":        "looker-generate-embed-url",
+				"type":        "looker-generate-embed-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connections": map[string]any{
-				"kind":        "looker-get-connections",
+				"type":        "looker-get-connections",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_schemas": map[string]any{
-				"kind":        "looker-get-connection-schemas",
+				"type":        "looker-get-connection-schemas",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_databases": map[string]any{
-				"kind":        "looker-get-connection-databases",
+				"type":        "looker-get-connection-databases",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_tables": map[string]any{
-				"kind":        "looker-get-connection-tables",
+				"type":        "looker-get-connection-tables",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_table_columns": map[string]any{
-				"kind":        "looker-get-connection-table-columns",
+				"type":        "looker-get-connection-table-columns",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -431,6 +436,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -446,6 +452,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -460,6 +467,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -467,6 +475,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -519,6 +528,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -534,6 +544,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -548,6 +559,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -555,6 +567,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -607,6 +620,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -622,6 +636,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -636,6 +651,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -643,6 +659,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -658,6 +675,7 @@ func TestLooker(t *testing.T) {
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
 					},
 				},
 			},
@@ -675,6 +693,7 @@ func TestLooker(t *testing.T) {
 						"name":        "title",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -682,6 +701,7 @@ func TestLooker(t *testing.T) {
 						"name":        "desc",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -689,6 +709,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(100),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -696,6 +717,7 @@ func TestLooker(t *testing.T) {
 						"name":        "offset",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(0),
 					},
 				},
 			},
@@ -741,6 +763,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -756,6 +779,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -770,6 +794,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -777,6 +802,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -797,6 +823,7 @@ func TestLooker(t *testing.T) {
 						"description": "The description of the Look",
 						"name":        "description",
 						"required":    false,
+						"default":     "",
 						"type":        "string",
 					},
 					map[string]any{
@@ -804,6 +831,7 @@ func TestLooker(t *testing.T) {
 						"description": "The folder id where the Look will be created. Leave blank to use the user's personal folder",
 						"name":        "folder",
 						"required":    false,
+						"default":     "",
 						"type":        "string",
 					},
 					map[string]any{
@@ -813,6 +841,7 @@ func TestLooker(t *testing.T) {
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
 					},
 				},
 			},
@@ -830,6 +859,7 @@ func TestLooker(t *testing.T) {
 						"name":        "title",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -837,6 +867,7 @@ func TestLooker(t *testing.T) {
 						"name":        "desc",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -844,6 +875,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(100),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -851,6 +883,7 @@ func TestLooker(t *testing.T) {
 						"name":        "offset",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(0),
 					},
 				},
 			},
@@ -875,6 +908,7 @@ func TestLooker(t *testing.T) {
 						"name":        "description",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -882,6 +916,7 @@ func TestLooker(t *testing.T) {
 						"name":        "folder",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 				},
 			},
@@ -920,6 +955,7 @@ func TestLooker(t *testing.T) {
 						"name":        "filter_type",
 						"required":    false,
 						"type":        "string",
+						"default":     "field_filter",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -955,6 +991,7 @@ func TestLooker(t *testing.T) {
 						"name":        "allow_multiple_values",
 						"required":    false,
 						"type":        "boolean",
+						"default":     true,
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -962,6 +999,7 @@ func TestLooker(t *testing.T) {
 						"name":        "required",
 						"required":    false,
 						"type":        "boolean",
+						"default":     false,
 					},
 				},
 			},
@@ -1007,6 +1045,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -1022,6 +1061,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1036,6 +1076,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1043,6 +1084,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1064,6 +1106,7 @@ func TestLooker(t *testing.T) {
 						"name":        "title",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"additionalProperties": true,
@@ -1072,6 +1115,7 @@ func TestLooker(t *testing.T) {
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1083,6 +1127,7 @@ func TestLooker(t *testing.T) {
 							"name":                 "dashboard_filter",
 							"required":             false,
 							"type":                 "object",
+							"default":              map[string]any{},
 						},
 						"name":     "dashboard_filters",
 						"required": false,
@@ -1181,6 +1226,7 @@ func TestLooker(t *testing.T) {
 						"name":        "timeframe",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(90),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1188,6 +1234,7 @@ func TestLooker(t *testing.T) {
 						"name":        "min_queries",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(0),
 					},
 				},
 			},
@@ -1212,6 +1259,7 @@ func TestLooker(t *testing.T) {
 						"name":        "project",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1219,6 +1267,7 @@ func TestLooker(t *testing.T) {
 						"name":        "model",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1226,6 +1275,7 @@ func TestLooker(t *testing.T) {
 						"name":        "explore",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1233,6 +1283,7 @@ func TestLooker(t *testing.T) {
 						"name":        "timeframe",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(90),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1240,6 +1291,7 @@ func TestLooker(t *testing.T) {
 						"name":        "min_queries",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(1),
 					},
 				},
 			},
@@ -1257,6 +1309,7 @@ func TestLooker(t *testing.T) {
 						"name":        "devMode",
 						"required":    false,
 						"type":        "boolean",
+						"default":     true,
 					},
 				},
 			},
@@ -1398,6 +1451,23 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "validate_project",
+		map[string]any{
+			"validate_project": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project to validate",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "generate_embed_url",
 		map[string]any{
 			"generate_embed_url": map[string]any{
@@ -1410,6 +1480,7 @@ func TestLooker(t *testing.T) {
 						"name":        "type",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1417,6 +1488,7 @@ func TestLooker(t *testing.T) {
 						"name":        "id",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 				},
 			},
@@ -1614,6 +1686,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "deleted"
 	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+
+	wantResult = "\"errors\":[]"
+	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)

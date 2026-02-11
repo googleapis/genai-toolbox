@@ -15,7 +15,6 @@ package mongodbfind
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -23,19 +22,19 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "mongodb-find"
+const resourceType string = "mongodb-find"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -49,11 +48,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	Find(context.Context, string, string, string, *options.FindOptionsBuilder) ([]any, error)
 }
 
 type Config struct {
 	Name           string                `yaml:"name" validate:"required"`
-	Kind           string                `yaml:"kind" validate:"required"`
+	Type           string                `yaml:"type" validate:"required"`
 	Source         string                `yaml:"source" validate:"required"`
 	AuthRequired   []string              `yaml:"authRequired" validate:"required"`
 	Description    string                `yaml:"description" validate:"required"`
@@ -71,8 +71,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -118,7 +118,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func getOptions(ctx context.Context, sortParameters parameters.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptions, error) {
+func getOptions(ctx context.Context, sortParameters parameters.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptionsBuilder, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -158,58 +158,21 @@ func getOptions(ctx context.Context, sortParameters parameters.Parameters, proje
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
 
 	paramsMap := params.AsMap()
-
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindFilterString", t.FilterPayload, paramsMap)
-
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
-
 	opts, err := getOptions(ctx, t.SortParams, t.ProjectPayload, t.Limit, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating options: %s", err)
 	}
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
-	if err != nil {
-		return nil, err
-	}
-
-	cur, err := source.MongoClient().Database(t.Database).Collection(t.Collection).Find(ctx, filter, opts)
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-
-	var data = []any{}
-	err = cur.All(context.TODO(), &data)
-	if err != nil {
-		return nil, err
-	}
-
-	var final []any
-	for _, item := range data {
-		tmp, _ := bson.MarshalExtJSON(item, false, false)
-		var tmp2 any
-		err = json.Unmarshal(tmp, &tmp2)
-		if err != nil {
-			return nil, err
-		}
-		final = append(final, tmp2)
-	}
-
-	return final, err
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	return source.Find(ctx, filterString, t.Database, t.Collection, opts)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -238,4 +201,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }

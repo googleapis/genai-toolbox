@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	PostgresSourceKind = "postgres"
-	PostgresToolKind   = "postgres-sql"
+	PostgresSourceType = "postgres"
+	PostgresToolType   = "postgres-sql"
 	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
 	PostgresHost       = os.Getenv("POSTGRES_HOST")
 	PostgresPort       = os.Getenv("POSTGRES_PORT")
@@ -55,7 +55,7 @@ func getPostgresVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     PostgresSourceKind,
+		"type":     PostgresSourceType,
 		"host":     PostgresHost,
 		"port":     PostgresPort,
 		"database": PostgresDatabase,
@@ -111,12 +111,20 @@ func TestPostgres(t *testing.T) {
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	// Set up table for semantic search
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, PostgresToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -165,4 +173,5 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
+	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
 }

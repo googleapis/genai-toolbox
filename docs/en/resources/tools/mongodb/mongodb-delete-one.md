@@ -21,7 +21,7 @@ such as a user account or a single item from an inventory based on a unique ID.
 The tool returns the number of documents deleted, which will be either `1` if a
 document was found and deleted, or `0` if no matching document was found.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -33,26 +33,26 @@ Here is an example that deletes a specific user account from the `users`
 collection by matching their unique email address. This is a permanent action.
 
 ```yaml
-tools:
-  delete_user_account:
-    kind: mongodb-delete-one
-    source: my-mongo-source
-    description: Permanently deletes a user account by their email address.
-    database: user_data
-    collection: users
-    filterPayload: |
-        { "email": {{json .email_address}} }
-    filterParams:
-      - name: email_address
-        type: string
-        description: The email of the user account to delete.
+kind: tools
+name: delete_user_account
+type: mongodb-delete-one
+source: my-mongo-source
+description: Permanently deletes a user account by their email address.
+database: user_data
+collection: users
+filterPayload: |
+    { "email": {{json .email_address}} }
+filterParams:
+  - name: email_address
+    type: string
+    description: The email of the user account to delete.
 ```
 
 ## Reference
 
 | **field**     | **type** | **required** | **description**                                                                                                    |
 |:--------------|:---------|:-------------|:-------------------------------------------------------------------------------------------------------------------|
-| kind          | string   | true         | Must be `mongodb-delete-one`.                                                                                      |
+| type          | string   | true         | Must be `mongodb-delete-one`.                                                                                      |
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                           |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                               |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                        |

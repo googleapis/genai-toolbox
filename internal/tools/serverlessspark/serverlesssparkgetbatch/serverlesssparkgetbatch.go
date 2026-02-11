@@ -16,26 +16,22 @@ package serverlesssparkgetbatch
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
-	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const kind = "serverless-spark-get-batch"
+const resourceType = "serverless-spark-get-batch"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -49,13 +45,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetBatchControllerClient() *dataproc.BatchControllerClient
-	GetProject() string
-	GetLocation() string
+	GetBatch(context.Context, string) (map[string]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -64,9 +59,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the unique name for this tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the unique name for this tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance.
@@ -105,61 +100,19 @@ type Tool struct {
 
 // Invoke executes the tool's operation.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
-
-	client := source.GetBatchControllerClient()
-
 	paramMap := params.AsMap()
 	name, ok := paramMap["name"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing required parameter: name")
 	}
-
 	if strings.Contains(name, "/") {
 		return nil, fmt.Errorf("name must be a short batch name without '/': %s", name)
 	}
-
-	req := &dataprocpb.GetBatchRequest{
-		Name: fmt.Sprintf("projects/%s/locations/%s/batches/%s", source.GetProject(), source.GetLocation(), name),
-	}
-
-	batchPb, err := client.GetBatch(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get batch: %w", err)
-	}
-
-	jsonBytes, err := protojson.Marshal(batchPb)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal batch to JSON: %w", err)
-	}
-
-	var result map[string]any
-	if err := json.Unmarshal(jsonBytes, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal batch JSON: %w", err)
-	}
-
-	consoleUrl, err := common.BatchConsoleURLFromProto(batchPb)
-	if err != nil {
-		return nil, fmt.Errorf("error generating console url: %v", err)
-	}
-	logsUrl, err := common.BatchLogsURLFromProto(batchPb)
-	if err != nil {
-		return nil, fmt.Errorf("error generating logs url: %v", err)
-	}
-
-	wrappedResult := map[string]any{
-		"consoleUrl": consoleUrl,
-		"logsUrl":    logsUrl,
-		"batch":      result,
-	}
-
-	return wrappedResult, nil
-}
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.GetBatch(ctx, name)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -189,4 +142,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

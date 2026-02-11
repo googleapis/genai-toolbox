@@ -23,16 +23,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-const kind string = "mongodb-update-one"
+const resourceType string = "mongodb-update-one"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -46,11 +44,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	UpdateOne(context.Context, string, bool, string, string, string, bool) (any, error)
 }
 
 type Config struct {
 	Name          string                `yaml:"name" validate:"required"`
-	Kind          string                `yaml:"kind" validate:"required"`
+	Type          string                `yaml:"type" validate:"required"`
 	Source        string                `yaml:"source" validate:"required"`
 	AuthRequired  []string              `yaml:"authRequired" validate:"required"`
 	Description   string                `yaml:"description" validate:"required"`
@@ -68,8 +67,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -112,45 +111,21 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
 
 	paramsMap := params.AsMap()
-
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
-	}
-
 	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOne", t.UpdatePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get update: %w", err)
 	}
-
-	var update = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(updateString), t.Canonical, &update)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
-	}
-
-	res, err := source.MongoClient().Database(t.Database).Collection(t.Collection).UpdateOne(ctx, filter, update, options.Update().SetUpsert(t.Upsert))
-	if err != nil {
-		return nil, fmt.Errorf("error updating collection: %w", err)
-	}
-
-	return res.ModifiedCount, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	return source.UpdateOne(ctx, filterString, t.Canonical, updateString, t.Database, t.Collection, t.Upsert)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -179,4 +154,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }

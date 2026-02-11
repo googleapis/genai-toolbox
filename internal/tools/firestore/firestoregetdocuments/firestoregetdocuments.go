@@ -27,12 +27,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-get-documents"
+const resourceType string = "firestore-get-documents"
 const documentPathsKey string = "documentPaths"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -46,11 +46,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	GetDocuments(context.Context, []string) ([]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,8 +60,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -94,7 +95,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -126,41 +127,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
 		}
 	}
-
-	// Create document references from paths
-	docRefs := make([]*firestoreapi.DocumentRef, len(documentPaths))
-	for i, path := range documentPaths {
-		docRefs[i] = source.FirestoreClient().Doc(path)
-	}
-
-	// Get all documents
-	snapshots, err := source.FirestoreClient().GetAll(ctx, docRefs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get documents: %w", err)
-	}
-
-	// Convert snapshots to response data
-	results := make([]any, len(snapshots))
-	for i, snapshot := range snapshots {
-		docData := make(map[string]any)
-		docData["path"] = documentPaths[i]
-		docData["exists"] = snapshot.Exists()
-
-		if snapshot.Exists() {
-			docData["data"] = snapshot.Data()
-			docData["createTime"] = snapshot.CreateTime
-			docData["updateTime"] = snapshot.UpdateTime
-			docData["readTime"] = snapshot.ReadTime
-		}
-
-		results[i] = docData
-	}
-
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.GetDocuments(ctx, documentPaths)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -185,4 +152,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

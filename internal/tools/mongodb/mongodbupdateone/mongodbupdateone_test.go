@@ -21,7 +21,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -40,31 +39,31 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: mongodb-update-one
-					source: my-instance
-					description: some description
-					database: test_db
-					collection: test_coll
-					filterPayload: |
-					    { name: {{json .name}} }
-					filterParams:
-                        - name: name 
-                          type: string
-                          description: small description
-					updatePayload: |
-					    { $set : { item: {{json .item}} } }
-					updateParams:
-                        - name: item
-                          type: string
-                          description: small description
-					upsert: true
+            kind: tools
+            name: example_tool
+            type: mongodb-update-one
+            source: my-instance
+            description: some description
+            database: test_db
+            collection: test_coll
+            filterPayload: |
+                { name: {{json .name}} }
+            filterParams:
+                - name: name 
+                  type: string
+                  description: small description
+            updatePayload: |
+                { $set : { item: {{json .item}} } }
+            updateParams:
+                - name: item
+                  type: string
+                  description: small description
+            upsert: true
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdateone.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-update-one",
+					Type:          "mongodb-update-one",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",
@@ -98,32 +97,32 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "false canonical",
 			in: `
-			tools:
-				example_tool:
-					kind: mongodb-update-one
-					source: my-instance
-					description: some description
-					database: test_db
-					collection: test_coll
-					filterPayload: |
-					    { name: {{json .name}} }
-					filterParams:
-                        - name: name 
-                          type: string
-                          description: small description
-					updatePayload: |
-					    { $set : { item: {{json .item}} } }
-					updateParams:
-                        - name: item
-                          type: string
-                          description: small description
-					canonical: false
-					upsert: true
+            kind: tools
+            name: example_tool
+            type: mongodb-update-one
+            source: my-instance
+            description: some description
+            database: test_db
+            collection: test_coll
+            filterPayload: |
+                { name: {{json .name}} }
+            filterParams:
+                - name: name 
+                  type: string
+                  description: small description
+            updatePayload: |
+                { $set : { item: {{json .item}} } }
+            updateParams:
+                - name: item
+                  type: string
+                  description: small description
+            canonical: false
+            upsert: true
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdateone.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-update-one",
+					Type:          "mongodb-update-one",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",
@@ -157,32 +156,32 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "true canonical",
 			in: `
-			tools:
-				example_tool:
-					kind: mongodb-update-one
-					source: my-instance
-					description: some description
-					database: test_db
-					collection: test_coll
-					filterPayload: |
-					    { name: {{json .name}} }
-					filterParams:
-                        - name: name 
-                          type: string
-                          description: small description
-					updatePayload: |
-					    { $set : { item: {{json .item}} } }
-					updateParams:
-                        - name: item
-                          type: string
-                          description: small description
-					canonical: true
-					upsert: true
+            kind: tools
+            name: example_tool
+            type: mongodb-update-one
+            source: my-instance
+            description: some description
+            database: test_db
+            collection: test_coll
+            filterPayload: |
+                { name: {{json .name}} }
+            filterParams:
+                - name: name 
+                  type: string
+                  description: small description
+            updatePayload: |
+                { $set : { item: {{json .item}} } }
+            updateParams:
+                - name: item
+                  type: string
+                  description: small description
+            canonical: true
+            upsert: true
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdateone.Config{
 					Name:          "example_tool",
-					Kind:          "mongodb-update-one",
+					Type:          "mongodb-update-one",
 					Source:        "my-instance",
 					AuthRequired:  []string{},
 					Database:      "test_db",
@@ -216,15 +215,11 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -245,24 +240,20 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-			tools:
-				example_tool:
-					kind: mongodb-update-one
-					source: my-instance
-					description: some description
-					collection: test_coll
-					filterPayload: |
-					  { name : {{json .name}} }`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-update-one"`,
+            kind: tools
+            name: example_tool
+            type: mongodb-update-one
+            source: my-instance
+            description: some description
+            collection: test_coll
+            filterPayload: |
+              { name : {{json .name}} }`,
+			err: `unable to parse tool "example_tool" as type "mongodb-update-one"`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

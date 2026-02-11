@@ -27,12 +27,12 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-list-collections"
+const resourceType string = "firestore-list-collections"
 const parentPathKey string = "parentPath"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -46,11 +46,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	ListCollections(context.Context, string) ([]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,8 +60,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -95,58 +96,22 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
 
 	mapParams := params.AsMap()
 
-	var collectionRefs []*firestoreapi.CollectionRef
-
 	// Check if parentPath is provided
-	parentPath, hasParent := mapParams[parentPathKey].(string)
-
-	if hasParent && parentPath != "" {
+	parentPath, _ := mapParams[parentPathKey].(string)
+	if parentPath != "" {
 		// Validate parent document path
 		if err := util.ValidateDocumentPath(parentPath); err != nil {
 			return nil, fmt.Errorf("invalid parent document path: %w", err)
 		}
-
-		// List subcollections of the specified document
-		docRef := source.FirestoreClient().Doc(parentPath)
-		collectionRefs, err = docRef.Collections(ctx).GetAll()
-		if err != nil {
-			return nil, fmt.Errorf("failed to list subcollections of document %q: %w", parentPath, err)
-		}
-	} else {
-		// List root collections
-		collectionRefs, err = source.FirestoreClient().Collections(ctx).GetAll()
-		if err != nil {
-			return nil, fmt.Errorf("failed to list root collections: %w", err)
-		}
 	}
-
-	// Convert collection references to response data
-	results := make([]any, len(collectionRefs))
-	for i, collRef := range collectionRefs {
-		collData := make(map[string]any)
-		collData["id"] = collRef.ID
-		collData["path"] = collRef.Path
-
-		// If this is a subcollection, include parent information
-		if collRef.Parent != nil {
-			collData["parent"] = collRef.Parent.Path
-		}
-
-		results[i] = collData
-	}
-
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.ListCollections(ctx, parentPath)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -171,4 +136,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

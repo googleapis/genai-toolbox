@@ -15,9 +15,9 @@
 package gemini_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
@@ -34,15 +34,15 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            embeddingModels:
-                my-gemini-model:
-                    kind: gemini
-                    model: text-embedding-004
+			kind: embeddingModels
+			name: my-gemini-model
+			type: gemini
+			model: text-embedding-004
             `,
 			want: map[string]embeddingmodels.EmbeddingModelConfig{
 				"my-gemini-model": gemini.Config{
 					Name:  "my-gemini-model",
-					Kind:  gemini.EmbeddingModelKind,
+					Type:  gemini.EmbeddingModelType,
 					Model: "text-embedding-004",
 				},
 			},
@@ -50,17 +50,17 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "full example with optional fields",
 			in: `
-            embeddingModels:
-                complex-gemini:
-                    kind: gemini
-                    model: text-embedding-004
-                    apiKey: "test-api-key"
-                    dimension: 768
+            kind: embeddingModels
+            name: complex-gemini
+            type: gemini
+            model: text-embedding-004
+            apiKey: "test-api-key"
+            dimension: 768
             `,
 			want: map[string]embeddingmodels.EmbeddingModelConfig{
 				"complex-gemini": gemini.Config{
 					Name:      "complex-gemini",
-					Kind:      gemini.EmbeddingModelKind,
+					Type:      gemini.EmbeddingModelType,
 					Model:     "text-embedding-004",
 					ApiKey:    "test-api-key",
 					Dimension: 768,
@@ -70,16 +70,13 @@ func TestParseFromYamlGemini(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Models server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-			}{}
 			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, got, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Models) {
-				t.Fatalf("incorrect parse: %v", cmp.Diff(tc.want, got.Models))
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: %v", cmp.Diff(tc.want, got))
 			}
 		})
 	}
@@ -93,32 +90,29 @@ func TestFailParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "missing required model field",
 			in: `
-            embeddingModels:
-                bad-model:
-                    kind: gemini
+            kind: embeddingModels
+            name: bad-model
+            type: gemini
             `,
 			// Removed the specific model name from the prefix to match your output
-			err: "unable to parse as \"gemini\": Key: 'Config.Model' Error:Field validation for 'Model' failed on the 'required' tag",
+			err: "error unmarshaling embeddingModels: unable to parse as \"bad-model\": Key: 'Config.Model' Error:Field validation for 'Model' failed on the 'required' tag",
 		},
 		{
 			desc: "unknown field",
 			in: `
-            embeddingModels:
-                bad-field:
-                    kind: gemini
-                    model: text-embedding-004
-                    invalid_param: true
+            kind: embeddingModels
+            name: bad-field
+            type: gemini
+            model: text-embedding-004
+            invalid_param: true
             `,
 			// Updated to match the specific line-starting format of your error output
-			err: "unable to parse as \"gemini\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | kind: gemini\n   3 | model: text-embedding-004",
+			err: "error unmarshaling embeddingModels: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: text-embedding-004\n   3 | name: bad-field\n   4 | type: gemini",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Models server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-			}{}
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

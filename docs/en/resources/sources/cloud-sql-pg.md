@@ -178,16 +178,16 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-pg-source:
-        kind: cloud-sql-postgres
-        project: my-project-id
-        region: us-central1
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "private"
+kind: sources
+name: my-cloud-sql-pg-source
+type: cloud-sql-postgres
+project: my-project-id
+region: us-central1
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: "private"
 ```
 
 {{< notice tip >}}
@@ -195,11 +195,20 @@ Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
+### Managed Connection Pooling
+
+Toolbox automatically supports [Managed Connection Pooling][csql-mcp]. If your Cloud SQL for PostgreSQL instance has Managed Connection Pooling enabled, the connection will immediately benefit from increased throughput and reduced latency.
+
+The interface is identical, so there's no additional configuration required on the client. For more information on configuring your instance, see the [Cloud SQL Managed Connection Pooling documentation][csql-mcp-docs].
+
+[csql-mcp]: https://docs.cloud.google.com/sql/docs/postgres/managed-connection-pooling
+[csql-mcp-docs]: https://docs.cloud.google.com/sql/docs/postgres/configure-mcp
+
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
+| type      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                                                  |

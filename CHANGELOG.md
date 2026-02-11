@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.26.0](https://github.com/googleapis/genai-toolbox/compare/v0.25.0...v0.26.0) (2026-01-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Validate tool naming ([#2305](https://github.com/googleapis/genai-toolbox/issues/2305)) ([5054212](https://github.com/googleapis/genai-toolbox/commit/5054212fa43017207fe83275d27b9fbab96e8ab5))
+* **tools/cloudgda:** Update description and parameter name for cloudgda tool ([#2288](https://github.com/googleapis/genai-toolbox/issues/2288)) ([6b02591](https://github.com/googleapis/genai-toolbox/commit/6b025917032394a66840488259db8ff2c3063016))
+
+### Features
+
+* Add new `user-agent-metadata` flag ([#2302](https://github.com/googleapis/genai-toolbox/issues/2302)) ([adc9589](https://github.com/googleapis/genai-toolbox/commit/adc9589766904d9e3cbe0a6399222f8d4bb9d0cc))
+* Add remaining flag to Toolbox server in MCP registry ([#2272](https://github.com/googleapis/genai-toolbox/issues/2272)) ([5e0999e](https://github.com/googleapis/genai-toolbox/commit/5e0999ebf5cdd9046e96857738254b2e0561b6d2))
+* **embeddingModel:** Add embedding model to MCP handler ([#2310](https://github.com/googleapis/genai-toolbox/issues/2310)) ([e4f60e5](https://github.com/googleapis/genai-toolbox/commit/e4f60e56335b755ef55b9553d3f40b31858ec8d9))
+* **sources/bigquery:** Make maximum rows returned from queries configurable ([#2262](https://github.com/googleapis/genai-toolbox/issues/2262)) ([4abf0c3](https://github.com/googleapis/genai-toolbox/commit/4abf0c39e717d53b22cc61efb65e09928c598236))
+* **prebuilt/cloud-sql:** Add create backup tool for Cloud SQL ([#2141](https://github.com/googleapis/genai-toolbox/issues/2141)) ([8e0fb03](https://github.com/googleapis/genai-toolbox/commit/8e0fb0348315a80f63cb47b3c7204869482448f4))
+* **prebuilt/cloud-sql:** Add restore backup tool for Cloud SQL ([#2171](https://github.com/googleapis/genai-toolbox/issues/2171)) ([00c3e6d](https://github.com/googleapis/genai-toolbox/commit/00c3e6d8cba54e2ab6cb271c7e6b378895df53e1))
+* Support combining multiple prebuilt configurations ([#2295](https://github.com/googleapis/genai-toolbox/issues/2295)) ([e535b37](https://github.com/googleapis/genai-toolbox/commit/e535b372ea81864d644a67135a1b07e4e519b4b4))
+* Support MCP specs version 2025-11-25 ([#2303](https://github.com/googleapis/genai-toolbox/issues/2303)) ([4d23a3b](https://github.com/googleapis/genai-toolbox/commit/4d23a3bbf2797b1f7fe328aeb5789e778121da23))
+* **tools:** Add `valueFromParam` support to Tool config ([#2333](https://github.com/googleapis/genai-toolbox/issues/2333)) ([15101b1](https://github.com/googleapis/genai-toolbox/commit/15101b1edbe2b85a4a5f9f819c23cf83138f4ee1))
+
+
+### Bug Fixes
+
+* **tools/cloudhealthcare:** Add check for client authorization before retrieving token string ([#2327](https://github.com/googleapis/genai-toolbox/issues/2327)) ([c25a233](https://github.com/googleapis/genai-toolbox/commit/c25a2330fea2ac382a398842c9e572e4e19bcb08))
+
+## [0.25.0](https://github.com/googleapis/genai-toolbox/compare/v0.24.0...v0.25.0) (2026-01-08)
+
+
+### Features
+
+* Add `embeddingModel` support ([#2121](https://github.com/googleapis/genai-toolbox/issues/2121)) ([9c62f31](https://github.com/googleapis/genai-toolbox/commit/9c62f313ff5edf0a3b5b8a3e996eba078fba4095))
+* Add `allowed-hosts` flag ([#2254](https://github.com/googleapis/genai-toolbox/issues/2254)) ([17b41f6](https://github.com/googleapis/genai-toolbox/commit/17b41f64531b8fe417c28ada45d1992ba430dc1b))
+* Add parameter default value to manifest ([#2264](https://github.com/googleapis/genai-toolbox/issues/2264)) ([9d1feca](https://github.com/googleapis/genai-toolbox/commit/9d1feca10810fa42cb4c94a409252f1bd373ee36))
+* **snowflake:** Add Snowflake Source and Tools ([#858](https://github.com/googleapis/genai-toolbox/issues/858)) ([b706b5b](https://github.com/googleapis/genai-toolbox/commit/b706b5bc685aeda277f277868bae77d38d5fd7b6))
+* **prebuilt/cloud-sql-mysql:** Update CSQL MySQL prebuilt tools to use IAM ([#2202](https://github.com/googleapis/genai-toolbox/issues/2202)) ([731a32e](https://github.com/googleapis/genai-toolbox/commit/731a32e5360b4d6862d81fcb27d7127c655679a8))
+* **sources/bigquery:** Make credentials scope configurable ([#2210](https://github.com/googleapis/genai-toolbox/issues/2210)) ([a450600](https://github.com/googleapis/genai-toolbox/commit/a4506009b93771b77fb05ae97044f914967e67ed))
+* **sources/trino:** Add ssl verification options and fix docs example ([#2155](https://github.com/googleapis/genai-toolbox/issues/2155)) ([4a4cf1e](https://github.com/googleapis/genai-toolbox/commit/4a4cf1e712b671853678dba99c4dc49dd4fc16a2))
+* **tools/looker:** Add ability to set destination folder with `make_look` and `make_dashboard`. ([#2245](https://github.com/googleapis/genai-toolbox/issues/2245)) ([eb79339](https://github.com/googleapis/genai-toolbox/commit/eb793398cd1cc4006d9808ccda5dc7aea5e92bd5))
+* **tools/postgressql:** Add tool to list store procedure ([#2156](https://github.com/googleapis/genai-toolbox/issues/2156)) ([cf0fc51](https://github.com/googleapis/genai-toolbox/commit/cf0fc515b57d9b84770076f3c0c5597c4597ef62))
+* **tools/postgressql:** Add Parameter `embeddedBy` config support ([#2151](https://github.com/googleapis/genai-toolbox/issues/2151)) ([17b70cc](https://github.com/googleapis/genai-toolbox/commit/17b70ccaa754d15bcc33a1a3ecb7e652520fa600))
+
+
+### Bug Fixes
+
+* **server:** Add `embeddingModel` config initialization ([#2281](https://github.com/googleapis/genai-toolbox/issues/2281)) ([a779975](https://github.com/googleapis/genai-toolbox/commit/a7799757c9345f99b6d2717841fbf792d364e1a2))
+* **sources/cloudgda:** Add import for cloudgda source ([#2217](https://github.com/googleapis/genai-toolbox/issues/2217)) ([7daa411](https://github.com/googleapis/genai-toolbox/commit/7daa4111f4ebfb0a35319fd67a8f7b9f0f99efcf))
+* **tools/alloydb-wait-for-operation:** Fix connection message generation ([#2228](https://github.com/googleapis/genai-toolbox/issues/2228)) ([7053fbb](https://github.com/googleapis/genai-toolbox/commit/7053fbb1953653143d39a8510916ea97a91022a6))
+* **tools/alloydbainl:** Only add psv when NL Config Param is defined ([#2265](https://github.com/googleapis/genai-toolbox/issues/2265)) ([ef8f3b0](https://github.com/googleapis/genai-toolbox/commit/ef8f3b02f2f38ce94a6ba9acf35d08b9469bef4e))
+* **tools/looker:** Looker client OAuth nil pointer error ([#2231](https://github.com/googleapis/genai-toolbox/issues/2231)) ([268700b](https://github.com/googleapis/genai-toolbox/commit/268700bdbf8281de0318d60ca613ed3672990b20))
+
 ## [0.24.0](https://github.com/googleapis/genai-toolbox/compare/v0.23.0...v0.24.0) (2025-12-19)
 
 

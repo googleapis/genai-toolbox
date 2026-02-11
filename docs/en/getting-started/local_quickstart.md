@@ -52,7 +52,7 @@ runtime](https://research.google.com/colaboratory/local-runtimes.html).
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install toolbox-core
+pip install google-adk[toolbox]
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -73,7 +73,7 @@ pip install toolbox-core
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk
+# No other dependencies required for ADK
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -115,7 +115,7 @@ pip install google-genai
 
 1. Update `my_agent/agent.py` with the following content to connect to Toolbox:
     ```py
-    {{< include "quickstart/python/adk/quickstart.py" >}}
+    {{< regionInclude "quickstart/python/adk/quickstart.py" "quickstart" >}}
     ```
     <br/>
 

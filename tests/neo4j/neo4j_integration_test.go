@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	Neo4jSourceKind = "neo4j"
+	Neo4jSourceType = "neo4j"
 	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
 	Neo4jUri        = os.Getenv("NEO4J_URI")
 	Neo4jUser       = os.Getenv("NEO4J_USER")
@@ -56,7 +56,7 @@ func getNeo4jVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     Neo4jSourceKind,
+		"type":     Neo4jSourceType,
 		"uri":      Neo4jUri,
 		"database": Neo4jDatabase,
 		"user":     Neo4jUser,
@@ -81,35 +81,35 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{
-				"kind":        "neo4j-cypher",
+				"type":        "neo4j-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
 			"my-simple-execute-cypher-tool": map[string]any{
-				"kind":        "neo4j-execute-cypher",
+				"type":        "neo4j-execute-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-readonly-execute-cypher-tool": map[string]any{
-				"kind":        "neo4j-execute-cypher",
+				"type":        "neo4j-execute-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "A readonly cypher execution tool.",
 				"readOnly":    true,
 			},
 			"my-schema-tool": map[string]any{
-				"kind":        "neo4j-schema",
+				"type":        "neo4j-schema",
 				"source":      "my-neo4j-instance",
 				"description": "A tool to get the Neo4j schema.",
 			},
 			"my-schema-tool-with-cache": map[string]any{
-				"kind":               "neo4j-schema",
+				"type":               "neo4j-schema",
 				"source":             "my-neo4j-instance",
 				"description":        "A schema tool with a custom cache expiration.",
 				"cacheExpireMinutes": 10,
 			},
 			"my-populated-schema-tool": map[string]any{
-				"kind":        "neo4j-schema",
+				"type":        "neo4j-schema",
 				"source":      "my-neo4j-instance",
 				"description": "A tool to get the Neo4j schema from a populated DB.",
 			},
@@ -165,6 +165,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 							"type":        "boolean",
 							"required":    false,
 							"description": "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
+							"default":     false,
 							"authSources": []any{},
 						},
 					},

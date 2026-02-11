@@ -32,7 +32,7 @@ to expose your developer assistant tools to a Postgres instance:
 
 {{< notice tip >}}
 This guide can be used with [AlloyDB
-Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
+Omni](https://cloud.google.com/alloydb/omni/docs/overview).
 {{< /notice >}}
 
 ## Set up the database
@@ -40,10 +40,10 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
 1. Create or select a PostgreSQL instance.
 
     * [Install PostgreSQL locally](https://www.postgresql.org/download/)
-    * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/quickstart)
+    * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/docs/quickstart)
 
 1. Create or reuse [a database
-   user](https://cloud.google.com/alloydb/omni/current/docs/database-users/manage-users)
+   user](https://docs.cloud.google.com/alloydb/omni/containers/current/docs/database-users/manage-users)
    and have the username and password ready.
 
 ## Install MCP Toolbox
@@ -56,19 +56,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->

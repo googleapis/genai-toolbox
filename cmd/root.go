@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -33,6 +34,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/cli/invoke"
+	"github.com/googleapis/genai-toolbox/internal/cli/skills"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
@@ -90,13 +93,18 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicominstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomseries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomstudies"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistlognames"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistresourcetypes"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminquerylogs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcloneinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatebackup"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatedatabase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreateusers"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlgetinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistdatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlrestorebackup"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmssql/cloudsqlmssqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
@@ -155,6 +163,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrundashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerupdateprojectfile"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookervalidateproject"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
@@ -215,6 +224,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakeexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlistgraphs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
@@ -239,6 +250,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
@@ -263,6 +275,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/singlestore"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/snowflake"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
@@ -310,15 +323,15 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg            server.ServerConfig
-	logger         log.Logger
-	tools_file     string
-	tools_files    []string
-	tools_folder   string
-	prebuiltConfig string
-	inStream       io.Reader
-	outStream      io.Writer
-	errStream      io.Writer
+	cfg             server.ServerConfig
+	logger          log.Logger
+	tools_file      string
+	tools_files     []string
+	tools_folder    string
+	prebuiltConfigs []string
+	inStream        io.Reader
+	outStream       io.Writer
+	errStream       io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
@@ -355,40 +368,49 @@ func NewCommand(opts ...Option) *Command {
 	baseCmd.SetErr(cmd.errStream)
 
 	flags := cmd.Flags()
+	persistentFlags := cmd.PersistentFlags()
+
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
 	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
-	flags.StringSliceVar(&cmd.tools_files, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
-	flags.StringVar(&cmd.tools_folder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
-	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
-	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
-	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
-	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
-	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
+	persistentFlags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
+	persistentFlags.StringSliceVar(&cmd.tools_files, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
+	persistentFlags.StringVar(&cmd.tools_folder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
+	persistentFlags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
+	persistentFlags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
+	persistentFlags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
+	persistentFlags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
+	persistentFlags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
-		"Use a prebuilt tool configuration by source type. Allowed: '%s'.",
+		"Use a prebuilt tool configuration by source type. Allowed: '%s'. Can be specified multiple times.",
 		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
 	)
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", prebuiltHelp)
+	persistentFlags.StringSliceVar(&cmd.prebuiltConfigs, "prebuilt", []string{}, prebuiltHelp)
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
+	// TODO: Insecure by default. Might consider updating this for v1.0.0
 	flags.StringSliceVar(&cmd.cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
+	flags.StringSliceVar(&cmd.cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	persistentFlags.StringSliceVar(&cmd.cfg.UserAgentMetadata, "user-agent-metadata", []string{}, "Appends additional metadata to the User-Agent.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
+
+	// Register subcommands for tool invocation
+	baseCmd.AddCommand(invoke.NewCommand(cmd))
+	// Register subcommands for skill generation
+	baseCmd.AddCommand(skills.NewCommand(cmd))
 
 	return cmd
 }
 
 type ToolsFile struct {
 	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthSources     server.AuthServiceConfigs    `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
 	Tools           server.ToolConfigs           `yaml:"tools"`
@@ -419,6 +441,129 @@ func parseEnv(input string) (string, error) {
 	return output, err
 }
 
+func convertToolsFile(raw []byte) ([]byte, error) {
+	var input yaml.MapSlice
+	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
+
+	// convert to tools file v2
+	var buf bytes.Buffer
+	encoder := yaml.NewEncoder(&buf)
+
+	v1keys := []string{"sources", "authSources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	for {
+		if err := decoder.Decode(&input); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		for _, item := range input {
+			key, ok := item.Key.(string)
+			if !ok {
+				return nil, fmt.Errorf("unexpected non-string key in input: %v", item.Key)
+			}
+			// check if the key is config file v1's key
+			if slices.Contains(v1keys, key) {
+				// check if value conversion to yaml.MapSlice successfully
+				// fields such as "tools" in toolsets might pass the first check but
+				// fail to convert to MapSlice
+				if slice, ok := item.Value.(yaml.MapSlice); ok {
+					// Deprecated: convert authSources to authServices
+					if key == "authSources" {
+						key = "authServices"
+					}
+					transformed, err := transformDocs(key, slice)
+					if err != nil {
+						return nil, err
+					}
+					// encode per-doc
+					for _, doc := range transformed {
+						if err := encoder.Encode(doc); err != nil {
+							return nil, err
+						}
+					}
+				} else {
+					// invalid input will be ignored
+					// we don't want to throw error here since the config could
+					// be valid but with a different order such as:
+					// ---
+					// tools:
+					// - tool_a
+					// kind: toolsets
+					// ---
+					continue
+				}
+			} else {
+				// this doc is already v2, encode to buf
+				if err := encoder.Encode(input); err != nil {
+					return nil, err
+				}
+				break
+			}
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// transformDocs transforms the configuration file from v1 format to v2
+// yaml.MapSlice will preserve the order in a map
+func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
+	var transformed []yaml.MapSlice
+	for _, entry := range input {
+		entryName, ok := entry.Key.(string)
+		if !ok {
+			return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
+		}
+		entryBody := ProcessValue(entry.Value, kind == "toolsets")
+
+		currentTransformed := yaml.MapSlice{
+			{Key: "kind", Value: kind},
+			{Key: "name", Value: entryName},
+		}
+
+		// Merge the transformed body into our result
+		if bodySlice, ok := entryBody.(yaml.MapSlice); ok {
+			currentTransformed = append(currentTransformed, bodySlice...)
+		} else {
+			return nil, fmt.Errorf("unable to convert entryBody to MapSlice")
+		}
+		transformed = append(transformed, currentTransformed)
+	}
+	return transformed, nil
+}
+
+// ProcessValue recursively looks for MapSlices to rename 'kind' -> 'type'
+func ProcessValue(v any, isToolset bool) any {
+	switch val := v.(type) {
+	case yaml.MapSlice:
+		// creating a new MapSlice is safer for recursive transformation
+		newVal := make(yaml.MapSlice, len(val))
+		for i, item := range val {
+			// Perform renaming
+			if item.Key == "kind" {
+				item.Key = "type"
+			}
+			// Recursive call for nested values (e.g., nested objects or lists)
+			item.Value = ProcessValue(item.Value, false)
+			newVal[i] = item
+		}
+		return newVal
+	case []any:
+		// Process lists: If it's a toolset top-level list, wrap it.
+		if isToolset {
+			return yaml.MapSlice{{Key: "tools", Value: val}}
+		}
+		// Otherwise, recurse into list items (to catch nested objects)
+		newVal := make([]any, len(val))
+		for i := range val {
+			newVal[i] = ProcessValue(val[i], false)
+		}
+		return newVal
+	default:
+		return val
+	}
+}
+
 // parseToolsFile parses the provided yaml into appropriate configs.
 func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
@@ -429,8 +574,13 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	}
 	raw = []byte(output)
 
+	raw, err = convertToolsFile(raw)
+	if err != nil {
+		return toolsFile, fmt.Errorf("error converting tools file: %s", err)
+	}
+
 	// Parse contents
-	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	toolsFile.Sources, toolsFile.AuthServices, toolsFile.EmbeddingModels, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
 		return toolsFile, err
 	}
@@ -459,18 +609,6 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Sources[name] = source
-			}
-		}
-
-		// Check for conflicts and merge authSources (deprecated, but still support)
-		for name, authSource := range file.AuthSources {
-			if _, exists := merged.AuthSources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("authSource '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				if merged.AuthSources == nil {
-					merged.AuthSources = make(server.AuthServiceConfigs)
-				}
-				merged.AuthSources[name] = authSource
 			}
 		}
 
@@ -791,6 +929,183 @@ func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder str
 	return watchDirs, watchedFiles
 }
 
+func (cmd *Command) Config() server.ServerConfig {
+	return cmd.cfg
+}
+
+func (cmd *Command) Out() io.Writer {
+	return cmd.outStream
+}
+
+func (cmd *Command) Logger() log.Logger {
+	return cmd.logger
+}
+
+func (cmd *Command) LoadConfig(ctx context.Context) error {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	var allToolsFiles []ToolsFile
+
+	// Load Prebuilt Configuration
+
+	if len(cmd.prebuiltConfigs) > 0 {
+		slices.Sort(cmd.prebuiltConfigs)
+		sourcesList := strings.Join(cmd.prebuiltConfigs, ", ")
+		logMsg := fmt.Sprintf("Using prebuilt tool configurations for: %s", sourcesList)
+		logger.InfoContext(ctx, logMsg)
+
+		for _, configName := range cmd.prebuiltConfigs {
+			buf, err := prebuiltconfigs.Get(configName)
+			if err != nil {
+				logger.ErrorContext(ctx, err.Error())
+				return err
+			}
+
+			// Parse into ToolsFile struct
+			parsed, err := parseToolsFile(ctx, buf)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to parse prebuilt tool configuration for '%s': %w", configName, err)
+				logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			allToolsFiles = append(allToolsFiles, parsed)
+		}
+	}
+
+	// Determine if Custom Files should be loaded
+	// Check for explicit custom flags
+	isCustomConfigured := cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != ""
+
+	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
+	useDefaultToolsFile := len(cmd.prebuiltConfigs) == 0 && !isCustomConfigured
+
+	if useDefaultToolsFile {
+		cmd.tools_file = "tools.yaml"
+		isCustomConfigured = true
+	}
+
+	// Load Custom Configurations
+	if isCustomConfigured {
+		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
+		if (cmd.tools_file != "" && len(cmd.tools_files) > 0) ||
+			(cmd.tools_file != "" && cmd.tools_folder != "") ||
+			(len(cmd.tools_files) > 0 && cmd.tools_folder != "") {
+			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
+			logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+
+		var customTools ToolsFile
+		var err error
+
+		if len(cmd.tools_files) > 0 {
+			// Use tools-files
+			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
+			customTools, err = loadAndMergeToolsFiles(ctx, cmd.tools_files)
+		} else if cmd.tools_folder != "" {
+			// Use tools-folder
+			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
+			customTools, err = loadAndMergeToolsFolder(ctx, cmd.tools_folder)
+		} else {
+			// Use single file (tools-file or default `tools.yaml`)
+			buf, readFileErr := os.ReadFile(cmd.tools_file)
+			if readFileErr != nil {
+				errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, readFileErr)
+				logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			customTools, err = parseToolsFile(ctx, buf)
+			if err != nil {
+				err = fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+			}
+		}
+
+		if err != nil {
+			logger.ErrorContext(ctx, err.Error())
+			return err
+		}
+		allToolsFiles = append(allToolsFiles, customTools)
+	}
+
+	// Modify version string based on loaded configurations
+	if len(cmd.prebuiltConfigs) > 0 {
+		tag := "prebuilt"
+		if isCustomConfigured {
+			tag = "custom"
+		}
+		// cmd.prebuiltConfigs is already sorted above
+		for _, configName := range cmd.prebuiltConfigs {
+			cmd.cfg.Version += fmt.Sprintf("+%s.%s", tag, configName)
+		}
+	}
+
+	// Merge Everything
+	// This will error if custom tools collide with prebuilt tools
+	finalToolsFile, err := mergeToolsFiles(allToolsFiles...)
+	if err != nil {
+		logger.ErrorContext(ctx, err.Error())
+		return err
+	}
+
+	cmd.cfg.SourceConfigs = finalToolsFile.Sources
+	cmd.cfg.AuthServiceConfigs = finalToolsFile.AuthServices
+	cmd.cfg.EmbeddingModelConfigs = finalToolsFile.EmbeddingModels
+	cmd.cfg.ToolConfigs = finalToolsFile.Tools
+	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
+	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
+
+	return nil
+}
+
+func (cmd *Command) Setup(ctx context.Context) (context.Context, func(context.Context) error, error) {
+	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
+	loggerOut := cmd.outStream
+	if cmd.cfg.Stdio {
+		loggerOut = cmd.errStream
+	}
+
+	// Handle logger separately from config
+	logger, err := log.NewLogger(cmd.cfg.LoggingFormat.String(), cmd.cfg.LogLevel.String(), loggerOut, cmd.errStream)
+	if err != nil {
+		return ctx, nil, fmt.Errorf("unable to initialize logger: %w", err)
+	}
+	cmd.logger = logger
+
+	ctx = util.WithLogger(ctx, cmd.logger)
+
+	// Set up OpenTelemetry
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.cfg.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	if err != nil {
+		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return ctx, nil, errMsg
+	}
+
+	shutdownFunc := func(ctx context.Context) error {
+		err := otelShutdown(ctx)
+		if err != nil {
+			errMsg := fmt.Errorf("error shutting down OpenTelemetry: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return err
+		}
+		return nil
+	}
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cmd.cfg.Version)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to create telemetry instrumentation: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return ctx, shutdownFunc, errMsg
+	}
+
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	return ctx, shutdownFunc, nil
+}
+
 func run(cmd *Command) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
@@ -815,161 +1130,17 @@ func run(cmd *Command) error {
 		cancel()
 	}(ctx)
 
-	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
-	loggerOut := cmd.outStream
-	if cmd.cfg.Stdio {
-		loggerOut = cmd.errStream
-	}
-
-	// Handle logger separately from config
-	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
-	case "json":
-		logger, err := log.NewStructuredLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
-		if err != nil {
-			return fmt.Errorf("unable to initialize logger: %w", err)
-		}
-		cmd.logger = logger
-	case "standard":
-		logger, err := log.NewStdLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
-		if err != nil {
-			return fmt.Errorf("unable to initialize logger: %w", err)
-		}
-		cmd.logger = logger
-	default:
-		return fmt.Errorf("logging format invalid")
-	}
-
-	ctx = util.WithLogger(ctx, cmd.logger)
-
-	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.cfg.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	ctx, shutdown, err := cmd.Setup(ctx)
 	if err != nil {
-		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
-	defer func() {
-		err := otelShutdown(ctx)
-		if err != nil {
-			errMsg := fmt.Errorf("error shutting down OpenTelemetry: %w", err)
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-		}
-	}()
-
-	var allToolsFiles []ToolsFile
-
-	// Load Prebuilt Configuration
-	if cmd.prebuiltConfig != "" {
-		buf, err := prebuiltconfigs.Get(cmd.prebuiltConfig)
-		if err != nil {
-			cmd.logger.ErrorContext(ctx, err.Error())
-			return err
-		}
-		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltConfig)
-		cmd.logger.InfoContext(ctx, logMsg)
-		// Append prebuilt.source to Version string for the User Agent
-		cmd.cfg.Version += "+prebuilt." + cmd.prebuiltConfig
-
-		parsed, err := parseToolsFile(ctx, buf)
-		if err != nil {
-			errMsg := fmt.Errorf("unable to parse prebuilt tool configuration: %w", err)
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-		allToolsFiles = append(allToolsFiles, parsed)
-	}
-
-	// Determine if Custom Files should be loaded
-	// Check for explicit custom flags
-	isCustomConfigured := cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != ""
-
-	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
-	useDefaultToolsFile := cmd.prebuiltConfig == "" && !isCustomConfigured
-
-	if useDefaultToolsFile {
-		cmd.tools_file = "tools.yaml"
-		isCustomConfigured = true
-	}
-
-	// Load Custom Configurations
-	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (cmd.tools_file != "" && len(cmd.tools_files) > 0) ||
-			(cmd.tools_file != "" && cmd.tools_folder != "") ||
-			(len(cmd.tools_files) > 0 && cmd.tools_folder != "") {
-			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-
-		var customTools ToolsFile
-		var err error
-
-		if len(cmd.tools_files) > 0 {
-			// Use tools-files
-			cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
-			customTools, err = loadAndMergeToolsFiles(ctx, cmd.tools_files)
-		} else if cmd.tools_folder != "" {
-			// Use tools-folder
-			cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
-			customTools, err = loadAndMergeToolsFolder(ctx, cmd.tools_folder)
-		} else {
-			// Use single file (tools-file or default `tools.yaml`)
-			buf, readFileErr := os.ReadFile(cmd.tools_file)
-			if readFileErr != nil {
-				errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, readFileErr)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
-			customTools, err = parseToolsFile(ctx, buf)
-			if err != nil {
-				err = fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-			}
-		}
-
-		if err != nil {
-			cmd.logger.ErrorContext(ctx, err.Error())
-			return err
-		}
-		allToolsFiles = append(allToolsFiles, customTools)
-	}
-
-	// Merge Everything
-	// This will error if custom tools collide with prebuilt tools
-	finalToolsFile, err := mergeToolsFiles(allToolsFiles...)
-	if err != nil {
-		cmd.logger.ErrorContext(ctx, err.Error())
 		return err
 	}
+	defer func() {
+		_ = shutdown(ctx)
+	}()
 
-	cmd.cfg.SourceConfigs = finalToolsFile.Sources
-	cmd.cfg.AuthServiceConfigs = finalToolsFile.AuthServices
-	cmd.cfg.ToolConfigs = finalToolsFile.Tools
-	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
-	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
-
-	authSourceConfigs := finalToolsFile.AuthSources
-	if authSourceConfigs != nil {
-		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-
-		for k, v := range authSourceConfigs {
-			if _, exists := cmd.cfg.AuthServiceConfigs[k]; exists {
-				errMsg := fmt.Errorf("resource conflict detected: authSource '%s' has the same name as an existing authService. Please rename your authSource", k)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
-			cmd.cfg.AuthServiceConfigs[k] = v
-		}
+	if err := cmd.LoadConfig(ctx); err != nil {
+		return err
 	}
-
-	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
-	if err != nil {
-		errMsg := fmt.Errorf("unable to create telemetry instrumentation: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
-
-	ctx = util.WithInstrumentation(ctx, instrumentation)
 
 	// start server
 	s, err := server.NewServer(ctx, cmd.cfg)
@@ -1009,6 +1180,9 @@ func run(cmd *Command) error {
 			}
 		}()
 	}
+
+	// Determine if Custom Files are configured (re-check as loadAndMergeConfig might have updated defaults)
+	isCustomConfigured := cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != ""
 
 	if isCustomConfigured && !cmd.cfg.DisableReload {
 		watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)

@@ -27,37 +27,37 @@ parameters will be used according to their name: e.g. `$id`.
 > names, or other parts of the query.
 
 ```yaml
-tools:
-    search_products_by_category:
-        kind: couchbase-sql
-        source: my-couchbase-instance
-        statement: |
-            SELECT p.name, p.price, p.description
-            FROM products p
-            WHERE p.category = $category AND p.price < $max_price
-            ORDER BY p.price DESC
-            LIMIT 10
-        description: |
-            Use this tool to get a list of products for a specific category under a maximum price.
-            Takes a category name, e.g. "Electronics" and a maximum price e.g 500 and returns a list of product names, prices, and descriptions.
-            Do NOT use this tool with invalid category names. Do NOT guess a category name, Do NOT guess a price.
-            Example:
-            {{
-                "category": "Electronics",
-                "max_price": 500
-            }}
-            Example:
-            {{
-                "category": "Furniture",
-                "max_price": 1000
-            }}
-        parameters:
-            - name: category
-              type: string
-              description: Product category name
-            - name: max_price
-              type: integer
-              description: Maximum price (positive integer)
+kind: tools
+name: search_products_by_category
+type: couchbase-sql
+source: my-couchbase-instance
+statement: |
+    SELECT p.name, p.price, p.description
+    FROM products p
+    WHERE p.category = $category AND p.price < $max_price
+    ORDER BY p.price DESC
+    LIMIT 10
+description: |
+    Use this tool to get a list of products for a specific category under a maximum price.
+    Takes a category name, e.g. "Electronics" and a maximum price e.g 500 and returns a list of product names, prices, and descriptions.
+    Do NOT use this tool with invalid category names. Do NOT guess a category name, Do NOT guess a price.
+    Example:
+    {{
+        "category": "Electronics",
+        "max_price": 500
+    }}
+    Example:
+    {{
+        "category": "Furniture",
+        "max_price": 1000
+    }}
+parameters:
+    - name: category
+      type: string
+      description: Product category name
+    - name: max_price
+      type: integer
+      description: Maximum price (positive integer)
 ```
 
 ### Example with Template Parameters
@@ -69,29 +69,29 @@ tools:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-tools:
- list_table:
-    kind: couchbase-sql
-    source: my-couchbase-instance
-    statement: |
-      SELECT * FROM {{.tableName}};
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "flights",
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
+kind: tools
+name: list_table
+type: couchbase-sql
+source: my-couchbase-instance
+statement: |
+  SELECT * FROM {{.tableName}};
+description: |
+  Use this tool to list all information from a specific table.
+  Example:
+  {{
+      "tableName": "flights",
+  }}
+templateParameters:
+  - name: tableName
+    type: string
+    description: Table to select from
 ```
 
 ## Reference
 
 | **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
 |--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                    string                    |     true     | Must be "couchbase-sql".                                                                                                               |
+| type               |                    string                    |     true     | Must be "couchbase-sql".                                                                                                               |
 | source             |                    string                    |     true     | Name of the source the SQL query should execute on.                                                                                    |
 | description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
 | statement          |                    string                    |     true     | SQL statement to execute                                                                                                               |

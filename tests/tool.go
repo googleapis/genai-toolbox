@@ -611,6 +611,9 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	// Default values for ExecuteSqlTestConfig
 	configs := &ExecuteSqlTestConfig{
 		select1Statement: `"SELECT 1"`,
+		createWant:       "null",
+		dropWant:         "null",
+		selectEmptyWant:  "null",
 	}
 
 	// Apply provided options
@@ -646,7 +649,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, createTableStatement))),
-			want:          "null",
+			want:          configs.createWant,
 			isErr:         false,
 		},
 		{
@@ -654,7 +657,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM t"}`)),
-			want:          "null",
+			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
@@ -662,7 +665,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
-			want:          "null",
+			want:          configs.dropWant,
 			isErr:         false,
 		},
 		{
@@ -1237,7 +1240,10 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 					var filteredGot []any
 					for _, item := range got {
 						if tableMap, ok := item.(map[string]interface{}); ok {
-							if schema, ok := tableMap["schema_name"]; ok && schema == "public" {
+							name, _ := tableMap["object_name"].(string)
+
+							// Only keep the table if it matches expected test tables
+							if name == tableNameParam || name == tableNameAuth {
 								filteredGot = append(filteredGot, item)
 							}
 						}

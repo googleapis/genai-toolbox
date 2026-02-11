@@ -16,29 +16,25 @@ package createbatch
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"time"
 
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 type BatchBuilder interface {
 	Parameters() parameters.Parameters
-	BuildBatch(params parameters.ParamValues) (*dataprocpb.Batch, error)
+	BuildBatch(parameters.ParamValues) (*dataprocpb.Batch, error)
 }
 
 func NewTool(cfg Config, originalCfg tools.ToolConfig, srcs map[string]sources.Source, builder BatchBuilder) (*Tool, error) {
 	desc := cfg.Description
 	if desc == "" {
-		desc = fmt.Sprintf("Creates a Serverless Spark (aka Dataproc Serverless) %s operation.", cfg.Kind)
+		desc = fmt.Sprintf("Creates a Serverless Spark (aka Dataproc Serverless) %s operation.", cfg.Type)
 	}
 
 	allParameters := builder.Parameters()
@@ -70,11 +66,10 @@ type Tool struct {
 }
 
 func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
-	client := source.GetBatchControllerClient()
 
 	batch, err := t.Builder.BuildBatch(params)
 	if err != nil {
@@ -97,50 +92,7 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 		}
 		batch.RuntimeConfig.Version = version
 	}
-
-	req := &dataprocpb.CreateBatchRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/%s", source.GetProject(), source.GetLocation()),
-		Batch:  batch,
-	}
-
-	op, err := client.CreateBatch(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create batch: %w", err)
-	}
-
-	meta, err := op.Metadata()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get create batch op metadata: %w", err)
-	}
-
-	jsonBytes, err := protojson.Marshal(meta)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal create batch op metadata to JSON: %w", err)
-	}
-
-	var result map[string]any
-	if err := json.Unmarshal(jsonBytes, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal create batch op metadata JSON: %w", err)
-	}
-
-	projectID, location, batchID, err := common.ExtractBatchDetails(meta.GetBatch())
-	if err != nil {
-		return nil, fmt.Errorf("error extracting batch details from name %q: %v", meta.GetBatch(), err)
-	}
-	consoleUrl := common.BatchConsoleURL(projectID, location, batchID)
-	logsUrl := common.BatchLogsURL(projectID, location, batchID, meta.GetCreateTime().AsTime(), time.Time{})
-
-	wrappedResult := map[string]any{
-		"opMetadata": meta,
-		"consoleUrl": consoleUrl,
-		"logsUrl":    logsUrl,
-	}
-
-	return wrappedResult, nil
-}
-
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.CreateBatch(ctx, batch)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -169,4 +121,8 @@ func (t *Tool) ToConfig() tools.ToolConfig {
 
 func (t *Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t *Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

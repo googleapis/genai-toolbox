@@ -24,19 +24,20 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-admin:
-        kind: cloud-sql-admin
-
-    my-oauth-cloud-sql-admin:
-        kind: cloud-sql-admin
-        useClientOAuth: true
+kind: sources
+name: my-cloud-sql-admin
+type: cloud-sql-admin
+---
+kind: sources
+name: my-oauth-cloud-sql-admin
+type: cloud-sql-admin
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
+| type           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |

@@ -98,7 +98,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -120,73 +120,84 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
 
     ```yaml
-    sources:
-      my-bigquery-source:
-        kind: bigquery
-        project: YOUR_PROJECT_ID
-        location: us
+    kind: sources
+    name: my-bigquery-source
+    type: bigquery
+    project: YOUR_PROJECT_ID
+    location: us
+    ---
+    kind: tools
+    name: search-hotels-by-name
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on name.
+    parameters:
+      - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
+    ---
+    kind: tools
+    name: search-hotels-by-location
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on location.
+    parameters:
+      - name: location
+        type: string
+        description: The location of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
+    ---
+    kind: tools
+    name: book-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+        Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
+    parameters:
+      - name: hotel_id
+        type: integer
+        description: The ID of the hotel to book.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: update-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+      Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
+    parameters:
+      - name: checkin_date
+        type: string
+        description: The new check-in date of the hotel.
+      - name: checkout_date
+        type: string
+        description: The new check-out date of the hotel.
+      - name: hotel_id
+        type: integer
+        description: The ID of the hotel to update.
+    statement: >-
+      UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: cancel-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Cancel a hotel by its ID.
+    parameters:
+      - name: hotel_id
+        type: integer
+        description: The ID of the hotel to cancel.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
+    ---
+    kind: toolsets
+    name: my-toolset
     tools:
-      search-hotels-by-name:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on name.
-        parameters:
-          - name: name
-            type: string
-            description: The name of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
-      search-hotels-by-location:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on location.
-        parameters:
-          - name: location
-            type: string
-            description: The location of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
-      book-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-           Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to book.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
-      update-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-          Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
-        parameters:
-          - name: checkin_date
-            type: string
-            description: The new check-in date of the hotel.
-          - name: checkout_date
-            type: string
-            description: The new check-out date of the hotel.
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to update.
-        statement: >-
-          UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
-      cancel-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Cancel a hotel by its ID.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to cancel.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
-    toolsets:
-      my-toolset:
-        - search-hotels-by-name
-        - search-hotels-by-location
-        - book-hotel
-        - update-hotel
-        - cancel-hotel
+      - search-hotels-by-name
+      - search-hotels-by-location
+      - book-hotel
+      - update-hotel
+      - cancel-hotel
     ```
 
     For more info on tools, check out the

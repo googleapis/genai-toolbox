@@ -33,8 +33,8 @@ import (
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -64,7 +64,7 @@ func getServerlessSparkVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     "serverless-spark",
+		"type":     "serverless-spark",
 		"project":  serverlessSparkProject,
 		"location": serverlessSparkLocation,
 	}
@@ -81,40 +81,40 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"list-batches": map[string]any{
-				"kind":   "serverless-spark-list-batches",
+				"type":   "serverless-spark-list-batches",
 				"source": "my-spark",
 			},
 			"list-batches-with-auth": map[string]any{
-				"kind":         "serverless-spark-list-batches",
+				"type":         "serverless-spark-list-batches",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"get-batch": map[string]any{
-				"kind":   "serverless-spark-get-batch",
+				"type":   "serverless-spark-get-batch",
 				"source": "my-spark",
 			},
 			"get-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-get-batch",
+				"type":         "serverless-spark-get-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"cancel-batch": map[string]any{
-				"kind":   "serverless-spark-cancel-batch",
+				"type":   "serverless-spark-cancel-batch",
 				"source": "my-spark",
 			},
 			"cancel-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-cancel-batch",
+				"type":         "serverless-spark-cancel-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"create-pyspark-batch": map[string]any{
-				"kind":   "serverless-spark-create-pyspark-batch",
+				"type":   "serverless-spark-create-pyspark-batch",
 				"source": "my-spark",
 				"environmentConfig": map[string]any{
 					"executionConfig": map[string]any{
@@ -123,7 +123,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-pyspark-batch-2-3": map[string]any{
-				"kind":          "serverless-spark-create-pyspark-batch",
+				"type":          "serverless-spark-create-pyspark-batch",
 				"source":        "my-spark",
 				"runtimeConfig": map[string]any{"version": "2.3"},
 				"environmentConfig": map[string]any{
@@ -133,12 +133,12 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-pyspark-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-create-pyspark-batch",
+				"type":         "serverless-spark-create-pyspark-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"create-spark-batch": map[string]any{
-				"kind":   "serverless-spark-create-spark-batch",
+				"type":   "serverless-spark-create-spark-batch",
 				"source": "my-spark",
 				"environmentConfig": map[string]any{
 					"executionConfig": map[string]any{
@@ -147,7 +147,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-spark-batch-2-3": map[string]any{
-				"kind":          "serverless-spark-create-spark-batch",
+				"type":          "serverless-spark-create-spark-batch",
 				"source":        "my-spark",
 				"runtimeConfig": map[string]any{"version": "2.3"},
 				"environmentConfig": map[string]any{
@@ -157,7 +157,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-spark-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-create-spark-batch",
+				"type":         "serverless-spark-create-spark-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
@@ -676,7 +676,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 		filter   string
 		pageSize int
 		numPages int
-		want     []serverlesssparklistbatches.Batch
+		want     []serverlessspark.Batch
 	}{
 		{name: "one page", pageSize: 2, numPages: 1, want: batch2},
 		{name: "two pages", pageSize: 1, numPages: 2, want: batch2},
@@ -701,7 +701,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			var actual []serverlesssparklistbatches.Batch
+			var actual []serverlessspark.Batch
 			var pageToken string
 			for i := 0; i < tc.numPages; i++ {
 				request := map[string]any{
@@ -733,7 +733,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 					t.Fatalf("unable to find result in response body")
 				}
 
-				var listResponse serverlesssparklistbatches.ListBatchesResponse
+				var listResponse serverlessspark.ListBatchesResponse
 				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
 					t.Fatalf("error unmarshalling result: %s", err)
 				}
@@ -759,7 +759,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	}
 }
 
-func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx context.Context, filter string, n int, exact bool) []serverlesssparklistbatches.Batch {
+func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx context.Context, filter string, n int, exact bool) []serverlessspark.Batch {
 	parent := fmt.Sprintf("projects/%s/locations/%s", serverlessSparkProject, serverlessSparkLocation)
 	req := &dataprocpb.ListBatchesRequest{
 		Parent:   parent,
@@ -783,7 +783,7 @@ func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx co
 	if !exact && (len(batchPbs) == 0 || len(batchPbs) > n) {
 		t.Fatalf("expected between 1 and %d batches, got %d", n, len(batchPbs))
 	}
-	batches, err := serverlesssparklistbatches.ToBatches(batchPbs)
+	batches, err := serverlessspark.ToBatches(batchPbs)
 	if err != nil {
 		t.Fatalf("failed to convert batches to JSON: %v", err)
 	}

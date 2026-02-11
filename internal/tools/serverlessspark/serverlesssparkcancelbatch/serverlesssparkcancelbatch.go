@@ -19,8 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	longrunning "cloud.google.com/go/longrunning/autogen"
-	"cloud.google.com/go/longrunning/autogen/longrunningpb"
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -28,11 +27,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind = "serverless-spark-cancel-batch"
+const resourceType = "serverless-spark-cancel-batch"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -45,14 +44,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetOperationsClient(context.Context) (*longrunning.OperationsClient, error)
-	GetProject() string
-	GetLocation() string
+	GetBatchControllerClient() *dataproc.BatchControllerClient
+	CancelOperation(context.Context, string) (any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -61,9 +59,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the unique name for this tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the unique name for this tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance.
@@ -102,40 +100,19 @@ type Tool struct {
 
 // Invoke executes the tool's operation.
 func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
-
-	client, err := source.GetOperationsClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get operations client: %w", err)
-	}
-
 	paramMap := params.AsMap()
 	operation, ok := paramMap["operation"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing required parameter: operation")
 	}
-
 	if strings.Contains(operation, "/") {
 		return nil, fmt.Errorf("operation must be a short operation name without '/': %s", operation)
 	}
-
-	req := &longrunningpb.CancelOperationRequest{
-		Name: fmt.Sprintf("projects/%s/locations/%s/operations/%s", source.GetProject(), source.GetLocation(), operation),
-	}
-
-	err = client.CancelOperation(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to cancel operation: %w", err)
-	}
-
-	return fmt.Sprintf("Cancelled [%s].", operation), nil
-}
-
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return source.CancelOperation(ctx, operation)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -165,4 +142,8 @@ func (t *Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t *Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

@@ -179,7 +179,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -201,66 +201,75 @@ to use BigQuery, and then run the Toolbox server.
     {{< /notice >}}
 
     ```yaml
-    sources:
-      my-bigquery-source:
-        kind: bigquery
-        project: YOUR_PROJECT_ID
-        location: us
-    tools:
-      search-hotels-by-name:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on name.
-        parameters:
-          - name: name
-            type: string
-            description: The name of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
-      search-hotels-by-location:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on location.
-        parameters:
-          - name: location
-            type: string
-            description: The location of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
-      book-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-           Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to book.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
-      update-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-          Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
-        parameters:
-          - name: checkin_date
-            type: string
-            description: The new check-in date of the hotel.
-          - name: checkout_date
-            type: string
-            description: The new check-out date of the hotel.
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to update.
-        statement: >-
-          UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
-      cancel-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Cancel a hotel by its ID.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to cancel.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
+    kind: sources
+    name: my-bigquery-source
+    type: bigquery
+    project: YOUR_PROJECT_ID
+    location: us
+    ---
+    kind: tools
+    name: search-hotels-by-name
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on name.
+    parameters:
+        - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
+    ---
+    kind: tools
+    name: search-hotels-by-location
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on location.
+    parameters:
+        - name: location
+        type: string
+        description: The location of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
+    ---
+    kind: tools
+    name: book-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+        Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
+    parameters:
+        - name: hotel_id
+        type: integer
+        description: The ID of the hotel to book.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: update-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+        Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
+    parameters:
+        - name: checkin_date
+        type: string
+        description: The new check-in date of the hotel.
+        - name: checkout_date
+        type: string
+        description: The new check-out date of the hotel.
+        - name: hotel_id
+        type: integer
+        description: The ID of the hotel to update.
+    statement: >-
+        UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: cancel-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Cancel a hotel by its ID.
+    parameters:
+        - name: hotel_id
+        type: integer
+        description: The ID of the hotel to cancel.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
     ```
 
     **Important Note on `toolsets`**: The `tools.yaml` content above does not
@@ -272,8 +281,9 @@ to use BigQuery, and then run the Toolbox server.
     ```yaml
     # Add this to your tools.yaml if using load_toolset("my-toolset")
     # Ensure it's at the same indentation level as 'sources:' and 'tools:'
-    toolsets:
-      my-toolset:
+    kind: toolsets
+    name: my-toolset
+    tools:
         - search-hotels-by-name
         - search-hotels-by-location
         - book-hotel
@@ -325,7 +335,7 @@ pip install toolbox-llamaindex
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk
+pip install google-adk[toolbox]
 {{< /tab >}}
 
 {{< /tabpane >}}
@@ -365,7 +375,7 @@ pip install llama-index-llms-google-genai
 
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
-pip install toolbox-core
+# No other dependencies required for ADK
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -607,8 +617,8 @@ from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+from google.adk.tools.toolbox_toolset import ToolboxToolset
 from google.genai import types # For constructing message content
-from toolbox_core import ToolboxSyncClient
 
 import os
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
@@ -623,46 +633,45 @@ os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
 
 # --- Load Tools from Toolbox ---
 
-# TODO(developer): Ensure the Toolbox server is running at <http://127.0.0.1:5000>
+# TODO(developer): Ensure the Toolbox server is running at http://127.0.0.1:5000
+toolset = ToolboxToolset(server_url="http://127.0.0.1:5000")
 
-with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
-    # TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
-    agent_toolset = toolbox_client.load_toolset("my-toolset")
+# --- Define the Agent's Prompt ---
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
 
-    # --- Define the Agent's Prompt ---
-    prompt = """
-      You're a helpful hotel assistant. You handle hotel searching, booking and
-      cancellations. When the user searches for a hotel, mention it's name, id,
-      location and price tier. Always mention hotel ids while performing any
-      searches. This is very important for any operations. For any bookings or
-      cancellations, please provide the appropriate confirmation. Be sure to
-      update checkin or checkout dates if mentioned by the user.
-      Don't ask for confirmations from the user.
-    """
+# --- Configure the Agent ---
 
-    # --- Configure the Agent ---
+root_agent = Agent(
+    model='gemini-2.0-flash-001',
+    name='hotel_agent',
+    description='A helpful AI assistant that can search and book hotels.',
+    instruction=prompt,
+    tools=[toolset], # Pass the loaded toolset
+)
 
-    root_agent = Agent(
-        model='gemini-2.0-flash-001',
-        name='hotel_agent',
-        description='A helpful AI assistant that can search and book hotels.',
-        instruction=prompt,
-        tools=agent_toolset, # Pass the loaded toolset
-    )
+# --- Initialize Services for Running the Agent ---
+session_service = InMemorySessionService()
+artifacts_service = InMemoryArtifactService()
 
-    # --- Initialize Services for Running the Agent ---
-    session_service = InMemorySessionService()
-    artifacts_service = InMemoryArtifactService()
+runner = Runner(
+    app_name='hotel_agent',
+    agent=root_agent,
+    artifact_service=artifacts_service,
+    session_service=session_service,
+)
+
+async def main():
     # Create a new session for the interaction.
-    session = session_service.create_session(
+    session = await session_service.create_session(
         state={}, app_name='hotel_agent', user_id='123'
-    )
-
-    runner = Runner(
-        app_name='hotel_agent',
-        agent=root_agent,
-        artifact_service=artifacts_service,
-        session_service=session_service,
     )
 
     # --- Define Queries and Run the Agent ---
@@ -687,6 +696,10 @@ with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
 
         for text in responses:
           print(text)
+
+import asyncio
+if __name__ == "__main__":
+    asyncio.run(main())
 {{< /tab >}}
 {{< /tabpane >}}
 
