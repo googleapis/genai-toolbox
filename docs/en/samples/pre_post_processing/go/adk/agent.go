@@ -60,13 +60,14 @@ func beforeToolCallback(ctx tool.Context, tool tool.Tool, args map[string]any) (
 		if okCheckin && okCheckout {
 			startDate, errStart := time.Parse("2006-01-02", checkinStr)
 			endDate, errEnd := time.Parse("2006-01-02", checkoutStr)
+			if errStart != nil || errEnd != nil {
+				return nil, nil
+			}
 
-			if errStart == nil && errEnd == nil {
-				duration := endDate.Sub(startDate).Hours() / 24
-				if duration > 14 {
-					fmt.Println("BLOCKED: Stay too long")
-					return map[string]any{"Error": "Maximum stay duration is 14 days."}, nil
-				}
+			duration := endDate.Sub(startDate).Hours() / 24
+			if duration > 14 {
+				fmt.Println("BLOCKED: Stay too long")
+				return map[string]any{"Error": "Maximum stay duration is 14 days."}, nil
 			}
 		}
 	}
@@ -78,8 +79,11 @@ func afterToolCallback(ctx tool.Context, tool tool.Tool, args, result map[string
 	resultStr := fmt.Sprintf("%v", result)
 
 	if tool.Name() == "book-hotel" {
-		if !strings.Contains(resultStr, "Error") {
-			loyaltyBonus := 500
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := result["Error"]; !ok && !strings.Contains(resultStr, "Error") {
+			const loyaltyBonus = 500
 			enrichedResult := fmt.Sprintf("Booking Confirmed!\n You earned %d Loyalty Points with this stay.\n\nSystem Details: %s", loyaltyBonus, resultStr)
 			return map[string]any{"confirmation": enrichedResult}, nil
 		}
@@ -162,9 +166,7 @@ func main() {
 		for event := range runIter {
 			if event != nil && event.LLMResponse.Content != nil {
 				for _, p := range event.LLMResponse.Content.Parts {
-					if streamingMode != agent.StreamingModeSSE || event.LLMResponse.Partial {
 						fmt.Print(p.Text)
-					}
 				}
 			}
 		}
