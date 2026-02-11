@@ -233,7 +233,7 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 
 ## Authenticating Tools
 
-{{< notice note >}}
+{{< notice info >}}
 Always use HTTPS to connect your application with the Toolbox service, especially when using tools with authentication configured. Using HTTP exposes your application to serious security risks.
 {{< /notice >}}
 
