@@ -348,12 +348,12 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
 	}
 
-	schema := httplog.SchemaGCP
+	schema := *httplog.SchemaGCP
 	schema.Level = cfg.LogLevel.String()
 	schema.Concise(true)
 	httpOpts := &httplog.Options{
 		Level:  logLevel,
-		Schema: schema,
+		Schema: &schema,
 	}
 	logger := l.SlogLogger()
 	r.Use(httplog.RequestLogger(logger, httpOpts))
