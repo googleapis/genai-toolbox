@@ -26,7 +26,7 @@ You can also add model-level (`before_model_callback`, `after_model_callback`) a
 For more information, see the [ADK Callbacks documentation](https://google.github.io/adk-docs/callbacks/types-of-callbacks/).
 {{% /tab %}}
 {{% tab header="Langchain" text=true %}}
-The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre and post processing for tool calls.
+The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre- and post- processing for tool calls.
 
 ```py
 {{< include "python/langchain/agent.py" >}}
