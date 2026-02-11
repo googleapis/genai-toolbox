@@ -64,13 +64,6 @@ func getCockroachDBVars(t *testing.T) map[string]any {
 		"queryParams": map[string]string{
 			"sslmode": "disable",
 		},
-		// MCP Security Settings
-		"readOnlyMode":     true,
-		"enableWriteMode":  false,
-		"maxRowLimit":      1000,
-		"queryTimeoutSec":  30,
-		"enableTelemetry":  true,
-		"telemetryVerbose": false,
 	}
 }
 
