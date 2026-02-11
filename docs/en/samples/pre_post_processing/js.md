@@ -10,7 +10,6 @@ description: >
 
 This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart_js.md).
 
-
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
 ## Implementation
@@ -25,11 +24,11 @@ The following example demonstrates how to use `ToolboxClient` with LangChain's m
 ```js
 {{< include "js/langchain/agent.js" >}}
 ```
+
 You can also use the `wrapModel` hook to intercept messages before and after model calls.
 You can also use [node-style hooks](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#node-style-hooks) to intercept messages at the agent and model level.
 See the [LangChain Middleware documentation](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#tool-call-monitoring) for details on these additional hook types.
 
-For more information, see the [LangChain Middleware documentation](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#tool-call-monitoring).
 {{% /tab %}}
 {{< /tabpane >}}
 
