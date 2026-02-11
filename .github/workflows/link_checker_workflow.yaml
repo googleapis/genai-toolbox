@@ -69,8 +69,7 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
-            README.md
-            docs/
+            ${{ env.CHECK_FILES }}
           output: lychee-report.md
           format: markdown
           fail: true           
