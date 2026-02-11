@@ -257,13 +257,7 @@ func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]int
 
 	var results []map[string]interface{}
 	for _, p := range projects {
-		if p.Name == nil {
-			return nil, util.NewAgentError("project name is nil", nil)
-		}
 		pName := *p.Name
-		if p.Id == nil {
-			return nil, util.NewAgentError("project ID is nil", nil)
-		}
 		pID := *p.Id
 		logger.InfoContext(ctx, fmt.Sprintf("Analyzing project: %s", pName))
 
@@ -292,13 +286,6 @@ func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]int
 			gitConnectionStatus = "Bare repo, no tests required"
 		}
 
-		if p.PullRequestMode == nil {
-			return nil, util.NewAgentError("pull request mode is nil", nil)
-		}
-		if p.ValidationRequired == nil {
-			return nil, util.NewAgentError("validation required is nil", nil)
-		}
-
 		results = append(results, map[string]interface{}{
 			"Project":                pName,
 			"# Models":               modelCount,
@@ -320,7 +307,7 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 
 	usedModels, err := t.getUsedModels(ctx)
 	if err != nil {
-		return nil, util.NewClientServerError("error getting used models", http.StatusInternalServerError, err)
+		return nil, util.NewClientServerError("error fetching used models", http.StatusInternalServerError, err)
 	}
 
 	lookmlModels, err := t.SdkClient.AllLookmlModels(v4.RequestAllLookmlModels{}, nil)
@@ -343,13 +330,6 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 				exploreCount = len(*m.Explores)
 			}
 
-			if m.ProjectName == nil {
-				return nil, util.NewAgentError("model project name is nil", nil)
-			}
-			if m.Name == nil {
-				return nil, util.NewAgentError("model name is nil", nil)
-			}
-
 			results = append(results, map[string]interface{}{
 				"Project":     *m.ProjectName,
 				"Model":       *m.Name,
@@ -361,7 +341,7 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 	return results, nil
 }
 
-func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, util.ToolboxError) {
+func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error) {
 	limit := "5000"
 	query := &v4.WriteQuery{
 		Model:  "system__activity",
@@ -381,20 +361,12 @@ func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, util.T
 	}
 
 	var data []map[string]interface{}
-	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("error unmarshaling used models data: %v", err), http.StatusInternalServerError, err)
-	}
+	_ = json.Unmarshal([]byte(raw), &data)
 
 	results := make(map[string]int)
 	for _, row := range data {
-		model, ok := row["query.model"].(string)
-		if !ok {
-			return nil, util.NewAgentError("error casting 'query.model' in used models data", nil)
-		}
-		count, ok := row["history.query_run_count"].(float64)
-		if !ok {
-			return nil, util.NewAgentError("error casting 'history.query_run_count' in used models data", nil)
-		}
+		model, _ := row["query.model"].(string)
+		count, _ := row["history.query_run_count"].(float64)
 		results[model] = int(count)
 	}
 	return results, nil
@@ -421,26 +393,15 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 	}
 
 	var data []map[string]interface{}
-	if err := json.Unmarshal([]byte(raw), &data); err != nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("error unmarshaling used explore fields data: %v", err), http.StatusInternalServerError, err)
-	}
+	_ = json.Unmarshal([]byte(raw), &data)
 
 	results := make(map[string]int)
 	fieldRegex := regexp.MustCompile(`(\w+\.\w+)`)
 
 	for _, row := range data {
-		count, ok := row["history.query_run_count"].(float64)
-		if !ok {
-			return nil, util.NewAgentError("error casting 'history.query_run_count' in used explore fields data", nil)
-		}
-		formattedFields, ok := row["query.formatted_fields"].(string)
-		if !ok {
-			return nil, util.NewAgentError("error casting 'query.formatted_fields' in used explore fields data", nil)
-		}
-		filters, ok := row["query.filters"].(string)
-		if !ok {
-			return nil, util.NewAgentError("error casting 'query.filters' in used explore fields data", nil)
-		}
+		count, _ := row["history.query_run_count"].(float64)
+		formattedFields, _ := row["query.formatted_fields"].(string)
+		filters, _ := row["query.filters"].(string)
 
 		usedFields := make(map[string]bool)
 
@@ -472,10 +433,7 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 	var results []map[string]interface{}
 	for _, m := range lookmlModels {
-		if m.Name == nil {
-			return nil, util.NewAgentError("model name is nil", nil)
-		}
-		if model != "" && *m.Name != model {
+		if model != "" && (m.Name == nil || *m.Name != model) {
 			continue
 		}
 		if m.Explores == nil {
@@ -483,10 +441,10 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 		}
 
 		for _, e := range *m.Explores {
-			if e.Name == nil {
-				return nil, util.NewAgentError("explore name is nil", nil)
+			if explore != "" && (e.Name == nil || *e.Name != explore) {
+				continue
 			}
-			if explore != "" && *e.Name != explore {
+			if e.Name == nil {
 				continue
 			}
 
@@ -504,12 +462,6 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			fieldCount := 0
 			if exploreDetail.Fields != nil {
-				if exploreDetail.Fields.Dimensions == nil {
-					return nil, util.NewAgentError("explore dimensions are nil", nil)
-				}
-				if exploreDetail.Fields.Measures == nil {
-					return nil, util.NewAgentError("explore measures are nil", nil)
-				}
 				fieldCount = len(*exploreDetail.Fields.Dimensions) + len(*exploreDetail.Fields.Measures)
 			}
 
@@ -526,30 +478,12 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			allFields := []string{}
 			if exploreDetail.Fields != nil {
-				if exploreDetail.Fields.Dimensions == nil {
-					return nil, util.NewAgentError("explore dimensions are nil", nil)
-				}
 				for _, d := range *exploreDetail.Fields.Dimensions {
-					if d.Hidden == nil {
-						return nil, util.NewAgentError("dimension hidden status is nil", nil)
-					}
-					if d.Name == nil {
-						return nil, util.NewAgentError("dimension name is nil", nil)
-					}
 					if !*d.Hidden {
 						allFields = append(allFields, *d.Name)
 					}
 				}
-				if exploreDetail.Fields.Measures == nil {
-					return nil, util.NewAgentError("explore measures are nil", nil)
-				}
 				for _, ms := range *exploreDetail.Fields.Measures {
-					if ms.Hidden == nil {
-						return nil, util.NewAgentError("measure hidden status is nil", nil)
-					}
-					if ms.Name == nil {
-						return nil, util.NewAgentError("measure name is nil", nil)
-					}
 					if !*ms.Hidden {
 						allFields = append(allFields, *ms.Name)
 					}
@@ -570,9 +504,6 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 					joinStats[join] += queryCount
 				}
 				for _, join := range *exploreDetail.Joins {
-					if join.Name == nil {
-						return nil, util.NewAgentError("join name is nil", nil)
-					}
 					if _, ok := joinStats[*join.Name]; !ok {
 						joinStats[*join.Name] = 0
 					}
@@ -608,14 +539,10 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 			}
 			queryCount := 0
 			var data []map[string]interface{}
-			if err := json.Unmarshal([]byte(rawQueryCount), &data); err != nil {
-				return nil, util.NewClientServerError(fmt.Sprintf("error unmarshaling query count data: %v", err), http.StatusInternalServerError, err)
-			}
+			_ = json.Unmarshal([]byte(rawQueryCount), &data)
 			if len(data) > 0 {
 				if count, ok := data[0]["history.query_run_count"].(float64); ok {
 					queryCount = int(count)
-				} else {
-					return nil, util.NewAgentError("error casting 'history.query_run_count' in query count data", nil)
 				}
 			}
 
@@ -623,7 +550,7 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 				"Model":           *m.Name,
 				"Explore":         *e.Name,
 				"Is Hidden":       *e.Hidden,
-				"Has Description": *e.Description != "",
+				"Has Description": e.Description != nil && *e.Description != "",
 				"# Joins":         joinCount,
 				"# Unused Joins":  unusedJoinsCount,
 				"# Unused Fields": unusedFieldsCount,
