@@ -858,7 +858,7 @@ pip install google-genai
 
 1. Update `my_agent/agent.py` with the following content to connect to Toolbox:
     ```py
-    {{< include "quickstart/python/adk/quickstart.py" >}}
+    {{< regionInclude "quickstart/python/adk/quickstart.py" "quickstart" >}}
     ```
     <br/>
 
@@ -3171,7 +3171,7 @@ to expose your developer assistant tools to a Postgres instance:
 
 {{< notice tip >}}
 This guide can be used with [AlloyDB
-Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
+Omni](https://cloud.google.com/alloydb/omni/docs/overview).
 {{< /notice >}}
 
 ## Set up the database
@@ -3179,10 +3179,10 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
 1. Create or select a PostgreSQL instance.
 
     * [Install PostgreSQL locally](https://www.postgresql.org/download/)
-    * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/current/docs/quickstart)
+    * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/docs/quickstart)
 
 1. Create or reuse [a database
-   user](https://cloud.google.com/alloydb/omni/current/docs/database-users/manage-users)
+   user](https://docs.cloud.google.com/alloydb/omni/containers/current/docs/database-users/manage-users)
    and have the username and password ready.
 
 ## Install MCP Toolbox
@@ -5726,14 +5726,11 @@ Toolbox instead of the local address.
 
 2.  Open your agent file (`my_agent/agent.py`).
 
-3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL.
+3.  Update the `ToolboxToolset` initialization to point to your Cloud Run service URL. Replace the existing initialization code with the following:
 
-    {{% alert color="info" %}}
-Since Cloud Run services are secured by default, you also need to provide an
-authentication token.
+    {{% alert color="info" title="Note" %}}
+Since Cloud Run services are secured by default, you also need to provide a workload identity.
     {{% /alert %}}
-
-    Replace your existing client initialization code with the following:
 
     ```python
     from google.adk import Agent
@@ -5775,14 +5772,14 @@ app = App(root_agent=root_agent, name="my_agent")
 Run the deployment command:
 
 ```bash
-make backend
+make deploy
 ```
 
 This command will build your agent's container image and deploy it to Vertex AI.
 
 ## Step 6: Test your Deployment
 
-Once the deployment command (`make backend`) completes, it will output the URL
+Once the deployment command (`make deploy`) completes, it will output the URL
 for the Agent Engine Playground. You can click on this URL to open the
 Playground in your browser and start chatting with your agent to test the tools.
 
@@ -6303,6 +6300,116 @@ There are a couple of steps to run and use a Collector.
 [trace-explorer]: https://console.cloud.google.com/traces
 
 
+# Generate Agent Skills
+How to generate agent skills from a toolset.
+
+
+The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill**. A toolset is a collection of tools, and the generated skill will contain metadata and execution scripts for all tools within that toolset, complying with the [Agent Skill specification](https://agentskills.io/specification).
+
+## Before you begin
+
+1. Make sure you have the `toolbox` executable in your PATH.
+2. Make sure you have [Node.js](https://nodejs.org/) installed on your system.
+
+## Generating a Skill from a Toolset
+
+A skill package consists of a `SKILL.md` file (with required YAML frontmatter) and a set of Node.js scripts. Each tool defined in your toolset maps to a corresponding script in the generated Node.js scripts (`.js`) that work across different platforms (Linux, macOS, Windows).
+
+
+### Command Usage
+
+The basic syntax for the command is:
+
+```bash
+toolbox <tool-source> skills-generate \
+  --name <skill-name> \
+  --toolset <toolset-name> \
+  --description <description> \
+  --output-dir <output-directory>
+```
+
+- `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
+- `--name`: Name of the generated skill.
+- `--description`: Description of the generated skill.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+
+{{< notice note >}}
+**Note:** The `<skill-name>` must follow the Agent Skill [naming convention](https://agentskills.io/specification): it must contain only lowercase alphanumeric characters and hyphens, cannot start or end with a hyphen, and cannot contain consecutive hyphens (e.g., `my-skill`, `data-processing`).
+{{< /notice >}}
+
+### Example: Custom Tools File
+
+1. Create a `tools.yaml` file with a toolset and some tools:
+
+   ```yaml
+   tools:
+     tool_a:
+       description: "First tool"
+       run:
+         command: "echo 'Tool A'"
+     tool_b:
+       description: "Second tool"
+       run:
+         command: "echo 'Tool B'"
+   toolsets:
+     my_toolset:
+       tools:
+         - tool_a
+         - tool_b
+   ```
+
+2. Generate the skill:
+
+   ```bash
+   toolbox --tools-file tools.yaml skills-generate \
+     --name "my-skill" \
+     --toolset "my_toolset" \
+     --description "A skill containing multiple tools" \
+     --output-dir "generated-skills"
+   ```
+
+3. The generated skill directory structure:
+
+   ```text
+   generated-skills/
+   └── my-skill/
+       ├── SKILL.md
+       ├── assets/
+       │   ├── tool_a.yaml
+       │   └── tool_b.yaml
+       └── scripts/
+           ├── tool_a.js
+           └── tool_b.js
+   ```
+
+   In this example, the skill contains two Node.js scripts (`tool_a.js` and `tool_b.js`), each mapping to a tool in the original toolset.
+
+### Example: Prebuilt Configuration
+
+You can also generate skills from prebuilt toolsets:
+
+```bash
+toolbox --prebuilt alloydb-postgres-admin skills-generate \
+  --name "alloydb-postgres-admin" \
+  --description "skill for performing administrative operations on alloydb"
+```
+
+## Installing the Generated Skill in Gemini CLI
+
+Once you have generated a skill, you can install it into the Gemini CLI using the `gemini skills install` command.
+
+### Installation Command
+
+Provide the path to the directory containing the generated skill:
+
+```bash
+gemini skills install /path/to/generated-skills/my-skill
+```
+
+Alternatively, use ~/.gemini/skills as the `--output-dir` to generate the skill straight to the Gemini CLI.
+
+
 # Invoke Tools via CLI
 Learn how to invoke your tools directly from the command line using the `invoke` command.
 
@@ -6321,14 +6428,15 @@ The `invoke` command allows you to invoke tools defined in your configuration di
 1. Make sure you have the `toolbox` binary installed or built.
 2. Make sure you have a valid tool configuration file (e.g., `tools.yaml`).
 
-## Basic Usage
+### Command Usage
 
 The basic syntax for the command is:
 
 ```bash
-toolbox [--tools-file <path> | --prebuilt <name>] invoke <tool-name> [params]
+toolbox <tool-source> invoke <tool-name> [params]
 ```
 
+- `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
 - `<tool-name>`: The name of the tool you want to call. This must match the name defined in your `tools.yaml`.
 - `[params]`: (Optional) A JSON string representing the arguments for the tool.
 
@@ -6961,6 +7069,15 @@ password: ${PASSWORD}
 Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
+
+### Managed Connection Pooling
+
+Toolbox automatically supports [Managed Connection Pooling][alloydb-mcp]. If your AlloyDB instance has Managed Connection Pooling enabled, the connection will immediately benefit from increased throughput and reduced latency.
+
+The interface is identical, so there's no additional configuration required on the client. For more information on configuring your instance, see the [AlloyDB Managed Connection Pooling documentation][alloydb-mcp-docs].
+
+[alloydb-mcp]: https://cloud.google.com/blog/products/databases/alloydb-managed-connection-pooling
+[alloydb-mcp-docs]: https://cloud.google.com/alloydb/docs/configure-managed-connection-pooling
 
 ## Reference
 
@@ -8015,6 +8132,15 @@ password: ${PASSWORD}
 Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
+
+### Managed Connection Pooling
+
+Toolbox automatically supports [Managed Connection Pooling][csql-mcp]. If your Cloud SQL for PostgreSQL instance has Managed Connection Pooling enabled, the connection will immediately benefit from increased throughput and reduced latency.
+
+The interface is identical, so there's no additional configuration required on the client. For more information on configuring your instance, see the [Cloud SQL Managed Connection Pooling documentation][csql-mcp-docs].
+
+[csql-mcp]: https://docs.cloud.google.com/sql/docs/postgres/managed-connection-pooling
+[csql-mcp-docs]: https://docs.cloud.google.com/sql/docs/postgres/configure-mcp
 
 ## Reference
 
@@ -11139,6 +11265,11 @@ Tools that work with Cloud Healthcare Sources.
 
 
 
+# Cloud Logging Admin
+Tools that work with Cloud Logging Admin Sources.
+
+
+
 # Cloud Monitoring
 Tools that work with Cloud Monitoring source.
 
@@ -11427,114 +11558,6 @@ Tools that work with Valkey Sources.
 # YugabyteDB
 Tools that work with Valkey Sources.
 
-
-
-# cloud-logging-admin-list-log-names
-A "cloud-logging-admin-list-log-names" tool lists the log names in the project.
-
-
-## About
-
-The `cloud-logging-admin-list-log-names` tool lists the log names available in the Google Cloud project.
-It's compatible with the following sources:
-
-- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
-
-## Example
-
-```yaml
-kind: tools
-name: list_log_names
-type: cloud-logging-admin-list-log-names
-source: my-cloud-logging
-description: Lists all log names in the project.
-```
-
-## Reference
-
-| **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "cloud-logging-admin-list-log-names".      |
-| source      |  string  |     true     | Name of the cloud-logging-admin source.            |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
-
-### Parameters
-
-| **parameter** | **type** | **required** | **description** |
-|:--------------|:--------:|:------------:|:----------------|
-| limit | integer | false | Maximum number of log entries to return (default: 200). |
-
-
-# cloud-logging-admin-list-resource-types
-A "cloud-logging-admin-list-resource-types" tool lists the monitored resource types.
-
-
-## About
-
-The `cloud-logging-admin-list-resource-types` tool lists the monitored resource types available in Google Cloud Logging.
-It's compatible with the following sources:
-
-- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
-
-## Example
-
-```yaml
-kind: tools
-name: list_resource_types
-type: cloud-logging-admin-list-resource-types
-source: my-cloud-logging
-description: Lists monitored resource types.
-```
-
-## Reference
-
-| **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "cloud-logging-admin-list-resource-types".|
-| source      |  string  |     true     | Name of the cloud-logging-admin source.            |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
-
-
-
-# cloud-logging-admin-query-logs
-A "cloud-logging-admin-query-logs" tool queries log entries.
-
-
-## About
-
-The `cloud-logging-admin-query-logs` tool allows you to query log entries from Google Cloud Logging using the advanced logs filter syntax.
-It's compatible with the following sources:
-
-- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
-
-## Example
-
-```yaml
-kind: tools
-name: query_logs
-type: cloud-logging-admin-query-logs
-source: my-cloud-logging
-description: Queries log entries from Cloud Logging.
-```
-
-## Reference
-
-| **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "cloud-logging-admin-query-logs".          |
-| source      |  string  |     true     | Name of the cloud-logging-admin source.            |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
-
-### Parameters
-
-| **parameter** | **type** | **required** | **description** |
-|:--------------|:--------:|:------------:|:----------------|
-| filter | string | false | Cloud Logging filter query. Common fields: resource.type, resource.labels.*, logName, severity, textPayload, jsonPayload.*, protoPayload.*, labels.*, httpRequest.*. Operators: =, !=, <, <=, >, >=, :, =~, AND, OR, NOT. |
-| newestFirst | boolean | false | Set to true for newest logs first. Defaults to oldest first. |
-| startTime | string | false | Start time in RFC3339 format (e.g., 2025-12-09T00:00:00Z). Defaults to 30 days ago. |
-| endTime | string | false | End time in RFC3339 format (e.g., 2025-12-09T23:59:59Z). Defaults to now. |
-| verbose | boolean | false | Include additional fields (insertId, trace, spanId, httpRequest, labels, operation, sourceLocation). Defaults to false. |
-| limit | integer | false | Maximum number of log entries to return. Default: `200`. |
 
 
 # Prompts
@@ -13547,13 +13570,17 @@ Starting MCP inspector...
 
 
 
-# Pre and Post processing
-Pre and Post processing in GenAI applications.
+# Pre- and Post- Processing
+Intercept and modify interactions between the agent and its tools either before or after a tool is executed.
 
 
-Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user.
+Pre- and post- processing allow developers to intercept and modify interactions between the agent and its tools or the user.
 
-> **Note**: These capabilities are typically features of **orchestration frameworks** (like LangChain, LangGraph, or Agent Builder) rather than the Toolbox SDK itself. However, Toolbox tools are designed to fully leverage these framework capabilities to support robust, secure, and compliant agent architectures.
+{{< notice note >}}
+
+These capabilities are typically features of **orchestration frameworks** (like LangChain, LangGraph, or Agent Builder) rather than the Toolbox SDK itself. However, Toolbox tools are designed to fully leverage these framework capabilities to support robust, secure, and compliant agent architectures.
+
+{{< /notice >}}
 
 ## Types of Processing
 
@@ -13584,12 +13611,53 @@ Wraps individual tool executions. This is best for logic specific to a single to
 - **Scope**: Intercepts the raw inputs (arguments) to a tool and its outputs.
 - **Use Cases**: Argument validation, output formatting, specific privacy rules for sensitive tools.
 
-### Comparison with Other Levels
+### Other Levels
 
 It is helpful to understand how tool-level processing differs from other scopes:
 
 - **Model Level**: Intercepts individual calls to the LLM (prompts and responses). Unlike tool-level, this applies globally to all text sent/received, making it better for global PII redaction or token tracking.
 - **Agent Level**: Wraps the high-level execution loop (e.g., a "turn" in the conversation). Unlike tool-level, this envelopes the entire turn (user input to final response), making it suitable for session management or end-to-end auditing.
+
+
+## Samples
+
+
+# Python
+How to add pre- and post- processing to your Agents using Python.
+
+
+## Prerequisites
+
+This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart.md).
+
+This guide demonstrates how to implement these patterns in your Toolbox applications.
+
+## Implementation
+
+{{< tabpane persist=header >}}
+{{% tab header="ADK" text=true %}}
+Coming soon.
+{{% /tab %}}
+{{% tab header="Langchain" text=true %}}
+The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre- and post- processing for tool calls.
+
+```py
+{{< include "python/langchain/agent.py" >}}
+```
+
+You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks) for details on these additional hook types.
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Results
+
+The output should look similar to the following. Note that exact responses may vary due to the non-deterministic nature of LLMs and differences between orchestration frameworks.
+
+```
+AI: Booking Confirmed! You earned 500 Loyalty Points with this stay.
+
+AI: Error: Maximum stay duration is 14 days.
+```
 
 
 # Javascript
@@ -13633,34 +13701,6 @@ AI: Booking Confirmed! You earned 500 Loyalty Points with this stay.
 AI: Error: Maximum stay duration is 14 days.
 ```
 
-
-# (Python) Pre and post processing
-How to add pre and post processing to your Python toolbox applications.
-
-
-## Prerequisites
-
-This tutorial assumes that you have set up a basic toolbox application as described in the [local quickstart](../../getting-started/local_quickstart).
-
-This guide demonstrates how to implement these patterns in your Toolbox applications.
-
-## Python
-
-{{< tabpane persist=header >}}
-{{% tab header="ADK" text=true %}}
-Coming soon.
-{{% /tab %}}
-{{% tab header="Langchain" text=true %}}
-The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre and post processing for tool calls.
-
-```py
-{{< include "python/langchain/agent.py" >}}
-```
-
-For more information, see the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks).
-You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks) for details on these additional hook types.
-{{% /tab %}}
-{{< /tabpane >}}
 
 # Snowflake
 How to get started running Toolbox with MCP Inspector and Snowflake as the source.
@@ -13978,7 +14018,8 @@ This page describes the `toolbox` command-line options.
 
 ## Sub Commands
 
-### `invoke`
+<details>
+<summary><code>invoke</code></summary>
 
 Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.
 
@@ -13988,8 +14029,36 @@ Executes a tool directly with the provided parameters. This is useful for testin
 toolbox invoke <tool-name> [params]
 ```
 
-- `<tool-name>`: The name of the tool to execute (as defined in your configuration).
-- `[params]`: (Optional) A JSON string containing the parameters for the tool.
+**Arguments:**
+
+- `tool-name`: The name of the tool to execute (as defined in your configuration).
+- `params`: (Optional) A JSON string containing the parameters for the tool.
+
+For more detailed instructions, see [Invoke Tools via CLI](../how-to/invoke_tool.md).
+
+</details>
+
+<details>
+<summary><code>skills-generate</code></summary>
+
+Generates a skill package from a specified toolset. Each tool in the toolset will have a corresponding Node.js execution script in the generated skill.
+
+**Syntax:**
+
+```bash
+toolbox skills-generate --name <name> --description <description> --toolset <toolset> --output-dir <output>
+```
+
+**Flags:**
+
+- `--name`: Name of the generated skill.
+- `--description`: Description of the generated skill.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+
+For more detailed instructions, see [Generate Agent Skills](../how-to/generate_skill.md).
+
+</details>
 
 ## Examples
 
@@ -14546,6 +14615,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_project_file`: Create a new LookML file.
     *   `update_project_file`: Update an existing LookML file.
     *   `delete_project_file`: Delete a LookML file.
+    *   `validate_project`: Check the syntax of a LookML project.
     *   `get_connections`: Get the available connections in a Looker instance.
     *   `get_connection_schemas`: Get the available schemas in a connection.
     *   `get_connection_databases`: Get the available databases in a connection.
