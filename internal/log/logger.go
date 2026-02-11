@@ -16,6 +16,7 @@ package log
 
 import (
 	"context"
+	"log/slog"
 )
 
 // Logger is the interface used throughout the project for logging.
@@ -28,4 +29,7 @@ type Logger interface {
 	WarnContext(ctx context.Context, format string, args ...any)
 	// ErrorContext is for reporting errors.
 	ErrorContext(ctx context.Context, format string, args ...any)
+	// Single standard slog.Logger that routes records to the outLogger or
+	// errLogger based on log levels
+	SlogLogger() *slog.Logger
 }

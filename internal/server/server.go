@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"net/http"
 	"slices"
@@ -356,7 +355,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		Level:  logLevel,
 		Schema: schema,
 	}
-	logger := l.(*slog.Logger)
+	logger := l.SlogLogger()
 	r.Use(httplog.RequestLogger(logger, httpOpts))
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
