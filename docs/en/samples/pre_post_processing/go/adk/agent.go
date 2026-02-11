@@ -158,6 +158,7 @@ func main() {
 			StreamingMode: streamingMode,
 		})
 
+		fmt.Print("AI: ")
 		for event := range runIter {
 			if event != nil && event.LLMResponse.Content != nil {
 				for _, p := range event.LLMResponse.Content.Parts {
