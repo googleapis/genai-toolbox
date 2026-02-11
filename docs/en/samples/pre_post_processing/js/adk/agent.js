@@ -13,9 +13,7 @@ const systemPrompt = `
   Don't ask for confirmations from the user.
 `;
 
-/**
- * Pre-processing: Enforce Business Rules
- */
+// Pre-Processing
 function preProcess({tool, args}) {
   const name = tool.name;
   console.log(`POLICY CHECK: Intercepting '${name}'`);
@@ -33,9 +31,7 @@ function preProcess({tool, args}) {
   return undefined;
 }
 
-/**
- * Post-processing: Enrich Response
- */
+// Post-Processing
 function postProcess({tool, response}) {
   const name = tool.name;
   console.log(`ENRICHING RESPONSE: Intercepting '${name}'`);
@@ -82,6 +78,7 @@ export async function main() {
     description: 'Agent for hotel bookings and administration.',
     instruction: systemPrompt,
     tools: tools,
+    // Add any pre- and post- processing callbacks
     beforeToolCallback: preProcess,
     afterToolCallback: postProcess
   });
