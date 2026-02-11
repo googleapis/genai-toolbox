@@ -34,8 +34,6 @@ jobs:
 
           # (Optional) Set an output variable for subsequent steps (GitHub Actions example)
           echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
-
-    steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
