@@ -120,6 +120,7 @@ func main() {
 		Description:         "Agent to answer questions about hotels.",
 		Instruction:         systemPrompt,
 		Tools:               tools,
+		// Add pre- and post- processing hooks
 		BeforeToolCallbacks: []llmagent.BeforeToolCallback{beforeToolCallback},
 		AfterToolCallbacks:  []llmagent.AfterToolCallback{afterToolCallback},
 	})
