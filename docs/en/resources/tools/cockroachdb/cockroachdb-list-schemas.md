@@ -44,7 +44,7 @@ tools:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `kind` | string | Must be `cockroachdb-list-schemas` |
+| `type` | string | Must be `cockroachdb-list-schemas` |
 | `source` | string | Name of the CockroachDB source to use |
 | `description` | string | Human-readable description for the LLM |
 

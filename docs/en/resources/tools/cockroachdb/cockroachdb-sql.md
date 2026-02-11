@@ -47,7 +47,7 @@ tools:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `kind` | string | Must be `cockroachdb-sql` |
+| `type` | string | Must be `cockroachdb-sql` |
 | `source` | string | Name of the CockroachDB source to use |
 | `description` | string | Human-readable description of what the tool does |
 | `statement` | string | The SQL query to execute |

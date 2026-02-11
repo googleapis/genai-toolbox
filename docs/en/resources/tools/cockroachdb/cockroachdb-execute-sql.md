@@ -122,7 +122,7 @@ tools:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `kind` | string | Must be `cockroachdb-execute-sql` |
+| `type` | string | Must be `cockroachdb-execute-sql` |
 | `source` | string | Name of the CockroachDB source to use |
 | `description` | string | Human-readable description for the LLM |
 

@@ -99,7 +99,7 @@ tools:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `kind` | string | Must be `cockroachdb` |
+| `type` | string | Must be `cockroachdb` |
 | `host` | string | The hostname or IP address of the CockroachDB cluster |
 | `port` | string | The port number (typically "26257") |
 | `user` | string | The database user name |
