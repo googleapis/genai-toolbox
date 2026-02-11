@@ -115,7 +115,7 @@ pip install google-genai
 
 1. Update `my_agent/agent.py` with the following content to connect to Toolbox:
     ```py
-    {{< include "quickstart/python/adk/quickstart.py" >}}
+    {{< regionInclude "quickstart/python/adk/quickstart.py" "quickstart" >}}
     ```
     <br/>
 
