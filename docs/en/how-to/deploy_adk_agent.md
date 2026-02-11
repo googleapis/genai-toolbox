@@ -83,14 +83,11 @@ Toolbox instead of the local address.
 
 2.  Open your agent file (`my_agent/agent.py`).
 
-3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL.
+3.  Update the `ToolboxToolset` initialization to point to your Cloud Run service URL. Replace the existing initialization code with the following:
 
-    {{% alert color="info" %}}
-Since Cloud Run services are secured by default, you also need to provide an
-authentication token.
+    {{% alert color="info" title="Note" %}}
+Since Cloud Run services are secured by default, you also need to provide a workload identity.
     {{% /alert %}}
-
-    Replace your existing client initialization code with the following:
 
     ```python
     from google.adk import Agent
@@ -132,14 +129,14 @@ app = App(root_agent=root_agent, name="my_agent")
 Run the deployment command:
 
 ```bash
-make backend
+make deploy
 ```
 
 This command will build your agent's container image and deploy it to Vertex AI.
 
 ## Step 6: Test your Deployment
 
-Once the deployment command (`make backend`) completes, it will output the URL
+Once the deployment command (`make deploy`) completes, it will output the URL
 for the Agent Engine Playground. You can click on this URL to open the
 Playground in your browser and start chatting with your agent to test the tools.
 
