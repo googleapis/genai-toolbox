@@ -35,10 +35,8 @@ import (
 
 const resourceType string = "bigquery-conversational-analytics"
 
-const (
-	gdaURLFormat = "https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat"
-	gdaClientID  = "GENAI_TOOLBOX"
-)
+const gdaURLFormat = "https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat"
+const gdaClientID = "GENAI_TOOLBOX"
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
