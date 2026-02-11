@@ -24,18 +24,7 @@ module_path = f"python.{ORCH_NAME}.quickstart"
 quickstart = importlib.import_module(module_path)
 
 
-@pytest.fixture(scope="module")
-def golden_keywords():
-    """Loads expected keywords from the golden.txt file."""
-    golden_file_path = Path("../golden.txt")
-    if not golden_file_path.exists():
-        pytest.fail(f"Golden file not found: {golden_file_path}")
-    try:
-        with open(golden_file_path, 'r') as f:
-            return [line.strip() for line in f.readlines() if line.strip()]
-    except Exception as e:
-        pytest.fail(f"Could not read golden.txt: {e}")
-
+GOLDEN_KEYWORDS = ["Hilton Basel", "Hyatt Regency", "book"]
 
 # --- Execution Tests ---
 class TestExecution:
@@ -62,8 +51,8 @@ class TestExecution:
         """Test that the script runs and produces no stderr."""
         assert script_output.err == "", f"Script produced stderr: {script_output.err}"
 
-    def test_keywords_in_output(self, script_output, golden_keywords):
+    def test_keywords_in_output(self, script_output):
         """Test that expected keywords are present in the script's output."""
         output = script_output.out
-        missing_keywords = [kw for kw in golden_keywords if kw not in output]
+        missing_keywords = [kw for kw in GOLDEN_KEYWORDS if kw not in output]
         assert not missing_keywords, f"Missing keywords in output: {missing_keywords}"
