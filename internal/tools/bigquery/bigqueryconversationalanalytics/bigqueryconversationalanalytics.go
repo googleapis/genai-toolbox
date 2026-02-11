@@ -236,11 +236,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if location == "" {
 		location = "us"
 	}
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
+	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", projectID, location)
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":  "application/json",
+		"Authorization":        fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":         "application/json",
+		"X-Goog-Gda-Client-Id": "GENAI_TOOLBOX",
 	}
 
 	payload := CAPayload{
