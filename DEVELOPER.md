@@ -358,6 +358,72 @@ preview link will be automatically added as a comment to your PR.
     docker run -d toolbox:dev
     ```
 
+### Cross-Compilation
+
+To cross-compile binaries for different operating systems and architectures (e.g., Linux, macOS, Windows), this project uses [Zig](https://ziglang.org/) as a C cross-compiler to handle CGO dependencies.
+
+You can refer to the [Continuous Release Cloud Build configuration](.ci/continuous.release.cloudbuild.yaml) for the specific `zig` commands and flags used for each target.
+
+#### Prerequisites
+
+*   **Zig:** Download and extract Zig (e.g., version 0.15.2).
+*   **macOS SDK:** Required for cross-compiling to macOS.
+
+#### Build Instructions
+
+Below are examples of how to compile for different targets using Zig. Adjust `ZIG_PATH` and other paths to match your environment.
+
+**1. Windows (x86_64)**
+
+```bash
+# Example setup:
+# curl https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz --output zig.tar.xz
+# tar xfv zig.tar.xz
+
+export ZIG_PATH="$HOME/zig-x86_64-linux-0.15.2"
+export CC="$ZIG_PATH/zig cc -target x86_64-windows-gnu"
+export CXX="$ZIG_PATH/zig c++ -target x86_64-windows-gnu"
+export CGO_ENABLED=1
+
+GOOS=windows GOARCH=amd64 go build -o toolbox.exe
+```
+
+**2. Linux (x86_64)**
+
+```bash
+export ZIG_PATH="$HOME/zig-x86_64-linux-0.15.2"
+export CC="$ZIG_PATH/zig cc -target x86_64-linux-gnu"
+export CXX="$ZIG_PATH/zig c++ -target x86_64-linux-gnu"
+export CGO_ENABLED=1
+
+GOOS=linux GOARCH=amd64 go build -o toolbox-linux
+```
+
+**3. macOS (ARM64)**
+
+Requires `MacOSX14.5.sdk` (or similar) to be available locally.
+
+```bash
+export ZIG_PATH="$HOME/zig-x86_64-linux-0.15.2"
+export SDK_PATH="/path/to/MacOSX14.5.sdk"
+export MACOS_MIN_VER="10.14"
+
+export CGO_LDFLAGS="-mmacosx-version-min=$MACOS_MIN_VER --sysroot $SDK_PATH -F$SDK_PATH/System/Library/Frameworks -L/usr/lib"
+export CC="$ZIG_PATH/zig cc -mmacosx-version-min=$MACOS_MIN_VER -target aarch64-macos.11.0.0-none -isysroot $SDK_PATH -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks"
+export CXX="$ZIG_PATH/zig c++ -mmacosx-version-min=$MACOS_MIN_VER -target aarch64-macos.11.0.0-none -isysroot $SDK_PATH -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks"
+export CGO_ENABLED=1
+
+GOOS=darwin GOARCH=arm64 go build -trimpath -buildmode=pie -o toolbox-darwin-arm64
+```
+
+#### Transferring Binaries
+
+After compilation, you can transfer the binary to the target machine using `scp` or similar tools:
+
+```bash
+scp toolbox.exe user@remote-host:/path/to/destination
+```
+
 ## Developing Toolbox SDKs
 
 Refer to the [SDK developer
