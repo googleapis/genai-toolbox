@@ -21,6 +21,21 @@ jobs:
   link-check:
     runs-on: ubuntu-latest
     steps:
+      - name: Get all changed files compared to main
+        id: get_changed_files
+        shell: bash
+        run: |
+          git fetch origin main --unshallow || git fetch origin main
+
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+
+          # Print the list of changed files
+          echo "Changed files: $CHANGED_FILES"
+
+          # (Optional) Set an output variable for subsequent steps (GitHub Actions example)
+          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
