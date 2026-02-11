@@ -14,7 +14,7 @@
 
 steps:
   - name: "${_IMAGE}"
-    id: "py-pre-post-processing-test"
+    id: "go-pre-post-processing-test"
     entrypoint: "bash"
     args:
       - -c
@@ -47,7 +47,7 @@ timeout: 1200s
 
 substitutions:
   _TARGET_LANG: "go"
-  _IMAGE: "gcr.io/google.com/cloudsdktool/cloud-sdk:537.0.0"
+  _IMAGE: "golang:1.25.1"
   _TARGET_ROOT: "docs/en/samples/pre_post_processing/go"
   _TABLE_NAME: "hotels_go_pre_post_processing"
   _SQL_FILE: ".ci/sample_tests/setup_hotels.sql"
