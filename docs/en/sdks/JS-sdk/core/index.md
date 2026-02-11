@@ -143,7 +143,7 @@ Once loaded, tools behave like awaitable JS functions. You invoke them using `aw
 
 ```javascript
 const tool = await client.loadTool("my-tool")
-const result = await tool.runAsync(args: {a: 5, b: 2})
+const result = await tool({a: 5, b: 2})
 ```
 
 {{< notice tip>}}
