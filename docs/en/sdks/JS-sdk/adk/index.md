@@ -1,7 +1,7 @@
 ---
 title: "Adk"
 type: docs
-weight: 8
+weight: 9
 description: >
   MCP Toolbox ADK SDK for integrating functionalities of MCP Toolbox into your apps.
 ---
