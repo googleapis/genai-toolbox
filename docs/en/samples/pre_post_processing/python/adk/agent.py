@@ -108,6 +108,7 @@ async def main():
         model="gemini-2.5-flash",
         instruction=SYSTEM_PROMPT,
         tools=tools,
+        # add any pre and post processing callbacks
         before_tool_callback=before_tool_callback,
         after_tool_callback=after_tool_callback,
     )
