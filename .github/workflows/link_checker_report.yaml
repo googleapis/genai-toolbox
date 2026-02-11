@@ -11,10 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: Link Checker
+name: Weekly Link Check
 
 on:
-  pull_request:
+  # Run automatically every Monday at 00:00 UTC
+  schedule:
+    - cron: '0 0 * * 1'
+  # Optional: Keep this to allow manual triggering from the Actions tab
+  workflow_dispatch:
 
 
 jobs:
