@@ -1,14 +1,18 @@
 ---
-title: "Pre and Post processing"
+title: "Pre- and Post- Processing"
 type: docs
 weight: 1
 description: >
-  Pre and Post processing in GenAI applications.
+  Intercept and modify interactions between the agent and its tools either before or after a tool is executed.
 ---
 
-Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user.
+Pre- and post- processing allow developers to intercept and modify interactions between the agent and its tools or the user.
 
-> **Note**: These capabilities are typically features of **orchestration frameworks** (like LangChain, LangGraph, or Agent Builder) rather than the Toolbox SDK itself. However, Toolbox tools are designed to fully leverage these framework capabilities to support robust, secure, and compliant agent architectures.
+{{< notice note >}}
+
+These capabilities are typically features of **orchestration frameworks** (like LangChain, LangGraph, or Agent Builder) rather than the Toolbox SDK itself. However, Toolbox tools are designed to fully leverage these framework capabilities to support robust, secure, and compliant agent architectures.
+
+{{< /notice >}}
 
 ## Types of Processing
 
@@ -39,9 +43,12 @@ Wraps individual tool executions. This is best for logic specific to a single to
 - **Scope**: Intercepts the raw inputs (arguments) to a tool and its outputs.
 - **Use Cases**: Argument validation, output formatting, specific privacy rules for sensitive tools.
 
-### Comparison with Other Levels
+### Other Levels
 
 It is helpful to understand how tool-level processing differs from other scopes:
 
 - **Model Level**: Intercepts individual calls to the LLM (prompts and responses). Unlike tool-level, this applies globally to all text sent/received, making it better for global PII redaction or token tracking.
 - **Agent Level**: Wraps the high-level execution loop (e.g., a "turn" in the conversation). Unlike tool-level, this envelopes the entire turn (user input to final response), making it suitable for session management or end-to-end auditing.
+
+
+## Samples
