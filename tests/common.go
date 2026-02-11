@@ -551,6 +551,18 @@ func GetCockroachDBAuthToolInfo(tableName string) (string, string, string, []any
 	return createStatement, insertStatement, toolStatement, params
 }
 
+// GetCockroachDBWants return the expected wants for cockroachdb
+func GetCockroachDBWants() (string, string, string, string) {
+	select1Want := "[{\"?column?\":1}]"
+	// CockroachDB formats syntax errors differently than PostgreSQL:
+	// - Uses lowercase for SQL keywords in error messages
+	// - Uses format: 'at or near "token": syntax error' instead of 'syntax error at or near "TOKEN"'
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: at or near \"selec\": syntax error (SQLSTATE 42601)"}],"isError":true}}`
+	createTableStatement := `"CREATE TABLE t (id INT PRIMARY KEY, name TEXT)"`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
+	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
+}
+
 // GetMSSQLParamToolInfo returns statements and param for my-tool mssql-sql type
 func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)

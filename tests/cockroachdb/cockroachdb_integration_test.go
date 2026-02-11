@@ -154,8 +154,8 @@ func TestCockroachDB(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Get configs for tests
-	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
+	// Get configs for tests (use CockroachDB-specific expectations)
+	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetCockroachDBWants()
 
 	// Run required integration test suites (per CONTRIBUTING.md)
 	t.Run("ToolGetTest", func(t *testing.T) {
