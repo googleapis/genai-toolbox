@@ -79,7 +79,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
 {{% tab header="Claude code" lang="en" %}}
 
 1.  Install [Claude
-    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+    Code](https://docs.anthropic.com/en/docs/gents-and-tools/claude-code/overview).
 1.  Create a `.mcp.json` file in your project root if it doesn't exist.
 1.  Add the following configuration, replace the environment variables with your
     values, and save:
@@ -133,7 +133,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
-1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and
+1.  Open the [Cline](https://gihub.com/cline/cline) extension in VS Code and
     tap the **MCP Servers** icon.
 1.  Tap Configure MCP Servers to open the configuration file.
 1.  Add the following configuration, replace the environment variables with your
