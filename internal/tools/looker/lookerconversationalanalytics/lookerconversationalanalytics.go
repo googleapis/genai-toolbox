@@ -267,8 +267,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":  "application/json",
+		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":      "application/json",
+		"X-Goog-API-Client": util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -280,7 +281,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			},
 			Options: ConversationOptions{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
-		ClientIdEnum: "GENAI_TOOLBOX",
+		ClientIdEnum: util.GDAClientID,
 	}
 
 	// Call the streaming API
