@@ -155,13 +155,13 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 			// parse authenticated parameter
 			v, err = parseFromAuthService(paramAuthServices, claimsMap)
 			if err != nil {
-				return nil, util.NewClientServerError("error parsing authenticated parameter", http.StatusUnauthorized, err)
+				return nil, util.NewClientServerError(fmt.Sprintf("error parsing authenticated parameter %q", name), http.StatusUnauthorized, err)
 			}
 		}
 		if v != nil {
 			newV, err = p.Parse(v)
 			if err != nil {
-				return nil, util.NewAgentError("unable to parse value for %q)", err)
+				return nil, util.NewAgentError(fmt.Sprintf("unable to parse value for %q", name), err)
 			}
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
