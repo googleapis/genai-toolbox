@@ -242,9 +242,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
 
 	headers := map[string]string{
-		"Authorization":        fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":         "application/json",
-		"X-Goog-Gda-Client-Id": gdaClientID,
+		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":      "application/json",
+		"X-Goog-API-Client": gdaClientID,
 	}
 
 	payload := CAPayload{
