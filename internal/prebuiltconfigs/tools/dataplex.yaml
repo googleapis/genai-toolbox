@@ -30,9 +30,14 @@ tools:
     kind: dataplex-search-aspect-types
     source: dataplex-source
     description: Use this tool to find aspect types relevant to the query.
+  search_dq_scans:
+    kind: dataplex-search-dq-scans
+    source: dataplex-source
+    description: Use this tool to search for data quality scans in Dataplex.
 
 toolsets:
   dataplex_tools:
     - search_entries
     - lookup_entry
     - search_aspect_types
+    - search_dq_scans
