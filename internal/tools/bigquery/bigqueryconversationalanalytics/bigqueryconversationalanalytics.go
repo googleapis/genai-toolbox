@@ -35,6 +35,8 @@ import (
 
 const resourceType string = "bigquery-conversational-analytics"
 
+const gdaURLFormat = "https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat"
+
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
 2. **OUTPUT FORMAT:** Your entire response MUST be in plain text format ONLY.
@@ -236,11 +238,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if location == "" {
 		location = "us"
 	}
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
+	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":  "application/json",
+		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":      "application/json",
+		"X-Goog-API-Client": util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -252,7 +255,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			},
 			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
-		ClientIdEnum: "GENAI_TOOLBOX",
+		ClientIdEnum: util.GDAClientID,
 	}
 
 	// Call the streaming API
