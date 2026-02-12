@@ -329,7 +329,7 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				"id":      "prompts-get-invalid-args",
 				"error": map[string]any{
 					"code":    -32602.0,
-					"message": `invalid arguments for prompt "prompt2": unable to parse value for %q): %!q(float64=42) not type "string"`,
+					"message": `invalid arguments for prompt "prompt2": unable to parse value for "arg1": %!q(float64=42) not type "string"`,
 				},
 			},
 		},
