@@ -167,11 +167,10 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 			want:     `{"name":"op2","status":"PENDING"}`,
 		},
 		{
-			name:        "missing password for built-in user",
-			toolName:    "create-user",
-			body:        `{"project": "p1", "instance": "i1", "name": "test-user", "iamUser": false}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing password for built-in user",
+			toolName: "create-user",
+			body:     `{"project": "p1", "instance": "i1", "name": "test-user", "iamUser": false}`,
+			want:     `{"error":"missing 'password' parameter for non-IAM user"}`,
 		},
 	}
 

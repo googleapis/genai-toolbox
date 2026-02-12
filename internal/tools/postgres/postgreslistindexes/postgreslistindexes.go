@@ -17,11 +17,13 @@ package postgreslistindexes
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,49 +31,49 @@ import (
 const resourceType string = "postgres-list-indexes"
 
 const listIndexesStatement = `
-	WITH IndexDetails AS (
-		SELECT
-			s.schemaname AS schema_name,
-			t.relname AS table_name,
-			i.relname AS index_name,
-			am.amname AS index_type,
-			ix.indisunique AS is_unique,
-			ix.indisprimary AS is_primary,
-			pg_get_indexdef(i.oid) AS index_definition,
-			pg_relation_size(i.oid) AS index_size_bytes,
-			s.idx_scan AS index_scans,
-			s.idx_tup_read AS tuples_read,
-			s.idx_tup_fetch AS tuples_fetched,
-			CASE 
-				WHEN s.idx_scan > 0 THEN true 
-				ELSE false 
-			END AS is_used
-		FROM pg_catalog.pg_class t
-		JOIN pg_catalog.pg_index ix
-			ON t.oid = ix.indrelid
-		JOIN pg_catalog.pg_class i
-			ON i.oid = ix.indexrelid
-		JOIN pg_catalog.pg_am am
-			ON i.relam = am.oid
-		JOIN pg_catalog.pg_stat_all_indexes s
-			ON i.oid = s.indexrelid
-		WHERE
-			t.relkind = 'r'
-			AND s.schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-			AND s.schemaname NOT LIKE 'pg_temp_%'
-	)
-	SELECT *
-	FROM IndexDetails
-	WHERE
-		($1::text IS NULL OR schema_name LIKE '%' || $1 || '%')
-		AND ($2::text IS NULL OR table_name LIKE '%' || $2 || '%')
-		AND ($3::text IS NULL OR index_name LIKE '%' || $3 || '%')
-		AND ($4::boolean IS NOT TRUE OR is_used IS FALSE)
-	ORDER BY
-		schema_name,
-		table_name,
-		index_name
-	LIMIT COALESCE($5::int, 50);
+    WITH IndexDetails AS (
+        SELECT
+            s.schemaname AS schema_name,
+            t.relname AS table_name,
+            i.relname AS index_name,
+            am.amname AS index_type,
+            ix.indisunique AS is_unique,
+            ix.indisprimary AS is_primary,
+            pg_get_indexdef(i.oid) AS index_definition,
+            pg_relation_size(i.oid) AS index_size_bytes,
+            s.idx_scan AS index_scans,
+            s.idx_tup_read AS tuples_read,
+            s.idx_tup_fetch AS tuples_fetched,
+            CASE 
+                WHEN s.idx_scan > 0 THEN true 
+                ELSE false 
+            END AS is_used
+        FROM pg_catalog.pg_class t
+        JOIN pg_catalog.pg_index ix
+            ON t.oid = ix.indrelid
+        JOIN pg_catalog.pg_class i
+            ON i.oid = ix.indexrelid
+        JOIN pg_catalog.pg_am am
+            ON i.relam = am.oid
+        JOIN pg_catalog.pg_stat_all_indexes s
+            ON i.oid = s.indexrelid
+        WHERE
+            t.relkind = 'r'
+            AND s.schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+            AND s.schemaname NOT LIKE 'pg_temp_%'
+    )
+    SELECT *
+    FROM IndexDetails
+    WHERE
+        ($1::text IS NULL OR schema_name LIKE '%' || $1 || '%')
+        AND ($2::text IS NULL OR table_name LIKE '%' || $2 || '%')
+        AND ($3::text IS NULL OR index_name LIKE '%' || $3 || '%')
+        AND ($4::boolean IS NOT TRUE OR is_used IS FALSE)
+    ORDER BY
+        schema_name,
+        table_name,
+        index_name
+    LIMIT COALESCE($5::int, 50);
 `
 
 func init() {
@@ -101,7 +103,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -122,7 +123,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -135,7 +135,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -149,21 +148,25 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
 
-	return source.RunSQL(ctx, listIndexesStatement, sliceParams)
+	resp, err := source.RunSQL(ctx, listIndexesStatement, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
