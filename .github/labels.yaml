@@ -83,10 +83,16 @@
 - name: 'status: feedback wanted'
   color: 8befd7
   description: 'Status: waiting for feedback from community or issue author.'
-
 - name: 'status: waiting for response'
   color: 8befd7
   description: 'Status: reviewer is awaiting feedback or responses from the author before proceeding.'
+- name: 'status: need-triage'
+  color: 8befd7
+  description: 'Status: Issues that needs to be triaged by the triage automation.'
+- name: 'status: manual-triage'
+  color: 8befd7
+  description: 'Status: Issues that needs to be triaged by the maintainers.'
+
 
 - name: 'release candidate'
   color: 32CD32

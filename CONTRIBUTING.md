@@ -200,6 +200,10 @@ tools.
 
 * **(Optional) Add samples** to the `docs/en/samples/<newdb>` directory.
 
+### Updating labels
+
+* Add a `product: <source>` label in `.github/labels.yaml`
+
 ### (Optional) Adding Prebuilt Tools
 
 You can provide developers with a set of "build-time" tools to aid common
