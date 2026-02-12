@@ -17,6 +17,7 @@ package alloydbcreatecluster
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -126,7 +127,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, util.NewClientServerError("source used is not compatible with the tool", 500, err)
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http. StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
