@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	CockroachDBSourceKind = "cockroachdb"
-	CockroachDBToolKind   = "cockroachdb-sql"
+	CockroachDBSourceType = "cockroachdb"
+	CockroachDBToolType   = "cockroachdb-sql"
 	CockroachDBDatabase   = getEnvOrDefault("COCKROACHDB_DATABASE", "defaultdb")
 	CockroachDBHost       = getEnvOrDefault("COCKROACHDB_HOST", "localhost")
 	CockroachDBPort       = getEnvOrDefault("COCKROACHDB_PORT", "26257")
@@ -53,7 +53,7 @@ func getCockroachDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"type":           CockroachDBSourceKind,
+		"type":           CockroachDBSourceType,
 		"host":           CockroachDBHost,
 		"port":           CockroachDBPort,
 		"database":       CockroachDBDatabase,
@@ -128,13 +128,13 @@ func TestCockroachDB(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, CockroachDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CockroachDBToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 
 	// Add execute-sql tool with write-enabled source (CockroachDB MCP security requires explicit opt-in)
 	toolsFile = addCockroachDBExecuteSqlConfig(t, toolsFile, sourceConfig)
 
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CockroachDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CockroachDBToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

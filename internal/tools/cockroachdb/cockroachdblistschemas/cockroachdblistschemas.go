@@ -29,7 +29,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const kind string = "cockroachdb-list-schemas"
+const resourceType string = "cockroachdb-list-schemas"
 
 const listSchemasStatement = `
 	SELECT
@@ -44,8 +44,8 @@ const listSchemasStatement = `
 `
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -63,7 +63,7 @@ type compatibleSource interface {
 
 var _ compatibleSource = &cockroachdb.Source{}
 
-var compatibleSources = [...]string{cockroachdb.SourceKind}
+var compatibleSources = [...]string{cockroachdb.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -75,12 +75,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
-}
-
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -91,7 +87,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	_, ok = rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", resourceType, compatibleSources)
 	}
 
 	allParameters := parameters.Parameters{}
