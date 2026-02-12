@@ -17,11 +17,13 @@ package postgreslisttablespaces
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,29 +31,29 @@ import (
 const resourceType string = "postgres-list-tablespaces"
 
 const listTableSpacesStatement = `
-	WITH
-	tablespace_info AS (
-		SELECT
-		spcname AS tablespace_name,
-		pg_catalog.pg_get_userbyid(spcowner) AS owner_name,
-		CASE
-			WHEN pg_catalog.has_tablespace_privilege(oid, 'CREATE') THEN pg_tablespace_size(oid)
-			ELSE NULL
-			END AS size_in_bytes,
-		oid,
-		spcacl,
-		spcoptions
-		FROM
-		pg_tablespace
-	)
-	SELECT *
-	FROM
-		tablespace_info
-	WHERE
-		($1::text IS NULL OR tablespace_name LIKE '%' || $1::text || '%')
-	ORDER BY
-		tablespace_name
-	LIMIT COALESCE($2::int, 50);
+    WITH
+    tablespace_info AS (
+        SELECT
+        spcname AS tablespace_name,
+        pg_catalog.pg_get_userbyid(spcowner) AS owner_name,
+        CASE
+            WHEN pg_catalog.has_tablespace_privilege(oid, 'CREATE') THEN pg_tablespace_size(oid)
+            ELSE NULL
+            END AS size_in_bytes,
+        oid,
+        spcacl,
+        spcoptions
+        FROM
+        pg_tablespace
+    )
+    SELECT *
+    FROM
+        tablespace_info
+    WHERE
+        ($1::text IS NULL OR tablespace_name LIKE '%' || $1::text || '%')
+    ORDER BY
+        tablespace_name
+    LIMIT COALESCE($2::int, 50);
 `
 
 func init() {
@@ -81,7 +83,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -99,7 +100,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -112,7 +112,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -126,24 +125,28 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	tablespaceName, ok := paramsMap["tablespace_name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'tablespace_name' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'tablespace_name' parameter; expected a string", nil)
 	}
 	limit, ok := paramsMap["limit"].(int)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'limit' parameter; expected an integer")
+		return nil, util.NewAgentError("invalid 'limit' parameter; expected an integer", nil)
 	}
 
-	return source.RunSQL(ctx, listTableSpacesStatement, []any{tablespaceName, limit})
+	resp, err := source.RunSQL(ctx, listTableSpacesStatement, []any{tablespaceName, limit})
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

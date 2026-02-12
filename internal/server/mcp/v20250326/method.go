@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
@@ -135,7 +134,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 	if clientAuth {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
+			err := util.NewClientServerError(
+				"missing access token in the 'Authorization' header",
+				http.StatusUnauthorized,
+				nil,
+			)
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 	}
 
@@ -183,7 +187,11 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	// Check if any of the specified auth services is verified
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
-		err = fmt.Errorf("unauthorized Tool call: Please make sure your specify correct auth headers: %w", util.ErrUnauthorized)
+		err = util.NewClientServerError(
+			"unauthorized Tool call: Please make sure you specify correct auth headers",
+			http.StatusUnauthorized,
+			nil,
+		)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
@@ -205,31 +213,45 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	if err != nil {
-		errStr := err.Error()
-		// Missing authService tokens.
-		if errors.Is(err, util.ErrUnauthorized) {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-		}
-		// Upstream auth error
-		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
-			if clientAuth {
-				// Error with client credentials should pass down to the client
-				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		var tbErr util.ToolboxError
+
+		if errors.As(err, &tbErr) {
+			switch tbErr.Category() {
+			case util.CategoryAgent:
+				// MCP - Tool execution error
+				// Return SUCCESS but with IsError: true
+				text := TextContent{
+					Type: "text",
+					Text: err.Error(),
+				}
+				return jsonrpc.JSONRPCResponse{
+					Jsonrpc: jsonrpc.JSONRPC_VERSION,
+					Id:      id,
+					Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+				}, nil
+
+			case util.CategoryServer:
+				// MCP Spec - Protocol error
+				// Return JSON-RPC ERROR
+				var clientServerErr *util.ClientServerError
+				rpcCode := jsonrpc.INTERNAL_ERROR // Default to Internal Error (-32603)
+
+				if errors.As(err, &clientServerErr) {
+					if clientServerErr.Code == http.StatusUnauthorized || clientServerErr.Code == http.StatusForbidden {
+						if clientAuth {
+							rpcCode = jsonrpc.INVALID_REQUEST
+						} else {
+							rpcCode = jsonrpc.INTERNAL_ERROR
+						}
+					}
+				}
+				return jsonrpc.NewError(id, rpcCode, err.Error(), nil), err
 			}
-			// Auth error with ADC should raise internal 500 error
+		} else {
+			// Unknown error -> 500
 			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 		}
-		text := TextContent{
-			Type: "text",
-			Text: err.Error(),
-		}
-		return jsonrpc.JSONRPCResponse{
-			Jsonrpc: jsonrpc.JSONRPC_VERSION,
-			Id:      id,
-			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
-		}, nil
 	}
-
 	content := make([]TextContent, 0)
 
 	sliceRes, ok := results.([]any)

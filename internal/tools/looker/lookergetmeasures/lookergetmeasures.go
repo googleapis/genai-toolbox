@@ -16,6 +16,7 @@ package lookergetmeasures
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -109,25 +110,25 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	model, explore, err := lookercommon.ProcessFieldArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("error processing model or explore: %w", err)
+		return nil, util.NewAgentError(fmt.Sprintf("error processing model or explore: %v", err), err)
 	}
 
 	fields := lookercommon.MeasuresFields
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error getting sdk: %v", err), http.StatusInternalServerError, err)
 	}
 	req := v4.RequestLookmlModelExplore{
 		LookmlModelName: *model,
@@ -136,16 +137,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	resp, err := sdk.LookmlModelExplore(req, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making get_measures request: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error making get_measures request: %v", err), http.StatusInternalServerError, err)
 	}
 
 	if err := lookercommon.CheckLookerExploreFields(&resp); err != nil {
-		return nil, fmt.Errorf("error processing get_measures response: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error processing get_measures response: %v", err), http.StatusInternalServerError, err)
 	}
 
 	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Measures, source.LookerShowHiddenFields())
 	if err != nil {
-		return nil, fmt.Errorf("error extracting get_measures response: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error extracting get_measures response: %v", err), http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "data = ", data)
 

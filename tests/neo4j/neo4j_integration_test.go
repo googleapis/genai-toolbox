@@ -287,25 +287,37 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:               "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
-			api:                "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "unable to execute query",
+			name:        "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "unable to execute query") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
-			name:               "invoke readonly tool with write query",
-			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+			name:        "invoke readonly tool with write query",
+			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
-			name:               "invoke readonly tool with write query and dry_run",
-			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+			name:        "invoke readonly tool with write query and dry_run",
+			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
 			name:        "invoke my-schema-tool",
