@@ -216,7 +216,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 		}
 		// no responses for notifications
 		if res != nil {
-			if err = s.write(ctx, res); err != nil {
+			if err = s.write(msgCtx, res); err != nil {
 				return err
 			}
 		}
@@ -578,12 +578,6 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	)
 	defer span.End()
 
-	// Check if message is a notification
-	if baseMessage.Id == nil {
-		err := mcp.NotificationHandler(ctx, body)
-		return "", nil, err
-	}
-
 	// Determine network transport and protocol based on header presence
 	networkTransport := "pipe" // default for stdio
 	networkProtocolName := "stdio"
@@ -617,6 +611,15 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 	// Set toolset name
 	span.SetAttributes(attribute.String("toolset.name", toolsetName))
+
+	// Check if message is a notification
+	if baseMessage.Id == nil {
+		err := mcp.NotificationHandler(ctx, body)
+		if err != nil {
+			span.SetStatus(codes.Error, err.Error())
+		}
+		return "", nil, err
+	}
 
 	// Process the method
 	switch baseMessage.Method {
