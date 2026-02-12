@@ -13146,7 +13146,7 @@ Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-pytho
 
 
 # Adk
-MCP Toolbox ADK SDK for integrating functionalities of MCP Toolbox into your apps.
+MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your ADK apps.
 
 
 ## Overview
@@ -13156,7 +13156,7 @@ The `toolbox-adk` package provides a Python interface to the MCP Toolbox service
 ## Installation
 
 ```bash
-pip install toolbox-adk
+pip install google-adk[toolbox]
 ```
 
 ## Usage
@@ -13164,11 +13164,11 @@ pip install toolbox-adk
 The primary entry point is the `ToolboxToolset`, which loads tools from a remote Toolbox server and adapts them for use with ADK agents.
 
 {{< notice note>}}
-The `ToolboxToolset` in this package mirrors the `ToolboxToolset` in the [`adk-python`](https://github.com/google/adk-python) package. The `adk-python` version is a shim that delegates all functionality to this implementation.
+> This package contains the core implementation of the `ToolboxToolset`. The `ToolboxToolset` provided in the [`google-adk`](https://github.com/google/adk-python/blob/758d337c76d877e3174c35f06551cc9beb1def06/src/google/adk/tools/toolbox_toolset.py#L35) package is a shim that simply delegates all functionality to this implementation.
 {{< /notice >}}
 
 ```python
-from toolbox_adk import ToolboxToolset
+from google.adk.tools.toolbox_toolset import ToolboxToolset
 from google.adk.agents import Agent
 
 # Create the Toolset
