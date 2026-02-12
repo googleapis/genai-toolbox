@@ -1,5 +1,5 @@
 ---
-title: "Adk"
+title: "ADK"
 type: docs
 weight: 8
 description: >
@@ -21,7 +21,7 @@ pip install google-adk[toolbox]
 The primary entry point is the `ToolboxToolset`, which loads tools from a remote Toolbox server and adapts them for use with ADK agents.
 
 {{< notice note>}}
-> This package contains the core implementation of the `ToolboxToolset`. The `ToolboxToolset` provided in the [`google-adk`](https://github.com/google/adk-python/blob/758d337c76d877e3174c35f06551cc9beb1def06/src/google/adk/tools/toolbox_toolset.py#L35) package is a shim that simply delegates all functionality to this implementation.
+This package contains the core implementation of the `ToolboxToolset`. The `ToolboxToolset` provided in the [`google-adk`](https://github.com/google/adk-python/blob/758d337c76d877e3174c35f06551cc9beb1def06/src/google/adk/tools/toolbox_toolset.py#L35) package is a shim that simply delegates all functionality to this implementation.
 {{< /notice >}}
 
 ```python
@@ -242,38 +242,5 @@ toolset = ToolboxToolset(
         "region": "us-central1",
         "api_key": lambda: get_api_key() # Can be a callable
     }
-)
-```
-
-### Usage with Hooks
-
-You can attach `pre_hook` and `post_hook` functions to execute logic before and after every tool invocation.
-
-{{< notice note>}}
- The `pre_hook` can modify `context.arguments` to dynamically alter the inputs passed to the tool.
-{{< /notice >}}
-
-```python
-from google.adk.tools.tool_context import ToolContext
-from typing import Any, Dict, Optional
-
-async def log_start(context: ToolContext, args: Dict[str, Any]):
-    print(f"Starting tool with args: {args}")
-    # context is the ADK ToolContext
-    # Example: Inject or modify arguments
-    # args["user_id"] = "123"
-
-async def log_end(context: ToolContext, args: Dict[str, Any], result: Optional[Any], error: Optional[Exception]):
-    print("Finished tool execution")
-    # Inspect result or error
-    if error:
-        print(f"Tool failed: {error}")
-    else:
-        print(f"Tool succeeded with result: {result}")
-
-toolset = ToolboxToolset(
-    server_url="...",
-    pre_hook=log_start,
-    post_hook=log_end
 )
 ```
