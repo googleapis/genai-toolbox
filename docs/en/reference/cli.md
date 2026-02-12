@@ -28,6 +28,7 @@ description: >
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
+|              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                        | `0`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Sub Commands
@@ -135,6 +136,16 @@ used at a time.
 
 Toolbox enables dynamic reloading by default. To disable, use the
 `--disable-reload` flag.
+
+Use the `--polling-interval` flag to manually detect configuration file updates.
+When the polling interval is `0`, the polling system is disabled.
+
+{{< notice tip >}}
+FOr polling to be effective when running Kubernetes, PersistentVolume or
+StorageClass must be set to refresh attributes rapidly by setting `actimeo=1`.
+Actimeo setting determines the duration for which a client trusts its local
+cache for file attributes.
+{{< /notice >}}
 
 ### Toolbox UI
 

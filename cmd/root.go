@@ -125,6 +125,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	// TODO: Insecure by default. Might consider updating this for v1.0.0
 	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
@@ -195,8 +196,22 @@ func validateReloadEdits(
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
+// Helper to check if a file has a newer ModTime than stored in the map
+func checkModTime(path string, lastSeen map[string]time.Time) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	mTime := info.ModTime()
+	if mTime.After(lastSeen[path]) {
+		lastSeen[path] = mTime
+		return true
+	}
+	return false
+}
+
 // watchChanges checks for changes in the provided yaml tools file(s) or folder.
-func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server) {
+func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -210,6 +225,17 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 	defer w.Close()
 
+	var pollTickerChan <-chan time.Time
+	if pollTickerSecond > 0 {
+		ticker := time.NewTicker(time.Duration(pollTickerSecond) * time.Second)
+		defer ticker.Stop()
+		pollTickerChan = ticker.C // Assign the channel
+		logger.DebugContext(ctx, fmt.Sprintf("NFS polling enabled every %v", pollTickerSecond))
+	} else {
+		logger.DebugContext(ctx, "NFS polling disabled (interval is 0)")
+	}
+
+	lastSeen := make(map[string]time.Time)
 	watchingFolder := false
 	var folderToWatch string
 
@@ -248,6 +274,37 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 		case <-ctx.Done():
 			logger.DebugContext(ctx, "file watcher context cancelled")
 			return
+		case <-pollTickerChan:
+			changed := false
+			if watchingFolder {
+				// Scan directory for any .yaml/.yml file changes
+				files, err := os.ReadDir(folderToWatch)
+				if err != nil {
+					logger.WarnContext(ctx, "error reading tools folder %s", err)
+					continue
+				}
+				for _, f := range files {
+					if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
+						fullPath := filepath.Join(folderToWatch, f.Name())
+						if checkModTime(fullPath, lastSeen) {
+							changed = true
+						}
+					}
+				}
+			} else {
+				files := slices.Collect(maps.Keys(watchedFiles))
+				// Check specific files in watchedFiles map
+				for _, f := range files {
+					if checkModTime(f, lastSeen) {
+						changed = true
+					}
+				}
+			}
+			if changed {
+				logger.DebugContext(ctx, "NFS remote change detected via polling")
+				// once this timer runs out, it will trigger debounce.C
+				debounce.Reset(debounceDelay)
+			}
 		case err, ok := <-w.Errors:
 			if !ok {
 				logger.WarnContext(ctx, "file watcher was closed unexpectedly")
@@ -417,7 +474,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	if isCustomConfigured && !opts.Cfg.DisableReload {
 		watchDirs, watchedFiles := resolveWatcherInputs(opts.ToolsFile, opts.ToolsFiles, opts.ToolsFolder)
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
-		go watchChanges(ctx, watchDirs, watchedFiles, s)
+		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled
