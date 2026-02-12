@@ -1,0 +1,77 @@
+// Copyright 2026 Google LLC
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package util
+
+import "fmt"
+
+type ErrorCategory string
+
+const (
+	CategoryAgent  ErrorCategory = "AGENT_ERROR"
+	CategoryServer ErrorCategory = "SERVER_ERROR"
+)
+
+// ToolboxError is the interface all custom errors must satisfy
+type ToolboxError interface {
+	error
+	Category() ErrorCategory
+	Error() string
+	Unwrap() error
+}
+
+// Agent Errors return 200 to the sender
+type AgentError struct {
+	Msg   string
+	Cause error
+}
+
+var _ ToolboxError = &AgentError{}
+
+func (e *AgentError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %v", e.Msg, e.Cause)
+	}
+	return e.Msg
+}
+
+func (e *AgentError) Category() ErrorCategory { return CategoryAgent }
+
+func (e *AgentError) Unwrap() error { return e.Cause }
+
+func NewAgentError(msg string, cause error) *AgentError {
+	return &AgentError{Msg: msg, Cause: cause}
+}
+
+// ClientServerError returns 4XX/5XX error code
+type ClientServerError struct {
+	Msg   string
+	Code  int
+	Cause error
+}
+
+var _ ToolboxError = &ClientServerError{}
+
+func (e *ClientServerError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %v", e.Msg, e.Cause)
+	}
+	return e.Msg
+}
+
+func (e *ClientServerError) Category() ErrorCategory { return CategoryServer }
+
+func (e *ClientServerError) Unwrap() error { return e.Cause }
+
+func NewClientServerError(msg string, code int, cause error) *ClientServerError {
+	return &ClientServerError{Msg: msg, Code: code, Cause: cause}
+}
