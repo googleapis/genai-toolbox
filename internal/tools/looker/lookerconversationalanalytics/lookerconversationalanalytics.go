@@ -215,10 +215,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	var tokenStr string
@@ -226,11 +226,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Get credentials for the API call
 	// Use cloud-platform token source for Gemini Data Analytics API
 	if t.TokenSource == nil {
-		return nil, fmt.Errorf("cloud-platform token source is missing")
+		return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
 	}
 	token, err := t.TokenSource.Token()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
+		return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
 	}
 	tokenStr = token.AccessToken
 
@@ -286,7 +286,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Call the streaming API
 	response, err := getStream(ctx, caURL, payload, headers)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
+		return nil, util.NewClientServerError("failed to get response from conversational analytics API", http.StatusInternalServerError, err)
 	}
 
 	return response, nil

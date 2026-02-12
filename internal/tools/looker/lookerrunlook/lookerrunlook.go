@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -115,15 +116,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "params = ", params)
 	paramsMap := params.AsMap()
@@ -134,12 +135,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	look, err := sdk.Look(look_id, "", source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error getting look definition: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	wq := v4.WriteQuery{
@@ -155,14 +156,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	resp, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making run_look request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = ", resp)
 
 	var data []any
 	e := json.Unmarshal([]byte(resp), &data)
 	if e != nil {
-		return nil, fmt.Errorf("error Unmarshaling run_look response: %s", e)
+		return nil, util.NewClientServerError("error Unmarshaling run_look response", http.StatusInternalServerError, e)
 	}
 
 	logger.DebugContext(ctx, "data = ", data)
