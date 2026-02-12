@@ -3023,12 +3023,23 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
 			}
 
-			if tc.isErr && (resultStr == "" || resultStr == "[]" || strings.Contains(resultStr, `"error":`)) {
+			var errorCheck map[string]any
+			if err := json.Unmarshal([]byte(resultStr), &errorCheck); err == nil {
+				if _, hasError := errorCheck["error"]; hasError {
+					if tc.isErr {
+						return
+					}
+					t.Fatalf("unexpected error object in result: %s", resultStr)
+				}
+			}
+
+			if tc.isErr && (resultStr == "" || resultStr == "[]") {
 				return
 			}
-			var entries []interface{}
+
+			var entries []any
 			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
-				t.Fatalf("error unmarshalling result string: %v", err)
+				t.Fatalf("error unmarshalling result string: %v. Raw string: %s", err, resultStr)
 			}
 
 			if !tc.isErr {
