@@ -17,11 +17,13 @@ package postgreslisttablestats
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,7 +31,7 @@ import (
 const resourceType string = "postgres-list-table-stats"
 
 const listTableStats = `
-	WITH table_stats AS (
+    WITH table_stats AS (
         SELECT
             s.schemaname AS schema_name,
             s.relname AS table_name,
@@ -102,7 +104,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -121,19 +122,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	if cfg.Description == "" {
 		cfg.Description = `Lists the user table statistics in the database ordered by number of
-		sequential scans with a default limit of 50 rows. Returns the following
-		columns: schema name, table name, table size in bytes, number of
-		sequential scans, number of index scans, idx_scan_ratio_percent (showing
-		the percentage of total scans that utilized an index, where a low ratio
-		indicates missing or ineffective indexes), number of live rows, number
-		of dead rows, dead_row_ratio_percent (indicating potential table bloat),
-		total number of rows inserted, updated, and deleted, the timestamps
-		for the last_vacuum, last_autovacuum, and last_autoanalyze operations.`
+        sequential scans with a default limit of 50 rows. Returns the following
+        columns: schema name, table name, table size in bytes, number of
+        sequential scans, number of index scans, idx_scan_ratio_percent (showing
+        the percentage of total scans that utilized an index, where a low ratio
+        indicates missing or ineffective indexes), number of live rows, number
+        of dead rows, dead_row_ratio_percent (indicating potential table bloat),
+        total number of rows inserted, updated, and deleted, the timestamps
+        for the last_vacuum, last_autovacuum, and last_autoanalyze operations.`
 	}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -146,7 +146,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -160,21 +159,25 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
 
-	return source.RunSQL(ctx, listTableStats, sliceParams)
+	resp, err := source.RunSQL(ctx, listTableStats, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

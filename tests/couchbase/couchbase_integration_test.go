@@ -137,7 +137,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"$1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"$1\":1}"}]}}`
 	tmplSelectId1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
 	selectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
