@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
@@ -152,25 +153,25 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast sql parameter %s", paramsMap["sql"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast sql parameter %s", paramsMap["sql"]), nil)
 	}
 	dryRun, ok := paramsMap["dry_run"].(bool)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast dry_run parameter %s", paramsMap["dry_run"]), nil)
 	}
 
 	bqClient, restService, err := source.RetrieveClientAndService(accessToken)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
 
 	var connProps []*bigqueryapi.ConnectionProperty
@@ -178,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.BigQueryWriteMode() == bigqueryds.WriteModeProtected {
 		session, err = source.BigQuerySession()(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get BigQuery session for protected mode: %w", err)
+			return nil, util.NewClientServerError("failed to get BigQuery session for protected mode", http.StatusInternalServerError, err)
 		}
 		connProps = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},
@@ -187,7 +188,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps)
 	if err != nil {
-		return nil, fmt.Errorf("query validation failed: %w", err)
+		return nil, util.NewClientServerError("query validation failed", http.StatusInternalServerError, err)
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
@@ -195,13 +196,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	switch source.BigQueryWriteMode() {
 	case bigqueryds.WriteModeBlocked:
 		if statementType != "SELECT" {
-			return nil, fmt.Errorf("write mode is 'blocked', only SELECT statements are allowed")
+			return nil, util.NewAgentError("write mode is 'blocked', only SELECT statements are allowed", nil)
 		}
 	case bigqueryds.WriteModeProtected:
 		if dryRunJob.Configuration != nil && dryRunJob.Configuration.Query != nil {
 			if dest := dryRunJob.Configuration.Query.DestinationTable; dest != nil && dest.DatasetId != session.DatasetID {
-				return nil, fmt.Errorf("protected write mode only supports SELECT statements, or write operations in the anonymous "+
-					"dataset of a BigQuery session, but destination was %q", dest.DatasetId)
+				return nil, util.NewAgentError(fmt.Sprintf("protected write mode only supports SELECT statements, or write operations in the anonymous "+
+					"dataset of a BigQuery session, but destination was %q", dest.DatasetId), nil)
 			}
 		}
 	}
@@ -209,11 +210,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if len(source.BigQueryAllowedDatasets()) > 0 {
 		switch statementType {
 		case "CREATE_SCHEMA", "DROP_SCHEMA", "ALTER_SCHEMA":
-			return nil, fmt.Errorf("dataset-level operations like '%s' are not allowed when dataset restrictions are in place", statementType)
+			return nil, util.NewAgentError(fmt.Sprintf("dataset-level operations like '%s' are not allowed when dataset restrictions are in place", statementType), nil)
 		case "CREATE_FUNCTION", "CREATE_TABLE_FUNCTION", "CREATE_PROCEDURE":
-			return nil, fmt.Errorf("creating stored routines ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType)
+			return nil, util.NewAgentError(fmt.Sprintf("creating stored routines ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType), nil)
 		case "CALL":
-			return nil, fmt.Errorf("calling stored procedures ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType)
+			return nil, util.NewAgentError(fmt.Sprintf("calling stored procedures ('%s') is not allowed when dataset restrictions are in place, as their contents cannot be safely analyzed", statementType), nil)
 		}
 
 		// Use a map to avoid duplicate table names.
@@ -244,7 +245,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			parsedTables, parseErr := bqutil.TableParser(sql, source.BigQueryClient().Project())
 			if parseErr != nil {
 				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.
-				return nil, fmt.Errorf("could not parse tables from query to validate against allowed datasets: %w", parseErr)
+				return nil, util.NewAgentError("could not parse tables from query to validate against allowed datasets", parseErr)
 			}
 			tableNames = parsedTables
 		}
@@ -254,7 +255,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			if len(parts) == 3 {
 				projectID, datasetID := parts[0], parts[1]
 				if !source.IsDatasetAllowed(projectID, datasetID) {
-					return nil, fmt.Errorf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID)
+					return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID), nil)
 				}
 			}
 		}
@@ -264,7 +265,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if dryRunJob != nil {
 			jobJSON, err := json.MarshalIndent(dryRunJob, "", "  ")
 			if err != nil {
-				return nil, fmt.Errorf("failed to marshal dry run job to JSON: %w", err)
+				return nil, util.NewClientServerError("failed to marshal dry run job to JSON", http.StatusInternalServerError, err)
 			}
 			return string(jobJSON), nil
 		}
@@ -275,10 +276,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
-	return source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps)
+	resp, err := source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps)
+	if err != nil {
+		return nil, util.NewClientServerError("error running sql", http.StatusInternalServerError, err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

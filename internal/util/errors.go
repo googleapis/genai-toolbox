@@ -12,7 +12,14 @@
 // limitations under the License.
 package util
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"google.golang.org/api/googleapi"
+)
 
 type ErrorCategory string
 
@@ -52,6 +59,8 @@ func NewAgentError(msg string, cause error) *AgentError {
 	return &AgentError{Msg: msg, Cause: cause}
 }
 
+var _ ToolboxError = &AgentError{}
+
 // ClientServerError returns 4XX/5XX error code
 type ClientServerError struct {
 	Msg   string
@@ -74,4 +83,58 @@ func (e *ClientServerError) Unwrap() error { return e.Cause }
 
 func NewClientServerError(msg string, code int, cause error) *ClientServerError {
 	return &ClientServerError{Msg: msg, Code: code, Cause: cause}
+}
+
+// ProcessGcpError catches auth related errors in GCP requests results and return 401/403 error codes
+// Returns AgentError for all other errors
+func ProcessGcpError(err error) ToolboxError {
+	var gErr *googleapi.Error
+	if errors.As(err, &gErr) {
+		if gErr.Code == 401 {
+			return NewClientServerError(
+				"failed to access GCP resource",
+				http.StatusUnauthorized,
+				err,
+			)
+		}
+		if gErr.Code == 403 {
+			return NewClientServerError(
+				"failed to access GCP resource",
+				http.StatusForbidden,
+				err,
+			)
+		}
+	}
+	return NewAgentError("error processing GCP request", err)
+}
+
+// ProcessGeneralError handles generic errors by inspecting the error string
+// for common status code patterns.
+func ProcessGeneralError(err error) ToolboxError {
+	if err == nil {
+		return nil
+	}
+
+	errStr := err.Error()
+
+	// Check for Unauthorized
+	if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "status 401") {
+		return NewClientServerError(
+			"failed to access resource",
+			http.StatusUnauthorized,
+			err,
+		)
+	}
+
+	// Check for Forbidden
+	if strings.Contains(errStr, "Error 403") || strings.Contains(errStr, "status 403") {
+		return NewClientServerError(
+			"failed to access resource",
+			http.StatusForbidden,
+			err,
+		)
+	}
+
+	// Default to AgentError for logical failures (task execution failed)
+	return NewAgentError("error processing request", err)
 }
