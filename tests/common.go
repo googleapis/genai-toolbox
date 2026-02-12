@@ -557,7 +557,7 @@ func GetCockroachDBWants() (string, string, string, string) {
 	// CockroachDB formats syntax errors differently than PostgreSQL:
 	// - Uses lowercase for SQL keywords in error messages
 	// - Uses format: 'at or near "token": syntax error' instead of 'syntax error at or near "TOKEN"'
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: at or near \"selec\": syntax error (SQLSTATE 42601)"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: ERROR: at or near \"selec\": syntax error (SQLSTATE 42601)"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
