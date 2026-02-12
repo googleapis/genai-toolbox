@@ -34,14 +34,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "cockroachdb"
 const SourceType string = "cockroachdb"
 
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -94,10 +93,6 @@ type Config struct {
 	ClusterID        string `yaml:"clusterID"`        // Optional cluster identifier for telemetry
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
-}
-
 func (r Config) SourceConfigType() string {
 	return SourceType
 }
@@ -125,10 +120,6 @@ var _ sources.Source = &Source{}
 type Source struct {
 	Config
 	Pool *pgxpool.Pool
-}
-
-func (s *Source) SourceKind() string {
-	return SourceKind
 }
 
 func (s *Source) SourceType() string {
@@ -379,7 +370,7 @@ func (s *Source) EmitTelemetry(ctx context.Context, event TelemetryEvent) {
 
 func initCockroachDBConnectionPoolWithRetry(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, maxRetries int, baseDelay time.Duration) (*pgxpool.Pool, error) {
 	//nolint:all
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)
