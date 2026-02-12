@@ -2071,6 +2071,7 @@ func TestPrebuiltTools(t *testing.T) {
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
 	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
+	lookeradmin_config, _ := prebuiltconfigs.Get("looker-admin")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -2381,6 +2382,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"looker_conversational_analytics_tools": tools.ToolsetConfig{
 					Name:      "looker_conversational_analytics_tools",
 					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
+				},
+			},
+		},
+		{
+			name: "looker-admin prebuilt tools",
+			in:   lookeradmin_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_admin_tools": tools.ToolsetConfig{
+					Name:      "looker_admin_tools",
+					ToolNames: []string{"search_permission_sets"},
 				},
 			},
 		},

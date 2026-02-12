@@ -257,6 +257,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"search_permission_sets": map[string]any{
+				"type":        "looker-search-permission-sets",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -1710,6 +1715,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
 	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)
+
+	wantResult = "Admin"
+	tests.RunToolInvokeParametersTest(t, "search_permission_sets", []byte(`{"name": "Admin"}`), wantResult)
 
 	runConversationalAnalytics(t, "system__activity", "content_usage")
 
