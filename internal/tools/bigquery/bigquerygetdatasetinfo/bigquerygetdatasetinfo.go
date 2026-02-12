@@ -146,7 +146,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if !source.IsDatasetAllowed(projectId, datasetId) {
-		return nil, util.NewClientServerError(fmt.Sprintf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId), http.StatusInternalServerError, nil)
+		return nil, util.NewAgentError(fmt.Sprintf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId), nil)
 	}
 
 	dsHandle := bqClient.DatasetInProject(projectId, datasetId)
