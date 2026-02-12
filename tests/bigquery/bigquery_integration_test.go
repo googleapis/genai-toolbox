@@ -1166,8 +1166,8 @@ func runBigQueryWriteModeBlockedTest(t *testing.T, tableNameParam, datasetName s
 		wantResult     string
 	}{
 		{"SELECT statement should succeed", fmt.Sprintf("SELECT id, name FROM %s WHERE id = 1", tableNameParam), http.StatusOK, "", `[{"id":1,"name":"Alice"}]`},
-		{"INSERT statement should fail", fmt.Sprintf("INSERT INTO %s (id, name) VALUES (10, 'test')", tableNameParam), http.StatusBadRequest, "write mode is 'blocked', only SELECT statements are allowed", ""},
-		{"CREATE TABLE statement should fail", fmt.Sprintf("CREATE TABLE %s.new_table (x INT64)", datasetName), http.StatusBadRequest, "write mode is 'blocked', only SELECT statements are allowed", ""},
+		{"INSERT statement should fail", fmt.Sprintf("INSERT INTO %s (id, name) VALUES (10, 'test')", tableNameParam), http.StatusOK, "write mode is 'blocked', only SELECT statements are allowed", ""},
+		{"CREATE TABLE statement should fail", fmt.Sprintf("CREATE TABLE %s.new_table (x INT64)", datasetName), http.StatusOK, "write mode is 'blocked', only SELECT statements are allowed", ""},
 	}
 
 	for _, tc := range testCases {
@@ -1710,7 +1710,8 @@ func runBigQueryDataTypeTests(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-scalar-datatype-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"int_val": 123}`)),
-			isErr:         true,
+			want:          `{\"error\":\"parameter \\\"string_val\\\" is required\"}`,
+			isErr:         false,
 		},
 		{
 			name:          "invoke my-array-datatype-tool",
@@ -2931,7 +2932,7 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			isErr:         false,
 		},
 		{
 			name:          "invoke my-search-catalog-tool",

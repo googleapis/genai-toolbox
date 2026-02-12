@@ -104,26 +104,27 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", 500, err)
 	}
 
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+		return nil, util.NewAgentError(fmt.Sprintf("parameter 'sql' is required, unable to cast %v", paramsMap["sql"]), nil)
 	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", 500, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", t.Type, sql))
 
 	results, err := source.Query(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, util.ProcessGeneralError(fmt.Errorf("unable to execute query: %w", err))
 	}
 	defer results.Close()
 
@@ -133,7 +134,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for results.Next() {
 		v, err := results.Values()
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
+			return nil, util.NewClientServerError("unable to parse row", 500, err)
 		}
 		row := orderedmap.Row{}
 		for i, f := range fields {
@@ -143,14 +144,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, util.ProcessGeneralError(fmt.Errorf("error during row iteration: %w", err))
 	}
 
 	return out, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, params parameters.ParamValues, models map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
