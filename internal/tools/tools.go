@@ -17,6 +17,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"slices"
 	"strings"
 
@@ -80,13 +81,13 @@ type AccessToken string
 func (token AccessToken) ParseBearerToken() (string, error) {
 	headerParts := strings.Split(string(token), " ")
 	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
-		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>': %w", util.ErrUnauthorized)
+		return "", util.NewClientServerError("authorization header must be in the format 'Bearer <token>'", http.StatusUnauthorized, nil)
 	}
 	return headerParts[1], nil
 }
 
 type Tool interface {
-	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, error)
+	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
