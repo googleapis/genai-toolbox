@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.27.0](https://github.com/googleapis/genai-toolbox/compare/v0.26.0...v0.27.0) (2026-02-13)
+## [0.27.0](https://github.com/googleapis/genai-toolbox/compare/v0.26.0...v0.27.0) (2026-02-12)
 
 
 ### ⚠ BREAKING CHANGES
