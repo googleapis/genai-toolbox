@@ -354,6 +354,7 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 		})
 	}
 }
+
 func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateManyWant string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -385,8 +386,8 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 			api:           "http://127.0.0.1:5000/api/tool/my-read-only-aggregate-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
-			want:          "",
-			isErr:         true,
+			want:          `{"error":"error processing request: this is not a read-only pipeline: {\"$out\":\"target_collection\"}"}`,
+			isErr:         false,
 		},
 		{
 			name:          "invoke my-read-write-aggregate-tool",

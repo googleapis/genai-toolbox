@@ -17,11 +17,13 @@ package postgreslistpublicationtables
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,33 +31,33 @@ import (
 const resourceType string = "postgres-list-publication-tables"
 
 const listPublicationTablesStatement = `
-	WITH
-	publication_details AS (
-		SELECT
-			pt.pubname AS publication_name,
-			pt.schemaname AS schema_name,
-			pt.tablename AS table_name,
-			-- Definition details
-			p.puballtables AS publishes_all_tables,
-			p.pubinsert AS publishes_inserts,
-			p.pubupdate AS publishes_updates,
-			p.pubdelete AS publishes_deletes,
-			p.pubtruncate AS publishes_truncates,
-			-- Owner information
-			pg_catalog.pg_get_userbyid(p.pubowner) AS publication_owner
-		FROM pg_catalog.pg_publication_tables pt
-		JOIN pg_catalog.pg_publication p
-			ON pt.pubname = p.pubname
-	)
-	SELECT *
-	FROM publication_details
-	WHERE
-		(NULLIF(TRIM($1::text), '') IS NULL OR table_name = ANY(regexp_split_to_array(TRIM($1::text), '\s*,\s*')))
-    	AND (NULLIF(TRIM($2::text), '') IS NULL OR publication_name = ANY(regexp_split_to_array(TRIM($2::text), '\s*,\s*')))
-	    AND (NULLIF(TRIM($3::text), '') IS NULL OR schema_name = ANY(regexp_split_to_array(TRIM($3::text), '\s*,\s*')))
-	ORDER BY
-		publication_name, schema_name, table_name
-	LIMIT COALESCE($4::int, 50);
+    WITH
+    publication_details AS (
+        SELECT
+            pt.pubname AS publication_name,
+            pt.schemaname AS schema_name,
+            pt.tablename AS table_name,
+            -- Definition details
+            p.puballtables AS publishes_all_tables,
+            p.pubinsert AS publishes_inserts,
+            p.pubupdate AS publishes_updates,
+            p.pubdelete AS publishes_deletes,
+            p.pubtruncate AS publishes_truncates,
+            -- Owner information
+            pg_catalog.pg_get_userbyid(p.pubowner) AS publication_owner
+        FROM pg_catalog.pg_publication_tables pt
+        JOIN pg_catalog.pg_publication p
+            ON pt.pubname = p.pubname
+    )
+    SELECT *
+    FROM publication_details
+    WHERE
+        (NULLIF(TRIM($1::text), '') IS NULL OR table_name = ANY(regexp_split_to_array(TRIM($1::text), '\s*,\s*')))
+        AND (NULLIF(TRIM($2::text), '') IS NULL OR publication_name = ANY(regexp_split_to_array(TRIM($2::text), '\s*,\s*')))
+        AND (NULLIF(TRIM($3::text), '') IS NULL OR schema_name = ANY(regexp_split_to_array(TRIM($3::text), '\s*,\s*')))
+    ORDER BY
+        publication_name, schema_name, table_name
+    LIMIT COALESCE($4::int, 50);
 `
 
 func init() {
@@ -85,7 +87,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -105,7 +106,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -118,7 +118,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -128,20 +127,24 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
-	return source.RunSQL(ctx, listPublicationTablesStatement, sliceParams)
+	resp, err := source.RunSQL(ctx, listPublicationTablesStatement, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
