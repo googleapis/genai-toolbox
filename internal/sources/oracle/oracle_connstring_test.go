@@ -34,3 +34,14 @@ func TestBuildGoOraConnString_DoesNotDoubleEncodePercentEncodedUser(t *testing.T
 		t.Fatalf("buildGoOraConnString() = %q, want %q", got, want)
 	}
 }
+
+func TestBuildGoOraConnString_UsesTrimmedWalletLocation(t *testing.T) {
+	t.Parallel()
+
+	got := buildGoOraConnString("scott", "tiger", "dbhost:1521/ORCL", "  /tmp/wallet  ")
+
+	want := "oracle://scott:tiger@dbhost:1521/ORCL?ssl=true&wallet=%2Ftmp%2Fwallet"
+	if got != want {
+		t.Fatalf("buildGoOraConnString() = %q, want %q", got, want)
+	}
+}

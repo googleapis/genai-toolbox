@@ -245,13 +245,14 @@ func buildGoOraConnString(user, password, connectStringBase, walletLocation stri
 	).String()
 
 	base := fmt.Sprintf("oracle://%s@%s", userInfo, connectStringBase)
-	if strings.TrimSpace(walletLocation) == "" {
+	trimmedWalletLocation := strings.TrimSpace(walletLocation)
+	if trimmedWalletLocation == "" {
 		return base
 	}
 
 	q := url.Values{}
 	q.Set("ssl", "true")
-	q.Set("wallet", walletLocation)
+	q.Set("wallet", trimmedWalletLocation)
 	return fmt.Sprintf("%s?%s", base, q.Encode())
 }
 
