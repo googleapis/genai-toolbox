@@ -69,6 +69,7 @@ List of reference documentation for resources in Toolbox.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
   - [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/cloud-sql-mssql/): Cloud SQL for SQL Server is a fully-managed database service for SQL Server.
   - [Cloud SQL Admin](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/cloud-sql-admin/): A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
+  - [CockroachDB](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/cockroachdb/): CockroachDB is a distributed SQL database built for cloud applications.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
@@ -110,6 +111,10 @@ List of reference documentation for resources in Toolbox.
   - [Cloud Logging Admin](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cloudloggingadmin/): Tools that work with Cloud Logging Admin Sources.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
+  - [cockroachdb-execute-sql](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cockroachdb/cockroachdb-execute-sql/): Execute ad-hoc SQL statements against a CockroachDB database.
+  - [cockroachdb-list-schemas](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cockroachdb/cockroachdb-list-schemas/): List schemas in a CockroachDB database.
+  - [cockroachdb-list-tables](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cockroachdb/cockroachdb-list-tables/): List tables in a CockroachDB database with schema details.
+  - [cockroachdb-sql](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/cockroachdb/cockroachdb-sql/): Execute parameterized SQL queries in CockroachDB.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataform](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/dataform/): Tools that work with Dataform.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-2459/resources/tools/dataplex/): Tools that work with Dataplex Sources.
