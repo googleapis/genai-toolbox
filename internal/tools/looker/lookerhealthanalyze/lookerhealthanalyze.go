@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -34,11 +35,11 @@ import (
 // =================================================================================================================
 // START MCP SERVER CORE LOGIC
 // =================================================================================================================
-const kind string = "looker-health-analyze"
+const resourceType string = "looker-health-analyze"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -59,7 +60,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string                 `yaml:"name" validate:"required"`
-	Kind         string                 `yaml:"kind" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
 	Source       string                 `yaml:"source" validate:"required"`
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired"`
@@ -69,8 +70,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -125,20 +126,20 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error getting sdk: %v", err), http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
@@ -159,7 +160,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	action, ok := paramsMap["action"].(string)
 	if !ok {
-		return nil, fmt.Errorf("action parameter not found")
+		return nil, util.NewAgentError("action parameter not found", nil)
 	}
 
 	switch action {
@@ -167,7 +168,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		projectId, _ := paramsMap["project"].(string)
 		result, err := analyzeTool.projects(ctx, projectId)
 		if err != nil {
-			return nil, fmt.Errorf("error analyzing projects: %w", err)
+			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing projects: %v", err), http.StatusInternalServerError, err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -176,7 +177,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		modelName, _ := paramsMap["model"].(string)
 		result, err := analyzeTool.models(ctx, projectName, modelName)
 		if err != nil {
-			return nil, fmt.Errorf("error analyzing models: %w", err)
+			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing models: %v", err), http.StatusInternalServerError, err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -185,16 +186,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		exploreName, _ := paramsMap["explore"].(string)
 		result, err := analyzeTool.explores(ctx, modelName, exploreName)
 		if err != nil {
-			return nil, fmt.Errorf("error analyzing explores: %w", err)
+			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing explores: %v", err), http.StatusInternalServerError, err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
 	default:
-		return nil, fmt.Errorf("unknown action: %s", action)
+		return nil, util.NewAgentError(fmt.Sprintf("unknown action: %s", action), nil)
 	}
-}
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -210,7 +208,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -234,23 +232,23 @@ type analyzeTool struct {
 	minQueries int
 }
 
-func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]interface{}, error) {
+func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]interface{}, util.ToolboxError) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 
 	var projects []*v4.Project
 	if id != "" {
 		p, err := t.SdkClient.Project(id, "", nil)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching project %s: %w", id, err)
+			return nil, util.NewClientServerError(fmt.Sprintf("error fetching project %s: %v", id, err), http.StatusInternalServerError, err)
 		}
 		projects = append(projects, &p)
 	} else {
 		allProjects, err := t.SdkClient.AllProjects("", nil)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching all projects: %w", err)
+			return nil, util.NewClientServerError(fmt.Sprintf("error fetching all projects: %v", err), http.StatusInternalServerError, err)
 		}
 		for i := range allProjects {
 			projects = append(projects, &allProjects[i])
@@ -265,7 +263,7 @@ func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]int
 
 		projectFiles, err := t.SdkClient.AllProjectFiles(pID, "", nil)
 		if err != nil {
-			return nil, fmt.Errorf("error fetching files for project %s: %w", pName, err)
+			return nil, util.NewClientServerError(fmt.Sprintf("error fetching files for project %s: %v", pName, err), http.StatusInternalServerError, err)
 		}
 
 		modelCount := 0
@@ -300,21 +298,21 @@ func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]int
 	return results, nil
 }
 
-func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[string]interface{}, error) {
+func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[string]interface{}, util.ToolboxError) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.InfoContext(ctx, "Analyzing models...")
 
 	usedModels, err := t.getUsedModels(ctx)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("error fetching used models", http.StatusInternalServerError, err)
 	}
 
 	lookmlModels, err := t.SdkClient.AllLookmlModels(v4.RequestAllLookmlModels{}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching LookML models: %w", err)
+		return nil, util.NewClientServerError("error fetching LookML models", http.StatusInternalServerError, err)
 	}
 
 	var results []map[string]interface{}
@@ -359,7 +357,7 @@ func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error)
 	}
 	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError(fmt.Sprintf("error running inline query for used models: %v", err), http.StatusInternalServerError, err)
 	}
 
 	var data []map[string]interface{}
@@ -374,7 +372,7 @@ func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error)
 	return results, nil
 }
 
-func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore string) (map[string]int, error) {
+func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore string) (map[string]int, util.ToolboxError) {
 	limit := "5000"
 	query := &v4.WriteQuery{
 		Model:  "system__activity",
@@ -391,7 +389,7 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 	}
 	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError(fmt.Sprintf("error running inline query for used explore fields: %v", err), http.StatusInternalServerError, err)
 	}
 
 	var data []map[string]interface{}
@@ -421,16 +419,16 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 	return results, nil
 }
 
-func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]map[string]interface{}, error) {
+func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]map[string]interface{}, util.ToolboxError) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.InfoContext(ctx, "Analyzing explores...")
 
 	lookmlModels, err := t.SdkClient.AllLookmlModels(v4.RequestAllLookmlModels{}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching LookML models: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error fetching LookML models: %v", err), http.StatusInternalServerError, err)
 	}
 
 	var results []map[string]interface{}
@@ -537,7 +535,7 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			rawQueryCount, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, queryCountQueryBody, "json", nil)
 			if err != nil {
-				return nil, err
+				return nil, util.NewClientServerError(fmt.Sprintf("error running inline query for query count: %v", err), http.StatusInternalServerError, err)
 			}
 			queryCount := 0
 			var data []map[string]interface{}
@@ -569,9 +567,13 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 // =================================================================================================================
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

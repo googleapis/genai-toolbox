@@ -29,15 +29,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// SourceKind for SingleStore source
-const SourceKind string = "singlestore"
+// SourceType for SingleStore source
+const SourceType string = "singlestore"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -52,7 +52,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 // Config holds the configuration parameters for connecting to a SingleStore database.
 type Config struct {
 	Name         string `yaml:"name" validate:"required"`
-	Kind         string `yaml:"kind" validate:"required"`
+	Type         string `yaml:"type" validate:"required"`
 	Host         string `yaml:"host" validate:"required"`
 	Port         string `yaml:"port" validate:"required"`
 	User         string `yaml:"user" validate:"required"`
@@ -61,9 +61,9 @@ type Config struct {
 	QueryTimeout string `yaml:"queryTimeout"`
 }
 
-// SourceConfigKind returns the kind of the source configuration.
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+// SourceConfigType returns the type of the source configuration.
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize sets up the SingleStore connection pool and returns a Source.
@@ -93,9 +93,9 @@ type Source struct {
 	Pool *sql.DB
 }
 
-// SourceKind returns the kind of the source configuration.
-func (s *Source) SourceKind() string {
-	return SourceKind
+// SourceType returns the type of the source configuration.
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -162,7 +162,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 
 func initSingleStoreConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, queryTimeout string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database

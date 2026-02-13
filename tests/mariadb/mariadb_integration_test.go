@@ -36,8 +36,8 @@ import (
 )
 
 var (
-	MariaDBSourceKind = "mysql"
-	MariaDBToolKind   = "mysql-sql"
+	MariaDBSourceType = "mysql"
+	MariaDBToolType   = "mysql-sql"
 	MariaDBDatabase   = os.Getenv("MARIADB_DATABASE")
 	MariaDBHost       = os.Getenv("MARIADB_HOST")
 	MariaDBPort       = os.Getenv("MARIADB_PORT")
@@ -60,7 +60,7 @@ func getMariaDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MariaDBSourceKind,
+		"type":     MariaDBSourceType,
 		"host":     MariaDBHost,
 		"port":     MariaDBPort,
 		"database": MariaDBDatabase,
@@ -112,10 +112,10 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MariaDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MariaDBToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MariaDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MariaDBToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	toolsFile = tests.AddMySQLPrebuiltToolConfig(t, toolsFile)
 
@@ -336,7 +336,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 // GetMariaDBWants return the expected wants for mariaDB
 func GetMariaDBWants() (string, string, string, string) {
 	select1Want := `[{"1":1}]`
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT AUTO_INCREMENT PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want

@@ -24,14 +24,15 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "dataform-compile-local"
+const resourceType string = "dataform-compile-local"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -45,15 +46,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -86,25 +87,22 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 
 	projectDir, ok := paramsMap["project_dir"].(string)
 	if !ok || projectDir == "" {
-		return nil, fmt.Errorf("error casting 'project_dir' to string or invalid value")
+		return nil, util.NewAgentError("error casting 'project_dir' to string or invalid value", nil)
 	}
 
 	cmd := exec.CommandContext(ctx, "dataform", "compile", projectDir, "--json")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error executing dataform compile: %w\nOutput: %s", err, string(output))
+		// Compilation failures are considered AgentErrors (invalid user code/project)
+		return nil, util.NewAgentError(fmt.Sprintf("error executing dataform compile: %v\nOutput: %s", err, string(output)), err)
 	}
 
 	return strings.TrimSpace(string(output)), nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -129,4 +127,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

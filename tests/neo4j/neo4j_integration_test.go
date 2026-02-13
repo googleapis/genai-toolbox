@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	Neo4jSourceKind = "neo4j"
+	Neo4jSourceType = "neo4j"
 	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
 	Neo4jUri        = os.Getenv("NEO4J_URI")
 	Neo4jUser       = os.Getenv("NEO4J_USER")
@@ -56,7 +56,7 @@ func getNeo4jVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     Neo4jSourceKind,
+		"type":     Neo4jSourceType,
 		"uri":      Neo4jUri,
 		"database": Neo4jDatabase,
 		"user":     Neo4jUser,
@@ -81,35 +81,35 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{
-				"kind":        "neo4j-cypher",
+				"type":        "neo4j-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
 			"my-simple-execute-cypher-tool": map[string]any{
-				"kind":        "neo4j-execute-cypher",
+				"type":        "neo4j-execute-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-readonly-execute-cypher-tool": map[string]any{
-				"kind":        "neo4j-execute-cypher",
+				"type":        "neo4j-execute-cypher",
 				"source":      "my-neo4j-instance",
 				"description": "A readonly cypher execution tool.",
 				"readOnly":    true,
 			},
 			"my-schema-tool": map[string]any{
-				"kind":        "neo4j-schema",
+				"type":        "neo4j-schema",
 				"source":      "my-neo4j-instance",
 				"description": "A tool to get the Neo4j schema.",
 			},
 			"my-schema-tool-with-cache": map[string]any{
-				"kind":               "neo4j-schema",
+				"type":               "neo4j-schema",
 				"source":             "my-neo4j-instance",
 				"description":        "A schema tool with a custom cache expiration.",
 				"cacheExpireMinutes": 10,
 			},
 			"my-populated-schema-tool": map[string]any{
-				"kind":        "neo4j-schema",
+				"type":        "neo4j-schema",
 				"source":      "my-neo4j-instance",
 				"description": "A tool to get the Neo4j schema from a populated DB.",
 			},
@@ -287,25 +287,37 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:               "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
-			api:                "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "unable to execute query",
+			name:        "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "unable to execute query") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
-			name:               "invoke readonly tool with write query",
-			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+			name:        "invoke readonly tool with write query",
+			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
-			name:               "invoke readonly tool with write query and dry_run",
-			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+			name:        "invoke readonly tool with write query and dry_run",
+			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
 			name:        "invoke my-schema-tool",

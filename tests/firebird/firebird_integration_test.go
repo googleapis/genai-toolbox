@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	FirebirdSourceKind = "firebird"
-	FirebirdToolKind   = "firebird-sql"
+	FirebirdSourceType = "firebird"
+	FirebirdToolType   = "firebird-sql"
 	FirebirdDatabase   = os.Getenv("FIREBIRD_DATABASE")
 	FirebirdHost       = os.Getenv("FIREBIRD_HOST")
 	FirebirdPort       = os.Getenv("FIREBIRD_PORT")
@@ -56,7 +56,7 @@ func getFirebirdVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     FirebirdSourceKind,
+		"type":     FirebirdSourceType,
 		"host":     FirebirdHost,
 		"port":     FirebirdPort,
 		"database": FirebirdDatabase,
@@ -107,10 +107,10 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	teardownTable2 := setupFirebirdTable(t, ctx, db, createAuthTableStmts, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
-	toolsFile := getFirebirdToolsConfig(sourceConfig, FirebirdToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := getFirebirdToolsConfig(sourceConfig, FirebirdToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addFirebirdExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getFirebirdTmplToolStatement()
-	toolsFile = addFirebirdTemplateParamConfig(t, toolsFile, FirebirdToolKind, tmplSelectCombined, tmplSelectFilterCombined)
+	toolsFile = addFirebirdTemplateParamConfig(t, toolsFile, FirebirdToolType, tmplSelectCombined, tmplSelectFilterCombined)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -305,14 +305,14 @@ func getFirebirdAuthToolInfo(tableName string) ([]string, string, string, []any)
 
 func getFirebirdWants() (string, string, string, string) {
 	select1Want := `[{"constant":1}]`
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Dynamic SQL Error\nSQL error code = -104\nToken unknown - line 1, column 1\nSELEC\n"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Dynamic SQL Error\nSQL error code = -104\nToken unknown - line 1, column 1\nSELEC\n"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INTEGER PRIMARY KEY, name VARCHAR(50))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"constant\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
 }
 
-func getFirebirdToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
-	toolsFile := tests.GetToolsConfig(sourceConfig, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+func getFirebirdToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+	toolsFile := tests.GetToolsConfig(sourceConfig, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
 
 	toolsMap, ok := toolsFile["tools"].(map[string]any)
 	if !ok {
@@ -350,7 +350,7 @@ func getFirebirdToolsConfig(sourceConfig map[string]any, toolKind, paramToolStat
 	return toolsFile
 }
 
-func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolType, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -358,7 +358,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 
 	// Firebird-specific template parameter tools with compatible syntax
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
@@ -368,7 +368,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -379,7 +379,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}}",
@@ -388,7 +388,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
@@ -400,7 +400,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}}",
@@ -409,7 +409,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
@@ -423,7 +423,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
@@ -441,12 +441,12 @@ func addFirebirdExecuteSqlConfig(t *testing.T, config map[string]any) map[string
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "firebird-execute-sql",
+		"type":        "firebird-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "firebird-execute-sql",
+		"type":        "firebird-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

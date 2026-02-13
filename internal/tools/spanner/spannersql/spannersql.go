@@ -17,6 +17,7 @@ package spannersql
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"cloud.google.com/go/spanner"
@@ -24,14 +25,15 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "spanner-sql"
+const resourceType string = "spanner-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -51,7 +53,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
-	Kind               string                `yaml:"kind" validate:"required"`
+	Type               string                `yaml:"type" validate:"required"`
 	Source             string                `yaml:"source" validate:"required"`
 	Description        string                `yaml:"description" validate:"required"`
 	Statement          string                `yaml:"statement" validate:"required"`
@@ -64,8 +66,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -103,25 +105,25 @@ func getMapParams(params parameters.ParamValues, dialect string) (map[string]int
 	case "postgresql":
 		return params.AsMapByOrderedKeys(), nil
 	default:
-		return nil, fmt.Errorf("invalid dialect %s", dialect)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid dialect %s", dialect), nil)
 	}
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract template params %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("unable to extract template params: %v", err), http.StatusInternalServerError, err)
 	}
 
 	newParams, err := parameters.GetParams(t.Parameters, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("unable to extract standard params: %v", err), http.StatusInternalServerError, err)
 	}
 
 	for i, p := range t.Parameters {
@@ -135,13 +137,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		case *parameters.ArrayParameter:
 			arrayParamValue, ok := value.([]any)
 			if !ok {
-				return nil, fmt.Errorf("unable to convert parameter `%s` to []any %w", name, err)
+				return nil, util.NewClientServerError(fmt.Sprintf("unable to convert parameter `%s` to []any", name), http.StatusInternalServerError, err)
 			}
 			itemType := arrayParam.GetItems().GetType()
-			var err error
-			value, err = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
-			if err != nil {
-				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
+			var convertErr error
+			value, convertErr = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
+			if convertErr != nil {
+				return nil, util.NewClientServerError(fmt.Sprintf("unable to convert parameter `%s` from []any to typed slice: %v", name, convertErr), http.StatusInternalServerError, convertErr)
 			}
 		}
 		newParams[i] = parameters.ParamValue{Name: name, Value: value}
@@ -149,13 +151,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	mapParams, err := getMapParams(newParams, source.DatabaseDialect())
 	if err != nil {
-		return nil, fmt.Errorf("fail to get map params: %w", err)
+		return nil, util.NewAgentError("fail to get map params", err)
 	}
-	return source.RunSQL(ctx, t.ReadOnly, newStatement, mapParams)
-}
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	resp, err := source.RunSQL(ctx, t.ReadOnly, newStatement, mapParams)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -184,4 +187,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }

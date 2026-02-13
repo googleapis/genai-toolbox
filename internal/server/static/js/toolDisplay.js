@@ -14,6 +14,7 @@
 
 import { handleRunTool, displayResults } from './runTool.js';
 import { createGoogleAuthMethodItem } from './auth.js'
+import { escapeHtml } from './sanitize.js'
 
 /**
  * Helper function to create form inputs for parameters.
@@ -357,9 +358,9 @@ export function renderToolInterface(tool, containerElement) {
     const descBox = document.createElement('div');
 
     nameBox.className = 'tool-box tool-name';
-    nameBox.innerHTML = `<h5>Name:</h5><p>${tool.name}</p>`;
+    nameBox.innerHTML = `<h5>Name:</h5><p>${escapeHtml(tool.name)}</p>`;
     descBox.className = 'tool-box tool-description';
-    descBox.innerHTML = `<h5>Description:</h5><p>${tool.description}</p>`;
+    descBox.innerHTML = `<h5>Description:</h5><p>${escapeHtml(tool.description)}</p>`;
 
     toolInfoContainer.className = 'tool-info';
     toolInfoContainer.appendChild(nameBox);

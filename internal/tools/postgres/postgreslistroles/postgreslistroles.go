@@ -17,62 +17,64 @@ package postgreslistroles
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-roles"
+const resourceType string = "postgres-list-roles"
 
 const listRolesStatement = `
-	WITH RoleDetails AS (
-		SELECT
-			r.rolname AS role_name,
-			r.oid AS oid,
-			r.rolconnlimit AS connection_limit,
-			r.rolsuper AS is_superuser,
-			r.rolinherit AS inherits_privileges,
-			r.rolcreaterole AS can_create_roles,
-			r.rolcreatedb AS can_create_db,
-			r.rolcanlogin AS can_login,
-			r.rolreplication AS is_replication_role, 
-			r.rolbypassrls AS bypass_rls,          
-			r.rolvaliduntil AS valid_until,         
-			-- List of roles that belong to this role (Direct Members)
-			ARRAY(
-				SELECT m_r.rolname
-				FROM pg_auth_members pam
-				JOIN pg_roles m_r ON pam.member = m_r.oid
-				WHERE pam.roleid = r.oid
-			) AS direct_members,
-			-- List of roles that this role belongs to (Member Of)
-			ARRAY(
-				SELECT g_r.rolname
-				FROM pg_auth_members pam
-				JOIN pg_roles g_r ON pam.roleid = g_r.oid
-				WHERE pam.member = r.oid
-			) AS member_of
-		FROM pg_roles r
-	-- Exclude system and internal roles
-		WHERE r.rolname NOT LIKE 'cloudsql%' 
-		AND r.rolname NOT LIKE 'alloydb_%'
-		AND r.rolname NOT LIKE 'pg_%'
-	)
-	SELECT *
-	FROM RoleDetails
-	WHERE
-		($1::text IS NULL OR role_name LIKE '%' || $1 || '%')
-	ORDER BY role_name
-	LIMIT COALESCE($2::int, 50);
+    WITH RoleDetails AS (
+        SELECT
+            r.rolname AS role_name,
+            r.oid AS oid,
+            r.rolconnlimit AS connection_limit,
+            r.rolsuper AS is_superuser,
+            r.rolinherit AS inherits_privileges,
+            r.rolcreaterole AS can_create_roles,
+            r.rolcreatedb AS can_create_db,
+            r.rolcanlogin AS can_login,
+            r.rolreplication AS is_replication_role, 
+            r.rolbypassrls AS bypass_rls,          
+            r.rolvaliduntil AS valid_until,         
+            -- List of roles that belong to this role (Direct Members)
+            ARRAY(
+                SELECT m_r.rolname
+                FROM pg_auth_members pam
+                JOIN pg_roles m_r ON pam.member = m_r.oid
+                WHERE pam.roleid = r.oid
+            ) AS direct_members,
+            -- List of roles that this role belongs to (Member Of)
+            ARRAY(
+                SELECT g_r.rolname
+                FROM pg_auth_members pam
+                JOIN pg_roles g_r ON pam.roleid = g_r.oid
+                WHERE pam.member = r.oid
+            ) AS member_of
+        FROM pg_roles r
+    -- Exclude system and internal roles
+        WHERE r.rolname NOT LIKE 'cloudsql%' 
+        AND r.rolname NOT LIKE 'alloydb_%'
+        AND r.rolname NOT LIKE 'pg_%'
+    )
+    SELECT *
+    FROM RoleDetails
+    WHERE
+        ($1::text IS NULL OR role_name LIKE '%' || $1 || '%')
+    ORDER BY role_name
+    LIMIT COALESCE($2::int, 50);
 `
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -91,17 +93,16 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -116,7 +117,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -129,7 +129,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -143,24 +142,24 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
-	return source.RunSQL(ctx, listRolesStatement, sliceParams)
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.allParams, data, claims)
+	resp, err := source.RunSQL(ctx, listRolesStatement, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -185,4 +184,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.allParams
 }

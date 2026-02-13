@@ -40,10 +40,10 @@ import (
 )
 
 var (
-	DataplexSourceKind                = "dataplex"
-	DataplexSearchEntriesToolKind     = "dataplex-search-entries"
-	DataplexLookupEntryToolKind       = "dataplex-lookup-entry"
-	DataplexSearchAspectTypesToolKind = "dataplex-search-aspect-types"
+	DataplexSourceType                = "dataplex"
+	DataplexSearchEntriesToolType     = "dataplex-search-entries"
+	DataplexLookupEntryToolType       = "dataplex-lookup-entry"
+	DataplexSearchAspectTypesToolType = "dataplex-search-aspect-types"
 	DataplexProject                   = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -53,7 +53,7 @@ func getDataplexVars(t *testing.T) map[string]any {
 		t.Fatal("'DATAPLEX_PROJECT' not set")
 	}
 	return map[string]any{
-		"kind":    DataplexSourceKind,
+		"type":    DataplexSourceType,
 		"project": DataplexProject,
 	}
 }
@@ -283,40 +283,40 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-dataplex-search-entries-tool": map[string]any{
-				"kind":        DataplexSearchEntriesToolKind,
+				"type":        DataplexSearchEntriesToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex search entries tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-search-entries-tool": map[string]any{
-				"kind":         DataplexSearchEntriesToolKind,
+				"type":         DataplexSearchEntriesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search entries tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-lookup-entry-tool": map[string]any{
-				"kind":        DataplexLookupEntryToolKind,
+				"type":        DataplexLookupEntryToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex lookup entry tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-lookup-entry-tool": map[string]any{
-				"kind":         DataplexLookupEntryToolKind,
+				"type":         DataplexLookupEntryToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex lookup entry tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-search-aspect-types-tool": map[string]any{
-				"kind":        DataplexSearchAspectTypesToolKind,
+				"type":        DataplexSearchAspectTypesToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex search aspect types tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-search-aspect-types-tool": map[string]any{
-				"kind":         DataplexSearchAspectTypesToolKind,
+				"type":         DataplexSearchAspectTypesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search aspect types tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
@@ -517,8 +517,11 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
 				}
 			} else {
-				if len(entries) != 0 {
-					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				isResultEmpty := resultStr == "" || resultStr == "[]" || resultStr == "null"
+				hasError := strings.Contains(resultStr, `"error":`)
+
+				if !isResultEmpty && !hasError {
+					t.Fatalf("expected an empty result or error message, but got: %s", resultStr)
 				}
 			}
 		})
@@ -584,7 +587,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, "non-existent-dataset"))),
-			wantStatusCode: 400,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 		{
@@ -602,7 +605,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
-			wantStatusCode: 400,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 		{
@@ -643,42 +646,44 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 				t.Fatalf("Error parsing response body: %v", err)
 			}
 
+			resultStr, hasResult := result["result"].(string)
+
 			if tc.expectResult {
-				resultStr, ok := result["result"].(string)
-				if !ok {
-					t.Fatalf("Expected 'result' field to be a string on success, got %T", result["result"])
-				}
-				if resultStr == "" || resultStr == "{}" || resultStr == "null" {
-					t.Fatal("Expected an entry, but got empty result")
+				if !hasResult || resultStr == "" || resultStr == "{}" || resultStr == "null" {
+					t.Fatalf("Expected a result, but got: %v", result)
 				}
 
 				var entry map[string]interface{}
 				if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
-					t.Fatalf("Error unmarshalling result string into entry map: %v", err)
+					t.Fatalf("Error unmarshalling result string: %v. Raw result: %s", err, resultStr)
 				}
 
 				if _, ok := entry[tc.wantContentKey]; !ok {
 					t.Fatalf("Expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
 				}
 
-				if _, ok := entry[tc.dontWantContentKey]; ok {
-					t.Fatalf("Expected entry to not have key '%s', but it was found in %v", tc.dontWantContentKey, entry)
+				if tc.dontWantContentKey != "" {
+					if _, ok := entry[tc.dontWantContentKey]; ok {
+						t.Fatalf("Expected entry to NOT have key '%s', but it was found", tc.dontWantContentKey)
+					}
 				}
 
 				if tc.aspectCheck {
-					// Check length of aspects
 					aspects, ok := entry["aspects"].(map[string]interface{})
-					if !ok {
-						t.Fatalf("Expected 'aspects' to be a map, got %T", aspects)
-					}
-					if len(aspects) != 1 {
+					if !ok || len(aspects) != 1 {
 						t.Fatalf("Expected exactly one aspect, but got %d", len(aspects))
 					}
 				}
-			} else { // Handle expected error response
-				_, ok := result["error"]
-				if !ok {
-					t.Fatalf("Expected 'error' field in response, got %v", result)
+			} else {
+				foundError := false
+				if _, ok := result["error"]; ok {
+					foundError = true
+				} else if hasResult && strings.Contains(resultStr, `"error"`) {
+					foundError = true
+				}
+
+				if !foundError {
+					t.Fatalf("Expected an error in response, but none was found. Response: %v", result)
 				}
 			}
 		})

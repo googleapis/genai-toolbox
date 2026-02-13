@@ -17,6 +17,7 @@ package neo4jschema
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -27,17 +28,18 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/cache"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-// kind defines the unique identifier for this tool.
-const kind string = "neo4j-schema"
+// type defines the unique identifier for this tool.
+const resourceType string = "neo4j-schema"
 
 // init registers the tool with the application's tool registry when the package is initialized.
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -62,7 +64,7 @@ type compatibleSource interface {
 // These settings are typically read from a YAML file.
 type Config struct {
 	Name               string   `yaml:"name" validate:"required"`
-	Kind               string   `yaml:"kind" validate:"required"`
+	Type               string   `yaml:"type" validate:"required"`
 	Source             string   `yaml:"source" validate:"required"`
 	Description        string   `yaml:"description" validate:"required"`
 	AuthRequired       []string `yaml:"authRequired"`
@@ -72,9 +74,9 @@ type Config struct {
 // Statically verify that Config implements the tools.ToolConfig interface.
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of this tool configuration.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of this tool configuration.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.
@@ -113,10 +115,10 @@ type Tool struct {
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	// Check if a valid schema is already in the cache.
@@ -129,7 +131,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// If not cached, extract the schema from the database.
 	schema, err := t.extractSchema(ctx, source)
 	if err != nil {
-		return nil, fmt.Errorf("failed to extract database schema: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	// Cache the newly extracted schema for future use.
@@ -137,11 +139,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	t.cache.Set("schema", schema, expiration)
 
 	return schema, nil
-}
-
-// ParseParams is a placeholder as this tool does not require input parameters.
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParamValues{}, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -377,14 +374,14 @@ func (t Tool) GetAPOCSchema(ctx context.Context, source compatibleSource) ([]typ
 			name: "apoc-relationships",
 			fn: func(session neo4j.SessionWithContext) error {
 				query := `
-					MATCH (startNode)-[rel]->(endNode)
-					WITH
-					  labels(startNode)[0] AS startNode,
-					  type(rel) AS relType,
-					  apoc.meta.cypher.types(rel) AS relProperties,
-					  labels(endNode)[0] AS endNode,
-					  count(*) AS count
-					RETURN relType, startNode, endNode, relProperties, count`
+                    MATCH (startNode)-[rel]->(endNode)
+                    WITH
+                      labels(startNode)[0] AS startNode,
+                      type(rel) AS relType,
+                      apoc.meta.cypher.types(rel) AS relProperties,
+                      labels(endNode)[0] AS endNode,
+                      count(*) AS count
+                    RETURN relType, startNode, endNode, relProperties, count`
 				result, err := session.Run(ctx, query, nil)
 				if err != nil {
 					return fmt.Errorf("failed to extract relationships: %w", err)
@@ -525,10 +522,10 @@ func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, source compatibleSource,
 			name: "relationship-schema",
 			fn: func(session neo4j.SessionWithContext) error {
 				relQuery := `
-					MATCH (start)-[r]->(end)
-					WITH type(r) AS relType, labels(start) AS startLabels, labels(end) AS endLabels, count(*) AS count
-					RETURN relType, CASE WHEN size(startLabels) > 0 THEN startLabels[0] ELSE null END AS startLabel, CASE WHEN size(endLabels) > 0 THEN endLabels[0] ELSE null END AS endLabel, sum(count) AS totalCount
-					ORDER BY totalCount DESC`
+                    MATCH (start)-[r]->(end)
+                    WITH type(r) AS relType, labels(start) AS startLabels, labels(end) AS endLabels, count(*) AS count
+                    RETURN relType, CASE WHEN size(startLabels) > 0 THEN startLabels[0] ELSE null END AS startLabel, CASE WHEN size(endLabels) > 0 THEN endLabels[0] ELSE null END AS endLabel, sum(count) AS totalCount
+                    ORDER BY totalCount DESC`
 				relResult, err := session.Run(ctx, relQuery, nil)
 				if err != nil {
 					return fmt.Errorf("relationship count query failed: %w", err)
@@ -700,4 +697,9 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+// This tool does not have parameters, so return an empty set.
+func (t Tool) GetParameters() parameters.Parameters {
+	return parameters.Parameters{}
 }

@@ -17,20 +17,22 @@ package serverlesssparklistbatches
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind = "serverless-spark-list-batches"
+const resourceType = "serverless-spark-list-batches"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -49,7 +51,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -58,9 +60,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the unique name for this tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the unique name for this tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance.
@@ -100,27 +102,39 @@ type Tool struct {
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
+
 	paramMap := params.AsMap()
 	var pageSize *int
 	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
-		pageSizeV := ps.(int)
+		pageSizeV, ok := ps.(int)
+		if !ok {
+			// Handle float64 case if unmarshaled from JSON usually
+			if f, ok := ps.(float64); ok {
+				pageSizeV = int(f)
+			} else {
+				return nil, util.NewAgentError("pageSize must be an integer", nil)
+			}
+		}
+
 		if pageSizeV <= 0 {
-			return nil, fmt.Errorf("pageSize must be positive: %d", pageSizeV)
+			return nil, util.NewAgentError(fmt.Sprintf("pageSize must be positive: %d", pageSizeV), nil)
 		}
 		pageSize = &pageSizeV
 	}
+
 	pt, _ := paramMap["pageToken"].(string)
 	filter, _ := paramMap["filter"].(string)
-	return source.ListBatches(ctx, pageSize, pt, filter)
-}
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	resp, err := source.ListBatches(ctx, pageSize, pt, filter)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -150,4 +164,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

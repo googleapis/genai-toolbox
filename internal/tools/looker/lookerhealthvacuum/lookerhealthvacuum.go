@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -34,11 +35,11 @@ import (
 // =================================================================================================================
 // START MCP SERVER CORE LOGIC
 // =================================================================================================================
-const kind string = "looker-health-vacuum"
+const resourceType string = "looker-health-vacuum"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -59,7 +60,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string                 `yaml:"name" validate:"required"`
-	Kind         string                 `yaml:"kind" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
 	Source       string                 `yaml:"source" validate:"required"`
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired"`
@@ -69,8 +70,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -125,15 +126,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
@@ -154,25 +155,29 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	action, ok := paramsMap["action"].(string)
 	if !ok {
-		return nil, fmt.Errorf("action parameter not found")
+		return nil, util.NewAgentError("action parameter not found", nil)
 	}
+
+	var res []map[string]interface{}
 
 	switch action {
 	case "models":
 		project, _ := paramsMap["project"].(string)
 		model, _ := paramsMap["model"].(string)
-		return vacuumTool.models(ctx, project, model)
+		res, err = vacuumTool.models(ctx, project, model)
 	case "explores":
 		model, _ := paramsMap["model"].(string)
 		explore, _ := paramsMap["explore"].(string)
-		return vacuumTool.explores(ctx, model, explore)
+		res, err = vacuumTool.explores(ctx, model, explore)
 	default:
-		return nil, fmt.Errorf("unknown action: %s", action)
+		return nil, util.NewAgentError(fmt.Sprintf("unknown action: %s", action), nil)
 	}
-}
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+
+	return res, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -188,7 +193,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -473,9 +478,13 @@ func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore st
 // =================================================================================================================
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

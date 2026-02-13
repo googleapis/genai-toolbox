@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	preCheckToolKind = "postgres-upgrade-precheck"
+	preCheckToolType = "postgres-upgrade-precheck"
 )
 
 type preCheckTransport struct {
@@ -264,37 +264,34 @@ func TestPreCheckToolEndpoints(t *testing.T) {
 			name:     "successful precheck - with warnings",
 			toolName: "precheck-tool",
 			body:     `{"project": "p1", "instance": "instance-warnings", "targetDatabaseVersion": "POSTGRES_18"}`,
-			want:     `{"preCheckResponse":[{"actionsRequired":["Check documentation."],"kind":"","message":"This is a warning.","messageType":"WARNING"}]}`,
+			want:     `{"preCheckResponse":[{"actionsRequired":["Check documentation."],"type":"","message":"This is a warning.","messageType":"WARNING"}]}`,
 		},
 		{
 			name:     "successful precheck - with errors",
 			toolName: "precheck-tool",
 			body:     `{"project": "p1", "instance": "instance-errors", "targetDatabaseVersion": "POSTGRES_18"}`,
-			want:     `{"preCheckResponse":[{"actionsRequired":["Fix this now."],"kind":"","message":"This is a critical error.","messageType":"ERROR"}]}`,
+			want:     `{"preCheckResponse":[{"actionsRequired":["Fix this now."],"type":"","message":"This is a critical error.","messageType":"ERROR"}]}`,
 		},
 		{
 			name:        "instance not found",
 			toolName:    "precheck-tool",
 			body:        `{"project": "p1", "instance": "instance-notfound", "targetDatabaseVersion": "POSTGRES_18"}`,
+			want:        `{"error":"failed to access GCP resource: googleapi: got HTTP response code 403 with body: Not authorized to access instance\n"}`,
 			expectError: true,
-			errorStatus: http.StatusBadRequest,
-			errorMsg:    "Not authorized to access instance",
+			errorStatus: http.StatusInternalServerError,
+			errorMsg:    "failed to access GCP resource: googleapi: got HTTP response code 403",
 		},
 		{
-			name:        "missing required parameter - project",
-			toolName:    "precheck-tool",
-			body:        `{"instance": "instance-ok", "targetDatabaseVersion": "POSTGRES_18"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
-			errorMsg:    "parameter \\\"project\\\" is required",
+			name:     "missing required parameter - project",
+			toolName: "precheck-tool",
+			body:     `{"instance": "instance-ok", "targetDatabaseVersion": "POSTGRES_18"}`,
+			want:     `{"error":"parameter \"project\" is required"}`,
 		},
 		{
-			name:        "missing required parameter - instance",
-			toolName:    "precheck-tool",
-			body:        `{"project": "p1", "targetDatabaseVersion": "POSTGRES_18"}`, // Missing instance
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
-			errorMsg:    "parameter \\\"instance\\\" is required",
+			name:     "missing required parameter - instance",
+			toolName: "precheck-tool",
+			body:     `{"project": "p1", "targetDatabaseVersion": "POSTGRES_18"}`, // Missing instance
+			want:     `{"error":"parameter \"instance\" is required"}`,
 		},
 		{
 			name:     "missing parameter - targetDatabaseVersion",
@@ -368,12 +365,12 @@ func getPreCheckToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"precheck-tool": map[string]any{
-				"kind":   preCheckToolKind,
+				"type":   preCheckToolType,
 				"source": "my-cloud-sql-source",
 				"authRequired": []string{
 					"https://www.googleapis.com/auth/cloud-platform",

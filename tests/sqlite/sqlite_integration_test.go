@@ -32,14 +32,14 @@ import (
 )
 
 var (
-	SQLiteSourceKind = "sqlite"
-	SQLiteToolKind   = "sqlite-sql"
+	SQLiteSourceType = "sqlite"
+	SQLiteToolType   = "sqlite-sql"
 	SQLiteDatabase   = os.Getenv("SQLITE_DATABASE")
 )
 
 func getSQLiteVars(t *testing.T) map[string]any {
 	return map[string]any{
-		"kind":     SQLiteSourceKind,
+		"type":     SQLiteSourceType,
 		"database": SQLiteDatabase,
 	}
 }
@@ -137,9 +137,9 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	setupSQLiteTestDB(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SQLiteToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	tmplSelectCombined, tmplSelectFilterCombined := getSQLiteTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SQLiteToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -157,7 +157,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
 	// Run tests
@@ -191,7 +191,7 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 	toolConfig := map[string]any{
 		"tools": map[string]any{
 			"my-exec-sql-tool": map[string]any{
-				"kind":        "sqlite-execute-sql",
+				"type":        "sqlite-execute-sql",
 				"source":      "my-instance",
 				"description": "Tool to execute SQL statements",
 			},
@@ -237,8 +237,8 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 		{
 			name:       "invalid SQL",
 			sql:        "SELEC name FROM not_a_table",
-			wantStatus: 400,
-			wantBody:   "SQL logic error",
+			wantStatus: 200,
+			wantBody:   "error processing request: unable to execute query: SQL logic error",
 		},
 	}
 

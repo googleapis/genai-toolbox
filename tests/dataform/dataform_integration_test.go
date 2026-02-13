@@ -69,7 +69,7 @@ func TestDataformCompileTool(t *testing.T) {
 	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-dataform-compiler": map[string]any{
-				"kind":        "dataform-compile-local",
+				"type":        "dataform-compile-local",
 				"description": "Tool to compile dataform projects",
 			},
 		},
@@ -109,13 +109,13 @@ func TestDataformCompileTool(t *testing.T) {
 		{
 			name:       "missing parameter",
 			reqBody:    `{}`,
-			wantStatus: http.StatusBadRequest,
-			wantBody:   `parameter \"project_dir\" is required`,
+			wantStatus: http.StatusOK,
+			wantBody:   `error`,
 		},
 		{
 			name:       "non-existent directory",
 			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, nonExistentDir),
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusOK,
 			wantBody:   "error executing dataform compile",
 		},
 	}

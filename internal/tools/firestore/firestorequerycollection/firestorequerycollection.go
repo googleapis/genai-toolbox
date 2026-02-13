@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	firestoreapi "cloud.google.com/go/firestore"
@@ -25,13 +26,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Constants for tool configuration
 const (
-	kind            = "firestore-query-collection"
+	resourceType    = "firestore-query-collection"
 	defaultLimit    = 100
 	defaultAnalyze  = false
 	maxFilterLength = 100 // Maximum filters to prevent abuse
@@ -73,8 +75,8 @@ const (
 )
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -96,7 +98,7 @@ type compatibleSource interface {
 // Config represents the configuration for the Firestore query collection tool
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -105,9 +107,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of tool configuration
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of tool configuration
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance from the configuration
@@ -230,16 +232,16 @@ func (o *OrderByConfig) GetDirection() firestoreapi.Direction {
 }
 
 // Invoke executes the Firestore query based on the provided parameters
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	// Parse parameters
 	queryParams, err := t.parseQueryParameters(params)
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError(fmt.Sprintf("failed to parse query parameters: %v", err), err)
 	}
 
 	var filter firestoreapi.EntityFilter
@@ -270,9 +272,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Build the query
 	query, err := source.BuildQuery(queryParams.CollectionPath, filter, nil, orderByField, orderByDirection, queryParams.Limit, queryParams.AnalyzeQuery)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGcpError(err)
 	}
-	return source.ExecuteQuery(ctx, query, queryParams.AnalyzeQuery)
+	resp, err := source.ExecuteQuery(ctx, query, queryParams.AnalyzeQuery)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 // queryParameters holds all parsed query parameters
@@ -295,7 +301,7 @@ func (t Tool) parseQueryParameters(params parameters.ParamValues) (*queryParamet
 	}
 
 	// Validate collection path
-	if err := util.ValidateCollectionPath(collectionPath); err != nil {
+	if err := fsUtil.ValidateCollectionPath(collectionPath); err != nil {
 		return nil, fmt.Errorf("invalid collection path: %w", err)
 	}
 
@@ -388,11 +394,6 @@ func (t Tool) parseOrderBy(orderByRaw interface{}) (*OrderByConfig, error) {
 	return &orderBy, nil
 }
 
-// ParseParams parses and validates input parameters
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
@@ -418,4 +419,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

@@ -17,6 +17,7 @@ package spannerlisttables
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"cloud.google.com/go/spanner"
@@ -24,14 +25,15 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "spanner-list-tables"
+const resourceType string = "spanner-list-tables"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -51,7 +53,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -60,8 +62,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -117,10 +119,10 @@ func getStatement(dialect string) string {
 	}
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
@@ -131,8 +133,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Prepare parameters based on dialect
 	var stmtParams map[string]interface{}
 
-	tableNames, _ := paramsMap["table_names"].(string)
-	outputFormat, _ := paramsMap["output_format"].(string)
+	tableNames, ok := paramsMap["table_names"].(string)
+	if !ok {
+		return nil, util.NewAgentError("unable to get cast table_names", nil)
+	}
+	outputFormat, ok := paramsMap["output_format"].(string)
+	if !ok {
+		return nil, util.NewAgentError("unable to get cast output_format", nil)
+	}
 	if outputFormat == "" {
 		outputFormat = "detailed"
 	}
@@ -151,14 +159,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			"output_format": outputFormat,
 		}
 	default:
-		return nil, fmt.Errorf("unsupported dialect: %s", source.DatabaseDialect())
+		return nil, util.NewAgentError(fmt.Sprintf("unsupported dialect: %s", source.DatabaseDialect()), nil)
 	}
 
-	return source.RunSQL(ctx, true, statement, stmtParams)
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	resp, err := source.RunSQL(ctx, true, statement, stmtParams)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -187,6 +195,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }
 
 // PostgreSQL statement for listing tables

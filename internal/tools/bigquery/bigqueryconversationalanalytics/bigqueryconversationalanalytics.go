@@ -33,7 +33,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const kind string = "bigquery-conversational-analytics"
+const resourceType string = "bigquery-conversational-analytics"
+
+const gdaURLFormat = "https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat"
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
@@ -41,8 +43,8 @@ const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 3. **NO CHARTS:** You are STRICTLY FORBIDDEN from generating any charts, graphs, images, or any other form of visualization.`
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -107,7 +109,7 @@ type CAPayload struct {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -116,8 +118,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -130,7 +132,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
@@ -172,10 +174,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	var tokenStr string
@@ -184,26 +186,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.UseClientAuthorization() {
 		// Use client-side access token
 		if accessToken == "" {
-			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", util.ErrUnauthorized)
+			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
 		}
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
+			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
 	} else {
 		// Get a token source for the Gemini Data Analytics API.
 		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get token source: %w", err)
+			return nil, util.NewClientServerError("failed to get token source", http.StatusInternalServerError, err)
 		}
 
 		// Use cloud-platform token source for Gemini Data Analytics API
 		if tokenSource == nil {
-			return nil, fmt.Errorf("cloud-platform token source is missing")
+			return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
 		}
 		token, err := tokenSource.Token()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
+			return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
 		}
 		tokenStr = token.AccessToken
 	}
@@ -218,14 +220,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var tableRefs []BQTableReference
 	if tableRefsJSON != "" {
 		if err := json.Unmarshal([]byte(tableRefsJSON), &tableRefs); err != nil {
-			return nil, fmt.Errorf("failed to parse 'table_references' JSON string: %w", err)
+			return nil, util.NewAgentError("failed to parse 'table_references' JSON string", err)
 		}
 	}
 
 	if len(source.BigQueryAllowedDatasets()) > 0 {
 		for _, tableRef := range tableRefs {
 			if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
-				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
+				return nil, util.NewAgentError(fmt.Sprintf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID), nil)
 			}
 		}
 	}
@@ -236,11 +238,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if location == "" {
 		location = "us"
 	}
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
+	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":  "application/json",
+		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":      "application/json",
+		"X-Goog-API-Client": util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -252,20 +255,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			},
 			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
-		ClientIdEnum: "GENAI_TOOLBOX",
+		ClientIdEnum: util.GDAClientID,
 	}
 
 	// Call the streaming API
 	response, err := getStream(caURL, payload, headers, source.GetMaxQueryResultRows())
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
+		// getStream wraps network errors or non-200 responses
+		return nil, util.NewClientServerError("failed to get response from conversational analytics API", http.StatusInternalServerError, err)
 	}
 
 	return response, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -285,7 +285,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -567,4 +567,8 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -26,19 +27,20 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Constants for tool configuration
 const (
-	kind         = "firestore-query"
+	resourceType = "firestore-query"
 	defaultLimit = 100
 )
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -60,7 +62,7 @@ type compatibleSource interface {
 // Config represents the configuration for the Firestore query tool
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -80,9 +82,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of tool configuration
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of tool configuration
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance from the configuration
@@ -158,16 +160,16 @@ var validOperators = map[string]bool{
 }
 
 // Invoke executes the Firestore query based on the provided parameters
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 	// Process collection path with template substitution
 	collectionPath, err := parameters.PopulateTemplate("collectionPath", t.CollectionPath, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("failed to process collection path: %w", err)
+		return nil, util.NewAgentError(fmt.Sprintf("failed to process collection path: %v", err), err)
 	}
 
 	var filter firestoreapi.EntityFilter
@@ -176,13 +178,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		// Apply template substitution to filters
 		filtersJSON, err := parameters.PopulateTemplateWithJSON("filters", t.Filters, paramsMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to process filters template: %w", err)
+			return nil, util.NewAgentError(fmt.Sprintf("failed to process filters template: %v", err), err)
 		}
 
 		// Parse the simplified filter format
 		var simplifiedFilter SimplifiedFilter
 		if err := json.Unmarshal([]byte(filtersJSON), &simplifiedFilter); err != nil {
-			return nil, fmt.Errorf("failed to parse filters: %w", err)
+			return nil, util.NewAgentError(fmt.Sprintf("failed to parse filters: %v", err), err)
 		}
 
 		// Convert simplified filter to Firestore filter
@@ -191,17 +193,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Process and apply ordering
 	orderBy, err := t.getOrderBy(paramsMap)
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError(fmt.Sprintf("failed to process order by: %v", err), err)
 	}
 	// Process select fields
 	selectFields, err := t.processSelectFields(paramsMap)
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError(fmt.Sprintf("failed to process select fields: %v", err), err)
 	}
 	// Process and apply limit
 	limit, err := t.getLimit(paramsMap)
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError(fmt.Sprintf("failed to process limit: %v", err), err)
 	}
 
 	// prevent panic when accessing orderBy incase it is nil
@@ -215,10 +217,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Build the query
 	query, err := source.BuildQuery(collectionPath, filter, selectFields, orderByField, orderByDirection, limit, t.AnalyzeQuery)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGcpError(err)
 	}
 	// Execute the query and return results
-	return source.ExecuteQuery(ctx, query, t.AnalyzeQuery)
+	resp, err := source.ExecuteQuery(ctx, query, t.AnalyzeQuery)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 // convertToFirestoreFilter converts simplified filter format to Firestore EntityFilter
@@ -255,7 +261,7 @@ func (t Tool) convertToFirestoreFilter(source compatibleSource, filter Simplifie
 	if filter.Field != "" && filter.Op != "" && filter.Value != nil {
 		if validOperators[filter.Op] {
 			// Convert the value using the Firestore native JSON converter
-			convertedValue, err := util.JSONToFirestoreValue(filter.Value, source.FirestoreClient())
+			convertedValue, err := fsUtil.JSONToFirestoreValue(filter.Value, source.FirestoreClient())
 			if err != nil {
 				// If conversion fails, use the original value
 				convertedValue = filter.Value
@@ -367,17 +373,12 @@ func (t Tool) getLimit(params map[string]any) (int, error) {
 		if processedValue != "" {
 			parsedLimit, err := strconv.Atoi(processedValue)
 			if err != nil {
-				return 0, fmt.Errorf("failed to parse limit value '%s': %w", processedValue, err)
+				return 0, err
 			}
 			limit = parsedLimit
 		}
 	}
 	return limit, nil
-}
-
-// ParseParams parses and validates input parameters
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -405,4 +406,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

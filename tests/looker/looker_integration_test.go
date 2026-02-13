@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	LookerSourceKind   = "looker"
+	LookerSourceType   = "looker"
 	LookerBaseUrl      = os.Getenv("LOOKER_BASE_URL")
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
@@ -62,7 +62,7 @@ func getLookerVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":          LookerSourceKind,
+		"type":          LookerSourceType,
 		"base_url":      LookerBaseUrl,
 		"verify_ssl":    (LookerVerifySsl == "true"),
 		"client_id":     LookerClientId,
@@ -93,162 +93,167 @@ func TestLooker(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"get_models": map[string]any{
-				"kind":        "looker-get-models",
+				"type":        "looker-get-models",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_explores": map[string]any{
-				"kind":        "looker-get-explores",
+				"type":        "looker-get-explores",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_dimensions": map[string]any{
-				"kind":        "looker-get-dimensions",
+				"type":        "looker-get-dimensions",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_measures": map[string]any{
-				"kind":        "looker-get-measures",
+				"type":        "looker-get-measures",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_filters": map[string]any{
-				"kind":        "looker-get-filters",
+				"type":        "looker-get-filters",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_parameters": map[string]any{
-				"kind":        "looker-get-parameters",
+				"type":        "looker-get-parameters",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query": map[string]any{
-				"kind":        "looker-query",
+				"type":        "looker-query",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query_sql": map[string]any{
-				"kind":        "looker-query-sql",
+				"type":        "looker-query-sql",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query_url": map[string]any{
-				"kind":        "looker-query-url",
+				"type":        "looker-query-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_looks": map[string]any{
-				"kind":        "looker-get-looks",
+				"type":        "looker-get-looks",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"make_look": map[string]any{
-				"kind":        "looker-make-look",
+				"type":        "looker-make-look",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_dashboards": map[string]any{
-				"kind":        "looker-get-dashboards",
+				"type":        "looker-get-dashboards",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"make_dashboard": map[string]any{
-				"kind":        "looker-make-dashboard",
+				"type":        "looker-make-dashboard",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"add_dashboard_filter": map[string]any{
-				"kind":        "looker-add-dashboard-filter",
+				"type":        "looker-add-dashboard-filter",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"add_dashboard_element": map[string]any{
-				"kind":        "looker-add-dashboard-element",
+				"type":        "looker-add-dashboard-element",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"conversational_analytics": map[string]any{
-				"kind":        "looker-conversational-analytics",
+				"type":        "looker-conversational-analytics",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"health_pulse": map[string]any{
-				"kind":        "looker-health-pulse",
+				"type":        "looker-health-pulse",
 				"source":      "my-instance",
 				"description": "Checks the health of a Looker instance by running a series of checks on the system.",
 			},
 			"health_analyze": map[string]any{
-				"kind":        "looker-health-analyze",
+				"type":        "looker-health-analyze",
 				"source":      "my-instance",
 				"description": "Provides analysis of a Looker instance's projects, models, or explores.",
 			},
 			"health_vacuum": map[string]any{
-				"kind":        "looker-health-vacuum",
+				"type":        "looker-health-vacuum",
 				"source":      "my-instance",
 				"description": "Vacuums unused content from a Looker instance.",
 			},
 			"dev_mode": map[string]any{
-				"kind":        "looker-dev-mode",
+				"type":        "looker-dev-mode",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_projects": map[string]any{
-				"kind":        "looker-get-projects",
+				"type":        "looker-get-projects",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_project_files": map[string]any{
-				"kind":        "looker-get-project-files",
+				"type":        "looker-get-project-files",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_project_file": map[string]any{
-				"kind":        "looker-get-project-file",
+				"type":        "looker-get-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"create_project_file": map[string]any{
-				"kind":        "looker-create-project-file",
+				"type":        "looker-create-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"update_project_file": map[string]any{
-				"kind":        "looker-update-project-file",
+				"type":        "looker-update-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"delete_project_file": map[string]any{
-				"kind":        "looker-delete-project-file",
+				"type":        "looker-delete-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"validate_project": map[string]any{
+				"type":        "looker-validate-project",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"generate_embed_url": map[string]any{
-				"kind":        "looker-generate-embed-url",
+				"type":        "looker-generate-embed-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connections": map[string]any{
-				"kind":        "looker-get-connections",
+				"type":        "looker-get-connections",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_schemas": map[string]any{
-				"kind":        "looker-get-connection-schemas",
+				"type":        "looker-get-connection-schemas",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_databases": map[string]any{
-				"kind":        "looker-get-connection-databases",
+				"type":        "looker-get-connection-databases",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_tables": map[string]any{
-				"kind":        "looker-get-connection-tables",
+				"type":        "looker-get-connection-tables",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_table_columns": map[string]any{
-				"kind":        "looker-get-connection-table-columns",
+				"type":        "looker-get-connection-table-columns",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -1446,6 +1451,23 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "validate_project",
+		map[string]any{
+			"validate_project": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project to validate",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "generate_embed_url",
 		map[string]any{
 			"generate_embed_url": map[string]any{
@@ -1664,6 +1686,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "deleted"
 	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+
+	wantResult = "\"errors\":[]"
+	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)

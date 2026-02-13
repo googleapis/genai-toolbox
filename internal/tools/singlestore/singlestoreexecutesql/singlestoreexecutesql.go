@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -27,11 +28,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "singlestore-execute-sql"
+const resourceType string = "singlestore-execute-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -51,7 +52,7 @@ type compatibleSource interface {
 // Config represents the configuration for the singlestore-execute-sql tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -60,9 +61,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of the tool configuration.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of the tool configuration.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize sets up the Tool using the provided sources map.
@@ -98,29 +99,30 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the provided SQL query using the tool's database connection and returns the results.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	sql, ok := paramsMap["sql"].(string)
+	sqlStr, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast parameter 'sql' to string: %v", paramsMap["sql"]), nil)
 	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
-	return source.RunSQL(ctx, sql, nil)
-}
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sqlStr))
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	resp, err := source.RunSQL(ctx, sqlStr, nil)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -145,4 +147,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	SnowflakeSourceKind = "snowflake"
-	SnowflakeToolKind   = "snowflake-sql"
+	SnowflakeSourceType = "snowflake"
+	SnowflakeToolType   = "snowflake-sql"
 	SnowflakeAccount    = os.Getenv("SNOWFLAKE_ACCOUNT")
 	SnowflakeUser       = os.Getenv("SNOWFLAKE_USER")
 	SnowflakePassword   = os.Getenv("SNOWFLAKE_PASS")
@@ -65,7 +65,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":      SnowflakeSourceKind,
+		"type":      SnowflakeSourceType,
 		"account":   SnowflakeAccount,
 		"user":      SnowflakeUser,
 		"password":  SnowflakePassword,
@@ -125,10 +125,10 @@ func TestSnowflake(t *testing.T) {
 	t.Logf("Test table setup complete.")
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -173,13 +173,13 @@ func addSnowflakeExecuteSqlConfig(t *testing.T, config map[string]any) map[strin
 	}
 
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "snowflake-execute-sql",
+		"type":        "snowflake-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "snowflake-execute-sql",
+		"type":        "snowflake-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -190,7 +190,7 @@ func addSnowflakeExecuteSqlConfig(t *testing.T, config map[string]any) map[strin
 	return config
 }
 
-// getSnowflakeParamToolInfo returns statements and param for my-param-tool snowflake-sql kind
+// getSnowflakeParamToolInfo returns statements and param for my-param-tool snowflake-sql type
 func getSnowflakeParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
@@ -202,7 +202,7 @@ func getSnowflakeParamToolInfo(tableName string) (string, string, string, string
 	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
 }
 
-// getSnowflakeAuthToolInfo returns statements and param of my-auth-tool for snowflake-sql kind
+// getSnowflakeAuthToolInfo returns statements and param of my-auth-tool for snowflake-sql type
 func getSnowflakeAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING, email STRING);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
@@ -211,7 +211,7 @@ func getSnowflakeAuthToolInfo(tableName string) (string, string, string, []any) 
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getSnowflakeTmplToolStatement returns statements and param for template parameter test cases for snowflake-sql kind
+// getSnowflakeTmplToolStatement returns statements and param for template parameter test cases for snowflake-sql type
 func getSnowflakeTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -222,7 +222,7 @@ func getSnowflakeTmplToolStatement() (string, string) {
 func getSnowflakeWants() (string, string, string, string) {
 	select1Want := `[{"1":"1"}]`
 	failInvocationWant := `unexpected 'SELEC'`
-	createTableStatement := `"CREATE TABLE t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)"`
+	createTableStatement := `"CREATE TABLE IF NOT EXISTS t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":\"1\"}"}]}}`
 	return select1Want, failInvocationWant, createTableStatement, mcpSelect1Want
 }

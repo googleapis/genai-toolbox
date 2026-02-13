@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	TrinoSourceKind = "trino"
-	TrinoToolKind   = "trino-sql"
+	TrinoSourceType = "trino"
+	TrinoToolType   = "trino-sql"
 	TrinoHost       = os.Getenv("TRINO_HOST")
 	TrinoPort       = os.Getenv("TRINO_PORT")
 	TrinoUser       = os.Getenv("TRINO_USER")
@@ -55,7 +55,7 @@ func getTrinoVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     TrinoSourceKind,
+		"type":     TrinoSourceType,
 		"host":     TrinoHost,
 		"port":     TrinoPort,
 		"user":     TrinoUser,
@@ -119,7 +119,7 @@ func buildTrinoDSN(host, port, user, password, catalog, schema, queryTimeout, ac
 	return dsn, nil
 }
 
-// getTrinoParamToolInfo returns statements and param for my-tool trino-sql kind
+// getTrinoParamToolInfo returns statements and param for my-tool trino-sql type
 func getTrinoParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id BIGINT NOT NULL, name VARCHAR(255))", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, ?), (2, ?), (3, ?), (4, ?)", tableName)
@@ -131,7 +131,7 @@ func getTrinoParamToolInfo(tableName string) (string, string, string, string, st
 	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
 }
 
-// getTrinoAuthToolInfo returns statements and param of my-auth-tool for trino-sql kind
+// getTrinoAuthToolInfo returns statements and param of my-auth-tool for trino-sql type
 func getTrinoAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id BIGINT NOT NULL, name VARCHAR(255), email VARCHAR(255))", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, ?, ?), (2, ?, ?)", tableName)
@@ -140,7 +140,7 @@ func getTrinoAuthToolInfo(tableName string) (string, string, string, []any) {
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getTrinoTmplToolStatement returns statements and param for template parameter test cases for trino-sql kind
+// getTrinoTmplToolStatement returns statements and param for template parameter test cases for trino-sql type
 func getTrinoTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -150,7 +150,7 @@ func getTrinoTmplToolStatement() (string, string) {
 // getTrinoWants return the expected wants for trino
 func getTrinoWants() (string, string, string, string) {
 	select1Want := `[{"_col0":1}]`
-	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: trino: query failed (200 OK): \"USER_ERROR: line 1:1: mismatched input 'SELEC'. Expecting: 'ALTER', 'ANALYZE', 'CALL', 'COMMENT', 'COMMIT', 'CREATE', 'DEALLOCATE', 'DELETE', 'DENY', 'DESC', 'DESCRIBE', 'DROP', 'EXECUTE', 'EXPLAIN', 'GRANT', 'INSERT', 'MERGE', 'PREPARE', 'REFRESH', 'RESET', 'REVOKE', 'ROLLBACK', 'SET', 'SHOW', 'START', 'TRUNCATE', 'UPDATE', 'USE', 'WITH', \u003cquery\u003e\""}],"isError":true}}`
+	failInvocationWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: trino: query failed (200 OK): \"USER_ERROR: line 1:1: mismatched input 'SELEC'. Expecting: 'ALTER', 'ANALYZE', 'CALL', 'COMMENT', 'COMMIT', 'CREATE', 'DEALLOCATE', 'DELETE', 'DENY', 'DESC', 'DESCRIBE', 'DROP', 'EXECUTE', 'EXPLAIN', 'GRANT', 'INSERT', 'MERGE', 'PREPARE', 'REFRESH', 'RESET', 'REVOKE', 'ROLLBACK', 'SET', 'SHOW', 'START', 'TRUNCATE', 'UPDATE', 'USE', 'WITH', \u003cquery\u003e\""}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id BIGINT NOT NULL, name VARCHAR(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"_col0\":1}"}]}}`
 	return select1Want, failInvocationWant, createTableStatement, mcpSelect1Want
@@ -192,12 +192,12 @@ func addTrinoExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "trino-execute-sql",
+		"type":        "trino-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "trino-execute-sql",
+		"type":        "trino-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -236,10 +236,10 @@ func TestTrinoToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, TrinoToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, TrinoToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addTrinoExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getTrinoTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TrinoToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TrinoToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

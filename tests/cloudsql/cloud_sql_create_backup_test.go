@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	createBackupToolKind = "cloud-sql-create-backup"
+	createBackupToolType = "cloud-sql-create-backup"
 )
 
 type createBackupTransport struct {
@@ -158,11 +158,10 @@ func TestCreateBackupToolEndpoints(t *testing.T) {
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:        "missing instance name",
-			toolName:    "create-backup",
-			body:        `{"project": "p1", "escription": "invalid"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing instance name",
+			toolName: "create-backup",
+			body:     `{"project": "p1", "escription": "invalid"}`,
+			want:     `{"error":"parameter \"instance\" is required"}`,
 		},
 	}
 
@@ -219,12 +218,12 @@ func getCreateBackupToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"create-backup": map[string]any{
-				"kind":   createBackupToolKind,
+				"type":   createBackupToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

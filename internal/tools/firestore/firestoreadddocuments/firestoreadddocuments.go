@@ -17,24 +17,26 @@ package firestoreadddocuments
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-add-documents"
+const resourceType string = "firestore-add-documents"
 const collectionPathKey string = "collectionPath"
 const documentDataKey string = "documentData"
 const returnDocumentDataKey string = "returnData"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -53,7 +55,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -62,8 +64,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -128,32 +130,32 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
 	// Get collection path
 	collectionPath, ok := mapParams[collectionPathKey].(string)
 	if !ok || collectionPath == "" {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter", collectionPathKey)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter", collectionPathKey), nil)
 	}
 	// Validate collection path
-	if err := util.ValidateCollectionPath(collectionPath); err != nil {
-		return nil, fmt.Errorf("invalid collection path: %w", err)
+	if err := fsUtil.ValidateCollectionPath(collectionPath); err != nil {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid collection path: %v", err), err)
 	}
 	// Get document data
 	documentDataRaw, ok := mapParams[documentDataKey]
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter", documentDataKey)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter", documentDataKey), nil)
 	}
 	// Convert the document data from JSON format to Firestore format
 	// The client is passed to handle referenceValue types
-	documentData, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
+	documentData, err := fsUtil.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert document data: %w", err)
+		return nil, util.NewAgentError(fmt.Sprintf("failed to convert document data: %v", err), err)
 	}
 
 	// Get return document data flag
@@ -161,11 +163,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
 		returnData = val
 	}
-	return source.AddDocuments(ctx, collectionPath, documentData, returnData)
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	resp, err := source.AddDocuments(ctx, collectionPath, documentData, returnData)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -190,4 +192,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

@@ -16,6 +16,7 @@ package lookeradddashboardfilter
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -28,11 +29,11 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-add-dashboard-filter"
+const resourceType string = "looker-add-dashboard-filter"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -53,7 +54,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string                 `yaml:"name" validate:"required"`
-	Kind         string                 `yaml:"kind" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
 	Source       string                 `yaml:"source" validate:"required"`
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired"`
@@ -63,8 +64,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -128,33 +129,54 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "params = ", params)
 
 	paramsMap := params.AsMap()
-	dashboard_id := paramsMap["dashboard_id"].(string)
-	name := paramsMap["name"].(string)
-	title := paramsMap["title"].(string)
-	filterType := paramsMap["filter_type"].(string)
+	dashboard_id, ok := paramsMap["dashboard_id"].(string)
+	if !ok {
+		return nil, util.NewAgentError("dashboard_id parameter missing or invalid", nil)
+	}
+	name, ok := paramsMap["name"].(string)
+	if !ok {
+		return nil, util.NewAgentError("name parameter missing or invalid", nil)
+	}
+	title, ok := paramsMap["title"].(string)
+	if !ok {
+		return nil, util.NewAgentError("title parameter missing or invalid", nil)
+	}
+	filterType, ok := paramsMap["filter_type"].(string)
+	if !ok {
+		return nil, util.NewAgentError("filter_type parameter missing or invalid", nil)
+	}
+
 	switch filterType {
 	case "date_filter":
 	case "number_filter":
 	case "string_filter":
 	case "field_filter":
 	default:
-		return nil, fmt.Errorf("invalid filter type: %s. Must be one of date_filter, number_filter, string_filter, field_filter", filterType)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid filter type: %s. Must be one of date_filter, number_filter, string_filter, field_filter", filterType), nil)
 	}
-	allowMultipleValues := paramsMap["allow_multiple_values"].(bool)
-	required := paramsMap["required"].(bool)
+
+	allowMultipleValues, ok := paramsMap["allow_multiple_values"].(bool)
+	if !ok {
+		// defaults should handle this, but safe fallback
+		allowMultipleValues = true
+	}
+	required, ok := paramsMap["required"].(bool)
+	if !ok {
+		required = false
+	}
 
 	req := v4.WriteCreateDashboardFilter{
 		DashboardId:         dashboard_id,
@@ -165,9 +187,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		Required:            &required,
 	}
 
-	if v, ok := paramsMap["default_value"]; ok {
-		if v != nil {
-			defaultValue := paramsMap["default_value"].(string)
+	if v, ok := paramsMap["default_value"]; ok && v != nil {
+		if defaultValue, ok := v.(string); ok {
 			req.DefaultValue = &defaultValue
 		}
 	}
@@ -175,15 +196,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if filterType == "field_filter" {
 		model, ok := paramsMap["model"].(string)
 		if !ok || model == "" {
-			return nil, fmt.Errorf("model must be specified for field_filter type")
+			return nil, util.NewAgentError("model must be specified for field_filter type", nil)
 		}
 		explore, ok := paramsMap["explore"].(string)
 		if !ok || explore == "" {
-			return nil, fmt.Errorf("explore must be specified for field_filter type")
+			return nil, util.NewAgentError("explore must be specified for field_filter type", nil)
 		}
 		dimension, ok := paramsMap["dimension"].(string)
 		if !ok || dimension == "" {
-			return nil, fmt.Errorf("dimension must be specified for field_filter type")
+			return nil, util.NewAgentError("dimension must be specified for field_filter type", nil)
 		}
 
 		req.Model = &model
@@ -193,12 +214,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	resp, err := sdk.CreateDashboardFilter(req, "name", source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create dashboard filter request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
@@ -207,10 +228,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	data["result"] = fmt.Sprintf("Dashboard filter \"%s\" added to dashboard %s", *resp.Name, dashboard_id)
 
 	return data, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -230,7 +247,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -238,9 +255,13 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

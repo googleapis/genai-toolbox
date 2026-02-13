@@ -3,12 +3,13 @@
 package oracle_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -22,18 +23,18 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "connection string and useOCI=true",
 			in: `
-            sources:
-                my-oracle-cs:
-                    kind: oracle
-                    connectionString: "my-host:1521/XEPDB1"
-                    user: my_user
-                    password: my_pass
-                    useOCI: true
-            `,
-			want: server.SourceConfigs{
+			kind: sources
+			name: my-oracle-cs
+			type: oracle
+			connectionString: "my-host:1521/XEPDB1"
+			user: my_user
+			password: my_pass
+			useOCI: true
+			`,
+			want: map[string]sources.SourceConfig{
 				"my-oracle-cs": oracle.Config{
 					Name:             "my-oracle-cs",
-					Kind:             oracle.SourceKind,
+					Type:             oracle.SourceType,
 					ConnectionString: "my-host:1521/XEPDB1",
 					User:             "my_user",
 					Password:         "my_pass",
@@ -44,19 +45,19 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "host/port/serviceName and default useOCI=false",
 			in: `
-            sources:
-                my-oracle-host:
-                    kind: oracle
-                    host: my-host
-                    port: 1521
-                    serviceName: ORCLPDB
-                    user: my_user
-                    password: my_pass
-            `,
-			want: server.SourceConfigs{
+			kind: sources
+			name: my-oracle-host
+			type: oracle
+			host: my-host
+			port: 1521
+			serviceName: ORCLPDB
+			user: my_user
+			password: my_pass
+			`,
+			want: map[string]sources.SourceConfig{
 				"my-oracle-host": oracle.Config{
 					Name:        "my-oracle-host",
-					Kind:        oracle.SourceKind,
+					Type:        oracle.SourceType,
 					Host:        "my-host",
 					Port:        1521,
 					ServiceName: "ORCLPDB",
@@ -69,19 +70,19 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "tnsAlias and TnsAdmin specified with explicit useOCI=true",
 			in: `
-            sources:
-                my-oracle-tns-oci:
-                    kind: oracle
-                    tnsAlias: FINANCE_DB
-                    tnsAdmin: /opt/oracle/network/admin
-                    user: my_user
-                    password: my_pass
-                    useOCI: true 
-            `,
-			want: server.SourceConfigs{
+			kind: sources
+			name: my-oracle-tns-oci
+			type: oracle
+			tnsAlias: FINANCE_DB
+			tnsAdmin: /opt/oracle/network/admin
+			user: my_user
+			password: my_pass
+			useOCI: true 
+			`,
+			want: map[string]sources.SourceConfig{
 				"my-oracle-tns-oci": oracle.Config{
 					Name:     "my-oracle-tns-oci",
-					Kind:     oracle.SourceKind,
+					Type:     oracle.SourceType,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
 					User:     "my_user",
@@ -93,22 +94,18 @@ func TestParseFromYamlOracle(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse:\nwant: %v\ngot:  %v\ndiff: %s", tc.want, got.Sources, cmp.Diff(tc.want, got.Sources))
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse:\nwant: %v\ngot:  %v\ndiff: %s", tc.want, got, cmp.Diff(tc.want, got))
 			}
 		})
 	}
 }
 
-func TestFailParseFromYamlOracle(t *testing.T) {
+func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -117,76 +114,72 @@ func TestFailParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-oracle-instance:
-					kind: oracle
-					host: my-host
-					serviceName: ORCL
-					user: my_user
-					password: my_pass
-					extraField: value
+			kind: sources
+			name: my-oracle-instance
+			type: oracle
+			host: my-host
+			serviceName: ORCL
+			user: my_user
+			password: my_pass
+			extraField: value
 			`,
-			err: "unable to parse source \"my-oracle-instance\" as \"oracle\": [1:1] unknown field \"extraField\"\n>  1 | extraField: value\n       ^\n   2 | host: my-host\n   3 | kind: oracle\n   4 | password: my_pass\n   5 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": [1:1] unknown field \"extraField\"\n>  1 | extraField: value\n       ^\n   2 | host: my-host\n   3 | name: my-oracle-instance\n   4 | password: my_pass\n   5 | ",
 		},
 		{
 			desc: "missing required password field",
 			in: `
-            sources:
-                my-oracle-instance:
-                    kind: oracle
-                    host: my-host
-                    serviceName: ORCL
-                    user: my_user
-            `,
-			err: "unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			kind: sources
+			name: my-oracle-instance
+			type: oracle
+			host: my-host
+			serviceName: ORCL
+			user: my_user
+			`,
+			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 		{
 			desc: "missing connection method fields (validate fails)",
 			in: `
-            sources:
-                my-oracle-instance:
-                    kind: oracle
-                    user: my_user
-                    password: my_pass
-            `,
-			err: "unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'",
+			kind: sources
+			name: my-oracle-instance
+			type: oracle
+			user: my_user
+			password: my_pass
+			`,
+			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'",
 		},
 		{
 			desc: "multiple connection methods provided (validate fails)",
 			in: `
-            sources:
-                my-oracle-instance:
-                    kind: oracle
-                    host: my-host
-                    serviceName: ORCL
-                    connectionString: "my-host:1521/XEPDB1"
-                    user: my_user
-                    password: my_pass
-            `,
-			err: "unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
+			kind: sources
+			name: my-oracle-instance
+			type: oracle
+			host: my-host
+			serviceName: ORCL
+			connectionString: "my-host:1521/XEPDB1"
+			user: my_user
+			password: my_pass
+			`,
+			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
 		},
 		{
 			desc: "fail on tnsAdmin with useOCI=false",
 			in: `
-			sources:
-				my-oracle-fail:
-					kind: oracle
-					tnsAlias: FINANCE_DB
-					tnsAdmin: /opt/oracle/network/admin
-					user: my_user
-					password: my_pass
-					useOCI: false
+			kind: sources
+			name: my-oracle-fail
+			type: oracle
+			tnsAlias: FINANCE_DB
+			tnsAdmin: /opt/oracle/network/admin
+			user: my_user
+			password: my_pass
+			useOCI: false
 			`,
-			err: "unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
+			err: "error unmarshaling sources: unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

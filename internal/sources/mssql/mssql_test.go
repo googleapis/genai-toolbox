@@ -15,11 +15,12 @@
 package mssql_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,19 +34,19 @@ func TestParseFromYamlMssql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-mssql-instance
+			type: mssql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mssql-instance": mssql.Config{
 					Name:     "my-mssql-instance",
-					Kind:     mssql.SourceKind,
+					Type:     mssql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -57,20 +58,20 @@ func TestParseFromYamlMssql(t *testing.T) {
 		{
 			desc: "with encrypt field",
 			in: `
-			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					encrypt: strict
+			kind: sources
+			name: my-mssql-instance
+			type: mssql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			encrypt: strict
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mssql-instance": mssql.Config{
 					Name:     "my-mssql-instance",
-					Kind:     mssql.SourceKind,
+					Type:     mssql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -83,16 +84,12 @@ func TestParseFromYamlMssql(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect psarse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect psarse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -107,39 +104,35 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: sources
+			name: my-mssql-instance
+			type: mssql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unable to parse source \"my-mssql-instance\" as \"mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: mssql\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-mssql-instance\" as \"mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-mssql-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-mssql-instance:
-					kind: mssql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
+			kind: sources
+			name: my-mssql-instance
+			type: mssql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
 			`,
-			err: "unable to parse source \"my-mssql-instance\" as \"mssql\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-mssql-instance\" as \"mssql\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

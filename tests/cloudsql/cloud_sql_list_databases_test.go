@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	listDatabasesToolKind = "cloud-sql-list-databases"
+	listDatabasesToolType = "cloud-sql-list-databases"
 )
 
 type listDatabasesTransport struct {
@@ -138,11 +138,10 @@ func TestListDatabasesToolEndpoints(t *testing.T) {
 			want:     `[{"name":"db1","charset":"utf8","collation":"utf8_general_ci"},{"name":"db2","charset":"utf8mb4","collation":"utf8mb4_unicode_ci"}]`,
 		},
 		{
-			name:        "missing instance",
-			toolName:    "list-databases",
-			body:        `{"project": "p1"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing instance",
+			toolName: "list-databases",
+			body:     `{"project": "p1"}`,
+			want:     `{"error":"parameter \"instance\" is required"}`,
 		},
 	}
 
@@ -181,12 +180,26 @@ func TestListDatabasesToolEndpoints(t *testing.T) {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
+			if strings.Contains(result.Result, `"error":`) {
+				var gotMap, wantMap map[string]any
+				if err := json.Unmarshal([]byte(result.Result), &gotMap); err != nil {
+					t.Fatalf("failed to unmarshal result error object: %v", err)
+				}
+				if err := json.Unmarshal([]byte(tc.want), &wantMap); err != nil {
+					t.Fatalf("failed to unmarshal want error object: %v", err)
+				}
+				if !reflect.DeepEqual(gotMap, wantMap) {
+					t.Fatalf("unexpected error result: got %+v, want %+v", gotMap, wantMap)
+				}
+				return
+			}
+
 			var got, want []map[string]any
 			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
-				t.Fatalf("failed to unmarshal result: %v", err)
+				t.Fatalf("failed to unmarshal result array: %v. Result was: %s", err, result.Result)
 			}
 			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
-				t.Fatalf("failed to unmarshal want: %v", err)
+				t.Fatalf("failed to unmarshal want array: %v", err)
 			}
 
 			if !reflect.DeepEqual(got, want) {
@@ -200,12 +213,12 @@ func getListDatabasesToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"list-databases": map[string]any{
-				"kind":   listDatabasesToolKind,
+				"type":   listDatabasesToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

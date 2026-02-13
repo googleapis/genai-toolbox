@@ -16,23 +16,25 @@ package lookerupdateprojectfile
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-update-project-file"
+const resourceType string = "looker-update-project-file"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -52,7 +54,7 @@ type compatibleSource interface {
 }
 type Config struct {
 	Name         string                 `yaml:"name" validate:"required"`
-	Kind         string                 `yaml:"kind" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
 	Source       string                 `yaml:"source" validate:"required"`
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired"`
@@ -62,8 +64,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -111,29 +113,29 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
 	projectId, ok := mapParams["project_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'project_id' must be a string, got %T", mapParams["project_id"])
+		return nil, util.NewAgentError(fmt.Sprintf("'project_id' must be a string, got %T", mapParams["project_id"]), nil)
 	}
 	filePath, ok := mapParams["file_path"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'file_path' must be a string, got %T", mapParams["file_path"])
+		return nil, util.NewAgentError(fmt.Sprintf("'file_path' must be a string, got %T", mapParams["file_path"]), nil)
 	}
 	fileContent, ok := mapParams["file_content"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'file_content' must be a string, got %T", mapParams["file_content"])
+		return nil, util.NewAgentError(fmt.Sprintf("'file_content' must be a string, got %T", mapParams["file_content"]), nil)
 	}
 
 	req := lookercommon.FileContent{
@@ -143,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	err = lookercommon.UpdateProjectFile(sdk, projectId, req, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making update_project_file request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	data := make(map[string]any)
@@ -151,10 +153,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	data["text"] = fmt.Sprintf("updated file %s in project %s", filePath, projectId)
 
 	return data, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -174,7 +172,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -182,9 +180,13 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

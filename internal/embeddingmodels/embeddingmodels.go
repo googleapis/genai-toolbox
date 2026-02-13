@@ -22,12 +22,12 @@ import (
 
 // EmbeddingModelConfig is the interface for configuring embedding models.
 type EmbeddingModelConfig interface {
-	EmbeddingModelConfigKind() string
+	EmbeddingModelConfigType() string
 	Initialize(context.Context) (EmbeddingModel, error)
 }
 
 type EmbeddingModel interface {
-	EmbeddingModelKind() string
+	EmbeddingModelType() string
 	ToConfig() EmbeddingModelConfig
 	EmbedParameters(context.Context, []string) ([][]float32, error)
 }

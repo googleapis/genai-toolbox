@@ -19,14 +19,14 @@ allowing tools to execute SQL queries against it.
 ## Example
 
 ```yaml
-sources:
-    my-couchbase-instance:
-        kind: couchbase
-        connectionString: couchbase://localhost
-        bucket: travel-sample
-        scope: inventory
-        username: Administrator
-        password: password
+kind: sources
+name: my-couchbase-instance
+type: couchbase
+connectionString: couchbase://localhost
+bucket: travel-sample
+scope: inventory
+username: Administrator
+password: password
 ```
 
 {{< notice note >}}
@@ -38,7 +38,7 @@ Connections](https://docs.couchbase.com/java-sdk/current/howtos/managing-connect
 
 | **field**            | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                          |
 |----------------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                 |  string  |     true     | Must be "couchbase".                                                                                                                                                                                                                                                                                                                                                                     |
+| type                 |  string  |     true     | Must be "couchbase".                                                                                                                                                                                                                                                                                                                                                                     |
 | connectionString     |  string  |     true     | Connection string for the Couchbase cluster.                                                                                                                                                                                                                                                                                                                                             |
 | bucket               |  string  |     true     | Name of the bucket to connect to.                                                                                                                                                                                                                                                                                                                                                        |
 | scope                |  string  |     true     | Name of the scope within the bucket.                                                                                                                                                                                                                                                                                                                                                     |

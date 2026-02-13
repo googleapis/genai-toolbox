@@ -17,19 +17,21 @@ package postgreslistschemas
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-schemas"
+const resourceType string = "postgres-list-schemas"
 
 const listSchemasStatement = `
-	WITH
+    WITH
     schema_grants AS (
         SELECT schema_oid, jsonb_object_agg(grantee, privileges) AS grants
         FROM
@@ -52,27 +54,27 @@ const listSchemasStatement = `
         SELECT
         n.nspname AS schema_name,
         pg_catalog.pg_get_userbyid(n.nspowner) AS owner,
-		COALESCE(sg.grants, '{}'::jsonb) AS grants,
-		(
-			SELECT COUNT(*)
-			FROM pg_catalog.pg_class c
-			WHERE c.relnamespace = n.oid AND c.relkind = 'r'
-		) AS tables,
-		(
-			SELECT COUNT(*)
-			FROM pg_catalog.pg_class c
-			WHERE c.relnamespace = n.oid AND c.relkind = 'v'
-		) AS views,
-		(SELECT COUNT(*) FROM pg_catalog.pg_proc p WHERE p.pronamespace = n.oid)
-			AS functions
+        COALESCE(sg.grants, '{}'::jsonb) AS grants,
+        (
+            SELECT COUNT(*)
+            FROM pg_catalog.pg_class c
+            WHERE c.relnamespace = n.oid AND c.relkind = 'r'
+        ) AS tables,
+        (
+            SELECT COUNT(*)
+            FROM pg_catalog.pg_class c
+            WHERE c.relnamespace = n.oid AND c.relkind = 'v'
+        ) AS views,
+        (SELECT COUNT(*) FROM pg_catalog.pg_proc p WHERE p.pronamespace = n.oid)
+            AS functions
         FROM pg_catalog.pg_namespace n
         LEFT JOIN schema_grants sg
         ON n.oid = sg.schema_oid
     )
-	SELECT *
-	FROM all_schemas
-    -- Exclude system schemas and temporary schemas created per session.
-	WHERE
+    SELECT *
+    FROM all_schemas
+    -- Exclude system and temporary schemas created per session.
+    WHERE
         schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
         AND schema_name NOT LIKE 'pg_temp_%'
         AND schema_name NOT LIKE 'pg_toast_temp_%'
@@ -83,8 +85,8 @@ const listSchemasStatement = `
 `
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -103,17 +105,16 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -128,7 +129,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -141,7 +141,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -151,24 +150,24 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
-	return source.RunSQL(ctx, listSchemasStatement, sliceParams)
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.allParams, data, claims)
+	resp, err := source.RunSQL(ctx, listSchemasStatement, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -197,4 +196,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.allParams
 }

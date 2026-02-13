@@ -35,8 +35,8 @@ import (
 )
 
 var (
-	BigtableSourceKind = "bigtable"
-	BigtableToolKind   = "bigtable-sql"
+	BigtableSourceType = "bigtable"
+	BigtableToolType   = "bigtable-sql"
 	BigtableProject    = os.Getenv("BIGTABLE_PROJECT")
 	BigtableInstance   = os.Getenv("BIGTABLE_INSTANCE")
 )
@@ -50,7 +50,7 @@ func getBigtableVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     BigtableSourceKind,
+		"type":     BigtableSourceType,
 		"project":  BigtableProject,
 		"instance": BigtableInstance,
 	}
@@ -99,7 +99,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	defer teardownTableTmpl(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolKind, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolType, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -120,7 +120,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	// Actual test parameters are set in https://github.com/googleapis/genai-toolbox/blob/52b09a67cb40ac0c5f461598b4673136699a3089/tests/tool_test.go#L250
 	select1Want := "[{\"$col1\":1}]"
 	myToolById4Want := `[{"id":4,"name":""}]`
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing GCP request: unable to prepare statement: rpc error: code = InvalidArgument desc = Syntax error: Unexpected identifier \"SELEC\" [at 1:1]"}],"isError":true}}`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"$col1\":1}"}]}}`
 	nameFieldArray := `["CAST(cf['name'] AS string) as name"]`
 	nameColFilter := "CAST(cf['name'] AS string)"
@@ -291,7 +291,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		t.Fatalf("unable to get tools from config")
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        "bigtable-sql",
+		"type":        "bigtable-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}};",
@@ -300,7 +300,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        "bigtable-sql",
+		"type":        "bigtable-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}} WHERE TO_INT64(cf['id']) = @id;",
@@ -310,7 +310,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        "bigtable-sql",
+		"type":        "bigtable-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}}, FROM {{.tableName}};",
@@ -320,7 +320,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        "bigtable-sql",
+		"type":        "bigtable-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}} WHERE {{.columnFilter}} = @name;",

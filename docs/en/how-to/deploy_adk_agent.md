@@ -46,10 +46,10 @@ with the necessary configuration for deployment to Vertex AI Agent Engine.
     process will generate deployment configuration files (like a `Makefile` and
     `Dockerfile`) in your project directory.
 
-4.  Add `toolbox-core` as a dependency to the new project:
+4.  Add `google-adk[toolbox]` as a dependency to the new project:
 
     ```bash
-    uv add toolbox-core
+    uv add google-adk[toolbox]
     ```
 
 ## Step 3: Configure Google Cloud Authentication
@@ -83,34 +83,32 @@ Toolbox instead of the local address.
 
 2.  Open your agent file (`my_agent/agent.py`).
 
-3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL.
+3.  Update the `ToolboxToolset` initialization to point to your Cloud Run service URL. Replace the existing initialization code with the following:
 
-    {{% alert color="info" %}}
-Since Cloud Run services are secured by default, you also need to provide an
-authentication token.
+    {{% alert color="info" title="Note" %}}
+Since Cloud Run services are secured by default, you also need to provide a workload identity.
     {{% /alert %}}
-
-    Replace your existing client initialization code with the following:
 
     ```python
     from google.adk import Agent
     from google.adk.apps import App
-    from toolbox_core import ToolboxSyncClient, auth_methods
+    from google.adk.tools.toolbox_toolset import ToolboxToolset
+    from toolbox_adk import CredentialStrategy
 
     # TODO(developer): Replace with your Toolbox Cloud Run Service URL
     TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
 
-    # Initialize the client with the Cloud Run URL and Auth headers
-    client = ToolboxSyncClient(
-        TOOLBOX_URL, 
-        client_headers={"Authorization": auth_methods.get_google_id_token(TOOLBOX_URL)}
+    # Initialize the toolset with Workload Identity (generates ID token for the URL)
+    toolset = ToolboxToolset(
+        server_url=TOOLBOX_URL,
+        credentials=CredentialStrategy.workload_identity(target_audience=TOOLBOX_URL)
     )
 
     root_agent = Agent(
         name='root_agent',
         model='gemini-2.5-flash',
         instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-        tools=client.load_toolset(),
+        tools=[toolset],
     )
 
     app = App(root_agent=root_agent, name="my_agent")
@@ -131,14 +129,14 @@ app = App(root_agent=root_agent, name="my_agent")
 Run the deployment command:
 
 ```bash
-make backend
+make deploy
 ```
 
 This command will build your agent's container image and deploy it to Vertex AI.
 
 ## Step 6: Test your Deployment
 
-Once the deployment command (`make backend`) completes, it will output the URL
+Once the deployment command (`make deploy`) completes, it will output the URL
 for the Agent Engine Playground. You can click on this URL to open the
 Playground in your browser and start chatting with your agent to test the tools.
 

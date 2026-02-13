@@ -42,7 +42,7 @@ func TestConfig(t *testing.T) {
 		Arguments: testArgs,
 	}
 
-	// initialize and check kind
+	// initialize and check type
 	p, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() failed: %v", err)
@@ -50,8 +50,8 @@ func TestConfig(t *testing.T) {
 	if p == nil {
 		t.Fatal("Initialize() returned a nil prompt")
 	}
-	if cfg.PromptConfigKind() != "custom" {
-		t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "custom")
+	if cfg.PromptConfigType() != "custom" {
+		t.Errorf("PromptConfigType() = %q, want %q", cfg.PromptConfigType(), "custom")
 	}
 
 	t.Run("Manifest", func(t *testing.T) {
