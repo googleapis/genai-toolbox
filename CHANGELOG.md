@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.27.1](https://github.com/googleapis/genai-toolbox/compare/v0.27.0...v0.27.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* Deflake alloydb omni ([#2431](https://github.com/googleapis/genai-toolbox/issues/2431)) ([62b8309](https://github.com/googleapis/genai-toolbox/commit/62b830987d65c3573214d04e50742476097ee9e9))
+
 ## [0.27.0](https://github.com/googleapis/genai-toolbox/compare/v0.26.0...v0.27.0) (2026-02-12)
 
 
