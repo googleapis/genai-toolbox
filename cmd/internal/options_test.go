@@ -12,57 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package internal
 
 import (
 	"errors"
 	"io"
 	"testing"
-
-	"github.com/spf13/cobra"
 )
 
-func TestCommandOptions(t *testing.T) {
+func TestToolboxOptions(t *testing.T) {
 	w := io.Discard
 	tcs := []struct {
 		desc    string
-		isValid func(*Command) error
+		isValid func(*ToolboxOptions) error
 		option  Option
 	}{
 		{
 			desc: "with logger",
-			isValid: func(c *Command) error {
-				if c.outStream != w || c.errStream != w {
+			isValid: func(o *ToolboxOptions) error {
+				if o.IOStreams.Out != w || o.IOStreams.ErrOut != w {
 					return errors.New("loggers do not match")
 				}
 				return nil
 			},
-			option: WithStreams(w, w),
+			option: WithIOStreams(w, w),
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, err := invokeProxyWithOption(tc.option)
-			if err != nil {
-				t.Fatal(err)
-			}
+			got := NewToolboxOptions(tc.option)
 			if err := tc.isValid(got); err != nil {
 				t.Errorf("option did not initialize command correctly: %v", err)
 			}
 		})
 	}
-}
-
-func invokeProxyWithOption(o Option) (*Command, error) {
-	c := NewCommand(o)
-	// Keep the test output quiet
-	c.SilenceUsage = true
-	c.SilenceErrors = true
-	// Disable execute behavior
-	c.RunE = func(*cobra.Command, []string) error {
-		return nil
-	}
-
-	err := c.Execute()
-	return c, err
 }

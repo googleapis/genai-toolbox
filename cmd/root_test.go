@@ -31,22 +31,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/googleapis/genai-toolbox/internal/auth/google"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/http"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
 )
 
@@ -76,15 +66,16 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	return c
 }
 
-func invokeCommand(args []string) (*Command, string, error) {
-	c := NewCommand()
+func invokeCommand(args []string) (*cobra.Command, *internal.ToolboxOptions, string, error) {
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	c := NewCommand(opts)
 
 	// Keep the test output quiet
 	c.SilenceUsage = true
 	c.SilenceErrors = true
 
 	// Capture output
-	buf := new(bytes.Buffer)
 	c.SetOut(buf)
 	c.SetErr(buf)
 	c.SetArgs(args)
@@ -96,22 +87,23 @@ func invokeCommand(args []string) (*Command, string, error) {
 
 	err := c.Execute()
 
-	return c, buf.String(), err
+	return c, opts, buf.String(), err
 }
 
 // invokeCommandWithContext executes the command with a context and returns the captured output.
-func invokeCommandWithContext(ctx context.Context, args []string) (*Command, string, error) {
-	// Capture output using a buffer
+func invokeCommandWithContext(ctx context.Context, args []string) (*cobra.Command, *internal.ToolboxOptions, string, error) {
 	buf := new(bytes.Buffer)
-	c := NewCommand(WithStreams(buf, buf))
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	c := NewCommand(opts)
 
+	// Capture output using a buffer
 	c.SetArgs(args)
 	c.SilenceUsage = true
 	c.SilenceErrors = true
 	c.SetContext(ctx)
 
 	err := c.Execute()
-	return c, buf.String(), err
+	return c, opts, buf.String(), err
 }
 
 func TestVersion(t *testing.T) {
@@ -121,7 +113,7 @@ func TestVersion(t *testing.T) {
 	}
 	want := strings.TrimSpace(string(data))
 
-	_, got, err := invokeCommand([]string{"--version"})
+	_, _, got, err := invokeCommand([]string{"--version"})
 	if err != nil {
 		t.Fatalf("error invoking command: %s", err)
 	}
@@ -243,79 +235,13 @@ func TestServerConfigFlags(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			c, _, err := invokeCommand(tc.args)
+			_, opts, _, err := invokeCommand(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
 
-			if !cmp.Equal(c.cfg, tc.want) {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
-			}
-		})
-	}
-}
-
-func TestParseEnv(t *testing.T) {
-	tcs := []struct {
-		desc      string
-		env       map[string]string
-		in        string
-		want      string
-		err       bool
-		errString string
-	}{
-		{
-			desc:      "without default without env",
-			in:        "${FOO}",
-			want:      "",
-			err:       true,
-			errString: `environment variable not found: "FOO"`,
-		},
-		{
-			desc: "without default with env",
-			env: map[string]string{
-				"FOO": "bar",
-			},
-			in:   "${FOO}",
-			want: "bar",
-		},
-		{
-			desc: "with empty default",
-			in:   "${FOO:}",
-			want: "",
-		},
-		{
-			desc: "with default",
-			in:   "${FOO:bar}",
-			want: "bar",
-		},
-		{
-			desc: "with default with env",
-			env: map[string]string{
-				"FOO": "hello",
-			},
-			in:   "${FOO:bar}",
-			want: "hello",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			if tc.env != nil {
-				for k, v := range tc.env {
-					t.Setenv(k, v)
-				}
-			}
-			got, err := parseEnv(tc.in)
-			if tc.err {
-				if err == nil {
-					t.Fatalf("expected error not found")
-				}
-				if tc.errString != err.Error() {
-					t.Fatalf("incorrect error string: got %s, want %s", err, tc.errString)
-				}
-			}
-			if tc.want != got {
-				t.Fatalf("unexpected want: got %s, want %s", got, tc.want)
+			if !cmp.Equal(opts.Cfg, tc.want) {
+				t.Fatalf("got %v, want %v", opts.Cfg, tc.want)
 			}
 		})
 	}
@@ -350,12 +276,12 @@ func TestToolFileFlag(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			c, _, err := invokeCommand(tc.args)
+			_, opts, _, err := invokeCommand(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if c.tools_file != tc.want {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			if opts.ToolsFile != tc.want {
+				t.Fatalf("got %v, want %v", opts.Cfg, tc.want)
 			}
 		})
 	}
@@ -385,12 +311,12 @@ func TestToolsFilesFlag(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			c, _, err := invokeCommand(tc.args)
+			_, opts, _, err := invokeCommand(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if diff := cmp.Diff(c.tools_files, tc.want); diff != "" {
-				t.Fatalf("got %v, want %v", c.tools_files, tc.want)
+			if diff := cmp.Diff(opts.ToolsFiles, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v", opts.ToolsFiles, tc.want)
 			}
 		})
 	}
@@ -415,12 +341,12 @@ func TestToolsFolderFlag(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			c, _, err := invokeCommand(tc.args)
+			_, opts, _, err := invokeCommand(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if c.tools_folder != tc.want {
-				t.Fatalf("got %v, want %v", c.tools_folder, tc.want)
+			if opts.ToolsFolder != tc.want {
+				t.Fatalf("got %v, want %v", opts.ToolsFolder, tc.want)
 			}
 		})
 	}
@@ -455,12 +381,12 @@ func TestPrebuiltFlag(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			c, _, err := invokeCommand(tc.args)
+			_, opts, _, err := invokeCommand(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if diff := cmp.Diff(c.prebuiltConfigs, tc.want); diff != "" {
-				t.Fatalf("got %v, want %v, diff %s", c.prebuiltConfigs, tc.want, diff)
+			if diff := cmp.Diff(opts.PrebuiltConfigs, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v, diff %s", opts.PrebuiltConfigs, tc.want, diff)
 			}
 		})
 	}
@@ -482,7 +408,7 @@ func TestFailServerConfigFlags(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, err := invokeCommand(tc.args)
+			_, _, _, err := invokeCommand(tc.args)
 			if err == nil {
 				t.Fatalf("expected an error, but got nil")
 			}
@@ -491,11 +417,11 @@ func TestFailServerConfigFlags(t *testing.T) {
 }
 
 func TestDefaultLoggingFormat(t *testing.T) {
-	c, _, err := invokeCommand([]string{})
+	_, opts, _, err := invokeCommand([]string{})
 	if err != nil {
 		t.Fatalf("unexpected error invoking command: %s", err)
 	}
-	got := c.cfg.LoggingFormat.String()
+	got := opts.Cfg.LoggingFormat.String()
 	want := "standard"
 	if got != want {
 		t.Fatalf("unexpected default logging format flag: got %v, want %v", got, want)
@@ -503,1374 +429,14 @@ func TestDefaultLoggingFormat(t *testing.T) {
 }
 
 func TestDefaultLogLevel(t *testing.T) {
-	c, _, err := invokeCommand([]string{})
+	_, opts, _, err := invokeCommand([]string{})
 	if err != nil {
 		t.Fatalf("unexpected error invoking command: %s", err)
 	}
-	got := c.cfg.LogLevel.String()
+	got := opts.Cfg.LogLevel.String()
 	want := "info"
 	if got != want {
 		t.Fatalf("unexpected default log level flag: got %v, want %v", got, want)
-	}
-}
-
-func TestConvertToolsFile(t *testing.T) {
-	tcs := []struct {
-		desc   string
-		in     string
-		want   string
-		isErr  bool
-		errStr string
-	}{
-		{
-			desc: "basic convert",
-			in: `
-            sources:
-                my-pg-instance:
-                    kind: cloud-sql-postgres
-                    project: my-project
-                    region: my-region
-                    instance: my-instance
-                    database: my_db
-                    user: my_user
-                    password: my_pass
-            authServices:
-                my-google-auth:
-                    kind: google
-                    clientId: testing-id
-            tools:
-                example_tool:
-                    kind: postgres-sql
-                    source: my-pg-instance
-                    description: some description
-                    statement: SELECT * FROM SQL_STATEMENT;
-                    parameters:
-                        - name: country
-                          type: string
-                          description: some description
-            toolsets:
-                example_toolset:
-                    - example_tool
-            prompts:
-                code_review:
-                    description: ask llm to analyze code quality
-                    messages:
-                      - content: "please review the following code for quality: {{.code}}"
-                    arguments:
-                        - name: code
-                          description: the code to review
-            embeddingModels:
-                gemini-model:
-                    kind: gemini
-                    model: gemini-embedding-001
-                    apiKey: some-key
-                    dimension: 768`,
-			want: `kind: sources
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
-database: my_db
-user: my_user
-password: my_pass
----
-kind: authServices
-name: my-google-auth
-type: google
-clientId: testing-id
----
-kind: tools
-name: example_tool
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT * FROM SQL_STATEMENT;
-parameters:
-- name: country
-  type: string
-  description: some description
----
-kind: toolsets
-name: example_toolset
-tools:
-- example_tool
----
-kind: prompts
-name: code_review
-description: ask llm to analyze code quality
-messages:
-- content: "please review the following code for quality: {{.code}}"
-arguments:
-- name: code
-  description: the code to review
----
-kind: embeddingModels
-name: gemini-model
-type: gemini
-model: gemini-embedding-001
-apiKey: some-key
-dimension: 768
-`,
-		},
-		{
-			desc: "preserve resource order",
-			in: `
-            tools:
-                example_tool:
-                    kind: postgres-sql
-                    source: my-pg-instance
-                    description: some description
-                    statement: SELECT * FROM SQL_STATEMENT;
-                    parameters:
-                        - name: country
-                          type: string
-                          description: some description
-            sources:
-                my-pg-instance:
-                    kind: cloud-sql-postgres
-                    project: my-project
-                    region: my-region
-                    instance: my-instance
-                    database: my_db
-                    user: my_user
-                    password: my_pass
-            authServices:
-                my-google-auth:
-                    kind: google
-                    clientId: testing-id
-            toolsets:
-                example_toolset:
-                    - example_tool
-            authSources:
-                my-google-auth2:
-                    kind: google
-                    clientId: testing-id`,
-			want: `kind: tools
-name: example_tool
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT * FROM SQL_STATEMENT;
-parameters:
-- name: country
-  type: string
-  description: some description
----
-kind: sources
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
-database: my_db
-user: my_user
-password: my_pass
----
-kind: authServices
-name: my-google-auth
-type: google
-clientId: testing-id
----
-kind: toolsets
-name: example_toolset
-tools:
-- example_tool
----
-kind: authServices
-name: my-google-auth2
-type: google
-clientId: testing-id
-`,
-		},
-		{
-			desc: "convert combination of v1 and v2",
-			in: `
-            sources:
-                my-pg-instance:
-                    kind: cloud-sql-postgres
-                    project: my-project
-                    region: my-region
-                    instance: my-instance
-                    database: my_db
-                    user: my_user
-                    password: my_pass
-            authServices:
-                my-google-auth:
-                    kind: google
-                    clientId: testing-id
-            tools:
-                example_tool:
-                    kind: postgres-sql
-                    source: my-pg-instance
-                    description: some description
-                    statement: SELECT * FROM SQL_STATEMENT;
-                    parameters:
-                        - name: country
-                          type: string
-                          description: some description
-            toolsets:
-                example_toolset:
-                    - example_tool
-            prompts:
-                code_review:
-                    description: ask llm to analyze code quality
-                    messages:
-                      - content: "please review the following code for quality: {{.code}}"
-                    arguments:
-                        - name: code
-                          description: the code to review
-            embeddingModels:
-                gemini-model:
-                    kind: gemini
-                    model: gemini-embedding-001
-                    apiKey: some-key
-                    dimension: 768
----
-            kind: sources
-            name: my-pg-instance2
-            type: cloud-sql-postgres
-            project: my-project
-            region: my-region
-            instance: my-instance
----
-            kind: authServices
-            name: my-google-auth2
-            type: google
-            clientId: testing-id
----
-            kind: tools
-            name: example_tool2
-            type: postgres-sql
-            source: my-pg-instance
-            description: some description
-            statement: SELECT * FROM SQL_STATEMENT;
-            parameters:
-            - name: country
-              type: string
-              description: some description
----
-            kind: toolsets
-            name: example_toolset2
-            tools:
-            - example_tool
----
-            tools:
-            - example_tool
-            kind: toolsets
-            name: example_toolset3
----
-            kind: prompts
-            name: code_review2
-            description: ask llm to analyze code quality
-            messages:
-            - content: "please review the following code for quality: {{.code}}"
-            arguments:
-            - name: code
-              description: the code to review
----
-            kind: embeddingModels
-            name: gemini-model2
-            type: gemini`,
-			want: `kind: sources
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
-database: my_db
-user: my_user
-password: my_pass
----
-kind: authServices
-name: my-google-auth
-type: google
-clientId: testing-id
----
-kind: tools
-name: example_tool
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT * FROM SQL_STATEMENT;
-parameters:
-- name: country
-  type: string
-  description: some description
----
-kind: toolsets
-name: example_toolset
-tools:
-- example_tool
----
-kind: prompts
-name: code_review
-description: ask llm to analyze code quality
-messages:
-- content: "please review the following code for quality: {{.code}}"
-arguments:
-- name: code
-  description: the code to review
----
-kind: embeddingModels
-name: gemini-model
-type: gemini
-model: gemini-embedding-001
-apiKey: some-key
-dimension: 768
----
-kind: sources
-name: my-pg-instance2
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
----
-kind: authServices
-name: my-google-auth2
-type: google
-clientId: testing-id
----
-kind: tools
-name: example_tool2
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT * FROM SQL_STATEMENT;
-parameters:
-- name: country
-  type: string
-  description: some description
----
-kind: toolsets
-name: example_toolset2
-tools:
-- example_tool
----
-tools:
-- example_tool
-kind: toolsets
-name: example_toolset3
----
-kind: prompts
-name: code_review2
-description: ask llm to analyze code quality
-messages:
-- content: "please review the following code for quality: {{.code}}"
-arguments:
-- name: code
-  description: the code to review
----
-kind: embeddingModels
-name: gemini-model2
-type: gemini
-`,
-		},
-		{
-			desc: "no convertion needed",
-			in: `kind: sources
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
-database: my_db
-user: my_user
-password: my_pass
----
-kind: tools
-name: example_tool
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT * FROM SQL_STATEMENT;
-parameters:
-- name: country
-  type: string
-  description: some description
----
-kind: toolsets
-name: example_toolset
-tools:
-- example_tool`,
-			want: `kind: sources
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
-database: my_db
-user: my_user
-password: my_pass
----
-kind: tools
-name: example_tool
-type: postgres-sql
-source: my-pg-instance
-description: some description
-statement: SELECT * FROM SQL_STATEMENT;
-parameters:
-- name: country
-  type: string
-  description: some description
----
-kind: toolsets
-name: example_toolset
-tools:
-- example_tool
-`,
-		},
-		{
-			desc: "invalid source",
-			in:   `sources: invalid`,
-			want: "",
-		},
-		{
-			desc: "invalid toolset",
-			in:   `toolsets: invalid`,
-			want: "",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			output, err := convertToolsFile([]byte(tc.in))
-			if err != nil {
-				t.Fatalf("unexpected error: %s", err)
-			}
-
-			if diff := cmp.Diff(string(output), tc.want); diff != "" {
-				t.Fatalf("incorrect toolsets parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func TestParseToolFile(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
-	}{
-		{
-			description: "basic example tools file v1",
-			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-							type: string
-							description: some description
-			toolsets:
-				example_toolset:
-					- example_tool
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-pg-instance": cloudsqlpgsrc.Config{
-						Name:     "my-pg-instance",
-						Type:     cloudsqlpgsrc.SourceType,
-						Project:  "my-project",
-						Region:   "my-region",
-						Instance: "my-instance",
-						IPType:   "public",
-						Database: "my_db",
-						User:     "my_user",
-						Password: "my_pass",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-						Parameters: []parameters.Parameter{
-							parameters.NewStringParameter("country", "some description"),
-						},
-						AuthRequired: []string{},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
-						Name:      "example_toolset",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				AuthServices: nil,
-				Prompts:      nil,
-			},
-		},
-		{
-			description: "basic example tools file v2",
-			in: `
-			kind: sources
-			name: my-pg-instance
-			type: cloud-sql-postgres
-			project: my-project
-			region: my-region
-			instance: my-instance
-			database: my_db
-			user: my_user
-			password: my_pass
----
-			kind: authServices
-			name: my-google-auth
-			type: google
-			clientId: testing-id
----
-			kind: embeddingModels
-			name: gemini-model
-			type: gemini
-			model: gemini-embedding-001
-			apiKey: some-key
-			dimension: 768
----
-			kind: tools
-			name: example_tool
-			type: postgres-sql
-			source: my-pg-instance
-			description: some description
-			statement: |
-				SELECT * FROM SQL_STATEMENT;
-			parameters:
-			- name: country
-			  type: string
-			  description: some description
----
-			kind: toolsets
-			name: example_toolset
-			tools:
-			- example_tool
----
-			kind: prompts
-			name: code_review
-			description: ask llm to analyze code quality
-			messages:
-			- content: "please review the following code for quality: {{.code}}"
-			arguments:
-			- name: code
-			  description: the code to review
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-pg-instance": cloudsqlpgsrc.Config{
-						Name:     "my-pg-instance",
-						Type:     cloudsqlpgsrc.SourceType,
-						Project:  "my-project",
-						Region:   "my-region",
-						Instance: "my-instance",
-						IPType:   "public",
-						Database: "my_db",
-						User:     "my_user",
-						Password: "my_pass",
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-auth": google.Config{
-						Name:     "my-google-auth",
-						Type:     google.AuthServiceType,
-						ClientID: "testing-id",
-					},
-				},
-				EmbeddingModels: server.EmbeddingModelConfigs{
-					"gemini-model": gemini.Config{
-						Name:      "gemini-model",
-						Type:      gemini.EmbeddingModelType,
-						Model:     "gemini-embedding-001",
-						ApiKey:    "some-key",
-						Dimension: 768,
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-						Parameters: []parameters.Parameter{
-							parameters.NewStringParameter("country", "some description"),
-						},
-						AuthRequired: []string{},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
-						Name:      "example_toolset",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: server.PromptConfigs{
-					"code_review": &custom.Config{
-						Name:        "code_review",
-						Description: "ask llm to analyze code quality",
-						Arguments: prompts.Arguments{
-							{Parameter: parameters.NewStringParameter("code", "the code to review")},
-						},
-						Messages: []prompts.Message{
-							{Role: "user", Content: "please review the following code for quality: {{.code}}"},
-						},
-					},
-				},
-			},
-		},
-		{
-			description: "only prompts",
-			in: `
-            kind: prompts
-            name: my-prompt
-            description: A prompt template for data analysis.
-            arguments:
-                - name: country
-                  description: The country to analyze.
-            messages:
-                - content: Analyze the data for {{.country}}.
-            `,
-			wantToolsFile: ToolsFile{
-				Sources:      nil,
-				AuthServices: nil,
-				Tools:        nil,
-				Toolsets:     nil,
-				Prompts: server.PromptConfigs{
-					"my-prompt": &custom.Config{
-						Name:        "my-prompt",
-						Description: "A prompt template for data analysis.",
-						Arguments: prompts.Arguments{
-							{Parameter: parameters.NewStringParameter("country", "The country to analyze.")},
-						},
-						Messages: []prompts.Message{
-							{Role: "user", Content: "Analyze the data for {{.country}}."},
-						},
-					},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
-			if err != nil {
-				t.Fatalf("failed to parse input: %v", err)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
-				t.Fatalf("incorrect sources parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
-				t.Fatalf("incorrect authServices parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect toolsets parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
-				t.Fatalf("incorrect prompts parse: diff %v", diff)
-			}
-		})
-	}
-
-}
-
-func TestParseToolFileWithAuth(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
-	}{
-		{
-			description: "basic example",
-			in: `
-			kind: sources
-			name: my-pg-instance
-			type: cloud-sql-postgres
-			project: my-project
-			region: my-region
-			instance: my-instance
-			database: my_db
-			user: my_user
-			password: my_pass
----
-			kind: authServices
-			name: my-google-service
-			type: google
-			clientId: my-client-id
----
-			kind: authServices
-			name: other-google-service
-			type: google
-			clientId: other-client-id
----
-			kind: tools
-			name: example_tool
-			type: postgres-sql
-			source: my-pg-instance
-			description: some description
-			statement: |
-				SELECT * FROM SQL_STATEMENT;
-			parameters:
-				- name: country
-					type: string
-					description: some description
-				- name: id
-					type: integer
-					description: user id
-					authServices:
-					- name: my-google-service
-						field: user_id
-				- name: email
-					type: string
-					description: user email
-					authServices:
-					- name: my-google-service
-						field: email
-					- name: other-google-service
-						field: other_email
----
-			kind: toolsets
-			name: example_toolset
-			tools:
-				- example_tool
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-pg-instance": cloudsqlpgsrc.Config{
-						Name:     "my-pg-instance",
-						Type:     cloudsqlpgsrc.SourceType,
-						Project:  "my-project",
-						Region:   "my-region",
-						Instance: "my-instance",
-						IPType:   "public",
-						Database: "my_db",
-						User:     "my_user",
-						Password: "my_pass",
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "my-client-id",
-					},
-					"other-google-service": google.Config{
-						Name:     "other-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "other-client-id",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{},
-						Parameters: []parameters.Parameter{
-							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
-						},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
-						Name:      "example_toolset",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: nil,
-			},
-		},
-		{
-			description: "basic example with authSources",
-			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			authSources:
-				my-google-service:
-					kind: google
-					clientId: my-client-id
-				other-google-service:
-					kind: google
-					clientId: other-client-id
-
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						- name: id
-						  type: integer
-						  description: user id
-						  authSources:
-							- name: my-google-service
-								field: user_id
-						- name: email
-							type: string
-							description: user email
-							authSources:
-							- name: my-google-service
-							  field: email
-							- name: other-google-service
-							  field: other_email
-
-			toolsets:
-				example_toolset:
-					- example_tool
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-pg-instance": cloudsqlpgsrc.Config{
-						Name:     "my-pg-instance",
-						Type:     cloudsqlpgsrc.SourceType,
-						Project:  "my-project",
-						Region:   "my-region",
-						Instance: "my-instance",
-						IPType:   "public",
-						Database: "my_db",
-						User:     "my_user",
-						Password: "my_pass",
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "my-client-id",
-					},
-					"other-google-service": google.Config{
-						Name:     "other-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "other-client-id",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{},
-						Parameters: []parameters.Parameter{
-							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
-						},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
-						Name:      "example_toolset",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: nil,
-			},
-		},
-		{
-			description: "basic example with authRequired",
-			in: `
-			kind: sources
-			name: my-pg-instance
-			type: cloud-sql-postgres
-			project: my-project
-			region: my-region
-			instance: my-instance
-			database: my_db
-			user: my_user
-			password: my_pass
----
-			kind: authServices
-			name: my-google-service
-			type: google
-			clientId: my-client-id
----
-			kind: authServices
-			name: other-google-service
-			type: google
-			clientId: other-client-id
----
-			kind: tools
-			name: example_tool
-			type: postgres-sql
-			source: my-pg-instance
-			description: some description
-			statement: |
-				SELECT * FROM SQL_STATEMENT;
-			authRequired:
-				- my-google-service
-			parameters:
-				- name: country
-					type: string
-					description: some description
-				- name: id
-					type: integer
-					description: user id
-					authServices:
-					- name: my-google-service
-						field: user_id
-				- name: email
-					type: string
-					description: user email
-					authServices:
-					- name: my-google-service
-						field: email
-					- name: other-google-service
-						field: other_email
----
-			kind: toolsets
-			name: example_toolset
-			tools:
-				- example_tool
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-pg-instance": cloudsqlpgsrc.Config{
-						Name:     "my-pg-instance",
-						Type:     cloudsqlpgsrc.SourceType,
-						Project:  "my-project",
-						Region:   "my-region",
-						Instance: "my-instance",
-						IPType:   "public",
-						Database: "my_db",
-						User:     "my_user",
-						Password: "my_pass",
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "my-client-id",
-					},
-					"other-google-service": google.Config{
-						Name:     "other-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "other-client-id",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{"my-google-service"},
-						Parameters: []parameters.Parameter{
-							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
-						},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
-						Name:      "example_toolset",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: nil,
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
-			if err != nil {
-				t.Fatalf("failed to parse input: %v", err)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
-				t.Fatalf("incorrect sources parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
-				t.Fatalf("incorrect authServices parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect toolsets parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
-				t.Fatalf("incorrect prompts parse: diff %v", diff)
-			}
-		})
-	}
-
-}
-
-func TestEnvVarReplacement(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	t.Setenv("TestHeader", "ACTUAL_HEADER")
-	t.Setenv("API_KEY", "ACTUAL_API_KEY")
-	t.Setenv("clientId", "ACTUAL_CLIENT_ID")
-	t.Setenv("clientId2", "ACTUAL_CLIENT_ID_2")
-	t.Setenv("toolset_name", "ACTUAL_TOOLSET_NAME")
-	t.Setenv("cat_string", "cat")
-	t.Setenv("food_string", "food")
-	t.Setenv("TestHeader", "ACTUAL_HEADER")
-	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
-	t.Setenv("prompt_content", "ACTUAL_CONTENT")
-
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
-	}{
-		{
-			description: "file with env var example",
-			in: `
-			sources:
-				my-http-instance:
-					kind: http
-					baseUrl: http://test_server/
-					timeout: 10s
-					headers:
-						Authorization: ${TestHeader}
-					queryParams:
-						api-key: ${API_KEY}
-			authServices:
-				my-google-service:
-					kind: google
-					clientId: ${clientId}
-				other-google-service:
-					kind: google
-					clientId: ${clientId2}
-
-			tools:
-				example_tool:
-					kind: http
-					source: my-instance
-					method: GET
-					path: "search?name=alice&pet=${cat_string}"
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					queryParams:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
-					requestBody: |
-							{
-								"age": {{.age}},
-								"city": "{{.city}}",
-								"food": "${food_string}",
-								"other": "$OTHER"
-							}
-					bodyParams:
-						- name: age
-						  type: integer
-						  description: age num
-						- name: city
-						  type: string
-						  description: city string
-					headers:
-						Authorization: API_KEY
-						Content-Type: application/json
-					headerParams:
-						- name: Language
-						  type: string
-						  description: language string
-
-			toolsets:
-				${toolset_name}:
-					- example_tool
-
-
-			prompts:
-				${prompt_name}:
-					description: A test prompt for {{.name}}.
-					messages:
-						- role: user
-						  content: ${prompt_content}
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-http-instance": httpsrc.Config{
-						Name:           "my-http-instance",
-						Type:           httpsrc.SourceType,
-						BaseURL:        "http://test_server/",
-						Timeout:        "10s",
-						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
-						QueryParams:    map[string]string{"api-key": "ACTUAL_API_KEY"},
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "ACTUAL_CLIENT_ID",
-					},
-					"other-google-service": google.Config{
-						Name:     "other-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "ACTUAL_CLIENT_ID_2",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": http.Config{
-						Name:         "example_tool",
-						Type:         "http",
-						Source:       "my-instance",
-						Method:       "GET",
-						Path:         "search?name=alice&pet=cat",
-						Description:  "some description",
-						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
-								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
-						},
-						RequestBody: `{
-  "age": {{.age}},
-  "city": "{{.city}}",
-  "food": "food",
-  "other": "$OTHER"
-}
-`,
-						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
-						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
-						Name:      "ACTUAL_TOOLSET_NAME",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: server.PromptConfigs{
-					"ACTUAL_PROMPT_NAME": &custom.Config{
-						Name:        "ACTUAL_PROMPT_NAME",
-						Description: "A test prompt for {{.name}}.",
-						Messages: []prompts.Message{
-							{
-								Role:    "user",
-								Content: "ACTUAL_CONTENT",
-							},
-						},
-						Arguments: nil,
-					},
-				},
-			},
-		},
-		{
-			description: "file with env var example toolsfile v2",
-			in: `
-			kind: sources
-			name: my-http-instance
-			type: http
-			baseUrl: http://test_server/
-			timeout: 10s
-			headers:
-				Authorization: ${TestHeader}
-			queryParams:
-				api-key: ${API_KEY}
----
-			kind: authServices
-			name: my-google-service
-			type: google
-			clientId: ${clientId}
----
-			kind: authServices
-			name: other-google-service
-			type: google
-			clientId: ${clientId2}
----
-			kind: tools
-			name: example_tool
-			type: http
-			source: my-instance
-			method: GET
-			path: "search?name=alice&pet=${cat_string}"
-			description: some description
-			authRequired:
-				- my-google-auth-service
-				- other-auth-service
-			queryParams:
-				- name: country
-					type: string
-					description: some description
-					authServices:
-					- name: my-google-auth-service
-						field: user_id
-					- name: other-auth-service
-						field: user_id
-			requestBody: |
-					{
-						"age": {{.age}},
-						"city": "{{.city}}",
-						"food": "${food_string}",
-						"other": "$OTHER"
-					}
-			bodyParams:
-				- name: age
-					type: integer
-					description: age num
-				- name: city
-					type: string
-					description: city string
-			headers:
-				Authorization: API_KEY
-				Content-Type: application/json
-			headerParams:
-				- name: Language
-					type: string
-					description: language string
----
-			kind: toolsets
-			name: ${toolset_name}
-			tools:
-				- example_tool
----
-			kind: prompts
-			name: ${prompt_name}
-			description: A test prompt for {{.name}}.
-			messages:
-				- role: user
-					content: ${prompt_content}
-			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-http-instance": httpsrc.Config{
-						Name:           "my-http-instance",
-						Type:           httpsrc.SourceType,
-						BaseURL:        "http://test_server/",
-						Timeout:        "10s",
-						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
-						QueryParams:    map[string]string{"api-key": "ACTUAL_API_KEY"},
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "ACTUAL_CLIENT_ID",
-					},
-					"other-google-service": google.Config{
-						Name:     "other-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "ACTUAL_CLIENT_ID_2",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": http.Config{
-						Name:         "example_tool",
-						Type:         "http",
-						Source:       "my-instance",
-						Method:       "GET",
-						Path:         "search?name=alice&pet=cat",
-						Description:  "some description",
-						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
-								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
-						},
-						RequestBody: `{
-  "age": {{.age}},
-  "city": "{{.city}}",
-  "food": "food",
-  "other": "$OTHER"
-}
-`,
-						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
-						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
-						Name:      "ACTUAL_TOOLSET_NAME",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: server.PromptConfigs{
-					"ACTUAL_PROMPT_NAME": &custom.Config{
-						Name:        "ACTUAL_PROMPT_NAME",
-						Description: "A test prompt for {{.name}}.",
-						Messages: []prompts.Message{
-							{
-								Role:    "user",
-								Content: "ACTUAL_CONTENT",
-							},
-						},
-						Arguments: nil,
-					},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
-			if err != nil {
-				t.Fatalf("failed to parse input: %v", err)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
-				t.Fatalf("incorrect sources parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
-				t.Fatalf("incorrect authServices parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect toolsets parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
-				t.Fatalf("incorrect prompts parse: diff %v", diff)
-			}
-		})
 	}
 }
 
@@ -2571,7 +1137,9 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			cmd := NewCommand()
+			buf := new(bytes.Buffer)
+			opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+			cmd := NewCommand(opts)
 			cmd.SetArgs(tc.args)
 			err := cmd.Execute()
 			if err == nil {
@@ -2586,7 +1154,9 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 
 func TestFileLoadingErrors(t *testing.T) {
 	t.Run("non-existent tools-file", func(t *testing.T) {
-		cmd := NewCommand()
+		buf := new(bytes.Buffer)
+		opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+		cmd := NewCommand(opts)
 		// Use a file that is guaranteed not to exist
 		nonExistentFile := filepath.Join(t.TempDir(), "non-existent-tools.yaml")
 		cmd.SetArgs([]string{"--tools-file", nonExistentFile})
@@ -2601,7 +1171,9 @@ func TestFileLoadingErrors(t *testing.T) {
 	})
 
 	t.Run("non-existent tools-folder", func(t *testing.T) {
-		cmd := NewCommand()
+		buf := new(bytes.Buffer)
+		opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+		cmd := NewCommand(opts)
 		nonExistentFolder := filepath.Join(t.TempDir(), "non-existent-folder")
 		cmd.SetArgs([]string{"--tools-folder", nonExistentFolder})
 
@@ -2615,94 +1187,6 @@ func TestFileLoadingErrors(t *testing.T) {
 	})
 }
 
-func TestMergeToolsFiles(t *testing.T) {
-	file1 := ToolsFile{
-		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
-		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
-		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-	}
-	file2 := ToolsFile{
-		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-		Tools:        server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
-		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
-	}
-	fileWithConflicts := ToolsFile{
-		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
-	}
-
-	testCases := []struct {
-		name    string
-		files   []ToolsFile
-		want    ToolsFile
-		wantErr bool
-	}{
-		{
-			name:  "merge two distinct files",
-			files: []ToolsFile{file1, file2},
-			want: ToolsFile{
-				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
-				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
-				Prompts:         server.PromptConfigs{},
-				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-			},
-			wantErr: false,
-		},
-		{
-			name:    "merge with conflicts",
-			files:   []ToolsFile{file1, file2, fileWithConflicts},
-			wantErr: true,
-		},
-		{
-			name:  "merge single file",
-			files: []ToolsFile{file1},
-			want: ToolsFile{
-				Sources:         file1.Sources,
-				AuthServices:    make(server.AuthServiceConfigs),
-				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
-				Tools:           file1.Tools,
-				Toolsets:        file1.Toolsets,
-				Prompts:         server.PromptConfigs{},
-			},
-		},
-		{
-			name:  "merge empty list",
-			files: []ToolsFile{},
-			want: ToolsFile{
-				Sources:         make(server.SourceConfigs),
-				AuthServices:    make(server.AuthServiceConfigs),
-				EmbeddingModels: make(server.EmbeddingModelConfigs),
-				Tools:           make(server.ToolConfigs),
-				Toolsets:        make(server.ToolsetConfigs),
-				Prompts:         server.PromptConfigs{},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := mergeToolsFiles(tc.files...)
-			if (err != nil) != tc.wantErr {
-				t.Fatalf("mergeToolsFiles() error = %v, wantErr %v", err, tc.wantErr)
-			}
-			if !tc.wantErr {
-				if diff := cmp.Diff(tc.want, got); diff != "" {
-					t.Errorf("mergeToolsFiles() mismatch (-want +got):\n%s", diff)
-				}
-			} else {
-				if err == nil {
-					t.Fatal("expected an error for conflicting files but got none")
-				}
-				if !strings.Contains(err.Error(), "resource conflicts detected") {
-					t.Errorf("expected conflict error, but got: %v", err)
-				}
-			}
-		})
-	}
-}
 func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
 	// Setup custom tools file
@@ -2868,7 +1352,7 @@ authSources:
 			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 			defer cancel()
 
-			cmd, output, err := invokeCommandWithContext(ctx, tc.args)
+			_, opts, output, err := invokeCommandWithContext(ctx, tc.args)
 
 			if tc.wantErr {
 				if err == nil {
@@ -2885,7 +1369,7 @@ authSources:
 					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
 				}
 				if tc.cfgCheck != nil {
-					if err := tc.cfgCheck(cmd.cfg); err != nil {
+					if err := tc.cfgCheck(opts.Cfg); err != nil {
 						t.Errorf("config check failed: %v", err)
 					}
 				}
@@ -2919,7 +1403,7 @@ func TestDefaultToolsFileBehavior(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 			defer cancel()
-			_, output, err := invokeCommandWithContext(ctx, tc.args)
+			_, _, output, err := invokeCommandWithContext(ctx, tc.args)
 
 			if tc.expectRun {
 				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
@@ -2941,114 +1425,29 @@ func TestDefaultToolsFileBehavior(t *testing.T) {
 	}
 }
 
-func TestParameterReferenceValidation(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
+func TestSubcommandWiring(t *testing.T) {
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	baseCmd := NewCommand(opts)
 
-	// Base template
-	baseYaml := `
-sources:
-  dummy-source:
-    kind: http
-    baseUrl: http://example.com
-tools:
-  test-tool:
-    kind: postgres-sql
-    source: dummy-source
-    description: test tool
-    statement: SELECT 1;
-    parameters:
-%s`
-
-	tcs := []struct {
-		desc      string
-		params    string
-		wantErr   bool
-		errSubstr string
+	tests := []struct {
+		args         []string
+		expectedName string
 	}{
-		{
-			desc: "valid backward reference",
-			params: `
-      - name: source_param
-        type: string
-        description: source
-      - name: copy_param
-        type: string
-        description: copy
-        valueFromParam: source_param`,
-			wantErr: false,
-		},
-		{
-			desc: "valid forward reference (out of order)",
-			params: `
-      - name: copy_param
-        type: string
-        description: copy
-        valueFromParam: source_param
-      - name: source_param
-        type: string
-        description: source`,
-			wantErr: false,
-		},
-		{
-			desc: "invalid missing reference",
-			params: `
-      - name: copy_param
-        type: string
-        description: copy
-        valueFromParam: non_existent_param`,
-			wantErr:   true,
-			errSubstr: "references '\"non_existent_param\"' in the 'valueFromParam' field",
-		},
-		{
-			desc: "invalid self reference",
-			params: `
-      - name: myself
-        type: string
-        description: self
-        valueFromParam: myself`,
-			wantErr:   true,
-			errSubstr: "parameter \"myself\" cannot copy value from itself",
-		},
-		{
-			desc: "multiple valid references",
-			params: `
-      - name: a
-        type: string
-        description: a
-      - name: b
-        type: string
-        description: b
-        valueFromParam: a
-      - name: c
-        type: string
-        description: c
-        valueFromParam: a`,
-			wantErr: false,
-		},
+		{[]string{"invoke"}, "invoke"},
+		{[]string{"skills-generate"}, "skills-generate"},
 	}
 
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			// Indent parameters to match YAML structure
-			yamlContent := fmt.Sprintf(baseYaml, tc.params)
+	for _, tc := range tests {
+		// Find returns the Command struct and the remaining args
+		cmd, _, err := baseCmd.Find(tc.args)
 
-			_, err := parseToolsFile(ctx, []byte(yamlContent))
+		if err != nil {
+			t.Fatalf("Failed to find command %v: %v", tc.args, err)
+		}
 
-			if tc.wantErr {
-				if err == nil {
-					t.Fatal("expected error, got nil")
-				}
-				if !strings.Contains(err.Error(), tc.errSubstr) {
-					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
-				}
-			}
-		})
+		if cmd.Name() != tc.expectedName {
+			t.Errorf("Expected command name %q, got %q", tc.expectedName, cmd.Name())
+		}
 	}
 }

@@ -12,15 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package invoke
 
 import (
-	"context"
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/googleapis/genai-toolbox/cmd/internal"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
+	"github.com/spf13/cobra"
 )
+
+func invokeCommand(args []string) (string, error) {
+	parentCmd := &cobra.Command{Use: "toolbox"}
+
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	internal.PersistentFlags(parentCmd, opts)
+
+	cmd := NewCommand(opts)
+	parentCmd.AddCommand(cmd)
+	parentCmd.SetArgs(args)
+
+	err := parentCmd.Execute()
+	return buf.String(), err
+}
 
 func TestInvokeTool(t *testing.T) {
 	// Create a temporary tools file
@@ -86,7 +108,7 @@ tools:
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, got, err := invokeCommandWithContext(context.Background(), tc.args)
+			got, err := invokeCommand(tc.args)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("got error %v, wantErr %v", err, tc.wantErr)
 			}
@@ -121,7 +143,7 @@ tools:
 	}
 
 	args := []string{"invoke", "bq-tool", "--tools-file", toolsFilePath}
-	_, _, err := invokeCommandWithContext(context.Background(), args)
+	_, err := invokeCommand(args)
 	if err == nil {
 		t.Fatal("expected error for tool requiring client auth, but got nil")
 	}
