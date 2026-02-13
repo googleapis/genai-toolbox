@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -32,65 +33,65 @@ import (
 const resourceType string = "mysql-list-active-queries"
 
 const listActiveQueriesStatementMySQL = `
-	SELECT
-		p.id AS processlist_id,
-		substring(IFNULL(p.info, t.trx_query), 1, 100) AS query,
-		t.trx_started AS trx_started,
-		(UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_started)) AS trx_duration_seconds,
-		(UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_wait_started)) AS trx_wait_duration_seconds,
-		p.time AS query_time,
-		t.trx_state AS trx_state,
-		p.state AS process_state,
-		IF(p.host IS NULL OR p.host = '', p.user, concat(p.user, '@', SUBSTRING_INDEX(p.host, ':', 1))) AS user,
-		t.trx_rows_locked AS trx_rows_locked,
-		t.trx_rows_modified AS trx_rows_modified,
-		p.db AS db
-	FROM
-		information_schema.processlist p
-		LEFT OUTER JOIN
-		information_schema.innodb_trx t
-		ON p.id = t.trx_mysql_thread_id
-	WHERE
-		(? IS NULL OR p.time >= ?)
-		AND p.id != CONNECTION_ID()
-		AND Command NOT IN ('Binlog Dump', 'Binlog Dump GTID', 'Connect', 'Connect Out', 'Register Slave')
-		AND User NOT IN ('system user', 'event_scheduler')
-		AND (t.trx_id is NOT NULL OR command != 'Sleep')
-	ORDER BY
-		t.trx_started
-	LIMIT ?;
+    SELECT
+        p.id AS processlist_id,
+        substring(IFNULL(p.info, t.trx_query), 1, 100) AS query,
+        t.trx_started AS trx_started,
+        (UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_started)) AS trx_duration_seconds,
+        (UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_wait_started)) AS trx_wait_duration_seconds,
+        p.time AS query_time,
+        t.trx_state AS trx_state,
+        p.state AS process_state,
+        IF(p.host IS NULL OR p.host = '', p.user, concat(p.user, '@', SUBSTRING_INDEX(p.host, ':', 1))) AS user,
+        t.trx_rows_locked AS trx_rows_locked,
+        t.trx_rows_modified AS trx_rows_modified,
+        p.db AS db
+    FROM
+        information_schema.processlist p
+        LEFT OUTER JOIN
+        information_schema.innodb_trx t
+        ON p.id = t.trx_mysql_thread_id
+    WHERE
+        (? IS NULL OR p.time >= ?)
+        AND p.id != CONNECTION_ID()
+        AND Command NOT IN ('Binlog Dump', 'Binlog Dump GTID', 'Connect', 'Connect Out', 'Register Slave')
+        AND User NOT IN ('system user', 'event_scheduler')
+        AND (t.trx_id is NOT NULL OR command != 'Sleep')
+    ORDER BY
+        t.trx_started
+    LIMIT ?;
 `
 
 const listActiveQueriesStatementCloudSQLMySQL = `
-	SELECT
-		p.id AS processlist_id,
-		substring(IFNULL(p.info, t.trx_query), 1, 100) AS query,
-		t.trx_started AS trx_started,
-		(UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_started)) AS trx_duration_seconds,
-		(UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_wait_started)) AS trx_wait_duration_seconds,
-		p.time AS query_time,
-		t.trx_state AS trx_state,
-		p.state AS process_state,
-		IF(p.host IS NULL OR p.host = '', p.user, concat(p.user, '@', SUBSTRING_INDEX(p.host, ':', 1))) AS user,
-		t.trx_rows_locked AS trx_rows_locked,
-		t.trx_rows_modified AS trx_rows_modified,
-		p.db AS db
-	FROM
-		information_schema.processlist p
-		LEFT OUTER JOIN
-		information_schema.innodb_trx t
-		ON p.id = t.trx_mysql_thread_id
-	WHERE
-		(? IS NULL OR p.time >= ?)
-		AND p.id != CONNECTION_ID()
-		AND SUBSTRING_INDEX(IFNULL(p.host,''), ':', 1) NOT IN ('localhost', '127.0.0.1')
-		AND IFNULL(p.host,'') NOT LIKE '::1%'
-		AND Command NOT IN ('Binlog Dump', 'Binlog Dump GTID', 'Connect', 'Connect Out', 'Register Slave')
-		AND User NOT IN ('system user', 'event_scheduler')
-		AND (t.trx_id is NOT NULL OR command != 'sleep')
-	ORDER BY
-		t.trx_started
-	LIMIT ?;
+    SELECT
+        p.id AS processlist_id,
+        substring(IFNULL(p.info, t.trx_query), 1, 100) AS query,
+        t.trx_started AS trx_started,
+        (UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_started)) AS trx_duration_seconds,
+        (UNIX_TIMESTAMP(UTC_TIMESTAMP()) - UNIX_TIMESTAMP(t.trx_wait_started)) AS trx_wait_duration_seconds,
+        p.time AS query_time,
+        t.trx_state AS trx_state,
+        p.state AS process_state,
+        IF(p.host IS NULL OR p.host = '', p.user, concat(p.user, '@', SUBSTRING_INDEX(p.host, ':', 1))) AS user,
+        t.trx_rows_locked AS trx_rows_locked,
+        t.trx_rows_modified AS trx_rows_modified,
+        p.db AS db
+    FROM
+        information_schema.processlist p
+        LEFT OUTER JOIN
+        information_schema.innodb_trx t
+        ON p.id = t.trx_mysql_thread_id
+    WHERE
+        (? IS NULL OR p.time >= ?)
+        AND p.id != CONNECTION_ID()
+        AND SUBSTRING_INDEX(IFNULL(p.host,''), ':', 1) NOT IN ('localhost', '127.0.0.1')
+        AND IFNULL(p.host,'') NOT LIKE '::1%'
+        AND Command NOT IN ('Binlog Dump', 'Binlog Dump GTID', 'Connect', 'Connect Out', 'Register Slave')
+        AND User NOT IN ('system user', 'event_scheduler')
+        AND (t.trx_id is NOT NULL OR command != 'sleep')
+    ORDER BY
+        t.trx_started
+    LIMIT ?;
 `
 
 func init() {
@@ -177,30 +178,34 @@ type Tool struct {
 	statement   string
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	duration, ok := paramsMap["min_duration_secs"].(int)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'min_duration_secs' parameter; expected an integer")
+		return nil, util.NewAgentError("invalid 'min_duration_secs' parameter; expected an integer", nil)
 	}
 	limit, ok := paramsMap["limit"].(int)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'limit' parameter; expected an integer")
+		return nil, util.NewAgentError("invalid 'limit' parameter; expected an integer", nil)
 	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, t.statement))
-	return source.RunSQL(ctx, t.statement, []any{duration, duration, limit})
+	resp, err := source.RunSQL(ctx, t.statement, []any{duration, duration, limit})
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

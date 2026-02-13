@@ -16,6 +16,7 @@ package lookeradddashboardelement
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -134,58 +135,74 @@ var (
 	visType  string = "vis"
 )
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 
 	logger.DebugContext(ctx, "params = ", params)
 
 	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("error building query request: %w", err)
+		return nil, util.NewAgentError("error building query request", err)
 	}
 
 	paramsMap := params.AsMap()
-	dashboard_id := paramsMap["dashboard_id"].(string)
-	title := paramsMap["title"].(string)
 
-	visConfig := paramsMap["vis_config"].(map[string]any)
+	dashboard_id, ok := paramsMap["dashboard_id"].(string)
+	if !ok {
+		return nil, util.NewAgentError("dashboard_id parameter missing or invalid", nil)
+	}
+
+	title, ok := paramsMap["title"].(string)
+	if !ok {
+		title = ""
+	}
+
+	visConfig, ok := paramsMap["vis_config"].(map[string]any)
+	if !ok {
+		visConfig = make(map[string]any)
+	}
 	wq.VisConfig = &visConfig
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	qresp, err := sdk.CreateQuery(*wq, "id", source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create query request: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	dashFilters := []any{}
 	if v, ok := paramsMap["dashboard_filters"]; ok {
 		if v != nil {
-			dashFilters = paramsMap["dashboard_filters"].([]any)
+			if df, ok := v.([]any); ok {
+				dashFilters = df
+			}
 		}
 	}
 
 	var filterables []v4.ResultMakerFilterables
 	for _, m := range dashFilters {
-		f := m.(map[string]any)
+		f, ok := m.(map[string]any)
+		if !ok {
+			return nil, util.NewAgentError("invalid dashboard filter structure", nil)
+		}
 		name, ok := f["dashboard_filter_name"].(string)
 		if !ok {
-			return nil, fmt.Errorf("error processing dashboard filter: %w", err)
+			return nil, util.NewAgentError("error processing dashboard filter: missing dashboard_filter_name", nil)
 		}
 		field, ok := f["field"].(string)
 		if !ok {
-			return nil, fmt.Errorf("error processing dashboard filter: %w", err)
+			return nil, util.NewAgentError("error processing dashboard filter: missing field", nil)
 		}
 		listener := v4.ResultMakerFilterablesListen{
 			DashboardFilterName: &name,
@@ -233,7 +250,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	resp, err := sdk.CreateDashboardElement(req, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create dashboard element request: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
