@@ -50,7 +50,10 @@ from Toolbox.
    an agent:
 
     {{< tabpane persist=header >}}
-{{< tab header="LangChain Go" lang="go" >}}
+{{< tab header="LangChain Go" lang="go" >}} Set your API key (If you don't have an API key yet, you can get one from [Google AI Studio](https://aistudio.google.com/app/apikey).)
+   ```bash
+   export GOOGLE_API_KEY="YOUR_ACTUAL_GEMINI_API_KEY"
+   ```
 
 {{< include "quickstart/go/langchain/quickstart.go" >}}
 
@@ -74,7 +77,11 @@ from Toolbox.
 
 {{< /tab >}}
 
-{{< tab header="ADK Go" lang="go" >}}
+{{< tab header="ADK Go" lang="go" >}} Set your API key (If you don't have an API key yet, you can get one from [Google AI Studio](https://aistudio.google.com/app/apikey).)
+   ```bash
+   export GEMINI_API_KEY="YOUR_ACTUAL_GEMINI_API_KEY"
+   ```
+
 
 {{< include "quickstart/go/adkgo/quickstart.go" >}}
 
