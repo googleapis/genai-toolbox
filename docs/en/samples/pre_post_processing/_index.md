@@ -50,5 +50,30 @@ It is helpful to understand how tool-level processing differs from other scopes:
 - **Model Level**: Intercepts individual calls to the LLM (prompts and responses). Unlike tool-level, this applies globally to all text sent/received, making it better for global PII redaction or token tracking.
 - **Agent Level**: Wraps the high-level execution loop (e.g., a "turn" in the conversation). Unlike tool-level, this envelopes the entire turn (user input to final response), making it suitable for session management or end-to-end auditing.
 
+## Best Practices
+
+### Security & Guardrails
+
+- **Principle of Least Privilege**: Ensure that tools run with the minimum necessary permissions. Middleware is an excellent place to enforce "read-only" modes or verify user identity before executing sensitive actions.
+- **Input Sanitization**: Actively strip potential PII (like credit card numbers or raw emails) from tool arguments before logging them.
+- **Prompt Injection Defense**: Use pre-processing hooks to scan user inputs for known jailbreak patterns or malicious directives before they reach the model or tools.
+
+### Observability & Debugging
+
+- **Structured Logging**: Instead of simple print statements, use structured JSON logging with correlation IDs. This allows you to trace a single user request through multiple agent turns and tool calls.
+- **Logging for Testability**: LLM responses are non-deterministic and may summarize away key details.
+  - **Pattern**: Add explicit logging markers in your post-processing middleware (e.g., `logger.info("ACTION_SUCCESS: <id>")`).
+  - **Benefit**: Your integration tests can grep logs for these stable markers to verify tool success, rather than painfully parsing variable natural language responses.
+
+### Performance & Cost Optimization
+
+- **Token Economy**: Tools often return verbose JSON. Use post-processing to strip unnecessary fields or summarize large datasets *before* returning the result to the LLM's context window. This saves tokens and reduces latency.
+- **Caching**: For read-heavy tools (like "search_knowledge_base"), implement caching middleware to return previous results for identical queries, saving both time and API costs.
+
+### Error Handling
+
+- **Graceful Degradation**: If a tool fails (e.g., API timeout), catch the exception in middleware and return a structured error message to the LLM (e.g., `Error: Database timeout, please try again`).
+- **Self-Correction**: Well-formatted error messages often allow the LLM to understand *why* a call failed and retry it with corrected parameters automatically.
+
 
 ## Samples
