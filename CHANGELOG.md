@@ -5,31 +5,26 @@
 
 ### ⚠ BREAKING CHANGES
 
-* update configuration file v2 ([#2369](https://github.com/googleapis/genai-toolbox/issues/2369))
+* Update configuration file v2 ([#2369](https://github.com/googleapis/genai-toolbox/issues/2369))([293c1d6](https://github.com/googleapis/genai-toolbox/commit/293c1d6889c39807855ba5e01d4c13ba2a4c50ce))
+* Update/add detailed telemetry for mcp endpoint compliant with OTEL semantic convention ([#1987](https://github.com/googleapis/genai-toolbox/issues/1987)) ([478a0bd](https://github.com/googleapis/genai-toolbox/commit/478a0bdb59288c1213f83862f95a698b4c2c0aab))
 
 ### Features
 
 * **cli/invoke:** Add support for direct tool invocation from CLI ([#2353](https://github.com/googleapis/genai-toolbox/issues/2353)) ([6e49ba4](https://github.com/googleapis/genai-toolbox/commit/6e49ba436ef2390c13feaf902b29f5907acffb57))
 * **cli/skills:** Add support for generating agent skills from toolset ([#2392](https://github.com/googleapis/genai-toolbox/issues/2392)) ([80ef346](https://github.com/googleapis/genai-toolbox/commit/80ef34621453b77bdf6a6016c354f102a17ada04))
+* **cloud-logging-admin:** Add source, tools, integration test and docs ([#2137](https://github.com/googleapis/genai-toolbox/issues/2137)) ([252fc30](https://github.com/googleapis/genai-toolbox/commit/252fc3091af10d25d8d7af7e047b5ac87a5dd041))
 * **cockroachdb:** Add CockroachDB integration with cockroach-go ([#2006](https://github.com/googleapis/genai-toolbox/issues/2006)) ([1fdd99a](https://github.com/googleapis/genai-toolbox/commit/1fdd99a9b609a5e906acce414226ff44d75d5975))
 * **prebuiltconfigs/alloydb-omni:** Implement Alloydb omni dataplane tools ([#2340](https://github.com/googleapis/genai-toolbox/issues/2340)) ([e995349](https://github.com/googleapis/genai-toolbox/commit/e995349ea0756c700d188b8f04e9459121219f0c))
 * **server:** Add Tool call error categories ([#2387](https://github.com/googleapis/genai-toolbox/issues/2387)) ([32cb4db](https://github.com/googleapis/genai-toolbox/commit/32cb4db712d27579c1bf29e61cbd0bed02286c28))
-* **sources/cloud-logging-admin:** Add source, tools, integration test and docs ([#2137](https://github.com/googleapis/genai-toolbox/issues/2137)) ([252fc30](https://github.com/googleapis/genai-toolbox/commit/252fc3091af10d25d8d7af7e047b5ac87a5dd041))
-* **tools/looker:** Validate project tool ([#2430](https://github.com/googleapis/genai-toolbox/issues/2430)) ([a15a128](https://github.com/googleapis/genai-toolbox/commit/a15a12873f936b0102aeb9500cc3bcd71bb38c34))
-* Update configuration file v2 ([#2369](https://github.com/googleapis/genai-toolbox/issues/2369)) ([293c1d6](https://github.com/googleapis/genai-toolbox/commit/293c1d6889c39807855ba5e01d4c13ba2a4c50ce))
-* Update/add detailed telemetry for stdio and http mcp transports ([#1987](https://github.com/googleapis/genai-toolbox/issues/1987)) ([478a0bd](https://github.com/googleapis/genai-toolbox/commit/478a0bdb59288c1213f83862f95a698b4c2c0aab))
+* **tools/looker:** support `looker-validate-project` tool ([#2430](https://github.com/googleapis/genai-toolbox/issues/2430)) ([a15a128](https://github.com/googleapis/genai-toolbox/commit/a15a12873f936b0102aeb9500cc3bcd71bb38c34))
+
 
 
 ### Bug Fixes
 
 * **dataplex:** Capture GCP HTTP errors in MCP Toolbox ([#2347](https://github.com/googleapis/genai-toolbox/issues/2347)) ([1d7c498](https://github.com/googleapis/genai-toolbox/commit/1d7c4981164c34b4d7bc8edecfd449f57ad11e15))
 * **sources/cockroachdb:** Update kind to type ([#2465](https://github.com/googleapis/genai-toolbox/issues/2465)) ([2d341ac](https://github.com/googleapis/genai-toolbox/commit/2d341acaa61c3c1fe908fceee8afbd90fb646d3a))
-* Surface Dataplex API errors in MCP results ([1d7c498](https://github.com/googleapis/genai-toolbox/commit/1d7c4981164c34b4d7bc8edecfd449f57ad11e15))
-
-
-### Miscellaneous Chores
-
-* Release 0.27.0 ([#2467](https://github.com/googleapis/genai-toolbox/issues/2467)) ([e1739ab](https://github.com/googleapis/genai-toolbox/commit/e1739abd811c85cd70198c687b254c59aa29c0f7))
+* Surface Dataplex API errors in MCP results ([#2347](https://github.com/googleapis/genai-toolbox/pull/2347))([1d7c498](https://github.com/googleapis/genai-toolbox/commit/1d7c4981164c34b4d7bc8edecfd449f57ad11e15))
 
 ## [0.26.0](https://github.com/googleapis/genai-toolbox/compare/v0.25.0...v0.26.0) (2026-01-22)
 
