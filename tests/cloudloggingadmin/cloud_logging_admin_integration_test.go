@@ -332,8 +332,8 @@ func runQueryLogsErrorTest(t *testing.T) {
 	t.Run("query-logs-error", func(t *testing.T) {
 		requestBody := `{"filter": "INVALID_FILTER_SYNTAX :::", "limit": 10}`
 		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/query-logs/invoke", bytes.NewBuffer([]byte(requestBody)), nil)
-		if resp.StatusCode == 200 {
-			t.Errorf("expected error status code, got 200 OK")
+		if resp.StatusCode != 200 {
+			t.Errorf("expected 200 OK")
 		}
 	})
 }

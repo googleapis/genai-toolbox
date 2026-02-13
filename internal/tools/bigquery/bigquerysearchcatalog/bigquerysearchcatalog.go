@@ -17,6 +17,7 @@ package bigquerysearchcatalog
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
@@ -26,6 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
 )
@@ -186,28 +188,31 @@ func ExtractType(resourceString string) string {
 	return typeMap[resourceString[lastIndex+1:]]
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 	pageSize := int32(paramsMap["pageSize"].(int))
 	prompt, _ := paramsMap["prompt"].(string)
+
 	projectIdSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["projectIds"].([]any), "string")
 	if err != nil {
-		return nil, fmt.Errorf("can't convert projectIds to array of strings: %s", err)
+		return nil, util.NewAgentError(fmt.Sprintf("can't convert projectIds to array of strings: %s", err), err)
 	}
 	projectIds := projectIdSlice.([]string)
+
 	datasetIdSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["datasetIds"].([]any), "string")
 	if err != nil {
-		return nil, fmt.Errorf("can't convert datasetIds to array of strings: %s", err)
+		return nil, util.NewAgentError(fmt.Sprintf("can't convert datasetIds to array of strings: %s", err), err)
 	}
 	datasetIds := datasetIdSlice.([]string)
+
 	typesSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["types"].([]any), "string")
 	if err != nil {
-		return nil, fmt.Errorf("can't convert types to array of strings: %s", err)
+		return nil, util.NewAgentError(fmt.Sprintf("can't convert types to array of strings: %s", err), err)
 	}
 	types := typesSlice.([]string)
 
@@ -223,17 +228,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
+			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
 		catalogClient, err = dataplexClientCreator(tokenStr)
 		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+			return nil, util.NewClientServerError("error creating client from OAuth access token", http.StatusInternalServerError, err)
 		}
 	}
 
 	it := catalogClient.SearchEntries(ctx, req)
 	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", source.BigQueryProject())
+		return nil, util.NewClientServerError(fmt.Sprintf("failed to create search entries iterator for project %q", source.BigQueryProject()), http.StatusInternalServerError, nil)
 	}
 
 	var results []Response
@@ -243,7 +248,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			break
 		}
 		if err != nil {
-			break
+			return nil, util.ProcessGcpError(err)
 		}
 		entrySource := entry.DataplexEntry.GetEntrySource()
 		resp := Response{

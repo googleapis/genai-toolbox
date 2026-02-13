@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -95,7 +94,11 @@ func (h *masterRestoreBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		response = map[string]any{"name": "op1", "status": "PENDING"}
 		statusCode = http.StatusOK
 	default:
-		http.Error(w, fmt.Sprintf("unhandled restore request body: %v", body), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"error": `oaraneter "backup_id" is required`,
+		})
 		return
 	}
 
@@ -178,25 +181,22 @@ func TestRestoreBackupToolEndpoints(t *testing.T) {
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:        "missing source instance info for standard backup",
-			toolName:    "restore-backup",
-			body:        `{"target_project": "p1", "target_instance": "instance-project-level", "backup_id": "12345"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing source instance info for standard backup",
+			toolName: "restore-backup",
+			body:     `{"target_project": "p1", "target_instance": "instance-project-level", "backup_id": "12345"}`,
+			want:     `{"error":"error processing GCP request: source project and instance are required when restoring via backup ID"}`,
 		},
 		{
-			name:        "missing backup identifier",
-			toolName:    "restore-backup",
-			body:        `{"target_project": "p1", "target_instance": "instance-project-level"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing backup identifier",
+			toolName: "restore-backup",
+			body:     `{"target_project": "p1", "target_instance": "instance-project-level"}`,
+			want:     `{"error":"parameter \"backup_id\" is required"}`,
 		},
 		{
-			name:        "missing target instance info",
-			toolName:    "restore-backup",
-			body:        `{"backup_id": "12345"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing target instance info",
+			toolName: "restore-backup",
+			body:     `{"backup_id": "12345"}`,
+			want:     `{"error":"parameter \"target_project\" is required"}`,
 		},
 	}
 
@@ -232,19 +232,14 @@ func TestRestoreBackupToolEndpoints(t *testing.T) {
 				Result string `json:"result"`
 			}
 			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
+				t.Fatalf("failed to decode response envelope: %v", err)
 			}
 
-			var got, want map[string]any
-			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
-				t.Fatalf("failed to unmarshal result: %v", err)
-			}
-			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
-				t.Fatalf("failed to unmarshal want: %v", err)
-			}
+			got := strings.TrimSpace(result.Result)
+			want := strings.TrimSpace(tc.want)
 
-			if !reflect.DeepEqual(got, want) {
-				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
+			if got != want {
+				t.Fatalf("unexpected result string:\n got: %s\nwant: %s", got, want)
 			}
 		})
 	}

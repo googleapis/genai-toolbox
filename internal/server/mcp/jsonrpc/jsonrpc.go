@@ -45,6 +45,9 @@ type Request struct {
 			// notifications. The receiver is not obligated to provide these
 			// notifications.
 			ProgressToken ProgressToken `json:"progressToken,omitempty"`
+			// W3C Trace Context fields for distributed tracing
+			Traceparent string `json:"traceparent,omitempty"`
+			Tracestate  string `json:"tracestate,omitempty"`
 		} `json:"_meta,omitempty"`
 	} `json:"params,omitempty"`
 }
@@ -95,6 +98,24 @@ type Error struct {
 	// Additional information about the error. The value of this member
 	// is defined by the sender (e.g. detailed error information, nested errors etc.).
 	Data interface{} `json:"data,omitempty"`
+}
+
+// String returns the error type as a string based on the error code.
+func (e Error) String() string {
+	switch e.Code {
+	case METHOD_NOT_FOUND:
+		return "method_not_found"
+	case INVALID_PARAMS:
+		return "invalid_params"
+	case INTERNAL_ERROR:
+		return "internal_error"
+	case PARSE_ERROR:
+		return "parse_error"
+	case INVALID_REQUEST:
+		return "invalid_request"
+	default:
+		return "jsonrpc_error"
+	}
 }
 
 // JSONRPCError represents a non-successful (error) response to a request.
