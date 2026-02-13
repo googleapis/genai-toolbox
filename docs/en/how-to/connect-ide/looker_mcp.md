@@ -6,7 +6,7 @@ description: >
   Connect your IDE to Looker using Toolbox.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+[Model Context Protocol (MCP)](https://modelcotextprotocol.io/introduction) is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox]
 to expose your developer assistant tools to a Looker instance:
@@ -20,7 +20,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Claude code][claudecode]
 * [Antigravity][antigravity]
 
-[toolbox]: https://github.com/googleapis/genai-toolbox
+[toolbox]: https://gitub.com/googleapis/genai-toolbox
 [gemini-cli]: #configure-your-mcp-client
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
@@ -92,7 +92,7 @@ After you install Looker in the MCP Store, resources and tools from the server a
 ## Install MCP Toolbox
 
 1. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   binary](https://gitub.com/googleapis/genai-toolbox/releases) corresponding
    to your OS and CPU architecture. You are required to use Toolbox version
    v0.10.0+:
 
