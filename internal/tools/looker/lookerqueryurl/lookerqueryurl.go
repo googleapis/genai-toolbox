@@ -16,6 +16,7 @@ package lookerqueryurl
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -115,34 +116,37 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "params = ", params)
 	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("error building query request: %w", err)
+		return nil, util.NewAgentError("error building query request", err)
 	}
 
 	paramsMap := params.AsMap()
-	visConfig := paramsMap["vis_config"].(map[string]any)
+	visConfig, ok := paramsMap["vis_config"].(map[string]any)
+	if !ok {
+		visConfig = make(map[string]any)
+	}
 	wq.VisConfig = &visConfig
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 	respFields := "id,slug,share_url,expanded_share_url"
 	resp, err := sdk.CreateQuery(*wq, respFields, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making query request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = ", resp)
 

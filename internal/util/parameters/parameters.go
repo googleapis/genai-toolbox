@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"regexp"
 	"slices"
@@ -118,7 +119,7 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 		}
 		return v, nil
 	}
-	return nil, fmt.Errorf("missing or invalid authentication header: %w", util.ErrUnauthorized)
+	return nil, util.NewClientServerError("missing or invalid authentication header", http.StatusUnauthorized, nil)
 }
 
 // CheckParamRequired checks if a parameter is required based on the required and default field.
@@ -147,20 +148,20 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 				v = p.GetDefault()
 				// if the parameter is required and no value given, throw an error
 				if CheckParamRequired(p.GetRequired(), v) {
-					return nil, fmt.Errorf("parameter %q is required", name)
+					return nil, util.NewAgentError(fmt.Sprintf("parameter %q is required", name), nil)
 				}
 			}
 		} else {
 			// parse authenticated parameter
 			v, err = parseFromAuthService(paramAuthServices, claimsMap)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
+				return nil, util.NewClientServerError(fmt.Sprintf("error parsing authenticated parameter %q", name), http.StatusUnauthorized, err)
 			}
 		}
 		if v != nil {
 			newV, err = p.Parse(v)
 			if err != nil {
-				return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+				return nil, util.NewAgentError(fmt.Sprintf("unable to parse value for %q", name), err)
 			}
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
