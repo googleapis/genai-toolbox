@@ -43,7 +43,7 @@ require (
 	github.com/looker-open-source/sdk-codegen/go v0.25.22
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
+	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/snowflakedb/gosnowflake v1.18.1
