@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +17,7 @@ package lookergenerateembedurl
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -114,15 +115,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 	embedType := paramsMap["type"].(string)
@@ -138,7 +139,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	forceLogoutLogin := true
@@ -151,7 +152,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	logger.ErrorContext(ctx, "Making request %v", req)
 	resp, err := sdk.CreateEmbedUrlAsMe(req, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error making create_embed_url_as_me request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.ErrorContext(ctx, "Got response %v", resp)
 
