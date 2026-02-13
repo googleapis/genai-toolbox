@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -91,46 +92,46 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	sql, ok := paramsMap["sql_statement"].(string)
+	sqlStr, ok := paramsMap["sql_statement"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql_statement"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to get cast %s", paramsMap["sql_statement"]), nil)
 	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sqlStr))
 
-	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sql)
+	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sqlStr)
 	result, err := source.RunSQL(ctx, query, nil)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGeneralError(err)
 	}
 	// extract and return only the query plan object
 	resSlice, ok := result.([]any)
 	if !ok || len(resSlice) == 0 {
-		return nil, fmt.Errorf("no query plan returned")
+		return nil, util.NewClientServerError("no query plan returned", http.StatusInternalServerError, nil)
 	}
 	row, ok := resSlice[0].(orderedmap.Row)
 	if !ok || len(row.Columns) == 0 {
-		return nil, fmt.Errorf("no query plan returned in row")
+		return nil, util.NewClientServerError("no query plan returned in row", http.StatusInternalServerError, nil)
 	}
 	plan, ok := row.Columns[0].Value.(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to convert plan object to string")
+		return nil, util.NewClientServerError("unable to convert plan object to string", http.StatusInternalServerError, nil)
 	}
 	var out map[string]any
 	if err := json.Unmarshal([]byte(plan), &out); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal query plan json: %w", err)
+		return nil, util.NewClientServerError("failed to unmarshal query plan json", http.StatusInternalServerError, err)
 	}
 	return out, nil
 }

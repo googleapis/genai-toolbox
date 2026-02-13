@@ -17,12 +17,14 @@ package cloudsqlpgcreateinstances
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
@@ -121,33 +123,33 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, util.NewAgentError("missing 'project' parameter", nil)
 	}
 	name, ok := paramsMap["name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'name' parameter")
+		return nil, util.NewAgentError("missing 'name' parameter", nil)
 	}
 	dbVersion, ok := paramsMap["databaseVersion"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'databaseVersion' parameter")
+		return nil, util.NewAgentError("missing 'databaseVersion' parameter", nil)
 	}
 	rootPassword, ok := paramsMap["rootPassword"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'rootPassword' parameter")
+		return nil, util.NewAgentError("missing 'rootPassword' parameter", nil)
 	}
 	editionPreset, ok := paramsMap["editionPreset"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'editionPreset' parameter")
+		return nil, util.NewAgentError("missing 'editionPreset' parameter", nil)
 	}
 
 	settings := sqladmin.Settings{}
@@ -165,9 +167,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		settings.DataDiskSizeGb = 100
 		settings.DataDiskType = "PD_SSD"
 	default:
-		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset), nil)
 	}
-	return source.CreateInstance(ctx, project, name, dbVersion, rootPassword, settings, string(accessToken))
+	resp, err := source.CreateInstance(ctx, project, name, dbVersion, rootPassword, settings, string(accessToken))
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

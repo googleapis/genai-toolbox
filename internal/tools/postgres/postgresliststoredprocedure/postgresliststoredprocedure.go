@@ -17,6 +17,7 @@ package postgresliststoredprocedure
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -25,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -32,7 +34,7 @@ import (
 const resourceType string = "postgres-list-stored-procedure"
 
 const listStoredProcedure = `
-	SELECT
+    SELECT
           n.nspname AS schema_name,
           p.proname AS name,
           r.rolname AS owner,
@@ -85,7 +87,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -118,7 +119,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -132,7 +132,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -147,18 +146,18 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
 
 	results, err := t.pool.Query(ctx, listStoredProcedure, sliceParams...)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	defer results.Close()
 
@@ -168,7 +167,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for results.Next() {
 		values, err := results.Values()
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
+			return nil, util.NewClientServerError("unable to parse row", http.StatusInternalServerError, err)
 		}
 		rowMap := make(map[string]any)
 		for i, field := range fields {
