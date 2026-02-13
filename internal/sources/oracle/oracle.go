@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -237,6 +238,31 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	return out, nil
 }
 
+func buildGoOraConnString(user, password, connectStringBase, walletLocation string) string {
+	userInfo := url.UserPassword(
+		decodePercentEncodedUserInfo(user),
+		decodePercentEncodedUserInfo(password),
+	).String()
+
+	base := fmt.Sprintf("oracle://%s@%s", userInfo, connectStringBase)
+	if strings.TrimSpace(walletLocation) == "" {
+		return base
+	}
+
+	q := url.Values{}
+	q.Set("ssl", "true")
+	q.Set("wallet", walletLocation)
+	return fmt.Sprintf("%s?%s", base, q.Encode())
+}
+
+func decodePercentEncodedUserInfo(value string) string {
+	decoded, err := url.PathUnescape(value)
+	if err != nil {
+		return value
+	}
+	return decoded
+}
+
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, config.Name)
@@ -289,16 +315,11 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		// Use go-ora driver (pure Go)
 		driverName = "oracle"
 
-		user := config.User
-		password := config.Password
+		finalConnStr = buildGoOraConnString(config.User, config.Password, connectStringBase, config.WalletLocation)
 
 		if hasWallet {
-			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s?ssl=true&wallet=%s",
-				user, password, connectStringBase, config.WalletLocation)
+			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with wallet and serverString: %s\n", connectStringBase))
 		} else {
-			// Standard go-ora connection
-			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s",
-				config.User, config.Password, connectStringBase)
 			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with serverString: %s\n", connectStringBase))
 		}
 	}
