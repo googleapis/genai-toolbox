@@ -137,11 +137,11 @@ used at a time.
 Toolbox enables dynamic reloading by default. To disable, use the
 `--disable-reload` flag.
 
-Use the `--polling-interval` flag to manually detect configuration file updates.
-When the polling interval is `0`, the polling system is disabled.
+Use the `--poll-interval` flag to manually detect configuration file updates.
+When the poll interval is `0`, the polling system is disabled.
 
 {{< notice tip >}}
-FOr polling to be effective when running Kubernetes, PersistentVolume or
+For polling system to be effective when running Kubernetes, PersistentVolume or
 StorageClass must be set to refresh attributes rapidly by setting `actimeo=1`.
 Actimeo setting determines the duration for which a client trusts its local
 cache for file attributes.

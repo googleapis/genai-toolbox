@@ -225,17 +225,6 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 	defer w.Close()
 
-	var pollTickerChan <-chan time.Time
-	if pollTickerSecond > 0 {
-		ticker := time.NewTicker(time.Duration(pollTickerSecond) * time.Second)
-		defer ticker.Stop()
-		pollTickerChan = ticker.C // Assign the channel
-		logger.DebugContext(ctx, fmt.Sprintf("NFS polling enabled every %v", pollTickerSecond))
-	} else {
-		logger.DebugContext(ctx, "NFS polling disabled (interval is 0)")
-	}
-
-	lastSeen := make(map[string]time.Time)
 	watchingFolder := false
 	var folderToWatch string
 
@@ -264,6 +253,42 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 		logger.DebugContext(ctx, fmt.Sprintf("Added directory %s to watcher.", dir))
 	}
 
+	lastSeen := make(map[string]time.Time)
+	var pollTickerChan <-chan time.Time
+	if pollTickerSecond > 0 {
+		ticker := time.NewTicker(time.Duration(pollTickerSecond) * time.Second)
+		defer ticker.Stop()
+		pollTickerChan = ticker.C // Assign the channel
+		logger.DebugContext(ctx, fmt.Sprintf("NFS polling enabled every %v", pollTickerSecond))
+
+		// Pre-populate lastSeen to avoid an initial spurious reload
+		if watchingFolder {
+			files, err := os.ReadDir(folderToWatch)
+			if err != nil {
+				logger.WarnContext(ctx, "error reading tools folder on initial scan %s", err)
+			} else {
+				for _, f := range files {
+					if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
+						fullPath := filepath.Join(folderToWatch, f.Name())
+						info, err := os.Stat(fullPath)
+						if err == nil {
+							lastSeen[fullPath] = info.ModTime()
+						}
+					}
+				}
+			}
+		} else {
+			for f := range watchedFiles {
+				info, err := os.Stat(f)
+				if err == nil {
+					lastSeen[f] = info.ModTime()
+				}
+			}
+		}
+	} else {
+		logger.DebugContext(ctx, "NFS polling disabled (interval is 0)")
+	}
+
 	// debounce timer is used to prevent multiple writes triggering multiple reloads
 	debounceDelay := 100 * time.Millisecond
 	debounce := time.NewTimer(1 * time.Minute)
@@ -276,8 +301,9 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			return
 		case <-pollTickerChan:
 			changed := false
+			currentDiskFiles := make(map[string]bool)
+			// Get files that are currently on disk
 			if watchingFolder {
-				// Scan directory for any .yaml/.yml file changes
 				files, err := os.ReadDir(folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, "error reading tools folder %s", err)
@@ -286,18 +312,35 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 				for _, f := range files {
 					if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
 						fullPath := filepath.Join(folderToWatch, f.Name())
+						currentDiskFiles[fullPath] = true
+
 						if checkModTime(fullPath, lastSeen) {
 							changed = true
 						}
 					}
 				}
 			} else {
-				files := slices.Collect(maps.Keys(watchedFiles))
-				// Check specific files in watchedFiles map
-				for _, f := range files {
-					if checkModTime(f, lastSeen) {
-						changed = true
+				for f := range watchedFiles {
+					// We must explicitly check existence here because checkModTime
+					// swallows errors (returns false), making it impossible to
+					// distinguish between "no change" and "file deleted".
+					if _, err := os.Stat(f); err == nil {
+						currentDiskFiles[f] = true
+						if checkModTime(f, lastSeen) {
+							changed = true
+						}
 					}
+				}
+			}
+
+			// Check for Deletions
+			// If it was in lastSeen but is NOT in currentDiskFiles, it's
+			// deleted; we will need to reload the server.
+			for path := range lastSeen {
+				if !currentDiskFiles[path] {
+					logger.DebugContext(ctx, fmt.Sprintf("File deleted (detected via polling): %s", path))
+					delete(lastSeen, path)
+					changed = true
 				}
 			}
 			if changed {
