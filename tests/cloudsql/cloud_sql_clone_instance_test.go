@@ -169,11 +169,10 @@ func TestCloneInstanceToolEndpoints(t *testing.T) {
 			want:     `{"name":"op2","status":"PENDING"}`,
 		},
 		{
-			name:        "missing destination instance name",
-			toolName:    "clone-instance",
-			body:        `{"project": "p1", "sourceInstanceName": "source-instance"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing destination instance name",
+			toolName: "clone-instance",
+			body:     `{"project": "p1", "sourceInstanceName": "source-instance"}`,
+			want:     `{"error":"parameter \"destinationInstanceName\" is required"}`,
 		},
 	}
 

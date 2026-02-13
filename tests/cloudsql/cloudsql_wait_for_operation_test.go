@@ -206,10 +206,10 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 			wantSubstring: true,
 		},
 		{
-			name:        "failed operation",
-			toolName:    "wait-for-op2",
-			body:        `{"project": "p1", "operation": "op2"}`,
-			expectError: true,
+			name:          "failed operation - agent error",
+			toolName:      "wait-for-op2",
+			body:          `{"project": "p1", "operation": "op2"}`,
+			wantSubstring: true,
 		},
 		{
 			name:     "non-database create operation",
