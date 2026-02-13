@@ -47,6 +47,7 @@ List of guides detailing how to do different things with Toolbox.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/previews/PR-2419/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/previews/PR-2419/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
 - [Export Telemetry](https://googleapis.github.io/genai-toolbox/previews/PR-2419/how-to/export_telemetry/): How to set up and configure Toolbox to use the Otel Collector.
+- [Generate Agent Skills](https://googleapis.github.io/genai-toolbox/previews/PR-2419/how-to/generate_skill/): How to generate agent skills from a toolset.
 - [Invoke Tools via CLI](https://googleapis.github.io/genai-toolbox/previews/PR-2419/how-to/invoke_tool/): Learn how to invoke your tools directly from the command line using the `invoke` command.
 
 ### Resources
@@ -68,6 +69,7 @@ List of reference documentation for resources in Toolbox.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
   - [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/cloud-sql-mssql/): Cloud SQL for SQL Server is a fully-managed database service for SQL Server.
   - [Cloud SQL Admin](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/cloud-sql-admin/): A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
+  - [CockroachDB](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/cockroachdb/): CockroachDB is a distributed SQL database built for cloud applications.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
@@ -109,6 +111,10 @@ List of reference documentation for resources in Toolbox.
   - [Cloud Logging Admin](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cloudloggingadmin/): Tools that work with Cloud Logging Admin Sources.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
+  - [cockroachdb-execute-sql](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cockroachdb/cockroachdb-execute-sql/): Execute ad-hoc SQL statements against a CockroachDB database.
+  - [cockroachdb-list-schemas](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cockroachdb/cockroachdb-list-schemas/): List schemas in a CockroachDB database.
+  - [cockroachdb-list-tables](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cockroachdb/cockroachdb-list-tables/): List tables in a CockroachDB database with schema details.
+  - [cockroachdb-sql](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/cockroachdb/cockroachdb-sql/): Execute parameterized SQL queries in CockroachDB.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/couchbase/): Tools that work with Couchbase Sources.
   - [Dataform](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/dataform/): Tools that work with Dataform.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-2419/resources/tools/dataplex/): Tools that work with Dataplex Sources.
@@ -156,6 +162,8 @@ Samples and guides for using Toolbox.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-2419/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
 - [Neo4j](https://googleapis.github.io/genai-toolbox/previews/PR-2419/samples/neo4j/): How to get started with Toolbox using Neo4j.
   - [Quickstart (MCP with Neo4j)](https://googleapis.github.io/genai-toolbox/previews/PR-2419/samples/neo4j/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and Neo4j as the source.
+- [Pre- and Post- Processing](https://googleapis.github.io/genai-toolbox/previews/PR-2419/samples/pre_post_processing/): Intercept and modify interactions between the agent and its tools either before or after a tool is executed.
+  - [Python](https://googleapis.github.io/genai-toolbox/previews/PR-2419/samples/pre_post_processing/python/): How to add pre- and post- processing to your Agents using Python.
 - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-2419/samples/snowflake/): How to get started running Toolbox with MCP Inspector and Snowflake as the source.
 
 ### About
