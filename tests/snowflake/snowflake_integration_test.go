@@ -222,7 +222,7 @@ func getSnowflakeTmplToolStatement() (string, string) {
 func getSnowflakeWants() (string, string, string, string) {
 	select1Want := `[{"1":"1"}]`
 	failInvocationWant := `unexpected 'SELEC'`
-	createTableStatement := `"CREATE TABLE t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)"`
+	createTableStatement := `"CREATE TABLE IF NOT EXISTS t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":\"1\"}"}]}}`
 	return select1Want, failInvocationWant, createTableStatement, mcpSelect1Want
 }

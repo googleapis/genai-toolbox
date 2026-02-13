@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -125,15 +126,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
@@ -154,21 +155,29 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	action, ok := paramsMap["action"].(string)
 	if !ok {
-		return nil, fmt.Errorf("action parameter not found")
+		return nil, util.NewAgentError("action parameter not found", nil)
 	}
+
+	var res []map[string]interface{}
 
 	switch action {
 	case "models":
 		project, _ := paramsMap["project"].(string)
 		model, _ := paramsMap["model"].(string)
-		return vacuumTool.models(ctx, project, model)
+		res, err = vacuumTool.models(ctx, project, model)
 	case "explores":
 		model, _ := paramsMap["model"].(string)
 		explore, _ := paramsMap["explore"].(string)
-		return vacuumTool.explores(ctx, model, explore)
+		res, err = vacuumTool.explores(ctx, model, explore)
 	default:
-		return nil, fmt.Errorf("unknown action: %s", action)
+		return nil, util.NewAgentError(fmt.Sprintf("unknown action: %s", action), nil)
 	}
+
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+
+	return res, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

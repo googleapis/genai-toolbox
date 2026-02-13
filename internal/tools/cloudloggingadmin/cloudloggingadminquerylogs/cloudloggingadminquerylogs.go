@@ -16,6 +16,7 @@ package cloudloggingadminquerylogs
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/goccy/go-yaml"
@@ -23,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	cla "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -104,10 +106,10 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	// Parse parameters
@@ -119,7 +121,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if val, ok := paramsMap["limit"].(int); ok && val > 0 {
 		limit = val
 	} else if ok && val < 0 {
-		return nil, fmt.Errorf("limit must be greater than or equal to 1")
+		return nil, util.NewAgentError("limit must be greater than or equal to 1", nil)
 	}
 
 	// Check for verbosity of output
@@ -129,7 +131,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var filter string
 	if f, ok := paramsMap["filter"].(string); ok {
 		if len(f) == 0 {
-			return nil, fmt.Errorf("filter cannot be empty if provided")
+			return nil, util.NewAgentError("filter cannot be empty if provided", nil)
 		}
 		filter = f
 	}
@@ -138,7 +140,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var startTime string
 	if val, ok := paramsMap["startTime"].(string); ok && val != "" {
 		if _, err := time.Parse(time.RFC3339, val); err != nil {
-			return nil, fmt.Errorf("startTime must be in RFC3339 format (e.g., 2025-12-09T00:00:00Z): %w", err)
+			return nil, util.NewAgentError(fmt.Sprintf("startTime must be in RFC3339 format (e.g., 2025-12-09T00:00:00Z): %v", err), err)
 		}
 		startTime = val
 	} else {
@@ -149,7 +151,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var endTime string
 	if val, ok := paramsMap["endTime"].(string); ok && val != "" {
 		if _, err := time.Parse(time.RFC3339, val); err != nil {
-			return nil, fmt.Errorf("endTime must be in RFC3339 format (e.g., 2025-12-09T23:59:59Z): %w", err)
+			return nil, util.NewAgentError(fmt.Sprintf("endTime must be in RFC3339 format (e.g., 2025-12-09T23:59:59Z): %v", err), err)
 		}
 		endTime = val
 	}
@@ -158,7 +160,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.UseClientAuthorization() {
 		tokenString, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse access token: %w", err)
+			return nil, util.NewClientServerError("failed to parse access token", http.StatusUnauthorized, err)
 		}
 	}
 
@@ -171,7 +173,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		Limit:       limit,
 	}
 
-	return source.QueryLogs(ctx, queryParams, tokenString)
+	resp, err := source.QueryLogs(ctx, queryParams, tokenString)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {

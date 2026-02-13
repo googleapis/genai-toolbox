@@ -18,11 +18,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -244,32 +246,32 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	tableNames, ok := paramsMap["table_names"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", tableNames)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter; expected a string", tableNames), nil)
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
 	if outputFormat != "simple" && outputFormat != "detailed" {
-		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat), nil)
 	}
 	resp, err := source.RunSQL(ctx, listTablesStatement, []any{tableNames, outputFormat})
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGeneralError(err)
 	}
 	// if there's no results, return empty list instead of null
 	resSlice, ok := resp.([]any)
 	if !ok || len(resSlice) == 0 {
 		return []any{}, nil
 	}
-	return resp, err
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

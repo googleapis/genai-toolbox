@@ -17,12 +17,14 @@ package searchdicomseries
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
 )
@@ -128,40 +130,44 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	storeID, err := common.ValidateAndFetchStoreID(params, source.AllowedDICOMStores())
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError("failed to validate store ID", err)
 	}
 	var tokenStr string
 	if source.UseClientAuthorization() {
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
+			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
 	}
 
 	opts, err := common.ParseDICOMSearchParameters(params, []string{seriesInstanceUIDKey, patientNameKey, patientIDKey, accessionNumberKey, referringPhysicianNameKey, studyDateKey, modalityKey})
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError("failed to parse DICOM search parameters", err)
 	}
 	paramsMap := params.AsMap()
 	dicomWebPath := "series"
 	if studyInstanceUID, ok := paramsMap[studyInstanceUIDKey]; ok {
 		id, ok := studyInstanceUID.(string)
 		if !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", studyInstanceUIDKey)
+			return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter; expected a string", studyInstanceUIDKey), nil)
 		}
 		if id != "" {
 			dicomWebPath = fmt.Sprintf("studies/%s/series", id)
 		}
 	}
-	return source.SearchDICOM(t.Type, storeID, dicomWebPath, tokenStr, opts)
+	resp, err := source.SearchDICOM(t.Type, storeID, dicomWebPath, tokenStr, opts)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
