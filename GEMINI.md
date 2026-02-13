@@ -43,6 +43,7 @@ This file (symlinked as `CLAUDE.md` and `AGENTS.md`) provides context and guidel
 -   **Integration Tests:**
     -   Run specific source tests: `go test -race -v ./tests/<source_dir>`
     -   Example: `go test -race -v ./tests/alloydbpg`
+    -   Add new sources to `.ci/integration.cloudbuild.yaml`
 -   **Linting:** `golangci-lint run --fix`
 
 ## Developing Documentation
