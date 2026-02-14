@@ -124,6 +124,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 
 }
 
+
 func TestFailParseFromYamlMongoQuery(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
