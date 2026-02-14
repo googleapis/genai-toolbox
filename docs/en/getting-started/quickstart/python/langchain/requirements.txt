@@ -1,5 +1,5 @@
-langchain==1.2.2
+langchain==1.2.3
 langchain-google-vertexai==3.2.1
-langgraph==1.0.5
-toolbox-langchain==0.5.4
+langgraph==1.0.6
+toolbox-langchain==0.5.7
 pytest==9.0.2
