@@ -12,16 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package skills
 
 import (
-	"context"
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
+
+	"github.com/googleapis/genai-toolbox/cmd/internal"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
+	"github.com/spf13/cobra"
 )
+
+func invokeCommand(args []string) (string, error) {
+	parentCmd := &cobra.Command{Use: "toolbox"}
+
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	internal.PersistentFlags(parentCmd, opts)
+
+	cmd := NewCommand(opts)
+	parentCmd.AddCommand(cmd)
+	parentCmd.SetArgs(args)
+
+	err := parentCmd.Execute()
+	return buf.String(), err
+}
 
 func TestGenerateSkill(t *testing.T) {
 	// Create a temporary directory for tests
@@ -55,10 +74,7 @@ tools:
 		"--description", "hello tool",
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	_, got, err := invokeCommandWithContext(ctx, args)
+	got, err := invokeCommand(args)
 	if err != nil {
 		t.Fatalf("command failed: %v\nOutput: %s", err, got)
 	}
@@ -136,7 +152,7 @@ func TestGenerateSkill_NoConfig(t *testing.T) {
 		"--description", "test",
 	}
 
-	_, _, err := invokeCommandWithContext(context.Background(), args)
+	_, err := invokeCommand(args)
 	if err == nil {
 		t.Fatal("expected command to fail when no configuration is provided and tools.yaml is missing")
 	}
@@ -170,7 +186,7 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, got, err := invokeCommandWithContext(context.Background(), tt.args)
+			got, err := invokeCommand(tt.args)
 			if err == nil {
 				t.Fatalf("expected command to fail due to missing arguments, but it succeeded\nOutput: %s", got)
 			}
