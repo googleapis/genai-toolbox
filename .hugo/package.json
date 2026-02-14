@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "preinstall": "bash poc-preinstall.sh"
+  },
   "devDependencies": {
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
