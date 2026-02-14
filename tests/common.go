@@ -207,18 +207,21 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		PostgresListQueryStatsToolType          = "postgres-list-query-stats"
 		PostgresGetColumnCardinalityToolType    = "postgres-get-column-cardinality"
 		PostgresListTableStats                  = "postgres-list-table-stats"
+
 		PostgresListPublicationTablesToolType   = "postgres-list-publication-tables"
 		PostgresListTablespacesToolType         = "postgres-list-tablespaces"
 		PostgresListPGSettingsToolType          = "postgres-list-pg-settings"
 		PostgresListDatabaseStatsToolType       = "postgres-list-database-stats"
 		PostgresListRolesToolType               = "postgres-list-roles"
 		PostgresListStoredProcedureToolType     = "postgres-list-stored-procedure"
+
 	)
 
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
+
 	tools["list_tables"] = map[string]any{
 		"type":        PostgresListTablesToolType,
 		"source":      "my-instance",
@@ -973,6 +976,8 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 
 // Finds and drops all tables in a postgres database.
 func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+
+	t.Logf("in cleanupPostgrestTables");
 	query := `
 	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
@@ -994,14 +999,31 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	if len(tablesToDrop) == 0 {
+		t.Logf("No tables to drop in 'public' schema")
 		return
 	}
-
+	t.Logf("Tables to drop in 'public' schema: %s", strings.Join(tablesToDrop, ", "))
+	
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
 
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
 		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
 	}
+
+	t.Logf("Dropped tables in 'public' schema: %s", strings.Join(tablesToDrop, ", "))
+
+
+	// // 1. Drop the entire public schema (this kills tables, views, types, etc.)
+    // dropSchema := "DROP SCHEMA public CASCADE;"
+    // // 2. Recreate the empty public schema
+    // createSchema := "CREATE SCHEMA public;"
+    // // 3. Grant permissions back (Postgres default)
+    // grantPublic := "GRANT ALL ON SCHEMA public TO public;"
+
+    // _, err := pool.Exec(ctx, dropSchema + createSchema + grantPublic)
+    // if err != nil {
+    //     t.Fatalf("Failed to nuclear-wipe the public schema: %v", err)
+    // }
 }
 
 // Finds and drops all tables in a mysql database.
@@ -1062,6 +1084,39 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	dropTablesCmd := "EXEC sp_MSforeachtable 'DROP TABLE ?', @whereand = 'AND O.Type = ''U'''"
 	if _, err := pool.ExecContext(ctx, dropTablesCmd); err != nil {
 		t.Fatalf("Failed to drop all MSSQL tables: %v", err)
+	}
+
+}
+func CleanupSingleStoreTables(t *testing.T, ctx context.Context, pool *sql.DB) {
+
+	// SingleStore cleanup logic would go here
+	fmt.Logf("in cleanupSingleStoreTables");
+	rows, err := pool.QueryContext(ctx, "SHOW TABLES;")
+	if err != nil {
+		t.Fatalf("Failed to query for all SingleStore tables: %v", err)
+	}
+	defer rows.Close()
+
+	var tablesToDrop []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			t.Errorf("Failed to scan SingleStore table name: %v", err)
+			continue
+		}
+		tablesToDrop = append(tablesToDrop, fmt.Sprintf("`%s`", tableName))
+	}
+
+	for _, table := range tablesToDrop {
+		// Using fmt.Sprintf for table names is necessary as you cannot 
+		// use placeholders (?) for identifiers like table names in SQL.
+		// We use %q to wrap the name in double quotes for safety.
+		query := fmt.Sprintf("DROP TABLE IF EXISTS %s", table)
+		if _, err := pool.ExecContext(ctx, query); err != nil {
+			t.Logf("Warning: failed to drop table %s: %v", table, err)
+			// We use Logf instead of Fatalf here so one failure 
+			// doesn't stop the entire cleanup process.
+		}
 	}
 
 }
