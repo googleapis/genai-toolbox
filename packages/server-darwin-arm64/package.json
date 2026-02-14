@@ -1,0 +1,20 @@
+{
+  "name": "@toolbox-sdk/server-darwin-arm64",
+  "version": "0.27.0",
+  "license": "Apache-2.0",
+  "author": "Google LLC",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "bin/toolbox",
+  "repository": "googleapis/genai-toolbox",
+  "scripts": {
+    "prepack": "node scripts/downloadBinary.js darwin arm64"
+  },
+  "files": [
+    "bin/toolbox"
+  ]
+}

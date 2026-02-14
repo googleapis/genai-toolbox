@@ -1,0 +1,20 @@
+{
+  "name": "@toolbox-sdk/server-linux-x64",
+  "version": "0.27.0",
+  "license": "Apache-2.0",
+  "author": "Google LLC",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bin/toolbox",
+  "repository": "googleapis/genai-toolbox",
+  "scripts": {
+    "prepack": "node scripts/downloadBinary.js linux x64"
+  },
+  "files": [
+    "bin/toolbox"
+  ]
+}
