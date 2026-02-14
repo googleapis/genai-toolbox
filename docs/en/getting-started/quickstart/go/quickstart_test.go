@@ -20,6 +20,8 @@ import (
 	"testing"
 )
 
+var goldenKeywords = []string{"Hilton Basel", "Hyatt Regency", "book"}
+
 func TestQuickstartSample(t *testing.T) {
 	framework := os.Getenv("ORCH_NAME")
 	if framework == "" {
@@ -59,16 +61,10 @@ func TestQuickstartSample(t *testing.T) {
 		t.Fatal("Script ran successfully but produced no output.")
 	}
 
-	goldenFile, err := os.ReadFile("../golden.txt")
-	if err != nil {
-		t.Fatalf("Could not read golden.txt to check for keywords: %v", err)
-	}
-
-	keywords := strings.Split(string(goldenFile), "\n")
 	var missingKeywords []string
 	outputLower := strings.ToLower(actualOutput)
 
-	for _, keyword := range keywords {
+	for _, keyword := range goldenKeywords {
 		kw := strings.TrimSpace(keyword)
 		if kw != "" && !strings.Contains(outputLower, strings.ToLower(kw)) {
 			missingKeywords = append(missingKeywords, kw)

@@ -25,7 +25,7 @@ const quickstartPath = path.join(orchDir, "quickstart.js");
 
 const { main: runAgent } = await import(quickstartPath);
 
-const GOLDEN_FILE_PATH = path.resolve(__dirname, "../golden.txt");
+const GOLDEN_KEYWORDS = ["Hilton Basel", "Hyatt Regency", "book"];
 
 describe(`${ORCH_NAME} Quickstart Agent`, () => {
   let capturedOutput = [];
@@ -52,11 +52,8 @@ describe(`${ORCH_NAME} Quickstart Agent`, () => {
       "Assertion Failed: Script ran successfully but produced no output."
     );
 
-    const goldenFile = fs.readFileSync(GOLDEN_FILE_PATH, "utf8");
-    const keywords = goldenFile.split("\n").filter((kw) => kw.trim() !== "");
     const missingKeywords = [];
-
-    for (const keyword of keywords) {
+    for (const keyword of GOLDEN_KEYWORDS) {
       if (!actualOutput.toLowerCase().includes(keyword.toLowerCase())) {
         missingKeywords.push(keyword);
       }
