@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY, either express or implied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package lookergetconnectiontablecolumns
@@ -16,6 +16,7 @@ package lookergetconnectiontablecolumns
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -111,34 +112,34 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	mapParams := params.AsMap()
 	conn, ok := mapParams["conn"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'conn' must be a string, got %T", mapParams["conn"])
+		return nil, util.NewAgentError(fmt.Sprintf("'conn' must be a string, got %T", mapParams["conn"]), nil)
 	}
 	db, _ := mapParams["db"].(string)
 	schema, ok := mapParams["schema"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'schema' must be a string, got %T", mapParams["schema"])
+		return nil, util.NewAgentError(fmt.Sprintf("'schema' must be a string, got %T", mapParams["schema"]), nil)
 	}
 	tables, ok := mapParams["tables"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'tables' must be a string, got %T", mapParams["tables"])
+		return nil, util.NewAgentError(fmt.Sprintf("'tables' must be a string, got %T", mapParams["tables"]), nil)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 	req := v4.RequestConnectionColumns{
 		ConnectionName: conn,
@@ -150,7 +151,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	resp, err := sdk.ConnectionColumns(req, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making get_connection_table_columns request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	var data []any
 	for _, t := range resp {

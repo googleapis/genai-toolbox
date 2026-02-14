@@ -17,12 +17,14 @@ package cloudsqlwaitforoperation
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/sqladmin/v1"
 )
@@ -210,21 +212,21 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, util.NewAgentError("missing 'project' parameter", nil)
 	}
 	operationID, ok := paramsMap["operation"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'operation' parameter")
+		return nil, util.NewAgentError("missing 'operation' parameter", nil)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
@@ -232,7 +234,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	service, err := source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGcpError(err)
 	}
 
 	delay := t.Delay
@@ -244,13 +246,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for retries < maxRetries {
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("timed out waiting for operation: %w", ctx.Err())
+			return nil, util.NewClientServerError("timed out waiting for operation", http.StatusRequestTimeout, ctx.Err())
 		default:
 		}
 
 		op, err := source.GetWaitForOperations(ctx, service, project, operationID, cloudSQLConnectionMessageTemplate, delay)
 		if err != nil {
-			return nil, err
+			return nil, util.ProcessGcpError(err)
 		} else if op != nil {
 			return op, nil
 		}
@@ -262,7 +264,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		retries++
 	}
-	return nil, fmt.Errorf("exceeded max retries waiting for operation")
+	return nil, util.NewClientServerError("exceeded max retries waiting for operation", http.StatusGatewayTimeout, fmt.Errorf("exceeded max retries"))
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
