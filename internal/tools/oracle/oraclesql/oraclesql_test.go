@@ -15,6 +15,10 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
+
+	valTrue := true
+	valFalse := false
+
 	tcs := []struct {
 		desc string
 		in   string
@@ -39,6 +43,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 					Source:       "my-oracle-instance",
 					Description:  "Retrieves user details by ID.",
 					Statement:    "SELECT id, name, email FROM users WHERE id = :1",
+					ReadOnly:     nil,
 					AuthRequired: []string{"my-google-auth-service"},
 				},
 			},
@@ -60,6 +65,53 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 					Source:       "db-prod",
 					Description:  "Gets orders for a customer with optional filtering.",
 					Statement:    "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
+					ReadOnly:     nil,
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "explicit: readOnly set to true",
+			in: `
+			kind: tools
+			name: safe_query
+			type: oracle-sql
+			source: db-prod
+			description: Safe read operation.
+			readOnly: true
+			statement: "SELECT * FROM orders"
+			`,
+			want: server.ToolConfigs{
+				"safe_query": oraclesql.Config{
+					Name:         "safe_query",
+					Type:         "oracle-sql",
+					Source:       "db-prod",
+					Description:  "Safe read operation.",
+					Statement:    "SELECT * FROM orders",
+					ReadOnly:     &valTrue,
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "example with readonly flag set to false (DML)",
+			in: `
+			kind: tools
+			name: update_user
+			type: oracle-sql
+			source: db-prod
+			description: Updates user email.
+			readOnly: false
+			statement: "UPDATE users SET email = :1 WHERE id = :2"
+			`,
+			want: server.ToolConfigs{
+				"update_user": oraclesql.Config{
+					Name:         "update_user",
+					Type:         "oracle-sql",
+					Source:       "db-prod",
+					Description:  "Updates user email.",
+					Statement:    "UPDATE users SET email = :1 WHERE id = :2",
+					ReadOnly:     &valFalse,
 					AuthRequired: []string{},
 				},
 			},

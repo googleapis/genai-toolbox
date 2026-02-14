@@ -136,7 +136,23 @@ func (s *Source) OracleDB() *sql.DB {
 	return s.DB
 }
 
-func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any, readOnly bool) (any, error) {
+	if !readOnly {
+		result, err := s.OracleDB().ExecContext(ctx, statement, params...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to execute DML statement: %w", err)
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get rows affected: %w", err)
+		}
+
+		return map[string]any{
+			"status":        "success",
+			"rows_affected": rowsAffected,
+		}, nil
+	}
 	rows, err := s.OracleDB().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
