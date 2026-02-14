@@ -109,13 +109,19 @@ func TestCockroachDB(t *testing.T) {
 	}
 	t.Logf("✅ Connected to: %s", version)
 
-	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool)
+	// Generate a unique ID
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	t.Logf("STARTING TEST RUN: uniqueID = %s", uniqueID)
 
-	// create table names with UUID suffix
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	// This will execute after all tool tests complete (success, fail, or t.Fatal)
+	t.Cleanup(func() {
+		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
+	})
+
+	// 3. Create table names using the UUID
+	tableNameParam := "param_table_" + uniqueID
+	tableNameAuth := "auth_table_" + uniqueID
+	tableNameTemplateParam := "template_param_table_" + uniqueID
 
 	// set up data for param tool (using CockroachDB explicit INT primary keys)
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetCockroachDBParamToolInfo(tableNameParam)

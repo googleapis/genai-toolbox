@@ -972,14 +972,16 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 }
 
 // Finds and drops all tables in a postgres database.
-func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	query := `
-	SELECT table_name FROM information_schema.tables
-	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
+func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool, uniqueID string) {
+	t.Logf("INTEGRATION CLEANUP: Identifying resources for uniqueID: %s", uniqueID)
 
-	rows, err := pool.Query(ctx, query)
+	query := `
+		SELECT table_name FROM information_schema.tables
+		WHERE table_schema = 'public' 
+		AND table_name LIKE $1;`
+	rows, err := pool.Query(ctx, query, "%\\_"+uniqueID)
 	if err != nil {
-		t.Fatalf("Failed to query for all tables in 'public' schema: %v", err)
+		t.Fatalf("Failed to query for tables for uniqueID %s in 'public' schema: %v", uniqueID, err)
 	}
 	defer rows.Close()
 
@@ -994,13 +996,18 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	if len(tablesToDrop) == 0 {
+		t.Logf("INTEGRATION CLEANUP: No tables found for uniqueID: %s", uniqueID)
 		return
 	}
+
+	t.Logf("INTEGRATION CLEANUP: Dropping %d isolated tables: %v", len(tablesToDrop), tablesToDrop)
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
 
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
-		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
+		t.Fatalf("Failed to drop tables for uniqueID %s in 'public' schema: %v", uniqueID, err)
+	} else {
+		t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped all tables for uniqueID: %s", uniqueID)
 	}
 }
 
