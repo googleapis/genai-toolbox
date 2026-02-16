@@ -105,8 +105,8 @@ jobs:
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@v4
         with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
-          # CHANGE: Read from the new combined file
           body-path: full-report.md
           edit-mode: replace
 
