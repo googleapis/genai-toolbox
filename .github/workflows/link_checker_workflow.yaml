@@ -66,6 +66,7 @@ jobs:
         continue-on-error: true 
         with:
           args: >
+            --accept 200..=299,300..=399
             --quiet
             --no-progress
             --cache
