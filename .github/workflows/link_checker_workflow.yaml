@@ -66,7 +66,6 @@ jobs:
         continue-on-error: true 
         with:
           args: >
-            --accept 200..=299,300..=399
             --quiet
             --no-progress
             --cache
@@ -86,6 +85,7 @@ jobs:
         id: find-comment
         with:
           issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
           body-includes: "## Link Resolution Note"
 
       - name: Prepare Report 
@@ -98,7 +98,10 @@ jobs:
           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md
           echo "---" >> full-report.md
           echo "### Broken Links Found" >> full-report.md
-          
+          # 1. Remove "Redirect" lines from the raw report
+          # 2. Remove "Redirects per input" headers
+          # 3. Append the cleaned errors to your full report
+          sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
           # Append the actual Lychee report
           cat lychee-report.md >> full-report.md
 
