@@ -17,11 +17,13 @@ package cloudsqlrestorebackup
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/sqladmin/v1"
 )
@@ -120,29 +122,33 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 
 	targetProject, ok := paramsMap["target_project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'target_project' parameter: %v", paramsMap["target_project"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'target_project' parameter: %v", paramsMap["target_project"]), nil)
 	}
 	targetInstance, ok := paramsMap["target_instance"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'target_instance' parameter: %v", paramsMap["target_instance"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'target_instance' parameter: %v", paramsMap["target_instance"]), nil)
 	}
 	backupID, ok := paramsMap["backup_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'backup_id' parameter: %v", paramsMap["backup_id"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'backup_id' parameter: %v", paramsMap["backup_id"]), nil)
 	}
 	sourceProject, _ := paramsMap["source_project"].(string)
 	sourceInstance, _ := paramsMap["source_instance"].(string)
 
-	return source.RestoreBackup(ctx, targetProject, targetInstance, sourceProject, sourceInstance, backupID, string(accessToken))
+	resp, err := source.RestoreBackup(ctx, targetProject, targetInstance, sourceProject, sourceInstance, backupID, string(accessToken))
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
