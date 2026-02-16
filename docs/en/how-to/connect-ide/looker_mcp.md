@@ -33,7 +33,7 @@ to expose your developer assistant tools to a Looker instance:
 ## Set up Looker
 
 1. Get a Looker Client ID and Client Secret. Follow the directions
-   [here](https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk).
+   [here](https://cloud.google.com/looker/docs/api-auth#authentication_wit_an_sdk).
 
 1. Have the base URL of your Looker instance available. It is likely
    something like `https://looker.example.com`. In some cases the API is
