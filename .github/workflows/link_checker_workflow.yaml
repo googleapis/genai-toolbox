@@ -98,12 +98,9 @@ jobs:
           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md
           echo "---" >> full-report.md
           echo "### Broken Links Found" >> full-report.md
-          # 1. Remove "Redirect" lines from the raw report
-          # 2. Remove "Redirects per input" headers
-          # 3. Append the cleaned errors to your full report
+          
+          # Clean the report (remove redirects) AND append it to the file
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
-          # Append the actual Lychee report
-          cat lychee-report.md >> full-report.md
 
       - name: Create PR Comment
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
