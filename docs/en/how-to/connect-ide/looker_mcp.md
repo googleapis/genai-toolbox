@@ -20,7 +20,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Claude code][claudecode]
 * [Antigravity][antigravity]
 
-[toolbox]: https://github.com/googleapis/genai-toolbox
+[toolbox]: https://github/googleapis/genai-toolbox
 [gemini-cli]: #configure-your-mcp-client
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
