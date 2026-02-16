@@ -88,6 +88,32 @@ func TestParseFromYamlPostgres(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "example with query exec mode",
+			in: `
+			kind: sources
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryExecMode: simple_protocol
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": postgres.Config{
+					Name:          "my-pg-instance",
+					Type:          postgres.SourceType,
+					Host:          "my-host",
+					Port:          "my-port",
+					Database:      "my_db",
+					User:          "my_user",
+					Password:      "my_pass",
+					QueryExecMode: "simple_protocol",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -136,6 +162,21 @@ func TestFailParseFromYaml(t *testing.T) {
 			user: my_user
 			`,
 			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+		},
+		{
+			desc: "invalid query exec mode",
+			in: `
+			kind: sources
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryExecMode: invalid_mode
+			`,
+			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": [6:16] Key: 'Config.QueryExecMode' Error:Field validation for 'QueryExecMode' failed on the 'oneof' tag\n   3 | name: my-pg-instance\n   4 | password: my_pass\n   5 | port: my-port\n>  6 | queryExecMode: invalid_mode\n                      ^\n   7 | type: postgres\n   8 | user: my_user",
 		},
 	}
 	for _, tc := range tcs {
