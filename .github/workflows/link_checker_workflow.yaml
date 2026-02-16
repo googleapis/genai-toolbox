@@ -79,25 +79,36 @@ jobs:
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Report Message
+        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        run: |
+          # Create a new file 'full-report.md'
+          echo "## Link Resolution Note" > full-report.md
+          echo "Local links and directory changes work differently on GitHub than on the docsite." >> full-report.md
+          echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
+          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md
+          echo "---" >> full-report.md
+          echo "### Broken Links Found" >> full-report.md
+          
+          # Append the actual Lychee report
+          cat lychee-report.md >> full-report.md
+
       - name: Create PR Comment
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body-path: lychee-report.md
+          # CHANGE: Read from the new combined file
+          body-path: full-report.md
           edit-mode: replace
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
         if: steps.lychee-check.outcome == 'failure'
         run: |
-          echo "## Link Resolution Note" >> $GITHUB_STEP_SUMMARY
-          echo "Local links and directory changes work differently on GitHub than on the docsite." >> $GITHUB_STEP_SUMMARY
-          echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> $GITHUB_STEP_SUMMARY
-          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> $GITHUB_STEP_SUMMARY
-          echo "---" >> $GITHUB_STEP_SUMMARY
-
-          echo "### Broken Links Found" >> $GITHUB_STEP_SUMMARY
-          cat ./lychee-report.md >> $GITHUB_STEP_SUMMARY
-
+          # We can now simply output the prepared file to the job summary
+          cat full-report.md >> $GITHUB_STEP_SUMMARY
+          
+          # Fail the job
           exit 1
