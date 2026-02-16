@@ -39,14 +39,34 @@ from Toolbox.
     go mod init main
     ```
 
-1. In a new terminal, install the
-   [SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go).
+1. In a new terminal, install the SDK Module:
+   {{< tabpane persist=header >}}
+    {{< tab header="LangChain Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    {{< /tab >}}
 
-    ```bash
-    go get github.com/googleapis/mcp-toolbox-sdk-go
-    ```
+    {{< tab header="Genkit Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    go get github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit
+    {{< /tab >}}
 
-1. Create a new file named `hotelagent.go` and copy the following code to create
+    {{< tab header="Go GenAI" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    go get github.com/googleapis/go-genai
+    {{< /tab >}}
+
+    {{< tab header="OpenAI Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    go get github.com/openai/openai-go
+    {{< /tab >}}
+
+    {{< tab header="ADK Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    go get github.com/googleapis/mcp-toolbox-sdk-go/tbadk
+    {{< /tab >}}
+    {{< /tabpane >}}
+
+2. Create a new file named `hotelagent.go` and copy the following code to create
    an agent:
 
     {{< tabpane persist=header >}}
