@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -247,8 +248,6 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		panic(err)
 	}
 
-	hasWallet := strings.TrimSpace(config.WalletLocation) != ""
-
 	if config.TnsAdmin != "" {
 		originalTnsAdmin := os.Getenv("TNS_ADMIN")
 		os.Setenv("TNS_ADMIN", config.TnsAdmin)
@@ -288,19 +287,8 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 	} else {
 		// Use go-ora driver (pure Go)
 		driverName = "oracle"
-
-		user := config.User
-		password := config.Password
-
-		if hasWallet {
-			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s?ssl=true&wallet=%s",
-				user, password, connectStringBase, config.WalletLocation)
-		} else {
-			// Standard go-ora connection
-			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s",
-				config.User, config.Password, connectStringBase)
-			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with serverString: %s\n", connectStringBase))
-		}
+		finalConnStr = buildGoOraConnectionString(config.User, config.Password, connectStringBase, config.WalletLocation)
+		logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with serverString: %s\n", connectStringBase))
 	}
 
 	db, err := sql.Open(driverName, finalConnStr)
@@ -309,4 +297,17 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 	}
 
 	return db, nil
+}
+
+func buildGoOraConnectionString(user, password, connectStringBase, walletLocation string) string {
+	userInfo := url.UserPassword(user, password).String()
+
+	if strings.TrimSpace(walletLocation) == "" {
+		return fmt.Sprintf("oracle://%s@%s", userInfo, connectStringBase)
+	}
+
+	query := url.Values{}
+	query.Set("ssl", "true")
+	query.Set("wallet", walletLocation)
+	return fmt.Sprintf("oracle://%s@%s?%s", userInfo, connectStringBase, query.Encode())
 }
