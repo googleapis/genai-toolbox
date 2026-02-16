@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -86,18 +87,19 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 
 	projectDir, ok := paramsMap["project_dir"].(string)
 	if !ok || projectDir == "" {
-		return nil, fmt.Errorf("error casting 'project_dir' to string or invalid value")
+		return nil, util.NewAgentError("error casting 'project_dir' to string or invalid value", nil)
 	}
 
 	cmd := exec.CommandContext(ctx, "dataform", "compile", projectDir, "--json")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error executing dataform compile: %w\nOutput: %s", err, string(output))
+		// Compilation failures are considered AgentErrors (invalid user code/project)
+		return nil, util.NewAgentError(fmt.Sprintf("error executing dataform compile: %v\nOutput: %s", err, string(output)), err)
 	}
 
 	return strings.TrimSpace(string(output)), nil
