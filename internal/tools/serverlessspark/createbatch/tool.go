@@ -17,11 +17,13 @@ package createbatch
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/protobuf/proto"
 )
@@ -65,15 +67,18 @@ type Tool struct {
 	Parameters     parameters.Parameters
 }
 
-func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	batch, err := t.Builder.BuildBatch(params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build batch: %w", err)
+		if tbErr, ok := err.(util.ToolboxError); ok {
+			return nil, tbErr
+		}
+		return nil, util.NewAgentError("failed to build batch", err)
 	}
 
 	if t.RuntimeConfig != nil {
@@ -92,11 +97,20 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 		}
 		batch.RuntimeConfig.Version = version
 	}
-	return source.CreateBatch(ctx, batch)
+
+	resp, err := source.CreateBatch(ctx, batch)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+	newParamValues, err := parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+	if err != nil {
+		return nil, util.NewClientServerError(fmt.Sprintf("error embedding parameters: %v", err), http.StatusInternalServerError, err)
+	}
+	return newParamValues, nil
 }
 
 func (t *Tool) Manifest() tools.Manifest {
