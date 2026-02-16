@@ -40,11 +40,12 @@ from Toolbox.
     ```
 
 1. In a new terminal, install the Go SDK Module:
-    > [!IMPORTANT]
-    > **Breaking Change Notice**: As of version `0.6.0`, this SDK has transitioned to a multi-module structure.
-    > *   **For new versions (`v0.6.0`+)**: You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/core`).
-    > *   **For older versions (`v0.5.1` and below)**: The repository remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
-    > *   Please update your imports and `go.mod` accordingly when upgrading.
+    {{< notice warning >}}
+    **Breaking Change Notice**: As of version `0.6.0`, this SDK has transitioned to a multi-module structure.
+    * **For new versions (`v0.6.0`+)**: You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/core`).
+    * **For older versions (`v0.5.1` and below)**: The SDK remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
+    * Please update your imports and `go.mod` accordingly when upgrading.
+    {{< /notice >}}
 
    {{< tabpane persist=header >}}
     {{< tab header="LangChain Go" lang="bash" >}}
@@ -58,12 +59,10 @@ from Toolbox.
 
     {{< tab header="Go GenAI" lang="bash" >}}
     go get github.com/googleapis/mcp-toolbox-sdk-go/core
-    go get github.com/googleapis/go-genai
     {{< /tab >}}
 
     {{< tab header="OpenAI Go" lang="bash" >}}
     go get github.com/googleapis/mcp-toolbox-sdk-go/core
-    go get github.com/openai/openai-go
     {{< /tab >}}
 
     {{< tab header="ADK Go" lang="bash" >}}
@@ -72,7 +71,7 @@ from Toolbox.
     {{< /tab >}}
     {{< /tabpane >}}
 
-1. Create a new file named `hotelagent.go` and copy the following code to create
+2. Create a new file named `hotelagent.go` and copy the following code to create
    an agent:
 
     {{< tabpane persist=header >}}
