@@ -48,7 +48,6 @@ jobs:
           fi
 
 
-
       - name: Restore lychee cache
         if: env.HAS_CHANGES == 'true'
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
@@ -77,6 +76,13 @@ jobs:
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create PR Comment
+        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outputs.status != '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: lychee-report.md
+          edit-mode: replace
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
