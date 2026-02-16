@@ -79,8 +79,15 @@ jobs:
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find comment
+        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: "## Link Resolution Note"
 
-      - name: Prepare Report Message
+      - name: Prepare Report 
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         run: |
           # Create a new file 'full-report.md'
