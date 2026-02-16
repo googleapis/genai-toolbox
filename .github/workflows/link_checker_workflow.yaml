@@ -77,7 +77,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create PR Comment
-        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outputs.status != '0'
+        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@v4
         with:
           issue-number: ${{ github.event.pull_request.number }}
