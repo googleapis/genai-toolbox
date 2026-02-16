@@ -15,6 +15,9 @@ name: Link Checker
 
 on:
   pull_request:
+permissions:
+  contents: read
+  pull_request: write
 
 
 jobs:
