@@ -17,6 +17,7 @@ package dataplexsearchdqscans
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
@@ -24,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -64,8 +66,8 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"")
-	dataScanID := parameters.NewStringParameterWithDefault("data_scan_id", "", "Optional. The ID of the data scan to filter by.")
-	tableName := parameters.NewStringParameterWithDefault("table_name", "", "Optional. The name of the table to filter by.")
+	dataScanID := parameters.NewStringParameterWithDefault("data_scan_id", "", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.")
+	tableName := parameters.NewStringParameterWithDefault("table_name", "", "Optional. The name of the table to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Number of returned data quality scans in the page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Specifies the ordering of results.")
 	params := parameters.Parameters{filter, dataScanID, tableName, pageSize, orderBy}
@@ -96,10 +98,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 	filter, _ := paramsMap["filter"].(string)
@@ -113,7 +115,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		filters = append(filters, filter)
 	}
 	if dataScanID != "" {
-		filters = append(filters, fmt.Sprintf("display_name = %q", dataScanID))
+		filters = append(filters, fmt.Sprintf("name = %q", dataScanID))
 	}
 	if tableName != "" {
 		filters = append(filters, fmt.Sprintf("data.entity = %q", tableName))
@@ -121,7 +123,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	finalFilter := strings.Join(filters, " AND ")
 
-	return source.SearchDataQualityScans(ctx, finalFilter, pageSize, orderBy)
+	res, err := source.SearchDataQualityScans(ctx, finalFilter, pageSize, orderBy)
+	if err != nil {
+		return nil, util.NewClientServerError("failed to search for dq scans", http.StatusInternalServerError, err)
+	}
+	return res, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
