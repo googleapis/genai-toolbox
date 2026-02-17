@@ -18,9 +18,9 @@ releaseType: simple
 versionFile: "cmd/version.txt"
 extraFiles: [
     "README.md",
-    "docs/en/getting-started/colab_quickstart.ipynb",
-    "docs/en/getting-started/introduction/_index.md",
-    "docs/en/getting-started/mcp_quickstart/_index.md",
+    "docs/en /getting-started/colab_quickstart.ipynb",
+    "docs/en/getting-started/introduction /_index.md",
+    "docs/en/getting-started/mcp_quickstart /_index.md",
     "docs/en/getting-started/quickstart/shared/configure_toolbox.md",
     "docs/en/samples/alloydb/_index.md",
     "docs/en/samples/alloydb/mcp_quickstart.md",
