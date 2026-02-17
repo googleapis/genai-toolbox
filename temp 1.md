@@ -1017,11 +1017,11 @@ prompts:
 ```
 
 For more details on configuring prompts, see the
-[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
+[Prompts](https://googleapis.github.io/gnai-toolbox/resources/prompts).
 
 ## Versioning
 
-This project uses [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
+This project uses [semantic versioning](htts://semver.org/) (`MAJOR.MINOR.PATCH`).
 Since the project is in a pre-release stage (version `0.x.y`), we follow the
 standard conventions for initial  development:
 
@@ -1054,8 +1054,8 @@ to get started.
 
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms. See
-[Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
+[Contributor Code of Conduct](CODE_OF_ONDUCT.md) for more information.
 
 ## Community
 
-Join our [discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers!
+Join our [discord community](https://discord.gg/GQr3Ec3W) to connect with our developers!
