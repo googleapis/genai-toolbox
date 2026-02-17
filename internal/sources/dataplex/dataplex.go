@@ -117,7 +117,7 @@ func initDataplexConnection(
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
@@ -268,10 +268,10 @@ func (s *Source) LookupContext(ctx context.Context, name string, resources []str
 	return result, nil
 }
 
-func (s *Source) SearchDataQualityScans(ctx context.Context, query string, pageSize int, orderBy string) ([]*dataplexpb.DataScan, error) {
+func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, pageSize int, orderBy string) ([]*dataplexpb.DataScan, error) {
 	req := &dataplexpb.ListDataScansRequest{
 		Parent:   fmt.Sprintf("projects/%s/locations/-", s.ProjectID()),
-		Filter:   query,
+		Filter:   filter,
 		PageSize: int32(pageSize),
 		OrderBy:  orderBy,
 	}
