@@ -16,12 +16,15 @@ package redisexecutecmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	redissrc "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -48,11 +51,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &redissrc.Source{}
 
-var compatibleSources = [...]string{redissrc.SourceKind}
+var compatibleSources = [...]string{redissrc.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Kind         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -60,7 +63,7 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
+func (cfg Config) ToolConfigType() string {
 	return kind
 }
 
@@ -77,22 +80,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	queryParameter := tools.NewArrayParameter("cmd", "The command to execute, represented as an array of strings.", tools.NewStringParameter("token", "An individual word or token in a command, such as a command name, key, or value"))
-	parameters := tools.Parameters{queryParameter}
+	queryParameter := parameters.NewArrayParameter("cmd", "The command to execute, represented as an array of strings.", parameters.NewStringParameter("token", "An individual word or token in a command, such as a command name, key, or value"))
+	params := parameters.Parameters{queryParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	t := Tool{
 		Name:         cfg.Name,
 		Kind:         cfg.Kind,
-		Parameters:   parameters,
+		Source:       cfg.Source,
+		Parameters:   params,
 		AuthRequired: cfg.AuthRequired,
 		Client:       s.RedisClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
@@ -101,10 +101,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string                `yaml:"name"`
+	Kind         string                `yaml:"kind"`
+	Source       string                `yaml:"source"`
+	AuthRequired []string              `yaml:"authRequired"`
+	Parameters   parameters.Parameters `yaml:"parameters"`
 
 	Client      redissrc.RedisClient
 	manifest    tools.Manifest
@@ -117,27 +118,27 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 // Invoke implements tools.Tool.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 	cmds, ok := paramsMap["cmd"].([]any)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["cmd"])
+		return nil, util.NewAgentError("unable to cast cmd parameter", fmt.Errorf("unable to get cast %s", paramsMap["cmd"]))
 	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "executing `%s` tool command: %v", kind, cmds)
 
 	if len(cmds) == 0 {
-		return nil, fmt.Errorf("invalid command statement")
+		return nil, util.NewAgentError("invalid command statement", fmt.Errorf("command array is empty"))
 	}
 
 	result, err := t.Client.Do(ctx, cmds...).Result()
 	if err != nil {
-		return nil, fmt.Errorf("error from executing command: %v", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	// If result is a map, convert map[any]any to map[string]any
@@ -148,11 +149,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		var json = jsoniter.ConfigCompatibleWithStandardLibrary
 		mapStr, err := json.Marshal(m)
 		if err != nil {
-			return nil, fmt.Errorf("error marshalling result: %s", err)
+			return nil, util.NewAgentError("error marshalling result", err)
 		}
 		err = json.Unmarshal(mapStr, &strMap)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing response: %v", err)
+			return nil, util.NewAgentError("error parsing response", err)
 		}
 		return strMap, nil
 	}
@@ -169,7 +170,33 @@ func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-// ParseParams implements tools.Tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+// EmbedParams implements tools.Tool.
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+}
+
+// ToConfig implements tools.Tool.
+func (t Tool) ToConfig() tools.ToolConfig {
+	return Config{
+		Name:         t.Name,
+		Kind:         t.Kind,
+		Source:       t.Source,
+		Description:  t.manifest.Description,
+		AuthRequired: t.AuthRequired,
+	}
+}
+
+// RequiresClientAuthorization implements tools.Tool.
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
+}
+
+// GetAuthTokenHeaderName implements tools.Tool.
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
+}
+
+// GetParameters implements tools.Tool.
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }
