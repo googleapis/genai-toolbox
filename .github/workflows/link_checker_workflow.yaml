@@ -90,13 +90,13 @@ jobs:
           comment-author: 'github-actions[bot]'
           body-includes: "## Link Resolution Note"
 
-      - name: Delete comment on success
-        if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
-        uses: detomarco/delete-comment@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+      # - name: Delete comment on success
+      #   if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
+      #   uses: detomarco/delete-comment@v1
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     repository: ${{ github.repository }}
+      #     comment-id: ${{ steps.find-comment.outputs.comment-id }}
 
       - name: Prepare Report 
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
