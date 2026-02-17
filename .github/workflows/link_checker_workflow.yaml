@@ -103,7 +103,7 @@ jobs:
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
       
       - name: Delete comment on success
-        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
+        if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
         run: |
           gh api \
             --method DELETE \
