@@ -113,19 +113,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		filters = append(filters, filter)
 	}
 	if dataScanID != "" {
-		// assuming data_scan_id usually maps to name or id filter if supported, or display_name
-		// referencing user request "parameters could be datascan name"
-		// The generic filter "resource.name" or "display_name" is often used.
-		// Let's assume display_name for user convenience or name if full resource name.
-		// If it's just ID, we might need wildcard?
-		// Actually, `id` might be part of the resource name.
-		// Let's use `display_name` as it's more likely what user means by "name".
-		// Or if they mean ID, it might be `resource.name : id`.
-		// Let's try `display_name = "ID"` first as safe bet or just append to filter.
 		filters = append(filters, fmt.Sprintf("display_name = %q", dataScanID))
 	}
 	if tableName != "" {
-		// "data.entity" is typically used for table in DataScan filters
 		filters = append(filters, fmt.Sprintf("data.entity = %q", tableName))
 	}
 
