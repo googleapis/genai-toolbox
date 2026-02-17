@@ -107,15 +107,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 				return nil, fmt.Errorf("expected allowedDataset to have at least 2 parts (project.dataset): %s", datasetFQN)
 			}
 			datasetID := parts[1]
-			sqlDescriptionBuilder.WriteString(fmt.Sprintf(" The query must only access the `%s` dataset. "+
+			fmt.Fprintf(&sqlDescriptionBuilder, " The query must only access the `%s` dataset. "+
 				"To query a table within this dataset (e.g., `my_table`), "+
-				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetFQN, datasetID))
+				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetFQN, datasetID)
 		} else {
 			datasetIDs := []string{}
 			for _, ds := range allowedDatasets {
 				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
 			}
-			sqlDescriptionBuilder.WriteString(fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", ")))
+			fmt.Fprintf(&sqlDescriptionBuilder, " The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
 		}
 	}
 
