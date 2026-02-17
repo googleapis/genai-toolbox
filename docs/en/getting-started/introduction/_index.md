@@ -109,7 +109,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.26.0
+export VERSION=0.27.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -120,7 +120,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.26.0
+export VERSION=0.27.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -131,7 +131,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.26.0
+export VERSION=0.27.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -142,7 +142,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=0.26.0
+set VERSION=0.27.0
 curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -152,7 +152,7 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "0.26.0"
+$VERSION = "0.27.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
@@ -164,7 +164,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.26.0
+export VERSION=0.27.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -183,7 +183,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.26.0
+go install github.com/googleapis/genai-toolbox@v0.27.0
 ```
 
 {{% /tab %}}
@@ -453,12 +453,11 @@ README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/too
 
 #### Go
 
-Once you've installed the [Toolbox Go
-SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
-tools:
-
 {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -490,6 +489,9 @@ func main() {
 
 {{% /tab %}}
 {{% tab header="LangChain Go" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -540,11 +542,14 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+
+For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 {{% tab header="Genkit Go" lang="en" %}}
+
+Once you've installed the [Go TBGenkit SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -586,11 +591,13 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
+For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
 
 {{% /tab %}}
 {{% tab header="Go GenAI" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -642,12 +649,14 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
 {{% tab header="OpenAI Go" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -697,12 +706,14 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
 {{% tab header="ADK Go" lang="en" %}}
+
+Once you've installed the [Go TBADK SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/tbadk), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -732,8 +743,7 @@ func main() {
 
 {{< /highlight >}}
 
-For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
+For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
 
 {{% /tab %}}
 {{< /tabpane >}}

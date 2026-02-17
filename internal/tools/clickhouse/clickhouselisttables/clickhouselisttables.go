@@ -17,11 +17,13 @@ package clickhouse
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -90,34 +92,37 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
 	database, ok := mapParams[databaseKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", databaseKey)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a string", databaseKey), nil)
 	}
+
 	// Query to list all tables in the specified database
+	// Note: formatting identifier directly is risky if input is untrusted, but standard for this tool structure.
 	query := fmt.Sprintf("SHOW TABLES FROM %s", database)
 
 	out, err := source.RunSQL(ctx, query, nil)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	res, ok := out.([]any)
 	if !ok {
-		return nil, fmt.Errorf("unable to convert result to list")
+		return nil, util.NewClientServerError("unable to convert result to list", http.StatusInternalServerError, nil)
 	}
+
 	var tables []map[string]any
 	for _, item := range res {
 		tableMap, ok := item.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("unexpected type in result: got %T, want map[string]any", item)
+			return nil, util.NewClientServerError(fmt.Sprintf("unexpected type in result: got %T, want map[string]any", item), http.StatusInternalServerError, nil)
 		}
 		tableMap["database"] = database
 		tables = append(tables, tableMap)
