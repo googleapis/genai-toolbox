@@ -18,6 +18,7 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 
 jobs:
@@ -92,6 +93,9 @@ jobs:
 
       - name: Delete comment on success
         if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
+        run: |
+          echo "Deleting Comment ID: ${{ steps.find-comment.outputs.comment-id }}"
+          gh api ...
         run: |
           gh api \
             --method DELETE \
