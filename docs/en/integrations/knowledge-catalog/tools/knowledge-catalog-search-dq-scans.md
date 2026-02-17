@@ -18,8 +18,8 @@ It's compatible with the following sources:
 `dataplex-search-dq-scans` accepts the following optional parameters:
 
 - `filter` - Filter string to search/filter data quality scans. E.g. "display_name = \"my-scan\"".
-- `data_scan_id` - The ID of the data scan to filter by.
-- `table_name` - The name of the table to filter by.
+- `data_scan_id` - The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.
+- `table_name` - The name of the table to filter by. Maps to data.entity in the filter string. E.g. "//bigquery.googleapis.com/projects/P/datasets/D/tables/T".
 - `pageSize` - Number of returned data quality scans in the page. Defaults to `10`.
 - `orderBy` - Specifies the ordering of results.
 
