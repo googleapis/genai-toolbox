@@ -43,10 +43,14 @@ jobs:
             echo "$CHANGED_FILES"
             echo "-----------------------------"
             
-            # Flatten newlines to spaces for the args list
-            FILES_FLAT=$(echo "$CHANGED_FILES" | tr '\n' ' ')
+            # FIX: Wrap filenames in quotes to handle spaces
+            FILES_QUOTED=$(echo "$CHANGED_FILES" | sed 's/^/"/;s/$/"/' | tr '\n' ' ')
             
-            echo "CHECK_FILES=$FILES_FLAT" >> $GITHUB_ENV
+            # Write to env using EOF pattern
+            echo "CHECK_FILES<<EOF" >> $GITHUB_ENV
+            echo "$FILES_QUOTED" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
             echo "HAS_CHANGES=true" >> $GITHUB_ENV
           fi
 
@@ -89,14 +93,12 @@ jobs:
 
       - name: Delete comment on success
         if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
-        run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/issues/comments/${{ steps.find-comment.outputs.comment-id }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+        uses: detomarco/delete-comment@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+
       - name: Prepare Report 
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         run: |
