@@ -717,8 +717,8 @@ func runGetDatasetToolInvokeTest(t *testing.T, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -915,8 +915,8 @@ func runListDICOMStoresToolInvokeTest(t *testing.T, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1021,8 +1021,8 @@ func runGetFHIRStoreToolInvokeTest(t *testing.T, fhirStoreID, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1127,8 +1127,8 @@ func runGetFHIRStoreMetricsToolInvokeTest(t *testing.T, fhirStoreID, want string
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1240,8 +1240,8 @@ func runGetFHIRResourceToolInvokeTest(t *testing.T, storeID, resType, resID, wan
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1394,8 +1394,8 @@ func runFHIRPatientSearchToolInvokeTest(t *testing.T, fhirStoreID string, patien
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1531,8 +1531,8 @@ func runFHIRPatientEverythingToolInvokeTest(t *testing.T, fhirStoreID, patientID
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1637,8 +1637,8 @@ func runFHIRFetchPageToolInvokeTest(t *testing.T, pageURL, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1710,6 +1710,9 @@ func runTest(t *testing.T, api string, requestHeader map[string]string, requestB
 
 	got, ok := body["result"].(string)
 	if !ok {
+		if errMsg, ok := body["error"].(string); ok {
+			return errMsg, http.StatusOK
+		}
 		t.Fatalf("unable to find result in response body")
 	}
 	return got, http.StatusOK
@@ -1837,8 +1840,8 @@ func runGetDICOMStoreToolInvokeTest(t *testing.T, dicomStoreID, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1943,8 +1946,8 @@ func runGetDICOMStoreMetricsToolInvokeTest(t *testing.T, dicomStoreID, want stri
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2065,8 +2068,8 @@ func runSearchDICOMStudiesToolInvokeTest(t *testing.T, dicomStoreID string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2187,8 +2190,8 @@ func runSearchDICOMSeriesToolInvokeTest(t *testing.T, dicomStoreID string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2309,8 +2312,8 @@ func runSearchDICOMInstancesToolInvokeTest(t *testing.T, dicomStoreID string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2422,10 +2425,10 @@ func runRetrieveRenderedDICOMInstanceToolInvokeTest(t *testing.T, dicomStoreID s
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}

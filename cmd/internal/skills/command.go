@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -30,28 +30,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// RootCommand defines the interface for required by skills-generate subcommand.
-// This allows subcommands to access shared resources and functionality without
-// direct coupling to the root command's implementation.
-type RootCommand interface {
-	// Config returns a copy of the current server configuration.
-	Config() server.ServerConfig
-
-	// LoadConfig loads and merges the configuration from files, folders, and prebuilts.
-	LoadConfig(ctx context.Context) error
-
-	// Setup initializes the runtime environment, including logging and telemetry.
-	// It returns the updated context and a shutdown function to be called when finished.
-	Setup(ctx context.Context) (context.Context, func(context.Context) error, error)
-
-	// Logger returns the logger instance.
-	Logger() log.Logger
-}
-
-// Command is the command for generating skills.
-type Command struct {
+// skillsCmd is the command for generating skills.
+type skillsCmd struct {
 	*cobra.Command
-	rootCmd     RootCommand
 	name        string
 	description string
 	toolset     string
@@ -59,15 +40,13 @@ type Command struct {
 }
 
 // NewCommand creates a new Command.
-func NewCommand(rootCmd RootCommand) *cobra.Command {
-	cmd := &Command{
-		rootCmd: rootCmd,
-	}
+func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
+	cmd := &skillsCmd{}
 	cmd.Command = &cobra.Command{
 		Use:   "skills-generate",
 		Short: "Generate skills from tool configurations",
 		RunE: func(c *cobra.Command, args []string) error {
-			return cmd.run(c)
+			return run(cmd, opts)
 		},
 	}
 
@@ -81,11 +60,11 @@ func NewCommand(rootCmd RootCommand) *cobra.Command {
 	return cmd.Command
 }
 
-func (c *Command) run(cmd *cobra.Command) error {
+func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
-	ctx, shutdown, err := c.rootCmd.Setup(ctx)
+	ctx, shutdown, err := opts.Setup(ctx)
 	if err != nil {
 		return err
 	}
@@ -93,39 +72,37 @@ func (c *Command) run(cmd *cobra.Command) error {
 		_ = shutdown(ctx)
 	}()
 
-	logger := c.rootCmd.Logger()
-
-	// Load and merge tool configurations
-	if err := c.rootCmd.LoadConfig(ctx); err != nil {
+	_, err = opts.LoadConfig(ctx)
+	if err != nil {
 		return err
 	}
 
-	if err := os.MkdirAll(c.outputDir, 0755); err != nil {
+	if err := os.MkdirAll(cmd.outputDir, 0755); err != nil {
 		errMsg := fmt.Errorf("error creating output directory: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
-	logger.InfoContext(ctx, fmt.Sprintf("Generating skill '%s'...", c.name))
+	opts.Logger.InfoContext(ctx, fmt.Sprintf("Generating skill '%s'...", cmd.name))
 
 	// Initialize toolbox and collect tools
-	allTools, err := c.collectTools(ctx)
+	allTools, err := cmd.collectTools(ctx, opts)
 	if err != nil {
 		errMsg := fmt.Errorf("error collecting tools: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
 	if len(allTools) == 0 {
-		logger.InfoContext(ctx, "No tools found to generate.")
+		opts.Logger.InfoContext(ctx, "No tools found to generate.")
 		return nil
 	}
 
 	// Generate the combined skill directory
-	skillPath := filepath.Join(c.outputDir, c.name)
+	skillPath := filepath.Join(cmd.outputDir, cmd.name)
 	if err := os.MkdirAll(skillPath, 0755); err != nil {
 		errMsg := fmt.Errorf("error creating skill directory: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
@@ -133,7 +110,7 @@ func (c *Command) run(cmd *cobra.Command) error {
 	assetsPath := filepath.Join(skillPath, "assets")
 	if err := os.MkdirAll(assetsPath, 0755); err != nil {
 		errMsg := fmt.Errorf("error creating assets dir: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
@@ -141,7 +118,7 @@ func (c *Command) run(cmd *cobra.Command) error {
 	scriptsPath := filepath.Join(skillPath, "scripts")
 	if err := os.MkdirAll(scriptsPath, 0755); err != nil {
 		errMsg := fmt.Errorf("error creating scripts dir: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
@@ -154,10 +131,10 @@ func (c *Command) run(cmd *cobra.Command) error {
 
 	for _, toolName := range toolNames {
 		// Generate YAML config in asset directory
-		minimizedContent, err := generateToolConfigYAML(c.rootCmd.Config(), toolName)
+		minimizedContent, err := generateToolConfigYAML(opts.Cfg, toolName)
 		if err != nil {
 			errMsg := fmt.Errorf("error generating filtered config for %s: %w", toolName, err)
-			logger.ErrorContext(ctx, errMsg.Error())
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
 
@@ -166,7 +143,7 @@ func (c *Command) run(cmd *cobra.Command) error {
 			destPath := filepath.Join(assetsPath, specificToolsFileName)
 			if err := os.WriteFile(destPath, minimizedContent, 0644); err != nil {
 				errMsg := fmt.Errorf("error writing filtered config for %s: %w", toolName, err)
-				logger.ErrorContext(ctx, errMsg.Error())
+				opts.Logger.ErrorContext(ctx, errMsg.Error())
 				return errMsg
 			}
 		}
@@ -175,40 +152,40 @@ func (c *Command) run(cmd *cobra.Command) error {
 		scriptContent, err := generateScriptContent(toolName, specificToolsFileName)
 		if err != nil {
 			errMsg := fmt.Errorf("error generating script content for %s: %w", toolName, err)
-			logger.ErrorContext(ctx, errMsg.Error())
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
 
 		scriptFilename := filepath.Join(scriptsPath, fmt.Sprintf("%s.js", toolName))
 		if err := os.WriteFile(scriptFilename, []byte(scriptContent), 0755); err != nil {
 			errMsg := fmt.Errorf("error writing script %s: %w", scriptFilename, err)
-			logger.ErrorContext(ctx, errMsg.Error())
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
 	}
 
 	// Generate SKILL.md
-	skillContent, err := generateSkillMarkdown(c.name, c.description, allTools)
+	skillContent, err := generateSkillMarkdown(cmd.name, cmd.description, allTools)
 	if err != nil {
 		errMsg := fmt.Errorf("error generating SKILL.md content: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 	skillMdPath := filepath.Join(skillPath, "SKILL.md")
 	if err := os.WriteFile(skillMdPath, []byte(skillContent), 0644); err != nil {
 		errMsg := fmt.Errorf("error writing SKILL.md: %w", err)
-		logger.ErrorContext(ctx, errMsg.Error())
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
 	}
 
-	logger.InfoContext(ctx, fmt.Sprintf("Successfully generated skill '%s' with %d tools.", c.name, len(allTools)))
+	opts.Logger.InfoContext(ctx, fmt.Sprintf("Successfully generated skill '%s' with %d tools.", cmd.name, len(allTools)))
 
 	return nil
 }
 
-func (c *Command) collectTools(ctx context.Context) (map[string]tools.Tool, error) {
+func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]tools.Tool, error) {
 	// Initialize Resources
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, c.rootCmd.Config())
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, opts.Cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize resources: %w", err)
 	}

@@ -155,11 +155,10 @@ func TestCreateDatabaseToolEndpoints(t *testing.T) {
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:        "missing name",
-			toolName:    "create-database",
-			body:        `{"project": "p1", "instance": "i1"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing name",
+			toolName: "create-database",
+			body:     `{"project": "p1", "instance": "i1"}`,
+			want:     `{"error":"parameter \"name\" is required"}`,
 		},
 	}
 

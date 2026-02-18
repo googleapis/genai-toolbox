@@ -231,7 +231,7 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				"id":      "tools-call-tool4",
 				"error": map[string]any{
 					"code":    -32600.0,
-					"message": "unauthorized Tool call: Please make sure your specify correct auth headers: unauthorized",
+					"message": "unauthorized Tool call: Please make sure you specify correct auth headers",
 				},
 			},
 		},
@@ -320,7 +320,7 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				Params: map[string]any{
 					"name": "prompt2",
 					"arguments": map[string]any{
-						"arg1": 42, // prompt2 expects a string, we send a number
+						"arg1": 42,
 					},
 				},
 			},
@@ -834,7 +834,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"id":      "tools-call-tool4",
 						"error": map[string]any{
 							"code":    -32600.0,
-							"message": "unauthorized Tool call: Please make sure your specify correct auth headers: unauthorized",
+							"message": "unauthorized Tool call: Please make sure you specify correct auth headers",
 						},
 					},
 				},

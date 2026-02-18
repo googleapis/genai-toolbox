@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -81,17 +82,17 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 
 	durationStr, ok := paramsMap["duration"].(string)
 	if !ok {
-		return nil, fmt.Errorf("duration parameter is not a string")
+		return nil, util.NewAgentError("duration parameter is not a string", nil)
 	}
 
 	totalDuration, err := time.ParseDuration(durationStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid duration format: %w", err)
+		return nil, util.NewAgentError("invalid duration format", err)
 	}
 
 	time.Sleep(totalDuration)
