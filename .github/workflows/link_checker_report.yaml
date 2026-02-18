@@ -37,16 +37,15 @@ jobs:
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
             *.md
-          output: lychee-report.md
-          format: markdown
-          fail: true           
-          jobSummary: false    
-          debug: false
+        output: lychee-report.md
+        format: markdown
+        fail: true           
+        jobSummary: false    
+        debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Prepare Report 
-        if: steps.lychee-check.outputs.exit_code != 0
+      - name: Prepare Report
         run: |
           echo "## Link Resolution Note" > full-report.md
           echo "Local links and directory changes work differently on GitHub than on the docsite.You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
