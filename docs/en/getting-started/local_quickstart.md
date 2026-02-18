@@ -7,7 +7,7 @@ description: >
   [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
 ---
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/ colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
 
 ## Before you begin
 
@@ -21,7 +21,7 @@ This guide assumes you have already done the following:
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
 [install-venv]:
-    https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+    https://packaging.python.org/en/lates t/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
