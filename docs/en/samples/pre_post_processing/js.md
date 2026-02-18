@@ -34,7 +34,11 @@ See the [LangChain Middleware documentation](https://docs.langchain.com/oss/java
 
 ## Results
 
-The output should look similar to the following. Note that exact responses may vary due to the non-deterministic nature of LLMs and differences between orchestration frameworks.
+The output should look similar to the following.
+
+{{< notice note >}}
+The exact responses may vary due to the non-deterministic nature of LLMs and differences between orchestration frameworks.
+{{< /notice >}}
 
 ```
 AI: Booking Confirmed! You earned 500 Loyalty Points with this stay.
