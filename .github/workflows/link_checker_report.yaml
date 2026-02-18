@@ -17,12 +17,6 @@ on:
   push:
     branches: 
       - test-link-report
-  repository_dispatch:
-  workflow_dispatch:
-  schedule:
-    - cron: '50 9 * * *' # For testing purposes, this is set to run every day at 9:50 AM UTC. Change to the above for weekly runs.
-    - cron: '0 0 * * 1' # Runs every Monday at 00:00 UTC
-
 jobs:
   linkChecker:
     runs-on: ubuntu-latest
