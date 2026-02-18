@@ -17,11 +17,13 @@ package postgreslisttriggers
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,49 +31,49 @@ import (
 const resourceType string = "postgres-list-triggers"
 
 const listTriggersStatement = `
-	WITH
-	trigger_list AS (
-		SELECT
-			t.tgname AS trigger_name,
-			n.nspname AS schema_name,
-			c.relname AS table_name,
-			CASE t.tgenabled
-				WHEN 'O' THEN 'ENABLED'
-				WHEN 'D' THEN 'DISABLED'
-				WHEN 'R' THEN 'REPLICA'
-				WHEN 'A' THEN 'ALWAYS'
-				END AS status,
-			CASE
-				WHEN (t.tgtype::int & 2) = 2 THEN 'BEFORE'
-				WHEN (t.tgtype::int & 64) = 64 THEN 'INSTEAD OF'
-				ELSE 'AFTER'
-				END AS timing,
-			concat_ws(
-				', ',
-				CASE WHEN (t.tgtype::int & 4) = 4 THEN 'INSERT' END,
-				CASE WHEN (t.tgtype::int & 16) = 16 THEN 'UPDATE' END,
-				CASE WHEN (t.tgtype::int & 8) = 8 THEN 'DELETE' END,
-				CASE WHEN (t.tgtype::int & 32) = 32 THEN 'TRUNCATE' END) AS events,
-			CASE WHEN (t.tgtype::int & 1) = 1 THEN 'ROW' ELSE 'STATEMENT' END AS activation_level,
-			p.proname AS function_name,
-			pg_get_triggerdef(t.oid) AS definition
-		FROM pg_trigger t
-		JOIN pg_class c
-			ON t.tgrelid = c.oid
-		JOIN pg_namespace n
-			ON c.relnamespace = n.oid
-		LEFT JOIN pg_proc p
-			ON t.tgfoid = p.oid
-		WHERE NOT t.tgisinternal
-	)
-	SELECT *
-	FROM trigger_list
-	WHERE
-		($1::text IS NULL OR trigger_name LIKE '%' || $1::text || '%')
-		AND ($2::text IS NULL OR schema_name LIKE '%' || $2::text || '%')
-		AND ($3::text IS NULL OR table_name LIKE '%' || $3::text || '%')
-	ORDER BY schema_name, table_name, trigger_name
-	LIMIT COALESCE($4::int, 50);
+    WITH
+    trigger_list AS (
+        SELECT
+            t.tgname AS trigger_name,
+            n.nspname AS schema_name,
+            c.relname AS table_name,
+            CASE t.tgenabled
+                WHEN 'O' THEN 'ENABLED'
+                WHEN 'D' THEN 'DISABLED'
+                WHEN 'R' THEN 'REPLICA'
+                WHEN 'A' THEN 'ALWAYS'
+                END AS status,
+            CASE
+                WHEN (t.tgtype::int & 2) = 2 THEN 'BEFORE'
+                WHEN (t.tgtype::int & 64) = 64 THEN 'INSTEAD OF'
+                ELSE 'AFTER'
+                END AS timing,
+            concat_ws(
+                ', ',
+                CASE WHEN (t.tgtype::int & 4) = 4 THEN 'INSERT' END,
+                CASE WHEN (t.tgtype::int & 16) = 16 THEN 'UPDATE' END,
+                CASE WHEN (t.tgtype::int & 8) = 8 THEN 'DELETE' END,
+                CASE WHEN (t.tgtype::int & 32) = 32 THEN 'TRUNCATE' END) AS events,
+            CASE WHEN (t.tgtype::int & 1) = 1 THEN 'ROW' ELSE 'STATEMENT' END AS activation_level,
+            p.proname AS function_name,
+            pg_get_triggerdef(t.oid) AS definition
+        FROM pg_trigger t
+        JOIN pg_class c
+            ON t.tgrelid = c.oid
+        JOIN pg_namespace n
+            ON c.relnamespace = n.oid
+        LEFT JOIN pg_proc p
+            ON t.tgfoid = p.oid
+        WHERE NOT t.tgisinternal
+    )
+    SELECT *
+    FROM trigger_list
+    WHERE
+        ($1::text IS NULL OR trigger_name LIKE '%' || $1::text || '%')
+        AND ($2::text IS NULL OR schema_name LIKE '%' || $2::text || '%')
+        AND ($3::text IS NULL OR table_name LIKE '%' || $3::text || '%')
+    ORDER BY schema_name, table_name, trigger_name
+    LIMIT COALESCE($4::int, 50);
 `
 
 func init() {
@@ -101,7 +103,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -121,7 +122,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -134,7 +134,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -148,20 +147,24 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
-	return source.RunSQL(ctx, listTriggersStatement, sliceParams)
+	resp, err := source.RunSQL(ctx, listTriggersStatement, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

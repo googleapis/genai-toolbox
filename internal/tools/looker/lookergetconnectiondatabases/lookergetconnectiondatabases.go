@@ -16,11 +16,13 @@ package lookergetconnectiondatabases
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -107,27 +109,26 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
 	conn, ok := mapParams["conn"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'conn' must be a string, got %T", mapParams["conn"])
+		return nil, util.NewAgentError(fmt.Sprintf("'conn' must be a string, got %T", mapParams["conn"]), nil)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
 	resp, err := sdk.ConnectionDatabases(conn, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making get_connection_databases request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
-	//logger.DebugContext(ctx, "Got response of %v\n", resp)
 
 	return resp, nil
 }
