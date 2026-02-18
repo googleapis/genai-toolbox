@@ -3,7 +3,7 @@ title: "Go Quickstart (Local)"
 type: docs
 weight: 4
 description: >
-  How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
+  How to get started running MCP Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
 ---
 
 ## Before you begin
@@ -24,14 +24,14 @@ This guide assumes you have already done the following:
 
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
-## Step 2: Install and configure Toolbox
+## Step 2: Install and configure MCP Toolbox
 
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
-## Step 3: Connect your agent to Toolbox
+## Step 3: Connect your agent to MCP Toolbox
 
 In this section, we will write and run an agent that will load the Tools
-from Toolbox.
+from MCP Toolbox.
 
 1. Initialize a go module:
 
