@@ -1,11 +1,11 @@
-module adkgo-quickstart
+module example.com/adk-agent
 
 go 1.24.4
 
 require (
-	github.com/googleapis/mcp-toolbox-sdk-go/tbadk v0.6.0
+	github.com/googleapis/mcp-toolbox-sdk-go v0.5.1
 	google.golang.org/adk v0.3.0
-	google.golang.org/genai v1.45.0
+	google.golang.org/genai v1.43.0
 )
 
 require (
@@ -23,7 +23,6 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.11 // indirect
 	github.com/googleapis/gax-go/v2 v2.16.0 // indirect
-	github.com/googleapis/mcp-toolbox-sdk-go/core v0.6.2 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
@@ -36,8 +35,8 @@ require (
 	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
-	google.golang.org/api v0.265.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
+	google.golang.org/api v0.263.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260122232226-8e98ce8d340d // indirect
 	google.golang.org/grpc v1.78.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	rsc.io/omap v1.2.0 // indirect

@@ -1,10 +1,10 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,6 @@ import (
 	"testing"
 )
 
-var goldenKeywords = []string{"Hilton Basel", "Hyatt Regency", "book"}
-
 func TestQuickstartSample(t *testing.T) {
 	framework := os.Getenv("ORCH_NAME")
 	if framework == "" {
@@ -33,14 +31,8 @@ func TestQuickstartSample(t *testing.T) {
 
 	t.Logf("--- Testing: %s ---", framework)
 
-	if framework == "openAI" {
-		if os.Getenv("OPENAI_API_KEY") == "" {
-			t.Skip("Skipping test: OPENAI_API_KEY environment variable is not set for openAI framework.")
-		}
-	} else {
-		if os.Getenv("GOOGLE_API_KEY") == "" {
-			t.Skipf("Skipping test for %s: GOOGLE_API_KEY environment variable is not set.", framework)
-		}
+	if os.Getenv("GOOGLE_API_KEY") == "" {
+		t.Skipf("Skipping test for %s: GOOGLE_API_KEY environment variable is not set.", framework)
 	}
 
 	sampleDir := filepath.Join(".", framework)
@@ -62,6 +54,12 @@ func TestQuickstartSample(t *testing.T) {
 	}
 	if len(actualOutput) == 0 {
 		t.Fatal("Script ran successfully but produced no output.")
+	}
+
+	goldenKeywords := []string{
+		"AI:",
+		"Loyalty Points",
+		"POLICY CHECK: Intercepting 'update-hotel'",
 	}
 
 	var missingKeywords []string

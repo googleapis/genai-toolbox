@@ -453,12 +453,11 @@ README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/too
 
 #### Go
 
-Once you've installed the [Toolbox Go
-SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
-tools:
-
 {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -490,6 +489,9 @@ func main() {
 
 {{% /tab %}}
 {{% tab header="LangChain Go" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -540,11 +542,14 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+
+For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 {{% tab header="Genkit Go" lang="en" %}}
+
+Once you've installed the [Go TBGenkit SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -586,11 +591,13 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
+For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
 
 {{% /tab %}}
 {{% tab header="Go GenAI" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -642,12 +649,14 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
 {{% tab header="OpenAI Go" lang="en" %}}
+
+Once you've installed the [Go Core SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -697,12 +706,14 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
 {{% tab header="ADK Go" lang="en" %}}
+
+Once you've installed the [Go TBADK SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/tbadk), you can load
+tools:
 
 {{< highlight go >}}
 package main
@@ -732,8 +743,7 @@ func main() {
 
 {{< /highlight >}}
 
-For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
+For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [module's samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
 
 {{% /tab %}}
 {{< /tabpane >}}

@@ -36,15 +36,17 @@ var (
 	AlloyDBDatabase = "postgres"
 )
 
-// Copied over from postgres.go
-func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
-	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
-	url := &url.URL{
+func buildPostgresURL(host, port, user, pass, dbname string) *url.URL {
+	return &url.URL{
 		Scheme: "postgres",
 		User:   url.UserPassword(user, pass),
 		Host:   fmt.Sprintf("%s:%s", host, port),
 		Path:   dbname,
 	}
+}
+
+func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+	url := buildPostgresURL(host, port, user, pass, dbname)
 	pool, err := pgxpool.New(context.Background(), url.String())
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create connection pool: %w", err)
@@ -63,7 +65,8 @@ func setupAlloyDBContainer(ctx context.Context, t *testing.T) (string, string, f
 			"POSTGRES_PASSWORD": AlloyDBPass,
 		},
 		WaitingFor: wait.ForAll(
-			wait.ForLog("Post Startup: Successfully reinstalled extensions"),
+			wait.ForLog("database system was shut down at"),
+			wait.ForLog("database system is ready to accept connections"),
 			wait.ForExposedPort(),
 		),
 	}

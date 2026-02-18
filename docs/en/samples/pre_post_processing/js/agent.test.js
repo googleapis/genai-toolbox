@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,37 +14,60 @@
 
 import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import fs from "fs";
+
 import path from "path";
 import { fileURLToPath } from "url";
 
 const ORCH_NAME = process.env.ORCH_NAME;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const orchDir = path.join(__dirname, ORCH_NAME);
-const quickstartPath = path.join(orchDir, "quickstart.js");
+const agentPath = path.join(orchDir, "agent.js");
 
-const { main: runAgent } = await import(quickstartPath);
+const { main: runAgent } = await import(agentPath);
 
-const GOLDEN_KEYWORDS = ["Hilton Basel", "Hyatt Regency", "book"];
+const GOLDEN_KEYWORDS = [
+  "AI:",
+  "Loyalty Points",
+  "POLICY CHECK: Intercepting 'update-hotel'"
+];
 
-describe(`${ORCH_NAME} Quickstart Agent`, () => {
+describe(`${ORCH_NAME} Pre/Post Processing Agent`, () => {
   let capturedOutput = [];
+  let capturedErrors = [];
   let originalLog;
+  let originalError;
 
   before(() => {
     originalLog = console.log;
-    console.log = (msg) => {
+    originalError = console.error;
+
+    console.log = (...args) => {
+      const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ');
       capturedOutput.push(msg);
+    };
+    
+    console.error = (...args) => {
+      const msg = args.map(a => (typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a))).join(' ');
+      capturedErrors.push(msg);
     };
   });
 
   after(() => {
     console.log = originalLog;
+    console.error = originalError;
   });
 
-  test("outputContainsRequiredKeywords", async () => {
+  test("runs without errors and outputContainsRequiredKeywords", async () => {
     capturedOutput = [];
+    capturedErrors = [];
+
     await runAgent();
+    assert.equal(
+        capturedErrors.length, 
+        0, 
+        `Script produced stderr: ${capturedErrors.join("\n")}`
+    );
+
     const actualOutput = capturedOutput.join("\n");
 
     assert.ok(
@@ -53,8 +76,9 @@ describe(`${ORCH_NAME} Quickstart Agent`, () => {
     );
 
     const missingKeywords = [];
+
     for (const keyword of GOLDEN_KEYWORDS) {
-      if (!actualOutput.toLowerCase().includes(keyword.toLowerCase())) {
+      if (!actualOutput.includes(keyword)) {
         missingKeywords.push(keyword);
       }
     }

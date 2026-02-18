@@ -1,14 +1,14 @@
 ---
-title: "Python"
+title: "Javascript"
 type: docs
-weight: 1
+weight: 2
 description: >
-  How to add pre- and post- processing to your Agents using Python.
+  How to add pre- and post- processing to your Agents using JS.
 ---
 
 ## Prerequisites
 
-This tutorial assumes that you have set up MCP Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart.md).
+This tutorial assumes that you have set up MCP Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart_js.md).
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
@@ -21,11 +21,14 @@ Coming soon.
 {{% tab header="Langchain" text=true %}}
 The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre- and post- processing for tool calls.
 
-```py
-{{< include "python/langchain/agent.py" >}}
+```js
+{{< include "js/langchain/agent.js" >}}
 ```
 
-You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks) for details on these additional hook types.
+You can also use the `wrapModelCall` hook to intercept messages before and after model calls.
+You can also use [node-style hooks](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#node-style-hooks) to intercept messages at the agent and model level.
+See the [LangChain Middleware documentation](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#tool-call-monitoring) for details on these additional hook types.
+
 {{% /tab %}}
 {{< /tabpane >}}
 
