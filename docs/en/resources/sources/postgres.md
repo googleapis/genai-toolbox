@@ -115,8 +115,6 @@ port: 5432
 database: my_db
 user: ${USER_NAME}
 password: ${PASSWORD}
-# Optional: override pgx query execution mode for connection pooler compatibility
-# queryExecMode: simple_protocol
 ```
 
 {{< notice tip >}}
