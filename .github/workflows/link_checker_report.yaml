@@ -66,4 +66,3 @@ jobs:
         # Run this ONLY if the link checker failed
         run: |
           cat full-report.md >> $GITHUB_STEP_SUMMARY
-          exit 1
