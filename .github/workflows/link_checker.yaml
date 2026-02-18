@@ -129,4 +129,4 @@ jobs:
           cat full-report.md >> $GITHUB_STEP_SUMMARY
           
           # Fail the job
-          exit 1
+          exit 1 
