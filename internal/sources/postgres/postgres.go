@@ -157,7 +157,7 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
 
-	execMode, err := parseQueryExecMode(queryExecMode)
+	execMode, err := ParseQueryExecMode(queryExecMode)
 	if err != nil {
 		return nil, err
 	}
