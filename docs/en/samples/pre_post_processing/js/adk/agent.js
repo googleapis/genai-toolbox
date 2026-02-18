@@ -4,35 +4,39 @@ import { ToolboxClient } from '@toolbox-sdk/adk';
 process.env.GOOGLE_GENAI_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const systemPrompt = `
-  You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id,
-  location and price tier. Always mention hotel ids while performing any
-  searches. This is very important for any operations. For any bookings or
-  cancellations, please provide the appropriate confirmation. Be sure to
-  update checkin or checkout dates if mentioned by the user.
-  Don't ask for confirmations from the user.
+You're a helpful hotel assistant. You handle hotel searching, booking and
+cancellations. When the user searches for a hotel, mention it's name, id,
+location and price tier. Always mention hotel ids while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
 `;
 
 // Pre-Processing
-function preProcess({tool, args}) {
+function enforeBusinessRules({tool, args}) {
   const name = tool.name;
   console.log(`POLICY CHECK: Intercepting '${name}'`);
 
   if (name === "update-hotel" && args.checkin_date && args.checkout_date) {
-    const start = new Date(args.checkin_date);
-    const end = new Date(args.checkout_date);
-    const duration = (end - start) / (1000 * 60 * 60 * 24); // days
+    try {
+      const start = new Date(args.checkin_date);
+      const end = new Date(args.checkout_date);
+      const duration = (end - start) / (1000 * 60 * 60 * 24); // days
 
-    if (duration > 14) {
-      console.log("BLOCKED: Stay too long");
-      return "Error: Maximum stay duration is 14 days.";
+      if (duration > 14) {
+        console.log("BLOCKED: Stay too long");
+        return "Error: Maximum stay duration is 14 days.";
+      }
+    } catch (e) {
+      // Ignore invalid dates
     }
   }
   return undefined;
 }
 
 // Post-Processing
-function postProcess({tool, response}) {
+function enrichResponse({tool, response}) {
   const name = tool.name;
   console.log(`ENRICHING RESPONSE: Intercepting '${name}'`);
   let content = response;
@@ -79,8 +83,8 @@ export async function main() {
     instruction: systemPrompt,
     tools: tools,
     // Add any pre- and post- processing callbacks
-    beforeToolCallback: preProcess,
-    afterToolCallback: postProcess
+    beforeToolCallback: enforeBusinessRules,
+    afterToolCallback: enrichResponse
   });
 
   const appName = rootAgent.name;
