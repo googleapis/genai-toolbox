@@ -1,3 +1,0 @@
-AI:
-Loyalty Points
-POLICY CHECK: Intercepting 'update-hotel'
