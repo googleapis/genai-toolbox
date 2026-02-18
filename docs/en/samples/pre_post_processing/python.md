@@ -8,7 +8,7 @@ description: >
 
 ## Prerequisites
 
-This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart.md).
+This tutorial assumes that you have set up MCP Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart.md).
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
@@ -31,7 +31,11 @@ You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `af
 
 ## Results
 
-The output should look similar to the following. Note that exact responses may vary due to the non-deterministic nature of LLMs and differences between orchestration frameworks.
+The output should look similar to the following.
+
+{{< notice note >}}
+The exact responses may vary due to the non-deterministic nature of LLMs and differences between orchestration frameworks.
+{{< /notice >}}
 
 ```
 AI: Booking Confirmed! You earned 500 Loyalty Points with this stay.
