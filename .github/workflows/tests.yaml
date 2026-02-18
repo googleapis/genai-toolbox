@@ -20,10 +20,14 @@ on:
     paths-ignore:
       - "docs/**"
       - "**.md"
+      - ".github/**"
+      - "!.github/workflows/tests.yaml"
   pull_request:
     paths-ignore:
       - "docs/**"
       - "**.md"
+      - ".github/**"
+      - "!.github/workflows/tests.yaml"
   pull_request_target:
     types: [labeled]
 
