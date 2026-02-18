@@ -179,7 +179,7 @@ func ConvertParamMapToRawQuery(queryParams map[string]string) string {
 	return strings.Join(queryArray, "&")
 }
 
-func parseQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {
+func ParseQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {
 	switch queryExecMode {
 	case "", "cache_statement":
 		return pgx.QueryExecModeCacheStatement, nil
