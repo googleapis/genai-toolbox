@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           git fetch origin main
-          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT origin/main...HEAD)
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT origin/main...HEAD -- '*.md')
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No markdown files changed. Skipping checks."
