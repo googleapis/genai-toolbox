@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/jackc/pgx/v5"
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
