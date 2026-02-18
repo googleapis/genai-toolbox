@@ -32,7 +32,7 @@ to expose your developer assistant tools to a Postgres instance:
 
 {{< notice tip >}}
 This guide can be used with [AlloyDB
-Omni](https://cloud.google.com/alloydb/omni/docs/overview).
+Omni](https://cloud.goo gle.com/ alloydb/omni/docs/overview).
 {{< /notice >}}
 
 ## Set up the database
@@ -43,13 +43,13 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
     * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/docs/quickstart)
 
 1. Create or reuse [a database
-   user](https://docs.cloud.google.com/alloydb/omni/con tainers/current/docs/database-users/manage-users)
+   user](https://docs.cl oud.google.com/alloydb/omni/con tainers/current/docs/database-users/manage-users)
    and have the username and password ready.
 
 ## Install MCP Toolbox
 
 1. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   binary](https://github.com/google apis/genai-toolbox/releases) corresponding
    to your OS and CPU architecture. You are required to use Toolbox version
    V0.6.0+:
 
