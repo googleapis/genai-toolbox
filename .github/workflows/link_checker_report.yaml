@@ -60,3 +60,9 @@ jobs:
       #     title: Link Checker Report
       #     content-filepath: full-report.md
       #     labels: report, automated issue,link checker
+
+      - name: Display Failure Report
+        # Run this ONLY if the link checker failed
+        run: |
+          cat full-report.md >> $GITHUB_STEP_SUMMARY
+          exit 1
