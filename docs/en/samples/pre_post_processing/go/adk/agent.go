@@ -50,7 +50,7 @@ var queries = []string{
 }
 
 // Pre-processing
-func beforeToolCallback(ctx tool.Context, tool tool.Tool, args map[string]any) (map[string]any, error) {
+func enforceBusinessRules(ctx tool.Context, tool tool.Tool, args map[string]any) (map[string]any, error) {
 
 	fmt.Printf("POLICY CHECK: Intercepting '%s'\n", tool.Name())
 	if tool.Name() == "update-hotel" {
@@ -75,7 +75,7 @@ func beforeToolCallback(ctx tool.Context, tool tool.Tool, args map[string]any) (
 }
 
 // Post-processing
-func afterToolCallback(ctx tool.Context, tool tool.Tool, args, result map[string]any, err error) (map[string]any, error) {
+func enrichResponse(ctx tool.Context, tool tool.Tool, args, result map[string]any, err error) (map[string]any, error) {
 	resultStr := fmt.Sprintf("%v", result)
 
 	if tool.Name() == "book-hotel" {
@@ -125,8 +125,8 @@ func main() {
 		Instruction:         systemPrompt,
 		Tools:               tools,
 		// Add pre- and post- processing hooks
-		BeforeToolCallbacks: []llmagent.BeforeToolCallback{beforeToolCallback},
-		AfterToolCallbacks:  []llmagent.AfterToolCallback{afterToolCallback},
+		BeforeToolCallbacks: []llmagent.BeforeToolCallback{enforceBusinessRules},
+		AfterToolCallbacks:  []llmagent.AfterToolCallback{enrichResponse},
 	})
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
