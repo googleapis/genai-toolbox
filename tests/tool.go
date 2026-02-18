@@ -3201,7 +3201,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 
 	createTableHelper := func(t *testing.T, tableName, databaseName string, primaryKey, uniqueKey, nonUniqueKey bool, ctx context.Context, pool *sql.DB) func() {
 		var stmt strings.Builder
-		stmt.WriteString(fmt.Sprintf("CREATE TABLE %s (", tableName))
+		fmt.Fprintf(&stmt, "CREATE TABLE %s (", tableName)
 		stmt.WriteString("c1 INT")
 		if primaryKey {
 			stmt.WriteString(" PRIMARY KEY")
