@@ -36,7 +36,8 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
-            *.md
+            README.md
+            docs/
           output: lychee-report.md
           format: markdown
           fail: true           
