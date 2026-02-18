@@ -200,11 +200,10 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 			want:     `{"name":"op2","status":"RUNNING"}`,
 		},
 		{
-			name:        "missing required parameter",
-			toolName:    "create-instance-prod",
-			body:        `{"name": "instance1"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing required parameter",
+			toolName: "create-instance-prod",
+			body:     `{"name": "instance1"}`,
+			want:     `{"error":"parameter \"project\" is required"}`,
 		},
 	}
 

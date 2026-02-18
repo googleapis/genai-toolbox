@@ -17,9 +17,11 @@ package elasticsearchesql
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
@@ -89,10 +91,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	var cancel context.CancelFunc
@@ -119,11 +121,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	for _, param := range t.Parameters {
 		if param.GetType() == "array" {
-			return nil, fmt.Errorf("array parameters are not supported yet")
+			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
 		sqlParams = append(sqlParams, map[string]any{param.GetName(): paramMap[param.GetName()]})
 	}
-	return source.RunSQL(ctx, t.Format, query, sqlParams)
+	resp, err := source.RunSQL(ctx, t.Format, query, sqlParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
