@@ -23,7 +23,7 @@ SYSTEM_PROMPT = """
 
 
 # Pre processing
-async def before_tool_callback(
+async def enfore_business_rules(
     tool: ToolboxTool, args: Dict[str, Any], tool_context: ToolContext
 ) -> Optional[Dict[str, Any]]:
     """
@@ -45,7 +45,7 @@ async def before_tool_callback(
 
 
 # Post processing
-async def after_tool_callback(
+async def enrich_response(
     tool: ToolboxTool,
     args: Dict[str, Any],
     tool_context: ToolContext,
@@ -109,8 +109,8 @@ async def main():
         instruction=SYSTEM_PROMPT,
         tools=tools,
         # add any pre and post processing callbacks
-        before_tool_callback=before_tool_callback,
-        after_tool_callback=after_tool_callback,
+        before_tool_callback=enfore_business_rules,
+        after_tool_callback=enrich_response,
     )
     app = App(root_agent=root_agent, name="my_agent")
     runner = Runner(app=app, session_service=InMemorySessionService())
