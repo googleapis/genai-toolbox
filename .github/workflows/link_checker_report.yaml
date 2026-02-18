@@ -37,11 +37,11 @@ jobs:
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
             *.md
-        output: lychee-report.md
-        format: markdown
-        fail: true           
-        jobSummary: false    
-        debug: false
+          output: lychee-report.md
+          format: markdown
+          fail: true           
+          jobSummary: false    
+          debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
