@@ -39,18 +39,20 @@ function enforeBusinessRules({tool, args}) {
 function enrichResponse({tool, response}) {
   const name = tool.name;
   console.log(`ENRICHING RESPONSE: Intercepting '${name}'`);
-  let content = response;
-  if (typeof response === 'object' && response !== null) {
-      if (response.result) content = response.result;
-      else if (response.content) content = response.content;
-  }
   if (name === "book-hotel") {
+    let content = response;
+    if (response && typeof response === "object") {
+      content = response.content;
+    }
+    if (typeof content === "string" && !content.includes("Error")) {
       const loyaltyBonus = 500;
       const enrichedContent = `Booking Confirmed!\n You earned ${loyaltyBonus} Loyalty Points with this stay.\n\nSystem Details: ${content}`;
-      if (typeof response === 'object' && response !== null) {
-          return { ...response, result: enrichedContent, content: enrichedContent };
+
+      if (response && typeof response === "object") {
+        return { ...response, content: enrichedContent };
       }
       return enrichedContent;
+    }
   }
   return response;
 }
