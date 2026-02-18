@@ -158,11 +158,10 @@ func TestCreateBackupToolEndpoints(t *testing.T) {
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:        "missing instance name",
-			toolName:    "create-backup",
-			body:        `{"project": "p1", "escription": "invalid"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing instance name",
+			toolName: "create-backup",
+			body:     `{"project": "p1", "escription": "invalid"}`,
+			want:     `{"error":"parameter \"instance\" is required"}`,
 		},
 	}
 

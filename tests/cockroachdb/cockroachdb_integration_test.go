@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	CockroachDBSourceKind = "cockroachdb"
-	CockroachDBToolKind   = "cockroachdb-sql"
+	CockroachDBSourceType = "cockroachdb"
+	CockroachDBToolType   = "cockroachdb-sql"
 	CockroachDBDatabase   = getEnvOrDefault("COCKROACHDB_DATABASE", "defaultdb")
 	CockroachDBHost       = getEnvOrDefault("COCKROACHDB_HOST", "localhost")
 	CockroachDBPort       = getEnvOrDefault("COCKROACHDB_PORT", "26257")
@@ -53,7 +53,7 @@ func getCockroachDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"type":           CockroachDBSourceKind,
+		"type":           CockroachDBSourceType,
 		"host":           CockroachDBHost,
 		"port":           CockroachDBPort,
 		"database":       CockroachDBDatabase,
@@ -109,13 +109,18 @@ func TestCockroachDB(t *testing.T) {
 	}
 	t.Logf("✅ Connected to: %s", version)
 
-	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool)
+	// Generate a unique ID
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	// create table names with UUID suffix
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	// This will execute after all tool tests complete (success, fail, or t.Fatal)
+	t.Cleanup(func() {
+		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
+	})
+
+	//Create table names using the UUID
+	tableNameParam := "param_table_" + uniqueID
+	tableNameAuth := "auth_table_" + uniqueID
+	tableNameTemplateParam := "template_param_table_" + uniqueID
 
 	// set up data for param tool (using CockroachDB explicit INT primary keys)
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetCockroachDBParamToolInfo(tableNameParam)
@@ -128,13 +133,13 @@ func TestCockroachDB(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, CockroachDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CockroachDBToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 
 	// Add execute-sql tool with write-enabled source (CockroachDB MCP security requires explicit opt-in)
 	toolsFile = addCockroachDBExecuteSqlConfig(t, toolsFile, sourceConfig)
 
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CockroachDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CockroachDBToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

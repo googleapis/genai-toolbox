@@ -17,17 +17,19 @@ package cockroachdblistschemas
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cockroachdb"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5"
 )
 
-const kind string = "cockroachdb-list-schemas"
+const resourceType string = "cockroachdb-list-schemas"
 
 const listSchemasStatement = `
 	SELECT
@@ -42,8 +44,8 @@ const listSchemasStatement = `
 `
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -61,7 +63,7 @@ type compatibleSource interface {
 
 var _ compatibleSource = &cockroachdb.Source{}
 
-var compatibleSources = [...]string{cockroachdb.SourceKind}
+var compatibleSources = [...]string{cockroachdb.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -73,12 +75,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
-}
-
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -89,7 +87,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	_, ok = rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", resourceType, compatibleSources)
 	}
 
 	allParameters := parameters.Parameters{}
@@ -116,15 +114,15 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	results, err := source.Query(ctx, listSchemasStatement)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, util.ProcessGeneralError(fmt.Errorf("unable to execute query: %w", err))
 	}
 	defer results.Close()
 
@@ -134,7 +132,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for results.Next() {
 		values, err := results.Values()
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
+			return nil, util.NewClientServerError("unable to parse row", http.StatusInternalServerError, err)
 		}
 		rowMap := make(map[string]any)
 		for i, field := range fields {
@@ -144,14 +142,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("error reading query results: %w", err)
+		return nil, util.ProcessGeneralError(fmt.Errorf("error reading query results: %w", err))
 	}
 
 	return out, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, params parameters.ParamValues, models map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
