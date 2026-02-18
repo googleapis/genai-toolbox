@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "google-data-cloud-genai-mcp-server": {
+      "command": "/Users/jdumitru/.vscode/google_data_cloud_tools/genai_toolbox_v0.25.0",
+      "args": [
+        "--prebuilt",
+        "bigquery",
+        "--stdio"
+      ],
+      "env": {
+        "BIGQUERY_PROJECT": "total-vertex-469513-r8"
+      }
+    }
+  }
+}
