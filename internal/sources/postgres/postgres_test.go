@@ -234,3 +234,32 @@ func TestConvertParamMapToRawQuery(t *testing.T) {
 		})
 	}
 }
+
+func TestParseQueryExecMode(t *testing.T) {
+	tcs := []struct {
+		desc    string
+		in      string
+		want    pgx.QueryExecMode
+		wantErr bool
+	}{
+		{desc: "empty (default)", in: "", want: pgx.QueryExecModeCacheStatement},
+		{desc: "cache_statement", in: "cache_statement", want: pgx.QueryExecModeCacheStatement},
+		{desc: "cache_describe", in: "cache_describe", want: pgx.QueryExecModeCacheDescribe},
+		{desc: "describe_exec", in: "describe_exec", want: pgx.QueryExecModeDescribeExec},
+		{desc: "exec", in: "exec", want: pgx.QueryExecModeExec},
+		{desc: "simple_protocol", in: "simple_protocol", want: pgx.QueryExecModeSimpleProtocol},
+		{desc: "invalid mode", in: "invalid_mode", wantErr: true},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := parseQueryExecMode(tc.in)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("parseQueryExecMode() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if !tc.wantErr && got != tc.want {
+				t.Errorf("parseQueryExecMode() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
