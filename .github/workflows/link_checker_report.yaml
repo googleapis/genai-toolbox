@@ -29,12 +29,21 @@ jobs:
         id: lychee
         uses: lycheeverse/lychee-action@v2
         with:
+          args: --verbose --no-progress './**/*.md' --output lychee-report.md
           fail: false
+      - name: Prepare Report 
+        if: steps.lychee.outputs.exit_code != 0
+        run: |
+          echo "## Link Resolution Note" > full-report.md
+          echo "Local links and directory changes work differently on GitHub than on the docsite.You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
+          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md          
+          echo "" >> full-report.md 
+          sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
       - name: Create Issue From File
         if: steps.lychee.outputs.exit_code != 0
         uses: peter-evans/create-issue-from-file@v5
         with:
           title: Link Checker Report
-          content-filepath: ./lychee/out.md
+          content-filepath: full-report.md
           labels: report, automated issue,link checker
