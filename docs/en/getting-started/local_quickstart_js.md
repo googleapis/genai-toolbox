@@ -3,7 +3,7 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
+  How to get started running MCP Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 ---
 
 ## Before you begin
@@ -24,14 +24,14 @@ This guide assumes you have already done the following:
 
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
-## Step 2: Install and configure Toolbox
+## Step 2: Install and configure MCP Toolbox
 
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
-## Step 3: Connect your agent to Toolbox
+## Step 3: Connect your agent to MCP Toolbox
 
 In this section, we will write and run an agent that will load the Tools
-from Toolbox.
+from MCP Toolbox.
 
 1. (Optional) Initialize a Node.js project:
 

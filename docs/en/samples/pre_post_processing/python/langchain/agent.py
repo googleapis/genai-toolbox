@@ -1,17 +1,3 @@
-# Copyright 2026 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import asyncio
 from datetime import datetime
 
@@ -61,7 +47,13 @@ async def enforce_business_rules(request, handler):
             except ValueError:
                 pass  # Ignore invalid date formats
 
-    return await handler(request)
+    # PRE: Code here runs BEFORE the tool execution
+    
+    # EXEC: Execute the tool (or next middleware)
+    result = await handler(request)
+
+    # POST: Code here runs AFTER the tool execution
+    return result
 
 
 # Post processing
@@ -72,8 +64,12 @@ async def enrich_response(request, handler):
     Adds loyalty points information to successful bookings.
     Standardizes output format.
     """
+    # PRE: Code here runs BEFORE the tool execution
+    
+    # EXEC: Execute the tool (or next middleware)
     result = await handler(request)
 
+    # POST: Code here runs AFTER the tool execution
     if isinstance(result, ToolMessage):
         content = str(result.content)
         tool_name = request.tool_call["name"]
@@ -93,6 +89,7 @@ async def main():
             system_prompt=system_prompt,
             model=model,
             tools=tools,
+            # add any pre and post processing methods
             middleware=[enforce_business_rules, enrich_response],
         )
 
@@ -102,7 +99,6 @@ async def main():
         )
 
         print("-" * 50)
-        print("Final Client Response:")
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
 

@@ -14,7 +14,7 @@
 
 import { describe, test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import fs from "fs";
+
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -25,7 +25,11 @@ const agentPath = path.join(orchDir, "agent.js");
 
 const { main: runAgent } = await import(agentPath);
 
-const GOLDEN_FILE_PATH = path.resolve(__dirname, "../golden.txt");
+const GOLDEN_KEYWORDS = [
+  "AI:",
+  "Loyalty Points",
+  "POLICY CHECK: Intercepting 'update-hotel'"
+];
 
 describe(`${ORCH_NAME} Pre/Post Processing Agent`, () => {
   let capturedOutput = [];
@@ -71,11 +75,9 @@ describe(`${ORCH_NAME} Pre/Post Processing Agent`, () => {
       "Assertion Failed: Script ran successfully but produced no output."
     );
 
-    const goldenFile = fs.readFileSync(GOLDEN_FILE_PATH, "utf8");
-    const keywords = goldenFile.split("\n").filter((kw) => kw.trim() !== "");
     const missingKeywords = [];
 
-    for (const keyword of keywords) {
+    for (const keyword of GOLDEN_KEYWORDS) {
       if (!actualOutput.includes(keyword)) {
         missingKeywords.push(keyword);
       }

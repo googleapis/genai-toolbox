@@ -17,11 +17,13 @@ package postgreslistinstalledextensions
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -29,24 +31,24 @@ import (
 const resourceType string = "postgres-list-installed-extensions"
 
 const listAvailableExtensionsQuery = `
-	SELECT
-		e.extname AS name,
-		e.extversion AS version,
-		n.nspname AS schema,
-		pg_get_userbyid(e.extowner) AS owner,
-		c.description AS description
-	FROM
-		pg_catalog.pg_extension e
-	LEFT JOIN
-		pg_catalog.pg_namespace n
-	ON
-		n.oid = e.extnamespace
-	LEFT JOIN
-		pg_catalog.pg_description c
-	ON
-		c.objoid = e.oid
-		AND c.classoid = 'pg_catalog.pg_extension'::pg_catalog.regclass
-	ORDER BY 1;
+    SELECT
+        e.extname AS name,
+        e.extversion AS version,
+        n.nspname AS schema,
+        pg_get_userbyid(e.extowner) AS owner,
+        c.description AS description
+    FROM
+        pg_catalog.pg_extension e
+    LEFT JOIN
+        pg_catalog.pg_namespace n
+    ON
+        n.oid = e.extnamespace
+    LEFT JOIN
+        pg_catalog.pg_description c
+    ON
+        c.objoid = e.oid
+        AND c.classoid = 'pg_catalog.pg_extension'::pg_catalog.regclass
+    ORDER BY 1;
 `
 
 func init() {
@@ -76,7 +78,6 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -87,7 +88,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
-	// finish tool setup
 	t := Tool{
 		Config: cfg,
 		manifest: tools.Manifest{
@@ -100,7 +100,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -109,12 +108,16 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
-	return source.RunSQL(ctx, listAvailableExtensionsQuery, nil)
+	resp, err := source.RunSQL(ctx, listAvailableExtensionsQuery, nil)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -145,7 +148,6 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	return "Authorization", nil
 }
 
-// This tool does not have parameters, so return an empty set.
 func (t Tool) GetParameters() parameters.Parameters {
 	return parameters.Parameters{}
 }

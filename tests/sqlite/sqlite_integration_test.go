@@ -157,7 +157,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: SQL logic error: near \"SELEC\": syntax error (1)"}],"isError":true}}`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
 	// Run tests
@@ -237,8 +237,8 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 		{
 			name:       "invalid SQL",
 			sql:        "SELEC name FROM not_a_table",
-			wantStatus: 400,
-			wantBody:   "SQL logic error",
+			wantStatus: 200,
+			wantBody:   "error processing request: unable to execute query: SQL logic error",
 		},
 	}
 
