@@ -23,7 +23,10 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
 
       - name: Link Checker
         id: lychee-check       
@@ -64,5 +67,10 @@ jobs:
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
+        if: steps.lychee-check.outcome == 'failure'
         run: |
+          # We can now simply output the prepared file to the job summary
           cat full-report.md >> $GITHUB_STEP_SUMMARY
+          
+          # Fail the job
+          exit 1
