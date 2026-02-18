@@ -97,9 +97,10 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/issues/comments/${{ steps.find-comment.outputs.comment-id }}
+            /repos/${{ github.repository }}/issues/comments/${STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID: ${{ steps.find-comment.outputs.comment-id }}
 
       - name: Prepare Report 
         if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
