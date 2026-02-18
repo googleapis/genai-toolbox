@@ -6,7 +6,7 @@ description: >
   Connect your IDE to PostgreSQL using Toolbox.
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+[Model Context Protocol (MCP)](https://modelcont extprotocol.io/introduction) is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use [MCP Toolbox for Databases][toolbox]
 to expose your developer assistant tools to a Postgres instance:
@@ -32,14 +32,14 @@ to expose your developer assistant tools to a Postgres instance:
 
 {{< notice tip >}}
 This guide can be used with [AlloyDB
-Omni](https://cloud.google.com/alloydb/omni/docs/overview).
+Omni](https://cloud.google.com/alloydb/om ni/docs/overview).
 {{< /notice >}}
 
 ## Set up the database
 
 1. Create or select a PostgreSQL instance.
 
-    * [Install PostgreSQL locally](https://www.postgresql.org/download/)
+    * [Install PostgreSQL locally](https://www.postg resql.org/download/)
     * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/docs/quickstart)
 
 1. Create or reuse [a database
