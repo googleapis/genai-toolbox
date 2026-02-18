@@ -1,19 +1,21 @@
 import { ToolboxClient } from "@toolbox-sdk/core";
-import { ChatVertexAI } from "@langchain/google-vertexai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { createAgent, createMiddleware, ToolMessage } from "langchain";
 import { tool } from "@langchain/core/tools";
 import { fileURLToPath } from "url";
 import process from "process";
 
 const systemPrompt = `
-  You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id,
-  location and price tier. Always mention hotel ids while performing any
-  searches. This is very important for any operations. For any bookings or
-  cancellations, please provide the appropriate confirmation. Be sure to
-  update checkin or checkout dates if mentioned by the user.
-  Don't ask for confirmations from the user.
+You're a helpful hotel assistant. You handle hotel searching, booking and
+cancellations. When the user searches for a hotel, mention it's name, id,
+location and price tier. Always mention hotel ids while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
 `;
+
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const businessRulesMiddleware = createMiddleware({
   name: "BusinessRules",
@@ -77,9 +79,8 @@ async function main() {
         schema: t.getParamSchema()
   }));
 
-  const model = new ChatVertexAI({
+  const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.5-flash",
-    temperature: 0,
   });
 
   const agent = createAgent({ 
