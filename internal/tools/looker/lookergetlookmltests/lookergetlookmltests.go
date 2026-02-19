@@ -125,9 +125,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("'project_id' must be a string, got %T", mapParams["project_id"])
 	}
 
-	var fileId string
-	if val, ok := mapParams["file_id"].(string); ok {
-		fileId = val
+	var fileId *string
+	if val, ok := mapParams["file_id"].(string); ok && val != "" {
+		fileId = &val
 	}
 
 	resp, err := sdk.AllLookmlTests(projectId, fileId, source.LookerApiSettings())
