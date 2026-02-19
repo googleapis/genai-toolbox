@@ -57,6 +57,42 @@ README for detailed installation and usage instructions:
 | `toolbox-adk` | Google ADK applications | Google ADK | `packages/toolbox-adk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-adk/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-adk.svg) |
 
 
+## Getting Started
+
+To get started using Toolbox tools with an application, follow these general steps:
+
+1. **Set up and Run the Toolbox Service:**
+
+    Before using the SDKs, you need the main MCP Toolbox service running. Follow
+    the instructions here: [**Toolbox Getting Started
+    Guide**](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#getting-started)
+
+2. **Install the Appropriate SDK:**
+
+    Choose the package based on your needs (see "[Which Package Should I Use?](#which-package-should-i-use)" above) and install it:
+
+    ```bash
+    # For the core, framework-agnostic SDK
+    pip install toolbox-core
+
+    # OR
+
+    # For LangChain/LangGraph integration
+    pip install toolbox-langchain
+
+    # OR
+
+    # For the LlamaIndex integration
+    pip install toolbox-llamaindex
+
+    # OR
+    
+    # For the Google ADK Integration
+    pip install google-adk[toolbox]
+    ```
+
+
+
 {{< notice note >}}
 Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-python)
 {{< /notice >}}
