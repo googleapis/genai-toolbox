@@ -87,16 +87,16 @@ Currently, this source only uses standard authentication. You will need to
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-mssql-instance:
-     kind: cloud-sql-mssql
-     project: my-project
-     region: my-region
-     instance: my-instance
-     database: my_db
-     user: ${USER_NAME}
-     password: ${PASSWORD}
-     # ipType: private
+kind: sources
+name: my-cloud-sql-mssql-instance
+type: cloud-sql-mssql
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: private
 ```
 
 {{< notice tip >}}
@@ -108,7 +108,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                      |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                           |
+| type      |  string  |     true     | Must be "cloud-sql-mssql".                                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |

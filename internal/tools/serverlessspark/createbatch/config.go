@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,9 +35,7 @@ func unmarshalProto(data any, m proto.Message) error {
 }
 
 type compatibleSource interface {
-	GetBatchControllerClient() *dataproc.BatchControllerClient
-	GetProject() string
-	GetLocation() string
+	CreateBatch(context.Context, *dataprocpb.Batch) (map[string]any, error)
 }
 
 // Config is a common config that can be used with any type of create batch tool. However, each tool
@@ -46,7 +43,7 @@ type compatibleSource interface {
 // Initialize implementation.
 type Config struct {
 	Name              string                        `yaml:"name" validate:"required"`
-	Kind              string                        `yaml:"kind" validate:"required"`
+	Type              string                        `yaml:"type" validate:"required"`
 	Source            string                        `yaml:"source" validate:"required"`
 	Description       string                        `yaml:"description"`
 	RuntimeConfig     *dataprocpb.RuntimeConfig     `yaml:"runtimeConfig"`
@@ -59,7 +56,7 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 	// conversion for RuntimeConfig and EnvironmentConfig.
 	var ymlCfg struct {
 		Name              string   `yaml:"name"`
-		Kind              string   `yaml:"kind"`
+		Type              string   `yaml:"type"`
 		Source            string   `yaml:"source"`
 		Description       string   `yaml:"description"`
 		RuntimeConfig     any      `yaml:"runtimeConfig"`
@@ -73,7 +70,7 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 
 	cfg := Config{
 		Name:         name,
-		Kind:         ymlCfg.Kind,
+		Type:         ymlCfg.Type,
 		Source:       ymlCfg.Source,
 		Description:  ymlCfg.Description,
 		AuthRequired: ymlCfg.AuthRequired,

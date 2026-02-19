@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	TiDBSourceKind = "tidb"
-	TiDBToolKind   = "tidb-sql"
+	TiDBSourceType = "tidb"
+	TiDBToolType   = "tidb-sql"
 	TiDBDatabase   = os.Getenv("TIDB_DATABASE")
 	TiDBHost       = os.Getenv("TIDB_HOST")
 	TiDBPort       = os.Getenv("TIDB_PORT")
@@ -54,7 +54,7 @@ func getTiDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     TiDBSourceKind,
+		"type":     TiDBSourceType,
 		"host":     TiDBHost,
 		"port":     TiDBPort,
 		"database": TiDBDatabase,
@@ -78,7 +78,7 @@ func initTiDBConnectionPool(host, port, user, pass, dbname string, useSSL bool) 
 // getTiDBWants return the expected wants for tidb
 func getTiDBWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 5 near \"SELEC 1;\" "}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 5 near \"SELEC 1;\" "}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -91,12 +91,12 @@ func addTiDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "tidb-execute-sql",
+		"type":        "tidb-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "tidb-execute-sql",
+		"type":        "tidb-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -135,10 +135,10 @@ func TestTiDBToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, TiDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, TiDBToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addTiDBExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TiDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TiDBToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

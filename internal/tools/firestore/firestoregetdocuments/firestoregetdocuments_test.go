@@ -17,7 +17,6 @@ package firestoregetdocuments_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				get_docs_tool:
-					kind: firestore-get-documents
-					source: my-firestore-instance
-					description: Retrieve documents from Firestore by paths
+			kind: tools
+			name: get_docs_tool
+			type: firestore-get-documents
+			source: my-firestore-instance
+			description: Retrieve documents from Firestore by paths
 			`,
 			want: server.ToolConfigs{
 				"get_docs_tool": firestoregetdocuments.Config{
 					Name:         "get_docs_tool",
-					Kind:         "firestore-get-documents",
+					Type:         "firestore-get-documents",
 					Source:       "my-firestore-instance",
 					Description:  "Retrieve documents from Firestore by paths",
 					AuthRequired: []string{},
@@ -56,19 +55,19 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_get_docs:
-					kind: firestore-get-documents
-					source: prod-firestore
-					description: Get documents with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tools
+			name: secure_get_docs
+			type: firestore-get-documents
+			source: prod-firestore
+			description: Get documents with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_get_docs": firestoregetdocuments.Config{
 					Name:         "secure_get_docs",
-					Kind:         "firestore-get-documents",
+					Type:         "firestore-get-documents",
 					Source:       "prod-firestore",
 					Description:  "Get documents with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -78,15 +77,11 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,58 +94,58 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		get_user_docs:
-			kind: firestore-get-documents
-			source: users-firestore
-			description: Get user documents
-			authRequired:
-				- user-auth
-		get_product_docs:
-			kind: firestore-get-documents
-			source: products-firestore
-			description: Get product documents
-		get_order_docs:
-			kind: firestore-get-documents
-			source: orders-firestore
-			description: Get order documents
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tools
+	name: get_user_docs
+	type: firestore-get-documents
+	source: users-firestore
+	description: Get user documents
+	authRequired:
+		- user-auth
+---
+	kind: tools
+	name: get_product_docs
+	type: firestore-get-documents
+	source: products-firestore
+	description: Get product documents
+---
+	kind: tools
+	name: get_order_docs
+	type: firestore-get-documents
+	source: orders-firestore
+	description: Get order documents
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"get_user_docs": firestoregetdocuments.Config{
 			Name:         "get_user_docs",
-			Kind:         "firestore-get-documents",
+			Type:         "firestore-get-documents",
 			Source:       "users-firestore",
 			Description:  "Get user documents",
 			AuthRequired: []string{"user-auth"},
 		},
 		"get_product_docs": firestoregetdocuments.Config{
 			Name:         "get_product_docs",
-			Kind:         "firestore-get-documents",
+			Type:         "firestore-get-documents",
 			Source:       "products-firestore",
 			Description:  "Get product documents",
 			AuthRequired: []string{},
 		},
 		"get_order_docs": firestoregetdocuments.Config{
 			Name:         "get_order_docs",
-			Kind:         "firestore-get-documents",
+			Type:         "firestore-get-documents",
 			Source:       "orders-firestore",
 			Description:  "Get order documents",
 			AuthRequired: []string{"user-auth", "admin-auth"},
 		},
 	}
 
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

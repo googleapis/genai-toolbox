@@ -38,87 +38,87 @@ developers can use to create custom tools with specific query patterns.
 ### Basic Configuration
 
 ```yaml
-tools:
-  query_countries:
-    kind: firestore-query
-    source: my-firestore-source
-    description: Query countries with dynamic filters
-    collectionPath: "countries"
-    filters: |
-      {
-        "field": "continent",
-        "op": "==",
-        "value": {"stringValue": "{{.continent}}"}
-      }
-    parameters:
-      - name: continent
-        type: string
-        description: Continent to filter by
-        required: true
+kind: tools
+name: query_countries
+type: firestore-query
+source: my-firestore-source
+description: Query countries with dynamic filters
+collectionPath: "countries"
+filters: |
+  {
+    "field": "continent",
+    "op": "==",
+    "value": {"stringValue": "{{.continent}}"}
+  }
+parameters:
+  - name: continent
+    type: string
+    description: Continent to filter by
+    required: true
 ```
 
 ### Advanced Configuration with Complex Filters
 
 ```yaml
-tools:
-  advanced_query:
-    kind: firestore-query
-    source: my-firestore-source
-    description: Advanced query with complex filters
-    collectionPath: "{{.collection}}"
-    filters: |
+kind: tools
+name: advanced_query
+type: firestore-query
+source: my-firestore-source
+description: Advanced query with complex filters
+collectionPath: "{{.collection}}"
+filters: |
+  {
+    "or": [
+      {"field": "status", "op": "==", "value": {"stringValue": "{{.status}}"}},
       {
-        "or": [
-          {"field": "status", "op": "==", "value": {"stringValue": "{{.status}}"}},
-          {
-            "and": [
-              {"field": "priority", "op": ">", "value": {"integerValue": "{{.priority}}"}},
-              {"field": "area", "op": "<", "value": {"doubleValue": {{.maxArea}}}},
-              {"field": "active", "op": "==", "value": {"booleanValue": {{.isActive}}}}
-            ]
-          }
+        "and": [
+          {"field": "priority", "op": ">", "value": {"integerValue": "{{.priority}}"}},
+          {"field": "area", "op": "<", "value": {"doubleValue": {{.maxArea}}}},
+          {"field": "active", "op": "==", "value": {"booleanValue": {{.isActive}}}}
         ]
       }
-    select:
-      - name
-      - status
-      - priority
-    orderBy:
-      field: "{{.sortField}}"
-      direction: "{{.sortDirection}}"
-    limit: 100
-    analyzeQuery: true
-    parameters:
-      - name: collection
-        type: string
-        description: Collection to query
-        required: true
-      - name: status
-        type: string
-        description: Status to filter by
-        required: true
-      - name: priority
-        type: string
-        description: Minimum priority value
-        required: true
-      - name: maxArea
-        type: float
-        description: Maximum area value
-        required: true
-      - name: isActive
-        type: boolean
-        description: Filter by active status
-        required: true
-      - name: sortField
-        type: string
-        description: Field to sort by
-        required: false
-        default: "createdAt"
-      - name: sortDirection
-        type: string
-        description: Sort direction (ASCENDING or DESCENDING)
-        required: false
-        default: "DESCENDING"
+    ]
+  }
+select:
+  - name
+  - status
+  - priority
+orderBy:
+  field: "{{.sortField}}"
+  direction: "{{.sortDirection}}"
+limit: 100
+analyzeQuery: true
+parameters:
+  - name: collection
+    type: string
+    description: Collection to query
+    required: true
+  - name: status
+    type: string
+    description: Status to filter by
+    required: true
+  - name: priority
+    type: string
+    description: Minimum priority value
+    required: true
+  - name: maxArea
+    type: float
+    description: Maximum area value
+    required: true
+  - name: isActive
+    type: boolean
+    description: Filter by active status
+    required: true
+  - name: sortField
+    type: string
+    description: Field to sort by
+    required: false
+    default: "createdAt"
+  - name: sortDirection
+    type: string
+    description: Sort direction (ASCENDING or DESCENDING)
+    required: false
+    default: "DESCENDING"
 ```
 
 ## Parameters
@@ -127,7 +127,7 @@ tools:
 
 | Parameter        | Type    | Required | Description                                                                                                 |
 |------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
-| `kind`           | string  | Yes      | Must be `firestore-query`                                                                                   |
+| `type`           | string  | Yes      | Must be `firestore-query`                                                                                   |
 | `source`         | string  | Yes      | Name of the Firestore source to use                                                                         |
 | `description`    | string  | Yes      | Description of what this tool does                                                                          |
 | `collectionPath` | string  | Yes      | Path to the collection to query (supports templates)                                                        |
@@ -254,103 +254,103 @@ The tool supports all Firestore native JSON value types:
 ### Example 1: Query with Dynamic Collection Path
 
 ```yaml
-tools:
-  user_documents:
-    kind: firestore-query
-    source: my-firestore
-    description: Query user-specific documents
-    collectionPath: "users/{{.userId}}/documents"
-    filters: |
-      {
-        "field": "type",
-        "op": "==",
-        "value": {"stringValue": "{{.docType}}"}
-      }
-    parameters:
-      - name: userId
-        type: string
-        description: User ID
-        required: true
-      - name: docType
-        type: string
-        description: Document type to filter
-        required: true
+kind: tools
+name: user_documents
+type: firestore-query
+source: my-firestore
+description: Query user-specific documents
+collectionPath: "users/{{.userId}}/documents"
+filters: |
+  {
+    "field": "type",
+    "op": "==",
+    "value": {"stringValue": "{{.docType}}"}
+  }
+parameters:
+  - name: userId
+    type: string
+    description: User ID
+    required: true
+  - name: docType
+    type: string
+    description: Document type to filter
+    required: true
 ```
 
 ### Example 2: Complex Geographic Query
 
 ```yaml
-tools:
-  location_search:
-    kind: firestore-query
-    source: my-firestore
-    description: Search locations by area and population
-    collectionPath: "cities"
-    filters: |
-      {
-        "and": [
-          {"field": "country", "op": "==", "value": {"stringValue": "{{.country}}"}},
-          {"field": "population", "op": ">", "value": {"integerValue": "{{.minPopulation}}"}},
-          {"field": "area", "op": "<", "value": {"doubleValue": {{.maxArea}}}}
-        ]
-      }
-    orderBy:
-      field: "population"
-      direction: "DESCENDING"
-    limit: 50
-    parameters:
-      - name: country
-        type: string
-        description: Country code
-        required: true
-      - name: minPopulation
-        type: string
-        description: Minimum population (as string for large numbers)
-        required: true
-      - name: maxArea
-        type: float
-        description: Maximum area in square kilometers
-        required: true
+kind: tools
+name: location_search
+type: firestore-query
+source: my-firestore
+description: Search locations by area and population
+collectionPath: "cities"
+filters: |
+  {
+    "and": [
+      {"field": "country", "op": "==", "value": {"stringValue": "{{.country}}"}},
+      {"field": "population", "op": ">", "value": {"integerValue": "{{.minPopulation}}"}},
+      {"field": "area", "op": "<", "value": {"doubleValue": {{.maxArea}}}}
+    ]
+  }
+orderBy:
+  field: "population"
+  direction: "DESCENDING"
+limit: 50
+parameters:
+  - name: country
+    type: string
+    description: Country code
+    required: true
+  - name: minPopulation
+    type: string
+    description: Minimum population (as string for large numbers)
+    required: true
+  - name: maxArea
+    type: float
+    description: Maximum area in square kilometers
+    required: true
 ```
 
 ### Example 3: Time-based Query with Analysis
 
 ```yaml
-tools:
-  activity_log:
-    kind: firestore-query
-    source: my-firestore
-    description: Query activity logs within time range
-    collectionPath: "logs"
-    filters: |
-      {
-        "and": [
-          {"field": "timestamp", "op": ">=", "value": {"timestampValue": "{{.startTime}}"}},
-          {"field": "timestamp", "op": "<=", "value": {"timestampValue": "{{.endTime}}"}},
-          {"field": "severity", "op": "in", "value": {"arrayValue": {"values": [
-            {"stringValue": "ERROR"},
-            {"stringValue": "CRITICAL"}
-          ]}}}
-        ]
-      }
-    select:
-      - timestamp
-      - message
-      - severity
-      - userId
-    orderBy:
-      field: "timestamp"
-      direction: "DESCENDING"
-    analyzeQuery: true
-    parameters:
-      - name: startTime
-        type: string
-        description: Start time in RFC3339 format
-        required: true
-      - name: endTime
-        type: string
-        description: End time in RFC3339 format
-        required: true
+kind: tools
+name: activity_log
+type: firestore-query
+source: my-firestore
+description: Query activity logs within time range
+collectionPath: "logs"
+filters: |
+  {
+    "and": [
+      {"field": "timestamp", "op": ">=", "value": {"timestampValue": "{{.startTime}}"}},
+      {"field": "timestamp", "op": "<=", "value": {"timestampValue": "{{.endTime}}"}},
+      {"field": "severity", "op": "in", "value": {"arrayValue": {"values": [
+        {"stringValue": "ERROR"},
+        {"stringValue": "CRITICAL"}
+      ]}}}
+    ]
+  }
+select:
+  - timestamp
+  - message
+  - severity
+  - userId
+orderBy:
+  field: "timestamp"
+  direction: "DESCENDING"
+analyzeQuery: true
+parameters:
+  - name: startTime
+    type: string
+    description: Start time in RFC3339 format
+    required: true
+  - name: endTime
+    type: string
+    description: End time in RFC3339 format
+    required: true
 ```
 
 ## Usage

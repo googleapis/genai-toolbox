@@ -19,10 +19,11 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -31,59 +32,65 @@ func TestNewConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		yaml    string
-		want    Config
+		want    server.ToolConfigs
 		wantErr bool
 	}{
 		{
 			name: "valid config",
 			yaml: `
-name: test-update-document
-kind: firestore-update-document
-source: test-firestore
-description: Update a document in Firestore
-authRequired:
-  - google-oauth
-`,
-			want: Config{
-				Name:         "test-update-document",
-				Kind:         "firestore-update-document",
-				Source:       "test-firestore",
-				Description:  "Update a document in Firestore",
-				AuthRequired: []string{"google-oauth"},
+			kind: tools
+			name: test-update-document
+			type: firestore-update-document
+			source: test-firestore
+			description: Update a document in Firestore
+			authRequired:
+			  - google-oauth
+			`,
+			want: server.ToolConfigs{
+				"test-update-document": Config{
+					Name:         "test-update-document",
+					Type:         "firestore-update-document",
+					Source:       "test-firestore",
+					Description:  "Update a document in Firestore",
+					AuthRequired: []string{"google-oauth"},
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "minimal config",
 			yaml: `
-name: test-update-document
-kind: firestore-update-document
-source: test-firestore
-description: Update a document
-`,
-			want: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "test-firestore",
-				Description: "Update a document",
+			kind: tools
+			name: test-update-document
+			type: firestore-update-document
+			source: test-firestore
+			description: Update a document
+			`,
+			want: server.ToolConfigs{
+				"test-update-document": Config{
+					Name:         "test-update-document",
+					Type:         "firestore-update-document",
+					Source:       "test-firestore",
+					Description:  "Update a document",
+					AuthRequired: []string{},
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "invalid yaml",
 			yaml: `
-name: test-update-document
-kind: [invalid
-`,
+			kind: tools
+			name: test-update-document
+			type: [invalid
+			`,
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(tt.yaml))
-			got, err := newConfig(context.Background(), "test-update-document", decoder)
-
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tt.yaml))
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error but got none")
@@ -102,12 +109,12 @@ kind: [invalid
 	}
 }
 
-func TestConfig_ToolConfigKind(t *testing.T) {
+func TestConfig_ToolConfigType(t *testing.T) {
 	cfg := Config{}
-	got := cfg.ToolConfigKind()
+	got := cfg.ToolConfigType()
 	want := "firestore-update-document"
 	if got != want {
-		t.Fatalf("ToolConfigKind() = %v, want %v", got, want)
+		t.Fatalf("ToolConfigType() = %v, want %v", got, want)
 	}
 }
 
@@ -123,7 +130,7 @@ func TestConfig_Initialize(t *testing.T) {
 			name: "valid initialization",
 			config: Config{
 				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
+				Type:        "firestore-update-document",
 				Source:      "test-firestore",
 				Description: "Update a document",
 			},
@@ -161,8 +168,8 @@ func TestConfig_Initialize(t *testing.T) {
 			if actualTool.Name != tt.config.Name {
 				t.Fatalf("tool.Name = %v, want %v", actualTool.Name, tt.config.Name)
 			}
-			if actualTool.Kind != "firestore-update-document" {
-				t.Fatalf("tool.Kind = %v, want %v", actualTool.Kind, "firestore-update-document")
+			if actualTool.Type != "firestore-update-document" {
+				t.Fatalf("tool.Type = %v, want %v", actualTool.Type, "firestore-update-document")
 			}
 			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.AuthRequired); diff != "" {
 				t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
@@ -235,7 +242,7 @@ func TestTool_ParseParams(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params, err := tool.ParseParams(tt.data, tt.claims)
+			params, err := parameters.ParseParams(tool.GetParameters(), tt.data, tt.claims)
 
 			if tt.wantErr {
 				if err == nil {

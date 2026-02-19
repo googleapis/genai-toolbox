@@ -33,11 +33,11 @@ The tool gets the `project` and `location` from the source configuration.
 ## Example
 
 ```yaml
-tools:
-  list_spark_batches:
-    kind: serverless-spark-list-batches
-    source: my-serverless-spark-source
-    description: Use this tool to list and filter serverless spark batches.
+kind: tools
+name: list_spark_batches
+type: serverless-spark-list-batches
+source: my-serverless-spark-source
+description: Use this tool to list and filter serverless spark batches.
 ```
 
 ## Response Format
@@ -72,7 +72,7 @@ tools:
 
 | **field**    | **type** | **required** | **description**                                    |
 | ------------ | :------: | :----------: | -------------------------------------------------- |
-| kind         |  string  |     true     | Must be "serverless-spark-list-batches".           |
+| type         |  string  |     true     | Must be "serverless-spark-list-batches".           |
 | source       |  string  |     true     | Name of the source the tool should use.            |
 | description  |  string  |     true     | Description of the tool that is passed to the LLM. |
 | authRequired | string[] |    false     | List of auth services required to invoke this tool |
