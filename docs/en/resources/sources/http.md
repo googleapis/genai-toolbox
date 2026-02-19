@@ -21,18 +21,18 @@ and other HTTP-accessible resources.
 ## Example
 
 ```yaml
-sources:
-  my-http-source:
-    kind: http
-    baseUrl: https://api.example.com/data
-    timeout: 10s # default to 30s
-    headers:
-      Authorization: Bearer ${API_KEY}
-      Content-Type: application/json
-    queryParams:
-      param1: value1
-      param2: value2
-    # disableSslVerification: false
+kind: sources
+name: my-http-source
+type: http
+baseUrl: https://api.example.com/data
+timeout: 10s # default to 30s
+headers:
+  Authorization: Bearer ${API_KEY}
+  Content-Type: application/json
+queryParams:
+  param1: value1
+  param2: value2
+# disableSslVerification: false
 ```
 
 {{< notice tip >}}
@@ -44,7 +44,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              |     **type**      | **required** | **description**                                                                                                                    |
 |------------------------|:-----------------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------|
-| kind                   |      string       |     true     | Must be "http".                                                                                                                    |
+| type                   |      string       |     true     | Must be "http".                                                                                                                    |
 | baseUrl                |      string       |     true     | The base URL for the HTTP requests (e.g., `https://api.example.com`).                                                              |
 | timeout                |      string       |    false     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples). Defaults to 30s. |
 | headers                | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                   |

@@ -35,17 +35,17 @@ The tool's behavior regarding these parameters is influenced by the
 ## Example
 
 ```yaml
-tools:
-  bigquery_get_table_info:
-    kind: bigquery-get-table-info
-    source: my-bigquery-source
-    description: Use this tool to get table metadata.
+kind: tools
+name: bigquery_get_table_info
+type: bigquery-get-table-info
+source: my-bigquery-source
+description: Use this tool to get table metadata.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-get-table-info".                                                               |
+| type        |                   string                   |     true     | Must be "bigquery-get-table-info".                                                               |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

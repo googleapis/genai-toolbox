@@ -27,14 +27,14 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "bigtable"
+const SourceType string = "bigtable"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -48,13 +48,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Project  string `yaml:"project" validate:"required"`
 	Instance string `yaml:"instance" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -77,8 +77,8 @@ type Source struct {
 	Client *bigtable.Client
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -179,7 +179,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, configParam param
 
 func initBigtableClient(ctx context.Context, tracer trace.Tracer, name, project, instance string) (*bigtable.Client, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// Set up Bigtable data operations client.

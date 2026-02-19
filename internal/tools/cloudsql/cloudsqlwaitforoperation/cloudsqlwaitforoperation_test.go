@@ -17,7 +17,6 @@ package cloudsqlwaitforoperation_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,20 +36,20 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				wait-for-thing:
-					kind: cloud-sql-wait-for-operation
-					source: some-source
-					description: some description
-					delay: 1s
-					maxDelay: 5s
-					multiplier: 1.5
-					maxRetries: 5
+			kind: tools
+			name: wait-for-thing
+			type: cloud-sql-wait-for-operation
+			source: some-source
+			description: some description
+			delay: 1s
+			maxDelay: 5s
+			multiplier: 1.5
+			maxRetries: 5
 			`,
 			want: server.ToolConfigs{
 				"wait-for-thing": cloudsqlwaitforoperation.Config{
 					Name:         "wait-for-thing",
-					Kind:         "cloud-sql-wait-for-operation",
+					Type:         "cloud-sql-wait-for-operation",
 					Source:       "some-source",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -64,15 +63,11 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

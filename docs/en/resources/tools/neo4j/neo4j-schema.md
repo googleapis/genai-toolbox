@@ -28,24 +28,24 @@ tool is compatible with a `neo4j` source and takes no parameters.
 ## Example
 
 ```yaml
-tools:
-  get_movie_db_schema:
-    kind: neo4j-schema
-    source: my-neo4j-movies-instance
-    description: |
-      Use this tool to get the full schema of the movie database.
-      This provides information on all available node labels (like Movie, Person), 
-      relationships (like ACTED_IN), and the properties on each.
-      This tool takes no parameters.
-    # Optional configuration to cache the schema for 2 hours
-    cacheExpireMinutes: 120
+kind: tools
+name: get_movie_db_schema
+type: neo4j-schema
+source: my-neo4j-movies-instance
+description: |
+  Use this tool to get the full schema of the movie database.
+  This provides information on all available node labels (like Movie, Person), 
+  relationships (like ACTED_IN), and the properties on each.
+  This tool takes no parameters.
+# Optional configuration to cache the schema for 2 hours
+cacheExpireMinutes: 120
 ```
 
 ## Reference
 
 | **field**          | **type** | **required** | **description**                                         |
 |--------------------|:--------:|:------------:|---------------------------------------------------------|
-| kind               |  string  |     true     | Must be `neo4j-schema`.                                 |
+| type               |  string  |     true     | Must be `neo4j-schema`.                                 |
 | source             |  string  |     true     | Name of the source the schema should be extracted from. |
 | description        |  string  |     true     | Description of the tool that is passed to the LLM.      |
 | cacheExpireMinutes | integer  |    false     | Cache expiration time in minutes. Defaults to 60.       |

@@ -15,11 +15,13 @@
 package firestore_test
 
 import (
+	"context"
 	"testing"
+	"time"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,15 +35,15 @@ func TestParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "basic example with default database",
 			in: `
-			sources:
-				my-firestore:
-					kind: firestore
-					project: my-project
+			kind: sources
+			name: my-firestore
+			type: firestore
+			project: my-project
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-firestore": firestore.Config{
 					Name:     "my-firestore",
-					Kind:     firestore.SourceKind,
+					Type:     firestore.SourceType,
 					Project:  "my-project",
 					Database: "",
 				},
@@ -50,16 +52,16 @@ func TestParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "with custom database",
 			in: `
-			sources:
-				my-firestore:
-					kind: firestore
-					project: my-project
-					database: my-database
+			kind: sources
+			name: my-firestore
+			type: firestore
+			project: my-project
+			database: my-database
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-firestore": firestore.Config{
 					Name:     "my-firestore",
-					Kind:     firestore.SourceKind,
+					Type:     firestore.SourceType,
 					Project:  "my-project",
 					Database: "my-database",
 				},
@@ -68,22 +70,18 @@ func TestParseFromYamlFirestore(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
 }
 
-func TestFailParseFromYamlFirestore(t *testing.T) {
+func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -92,32 +90,27 @@ func TestFailParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-firestore:
-					kind: firestore
-					project: my-project
-					foo: bar
+			kind: sources
+			name: my-firestore
+			type: firestore
+			project: my-project
+			foo: bar
 			`,
-			err: "unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: firestore\n   3 | project: my-project",
+			err: "error unmarshaling sources: unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-firestore\n   3 | project: my-project\n   4 | type: firestore",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-firestore:
-					kind: firestore
-					database: my-database
+			kind: sources
+			name: my-firestore
+			type: firestore
 			`,
-			err: "unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -126,5 +119,39 @@ func TestFailParseFromYamlFirestore(t *testing.T) {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
+	}
+}
+
+func TestFirestoreValueToJSON_RoundTrip(t *testing.T) {
+	// Test round-trip conversion
+	original := map[string]any{
+		"name":   "Test",
+		"count":  int64(42),
+		"price":  19.99,
+		"active": true,
+		"tags":   []any{"tag1", "tag2"},
+		"metadata": map[string]any{
+			"created": time.Now(),
+		},
+		"nullField": nil,
+	}
+
+	// Convert to JSON representation
+	jsonRepresentation := firestore.FirestoreValueToJSON(original)
+
+	// Verify types are simplified
+	jsonMap, ok := jsonRepresentation.(map[string]any)
+	if !ok {
+		t.Fatalf("Expected map, got %T", jsonRepresentation)
+	}
+
+	// Time should be converted to string
+	metadata, ok := jsonMap["metadata"].(map[string]any)
+	if !ok {
+		t.Fatalf("metadata should be a map, got %T", jsonMap["metadata"])
+	}
+	_, ok = metadata["created"].(string)
+	if !ok {
+		t.Errorf("created should be a string, got %T", metadata["created"])
 	}
 }

@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	cloneInstanceToolKind = "cloud-sql-clone-instance"
+	cloneInstanceToolType = "cloud-sql-clone-instance"
 )
 
 type cloneInstanceTransport struct {
@@ -169,11 +169,10 @@ func TestCloneInstanceToolEndpoints(t *testing.T) {
 			want:     `{"name":"op2","status":"PENDING"}`,
 		},
 		{
-			name:        "missing destination instance name",
-			toolName:    "clone-instance",
-			body:        `{"project": "p1", "sourceInstanceName": "source-instance"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing destination instance name",
+			toolName: "clone-instance",
+			body:     `{"project": "p1", "sourceInstanceName": "source-instance"}`,
+			want:     `{"error":"parameter \"destinationInstanceName\" is required"}`,
 		},
 	}
 
@@ -231,12 +230,12 @@ func getCloneInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"clone-instance": map[string]any{
-				"kind":   cloneInstanceToolKind,
+				"type":   cloneInstanceToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

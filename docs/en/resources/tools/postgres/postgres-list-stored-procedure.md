@@ -31,11 +31,11 @@ The tool returns a JSON array where each element represents a stored procedure w
 ## Example
 
 ```yaml
-tools:
-  list_stored_procedure:
-    kind: postgres-list-stored-procedure
-    source: postgres-source
-    description: "Retrieves stored procedure metadata including definitions and owners."
+kind: tools
+name: list_stored_procedure
+type: postgres-list-stored-procedure
+source: postgres-source
+description: "Retrieves stored procedure metadata including definitions and owners."
 ```
 
 ### Example Requests

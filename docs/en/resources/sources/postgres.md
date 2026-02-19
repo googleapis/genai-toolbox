@@ -107,14 +107,14 @@ PostgreSQL user][pg-users] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-pg-source:
-        kind: postgres
-        host: 127.0.0.1
-        port: 5432
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+kind: sources
+name: my-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 {{< notice tip >}}
@@ -126,10 +126,11 @@ instead of hardcoding your secrets into the configuration file.
 
 |  **field**  |      **type**      | **required** | **description**                                                        |
 |-------------|:------------------:|:------------:|------------------------------------------------------------------------|
-| kind        |       string       |     true     | Must be "postgres".                                                    |
+| type        |       string       |     true     | Must be "postgres".                                                    |
 | host        |       string       |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
 | port        |       string       |     true     | Port to connect to (e.g. "5432")                                       |
 | database    |       string       |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
 | user        |       string       |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
 | password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
 | queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |
+| queryExecMode | string | false | pgx query execution mode. Valid values: `cache_statement` (default), `cache_describe`, `describe_exec`, `exec`, `simple_protocol`. Useful with connection poolers that don't support prepared statement caching. |

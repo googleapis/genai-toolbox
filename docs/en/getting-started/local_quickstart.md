@@ -3,7 +3,7 @@ title: "Python Quickstart (Local)"
 type: docs
 weight: 2
 description: >
-  How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
+  How to get started running MCP Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
   [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
 ---
 
@@ -32,14 +32,14 @@ This guide assumes you have already done the following:
 
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
-## Step 2: Install and configure Toolbox
+## Step 2: Install and configure MCP Toolbox
 
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
-## Step 3: Connect your agent to Toolbox
+## Step 3: Connect your agent to MCP Toolbox
 
 In this section, we will write and run an agent that will load the Tools
-from Toolbox.
+from MCP Toolbox.
 
 {{< notice tip>}}
 If you prefer to experiment within a Google Colab environment, you can connect
@@ -52,7 +52,7 @@ runtime](https://research.google.com/colaboratory/local-runtimes.html).
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install toolbox-core
+pip install google-adk[toolbox]
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -73,7 +73,7 @@ pip install toolbox-core
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk
+# No other dependencies required for ADK
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -113,9 +113,9 @@ pip install google-genai
     ```
     <br/>
 
-1. Update `my_agent/agent.py` with the following content to connect to Toolbox:
+1. Update `my_agent/agent.py` with the following content to connect to MCP Toolbox:
     ```py
-    {{< include "quickstart/python/adk/quickstart.py" >}}
+    {{< regionInclude "quickstart/python/adk/quickstart.py" "quickstart" >}}
     ```
     <br/>
 

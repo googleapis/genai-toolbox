@@ -30,12 +30,14 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout Code at Tag
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Get Version from Release Tag
-        run: echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+        run: echo "VERSION=${GITHUB_EVENT_RELEASE_TAG_NAME}" >> $GITHUB_ENV
+        env:
+          GITHUB_EVENT_RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
@@ -44,7 +46,7 @@ jobs:
           extended: true
 
       - name: Setup Node
-        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
         with:
           node-version: "22"
 

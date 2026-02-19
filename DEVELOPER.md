@@ -47,12 +47,13 @@ Before you begin, ensure you have the following:
 ### Tool Naming Conventions
 
 This section details the purpose and conventions for MCP Toolbox's tools naming
-properties, **tool name** and **tool kind**.
+properties, **tool name** and **tool type**.
 
 ```
-cancel_hotel: <- tool name
-    kind: postgres-sql  <- tool kind
-    source: my_pg_source
+kind: tools
+name: cancel_hotel <- tool name
+type: postgres-sql  <- tool type
+source: my_pg_source
 ```
 
 #### Tool Name
@@ -76,17 +77,17 @@ The following guidelines apply to tool names:
   to a function) until they can be validated through extensive testing to ensure
   they do not negatively impact agent's performances.
 
-#### Tool Kind
+#### Tool Type
 
-Tool kind serves as a category or type that a user can assign to a tool.
+Tool type serves as a category or type that a user can assign to a tool.
 
-The following guidelines apply to tool kinds:
+The following guidelines apply to tool types:
 
-* Should user hyphens over underscores (e.g. `firestore-list-collections` or
+* Should use hyphens over underscores (e.g. `firestore-list-collections` or
   `firestore_list_colelctions`).
 * Should use product name in name (e.g. `firestore-list-collections` over
   `list-collections`).
-* Changes to tool kind are breaking changes and should be avoided.
+* Changes to tool type are breaking changes and should be avoided.
 
 ## Testing
 
@@ -378,6 +379,23 @@ can create branches and approve test runs. But they do not have the ability
 to approve PRs for main. TeamSync is used to create this team from the MDB
 Group `toolbox-contributors`. Googlers who are developing for MCP-Toolbox
 but aren't part of the core team should join this group.
+
+### Issue/PR Triage and SLO
+After an issue is created, maintainers will assign the following labels:
+* `Priority` (defaulted to P0)
+* `Type` (if applicable)
+* `Product` (if applicable)
+
+All incoming issues and PRs will follow the following SLO:
+| Type            | Priority | Objective                                                              |
+|-----------------|----------|------------------------------------------------------------------------|
+| Feature Request | P0       | Must respond within **5 days**                                         |
+| Process         | P0       | Must respond within **5 days**                                         |
+| Bugs            | P0       | Must respond within **5 days**, and resolve/closure within **14 days** |
+| Bugs            | P1       | Must respond within **7 days**, and resolve/closure within **90 days** |
+| Bugs            | P2       | Must respond within **30 days**
+
+_Types that are not listed in the table do not adhere to any SLO._
 
 ### Releasing
 
