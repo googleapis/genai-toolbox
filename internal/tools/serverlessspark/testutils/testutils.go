@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -30,7 +29,7 @@ import (
 )
 
 // RunParseFromYAMLTests runs a suite of tests for parsing tool configurations from YAML.
-func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbatch.Config) tools.ToolConfig) {
+func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c createbatch.Config) tools.ToolConfig) {
 	t.Helper()
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -46,16 +45,16 @@ func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbat
 		{
 			desc: "basic example",
 			in: fmt.Sprintf(`
-			tools:
-				example_tool:
-					kind: %s
-					source: my-instance
-					description: some description
-			`, kind),
+			kind: tools
+			name: example_tool
+			type: %s
+			source: my-instance
+			description: some description
+			`, resourceType),
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
 					Name:         "example_tool",
-					Kind:         kind,
+					Type:         resourceType,
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -65,22 +64,22 @@ func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbat
 		{
 			desc: "detailed config",
 			in: fmt.Sprintf(`
-			tools:
-				example_tool:
-					kind: %s
-					source: my-instance
-					description: some description
-					runtimeConfig:
-					  properties:
-						  "spark.driver.memory": "1g"
-					environmentConfig:
-					  executionConfig:
-						  networkUri: "my-network"
-			`, kind),
+			kind: tools
+			name: example_tool
+			type: %s
+			source: my-instance
+			description: some description
+			runtimeConfig:
+			  properties:
+				  "spark.driver.memory": "1g"
+			environmentConfig:
+			  executionConfig:
+				  networkUri: "my-network"
+			`, resourceType),
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
 					Name:        "example_tool",
-					Kind:        kind,
+					Type:        resourceType,
 					Source:      "my-instance",
 					Description: "some description",
 					RuntimeConfig: &dataproc.RuntimeConfig{
@@ -98,36 +97,33 @@ func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbat
 		{
 			desc: "invalid runtime config",
 			in: fmt.Sprintf(`
-			tools:
-				example_tool:
-					kind: %s
-					source: my-instance
-					description: some description
-					runtimeConfig:
-					  invalidField: true
-			`, kind),
+			kind: tools
+			name: example_tool
+			type: %s
+			source: my-instance
+			description: some description
+			runtimeConfig:
+			  invalidField: true
+			`, resourceType),
 			wantErr: "unmarshal runtimeConfig",
 		},
 		{
 			desc: "invalid environment config",
 			in: fmt.Sprintf(`
-			tools:
-				example_tool:
-					kind: %s
-					source: my-instance
-					description: some description
-					environmentConfig:
-					  invalidField: true
-			`, kind),
+			kind: tools
+			name: example_tool
+			type: %s
+			source: my-instance
+			description: some description
+			environmentConfig:
+			  invalidField: true
+			`, resourceType),
 			wantErr: "unmarshal environmentConfig",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got, yaml.Strict())
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatal("expected error, got nil")
@@ -141,7 +137,7 @@ func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbat
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			if diff := cmp.Diff(tc.want, got.Tools, protocmp.Transform()); diff != "" {
+			if diff := cmp.Diff(tc.want, got, protocmp.Transform()); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

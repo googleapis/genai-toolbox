@@ -125,15 +125,15 @@ can omit the password field.
 ## Example
 
 ```yaml
-sources:
-    my-mindsdb-source:
-        kind: mindsdb
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD} # Optional: omit if MindsDB is configured without authentication
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-mindsdb-source
+type: mindsdb
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD} # Optional: omit if MindsDB is configured without authentication
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 ### Working Configuration Example
@@ -141,13 +141,13 @@ sources:
 Here's a working configuration that has been tested:
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: mindsdb
-    host: 127.0.0.1
-    port: 47335
-    database: files
-    user: mindsdb
+kind: sources
+name: my-pg-source
+type: mindsdb
+host: 127.0.0.1
+port: 47335
+database: files
+user: mindsdb
 ```
 
 {{< notice tip >}}
@@ -176,7 +176,7 @@ With MindsDB integration, you can:
 
 | **field**    | **type** | **required** | **description**                                                                                              |
 |--------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "mindsdb".                                                                                           |
+| type         |  string  |     true     | Must be "mindsdb".                                                                                           |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                 |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                                            |
 | database     |  string  |     true     | Name of the MindsDB database to connect to (e.g. "my_db").                                                   |

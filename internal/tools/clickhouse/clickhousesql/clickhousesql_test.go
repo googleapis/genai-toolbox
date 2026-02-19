@@ -17,7 +17,6 @@ package clickhouse
 import (
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -27,10 +26,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-func TestConfigToolConfigKind(t *testing.T) {
+func TestConfigToolConfigType(t *testing.T) {
 	config := Config{}
-	if config.ToolConfigKind() != sqlKind {
-		t.Errorf("Expected %s, got %s", sqlKind, config.ToolConfigKind())
+	if config.ToolConfigType() != sqlType {
+		t.Errorf("Expected %s, got %s", sqlType, config.ToolConfigType())
 	}
 }
 
@@ -47,17 +46,17 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: clickhouse-sql
-					source: my-instance
-					description: some description
-					statement: SELECT 1
+			kind: tools
+			name: example_tool
+			type: clickhouse-sql
+			source: my-instance
+			description: some description
+			statement: SELECT 1
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "clickhouse-sql",
+					Type:         "clickhouse-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT 1",
@@ -68,21 +67,21 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 		{
 			desc: "with parameters",
 			in: `
-			tools:
-				param_tool:
-					kind: clickhouse-sql
-					source: test-source
-					description: Test ClickHouse tool
-					statement: SELECT * FROM test_table WHERE id = $1
-					parameters:
-					  - name: id
-					    type: string
-					    description: Test ID
+			kind: tools
+			name: param_tool
+			type: clickhouse-sql
+			source: test-source
+			description: Test ClickHouse tool
+			statement: SELECT * FROM test_table WHERE id = $1
+			parameters:
+			  - name: id
+			    type: string
+			    description: Test ID
 			`,
 			want: server.ToolConfigs{
 				"param_tool": Config{
 					Name:        "param_tool",
-					Kind:        "clickhouse-sql",
+					Type:        "clickhouse-sql",
 					Source:      "test-source",
 					Description: "Test ClickHouse tool",
 					Statement:   "SELECT * FROM test_table WHERE id = $1",
@@ -96,14 +95,11 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -113,7 +109,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 func TestSQLConfigInitializeValidSource(t *testing.T) {
 	config := Config{
 		Name:        "test-tool",
-		Kind:        sqlKind,
+		Type:        sqlType,
 		Source:      "test-clickhouse",
 		Description: "Test tool",
 		Statement:   "SELECT 1",

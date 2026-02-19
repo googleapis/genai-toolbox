@@ -17,22 +17,24 @@ package firestoredeletedocuments
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-delete-documents"
+const resourceType string = "firestore-delete-documents"
 const documentPathsKey string = "documentPaths"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -46,11 +48,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	DeleteDocuments(context.Context, []string) ([]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,8 +62,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -93,82 +96,43 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
 	documentPathsRaw, ok := mapParams[documentPathsKey].([]any)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected an array", documentPathsKey)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected an array", documentPathsKey), nil)
 	}
-
 	if len(documentPathsRaw) == 0 {
-		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
+		return nil, util.NewAgentError(fmt.Sprintf("'%s' parameter cannot be empty", documentPathsKey), nil)
 	}
 
 	// Use ConvertAnySliceToTyped to convert the slice
 	typedSlice, err := parameters.ConvertAnySliceToTyped(documentPathsRaw, "string")
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert document paths: %w", err)
+		return nil, util.NewAgentError(fmt.Sprintf("failed to convert document paths: %v", err), err)
 	}
 
 	documentPaths, ok := typedSlice.([]string)
 	if !ok {
-		return nil, fmt.Errorf("unexpected type conversion error for document paths")
+		return nil, util.NewAgentError("unexpected type conversion error for document paths", nil)
 	}
 
 	// Validate each document path
 	for i, path := range documentPaths {
-		if err := util.ValidateDocumentPath(path); err != nil {
-			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
+		if err := fsUtil.ValidateDocumentPath(path); err != nil {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid document path at index %d: %v", i, err), err)
 		}
 	}
-
-	// Create a BulkWriter to handle multiple deletions efficiently
-	bulkWriter := source.FirestoreClient().BulkWriter(ctx)
-
-	// Keep track of jobs for each document
-	jobs := make([]*firestoreapi.BulkWriterJob, len(documentPaths))
-
-	// Add all delete operations to the BulkWriter
-	for i, path := range documentPaths {
-		docRef := source.FirestoreClient().Doc(path)
-		job, err := bulkWriter.Delete(docRef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add delete operation for document %q: %w", path, err)
-		}
-		jobs[i] = job
+	resp, err := source.DeleteDocuments(ctx, documentPaths)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
 	}
-
-	// End the BulkWriter to execute all operations
-	bulkWriter.End()
-
-	// Collect results
-	results := make([]any, len(documentPaths))
-	for i, job := range jobs {
-		docData := make(map[string]any)
-		docData["path"] = documentPaths[i]
-
-		// Wait for the job to complete and get the result
-		_, err := job.Results()
-		if err != nil {
-			docData["success"] = false
-			docData["error"] = err.Error()
-		} else {
-			docData["success"] = true
-		}
-
-		results[i] = docData
-	}
-
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -193,4 +157,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

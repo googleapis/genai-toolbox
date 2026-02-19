@@ -18,7 +18,7 @@ results (**sorting**), and restricting the number of documents returned
 
 The tool returns a JSON array of the documents found.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -29,40 +29,40 @@ live in a specific city. The results are sorted by their last name, and only
 their first name, last name, and email are returned.
 
 ```yaml
-tools:
-  find_local_customers:
-    kind: mongodb-find
-    source: my-mongo-source
-    description: Finds customers by city, sorted by last name.
-    database: crm
-    collection: customers
-    limit: 10
-    filterPayload: |
-        { "address.city": {{json .city}} }
-    filterParams:
-      - name: city
-        type: string
-        description: The city to search for customers in.
-    projectPayload: |
-        { 
-          "first_name": 1,
-          "last_name": 1,
-          "email": 1,
-          "_id": 0
-        }
-    sortPayload: |
-        { "last_name": {{json .sort_order}} }
-    sortParams:
-      - name: sort_order
-        type: integer
-        description: The sort order (1 for ascending, -1 for descending).
+kind: tools
+name: find_local_customers
+type: mongodb-find
+source: my-mongo-source
+description: Finds customers by city, sorted by last name.
+database: crm
+collection: customers
+limit: 10
+filterPayload: |
+    { "address.city": {{json .city}} }
+filterParams:
+  - name: city
+    type: string
+    description: The city to search for customers in.
+projectPayload: |
+    { 
+      "first_name": 1,
+      "last_name": 1,
+      "email": 1,
+      "_id": 0
+    }
+sortPayload: |
+    { "last_name": {{json .sort_order}} }
+sortParams:
+  - name: sort_order
+    type: integer
+    description: The sort order (1 for ascending, -1 for descending).
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                             |
 |:---------------|:---------|:-------------|:----------------------------------------------------------------------------------------------------------------------------|
-| kind           | string   | true         | Must be `mongodb-find`.                                                                                                     |
+| type           | string   | true         | Must be `mongodb-find`.                                                                                                     |
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                    |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                        |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                  |

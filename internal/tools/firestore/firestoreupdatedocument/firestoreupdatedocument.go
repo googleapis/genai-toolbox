@@ -17,6 +17,7 @@ package firestoreupdatedocument
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	firestoreapi "cloud.google.com/go/firestore"
@@ -24,19 +25,20 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "firestore-update-document"
+const resourceType string = "firestore-update-document"
 const documentPathKey string = "documentPath"
 const documentDataKey string = "documentData"
 const updateMaskKey string = "updateMask"
 const returnDocumentDataKey string = "returnData"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -50,11 +52,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	UpdateDocument(context.Context, string, []firestoreapi.Update, any, bool) (map[string]any, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -63,8 +66,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -137,10 +140,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
@@ -148,18 +151,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Get document path
 	documentPath, ok := mapParams[documentPathKey].(string)
 	if !ok || documentPath == "" {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter", documentPathKey)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter", documentPathKey), nil)
 	}
 
 	// Validate document path
-	if err := util.ValidateDocumentPath(documentPath); err != nil {
-		return nil, fmt.Errorf("invalid document path: %w", err)
+	if err := fsUtil.ValidateDocumentPath(documentPath); err != nil {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid document path: %v", err), err)
 	}
 
 	// Get document data
 	documentDataRaw, ok := mapParams[documentDataKey]
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter", documentDataKey)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter", documentDataKey), nil)
 	}
 
 	// Get update mask if provided
@@ -169,42 +172,29 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			// Use ConvertAnySliceToTyped to convert the slice
 			typedSlice, err := parameters.ConvertAnySliceToTyped(updateMaskArray, "string")
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert update mask: %w", err)
+				return nil, util.NewAgentError(fmt.Sprintf("failed to convert update mask: %v", err), err)
 			}
 			updatePaths, ok = typedSlice.([]string)
 			if !ok {
-				return nil, fmt.Errorf("unexpected type conversion error for update mask")
+				return nil, util.NewAgentError("unexpected type conversion error for update mask", nil)
 			}
 		}
 	}
-
-	// Get return document data flag
-	returnData := false
-	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
-		returnData = val
-	}
-
-	// Get the document reference
-	docRef := source.FirestoreClient().Doc(documentPath)
-
-	// Prepare update data
-	var writeResult *firestoreapi.WriteResult
-	var writeErr error
-
+	// Use selective field update with update mask
+	updates := make([]firestoreapi.Update, 0, len(updatePaths))
+	var documentData any
 	if len(updatePaths) > 0 {
-		// Use selective field update with update mask
-		updates := make([]firestoreapi.Update, 0, len(updatePaths))
 
 		// Convert document data without delete markers
-		dataMap, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
+		dataMap, err := fsUtil.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert document data: %w", err)
+			return nil, util.NewAgentError(fmt.Sprintf("failed to convert document data: %v", err), err)
 		}
 
 		// Ensure it's a map
 		dataMapTyped, ok := dataMap.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("document data must be a map")
+			return nil, util.NewAgentError("document data must be a map", nil)
 		}
 
 		for _, path := range updatePaths {
@@ -220,41 +210,24 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				Value: value,
 			})
 		}
-
-		writeResult, writeErr = docRef.Update(ctx, updates)
 	} else {
 		// Update all fields in the document data (merge)
-		documentData, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
+		documentData, err = fsUtil.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert document data: %w", err)
+			return nil, util.NewAgentError(fmt.Sprintf("failed to convert document data: %v", err), err)
 		}
-		writeResult, writeErr = docRef.Set(ctx, documentData, firestoreapi.MergeAll)
 	}
 
-	if writeErr != nil {
-		return nil, fmt.Errorf("failed to update document: %w", writeErr)
+	// Get return document data flag
+	returnData := false
+	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
+		returnData = val
 	}
-
-	// Build the response
-	response := map[string]any{
-		"documentPath": docRef.Path,
-		"updateTime":   writeResult.UpdateTime.Format("2006-01-02T15:04:05.999999999Z"),
+	resp, err := source.UpdateDocument(ctx, documentPath, updates, documentData, returnData)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
 	}
-
-	// Add document data if requested
-	if returnData {
-		// Fetch the updated document to return the current state
-		snapshot, err := docRef.Get(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve updated document: %w", err)
-		}
-
-		// Convert the document data to simple JSON format
-		simplifiedData := util.FirestoreValueToJSON(snapshot.Data())
-		response["documentData"] = simplifiedData
-	}
-
-	return response, nil
+	return resp, nil
 }
 
 // getFieldValue retrieves a value from a nested map using a dot-separated path
@@ -283,10 +256,6 @@ func getFieldValue(data map[string]interface{}, path string) (interface{}, bool)
 	return nil, false
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
@@ -309,4 +278,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

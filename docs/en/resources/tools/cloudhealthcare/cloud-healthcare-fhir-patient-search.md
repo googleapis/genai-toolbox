@@ -21,18 +21,18 @@ given criteria.
 ## Example
 
 ```yaml
-tools:
-  fhir_patient_search:
-    kind: cloud-healthcare-fhir-patient-search
-    source: my-healthcare-source
-    description: Use this tool to search for patients in the FHIR store.
+kind: tools
+name: fhir_patient_search
+type: cloud-healthcare-fhir-patient-search
+source: my-healthcare-source
+description: Use this tool to search for patients in the FHIR store.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-fhir-patient-search".    |
+| type        |  string  |     true     | Must be "cloud-healthcare-fhir-patient-search".    |
 | source      |  string  |     true     | Name of the healthcare source.                     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

@@ -53,7 +53,7 @@ export async function main() {
 
   for (const query of queries) {
     conversationHistory.push({ role: "user", content: [{ text: query }] });
-    const response = await ai.generate({
+    let response = await ai.generate({
       messages: conversationHistory,
       tools: tools,
     });

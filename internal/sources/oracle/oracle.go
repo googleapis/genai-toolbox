@@ -18,14 +18,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "oracle"
+const SourceType string = "oracle"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -45,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name             string `yaml:"name" validate:"required"`
-	Kind             string `yaml:"kind" validate:"required"`
+	Type             string `yaml:"type" validate:"required"`
 	ConnectionString string `yaml:"connectionString,omitempty"`
 	TnsAlias         string `yaml:"tnsAlias,omitempty"`
 	TnsAdmin         string `yaml:"tnsAdmin,omitempty"`
@@ -95,8 +95,8 @@ func (c Config) validate() error {
 	return nil
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -124,8 +124,8 @@ type Source struct {
 	DB *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -239,7 +239,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, config.Name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, config.Name)
 	defer span.End()
 
 	logger, err := util.LoggerFromContext(ctx)

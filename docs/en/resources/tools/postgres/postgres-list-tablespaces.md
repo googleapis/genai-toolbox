@@ -24,15 +24,15 @@ The `postgres-list-tablespaces` tool lists available tablespaces in the database
 ## Example
 
 ```yaml
-tools:
-  list_tablespaces:
-    kind: postgres-list-tablespaces
-    source: postgres-source
-    description: |
-      Lists all tablespaces in the database. Returns the tablespace name,
-      owner name, size in bytes(if the current user has CREATE privileges on
-      the tablespace, otherwise NULL), internal object ID, the access control
-      list regarding permissions, and any specific tablespace options.
+kind: tools
+name: list_tablespaces
+type: postgres-list-tablespaces
+source: postgres-source
+description: |
+  Lists all tablespaces in the database. Returns the tablespace name,
+  owner name, size in bytes(if the current user has CREATE privileges on
+  the tablespace, otherwise NULL), internal object ID, the access control
+  list regarding permissions, and any specific tablespace options.
 ```
 The response is a json array with the following elements:
 
@@ -51,6 +51,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required**  | **description**                                      |
 |-------------|:--------:|:-------------:|------------------------------------------------------|
-| kind        |  string  |     true      | Must be "postgres-list-tablespaces".                      |
+| type        |  string  |     true      | Must be "postgres-list-tablespaces".                      |
 | source      |  string  |     true      | Name of the source the SQL should execute on.        |
 | description |  string  |     false     | Description of the tool that is passed to the agent. |

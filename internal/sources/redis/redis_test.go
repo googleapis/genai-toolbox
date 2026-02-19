@@ -15,12 +15,13 @@
 package redis_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -34,16 +35,16 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "default setting",
 			in: `
-			sources:
-				my-redis-instance:
-					kind: redis
-					address:
-					  - 127.0.0.1
+			kind: sources
+			name: my-redis-instance
+			type: redis
+			address:
+			  - 127.0.0.1
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-redis-instance": redis.Config{
 					Name:           "my-redis-instance",
-					Kind:           redis.SourceKind,
+					Type:           redis.SourceType,
 					Address:        []string{"127.0.0.1"},
 					ClusterEnabled: false,
 					UseGCPIAM:      false,
@@ -53,41 +54,44 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			sources:
-				my-redis-instance:
-					kind: redis
-					address:
-					  - 127.0.0.1
-					password: my-pass
-					database: 1
-					useGCPIAM: true
-					clusterEnabled: true
+			kind: sources
+			name: my-redis-instance
+			type: redis
+			address:
+			  - 127.0.0.1
+			password: my-pass
+			database: 1
+			useGCPIAM: true
+			clusterEnabled: true
+			tls:
+			  enabled: true
+			  insecureSkipVerify: true
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-redis-instance": redis.Config{
 					Name:           "my-redis-instance",
-					Kind:           redis.SourceKind,
+					Type:           redis.SourceType,
 					Address:        []string{"127.0.0.1"},
 					Password:       "my-pass",
 					Database:       1,
 					ClusterEnabled: true,
 					UseGCPIAM:      true,
+					TLS: redis.TLSConfig{
+						Enabled:            true,
+						InsecureSkipVerify: true,
+					},
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -103,48 +107,43 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid database",
 			in: `
-			sources:
-				my-redis-instance:
-					kind: redis
-					project: my-project
-					address:
-					  - 127.0.0.1
-					password: my-pass
-					database: data
+			kind: sources
+			name: my-redis-instance
+			type: redis
+			address:
+			- 127.0.0.1
+			password: my-pass
+			database: data
 			`,
-			err: "cannot unmarshal string into Go struct field .Sources of type int",
+			err: "error unmarshaling sources: unable to parse source \"my-redis-instance\" as \"redis\": [3:11] cannot unmarshal string into Go struct field Config.Database of type int\n   1 | address:\n   2 | - 127.0.0.1\n>  3 | database: data\n                 ^\n   4 | name: my-redis-instance\n   5 | password: my-pass\n   6 | type: redis",
 		},
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-redis-instance:
-					kind: redis
-					project: my-project
-					address:
-					  - 127.0.0.1
-					password: my-pass
-					database: 1
+			kind: sources
+			name: my-redis-instance
+			type: redis
+			project: my-project
+			address:
+			- 127.0.0.1
+			password: my-pass
+			database: 1
 			`,
-			err: "unable to parse source \"my-redis-instance\" as \"redis\": [6:1] unknown field \"project\"",
+			err: "error unmarshaling sources: unable to parse source \"my-redis-instance\" as \"redis\": [6:1] unknown field \"project\"\n   3 | database: 1\n   4 | name: my-redis-instance\n   5 | password: my-pass\n>  6 | project: my-project\n       ^\n   7 | type: redis",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-redis-instance:
-					kind: redis
+			kind: sources
+			name: my-redis-instance
+			type: redis
 			`,
-			err: "unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

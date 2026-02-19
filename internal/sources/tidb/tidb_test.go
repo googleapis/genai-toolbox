@@ -15,11 +15,12 @@
 package tidb_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/tidb"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,19 +34,19 @@ func TestParseFromYamlTiDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-tidb-instance:
-					kind: tidb
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-tidb-instance
+			type: tidb
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-tidb-instance": tidb.Config{
 					Name:     "my-tidb-instance",
-					Kind:     tidb.SourceKind,
+					Type:     tidb.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -58,20 +59,20 @@ func TestParseFromYamlTiDB(t *testing.T) {
 		{
 			desc: "with SSL enabled",
 			in: `
-			sources:
-				my-tidb-cloud:
-					kind: tidb
-					host: gateway01.us-west-2.prod.aws.tidbcloud.com
-					port: 4000
-					database: test_db
-					user: cloud_user
-					password: cloud_pass
-					ssl: true
+			kind: sources
+			name: my-tidb-cloud
+			type: tidb
+			host: gateway01.us-west-2.prod.aws.tidbcloud.com
+			port: 4000
+			database: test_db
+			user: cloud_user
+			password: cloud_pass
+			ssl: true
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-tidb-cloud": tidb.Config{
 					Name:     "my-tidb-cloud",
-					Kind:     tidb.SourceKind,
+					Type:     tidb.SourceType,
 					Host:     "gateway01.us-west-2.prod.aws.tidbcloud.com",
 					Port:     "4000",
 					Database: "test_db",
@@ -84,19 +85,19 @@ func TestParseFromYamlTiDB(t *testing.T) {
 		{
 			desc: "Change SSL enabled due to TiDB Cloud host",
 			in: `
-			sources:
-				my-tidb-cloud:
-					kind: tidb
-					host: gateway01.us-west-2.prod.aws.tidbcloud.com
-					port: 4000
-					database: test_db
-					user: cloud_user
-					password: cloud_pass
+			kind: sources
+			name: my-tidb-cloud
+			type: tidb
+			host: gateway01.us-west-2.prod.aws.tidbcloud.com
+			port: 4000
+			database: test_db
+			user: cloud_user
+			password: cloud_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-tidb-cloud": tidb.Config{
 					Name:     "my-tidb-cloud",
-					Kind:     tidb.SourceKind,
+					Type:     tidb.SourceType,
 					Host:     "gateway01.us-west-2.prod.aws.tidbcloud.com",
 					Port:     "4000",
 					Database: "test_db",
@@ -109,16 +110,12 @@ func TestParseFromYamlTiDB(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -134,41 +131,37 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-tidb-instance:
-					kind: tidb
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					ssl: false
-					foo: bar
+			kind: sources
+			name: my-tidb-instance
+			type: tidb
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			ssl: false
+			foo: bar
 			`,
-			err: "unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: tidb\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-tidb-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-tidb-instance:
-					kind: tidb
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					ssl: false
+			kind: sources
+			name: my-tidb-instance
+			type: tidb
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			ssl: false
 			`,
-			err: "unable to parse source \"my-tidb-instance\" as \"tidb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-tidb-instance\" as \"tidb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
