@@ -11,73 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# name: Links
-
-# on:
-#   push:
-#     branches: 
-#       - test-link-report
-# jobs:
-#   linkChecker:
-#     runs-on: ubuntu-latest
-#     permissions:
-#       issues: write
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-#         with:
-#           fetch-depth: 0
-
-#       - name: Link Checker
-#         id: lychee-check
-#         uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
-#         continue-on-error: true
-#         with:
-#           args: >
-#             --quiet
-#             --no-progress
-#             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
-#             README.md
-#             docs/
-#           output: lychee-report.md
-#           format: markdown
-#           fail: true
-#           jobSummary: false
-#           debug: false
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-#       - name: Prepare Report
-#         run: |
-#           echo "## Link Resolution Note" > full-report.md
-#           echo "Local links and directory changes work differently on GitHub than on the docsite.You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
-#           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md          
-#           echo "" >> full-report.md 
-#           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
-
-      # - name: Create Issue From File
-      #   if: steps.lychee.outputs.exit_code != 0
-      #   uses: peter-evans/create-issue-from-file@v5
-      #   with:
-      #     title: Link Checker Report
-      #     content-filepath: full-report.md
-      #     labels: report, automated issue,link checker
 name: Links
 
 on:
   push:
-    branches:
+    branches: 
       - test-link-report
-
 jobs:
   linkChecker:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # Required for Checkout
-      issues: write   # Required for creating issues
+      issues: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
 
@@ -92,7 +39,6 @@ jobs:
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
             README.md
             docs/
-
           output: lychee-report.md
           format: markdown
           fail: true
@@ -102,31 +48,27 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare Report
-        if: steps.lychee-check.outcome == 'failure'
         run: |
           echo "## Link Resolution Note" > full-report.md
-          echo "Local links differ on GitHub. Ensure fixes pass the GitHub check." >> full-report.md
-          echo "" >> full-report.md
-          
-          # 4. CHECK: Verify file exists before running sed to prevent crash
-          if [ -f lychee-report.md ]; then
-            sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
-          else
-            echo "Error: lychee-report.md was not generated." >> full-report.md
-          fi
+          echo "Local links and directory changes work differently on GitHub than on the docsite.You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
+          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md          
+          echo "" >> full-report.md 
+          sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
-      - name: Display Failure Report
-        if: steps.lychee-check.outcome == 'failure'
-        run: |
-          cat full-report.md >> $GITHUB_STEP_SUMMARY
-          # Fail the workflow so you see the red X
-          exit 1
+      - name: Create Issue From File
+        if: steps.lychee.outputs.exit_code != 0
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: Link Checker Report
+          content-filepath: full-report.md
+          labels: report, automated issue,link checker
+
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
         if: steps.lychee-check.outcome == 'failure'
         run: |
           # We can now simply output the prepared file to the job summary
-          echo "" >> full-report.md
           cat full-report.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> full-report.md
           # Fail the job
           exit 1
