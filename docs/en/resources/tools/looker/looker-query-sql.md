@@ -36,28 +36,28 @@ to find MCP Toolbox queries.
 ## Example
 
 ```yaml
-tools:
-    query_sql:
-        kind: looker-query-sql
-        source: looker-source
-        description: |
-          This tool generates the underlying SQL query that Looker would execute
-          against the database for a given set of parameters. It is useful for
-          understanding how Looker translates a request into SQL.
+kind: tools
+name: query_sql
+type: looker-query-sql
+source: looker-source
+description: |
+  This tool generates the underlying SQL query that Looker would execute
+  against the database for a given set of parameters. It is useful for
+  understanding how Looker translates a request into SQL.
 
-          Parameters:
-          All parameters for this tool are identical to those of the `query` tool.
-          This includes `model_name`, `explore_name`, `fields` (required),
-          and optional parameters like `pivots`, `filters`, `sorts`, `limit`, and `query_timezone`.
+  Parameters:
+  All parameters for this tool are identical to those of the `query` tool.
+  This includes `model_name`, `explore_name`, `fields` (required),
+  and optional parameters like `pivots`, `filters`, `sorts`, `limit`, and `query_timezone`.
 
-          Output:
-          The result of this tool is the raw SQL text.
+  Output:
+  The result of this tool is the raw SQL text.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-query-sql"                         |
+| type        |  string  |     true     | Must be "looker-query-sql"                         |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

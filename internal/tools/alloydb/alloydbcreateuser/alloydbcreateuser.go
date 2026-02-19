@@ -17,19 +17,21 @@ package alloydbcreateuser
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "alloydb-create-user"
+const resourceType string = "alloydb-create-user"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -50,7 +52,7 @@ type compatibleSource interface {
 // Configuration for the create-user tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,9 +61,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of the tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of the tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize initializes the tool from the configuration.
@@ -73,7 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	project := s.GetDefaultProject()
@@ -122,43 +124,43 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string", nil)
 	}
 
 	location, ok := paramsMap["location"].(string)
 	if !ok || location == "" {
-		return nil, fmt.Errorf("invalid or missing'location' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing'location' parameter; expected a non-empty string", nil)
 	}
 
 	cluster, ok := paramsMap["cluster"].(string)
 	if !ok || cluster == "" {
-		return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string", nil)
 	}
 
 	userID, ok := paramsMap["user"].(string)
 	if !ok || userID == "" {
-		return nil, fmt.Errorf("invalid or missing 'user' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'user' parameter; expected a non-empty string", nil)
 	}
 
 	userType, ok := paramsMap["userType"].(string)
 	if !ok || (userType != "ALLOYDB_BUILT_IN" && userType != "ALLOYDB_IAM_USER") {
-		return nil, fmt.Errorf("invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'")
+		return nil, util.NewAgentError("invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'", nil)
 	}
 	var password string
 
 	if userType == "ALLOYDB_BUILT_IN" {
 		password, ok = paramsMap["password"].(string)
 		if !ok || password == "" {
-			return nil, fmt.Errorf("password is required when userType is ALLOYDB_BUILT_IN")
+			return nil, util.NewAgentError("password is required when userType is ALLOYDB_BUILT_IN", nil)
 		}
 	}
 
@@ -170,12 +172,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			}
 		}
 	}
-	return source.CreateUser(ctx, userType, password, roles, string(accessToken), project, location, cluster, userID)
-}
-
-// ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	resp, err := source.CreateUser(ctx, userType, password, roles, string(accessToken), project, location, cluster, userID)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -198,7 +199,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -208,4 +209,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }

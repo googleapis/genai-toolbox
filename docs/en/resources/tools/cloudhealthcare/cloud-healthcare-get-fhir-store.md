@@ -20,18 +20,18 @@ compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  get_fhir_store:
-    kind: cloud-healthcare-get-fhir-store
-    source: my-healthcare-source
-    description: Use this tool to get information about a FHIR store.
+kind: tools
+name: get_fhir_store
+type: cloud-healthcare-get-fhir-store
+source: my-healthcare-source
+description: Use this tool to get information about a FHIR store.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-get-fhir-store".         |
+| type        |  string  |     true     | Must be "cloud-healthcare-get-fhir-store".         |
 | source      |  string  |     true     | Name of the healthcare source.                     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

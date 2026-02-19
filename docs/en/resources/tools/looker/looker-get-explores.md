@@ -35,24 +35,24 @@ The return type is an array of maps, each map is formatted like:
 ## Example
 
 ```yaml
-tools:
-    get_explores:
-        kind: looker-get-explores
-        source: looker-source
-        description: |
-          This tool retrieves a list of explores defined within a specific LookML model.
-          Explores represent a curated view of your data, typically joining several
-          tables together to allow for focused analysis on a particular subject area.
-          The output provides details like the explore's `name` and `label`.
+kind: tools
+name: get_explores
+type: looker-get-explores
+source: looker-source
+description: |
+  This tool retrieves a list of explores defined within a specific LookML model.
+  Explores represent a curated view of your data, typically joining several
+  tables together to allow for focused analysis on a particular subject area.
+  The output provides details like the explore's `name` and `label`.
 
-          Parameters:
-          - model_name (required): The name of the LookML model, obtained from `get_models`.
+  Parameters:
+  - model_name (required): The name of the LookML model, obtained from `get_models`.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-get-explores".                     |
+| type        |  string  |     true     | Must be "looker-get-explores".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

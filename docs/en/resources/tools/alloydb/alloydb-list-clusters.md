@@ -24,17 +24,17 @@ location. The tool takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_clusters:
-    kind: alloydb-list-clusters
-    source: alloydb-admin-source
-    description: Use this tool to list all AlloyDB clusters in a given project and location.
+kind: tools
+name: list_clusters
+type: alloydb-list-clusters
+source: alloydb-admin-source
+description: Use this tool to list all AlloyDB clusters in a given project and location.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 | ----------- | :------: | :----------: | ---------------------------------------------------- |
-| kind        |  string  |     true     | Must be alloydb-list-clusters.                       |
+| type        |  string  |     true     | Must be alloydb-list-clusters.                       |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |     false    | Description of the tool that is passed to the agent. |
