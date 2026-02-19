@@ -232,7 +232,7 @@ toolset = ToolboxToolset(
 )
 ```
 
-### Global Parameter Binding
+### Parameter Binding
 
 Bind values to tool parameters globally across all loaded tools. These values will be **fixed** and **hidden** from the LLM.
 
@@ -243,7 +243,7 @@ Bind values to tool parameters globally across all loaded tools. These values wi
 toolset = ToolboxToolset(
     server_url="...",
     bound_params={
-        # 'region' will be removed from the LLM schema and injected automatically
+        # 'region' will be hidden from the LLM and injected automatically
         "region": "us-central1",
         "api_key": lambda: get_api_key() # Can be a callable
     }
