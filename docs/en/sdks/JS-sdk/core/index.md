@@ -1,7 +1,7 @@
 ---
 title: "Core"
 type: docs
-weight: 8
+weight: 2
 description: >
    MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
 ---
