@@ -63,7 +63,7 @@ description: |
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "lookerca-conversational-analytics".       |
+| type        |  string  |     true     | Must be "looker-conversational-analytics".       |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | dataAgent   |  string  |    false     | Full resource name of a data agent (e.g. `projects/{project}/locations/{location}/dataAgents/{dataAgentId}`). When set, the tool uses data agent context instead of inline context. |
