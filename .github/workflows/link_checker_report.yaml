@@ -56,12 +56,11 @@ jobs:
 
       - name: Create Issue From File
         if: steps.lychee-check.outcome == 'failure'
-
         uses: peter-evans/create-issue-from-file@v5
         with:
           title: Link Checker Report
           content-filepath: full-report.md
-          labels: report, automated issue,link checker
+          labels: report, automated issue, link checker
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
