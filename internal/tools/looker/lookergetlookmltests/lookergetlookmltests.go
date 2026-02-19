@@ -67,8 +67,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	projectIdParameter := parameters.NewStringParameter("project_id", "The id of the project to retrieve LookML tests for.")
-	fileIdParameter := parameters.NewStringParameterWithRequired("file_id", "Optional id of the file to filter tests by.", false)
+	projectIdParameter := parameters.NewStringParameter("project_id", "The unique ID of the LookML project.")
+	fileIdParameter := parameters.NewStringParameterWithRequired("file_id", "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').", false)
 	params := parameters.Parameters{projectIdParameter, fileIdParameter}
 
 	annotations := cfg.Annotations

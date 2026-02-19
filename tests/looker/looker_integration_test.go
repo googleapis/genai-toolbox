@@ -704,7 +704,7 @@ func TestLooker(t *testing.T) {
 	tests.RunToolGetTestByName(t, "get_lookml_tests",
 		map[string]any{
 			"get_lookml_tests": map[string]any{
-				"description":  "Get LookML tests.",
+				"description":  "Simple tool to test end to end functionality.",
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
