@@ -15,11 +15,12 @@
 package couchbase_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,19 +34,19 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-couchbase-instance:
-					kind: couchbase
-					connectionString: localhost
-					username: Administrator
-					password: password
-					bucket: travel-sample
-					scope: inventory
+			kind: sources
+			name: my-couchbase-instance
+			type: couchbase
+			connectionString: localhost
+			username: Administrator
+			password: password
+			bucket: travel-sample
+			scope: inventory
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-couchbase-instance": couchbase.Config{
 					Name:             "my-couchbase-instance",
-					Kind:             couchbase.SourceKind,
+					Type:             couchbase.SourceType,
 					ConnectionString: "localhost",
 					Username:         "Administrator",
 					Password:         "password",
@@ -57,24 +58,24 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "with TLS configuration",
 			in: `
-			sources:
-				my-couchbase-instance:
-					kind: couchbase
-					connectionString: couchbases://localhost
-					bucket: travel-sample
-					scope: inventory
-					clientCert: /path/to/cert.pem
-					clientKey: /path/to/key.pem
-					clientCertPassword: password
-					clientKeyPassword: password
-					caCert: /path/to/ca.pem
-					noSslVerify: false
-					queryScanConsistency: 2
+			kind: sources
+			name: my-couchbase-instance
+			type: couchbase
+			connectionString: couchbases://localhost
+			bucket: travel-sample
+			scope: inventory
+			clientCert: /path/to/cert.pem
+			clientKey: /path/to/key.pem
+			clientCertPassword: password
+			clientKeyPassword: password
+			caCert: /path/to/ca.pem
+			noSslVerify: false
+			queryScanConsistency: 2
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-couchbase-instance": couchbase.Config{
 					Name:                 "my-couchbase-instance",
-					Kind:                 couchbase.SourceKind,
+					Type:                 couchbase.SourceType,
 					ConnectionString:     "couchbases://localhost",
 					Bucket:               "travel-sample",
 					Scope:                "inventory",
@@ -91,16 +92,12 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -115,39 +112,35 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-couchbase-instance:
-					kind: couchbase
-					connectionString: localhost
-					username: Administrator
-					password: password
-					bucket: travel-sample
-					scope: inventory
-					foo: bar
+			kind: sources
+			name: my-couchbase-instance
+			type: couchbase
+			connectionString: localhost
+			username: Administrator
+			password: password
+			bucket: travel-sample
+			scope: inventory
+			foo: bar
 			`,
-			err: "unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | kind: couchbase\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | name: my-couchbase-instance\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-couchbase-instance:
-					kind: couchbase
-					username: Administrator
-					password: password
-					bucket: travel-sample
-					scope: inventory
+			kind: sources
+			name: my-couchbase-instance
+			type: couchbase
+			username: Administrator
+			password: password
+			bucket: travel-sample
+			scope: inventory
 			`,
-			err: "unable to parse source \"my-couchbase-instance\" as \"couchbase\": Key: 'Config.ConnectionString' Error:Field validation for 'ConnectionString' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-couchbase-instance\" as \"couchbase\": Key: 'Config.ConnectionString' Error:Field validation for 'ConnectionString' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

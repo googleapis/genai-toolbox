@@ -14,22 +14,22 @@ exponential backoff.
 ## Example
 
 ```yaml
-tools:
-  cloudsql-operations-get:
-    kind: cloud-sql-wait-for-operation
-    source: my-cloud-sql-source
-    description: "This will poll on operations API until the operation is done. For checking operation status we need projectId and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
-    delay: 1s
-    maxDelay: 4m
-    multiplier: 2
-    maxRetries: 10
+kind: tools
+name: cloudsql-operations-get
+type: cloud-sql-wait-for-operation
+source: my-cloud-sql-source
+description: "This will poll on operations API until the operation is done. For checking operation status we need projectId and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+delay: 1s
+maxDelay: 4m
+multiplier: 2
+maxRetries: 10
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                                                                                  |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "cloud-sql-wait-for-operation".                                                                          |
+| type        |  string  |     true     | Must be "cloud-sql-wait-for-operation".                                                                          |
 | source      |  string  |     true     | The name of a `cloud-sql-admin` source to use for authentication.                                                |
 | description |  string  |     false    | A description of the tool.                                                                                       |
 | delay       | duration |     false    | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |

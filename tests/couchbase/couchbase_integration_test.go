@@ -30,8 +30,8 @@ import (
 )
 
 const (
-	couchbaseSourceKind = "couchbase"
-	couchbaseToolKind   = "couchbase-sql"
+	couchbaseSourceType = "couchbase"
+	couchbaseToolType   = "couchbase-sql"
 )
 
 var (
@@ -58,7 +58,7 @@ func getCouchbaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":                 couchbaseSourceKind,
+		"type":                 couchbaseSourceType,
 		"connectionString":     couchbaseConnection,
 		"bucket":               couchbaseBucket,
 		"scope":                couchbaseScope,
@@ -118,8 +118,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	defer teardownCollection3(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolType, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -137,7 +137,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"$1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"$1\":1}"}]}}`
 	tmplSelectId1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
 	selectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
@@ -231,7 +231,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 }
 
-// getCouchbaseParamToolInfo returns statements and params for my-tool couchbase-sql kind
+// getCouchbaseParamToolInfo returns statements and params for my-tool couchbase-sql type
 func getCouchbaseParamToolInfo(collectionName string) (string, string, string, string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
@@ -254,7 +254,7 @@ func getCouchbaseParamToolInfo(collectionName string) (string, string, string, s
 	return toolStatement, idToolStatement, nameToolStatement, arrayToolStatemnt, params
 }
 
-// getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
+// getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql type
 func getCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
 	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
 

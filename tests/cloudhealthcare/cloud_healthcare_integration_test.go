@@ -41,22 +41,22 @@ import (
 )
 
 var (
-	healthcareSourceKind                  = "cloud-healthcare"
-	getDatasetToolKind                    = "cloud-healthcare-get-dataset"
-	listFHIRStoresToolKind                = "cloud-healthcare-list-fhir-stores"
-	listDICOMStoresToolKind               = "cloud-healthcare-list-dicom-stores"
-	getFHIRStoreToolKind                  = "cloud-healthcare-get-fhir-store"
-	getFHIRStoreMetricsToolKind           = "cloud-healthcare-get-fhir-store-metrics"
-	getFHIRResourceToolKind               = "cloud-healthcare-get-fhir-resource"
-	fhirPatientSearchToolKind             = "cloud-healthcare-fhir-patient-search"
-	fhirPatientEverythingToolKind         = "cloud-healthcare-fhir-patient-everything"
-	fhirFetchPageToolKind                 = "cloud-healthcare-fhir-fetch-page"
-	getDICOMStoreToolKind                 = "cloud-healthcare-get-dicom-store"
-	getDICOMStoreMetricsToolKind          = "cloud-healthcare-get-dicom-store-metrics"
-	searchDICOMStudiesToolKind            = "cloud-healthcare-search-dicom-studies"
-	searchDICOMSeriesToolKind             = "cloud-healthcare-search-dicom-series"
-	searchDICOMInstancesToolKind          = "cloud-healthcare-search-dicom-instances"
-	retrieveRenderedDICOMInstanceToolKind = "cloud-healthcare-retrieve-rendered-dicom-instance"
+	healthcareSourceType                  = "cloud-healthcare"
+	getDatasetToolType                    = "cloud-healthcare-get-dataset"
+	listFHIRStoresToolType                = "cloud-healthcare-list-fhir-stores"
+	listDICOMStoresToolType               = "cloud-healthcare-list-dicom-stores"
+	getFHIRStoreToolType                  = "cloud-healthcare-get-fhir-store"
+	getFHIRStoreMetricsToolType           = "cloud-healthcare-get-fhir-store-metrics"
+	getFHIRResourceToolType               = "cloud-healthcare-get-fhir-resource"
+	fhirPatientSearchToolType             = "cloud-healthcare-fhir-patient-search"
+	fhirPatientEverythingToolType         = "cloud-healthcare-fhir-patient-everything"
+	fhirFetchPageToolType                 = "cloud-healthcare-fhir-fetch-page"
+	getDICOMStoreToolType                 = "cloud-healthcare-get-dicom-store"
+	getDICOMStoreMetricsToolType          = "cloud-healthcare-get-dicom-store-metrics"
+	searchDICOMStudiesToolType            = "cloud-healthcare-search-dicom-studies"
+	searchDICOMSeriesToolType             = "cloud-healthcare-search-dicom-series"
+	searchDICOMInstancesToolType          = "cloud-healthcare-search-dicom-instances"
+	retrieveRenderedDICOMInstanceToolType = "cloud-healthcare-retrieve-rendered-dicom-instance"
 	healthcareProject                     = os.Getenv("HEALTHCARE_PROJECT")
 	healthcareRegion                      = os.Getenv("HEALTHCARE_REGION")
 	healthcareDataset                     = os.Getenv("HEALTHCARE_DATASET")
@@ -92,7 +92,7 @@ func getHealthcareVars(t *testing.T) map[string]any {
 		t.Fatal("'HEALTHCARE_PREPOPULATED_DICOM_STORE' not set")
 	}
 	return map[string]any{
-		"kind":    healthcareSourceKind,
+		"type":    healthcareSourceType,
 		"project": healthcareProject,
 		"region":  healthcareRegion,
 		"dataset": healthcareDataset,
@@ -112,8 +112,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	fhirStoreID := "fhir-store-" + uuid.New().String()
 	dicomStoreID := "dicom-store-" + uuid.New().String()
 
-	patient1ID, patient2ID, teardown := setupHealthcareResources(t, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
-	defer teardown(t)
+	patient1ID, patient2ID := setupHealthcareResources(t, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
 
 	toolsFile := getToolsConfig(sourceConfig)
 	toolsFile = addClientAuthSourceConfig(t, toolsFile)
@@ -173,10 +172,8 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	disallowedFHIRStoreID := "fhir-store-disallowed-" + uuid.New().String()
 	disallowedDICOMStoreID := "dicom-store-disallowed-" + uuid.New().String()
 
-	_, _, teardownAllowedStores := setupHealthcareResources(t, healthcareService, healthcareDataset, allowedFHIRStoreID, allowedDICOMStoreID)
-	defer teardownAllowedStores(t)
-	_, _, teardownDisallowedStores := setupHealthcareResources(t, healthcareService, healthcareDataset, disallowedFHIRStoreID, disallowedDICOMStoreID)
-	defer teardownDisallowedStores(t)
+	setupHealthcareResources(t, healthcareService, healthcareDataset, allowedFHIRStoreID, allowedDICOMStoreID)
+	setupHealthcareResources(t, healthcareService, healthcareDataset, disallowedFHIRStoreID, disallowedDICOMStoreID)
 
 	// Configure source with dataset restriction.
 	sourceConfig["allowedFhirStores"] = []string{allowedFHIRStoreID}
@@ -185,12 +182,12 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	// Configure tool
 	toolsConfig := map[string]any{
 		"list-fhir-stores-restricted": map[string]any{
-			"kind":        "cloud-healthcare-list-fhir-stores",
+			"type":        "cloud-healthcare-list-fhir-stores",
 			"source":      "my-instance",
 			"description": "Tool to list fhir stores",
 		},
 		"list-dicom-stores-restricted": map[string]any{
-			"kind":        "cloud-healthcare-list-dicom-stores",
+			"type":        "cloud-healthcare-list-dicom-stores",
 			"source":      "my-instance",
 			"description": "Tool to list dicom stores",
 		},
@@ -257,7 +254,7 @@ func newHealthcareService(ctx context.Context) (*healthcare.Service, error) {
 	return healthcareService, nil
 }
 
-func setupHealthcareResources(t *testing.T, service *healthcare.Service, datasetID, fhirStoreID, dicomStoreID string) (string, string, func(*testing.T)) {
+func setupHealthcareResources(t *testing.T, service *healthcare.Service, datasetID, fhirStoreID, dicomStoreID string) (string, string) {
 	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", healthcareProject, healthcareRegion, datasetID)
 	var err error
 
@@ -266,12 +263,24 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 	if fhirStore, err = service.Projects.Locations.Datasets.FhirStores.Create(datasetName, fhirStore).FhirStoreId(fhirStoreID).Do(); err != nil {
 		t.Fatalf("failed to create fhir store: %v", err)
 	}
+	// Register cleanup
+	t.Cleanup(func() {
+		if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(fhirStore.Name).Do(); err != nil {
+			t.Logf("failed to delete fhir store: %v", err)
+		}
+	})
 
 	// Create DICOM store
 	dicomStore := &healthcare.DicomStore{}
 	if dicomStore, err = service.Projects.Locations.Datasets.DicomStores.Create(datasetName, dicomStore).DicomStoreId(dicomStoreID).Do(); err != nil {
 		t.Fatalf("failed to create dicom store: %v", err)
 	}
+	// Register cleanup
+	t.Cleanup(func() {
+		if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(dicomStore.Name).Do(); err != nil {
+			t.Logf("failed to delete dicom store: %v", err)
+		}
+	})
 
 	// Create Patient 1
 	patient1Body := bytes.NewBuffer([]byte(`{
@@ -317,15 +326,7 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 		createFHIRResource(t, service, fhirStore.Name, "Observation", observation2Body)
 	}
 
-	teardown := func(t *testing.T) {
-		if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(fhirStore.Name).Do(); err != nil {
-			t.Logf("failed to delete fhir store: %v", err)
-		}
-		if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(dicomStore.Name).Do(); err != nil {
-			t.Logf("failed to delete dicom store: %v", err)
-		}
-	}
-	return patient1ID, patient2ID, teardown
+	return patient1ID, patient2ID
 }
 
 func getToolsConfig(sourceConfig map[string]any) map[string]any {
@@ -335,157 +336,157 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"tools": map[string]any{
 			"my-get-dataset-tool": map[string]any{
-				"kind":        getDatasetToolKind,
+				"type":        getDatasetToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a healthcare dataset",
 			},
 			"my-list-fhir-stores-tool": map[string]any{
-				"kind":        listFHIRStoresToolKind,
+				"type":        listFHIRStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list FHIR stores",
 			},
 			"my-list-dicom-stores-tool": map[string]any{
-				"kind":        listDICOMStoresToolKind,
+				"type":        listDICOMStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores",
 			},
 			"my-get-fhir-store-tool": map[string]any{
-				"kind":        getFHIRStoreToolKind,
+				"type":        getFHIRStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a FHIR store",
 			},
 			"my-get-fhir-store-metrics-tool": map[string]any{
-				"kind":        getFHIRStoreMetricsToolKind,
+				"type":        getFHIRStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR store metrics",
 			},
 			"my-get-fhir-resource-tool": map[string]any{
-				"kind":        getFHIRResourceToolKind,
+				"type":        getFHIRResourceToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR resource",
 			},
 			"my-fhir-patient-search-tool": map[string]any{
-				"kind":        fhirPatientSearchToolKind,
+				"type":        fhirPatientSearchToolType,
 				"source":      "my-instance",
 				"description": "Tool to search for patients",
 			},
 			"my-fhir-patient-everything-tool": map[string]any{
-				"kind":        fhirPatientEverythingToolKind,
+				"type":        fhirPatientEverythingToolType,
 				"source":      "my-instance",
 				"description": "Tool for patient everything",
 			},
 			"my-fhir-fetch-page-tool": map[string]any{
-				"kind":        fhirFetchPageToolKind,
+				"type":        fhirFetchPageToolType,
 				"source":      "my-instance",
 				"description": "Tool to fetch a page of FHIR resources",
 			},
 			"my-get-dicom-store-tool": map[string]any{
-				"kind":        getDICOMStoreToolKind,
+				"type":        getDICOMStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a DICOM store",
 			},
 			"my-get-dicom-store-metrics-tool": map[string]any{
-				"kind":        getDICOMStoreMetricsToolKind,
+				"type":        getDICOMStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get DICOM store metrics",
 			},
 			"my-search-dicom-studies-tool": map[string]any{
-				"kind":        searchDICOMStudiesToolKind,
+				"type":        searchDICOMStudiesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM studies",
 			},
 			"my-search-dicom-series-tool": map[string]any{
-				"kind":        searchDICOMSeriesToolKind,
+				"type":        searchDICOMSeriesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM series",
 			},
 			"my-search-dicom-instances-tool": map[string]any{
-				"kind":        searchDICOMInstancesToolKind,
+				"type":        searchDICOMInstancesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM instances",
 			},
 			"my-retrieve-rendered-dicom-instance-tool": map[string]any{
-				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"type":        retrieveRenderedDICOMInstanceToolType,
 				"source":      "my-instance",
 				"description": "Tool to retrieve rendered DICOM instance",
 			},
 			"my-client-auth-get-dataset-tool": map[string]any{
-				"kind":        getDatasetToolKind,
+				"type":        getDatasetToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get a healthcare dataset",
 			},
 			"my-client-auth-list-fhir-stores-tool": map[string]any{
-				"kind":        listFHIRStoresToolKind,
+				"type":        listFHIRStoresToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to list FHIR stores",
 			},
 			"my-client-auth-list-dicom-stores-tool": map[string]any{
-				"kind":        listDICOMStoresToolKind,
+				"type":        listDICOMStoresToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to list DICOM stores",
 			},
 			"my-client-auth-get-fhir-store-tool": map[string]any{
-				"kind":        getFHIRStoreToolKind,
+				"type":        getFHIRStoreToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get a FHIR store",
 			},
 			"my-client-auth-get-fhir-store-metrics-tool": map[string]any{
-				"kind":        getFHIRStoreMetricsToolKind,
+				"type":        getFHIRStoreMetricsToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get FHIR store metrics",
 			},
 			"my-client-auth-get-fhir-resource-tool": map[string]any{
-				"kind":        getFHIRResourceToolKind,
+				"type":        getFHIRResourceToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get FHIR resource",
 			},
 			"my-client-auth-fhir-patient-search-tool": map[string]any{
-				"kind":        fhirPatientSearchToolKind,
+				"type":        fhirPatientSearchToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search for patients",
 			},
 			"my-client-auth-fhir-patient-everything-tool": map[string]any{
-				"kind":        fhirPatientEverythingToolKind,
+				"type":        fhirPatientEverythingToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool for patient everything",
 			},
 			"my-client-auth-fhir-fetch-page-tool": map[string]any{
-				"kind":        fhirFetchPageToolKind,
+				"type":        fhirFetchPageToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to fetch a page of FHIR resources",
 			},
 			"my-client-auth-get-dicom-store-tool": map[string]any{
-				"kind":        getDICOMStoreToolKind,
+				"type":        getDICOMStoreToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get a DICOM store",
 			},
 			"my-client-auth-get-dicom-store-metrics-tool": map[string]any{
-				"kind":        getDICOMStoreMetricsToolKind,
+				"type":        getDICOMStoreMetricsToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get DICOM store metrics",
 			},
 			"my-client-auth-search-dicom-studies-tool": map[string]any{
-				"kind":        searchDICOMStudiesToolKind,
+				"type":        searchDICOMStudiesToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search DICOM studies",
 			},
 			"my-client-auth-search-dicom-series-tool": map[string]any{
-				"kind":        searchDICOMSeriesToolKind,
+				"type":        searchDICOMSeriesToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search DICOM series",
 			},
 			"my-client-auth-search-dicom-instances-tool": map[string]any{
-				"kind":        searchDICOMInstancesToolKind,
+				"type":        searchDICOMInstancesToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search DICOM instances",
 			},
 			"my-client-auth-retrieve-rendered-dicom-instance-tool": map[string]any{
-				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"type":        retrieveRenderedDICOMInstanceToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to retrieve rendered DICOM instance",
 			},
 			"my-auth-get-dataset-tool": map[string]any{
-				"kind":        getDatasetToolKind,
+				"type":        getDatasetToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a healthcare dataset with auth",
 				"authRequired": []string{
@@ -493,7 +494,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-list-fhir-stores-tool": map[string]any{
-				"kind":        listFHIRStoresToolKind,
+				"type":        listFHIRStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list FHIR stores with auth",
 				"authRequired": []string{
@@ -501,7 +502,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-list-dicom-stores-tool": map[string]any{
-				"kind":        listDICOMStoresToolKind,
+				"type":        listDICOMStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores with auth",
 				"authRequired": []string{
@@ -509,7 +510,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-fhir-store-tool": map[string]any{
-				"kind":        getFHIRStoreToolKind,
+				"type":        getFHIRStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a FHIR store",
 				"authRequired": []string{
@@ -517,7 +518,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-fhir-store-metrics-tool": map[string]any{
-				"kind":        getFHIRStoreMetricsToolKind,
+				"type":        getFHIRStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR store metrics",
 				"authRequired": []string{
@@ -525,7 +526,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-fhir-resource-tool": map[string]any{
-				"kind":        getFHIRResourceToolKind,
+				"type":        getFHIRResourceToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR resource",
 				"authRequired": []string{
@@ -533,7 +534,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-fhir-patient-search-tool": map[string]any{
-				"kind":        fhirPatientSearchToolKind,
+				"type":        fhirPatientSearchToolType,
 				"source":      "my-instance",
 				"description": "Tool to search for patients",
 				"authRequired": []string{
@@ -541,7 +542,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-fhir-patient-everything-tool": map[string]any{
-				"kind":        fhirPatientEverythingToolKind,
+				"type":        fhirPatientEverythingToolType,
 				"source":      "my-instance",
 				"description": "Tool for patient everything",
 				"authRequired": []string{
@@ -549,7 +550,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-fhir-fetch-page-tool": map[string]any{
-				"kind":        fhirFetchPageToolKind,
+				"type":        fhirFetchPageToolType,
 				"source":      "my-instance",
 				"description": "Tool to fetch a page of FHIR resources",
 				"authRequired": []string{
@@ -557,7 +558,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-dicom-store-tool": map[string]any{
-				"kind":        getDICOMStoreToolKind,
+				"type":        getDICOMStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a DICOM store",
 				"authRequired": []string{
@@ -565,7 +566,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-dicom-store-metrics-tool": map[string]any{
-				"kind":        getDICOMStoreMetricsToolKind,
+				"type":        getDICOMStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get DICOM store metrics",
 				"authRequired": []string{
@@ -573,7 +574,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-search-dicom-studies-tool": map[string]any{
-				"kind":        searchDICOMStudiesToolKind,
+				"type":        searchDICOMStudiesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM studies",
 				"authRequired": []string{
@@ -581,7 +582,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-search-dicom-series-tool": map[string]any{
-				"kind":        searchDICOMSeriesToolKind,
+				"type":        searchDICOMSeriesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM series",
 				"authRequired": []string{
@@ -589,7 +590,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-search-dicom-instances-tool": map[string]any{
-				"kind":        searchDICOMInstancesToolKind,
+				"type":        searchDICOMInstancesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM instances",
 				"authRequired": []string{
@@ -597,7 +598,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-retrieve-rendered-dicom-instance-tool": map[string]any{
-				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"type":        retrieveRenderedDICOMInstanceToolType,
 				"source":      "my-instance",
 				"description": "Tool to retrieve rendered DICOM instance",
 				"authRequired": []string{
@@ -607,7 +608,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
@@ -621,7 +622,7 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		t.Fatalf("unable to get sources from config")
 	}
 	sources["my-client-auth-source"] = map[string]any{
-		"kind":           healthcareSourceKind,
+		"type":           healthcareSourceType,
 		"project":        healthcareProject,
 		"region":         healthcareRegion,
 		"dataset":        healthcareDataset,
@@ -716,8 +717,8 @@ func runGetDatasetToolInvokeTest(t *testing.T, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -914,8 +915,8 @@ func runListDICOMStoresToolInvokeTest(t *testing.T, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1020,8 +1021,8 @@ func runGetFHIRStoreToolInvokeTest(t *testing.T, fhirStoreID, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1126,8 +1127,8 @@ func runGetFHIRStoreMetricsToolInvokeTest(t *testing.T, fhirStoreID, want string
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1239,8 +1240,8 @@ func runGetFHIRResourceToolInvokeTest(t *testing.T, storeID, resType, resID, wan
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1393,8 +1394,8 @@ func runFHIRPatientSearchToolInvokeTest(t *testing.T, fhirStoreID string, patien
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1530,8 +1531,8 @@ func runFHIRPatientEverythingToolInvokeTest(t *testing.T, fhirStoreID, patientID
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1636,8 +1637,8 @@ func runFHIRFetchPageToolInvokeTest(t *testing.T, pageURL, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1709,6 +1710,9 @@ func runTest(t *testing.T, api string, requestHeader map[string]string, requestB
 
 	got, ok := body["result"].(string)
 	if !ok {
+		if errMsg, ok := body["error"].(string); ok {
+			return errMsg, http.StatusOK
+		}
 		t.Fatalf("unable to find result in response body")
 	}
 	return got, http.StatusOK
@@ -1836,8 +1840,8 @@ func runGetDICOMStoreToolInvokeTest(t *testing.T, dicomStoreID, want string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -1942,8 +1946,8 @@ func runGetDICOMStoreMetricsToolInvokeTest(t *testing.T, dicomStoreID, want stri
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2064,8 +2068,8 @@ func runSearchDICOMStudiesToolInvokeTest(t *testing.T, dicomStoreID string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2186,8 +2190,8 @@ func runSearchDICOMSeriesToolInvokeTest(t *testing.T, dicomStoreID string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2308,8 +2312,8 @@ func runSearchDICOMInstancesToolInvokeTest(t *testing.T, dicomStoreID string) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}
@@ -2421,10 +2425,10 @@ func runRetrieveRenderedDICOMInstanceToolInvokeTest(t *testing.T, dicomStoreID s
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
 			if tc.isErr {
-				if status == http.StatusOK {
-					t.Errorf("expected error but got success")
+				if status == http.StatusOK && !strings.Contains(got, "error") {
+					t.Errorf("expected error but got success: %s", got)
 				}
 				return
 			}

@@ -17,15 +17,15 @@ instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 ```yaml
-sources:
-    my-cloud-sql-source:
-        kind: cloud-sql-postgres
-        project: my-project-id
-        region: us-central1
-        instance: my-instance-name
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+kind: sources
+name: my-cloud-sql-source
+type: cloud-sql-postgres
+project: my-project-id
+region: us-central1
+instance: my-instance-name
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 In implementation, each source is a different connection pool or client that used

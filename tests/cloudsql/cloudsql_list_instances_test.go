@@ -171,20 +171,20 @@ func getListInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
-				"kind":           "cloud-sql-admin",
+				"type":           "cloud-sql-admin",
 				"useClientOAuth": true,
 			},
 		},
 		"tools": map[string]any{
 			"list-instances": map[string]any{
-				"kind":   "cloud-sql-list-instances",
+				"type":   "cloud-sql-list-instances",
 				"source": "my-cloud-sql-source",
 			},
 			"list-instances-fail": map[string]any{
-				"kind":        "cloud-sql-list-instances",
+				"type":        "cloud-sql-list-instances",
 				"description": "list instances",
 				"source":      "my-invalid-cloud-sql-source",
 			},

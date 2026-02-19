@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	cloudsqlWaitToolKind = "cloud-sql-wait-for-operation"
+	cloudsqlWaitToolType = "cloud-sql-wait-for-operation"
 )
 
 type waitForOperationTransport struct {
@@ -206,10 +206,10 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 			wantSubstring: true,
 		},
 		{
-			name:        "failed operation",
-			toolName:    "wait-for-op2",
-			body:        `{"project": "p1", "operation": "op2"}`,
-			expectError: true,
+			name:          "failed operation - agent error",
+			toolName:      "wait-for-op2",
+			body:          `{"project": "p1", "operation": "op2"}`,
+			wantSubstring: true,
 		},
 		{
 			name:     "non-database create operation",
@@ -291,22 +291,22 @@ func getCloudSQLWaitToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":        cloudsqlWaitToolKind,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":        cloudsqlWaitToolKind,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op2",
 			},
 			"wait-for-op3": map[string]any{
-				"kind":        cloudsqlWaitToolKind,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op3",
 			},

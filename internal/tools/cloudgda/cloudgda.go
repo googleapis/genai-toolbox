@@ -18,19 +18,36 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "cloud-gemini-data-analytics-query"
+const resourceType string = "cloud-gemini-data-analytics-query"
+
+// Guidance is the tool guidance string.
+const Guidance = `Tool guidance:
+  Inputs:
+    1. query: A natural language formulation of a database query.
+  Outputs: (all optional)
+    1. disambiguation_question: Clarification questions or comments where the tool needs the users' input.
+    2. generated_query: The generated query for the user query.
+    3. intent_explanation: An explanation for why the tool produced ` + "`generated_query`" + `.
+    4. query_result: The result of executing ` + "`generated_query`" + `.
+    5. natural_language_answer: The natural language answer that summarizes the ` + "`query`" + ` and ` + "`query_result`" + `.
+
+Usage guidance:
+  1. If ` + "`disambiguation_question`" + ` is produced, then solicit the needed inputs from the user and try the tool with a new ` + "`query`" + ` that has the needed clarification.
+  2. If ` + "`natural_language_answer`" + ` is produced, use ` + "`intent_explanation`" + ` and ` + "`generated_query`" + ` to see if you need to clarify any assumptions for the user.`
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -50,7 +67,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name              string             `yaml:"name" validate:"required"`
-	Kind              string             `yaml:"kind" validate:"required"`
+	Type              string             `yaml:"type" validate:"required"`
 	Source            string             `yaml:"source" validate:"required"`
 	Description       string             `yaml:"description" validate:"required"`
 	Location          string             `yaml:"location" validate:"required"`
@@ -62,17 +79,24 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// Define the parameters for the Gemini Data Analytics Query API
-	// The prompt is the only input parameter.
+	// The query is the only input parameter.
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("prompt", "The natural language question to ask.", true),
+		parameters.NewStringParameterWithRequired("query", "A natural language formulation of a database query.", true),
 	}
+	// The input and outputs are for tool guidance, usage guidance is for multi-turn interaction.
+	guidance := Guidance
 
+	if cfg.Description != "" {
+		cfg.Description += "\n\n" + guidance
+	} else {
+		cfg.Description = guidance
+	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	return Tool{
@@ -97,17 +121,16 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-// Invoke executes the tool logic
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	prompt, ok := paramsMap["prompt"].(string)
+	query, ok := paramsMap["query"].(string)
 	if !ok {
-		return nil, fmt.Errorf("prompt parameter not found or not a string")
+		return nil, util.NewAgentError("query parameter not found or not a string", nil)
 	}
 
 	// Parse the access token if provided
@@ -116,7 +139,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		var err error
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
+			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
 	}
 
@@ -125,20 +148,21 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	payload := &QueryDataRequest{
 		Parent:            payloadParent,
-		Prompt:            prompt,
+		Prompt:            query,
 		Context:           t.Context,
 		GenerationOptions: t.GenerationOptions,
 	}
 
 	bodyBytes, err := json.Marshal(payload)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request payload: %w", err)
+		return nil, util.NewClientServerError("failed to marshal request payload", http.StatusInternalServerError, err)
 	}
-	return source.RunQuery(ctx, tokenStr, bodyBytes)
-}
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	resp, err := source.RunQuery(ctx, tokenStr, bodyBytes)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -158,7 +182,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -167,4 +191,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(_ tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }

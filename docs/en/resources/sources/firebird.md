@@ -36,14 +36,14 @@ user][fb-users] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my_firebird_db:
-        kind: firebird
-        host: "localhost"
-        port: 3050
-        database: "/path/to/your/database.fdb"
-        user: ${FIREBIRD_USER}
-        password: ${FIREBIRD_PASS}
+kind: sources
+name: my_firebird_db
+type: firebird
+host: "localhost"
+port: 3050
+database: "/path/to/your/database.fdb"
+user: ${FIREBIRD_USER}
+password: ${FIREBIRD_PASS}
 ```
 
 {{< notice tip >}}
@@ -55,7 +55,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                              |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firebird".                                                          |
+| type      |  string  |     true     | Must be "firebird".                                                          |
 | host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                                  |
 | port      |  string  |     true     | Port to connect to (e.g. "3050")                                             |
 | database  |  string  |     true     | Path to the Firebird database file (e.g. "/var/lib/firebird/data/test.fdb"). |

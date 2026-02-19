@@ -30,18 +30,18 @@ takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_indexes:
-    kind: postgres-list-indexes
-    source: postgres-source
-    description: |
-      Lists available user indexes in the database, excluding system schemas (pg_catalog, 
-      information_schema). For each index, the following properties are returned: 
-      schema name, table name, index name, index type (access method), a boolean 
-      indicating if it's a unique index, a boolean indicating if it's for a primary key,
-      the index definition, index size in bytes, the number of index scans, the number of 
-      index tuples read, the number of table tuples fetched via index scans, and a boolean 
-      indicating if the index has been used at least once. 
+kind: tools
+name: list_indexes
+type: postgres-list-indexes
+source: postgres-source
+description: |
+  Lists available user indexes in the database, excluding system schemas (pg_catalog, 
+  information_schema). For each index, the following properties are returned: 
+  schema name, table name, index name, index type (access method), a boolean 
+  indicating if it's a unique index, a boolean indicating if it's for a primary key,
+  the index definition, index size in bytes, the number of index scans, the number of 
+  index tuples read, the number of table tuples fetched via index scans, and a boolean 
+  indicating if the index has been used at least once. 
 ```
 
 The response is a json array with the following elements:
@@ -67,6 +67,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-indexes".                     |
+| type        |  string  |     true     | Must be "postgres-list-indexes".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

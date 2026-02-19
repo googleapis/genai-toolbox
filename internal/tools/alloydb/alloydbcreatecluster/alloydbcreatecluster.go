@@ -17,19 +17,21 @@ package alloydbcreatecluster
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "alloydb-create-cluster"
+const resourceType string = "alloydb-create-cluster"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -50,7 +52,7 @@ type compatibleSource interface {
 // Configuration for the create-cluster tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,9 +61,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of the tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of the tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize initializes the tool from the configuration.
@@ -73,7 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	project := s.GetDefaultProject()
@@ -122,49 +124,49 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string", nil)
 	}
 
 	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'location' parameter; expected a string", nil)
 	}
 
 	clusterID, ok := paramsMap["cluster"].(string)
 	if !ok || clusterID == "" {
-		return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string", nil)
 	}
 
 	password, ok := paramsMap["password"].(string)
 	if !ok || password == "" {
-		return nil, fmt.Errorf("invalid or missing 'password' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'password' parameter; expected a non-empty string", nil)
 	}
 
 	network, ok := paramsMap["network"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'network' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'network' parameter; expected a string", nil)
 	}
 
 	user, ok := paramsMap["user"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'user' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'user' parameter; expected a string", nil)
+	}
+	resp, err := source.CreateCluster(ctx, project, location, network, user, password, clusterID, string(accessToken))
+
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
 	}
 
-	return source.CreateCluster(ctx, project, location, network, user, password, clusterID, string(accessToken))
-}
-
-// ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -187,7 +189,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -197,4 +199,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
 }
