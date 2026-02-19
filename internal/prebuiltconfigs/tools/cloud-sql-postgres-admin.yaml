@@ -46,6 +46,12 @@ tools:
   postgres_upgrade_precheck:
     kind: postgres-upgrade-precheck
     source: cloud-sql-admin-source
+  create_backup:
+    kind: cloud-sql-create-backup
+    source: cloud-sql-admin-source
+  restore_backup:
+    kind: cloud-sql-restore-backup
+    source: cloud-sql-admin-source
 
 toolsets:
   cloud_sql_postgres_admin_tools:
@@ -58,3 +64,5 @@ toolsets:
     - wait_for_operation
     - postgres_upgrade_precheck
     - clone_instance
+    - create_backup
+    - restore_backup

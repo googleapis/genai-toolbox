@@ -21,13 +21,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ProcessMethod returns a response for the request.
@@ -94,6 +96,15 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	toolName := req.Params.Name
 	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
+
+	// Update span name and set gen_ai attributes
+	span := trace.SpanFromContext(ctx)
+	span.SetName(fmt.Sprintf("%s %s", TOOLS_CALL, toolName))
+	span.SetAttributes(
+		attribute.String("gen_ai.tool.name", toolName),
+		attribute.String("gen_ai.operation.name", "execute_tool"),
+	)
+
 	tool, ok := resourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
@@ -116,7 +127,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 	if clientAuth {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
+			err := util.NewClientServerError(
+				"missing access token in the 'Authorization' header",
+				http.StatusUnauthorized,
+				nil,
+			)
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 	}
 
@@ -164,44 +180,70 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	// Check if any of the specified auth services is verified
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
-		err = fmt.Errorf("unauthorized Tool call: Please make sure your specify correct auth headers: %w", util.ErrUnauthorized)
+		err = util.NewClientServerError(
+			"unauthorized Tool call: Please make sure you specify correct auth headers",
+			http.StatusUnauthorized,
+			nil,
+		)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
-	params, err := tool.ParseParams(data, claimsFromAuth)
+	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
+	embeddingModels := resourceMgr.GetEmbeddingModelMap()
+	params, err = tool.EmbedParams(ctx, params, embeddingModels)
+	if err != nil {
+		err = fmt.Errorf("error embedding parameters: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	if err != nil {
-		errStr := err.Error()
-		// Missing authService tokens.
-		if errors.Is(err, util.ErrUnauthorized) {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-		}
-		// Upstream auth error
-		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
-			if clientAuth {
-				// Error with client credentials should pass down to the client
-				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		var tbErr util.ToolboxError
+
+		if errors.As(err, &tbErr) {
+			switch tbErr.Category() {
+			case util.CategoryAgent:
+				// MCP - Tool execution error
+				// Return SUCCESS but with IsError: true
+				text := TextContent{
+					Type: "text",
+					Text: err.Error(),
+				}
+				return jsonrpc.JSONRPCResponse{
+					Jsonrpc: jsonrpc.JSONRPC_VERSION,
+					Id:      id,
+					Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+				}, nil
+
+			case util.CategoryServer:
+				// MCP Spec - Protocol error
+				// Return JSON-RPC ERROR
+				var clientServerErr *util.ClientServerError
+				rpcCode := jsonrpc.INTERNAL_ERROR // Default to Internal Error (-32603)
+
+				if errors.As(err, &clientServerErr) {
+					if clientServerErr.Code == http.StatusUnauthorized || clientServerErr.Code == http.StatusForbidden {
+						if clientAuth {
+							rpcCode = jsonrpc.INVALID_REQUEST
+						} else {
+							rpcCode = jsonrpc.INTERNAL_ERROR
+						}
+					}
+				}
+				return jsonrpc.NewError(id, rpcCode, err.Error(), nil), err
 			}
-			// Auth error with ADC should raise internal 500 error
+		} else {
+			// Unknown error -> 500
 			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 		}
-		text := TextContent{
-			Type: "text",
-			Text: err.Error(),
-		}
-		return jsonrpc.JSONRPCResponse{
-			Jsonrpc: jsonrpc.JSONRPC_VERSION,
-			Id:      id,
-			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
-		}, nil
 	}
 
 	content := make([]TextContent, 0)
@@ -272,6 +314,12 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 
 	promptName := req.Params.Name
 	logger.DebugContext(ctx, fmt.Sprintf("prompt name: %s", promptName))
+
+	// Update span name and set gen_ai attributes
+	span := trace.SpanFromContext(ctx)
+	span.SetName(fmt.Sprintf("%s %s", PROMPTS_GET, promptName))
+	span.SetAttributes(attribute.String("gen_ai.prompt.name", promptName))
+
 	prompt, ok := resourceMgr.GetPrompt(promptName)
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)

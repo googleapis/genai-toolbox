@@ -17,6 +17,7 @@ package bigquerysql
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -27,15 +28,16 @@ import (
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
-const kind string = "bigquery-sql"
+const resourceType string = "bigquery-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -56,7 +58,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
-	Kind               string                `yaml:"kind" validate:"required"`
+	Type               string                `yaml:"type" validate:"required"`
 	Source             string                `yaml:"source" validate:"required"`
 	Description        string                `yaml:"description" validate:"required"`
 	Statement          string                `yaml:"statement" validate:"required"`
@@ -68,8 +70,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -103,11 +105,10 @@ type Tool struct {
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
-
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
@@ -116,7 +117,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract template params %w", err)
+		return nil, util.NewAgentError("unable to extract template params", err)
 	}
 
 	for _, p := range t.Parameters {
@@ -127,13 +128,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
 			arrayParamValue, ok := value.([]any)
 			if !ok {
-				return nil, fmt.Errorf("unable to convert parameter `%s` to []any", name)
+				return nil, util.NewAgentError(fmt.Sprintf("unable to convert parameter `%s` to []any", name), nil)
 			}
 			itemType := arrayParam.GetItems().GetType()
 			var err error
 			value, err = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
 			if err != nil {
-				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
+				return nil, util.NewAgentError(fmt.Sprintf("unable to convert parameter `%s` from []any to typed slice", name), err)
 			}
 		}
 
@@ -161,7 +162,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			lowLevelParam.ParameterType.Type = "ARRAY"
 			itemType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType())
 			if err != nil {
-				return nil, err
+				return nil, util.NewAgentError("unable to get BigQuery type from tool parameter type", err)
 			}
 			lowLevelParam.ParameterType.ArrayType = &bigqueryrestapi.QueryParameterType{Type: itemType}
 
@@ -178,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			// Handle scalar types based on their defined type.
 			bqType, err := bqutil.BQTypeStringFromToolType(p.GetType())
 			if err != nil {
-				return nil, err
+				return nil, util.NewAgentError("unable to get BigQuery type from tool parameter type", err)
 			}
 			lowLevelParam.ParameterType.Type = bqType
 			lowLevelParam.ParameterValue.Value = fmt.Sprintf("%v", value)
@@ -190,7 +191,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.BigQuerySession() != nil {
 		session, err := source.BigQuerySession()(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+			return nil, util.NewClientServerError("failed to get BigQuery session", http.StatusInternalServerError, err)
 		}
 		if session != nil {
 			// Add session ID to the connection properties for subsequent calls.
@@ -200,21 +201,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	bqClient, restService, err := source.RetrieveClientAndService(accessToken)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, connProps)
 	if err != nil {
-		return nil, fmt.Errorf("query validation failed: %w", err)
+		return nil, util.ProcessGcpError(err)
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
-
-	return source.RunSQL(ctx, bqClient, newStatement, statementType, highLevelParams, connProps)
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	resp, err := source.RunSQL(ctx, bqClient, newStatement, statementType, highLevelParams, connProps)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -234,7 +234,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}
@@ -243,4 +243,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

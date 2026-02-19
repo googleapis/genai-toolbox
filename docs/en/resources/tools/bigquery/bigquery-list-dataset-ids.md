@@ -32,17 +32,17 @@ The tool's behavior regarding this parameter is influenced by the
 ## Example
 
 ```yaml
-tools:
-  bigquery_list_dataset_ids:
-    kind: bigquery-list-dataset-ids
-    source: my-bigquery-source
-    description: Use this tool to get dataset metadata.
+kind: tools
+name: bigquery_list_dataset_ids
+type: bigquery-list-dataset-ids
+source: my-bigquery-source
+description: Use this tool to get dataset metadata.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-list-dataset-ids".                                                             |
+| type        |                   string                   |     true     | Must be "bigquery-list-dataset-ids".                                                             |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

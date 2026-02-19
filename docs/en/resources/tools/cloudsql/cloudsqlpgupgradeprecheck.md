@@ -10,7 +10,7 @@ instance to assess its readiness for a major version upgrade using the Cloud SQL
 It helps identify potential incompatibilities or issues before starting the actual upgrade process.
 
 {{< notice info >}}
-This tool uses a `source` of kind `cloud-sql-admin`.
+This tool uses a `source` of type `cloud-sql-admin`.
 {{< /notice >}}
 
 ## Tool Inputs
@@ -18,18 +18,18 @@ This tool uses a `source` of kind `cloud-sql-admin`.
 ### Example
 
 ```yaml
-tools:
-  postgres-upgrade-precheck:
-    kind: postgres-upgrade-precheck
-    source: cloud-sql-admin-source
-    description: "Checks if a Cloud SQL PostgreSQL instance is ready for a major version upgrade to the specified target version."
+kind: tools
+name: postgres-upgrade-precheck
+type: postgres-upgrade-precheck
+source: cloud-sql-admin-source
+description: "Checks if a Cloud SQL PostgreSQL instance is ready for a major version upgrade to the specified target version."
 ```
 
 ### Reference
 
 | **field**    | **type** | **required** | **description**                                           |
 | ------------ | :------: | :----------: | --------------------------------------------------------- |
-| kind         |  string  |     true     | Must be "postgres-upgrade-precheck". |
+| type         |  string  |     true     | Must be "postgres-upgrade-precheck". |
 | source       |  string  |     true     | The name of the `cloud-sql-admin` source to use.          |
 | description  |  string  |     false    | A description of the tool.                                |
 

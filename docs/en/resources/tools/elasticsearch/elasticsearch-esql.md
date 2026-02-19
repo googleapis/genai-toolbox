@@ -20,20 +20,20 @@ for more information.
 ## Example
 
 ```yaml
-tools:
-  query_my_index:
-    kind: elasticsearch-esql
-    source: elasticsearch-source
-    description: Use this tool to execute ES|QL queries.
-    query: |
-      FROM my-index
-      | KEEP *
-      | LIMIT ?limit
-    parameters:
-      - name: limit
-        type: integer
-        description: Limit the number of results.
-        required: true
+kind: tools
+name: query_my_index
+type: elasticsearch-esql
+source: elasticsearch-source
+description: Use this tool to execute ES|QL queries.
+query: |
+  FROM my-index
+  | KEEP *
+  | LIMIT ?limit
+parameters:
+  - name: limit
+    type: integer
+    description: Limit the number of results.
+    required: true
 ```
 
 ## Parameters

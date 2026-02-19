@@ -24,18 +24,19 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "postgres"
+const SourceType string = "postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -48,22 +49,23 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name        string            `yaml:"name" validate:"required"`
-	Kind        string            `yaml:"kind" validate:"required"`
-	Host        string            `yaml:"host" validate:"required"`
-	Port        string            `yaml:"port" validate:"required"`
-	User        string            `yaml:"user" validate:"required"`
-	Password    string            `yaml:"password" validate:"required"`
-	Database    string            `yaml:"database" validate:"required"`
-	QueryParams map[string]string `yaml:"queryParams"`
+	Name          string            `yaml:"name" validate:"required"`
+	Type          string            `yaml:"type" validate:"required"`
+	Host          string            `yaml:"host" validate:"required"`
+	Port          string            `yaml:"port" validate:"required"`
+	User          string            `yaml:"user" validate:"required"`
+	Password      string            `yaml:"password" validate:"required"`
+	Database      string            `yaml:"database" validate:"required"`
+	QueryParams   map[string]string `yaml:"queryParams"`
+	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -87,8 +89,8 @@ type Source struct {
 	Pool *pgxpool.Pool
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -126,9 +128,9 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	return out, nil
 }
 
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -150,7 +152,18 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		Path:     dbname,
 		RawQuery: ConvertParamMapToRawQuery(queryParams),
 	}
-	pool, err := pgxpool.New(ctx, url.String())
+	config, err := pgxpool.ParseConfig(url.String())
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
+	}
+
+	execMode, err := ParseQueryExecMode(queryExecMode)
+	if err != nil {
+		return nil, err
+	}
+	config.ConnConfig.DefaultQueryExecMode = execMode
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
@@ -164,4 +177,21 @@ func ConvertParamMapToRawQuery(queryParams map[string]string) string {
 		queryArray = append(queryArray, fmt.Sprintf("%s=%s", k, v))
 	}
 	return strings.Join(queryArray, "&")
+}
+
+func ParseQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {
+	switch queryExecMode {
+	case "", "cache_statement":
+		return pgx.QueryExecModeCacheStatement, nil
+	case "cache_describe":
+		return pgx.QueryExecModeCacheDescribe, nil
+	case "describe_exec":
+		return pgx.QueryExecModeDescribeExec, nil
+	case "exec":
+		return pgx.QueryExecModeExec, nil
+	case "simple_protocol":
+		return pgx.QueryExecModeSimpleProtocol, nil
+	default:
+		return 0, fmt.Errorf("invalid queryExecMode %q: must be one of %q, %q, %q, %q, or %q", queryExecMode, "cache_statement", "cache_describe", "describe_exec", "exec", "simple_protocol")
+	}
 }

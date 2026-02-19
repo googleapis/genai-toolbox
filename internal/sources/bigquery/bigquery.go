@@ -41,7 +41,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "bigquery"
+const SourceType string = "bigquery"
 
 // CloudPlatformScope is a broad scope for Google Cloud Platform services.
 const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
@@ -65,8 +65,8 @@ type BigQuerySessionProvider func(ctx context.Context) (*Session, error)
 type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -81,7 +81,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// BigQuery configs
 	Name                      string              `yaml:"name" validate:"required"`
-	Kind                      string              `yaml:"kind" validate:"required"`
+	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
 	WriteMode                 string              `yaml:"writeMode"`
@@ -89,6 +89,7 @@ type Config struct {
 	UseClientOAuth            bool                `yaml:"useClientOAuth"`
 	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
+	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -118,13 +119,17 @@ func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(any) error) error {
 	return fmt.Errorf("cannot unmarshal %T into StringOrStringSlice", v)
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns BigQuery source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns BigQuery source type
+	return SourceType
 }
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
+	}
+
+	if r.MaxQueryResultRows == 0 {
+		r.MaxQueryResultRows = 50
 	}
 
 	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
@@ -150,7 +155,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
+		MaxQueryResultRows: r.MaxQueryResultRows,
 		ClientCreator:      clientCreator,
 	}
 
@@ -231,9 +236,9 @@ func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
 	}
 
 	// Initialize caches
-	s.bqClientCache = NewCache(onBqEvict)
-	s.bqRestCache = NewCache(nil)
-	s.dataplexCache = NewCache(onDataplexEvict)
+	s.bqClientCache = sources.NewCache(onBqEvict)
+	s.bqRestCache = sources.NewCache(nil)
+	s.dataplexCache = sources.NewCache(onDataplexEvict)
 
 	// Create the caching wrapper for the client creator
 	s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
@@ -284,9 +289,9 @@ type Source struct {
 	Session                   *Session
 
 	// Caches for OAuth clients
-	bqClientCache *Cache
-	bqRestCache   *Cache
-	dataplexCache *Cache
+	bqClientCache *sources.Cache
+	bqRestCache   *sources.Cache
+	dataplexCache *sources.Cache
 }
 
 type Session struct {
@@ -297,9 +302,9 @@ type Session struct {
 	LastUsed     time.Time
 }
 
-func (s *Source) SourceKind() string {
-	// Returns BigQuery Google SQL source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns BigQuery Google SQL source type
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -567,7 +572,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	}
 
 	var out []any
-	for {
+	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
 		var val []bigqueryapi.Value
 		err = it.Next(&val)
 		if err == iterator.Done {
@@ -660,7 +665,7 @@ func initBigQueryConnection(
 	impersonateServiceAccount string,
 	scopes []string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)
@@ -736,7 +741,7 @@ func initBigQueryConnectionWithOAuthToken(
 	tokenString string,
 	wantRestService bool,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 	// Construct token source
 	token := &oauth2.Token{
@@ -796,7 +801,7 @@ func initDataplexConnection(
 	var clientCreator DataplexClientCreator
 	var err error
 
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)

@@ -188,8 +188,12 @@ description: >
                   path: tools.yaml
     ```
 
-    {{< notice tip >}}  
+    {{< notice tip >}}
 To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-hosts", "foo.bar:5000"]`
+
+To implement CORs, use the `--allowed-origins` flag to specify a
 list of origins permitted to access the server. E.g. `args: ["--address",
 "0.0.0.0", "--allowed-origins", "https://foo.bar"]`
 {{< /notice >}}

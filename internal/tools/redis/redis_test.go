@@ -17,7 +17,6 @@ package redis_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,23 +37,23 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				redis_tool:
-					kind: redis
-					source: my-redis-instance
-					description: some description
-					commands:
-						- [SET, greeting, "hello, {{.name}}"]
-						- [GET, id]
-					parameters:
-						- name: name
-						  type: string
-						  description: user name
+			kind: tools
+			name: redis_tool
+			type: redis
+			source: my-redis-instance
+			description: some description
+			commands:
+				- [SET, greeting, "hello, {{.name}}"]
+				- [GET, id]
+			parameters:
+				- name: name
+				  type: string
+				  description: user name
 			`,
 			want: server.ToolConfigs{
 				"redis_tool": redis.Config{
 					Name:         "redis_tool",
-					Kind:         "redis",
+					Type:         "redis",
 					Source:       "my-redis-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -68,15 +67,11 @@ func TestParseFromYamlRedis(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

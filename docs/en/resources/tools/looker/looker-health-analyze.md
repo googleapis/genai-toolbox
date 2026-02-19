@@ -37,29 +37,29 @@ instance. The `action` parameter selects the type of analysis to perform:
 ## Example
 
 ```yaml
-tools:
-  health_analyze:
-    kind: looker-health-analyze
-    source: looker-source
-    description: |
-      This tool calculates the usage statistics for Looker projects, models, and explores.
+kind: tools
+name: health_analyze
+type: looker-health-analyze
+source: looker-source
+description: |
+  This tool calculates the usage statistics for Looker projects, models, and explores.
 
-      Parameters:
-      - action (required): The type of resource to analyze. Can be `"projects"`, `"models"`, or `"explores"`.
-      - project (optional): The specific project ID to analyze.
-      - model (optional): The specific model name to analyze. Requires `project` if used without `explore`.
-      - explore (optional): The specific explore name to analyze. Requires `model` if used.
-      - timeframe (optional): The lookback period in days for usage data. Defaults to `90` days.
-      - min_queries (optional): The minimum number of queries for a resource to be considered active. Defaults to `1`.
+  Parameters:
+  - action (required): The type of resource to analyze. Can be `"projects"`, `"models"`, or `"explores"`.
+  - project (optional): The specific project ID to analyze.
+  - model (optional): The specific model name to analyze. Requires `project` if used without `explore`.
+  - explore (optional): The specific explore name to analyze. Requires `model` if used.
+  - timeframe (optional): The lookback period in days for usage data. Defaults to `90` days.
+  - min_queries (optional): The minimum number of queries for a resource to be considered active. Defaults to `1`.
 
-      Output:
-      The result is a JSON object containing usage metrics for the specified resources.
+  Output:
+  The result is a JSON object containing usage metrics for the specified resources.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-health-analyze"                    |
+| type        |  string  |     true     | Must be "looker-health-analyze"                    |
 | source      |  string  |     true     | Looker source name                                 |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

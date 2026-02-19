@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	SingleStoreSourceKind = "singlestore"
-	SingleStoreToolKind   = "singlestore-sql"
+	SingleStoreSourceType = "singlestore"
+	SingleStoreToolType   = "singlestore-sql"
 	SingleStoreDatabase   = os.Getenv("SINGLESTORE_DATABASE")
 	SingleStoreHost       = os.Getenv("SINGLESTORE_HOST")
 	SingleStorePort       = os.Getenv("SINGLESTORE_PORT")
@@ -54,7 +54,7 @@ func getSingleStoreVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     SingleStoreSourceKind,
+		"type":     SingleStoreSourceType,
 		"host":     SingleStoreHost,
 		"port":     SingleStorePort,
 		"database": SingleStoreDatabase,
@@ -85,7 +85,7 @@ func getSingleStoreAuthToolInfo(tableName string) (string, string, string, []any
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getSingleStoreTmplToolStatement returns statements and param for template parameter test cases for singlestore-sql kind
+// getSingleStoreTmplToolStatement returns statements and param for template parameter test cases for singlestore-sql type
 func getSingleStoreTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -95,7 +95,7 @@ func getSingleStoreTmplToolStatement() (string, string) {
 // getSingleStoreWants return the expected wants for singlestore
 func getSingleStoreWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id BIGINT PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -130,8 +130,8 @@ func setupSingleStoreTable(t *testing.T, ctx context.Context, pool *sql.DB, crea
 	}
 }
 
-func getSingleStoreToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
-	toolsFile := tests.GetToolsConfig(sourceConfig, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+func getSingleStoreToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+	toolsFile := tests.GetToolsConfig(sourceConfig, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
 
 	toolsMap, ok := toolsFile["tools"].(map[string]any)
 	if !ok {
@@ -151,12 +151,12 @@ func addSingleStoreExecuteSQLConfig(t *testing.T, config map[string]any) map[str
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "singlestore-execute-sql",
+		"type":        "singlestore-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "singlestore-execute-sql",
+		"type":        "singlestore-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -207,10 +207,10 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := getSingleStoreToolsConfig(sourceConfig, SingleStoreToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := getSingleStoreToolsConfig(sourceConfig, SingleStoreToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSingleStoreExecuteSQLConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSingleStoreTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

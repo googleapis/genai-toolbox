@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"regexp"
 	"slices"
@@ -118,7 +119,7 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 		}
 		return v, nil
 	}
-	return nil, fmt.Errorf("missing or invalid authentication header: %w", util.ErrUnauthorized)
+	return nil, util.NewClientServerError("missing or invalid authentication header", http.StatusUnauthorized, nil)
 }
 
 // CheckParamRequired checks if a parameter is required based on the required and default field.
@@ -134,7 +135,12 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		var err error
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
-		if len(paramAuthServices) == 0 {
+
+		sourceParamName := p.GetValueFromParam()
+		if sourceParamName != "" {
+			v = data[sourceParamName]
+
+		} else if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter
 			var ok bool
 			v, ok = data[name]
@@ -142,20 +148,20 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 				v = p.GetDefault()
 				// if the parameter is required and no value given, throw an error
 				if CheckParamRequired(p.GetRequired(), v) {
-					return nil, fmt.Errorf("parameter %q is required", name)
+					return nil, util.NewAgentError(fmt.Sprintf("parameter %q is required", name), nil)
 				}
 			}
 		} else {
 			// parse authenticated parameter
 			v, err = parseFromAuthService(paramAuthServices, claimsMap)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
+				return nil, util.NewClientServerError(fmt.Sprintf("error parsing authenticated parameter %q", name), http.StatusUnauthorized, err)
 			}
 		}
 		if v != nil {
 			newV, err = p.Parse(v)
 			if err != nil {
-				return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+				return nil, util.NewAgentError(fmt.Sprintf("unable to parse value for %q", name), err)
 			}
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
@@ -318,6 +324,7 @@ type Parameter interface {
 	GetRequired() bool
 	GetAuthServices() []ParamAuthService
 	GetEmbeddedBy() string
+	GetValueFromParam() string
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
@@ -465,6 +472,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 func (ps Parameters) Manifest() []ParameterManifest {
 	rtn := make([]ParameterManifest, 0, len(ps))
 	for _, p := range ps {
+		if p.GetValueFromParam() != "" {
+			continue
+		}
 		rtn = append(rtn, p.Manifest())
 	}
 	return rtn
@@ -476,11 +486,20 @@ func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 	authParam := make(map[string][]string)
 
 	for _, p := range ps {
+		// If the parameter is sourced from another param, skip it in the MCP manifest
+		if p.GetValueFromParam() != "" {
+			continue
+		}
+
 		name := p.GetName()
 		paramManifest, authParamList := p.McpManifest()
+		defaultV := p.GetDefault()
+		if defaultV != nil {
+			paramManifest.Default = defaultV
+		}
 		properties[name] = paramManifest
 		// parameters that doesn't have a default value are added to the required field
-		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
+		if CheckParamRequired(p.GetRequired(), defaultV) {
 			required = append(required, name)
 		}
 		if len(authParamList) > 0 {
@@ -502,8 +521,10 @@ type ParameterManifest struct {
 	Description          string             `json:"description"`
 	AuthServices         []string           `json:"authSources"`
 	Items                *ParameterManifest `json:"items,omitempty"`
+	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
 	EmbeddedBy           string             `json:"embeddedBy,omitempty"`
+	ValueFromParam       string             `json:"valueFromParam,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
@@ -511,6 +532,7 @@ type ParameterMcpManifest struct {
 	Type                 string                `json:"type"`
 	Description          string                `json:"description"`
 	Items                *ParameterMcpManifest `json:"items,omitempty"`
+	Default              any                   `json:"default,omitempty"`
 	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
 }
 
@@ -525,6 +547,7 @@ type CommonParameter struct {
 	AuthServices   []ParamAuthService `yaml:"authServices"`
 	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	EmbeddedBy     string             `yaml:"embeddedBy"`
+	ValueFromParam string             `yaml:"valueFromParam"`
 }
 
 // GetName returns the name specified for the Parameter.
@@ -582,8 +605,14 @@ func (p *CommonParameter) IsExcludedValues(v any) bool {
 	return false
 }
 
+// GetEmbeddedBy returns the embedding model name for the Parameter.
 func (p *CommonParameter) GetEmbeddedBy() string {
 	return p.EmbeddedBy
+}
+
+// GetValueFromParam returns the param value to copy from.
+func (p *CommonParameter) GetValueFromParam() string {
+	return p.ValueFromParam
 }
 
 // MatchStringOrRegex checks if the input matches the target
@@ -788,6 +817,7 @@ func (p *StringParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -946,6 +976,7 @@ func (p *IntParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1102,6 +1133,7 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1235,6 +1267,7 @@ func (p *BooleanParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1430,6 +1463,7 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
 		Items:        &items,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1675,7 +1709,10 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
 	}
-
+	var defaultV any
+	if p.Default != nil {
+		defaultV = *p.Default
+	}
 	return ParameterManifest{
 		Name:                 p.Name,
 		Type:                 "object",
@@ -1683,6 +1720,7 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		Description:          p.Desc,
 		AuthServices:         authServiceNames,
 		AdditionalProperties: additionalProperties,
+		Default:              defaultV,
 	}
 }
 

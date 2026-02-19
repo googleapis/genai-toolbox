@@ -32,14 +32,14 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "alloydb-admin"
+const SourceType string = "alloydb-admin"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -53,13 +53,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
+	Type           string `yaml:"type" validate:"required"`
 	DefaultProject string `yaml:"defaultProject"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -106,8 +106,8 @@ type Source struct {
 	Service *alloydbrestapi.Service
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -361,7 +361,11 @@ func (s *Source) GetOperations(ctx context.Context, project, location, operation
 				}
 			}
 
-			return string(opBytes), nil
+			var result any
+			if err := json.Unmarshal(opBytes, &result); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal operation bytes: %w", err)
+			}
+			return result, nil
 		}
 		logger.DebugContext(ctx, fmt.Sprintf("Operation not complete, retrying in %v\n", delay))
 	}
