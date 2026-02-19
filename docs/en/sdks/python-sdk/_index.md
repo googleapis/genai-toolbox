@@ -1,7 +1,7 @@
 ---
-title: "Python SDK"
+title: "Python"
 type: docs
-weight: 7
+weight: 1
 description: >
   Python SDKs to connect to the MCP Toolbox server.
 ---

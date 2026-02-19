@@ -1,7 +1,7 @@
 ---
-title: "Go SDK"
+title: "Go"
 type: docs
-weight: 7
+weight: 3
 description: >
   Go SDKs to connect to the MCP Toolbox server.
 ---

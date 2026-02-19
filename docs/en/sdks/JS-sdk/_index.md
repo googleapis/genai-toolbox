@@ -1,7 +1,7 @@
 ---
 title: "Javascript"
 type: docs
-weight: 7
+weight: 2
 description: >
   Javascript SDKs to connect to the MCP Toolbox server.
 ---
