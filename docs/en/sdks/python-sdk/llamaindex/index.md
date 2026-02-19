@@ -360,7 +360,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
     print(result)
 ```
 
-## Binding Parameter Values
+## Parameter Binding
 
 Predetermine values for tool parameters using the SDK. These values won't be
 modified by the LLM. This is useful for:
