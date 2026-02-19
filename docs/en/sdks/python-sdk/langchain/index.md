@@ -1,9 +1,9 @@
 ---
-title: "langchain"
+title: "LangChain/LangGraph"
 type: docs
 weight: 8
 description: >
-  MCP Toolbox LangChain SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
+  MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 ---
 
 ## Overview
@@ -326,7 +326,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
     print(result)
 ```
 
-## Binding Parameter Values
+## Parameter Binding
 
 Predetermine values for tool parameters using the SDK. These values won't be
 modified by the LLM. This is useful for:
