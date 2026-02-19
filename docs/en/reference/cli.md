@@ -30,6 +30,50 @@ description: >
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
+## Sub Commands
+
+<details>
+<summary><code>invoke</code></summary>
+
+Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.
+
+**Syntax:**
+
+```bash
+toolbox invoke <tool-name> [params]
+```
+
+**Arguments:**
+
+- `tool-name`: The name of the tool to execute (as defined in your configuration).
+- `params`: (Optional) A JSON string containing the parameters for the tool.
+
+For more detailed instructions, see [Invoke Tools via CLI](../how-to/invoke_tool.md).
+
+</details>
+
+<details>
+<summary><code>skills-generate</code></summary>
+
+Generates a skill package from a specified toolset. Each tool in the toolset will have a corresponding Node.js execution script in the generated skill.
+
+**Syntax:**
+
+```bash
+toolbox skills-generate --name <name> --description <description> --toolset <toolset> --output-dir <output>
+```
+
+**Flags:**
+
+- `--name`: Name of the generated skill.
+- `--description`: Description of the generated skill.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+
+For more detailed instructions, see [Generate Agent Skills](../how-to/generate_skill.md).
+
+</details>
+
 ## Examples
 
 ### Transport Configuration

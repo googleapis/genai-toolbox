@@ -195,6 +195,15 @@ Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
+### Managed Connection Pooling
+
+Toolbox automatically supports [Managed Connection Pooling][csql-mcp]. If your Cloud SQL for PostgreSQL instance has Managed Connection Pooling enabled, the connection will immediately benefit from increased throughput and reduced latency.
+
+The interface is identical, so there's no additional configuration required on the client. For more information on configuring your instance, see the [Cloud SQL Managed Connection Pooling documentation][csql-mcp-docs].
+
+[csql-mcp]: https://docs.cloud.google.com/sql/docs/postgres/managed-connection-pooling
+[csql-mcp-docs]: https://docs.cloud.google.com/sql/docs/postgres/configure-mcp
+
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                                          |

@@ -361,7 +361,11 @@ func (s *Source) GetOperations(ctx context.Context, project, location, operation
 				}
 			}
 
-			return string(opBytes), nil
+			var result any
+			if err := json.Unmarshal(opBytes, &result); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal operation bytes: %w", err)
+			}
+			return result, nil
 		}
 		logger.DebugContext(ctx, fmt.Sprintf("Operation not complete, retrying in %v\n", delay))
 	}

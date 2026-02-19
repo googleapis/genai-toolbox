@@ -23,6 +23,14 @@ To connect to the database to explore and query data, search the MCP store for t
 
 In the Antigravity MCP Store, click the "Install" button.
 
+> [!NOTE]
+> On first use, the installation process automatically downloads and uses
+> [MCP Toolbox](https://www.npmjs.com/package/@toolbox-sdk/server)
+> `>=0.26.0`. To update MCP Toolbox, use:
+> ```npm i -g @toolbox-sdk/server@latest```
+> To always run the latest version, update the MCP server configuration to use:
+> ```npx -y @toolbox-sdk/server@latest --prebuilt cloud-sql-postgres-admin```.
+
 You'll now be able to see all enabled tools in the "Tools" tab.
 
 > [!NOTE]

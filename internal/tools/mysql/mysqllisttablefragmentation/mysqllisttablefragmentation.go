@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -30,25 +31,25 @@ import (
 const resourceType string = "mysql-list-table-fragmentation"
 
 const listTableFragmentationStatement = `
-	SELECT
-		table_schema,
-		table_name,
-		data_length AS data_size,
-		index_length AS index_size,
-		data_free AS data_free,
-		ROUND((data_free / (data_length + index_length)) * 100, 2) AS fragmentation_percentage
-	FROM
-		information_schema.tables
-	WHERE
-		table_schema NOT IN ('sys', 'performance_schema', 'mysql', 'information_schema')
-		AND (COALESCE(?, '') = '' OR table_schema = ?)
-		AND (COALESCE(?, '') = '' OR table_name = ?)
-		AND data_free >= ?
-	ORDER BY
-		fragmentation_percentage DESC,
-		table_schema,
-		table_name
-	LIMIT ?;
+    SELECT
+        table_schema,
+        table_name,
+        data_length AS data_size,
+        index_length AS index_size,
+        data_free AS data_free,
+        ROUND((data_free / (data_length + index_length)) * 100, 2) AS fragmentation_percentage
+    FROM
+        information_schema.tables
+    WHERE
+        table_schema NOT IN ('sys', 'performance_schema', 'mysql', 'information_schema')
+        AND (COALESCE(?, '') = '' OR table_schema = ?)
+        AND (COALESCE(?, '') = '' OR table_name = ?)
+        AND data_free >= ?
+    ORDER BY
+        fragmentation_percentage DESC,
+        table_schema,
+        table_name
+    LIMIT ?;
 `
 
 func init() {
@@ -114,39 +115,43 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	table_schema, ok := paramsMap["table_schema"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'table_schema' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'table_schema' parameter; expected a string", nil)
 	}
 	table_name, ok := paramsMap["table_name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'table_name' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'table_name' parameter; expected a string", nil)
 	}
 	data_free_threshold_bytes, ok := paramsMap["data_free_threshold_bytes"].(int)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'data_free_threshold_bytes' parameter; expected an integer")
+		return nil, util.NewAgentError("invalid 'data_free_threshold_bytes' parameter; expected an integer", nil)
 	}
 	limit, ok := paramsMap["limit"].(int)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'limit' parameter; expected an integer")
+		return nil, util.NewAgentError("invalid 'limit' parameter; expected an integer", nil)
 	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, listTableFragmentationStatement))
 	sliceParams := []any{table_schema, table_schema, table_name, table_name, data_free_threshold_bytes, limit}
-	return source.RunSQL(ctx, listTableFragmentationStatement, sliceParams)
+	resp, err := source.RunSQL(ctx, listTableFragmentationStatement, sliceParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
