@@ -98,6 +98,7 @@ type Options struct {
 	Chart ChartOptions `json:"chart"`
 }
 type InlineContext struct {
+	SystemInstruction    string               `json:"systemInstruction"`
 	DatasourceReferences DatasourceReferences `json:"datasourceReferences"`
 	Options              Options              `json:"options"`
 }
@@ -237,8 +238,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	userQuery, _ := mapParams["user_query_with_context"].(string)
 
-	finalQueryText := fmt.Sprintf("%s\n**User Query and Context:**\n%s", instructions, userQuery)
-
 	tableRefsJSON, _ := mapParams["table_references"].(string)
 	var tableRefs []BQTableReference
 	if tableRefsJSON != "" {
@@ -271,7 +270,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	payload := CAPayload{
 		Project:      fmt.Sprintf("projects/%s", projectID),
-		Messages:     []Message{{UserMessage: UserMessage{Text: finalQueryText}}},
+		Messages:     []Message{{UserMessage: UserMessage{Text: userQuery}}},
 		ClientIdEnum: util.GDAClientID,
 	}
 
@@ -281,6 +280,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	} else {
 		payload.InlineContext = &InlineContext{
+			SystemInstruction: instructions,
 			DatasourceReferences: DatasourceReferences{
 				BQ: BQDatasource{TableReferences: tableRefs},
 			},
