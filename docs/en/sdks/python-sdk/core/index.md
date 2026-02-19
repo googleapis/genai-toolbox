@@ -93,9 +93,10 @@ The SDK supports multiple transport protocols for communicating with the Toolbox
 
 You can explicitly select a protocol using the `protocol` option during client initialization. This is useful if you need to use the native Toolbox HTTP protocol or pin the client to a specific legacy version of MCP.
 
-> [!NOTE]
-> * **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
-> * **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+{{< notice note >}}
+* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
+* **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+{{< /notice >}}
 
 ### Supported Protocols
 
@@ -107,9 +108,10 @@ You can explicitly select a protocol using the `protocol` option during client i
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-> [!WARNING]
-> The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-> Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
+{{< notice note >}}
+The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
+Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
+{{< /notice >}}
 
 ### Example
 
