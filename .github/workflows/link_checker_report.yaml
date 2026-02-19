@@ -56,7 +56,8 @@ jobs:
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
       - name: Create Issue From File
-        if: steps.lychee.outputs.exit_code != 0
+        if: steps.lychee-check.outcome == 'failure'
+
         uses: peter-evans/create-issue-from-file@v5
         with:
           title: Link Checker Report
@@ -69,6 +70,5 @@ jobs:
         run: |
           # We can now simply output the prepared file to the job summary
           cat full-report.md >> $GITHUB_STEP_SUMMARY
-          echo "" >> full-report.md
           # Fail the job
           exit 1
