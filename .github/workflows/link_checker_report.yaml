@@ -69,6 +69,6 @@ jobs:
         run: |
           # We can now simply output the prepared file to the job summary
           cat full-report.md >> $GITHUB_STEP_SUMMARY
-          
+          echo "" >> $full-report.md
           # Fail the job
           exit 1
