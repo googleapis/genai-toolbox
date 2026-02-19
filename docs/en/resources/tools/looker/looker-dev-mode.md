@@ -22,24 +22,24 @@ to exit dev mode.
 ## Example
 
 ```yaml
-tools:
-    dev_mode:
-        kind: looker-dev-mode
-        source: looker-source
-        description: |
-          This tool allows toggling the Looker IDE session between Development Mode and Production Mode.
-          Development Mode enables making and testing changes to LookML projects.
+kind: tools
+name: dev_mode
+type: looker-dev-mode
+source: looker-source
+description: |
+  This tool allows toggling the Looker IDE session between Development Mode and Production Mode.
+  Development Mode enables making and testing changes to LookML projects.
 
-          Parameters:
-          - enable (required): A boolean value.
-            - `true`: Switches the current session to Development Mode.
-            - `false`: Switches the current session to Production Mode.
+  Parameters:
+  - enable (required): A boolean value.
+    - `true`: Switches the current session to Development Mode.
+    - `false`: Switches the current session to Production Mode.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-dev-mode".                         |
+| type        |  string  |     true     | Must be "looker-dev-mode".                         |
 | source      |  string  |     true     | Name of the source Looker instance.                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

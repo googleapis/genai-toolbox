@@ -15,11 +15,12 @@
 package cassandra_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cassandra"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,17 +34,17 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "basic example (without optional fields)",
 			in: `
-			sources:
-				my-cassandra-instance:
-					kind: cassandra
-					hosts:
-						- "my-host1"
-						- "my-host2"
+			kind: sources
+			name: my-cassandra-instance
+			type: cassandra
+			hosts:
+				- "my-host1"
+				- "my-host2"
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-cassandra-instance": cassandra.Config{
 					Name:                   "my-cassandra-instance",
-					Kind:                   cassandra.SourceKind,
+					Type:                   cassandra.SourceType,
 					Hosts:                  []string{"my-host1", "my-host2"},
 					Username:               "",
 					Password:               "",
@@ -59,25 +60,25 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "with optional fields",
 			in: `
-			sources:
-				my-cassandra-instance:
-					kind: cassandra
-					hosts:
-						- "my-host1"
-						- "my-host2"
-					username: "user"
-					password: "pass"
-					keyspace: "example_keyspace"
-					protoVersion: 4
-					caPath: "path/to/ca.crt"
-					certPath: "path/to/cert"
-					keyPath: "path/to/key"
-					enableHostVerification: true
+			kind: sources
+			name: my-cassandra-instance
+			type: cassandra
+			hosts:
+				- "my-host1"
+				- "my-host2"
+			username: "user"
+			password: "pass"
+			keyspace: "example_keyspace"
+			protoVersion: 4
+			caPath: "path/to/ca.crt"
+			certPath: "path/to/cert"
+			keyPath: "path/to/key"
+			enableHostVerification: true
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-cassandra-instance": cassandra.Config{
 					Name:                   "my-cassandra-instance",
-					Kind:                   cassandra.SourceKind,
+					Type:                   cassandra.SourceType,
 					Hosts:                  []string{"my-host1", "my-host2"},
 					Username:               "user",
 					Password:               "pass",
@@ -93,16 +94,12 @@ func TestParseFromYamlCassandra(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -118,33 +115,29 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-cassandra-instance:
-					kind: cassandra
-					hosts:
-						- "my-host"
-					foo: bar
+			kind: sources
+			name: my-cassandra-instance
+			type: cassandra
+			hosts:
+				- "my-host"
+			foo: bar
 			`,
-			err: "unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | kind: cassandra",
+			err: "error unmarshaling sources: unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | name: my-cassandra-instance\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-cassandra-instance:
-					kind: cassandra
+			kind: sources
+			name: my-cassandra-instance
+			type: cassandra
 			`,
-			err: "unable to parse source \"my-cassandra-instance\" as \"cassandra\": Key: 'Config.Hosts' Error:Field validation for 'Hosts' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-cassandra-instance\" as \"cassandra\": Key: 'Config.Hosts' Error:Field validation for 'Hosts' failed on the 'required' tag",
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

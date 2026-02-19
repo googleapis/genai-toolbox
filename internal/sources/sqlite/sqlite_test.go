@@ -15,9 +15,9 @@
 package sqlite_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,15 +34,15 @@ func TestParseFromYamlSQLite(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            sources:
-                my-sqlite-db:
-                    kind: sqlite
-                    database: /path/to/database.db
+            kind: sources
+            name: my-sqlite-db
+            type: sqlite
+            database: /path/to/database.db
             `,
 			want: map[string]sources.SourceConfig{
 				"my-sqlite-db": sqlite.Config{
 					Name:     "my-sqlite-db",
-					Kind:     sqlite.SourceKind,
+					Type:     sqlite.SourceType,
 					Database: "/path/to/database.db",
 				},
 			},
@@ -50,16 +50,53 @@ func TestParseFromYamlSQLite(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: `
+            kind: sources
+            name: my-sqlite-db
+            type: sqlite
+            database: /path/to/database.db
+            foo: bar
+            `,
+			err: "error unmarshaling sources: unable to parse source \"my-sqlite-db\" as \"sqlite\": [2:1] unknown field \"foo\"\n   1 | database: /path/to/database.db\n>  2 | foo: bar\n       ^\n   3 | name: my-sqlite-db\n   4 | type: sqlite",
+		},
+		{
+			desc: "missing required field",
+			in: `
+            kind: sources
+            name: my-sqlite-db
+            type: sqlite
+            `,
+			err: "error unmarshaling sources: unable to parse source \"my-sqlite-db\" as \"sqlite\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}

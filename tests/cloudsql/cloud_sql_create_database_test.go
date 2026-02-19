@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	createDatabaseToolKind = "cloud-sql-create-database"
+	createDatabaseToolType = "cloud-sql-create-database"
 )
 
 type createDatabaseTransport struct {
@@ -155,11 +155,10 @@ func TestCreateDatabaseToolEndpoints(t *testing.T) {
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:        "missing name",
-			toolName:    "create-database",
-			body:        `{"project": "p1", "instance": "i1"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing name",
+			toolName: "create-database",
+			body:     `{"project": "p1", "instance": "i1"}`,
+			want:     `{"error":"parameter \"name\" is required"}`,
 		},
 	}
 
@@ -217,12 +216,12 @@ func getCreateDatabaseToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"create-database": map[string]any{
-				"kind":   createDatabaseToolKind,
+				"type":   createDatabaseToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

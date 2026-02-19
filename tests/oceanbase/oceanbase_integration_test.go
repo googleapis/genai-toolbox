@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	OceanBaseSourceKind = "oceanbase"
-	OceanBaseToolKind   = "oceanbase-sql"
+	OceanBaseSourceType = "oceanbase"
+	OceanBaseToolType   = "oceanbase-sql"
 	OceanBaseDatabase   = os.Getenv("OCEANBASE_DATABASE")
 	OceanBaseHost       = os.Getenv("OCEANBASE_HOST")
 	OceanBasePort       = os.Getenv("OCEANBASE_PORT")
@@ -56,7 +56,7 @@ func getOceanBaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     OceanBaseSourceKind,
+		"type":     OceanBaseSourceType,
 		"host":     OceanBaseHost,
 		"port":     OceanBasePort,
 		"database": OceanBaseDatabase,
@@ -105,10 +105,10 @@ func TestOceanBaseToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, OceanBaseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, OceanBaseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addOceanBaseExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getOceanBaseTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OceanBaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OceanBaseToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -166,7 +166,7 @@ func getOceanBaseTmplToolStatement() (string, string) {
 // OceanBase specific expected results
 func getOceanBaseWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your OceanBase version for the right syntax to use near 'SELEC 1;' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your OceanBase version for the right syntax to use near 'SELEC 1;' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -179,12 +179,12 @@ func addOceanBaseExecuteSqlConfig(t *testing.T, config map[string]any) map[strin
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "oceanbase-execute-sql",
+		"type":        "oceanbase-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "oceanbase-execute-sql",
+		"type":        "oceanbase-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

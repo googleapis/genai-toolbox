@@ -28,7 +28,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httplog/v2"
+	"github.com/go-chi/httplog/v3"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -64,7 +64,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]prompts.Promptset,
 	error,
 ) {
-	ctx = util.WithUserAgent(ctx, cfg.Version)
+	metadataStr := cfg.Version
+	if len(cfg.UserAgentMetadata) > 0 {
+		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
+	}
+	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -82,7 +86,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/init",
-				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
+				trace.WithAttributes(attribute.String("source_type", sc.SourceConfigType())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
@@ -110,7 +114,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/auth/init",
-				trace.WithAttributes(attribute.String("auth_kind", sc.AuthServiceConfigKind())),
+				trace.WithAttributes(attribute.String("auth_type", sc.AuthServiceConfigType())),
 				trace.WithAttributes(attribute.String("auth_name", name)),
 			)
 			defer span.End()
@@ -138,7 +142,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/embeddingmodel/init",
-				trace.WithAttributes(attribute.String("model_kind", ec.EmbeddingModelConfigKind())),
+				trace.WithAttributes(attribute.String("model_type", ec.EmbeddingModelConfigType())),
 				trace.WithAttributes(attribute.String("model_name", name)),
 			)
 			defer span.End()
@@ -166,7 +170,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/tool/init",
-				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
+				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()
@@ -235,7 +239,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/prompt/init",
-				trace.WithAttributes(attribute.String("prompt_kind", pc.PromptConfigKind())),
+				trace.WithAttributes(attribute.String("prompt_type", pc.PromptConfigType())),
 				trace.WithAttributes(attribute.String("prompt_name", name)),
 			)
 			defer span.End()
@@ -300,6 +304,25 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
+func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, hasWildcard := allowedHosts["*"]
+			hostname := r.Host
+			if host, _, err := net.SplitHostPort(r.Host); err == nil {
+				hostname = host
+			}
+			_, hostIsAllowed := allowedHosts[hostname]
+			if !hasWildcard && !hostIsAllowed {
+				// Return 403 Forbidden to block the attack
+				http.Error(w, "Invalid Host header", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // NewServer returns a Server object based on provided Config.
 func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	instrumentation, err := util.InstrumentationFromContext(ctx)
@@ -324,31 +347,16 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
 	}
-	var httpOpts httplog.Options
-	switch cfg.LoggingFormat.String() {
-	case "json":
-		httpOpts = httplog.Options{
-			JSON:             true,
-			LogLevel:         logLevel,
-			Concise:          true,
-			RequestHeaders:   false,
-			MessageFieldName: "message",
-			SourceFieldName:  "logging.googleapis.com/sourceLocation",
-			TimeFieldName:    "timestamp",
-			LevelFieldName:   "severity",
-		}
-	case "standard":
-		httpOpts = httplog.Options{
-			LogLevel:         logLevel,
-			Concise:          true,
-			RequestHeaders:   false,
-			MessageFieldName: "message",
-		}
-	default:
-		return nil, fmt.Errorf("invalid Logging format: %q", cfg.LoggingFormat.String())
+
+	schema := *httplog.SchemaGCP
+	schema.Level = cfg.LogLevel.String()
+	schema.Concise(true)
+	httpOpts := &httplog.Options{
+		Level:  logLevel,
+		Schema: &schema,
 	}
-	httpLogger := httplog.NewLogger("httplog", httpOpts)
-	r.Use(httplog.RequestLogger(httpLogger))
+	logger := l.SlogLogger()
+	r.Use(httplog.RequestLogger(logger, httpOpts))
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
@@ -374,7 +382,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag to prevent DNS rebinding attacks")
+		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -385,6 +393,19 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		MaxAge:           300,                        // cache preflight results for 5 minutes
 	}
 	r.Use(cors.Handler(corsOpts))
+	// validate hosts for DNS rebinding attacks
+	if slices.Contains(cfg.AllowedHosts, "*") {
+		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
+	}
+	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
+	for _, h := range cfg.AllowedHosts {
+		hostname := h
+		if host, _, err := net.SplitHostPort(h); err == nil {
+			hostname = host
+		}
+		allowedHostsMap[hostname] = struct{}{}
+	}
+	r.Use(hostCheck(allowedHostsMap))
 
 	// control plane
 	apiR, err := apiRouter(s)

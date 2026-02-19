@@ -40,10 +40,10 @@ import (
 )
 
 var (
-	DataplexSourceKind                = "dataplex"
-	DataplexSearchEntriesToolKind     = "dataplex-search-entries"
-	DataplexLookupEntryToolKind       = "dataplex-lookup-entry"
-	DataplexSearchAspectTypesToolKind = "dataplex-search-aspect-types"
+	DataplexSourceType                = "dataplex"
+	DataplexSearchEntriesToolType     = "dataplex-search-entries"
+	DataplexLookupEntryToolType       = "dataplex-lookup-entry"
+	DataplexSearchAspectTypesToolType = "dataplex-search-aspect-types"
 	DataplexProject                   = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -53,7 +53,7 @@ func getDataplexVars(t *testing.T) map[string]any {
 		t.Fatal("'DATAPLEX_PROJECT' not set")
 	}
 	return map[string]any{
-		"kind":    DataplexSourceKind,
+		"type":    DataplexSourceType,
 		"project": DataplexProject,
 	}
 }
@@ -85,13 +85,66 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 	return client, nil
 }
 
+// cleanupOldAspectTypes Deletes AspectTypes older than the specified duration.
+func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.CatalogClient, oldThreshold time.Duration) {
+	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
+	olderThanTime := time.Now().Add(-oldThreshold)
+
+	listReq := &dataplexpb.ListAspectTypesRequest{
+		Parent:   parent,
+		PageSize: 100,               // Fetch up to 100 items
+		OrderBy:  "create_time asc", // Order by creation time
+	}
+
+	const maxDeletes = 8 // Explicitly limit the number of deletions
+	it := client.ListAspectTypes(ctx, listReq)
+	var aspectTypesToDelete []string
+	for len(aspectTypesToDelete) < maxDeletes {
+		aspectType, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			t.Logf("Warning: Failed to list aspect types during cleanup: %v", err)
+			return
+		}
+		// Perform time-based filtering in memory
+		if aspectType.CreateTime != nil {
+			createTime := aspectType.CreateTime.AsTime()
+			if createTime.Before(olderThanTime) {
+				aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
+			}
+		} else {
+			t.Logf("Warning: AspectType %s has no CreateTime", aspectType.GetName())
+		}
+	}
+	if len(aspectTypesToDelete) == 0 {
+		t.Logf("cleanupOldAspectTypes: No aspect types found older than %s to delete.", oldThreshold.String())
+		return
+	}
+
+	for _, aspectTypeName := range aspectTypesToDelete {
+		deleteReq := &dataplexpb.DeleteAspectTypeRequest{Name: aspectTypeName}
+		op, err := client.DeleteAspectType(ctx, deleteReq)
+		if err != nil {
+			t.Logf("Warning: Failed to delete aspect type %s: %v", aspectTypeName, err)
+			continue // Skip to the next item if initiation fails
+		}
+
+		if err := op.Wait(ctx); err != nil {
+			t.Logf("Warning: Failed to delete aspect type %s, operation error: %v", aspectTypeName, err)
+		} else {
+			t.Logf("cleanupOldAspectTypes: Successfully deleted %s", aspectTypeName)
+		}
+	}
+}
+
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
-
 	bigqueryClient, err := initBigQueryConnection(ctx, DataplexProject)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
@@ -101,6 +154,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create Dataplex connection: %s", err)
 	}
+
+	// Cleanup older aspecttypes
+	cleanupOldAspectTypes(t, ctx, dataplexClient, 1*time.Hour)
 
 	// create resources with UUID
 	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
@@ -227,40 +283,40 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-dataplex-search-entries-tool": map[string]any{
-				"kind":        DataplexSearchEntriesToolKind,
+				"type":        DataplexSearchEntriesToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex search entries tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-search-entries-tool": map[string]any{
-				"kind":         DataplexSearchEntriesToolKind,
+				"type":         DataplexSearchEntriesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search entries tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-lookup-entry-tool": map[string]any{
-				"kind":        DataplexLookupEntryToolKind,
+				"type":        DataplexLookupEntryToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex lookup entry tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-lookup-entry-tool": map[string]any{
-				"kind":         DataplexLookupEntryToolKind,
+				"type":         DataplexLookupEntryToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex lookup entry tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-search-aspect-types-tool": map[string]any{
-				"kind":        DataplexSearchAspectTypesToolKind,
+				"type":        DataplexSearchAspectTypesToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex search aspect types tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-search-aspect-types-tool": map[string]any{
-				"kind":         DataplexSearchAspectTypesToolKind,
+				"type":         DataplexSearchAspectTypesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search aspect types tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
@@ -461,8 +517,11 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
 				}
 			} else {
-				if len(entries) != 0 {
-					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				isResultEmpty := resultStr == "" || resultStr == "[]" || resultStr == "null"
+				hasError := strings.Contains(resultStr, `"error":`)
+
+				if !isResultEmpty && !hasError {
+					t.Fatalf("expected an empty result or error message, but got: %s", resultStr)
 				}
 			}
 		})
@@ -528,7 +587,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, "non-existent-dataset"))),
-			wantStatusCode: 400,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 		{
@@ -546,7 +605,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
-			wantStatusCode: 400,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 		{
@@ -587,42 +646,44 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 				t.Fatalf("Error parsing response body: %v", err)
 			}
 
+			resultStr, hasResult := result["result"].(string)
+
 			if tc.expectResult {
-				resultStr, ok := result["result"].(string)
-				if !ok {
-					t.Fatalf("Expected 'result' field to be a string on success, got %T", result["result"])
-				}
-				if resultStr == "" || resultStr == "{}" || resultStr == "null" {
-					t.Fatal("Expected an entry, but got empty result")
+				if !hasResult || resultStr == "" || resultStr == "{}" || resultStr == "null" {
+					t.Fatalf("Expected a result, but got: %v", result)
 				}
 
 				var entry map[string]interface{}
 				if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
-					t.Fatalf("Error unmarshalling result string into entry map: %v", err)
+					t.Fatalf("Error unmarshalling result string: %v. Raw result: %s", err, resultStr)
 				}
 
 				if _, ok := entry[tc.wantContentKey]; !ok {
 					t.Fatalf("Expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
 				}
 
-				if _, ok := entry[tc.dontWantContentKey]; ok {
-					t.Fatalf("Expected entry to not have key '%s', but it was found in %v", tc.dontWantContentKey, entry)
+				if tc.dontWantContentKey != "" {
+					if _, ok := entry[tc.dontWantContentKey]; ok {
+						t.Fatalf("Expected entry to NOT have key '%s', but it was found", tc.dontWantContentKey)
+					}
 				}
 
 				if tc.aspectCheck {
-					// Check length of aspects
 					aspects, ok := entry["aspects"].(map[string]interface{})
-					if !ok {
-						t.Fatalf("Expected 'aspects' to be a map, got %T", aspects)
-					}
-					if len(aspects) != 1 {
+					if !ok || len(aspects) != 1 {
 						t.Fatalf("Expected exactly one aspect, but got %d", len(aspects))
 					}
 				}
-			} else { // Handle expected error response
-				_, ok := result["error"]
-				if !ok {
-					t.Fatalf("Expected 'error' field in response, got %v", result)
+			} else {
+				foundError := false
+				if _, ok := result["error"]; ok {
+					foundError = true
+				} else if hasResult && strings.Contains(resultStr, `"error"`) {
+					foundError = true
+				}
+
+				if !foundError {
+					t.Fatalf("Expected an error in response, but none was found. Response: %v", result)
 				}
 			}
 		})

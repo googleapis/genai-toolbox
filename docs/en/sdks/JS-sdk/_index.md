@@ -37,7 +37,7 @@ This repository hosts the following TS packages. See the package-specific
 README for detailed installation and usage instructions:
 
 | Package | Target Use Case | Integration | Path | Details (README) | Npm Version |
-| :------ | :---------- | :---------- | :---------------------- | :---------- | :--------- 
+| :------ | :---------- | :---------- | :---------------------- | :---------- | :---------- |
 | `toolbox-core` | Framework-agnostic / Custom applications | Use directly / Custom | `packages/toolbox-core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md) | ![npm](https://img.shields.io/npm/v/@toolbox-sdk/core) |
 | `toolbox-adk` | ADK applications | ADK | `packages/toolbox-adk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-adk/README.md) | ![npm](https://img.shields.io/npm/v/@toolbox-sdk/adk) |
 
@@ -59,6 +59,9 @@ To get started using Toolbox tools with an application, follow these general ste
     ```bash
     # For the core, framework-agnostic SDK
     npm install @toolbox-sdk/core
+
+    # For ADK applications
+    npm install @toolbox-sdk/adk
     ```
 
 

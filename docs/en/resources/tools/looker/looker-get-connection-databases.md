@@ -21,27 +21,27 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-    get_connection_databases:
-        kind: looker-get-connection-databases
-        source: looker-source
-        description: |
-          This tool retrieves a list of databases available through a specified Looker connection.
-          This is only applicable for connections that support multiple databases.
-          Use `get_connections` to check if a connection supports multiple databases.
+kind: tools
+name: get_connection_databases
+type: looker-get-connection-databases
+source: looker-source
+description: |
+  This tool retrieves a list of databases available through a specified Looker connection.
+  This is only applicable for connections that support multiple databases.
+  Use `get_connections` to check if a connection supports multiple databases.
 
-          Parameters:
-          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+  Parameters:
+  - connection_name (required): The name of the database connection, obtained from `get_connections`.
 
-          Output:
-          A JSON array of strings, where each string is the name of an available database.
-          If the connection does not support multiple databases, an empty list or an error will be returned.
+  Output:
+  A JSON array of strings, where each string is the name of an available database.
+  If the connection does not support multiple databases, an empty list or an error will be returned.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-get-connection-databases".         |
+| type        |  string  |     true     | Must be "looker-get-connection-databases".         |
 | source      |  string  |     true     | Name of the source Looker instance.                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

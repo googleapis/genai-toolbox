@@ -26,19 +26,19 @@ takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_indexes:
-    kind: postgres-list-roles
-    source: postgres-source
-    description: |
-      Lists all the user-created roles in the instance . It returns the role name,
-      Object ID, the maximum number of concurrent connections the role can make,
-      along with boolean indicators for: superuser status, privilege inheritance
-      from member roles, ability to create roles, ability to create databases,
-      ability to log in, replication privilege, and the ability to bypass
-      row-level security, the password expiration timestamp, a list of direct
-      members belonging to this role, and a list of other roles/groups that this
-      role is a member of.
+kind: tools
+name: list_indexes
+type: postgres-list-roles
+source: postgres-source
+description: |
+  Lists all the user-created roles in the instance . It returns the role name,
+  Object ID, the maximum number of concurrent connections the role can make,
+  along with boolean indicators for: superuser status, privilege inheritance
+  from member roles, ability to create roles, ability to create databases,
+  ability to log in, replication privilege, and the ability to bypass
+  row-level security, the password expiration timestamp, a list of direct
+  members belonging to this role, and a list of other roles/groups that this
+  role is a member of.
 ```
 
 The response is a json array with the following elements:
@@ -65,6 +65,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-roles".                     |
+| type        |  string  |     true     | Must be "postgres-list-roles".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -44,33 +44,33 @@ The `looker-health-pulse` tool performs health checks on a Looker instance. The
 ## Example
 
 ```yaml
-tools:
-  health_pulse:
-    kind: looker-health-pulse
-    source: looker-source
-    description: |
-      This tool performs various health checks on a Looker instance.
+kind: tools
+name: health_pulse
+type: looker-health-pulse
+source: looker-source
+description: |
+  This tool performs various health checks on a Looker instance.
 
-      Parameters:
-      - action (required): Specifies the type of health check to perform.
-        Choose one of the following:
-        - `check_db_connections`: Verifies database connectivity.
-        - `check_dashboard_performance`: Assesses dashboard loading performance.
-        - `check_dashboard_errors`: Identifies errors within dashboards.
-        - `check_explore_performance`: Evaluates explore query performance.
-        - `check_schedule_failures`: Reports on failed scheduled deliveries.
-        - `check_legacy_features`: Checks for the usage of legacy features.
+  Parameters:
+  - action (required): Specifies the type of health check to perform.
+    Choose one of the following:
+    - `check_db_connections`: Verifies database connectivity.
+    - `check_dashboard_performance`: Assesses dashboard loading performance.
+    - `check_dashboard_errors`: Identifies errors within dashboards.
+    - `check_explore_performance`: Evaluates explore query performance.
+    - `check_schedule_failures`: Reports on failed scheduled deliveries.
+    - `check_legacy_features`: Checks for the usage of legacy features.
 
-      Note on `check_legacy_features`:
-      This action is exclusively available in Looker Core instances. If invoked
-      on a non-Looker Core instance, it will return a notice rather than an error.
-      This notice should be considered normal behavior and not an indication of an issue.
+  Note on `check_legacy_features`:
+  This action is exclusively available in Looker Core instances. If invoked
+  on a non-Looker Core instance, it will return a notice rather than an error.
+  This notice should be considered normal behavior and not an indication of an issue.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-health-pulse"                      |
+| type        |  string  |     true     | Must be "looker-health-pulse"                      |
 | source      |  string  |     true     | Looker source name                                 |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

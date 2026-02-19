@@ -64,11 +64,11 @@ the `bigquery` source:
 ## Example
 
 ```yaml
-tools:
-  contribution_analyzer:
-    kind: bigquery-analyze-contribution
-    source: my-bigquery-source
-    description: Use this tool to run contribution analysis on a dataset in BigQuery.
+kind: tools
+name: contribution_analyzer
+type: bigquery-analyze-contribution
+source: my-bigquery-source
+description: Use this tool to run contribution analysis on a dataset in BigQuery.
 ```
 
 ## Sample Prompt
@@ -88,6 +88,6 @@ And use the following sample prompts to call this tool:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "bigquery-analyze-contribution".           |
+| type        |  string  |     true     | Must be "bigquery-analyze-contribution".           |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

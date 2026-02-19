@@ -76,7 +76,7 @@ deleted. To delete a field, include it in the `updateMask` but omit it from
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "firestore-update-document".                 |
+| type        |  string  |     true     | Must be "firestore-update-document".                 |
 | source      |  string  |     true     | Name of the Firestore source to update documents in. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
 
@@ -85,11 +85,11 @@ deleted. To delete a field, include it in the `updateMask` but omit it from
 ### Basic Document Update (Full Merge)
 
 ```yaml
-tools:
-  update-user-doc:
-    kind: firestore-update-document
-    source: my-firestore
-    description: Update a user document
+kind: tools
+name: update-user-doc
+type: firestore-update-document
+source: my-firestore
+description: Update a user document
 ```
 
 Usage:
@@ -299,14 +299,14 @@ In this example:
 The tool can be configured to require authentication:
 
 ```yaml
-tools:
-  secure-update-doc:
-    kind: firestore-update-document
-    source: prod-firestore
-    description: Update documents with authentication required
-    authRequired:
-      - google-oauth
-      - api-key
+kind: tools
+name: secure-update-doc
+type: firestore-update-document
+source: prod-firestore
+description: Update documents with authentication required
+authRequired:
+  - google-oauth
+  - api-key
 ```
 
 ## Error Handling

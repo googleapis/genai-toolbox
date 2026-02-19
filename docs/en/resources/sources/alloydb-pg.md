@@ -176,17 +176,17 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-sources:
-    my-alloydb-pg-source:
-        kind: alloydb-postgres
-        project: my-project-id
-        region: us-central1
-        cluster: my-cluster
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "public"
+kind: sources
+name: my-alloydb-pg-source
+type: alloydb-postgres
+project: my-project-id
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: "public"
 ```
 
 {{< notice tip >}}
@@ -194,11 +194,20 @@ Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
+### Managed Connection Pooling
+
+Toolbox automatically supports [Managed Connection Pooling][alloydb-mcp]. If your AlloyDB instance has Managed Connection Pooling enabled, the connection will immediately benefit from increased throughput and reduced latency.
+
+The interface is identical, so there's no additional configuration required on the client. For more information on configuring your instance, see the [AlloyDB Managed Connection Pooling documentation][alloydb-mcp-docs].
+
+[alloydb-mcp]: https://cloud.google.com/blog/products/databases/alloydb-managed-connection-pooling
+[alloydb-mcp-docs]: https://cloud.google.com/alloydb/docs/configure-managed-connection-pooling
+
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
+| type      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                                                         |

@@ -58,7 +58,7 @@ func getYBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":        YBDB_SOURCE_KIND,
+		"type":        YBDB_SOURCE_KIND,
 		"host":        YBDB_HOST,
 		"port":        YBDB_PORT,
 		"database":    YBDB_DATABASE,

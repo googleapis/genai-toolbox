@@ -27,6 +27,13 @@ For AlloyDB infrastructure management, search the MCP store for the AlloyDB for 
 ## Install & Configuration
 
 1. In the Antigravity MCP Store, click the "Install" button.
+    > [!NOTE]
+    > On first use, the installation process automatically downloads and uses
+    > [MCP Toolbox](https://www.npmjs.com/package/@toolbox-sdk/server)
+    > `>=0.26.0`. To update MCP Toolbox, use:
+    > ```npm i -g @toolbox-sdk/server@latest```
+    > To always run the latest version, update the MCP server configuration to use:
+    > ```npx -y @toolbox-sdk/server@latest --prebuilt alloydb-postgres```.
 
 2. Add the required inputs for your [cluster](https://docs.cloud.google.com/alloydb/docs/cluster-list) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 

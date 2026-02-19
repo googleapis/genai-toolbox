@@ -21,17 +21,17 @@ configured in the source. It takes no extra parameters.
 ## Example
 
 ```yaml
-tools:
-  get_dataset:
-    kind: cloud-healthcare-get-dataset
-    source: my-healthcare-source
-    description: Use this tool to get healthcare dataset metadata.
+kind: tools
+name: get_dataset
+type: cloud-healthcare-get-dataset
+source: my-healthcare-source
+description: Use this tool to get healthcare dataset metadata.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                    |
 |-------------|:------------------------------------------:|:------------:|----------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "cloud-healthcare-get-dataset".            |
+| type        |                   string                   |     true     | Must be "cloud-healthcare-get-dataset".            |
 | source      |                   string                   |     true     | Name of the healthcare source.                     |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM. |

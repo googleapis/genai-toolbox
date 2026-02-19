@@ -30,31 +30,31 @@ takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_database_stats:
-    kind: postgres-list-database-stats
-    source: postgres-source
-    description: |
-       Lists the key performance and activity statistics for each PostgreSQL
-        database in the instance, offering insights into cache efficiency,
-        transaction throughput row-level activity, temporary file usage, and
-        contention. It returns: the database name, whether the database is
-        connectable, database owner, default tablespace name, the percentage of
-        data blocks found in the buffer cache rather than being read from disk
-        (a higher value indicates better cache performance), the total number of
-        disk blocks read from disk, the total number of times disk blocks were
-        found already in the cache; the total number of committed transactions,
-        the total number of rolled back transactions, the percentage of rolled
-        back transactions compared to the total number of completed
-        transactions, the total number of rows returned by queries, the total
-        number of live rows fetched by scans, the total number of rows inserted,
-        the total number of rows updated, the total number of rows deleted, the
-        number of temporary files created by queries, the total size of
-        temporary files used by queries in bytes, the number of query
-        cancellations due to conflicts with recovery, the number of deadlocks
-        detected, the current number of active backend connections, the
-        timestamp when the database statistics were last reset, and the total
-        database size in bytes.
+kind: tools
+name: list_database_stats
+type: postgres-list-database-stats
+source: postgres-source
+description: |
+  Lists the key performance and activity statistics for each PostgreSQL
+  database in the instance, offering insights into cache efficiency,
+  transaction throughput row-level activity, temporary file usage, and
+  contention. It returns: the database name, whether the database is
+  connectable, database owner, default tablespace name, the percentage of
+  data blocks found in the buffer cache rather than being read from disk
+  (a higher value indicates better cache performance), the total number of
+  disk blocks read from disk, the total number of times disk blocks were
+  found already in the cache; the total number of committed transactions,
+  the total number of rolled back transactions, the percentage of rolled
+  back transactions compared to the total number of completed
+  transactions, the total number of rows returned by queries, the total
+  number of live rows fetched by scans, the total number of rows inserted,
+  the total number of rows updated, the total number of rows deleted, the
+  number of temporary files created by queries, the total size of
+  temporary files used by queries in bytes, the number of query
+  cancellations due to conflicts with recovery, the number of deadlocks
+  detected, the current number of active backend connections, the
+  timestamp when the database statistics were last reset, and the total
+  database size in bytes.
 ```
 
 The response is a json array with the following elements:
@@ -90,6 +90,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-database-stats".              |
+| type        |  string  |     true     | Must be "postgres-list-database-stats".              |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

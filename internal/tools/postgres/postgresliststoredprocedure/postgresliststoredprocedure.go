@@ -17,6 +17,7 @@ package postgresliststoredprocedure
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -25,14 +26,15 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-stored-procedure"
+const resourceType string = "postgres-list-stored-procedure"
 
 const listStoredProcedure = `
-	SELECT
+    SELECT
           n.nspname AS schema_name,
           p.proname AS name,
           r.rolname AS owner,
@@ -53,8 +55,8 @@ const listStoredProcedure = `
 `
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -75,21 +77,20 @@ var _ compatibleSource = &alloydbpg.Source{}
 var _ compatibleSource = &cloudsqlpg.Source{}
 var _ compatibleSource = &postgres.Source{}
 
-var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
+var compatibleSources = [...]string{alloydbpg.SourceType, cloudsqlpg.SourceType, postgres.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -102,7 +103,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", resourceType, compatibleSources)
 	}
 
 	allParameters := parameters.Parameters{
@@ -118,13 +119,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	// finish tool setup
 	return Tool{
-		name:         cfg.Name,
-		kind:         cfg.Kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
-		pool:         s.PostgresPool(),
+		Config:    cfg,
+		allParams: allParameters,
+		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   paramManifest,
@@ -134,36 +132,32 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	name         string                `yaml:"name"`
-	kind         string                `yaml:"kind"`
-	authRequired []string              `yaml:"authRequired"`
-	allParams    parameters.Parameters `yaml:"allParams"`
-	pool         *pgxpool.Pool
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	allParams   parameters.Parameters `yaml:"allParams"`
+	pool        *pgxpool.Pool
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
 	sliceParams := newParams.AsSlice()
 
 	results, err := t.pool.Query(ctx, listStoredProcedure, sliceParams...)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	defer results.Close()
 
@@ -173,7 +167,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for results.Next() {
 		values, err := results.Values()
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
+			return nil, util.NewClientServerError("unable to parse row", http.StatusInternalServerError, err)
 		}
 		rowMap := make(map[string]any)
 		for i, field := range fields {
@@ -183,10 +177,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	return out, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -202,7 +192,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
@@ -211,4 +201,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.allParams
 }

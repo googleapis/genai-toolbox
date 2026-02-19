@@ -21,137 +21,113 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"go.opentelemetry.io/otel"
 )
 
-func TestConfigSourceConfigKind(t *testing.T) {
-	config := Config{}
-	if config.SourceConfigKind() != SourceKind {
-		t.Errorf("Expected %s, got %s", SourceKind, config.SourceConfigKind())
+func TestParseFromYamlClickhouse(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want server.SourceConfigs
+	}{
+		{
+			desc: "all fields specified",
+			in: `
+			kind: sources
+			name: test-clickhouse
+			type: clickhouse
+			host: localhost
+			port: "8443"
+			user: default
+			password: "mypass"
+			database: mydb
+			protocol: https
+			secure: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"test-clickhouse": Config{
+					Name:     "test-clickhouse",
+					Type:     "clickhouse",
+					Host:     "localhost",
+					Port:     "8443",
+					User:     "default",
+					Password: "mypass",
+					Database: "mydb",
+					Protocol: "https",
+					Secure:   true,
+				},
+			},
+		},
+		{
+			desc: "minimal configuration with defaults",
+			in: `
+			kind: sources
+			name: minimal-clickhouse
+			type: clickhouse
+			host: 127.0.0.1
+			port: "8123"
+			user: testuser
+			database: testdb
+			`,
+			want: map[string]sources.SourceConfig{
+				"minimal-clickhouse": Config{
+					Name:     "minimal-clickhouse",
+					Type:     "clickhouse",
+					Host:     "127.0.0.1",
+					Port:     "8123",
+					User:     "testuser",
+					Password: "",
+					Database: "testdb",
+					Protocol: "",
+					Secure:   false,
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+			}
+		})
 	}
 }
 
-func TestNewConfig(t *testing.T) {
-	tests := []struct {
-		name     string
-		yaml     string
-		expected Config
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
 	}{
 		{
-			name: "all fields specified",
-			yaml: `
-				name: test-clickhouse
-				kind: clickhouse
-				host: localhost
-				port: "8443"
-				user: default
-				password: "mypass"
-				database: mydb
-				protocol: https
-				secure: true
+			desc: "extra field",
+			in: `
+			kind: sources
+			name: test-clickhouse
+			type: clickhouse
+			host: localhost
+			foo: bar
 			`,
-			expected: Config{
-				Name:     "test-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "localhost",
-				Port:     "8443",
-				User:     "default",
-				Password: "mypass",
-				Database: "mydb",
-				Protocol: "https",
-				Secure:   true,
-			},
-		},
-		{
-			name: "minimal configuration with defaults",
-			yaml: `
-				name: minimal-clickhouse
-				kind: clickhouse
-				host: 127.0.0.1
-				port: "8123"
-				user: testuser
-				database: testdb
-			`,
-			expected: Config{
-				Name:     "minimal-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "127.0.0.1",
-				Port:     "8123",
-				User:     "testuser",
-				Password: "",
-				Database: "testdb",
-				Protocol: "",
-				Secure:   false,
-			},
-		},
-		{
-			name: "http protocol",
-			yaml: `
-				name: http-clickhouse
-				kind: clickhouse
-				host: clickhouse.example.com
-				port: "8123"
-				user: analytics
-				password: "securepass"
-				database: analytics_db
-				protocol: http
-				secure: false
-			`,
-			expected: Config{
-				Name:     "http-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "clickhouse.example.com",
-				Port:     "8123",
-				User:     "analytics",
-				Password: "securepass",
-				Database: "analytics_db",
-				Protocol: "http",
-				Secure:   false,
-			},
-		},
-		{
-			name: "https with secure connection",
-			yaml: `
-				name: secure-clickhouse
-				kind: clickhouse
-				host: secure.clickhouse.io
-				port: "8443"
-				user: secureuser
-				password: "verysecure"
-				database: production
-				protocol: https
-				secure: true
-			`,
-			expected: Config{
-				Name:     "secure-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "secure.clickhouse.io",
-				Port:     "8443",
-				User:     "secureuser",
-				Password: "verysecure",
-				Database: "production",
-				Protocol: "https",
-				Secure:   true,
-			},
+			err: "error unmarshaling sources: unable to parse source \"test-clickhouse\" as \"clickhouse\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | host: localhost\n   3 | name: test-clickhouse\n   4 | type: clickhouse",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(string(testutils.FormatYaml(tt.yaml))))
-			config, err := newConfig(context.Background(), tt.expected.Name, decoder)
-			if err != nil {
-				t.Fatalf("Failed to create config: %v", err)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
 			}
-
-			clickhouseConfig, ok := config.(Config)
-			if !ok {
-				t.Fatalf("Expected Config type, got %T", config)
-			}
-
-			if diff := cmp.Diff(tt.expected, clickhouseConfig); diff != "" {
-				t.Errorf("Config mismatch (-want +got):\n%s", diff)
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}
@@ -167,18 +143,10 @@ func TestNewConfigInvalidYAML(t *testing.T) {
 			name: "invalid yaml syntax",
 			yaml: `
 				name: test-clickhouse
-				kind: clickhouse
+				type: clickhouse
 				host: [invalid
 			`,
 			expectError: true,
-		},
-		{
-			name: "missing required fields",
-			yaml: `
-				name: test-clickhouse
-				kind: clickhouse
-			`,
-			expectError: false,
 		},
 	}
 
@@ -196,10 +164,10 @@ func TestNewConfigInvalidYAML(t *testing.T) {
 	}
 }
 
-func TestSource_SourceKind(t *testing.T) {
+func TestSource_SourceType(t *testing.T) {
 	source := &Source{}
-	if source.SourceKind() != SourceKind {
-		t.Errorf("Expected %s, got %s", SourceKind, source.SourceKind())
+	if source.SourceType() != SourceType {
+		t.Errorf("Expected %s, got %s", SourceType, source.SourceType())
 	}
 }
 

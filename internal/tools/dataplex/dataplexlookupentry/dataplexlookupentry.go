@@ -17,21 +17,22 @@ package dataplexlookupentry
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "dataplex-lookup-entry"
+const resourceType string = "dataplex-lookup-entry"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -44,12 +45,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CatalogClient() *dataplexapi.CatalogClient
+	LookupEntry(context.Context, string, int, []string, string) (*dataplexpb.Entry, error)
 }
 
 type Config struct {
 	Name         string                `yaml:"name" validate:"required"`
-	Kind         string                `yaml:"kind" validate:"required"`
+	Type         string                `yaml:"type" validate:"required"`
 	Source       string                `yaml:"source" validate:"required"`
 	Description  string                `yaml:"description"`
 	AuthRequired []string              `yaml:"authRequired"`
@@ -59,8 +60,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -111,45 +112,26 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	viewMap := map[int]dataplexpb.EntryView{
-		1: dataplexpb.EntryView_BASIC,
-		2: dataplexpb.EntryView_FULL,
-		3: dataplexpb.EntryView_CUSTOM,
-		4: dataplexpb.EntryView_ALL,
-	}
 	name, _ := paramsMap["name"].(string)
 	entry, _ := paramsMap["entry"].(string)
 	view, _ := paramsMap["view"].(int)
 	aspectTypeSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["aspectTypes"].([]any), "string")
 	if err != nil {
-		return nil, fmt.Errorf("can't convert aspectTypes to array of strings: %s", err)
+		return nil, util.NewAgentError(fmt.Sprintf("can't convert aspectTypes to array of strings: %s", err), err)
 	}
 	aspectTypes := aspectTypeSlice.([]string)
-
-	req := &dataplexpb.LookupEntryRequest{
-		Name:        name,
-		View:        viewMap[view],
-		AspectTypes: aspectTypes,
-		Entry:       entry,
-	}
-
-	result, err := source.CatalogClient().LookupEntry(ctx, req)
+	resp, err := source.LookupEntry(ctx, name, view, aspectTypes, entry)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGcpError(err)
 	}
-	return result, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	// Parse parameters from the provided data
-	return parameters.ParseParams(t.Parameters, data, claims)
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -176,4 +158,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }
