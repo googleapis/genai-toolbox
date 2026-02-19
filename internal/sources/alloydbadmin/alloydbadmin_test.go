@@ -15,9 +15,9 @@
 package alloydbadmin_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,14 +34,14 @@ func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-alloydb-admin-instance:
-					kind: alloydb-admin
+			kind: sources
+			name: my-alloydb-admin-instance
+			type: alloydb-admin
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-alloydb-admin-instance": alloydbadmin.Config{
 					Name:           "my-alloydb-admin-instance",
-					Kind:           alloydbadmin.SourceKind,
+					Type:           alloydbadmin.SourceType,
 					UseClientOAuth: false,
 				},
 			},
@@ -49,15 +49,15 @@ func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			sources:
-				my-alloydb-admin-instance:
-					kind: alloydb-admin
-					useClientOAuth: true
+			kind: sources
+			name: my-alloydb-admin-instance
+			type: alloydb-admin
+			useClientOAuth: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-alloydb-admin-instance": alloydbadmin.Config{
 					Name:           "my-alloydb-admin-instance",
-					Kind:           alloydbadmin.SourceKind,
+					Type:           alloydbadmin.SourceType,
 					UseClientOAuth: true,
 				},
 			},
@@ -65,16 +65,13 @@ func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
 			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -89,30 +86,27 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-alloydb-admin-instance:
-					kind: alloydb-admin
-					project: test-project
+			kind: sources
+			name: my-alloydb-admin-instance
+			type: alloydb-admin
+			project: test-project
 			`,
-			err: "unable to parse source \"my-alloydb-admin-instance\" as \"alloydb-admin\": [2:1] unknown field \"project\"\n   1 | kind: alloydb-admin\n>  2 | project: test-project\n       ^\n",
+			err: "error unmarshaling sources: unable to parse source \"my-alloydb-admin-instance\" as \"alloydb-admin\": [2:1] unknown field \"project\"\n   1 | name: my-alloydb-admin-instance\n>  2 | project: test-project\n       ^\n   3 | type: alloydb-admin",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-alloydb-admin-instance:
-					useClientOAuth: true
+			kind: sources
+			name: my-alloydb-admin-instance
+			useClientOAuth: true
 			`,
-			err: "missing 'kind' field for source \"my-alloydb-admin-instance\"",
+			err: "error unmarshaling sources: missing 'type' field or it is not a string",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
 			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

@@ -17,22 +17,22 @@ package dataplexsearchaspecttypes
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
-	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
-	"github.com/cenkalti/backoff/v5"
+	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "dataplex-search-aspect-types"
+const resourceType string = "dataplex-search-aspect-types"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -45,13 +45,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CatalogClient() *dataplexapi.CatalogClient
-	ProjectID() string
+	SearchAspectTypes(context.Context, string, int, string) ([]*dataplexpb.AspectType, error)
 }
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -60,8 +59,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -96,71 +95,29 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
-
-	// Invoke the tool with the provided parameters
 	paramsMap := params.AsMap()
-	query, _ := paramsMap["query"].(string)
-	pageSize := int32(paramsMap["pageSize"].(int))
-	orderBy, _ := paramsMap["orderBy"].(string)
-
-	// Create SearchEntriesRequest with the provided parameters
-	req := &dataplexpb.SearchEntriesRequest{
-		Query:          query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype",
-		Name:           fmt.Sprintf("projects/%s/locations/global", source.ProjectID()),
-		PageSize:       pageSize,
-		OrderBy:        orderBy,
-		SemanticSearch: true,
+	query, ok := paramsMap["query"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'query' parameter: %v", paramsMap["query"]), nil)
 	}
-
-	// Perform the search using the CatalogClient - this will return an iterator
-	it := source.CatalogClient().SearchEntries(ctx, req)
-	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", source.ProjectID())
+	pageSize, ok := paramsMap["pageSize"].(int)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'pageSize' parameter: %v", paramsMap["pageSize"]), nil)
 	}
-
-	// Create an instance of exponential backoff with default values for retrying GetAspectType calls
-	// InitialInterval, RandomizationFactor, Multiplier, MaxInterval = 500 ms, 0.5, 1.5, 60 s
-	getAspectBackOff := backoff.NewExponentialBackOff()
-
-	// Iterate through the search results and call GetAspectType for each result using the resource name
-	var results []*dataplexpb.AspectType
-	for {
-		entry, err := it.Next()
-		if err != nil {
-			break
-		}
-		resourceName := entry.DataplexEntry.GetEntrySource().Resource
-		getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
-			Name: resourceName,
-		}
-
-		operation := func() (*dataplexpb.AspectType, error) {
-			aspectType, err := source.CatalogClient().GetAspectType(ctx, getAspectTypeReq)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
-			}
-			return aspectType, nil
-		}
-
-		// Retry the GetAspectType operation with exponential backoff
-		aspectType, err := backoff.Retry(ctx, operation, backoff.WithBackOff(getAspectBackOff))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get aspect type after retries for entry %q: %w", resourceName, err)
-		}
-
-		results = append(results, aspectType)
+	orderBy, ok := paramsMap["orderBy"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
 	}
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	// Parse parameters from the provided data
-	return parameters.ParseParams(t.Parameters, data, claims)
+	resp, err := source.SearchAspectTypes(ctx, query, pageSize, orderBy)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -187,4 +144,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

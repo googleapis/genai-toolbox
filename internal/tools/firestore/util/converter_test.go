@@ -312,40 +312,6 @@ func TestJSONToFirestoreValue_IntegerFromString(t *testing.T) {
 	}
 }
 
-func TestFirestoreValueToJSON_RoundTrip(t *testing.T) {
-	// Test round-trip conversion
-	original := map[string]interface{}{
-		"name":   "Test",
-		"count":  int64(42),
-		"price":  19.99,
-		"active": true,
-		"tags":   []interface{}{"tag1", "tag2"},
-		"metadata": map[string]interface{}{
-			"created": time.Now(),
-		},
-		"nullField": nil,
-	}
-
-	// Convert to JSON representation
-	jsonRepresentation := FirestoreValueToJSON(original)
-
-	// Verify types are simplified
-	jsonMap, ok := jsonRepresentation.(map[string]interface{})
-	if !ok {
-		t.Fatalf("Expected map, got %T", jsonRepresentation)
-	}
-
-	// Time should be converted to string
-	metadata, ok := jsonMap["metadata"].(map[string]interface{})
-	if !ok {
-		t.Fatalf("metadata should be a map, got %T", jsonMap["metadata"])
-	}
-	_, ok = metadata["created"].(string)
-	if !ok {
-		t.Errorf("created should be a string, got %T", metadata["created"])
-	}
-}
-
 func TestJSONToFirestoreValue_InvalidFormats(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -29,11 +29,11 @@ total execution time in descending order. The tool takes the following input par
 ## Example
 
 ```yaml
-tools:
-  list_query_stats:
-    kind: postgres-list-query-stats
-    source: postgres-source
-    description: List query statistics from pg_stat_statements, showing performance metrics for queries including execution counts, timing information, and resource usage. Results are ordered by total execution time descending.
+kind: tools
+name: list_query_stats
+type: postgres-list-query-stats
+source: postgres-source
+description: List query statistics from pg_stat_statements, showing performance metrics for queries including execution counts, timing information, and resource usage. Results are ordered by total execution time descending.
 ```
 
 The response is a json array with the following elements:
@@ -66,6 +66,6 @@ identifying slow queries and understanding query performance patterns.
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-query-stats".                 |
+| type        |  string  |     true     | Must be "postgres-list-query-stats".                 |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |

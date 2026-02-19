@@ -28,14 +28,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "clickhouse"
+const SourceType string = "clickhouse"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
 	Database string `yaml:"database" validate:"required"`
@@ -59,8 +59,8 @@ type Config struct {
 	Secure   bool   `yaml:"secure"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -88,8 +88,8 @@ type Source struct {
 	Pool *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -174,7 +174,7 @@ func validateConfig(protocol string) error {
 
 func initClickHouseConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, protocol string, secure bool) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	if protocol == "" {

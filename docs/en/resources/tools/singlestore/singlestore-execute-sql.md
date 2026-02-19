@@ -25,17 +25,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-tools:
- execute_sql_tool:
-    kind: singlestore-execute-sql
-    source: my-s2-instance
-    description: Use this tool to execute sql statement
+kind: tools
+name: execute_sql_tool
+type: singlestore-execute-sql
+source: my-s2-instance
+description: Use this tool to execute sql statement
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "singlestore-execute-sql".                 |
+| type        |  string  |     true     | Must be "singlestore-execute-sql".                 |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

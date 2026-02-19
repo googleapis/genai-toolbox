@@ -33,15 +33,15 @@ with SSL).
 ## Example
 
 ```yaml
-sources:
-    my-oceanbase-source:
-        kind: oceanbase
-        host: 127.0.0.1
-        port: 2881
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-oceanbase-source
+type: oceanbase
+host: 127.0.0.1
+port: 2881
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -53,7 +53,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 | ------------ | :------: | :----------: |-------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "oceanbase".                                                                            |
+| type         |  string  |     true     | Must be "oceanbase".                                                                            |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "2881").                                                               |
 | database     |  string  |     true     | Name of the OceanBase database to connect to (e.g. "my_db").                                    |

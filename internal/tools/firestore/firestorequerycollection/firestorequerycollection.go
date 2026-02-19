@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	firestoreapi "cloud.google.com/go/firestore"
@@ -25,13 +26,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Constants for tool configuration
 const (
-	kind            = "firestore-query-collection"
+	resourceType    = "firestore-query-collection"
 	defaultLimit    = 100
 	defaultAnalyze  = false
 	maxFilterLength = 100 // Maximum filters to prevent abuse
@@ -69,13 +71,12 @@ const (
 	errInvalidOperator       = "unsupported operator: %s. Valid operators are: %v"
 	errMissingFilterValue    = "no value specified for filter on field '%s'"
 	errOrderByParseFailed    = "failed to parse orderBy: %w"
-	errQueryExecutionFailed  = "failed to execute query: %w"
 	errTooManyFilters        = "too many filters provided: %d (maximum: %d)"
 )
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -90,12 +91,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 // compatibleSource defines the interface for sources that can provide a Firestore client
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	BuildQuery(string, firestoreapi.EntityFilter, []string, string, firestoreapi.Direction, int, bool) (*firestoreapi.Query, error)
+	ExecuteQuery(context.Context, *firestoreapi.Query, bool) (any, error)
 }
 
 // Config represents the configuration for the Firestore query collection tool
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -104,9 +107,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of tool configuration
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of tool configuration
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance from the configuration
@@ -228,43 +231,54 @@ func (o *OrderByConfig) GetDirection() firestoreapi.Direction {
 	return firestoreapi.Asc
 }
 
-// QueryResult represents a document result from the query
-type QueryResult struct {
-	ID         string         `json:"id"`
-	Path       string         `json:"path"`
-	Data       map[string]any `json:"data"`
-	CreateTime interface{}    `json:"createTime,omitempty"`
-	UpdateTime interface{}    `json:"updateTime,omitempty"`
-	ReadTime   interface{}    `json:"readTime,omitempty"`
-}
-
-// QueryResponse represents the full response including optional metrics
-type QueryResponse struct {
-	Documents      []QueryResult  `json:"documents"`
-	ExplainMetrics map[string]any `json:"explainMetrics,omitempty"`
-}
-
 // Invoke executes the Firestore query based on the provided parameters
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	// Parse parameters
 	queryParams, err := t.parseQueryParameters(params)
 	if err != nil {
-		return nil, err
+		return nil, util.NewAgentError(fmt.Sprintf("failed to parse query parameters: %v", err), err)
+	}
+
+	var filter firestoreapi.EntityFilter
+	// Apply filters
+	if len(queryParams.Filters) > 0 {
+		filterConditions := make([]firestoreapi.EntityFilter, 0, len(queryParams.Filters))
+		for _, filter := range queryParams.Filters {
+			filterConditions = append(filterConditions, firestoreapi.PropertyFilter{
+				Path:     filter.Field,
+				Operator: filter.Op,
+				Value:    filter.Value,
+			})
+		}
+
+		filter = firestoreapi.AndFilter{
+			Filters: filterConditions,
+		}
+	}
+
+	// prevent panic incase queryParams.OrderBy is nil
+	var orderByField string
+	var orderByDirection firestoreapi.Direction
+	if queryParams.OrderBy != nil {
+		orderByField = queryParams.OrderBy.Field
+		orderByDirection = queryParams.OrderBy.GetDirection()
 	}
 
 	// Build the query
-	query, err := t.buildQuery(source, queryParams)
+	query, err := source.BuildQuery(queryParams.CollectionPath, filter, nil, orderByField, orderByDirection, queryParams.Limit, queryParams.AnalyzeQuery)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGcpError(err)
 	}
-
-	// Execute the query and return results
-	return t.executeQuery(ctx, query, queryParams.AnalyzeQuery)
+	resp, err := source.ExecuteQuery(ctx, query, queryParams.AnalyzeQuery)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }
 
 // queryParameters holds all parsed query parameters
@@ -287,7 +301,7 @@ func (t Tool) parseQueryParameters(params parameters.ParamValues) (*queryParamet
 	}
 
 	// Validate collection path
-	if err := util.ValidateCollectionPath(collectionPath); err != nil {
+	if err := fsUtil.ValidateCollectionPath(collectionPath); err != nil {
 		return nil, fmt.Errorf("invalid collection path: %w", err)
 	}
 
@@ -380,127 +394,6 @@ func (t Tool) parseOrderBy(orderByRaw interface{}) (*OrderByConfig, error) {
 	return &orderBy, nil
 }
 
-// buildQuery constructs the Firestore query from parameters
-func (t Tool) buildQuery(source compatibleSource, params *queryParameters) (*firestoreapi.Query, error) {
-	collection := source.FirestoreClient().Collection(params.CollectionPath)
-	query := collection.Query
-
-	// Apply filters
-	if len(params.Filters) > 0 {
-		filterConditions := make([]firestoreapi.EntityFilter, 0, len(params.Filters))
-		for _, filter := range params.Filters {
-			filterConditions = append(filterConditions, firestoreapi.PropertyFilter{
-				Path:     filter.Field,
-				Operator: filter.Op,
-				Value:    filter.Value,
-			})
-		}
-
-		query = query.WhereEntity(firestoreapi.AndFilter{
-			Filters: filterConditions,
-		})
-	}
-
-	// Apply ordering
-	if params.OrderBy != nil {
-		query = query.OrderBy(params.OrderBy.Field, params.OrderBy.GetDirection())
-	}
-
-	// Apply limit
-	query = query.Limit(params.Limit)
-
-	// Apply analyze options
-	if params.AnalyzeQuery {
-		query = query.WithRunOptions(firestoreapi.ExplainOptions{
-			Analyze: true,
-		})
-	}
-
-	return &query, nil
-}
-
-// executeQuery runs the query and formats the results
-func (t Tool) executeQuery(ctx context.Context, query *firestoreapi.Query, analyzeQuery bool) (any, error) {
-	docIterator := query.Documents(ctx)
-	docs, err := docIterator.GetAll()
-	if err != nil {
-		return nil, fmt.Errorf(errQueryExecutionFailed, err)
-	}
-
-	// Convert results to structured format
-	results := make([]QueryResult, len(docs))
-	for i, doc := range docs {
-		results[i] = QueryResult{
-			ID:         doc.Ref.ID,
-			Path:       doc.Ref.Path,
-			Data:       doc.Data(),
-			CreateTime: doc.CreateTime,
-			UpdateTime: doc.UpdateTime,
-			ReadTime:   doc.ReadTime,
-		}
-	}
-
-	// Return with explain metrics if requested
-	if analyzeQuery {
-		explainMetrics, err := t.getExplainMetrics(docIterator)
-		if err == nil && explainMetrics != nil {
-			response := QueryResponse{
-				Documents:      results,
-				ExplainMetrics: explainMetrics,
-			}
-			return response, nil
-		}
-	}
-
-	// Return just the documents
-	resultsAny := make([]any, len(results))
-	for i, r := range results {
-		resultsAny[i] = r
-	}
-	return resultsAny, nil
-}
-
-// getExplainMetrics extracts explain metrics from the query iterator
-func (t Tool) getExplainMetrics(docIterator *firestoreapi.DocumentIterator) (map[string]any, error) {
-	explainMetrics, err := docIterator.ExplainMetrics()
-	if err != nil || explainMetrics == nil {
-		return nil, err
-	}
-
-	metricsData := make(map[string]any)
-
-	// Add plan summary if available
-	if explainMetrics.PlanSummary != nil {
-		planSummary := make(map[string]any)
-		planSummary["indexesUsed"] = explainMetrics.PlanSummary.IndexesUsed
-		metricsData["planSummary"] = planSummary
-	}
-
-	// Add execution stats if available
-	if explainMetrics.ExecutionStats != nil {
-		executionStats := make(map[string]any)
-		executionStats["resultsReturned"] = explainMetrics.ExecutionStats.ResultsReturned
-		executionStats["readOperations"] = explainMetrics.ExecutionStats.ReadOperations
-
-		if explainMetrics.ExecutionStats.ExecutionDuration != nil {
-			executionStats["executionDuration"] = explainMetrics.ExecutionStats.ExecutionDuration.String()
-		}
-
-		if explainMetrics.ExecutionStats.DebugStats != nil {
-			executionStats["debugStats"] = *explainMetrics.ExecutionStats.DebugStats
-		}
-
-		metricsData["executionStats"] = executionStats
-	}
-
-	return metricsData, nil
-}
-
-// ParseParams parses and validates input parameters
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
@@ -526,4 +419,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

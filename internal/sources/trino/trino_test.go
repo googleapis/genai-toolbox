@@ -15,11 +15,12 @@
 package trino
 
 import (
+	"context"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
@@ -36,6 +37,8 @@ func TestBuildTrinoDSN(t *testing.T) {
 		accessToken     string
 		kerberosEnabled bool
 		sslEnabled      bool
+		sslCertPath     string
+		sslCert         string
 		want            string
 		wantErr         bool
 	}{
@@ -48,6 +51,19 @@ func TestBuildTrinoDSN(t *testing.T) {
 			schema:  "default",
 			want:    "http://testuser@localhost:8080?catalog=hive&schema=default",
 			wantErr: false,
+		},
+		{
+			name:        "with SSL cert path and cert",
+			host:        "localhost",
+			port:        "8443",
+			user:        "testuser",
+			catalog:     "hive",
+			schema:      "default",
+			sslEnabled:  true,
+			sslCertPath: "/path/to/cert.pem",
+			sslCert:     "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n",
+			want:        "https://testuser@localhost:8443?catalog=hive&schema=default&sslCert=-----BEGIN+CERTIFICATE-----%0A...%0A-----END+CERTIFICATE-----%0A&sslCertPath=%2Fpath%2Fto%2Fcert.pem",
+			wantErr:     false,
 		},
 		{
 			name:     "with password",
@@ -117,7 +133,7 @@ func TestBuildTrinoDSN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := buildTrinoDSN(tt.host, tt.port, tt.user, tt.password, tt.catalog, tt.schema, tt.queryTimeout, tt.accessToken, tt.kerberosEnabled, tt.sslEnabled)
+			got, err := buildTrinoDSN(tt.host, tt.port, tt.user, tt.password, tt.catalog, tt.schema, tt.queryTimeout, tt.accessToken, tt.kerberosEnabled, tt.sslEnabled, tt.sslCertPath, tt.sslCert)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("buildTrinoDSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -138,19 +154,19 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-trino-instance:
-					kind: trino
-					host: localhost
-					port: "8080"
-					user: testuser
-					catalog: hive
-					schema: default
+			kind: sources
+			name: my-trino-instance
+			type: trino
+			host: localhost
+			port: "8080"
+			user: testuser
+			catalog: hive
+			schema: default
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-trino-instance": Config{
 					Name:    "my-trino-instance",
-					Kind:    SourceKind,
+					Type:    SourceType,
 					Host:    "localhost",
 					Port:    "8080",
 					User:    "testuser",
@@ -162,24 +178,24 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "example with optional fields",
 			in: `
-			sources:
-				my-trino-instance:
-					kind: trino
-					host: localhost
-					port: "8443"
-					user: testuser
-					password: testpass
-					catalog: hive
-					schema: default
-					queryTimeout: "30m"
-					accessToken: "jwt-token-here"
-					kerberosEnabled: true
-					sslEnabled: true
+			kind: sources
+			name: my-trino-instance
+			type: trino
+			host: localhost
+			port: "8443"
+			user: testuser
+			password: testpass
+			catalog: hive
+			schema: default
+			queryTimeout: "30m"
+			accessToken: "jwt-token-here"
+			kerberosEnabled: true
+			sslEnabled: true
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-trino-instance": Config{
 					Name:            "my-trino-instance",
-					Kind:            SourceKind,
+					Type:            SourceType,
 					Host:            "localhost",
 					Port:            "8443",
 					User:            "testuser",
@@ -196,18 +212,18 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "anonymous access without user",
 			in: `
-			sources:
-				my-trino-anonymous:
-					kind: trino
-					host: localhost
-					port: "8080"
-					catalog: hive
-					schema: default
+			kind: sources
+			name: my-trino-anonymous
+			type: trino
+			host: localhost
+			port: "8080"
+			catalog: hive
+			schema: default
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-trino-anonymous": Config{
 					Name:    "my-trino-anonymous",
-					Kind:    SourceKind,
+					Type:    SourceType,
 					Host:    "localhost",
 					Port:    "8080",
 					Catalog: "hive",
@@ -215,19 +231,50 @@ func TestParseFromYamlTrino(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "example with SSL cert path and cert",
+			in: `
+			kind: sources
+			name: my-trino-ssl-cert
+			type: trino
+			host: localhost
+			port: "8443"
+			user: testuser
+			catalog: hive
+			schema: default
+			sslEnabled: true
+			sslCertPath: /path/to/cert.pem
+			sslCert: |-
+						-----BEGIN CERTIFICATE-----
+						...
+						-----END CERTIFICATE-----
+			disableSslVerification: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-trino-ssl-cert": Config{
+					Name:                   "my-trino-ssl-cert",
+					Type:                   SourceType,
+					Host:                   "localhost",
+					Port:                   "8443",
+					User:                   "testuser",
+					Catalog:                "hive",
+					Schema:                 "default",
+					SSLEnabled:             true,
+					SSLCertPath:            "/path/to/cert.pem",
+					SSLCert:                "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+					DisableSslVerification: true,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}

@@ -28,17 +28,19 @@ The following configurations are placed at the top level of a `tools.yaml` file.
 {{< notice tip >}}
 If you are accessing Toolbox with multiple applications, each
  application should register their own Client ID even if they use the same
- "kind" of auth provider.
+ "type" of auth provider.
 {{< /notice >}}
 
 ```yaml
-authServices:
-  my_auth_app_1:
-    kind: google
-    clientId: ${YOUR_CLIENT_ID_1}
-  my_auth_app_2:
-    kind: google
-    clientId: ${YOUR_CLIENT_ID_2}
+kind: authServices
+name: my_auth_app_1
+type: google
+clientId: ${YOUR_CLIENT_ID_1}
+---
+kind: authServices
+name: my_auth_app_2
+type: google
+clientId: ${YOUR_CLIENT_ID_2}
 ```
 
 {{< notice tip >}}

@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,6 +27,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 )
+
+// GDAClientID is the client ID for Gemini Data Analytics
+const GDAClientID = "GENAI_TOOLBOX"
 
 // DecodeJSON decodes a given reader into an interface using the json decoder.
 func DecodeJSON(r io.Reader, v interface{}) error {
@@ -188,5 +190,3 @@ func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation
 	}
 	return nil, fmt.Errorf("unable to retrieve instrumentation")
 }
-
-var ErrUnauthorized = errors.New("unauthorized")

@@ -35,8 +35,8 @@ import (
 )
 
 var (
-	ClickHouseSourceKind = "clickhouse"
-	ClickHouseToolKind   = "clickhouse-sql"
+	ClickHouseSourceType = "clickhouse"
+	ClickHouseToolType   = "clickhouse-sql"
 	ClickHouseDatabase   = os.Getenv("CLICKHOUSE_DATABASE")
 	ClickHouseHost       = os.Getenv("CLICKHOUSE_HOST")
 	ClickHousePort       = os.Getenv("CLICKHOUSE_PORT")
@@ -64,7 +64,7 @@ func getClickHouseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     ClickHouseSourceKind,
+		"type":     ClickHouseSourceType,
 		"host":     ClickHouseHost,
 		"port":     ClickHousePort,
 		"database": ClickHouseDatabase,
@@ -126,10 +126,10 @@ func TestClickHouse(t *testing.T) {
 	teardownTable2 := setupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
-	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addClickHouseExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getClickHouseSQLTmplToolStatement()
-	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined)
+	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolType, tmplSelectCombined, tmplSelectFilterCombined)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -162,12 +162,12 @@ func addClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[stri
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "clickhouse-execute-sql",
+		"type":        "clickhouse-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "clickhouse-execute-sql",
+		"type":        "clickhouse-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -178,7 +178,7 @@ func addClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[stri
 	return config
 }
 
-func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolType, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -186,7 +186,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 
 	// ClickHouse-specific template parameter tools with compatible syntax
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}}) ORDER BY id",
@@ -196,7 +196,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -207,7 +207,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}} ORDER BY id",
@@ -216,7 +216,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
@@ -228,7 +228,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}} ORDER BY id",
@@ -237,7 +237,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
@@ -251,7 +251,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
@@ -310,7 +310,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"type":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -339,7 +339,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 func getClickHouseWants() (string, string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: sendQuery: [HTTP 400] response body: \"Code: 62. DB::Exception: Syntax error: failed at position 1 (SELEC): SELEC 1;. Expected one of: Query, Query with output, EXPLAIN, EXPLAIN, SELECT query, possibly with UNION, list of union elements, SELECT query, subquery, possibly with UNION, SELECT subquery, SELECT query, WITH, FROM, SELECT, SHOW CREATE QUOTA query, SHOW CREATE, SHOW [FULL] [TEMPORARY] TABLES|DATABASES|CLUSTERS|CLUSTER|MERGES 'name' [[NOT] [I]LIKE 'str'] [LIMIT expr], SHOW, SHOW COLUMNS query, SHOW ENGINES query, SHOW ENGINES, SHOW FUNCTIONS query, SHOW FUNCTIONS, SHOW INDEXES query, SHOW SETTING query, SHOW SETTING, EXISTS or SHOW CREATE query, EXISTS, DESCRIBE FILESYSTEM CACHE query, DESCRIBE, DESC, DESCRIBE query, SHOW PROCESSLIST query, SHOW PROCESSLIST, CREATE TABLE or ATTACH TABLE query, CREATE, ATTACH, REPLACE, CREATE DATABASE query, CREATE VIEW query, CREATE DICTIONARY, CREATE LIVE VIEW query, CREATE WINDOW VIEW query, ALTER query, ALTER TABLE, ALTER TEMPORARY TABLE, ALTER DATABASE, RENAME query, RENAME DATABASE, RENAME TABLE, EXCHANGE TABLES, RENAME DICTIONARY, EXCHANGE DICTIONARIES, RENAME, DROP query, DROP, DETACH, TRUNCATE, UNDROP query, UNDROP, CHECK ALL TABLES, CHECK TABLE, KILL QUERY query, KILL, OPTIMIZE query, OPTIMIZE TABLE, WATCH query, WATCH, SHOW ACCESS query, SHOW ACCESS, ShowAccessEntitiesQuery, SHOW GRANTS query, SHOW GRANTS, SHOW PRIVILEGES query, SHOW PRIVILEGES, BACKUP or RESTORE query, BACKUP, RESTORE, INSERT query, INSERT INTO, USE query, USE, SET ROLE or SET DEFAULT ROLE query, SET ROLE DEFAULT, SET ROLE, SET DEFAULT ROLE, SET query, SET, SYSTEM query, SYSTEM, CREATE USER or ALTER USER query, ALTER USER, CREATE USER, CREATE ROLE or ALTER ROLE query, ALTER ROLE, CREATE ROLE, CREATE QUOTA or ALTER QUOTA query, ALTER QUOTA, CREATE QUOTA, CREATE ROW POLICY or ALTER ROW POLICY query, ALTER POLICY, ALTER ROW POLICY, CREATE POLICY, CREATE ROW POLICY, CREATE SETTINGS PROFILE or ALTER SETTINGS PROFILE query, ALTER SETTINGS PROFILE, ALTER PROFILE, CREATE SETTINGS PROFILE, CREATE PROFILE, CREATE FUNCTION query, DROP FUNCTION query, CREATE WORKLOAD query, DROP WORKLOAD query, CREATE RESOURCE query, DROP RESOURCE query, CREATE NAMED COLLECTION, DROP NAMED COLLECTION query, Alter NAMED COLLECTION query, ALTER, CREATE INDEX query, DROP INDEX query, DROP access entity query, MOVE access entity query, MOVE, GRANT or REVOKE query, REVOKE, GRANT, CHECK GRANT, CHECK GRANT, EXTERNAL DDL query, EXTERNAL DDL FROM, TCL query, BEGIN TRANSACTION, START TRANSACTION, COMMIT, ROLLBACK, SET TRANSACTION SNAPSHOT, Delete query, DELETE, Update query, UPDATE. (SYNTAX_ERROR) (version 25.7.5.34 (official build))\n\""}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: sendQuery: [HTTP 400] response body: \"Code: 62. DB::Exception: Syntax error: failed at position 1 (SELEC): SELEC 1;. Expected one of: Query, Query with output, EXPLAIN, EXPLAIN, SELECT query, possibly with UNION, list of union elements, SELECT query, subquery, possibly with UNION, SELECT subquery, SELECT query, WITH, FROM, SELECT, SHOW CREATE QUOTA query, SHOW CREATE, SHOW [FULL] [TEMPORARY] TABLES|DATABASES|CLUSTERS|CLUSTER|MERGES 'name' [[NOT] [I]LIKE 'str'] [LIMIT expr], SHOW, SHOW COLUMNS query, SHOW ENGINES query, SHOW ENGINES, SHOW FUNCTIONS query, SHOW FUNCTIONS, SHOW INDEXES query, SHOW SETTING query, SHOW SETTING, EXISTS or SHOW CREATE query, EXISTS, DESCRIBE FILESYSTEM CACHE query, DESCRIBE, DESC, DESCRIBE query, SHOW PROCESSLIST query, SHOW PROCESSLIST, CREATE TABLE or ATTACH TABLE query, CREATE, ATTACH, REPLACE, CREATE DATABASE query, CREATE VIEW query, CREATE DICTIONARY, CREATE LIVE VIEW query, CREATE WINDOW VIEW query, ALTER query, ALTER TABLE, ALTER TEMPORARY TABLE, ALTER DATABASE, RENAME query, RENAME DATABASE, RENAME TABLE, EXCHANGE TABLES, RENAME DICTIONARY, EXCHANGE DICTIONARIES, RENAME, DROP query, DROP, DETACH, TRUNCATE, UNDROP query, UNDROP, CHECK ALL TABLES, CHECK TABLE, KILL QUERY query, KILL, OPTIMIZE query, OPTIMIZE TABLE, WATCH query, WATCH, SHOW ACCESS query, SHOW ACCESS, ShowAccessEntitiesQuery, SHOW GRANTS query, SHOW GRANTS, SHOW PRIVILEGES query, SHOW PRIVILEGES, BACKUP or RESTORE query, BACKUP, RESTORE, INSERT query, INSERT INTO, USE query, USE, SET ROLE or SET DEFAULT ROLE query, SET ROLE DEFAULT, SET ROLE, SET DEFAULT ROLE, SET query, SET, SYSTEM query, SYSTEM, CREATE USER or ALTER USER query, ALTER USER, CREATE USER, CREATE ROLE or ALTER ROLE query, ALTER ROLE, CREATE ROLE, CREATE QUOTA or ALTER QUOTA query, ALTER QUOTA, CREATE QUOTA, CREATE ROW POLICY or ALTER ROW POLICY query, ALTER POLICY, ALTER ROW POLICY, CREATE POLICY, CREATE ROW POLICY, CREATE SETTINGS PROFILE or ALTER SETTINGS PROFILE query, ALTER SETTINGS PROFILE, ALTER PROFILE, CREATE SETTINGS PROFILE, CREATE PROFILE, CREATE FUNCTION query, DROP FUNCTION query, CREATE WORKLOAD query, DROP WORKLOAD query, CREATE RESOURCE query, DROP RESOURCE query, CREATE NAMED COLLECTION, DROP NAMED COLLECTION query, Alter NAMED COLLECTION query, ALTER, CREATE INDEX query, DROP INDEX query, DROP access entity query, MOVE access entity query, MOVE, GRANT or REVOKE query, REVOKE, GRANT, CHECK GRANT, CHECK GRANT, EXTERNAL DDL query, EXTERNAL DDL FROM, TCL query, BEGIN TRANSACTION, START TRANSACTION, COMMIT, ROLLBACK, SET TRANSACTION SNAPSHOT, Delete query, DELETE, Update query, UPDATE. (SYNTAX_ERROR) (version 25.7.5.34 (official build))\n\""}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id UInt32, name String) ENGINE = Memory"`
 	nullWant := `[{"id":4,"name":""}]`
 	return select1Want, mcpSelect1Want, mcpMyFailToolWant, createTableStatement, nullWant
@@ -386,13 +386,13 @@ func TestClickHouseSQLTool(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"test-select": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"type":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test select query",
 				"statement":   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
 			},
 			"test-param-query": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"type":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test parameterized query",
 				"statement":   fmt.Sprintf("SELECT * FROM %s WHERE age > ? ORDER BY id", tableName),
@@ -401,7 +401,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 				},
 			},
 			"test-empty-result": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"type":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test query with no results",
 				"statement":   fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName),
@@ -410,7 +410,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 				},
 			},
 			"test-invalid-sql": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"type":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test invalid SQL",
 				"statement":   "SELEC * FROM nonexistent_table", // Typo in SELECT
@@ -522,7 +522,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"execute-sql-tool": map[string]any{
-				"kind":        "clickhouse-execute-sql",
+				"type":        "clickhouse-execute-sql",
 				"source":      "my-instance",
 				"description": "Test create table",
 			},
@@ -548,6 +548,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		sql            string
 		resultSliceLen int
 		isErr          bool
+		isAgentErr     bool
 	}{
 		{
 			name:           "CreateTable",
@@ -570,15 +571,15 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			resultSliceLen: 0,
 		},
 		{
-			name:  "MissingSQL",
-			sql:   "",
-			isErr: true,
+			name:       "MissingSQL",
+			sql:        "",
+			isAgentErr: true,
 		},
 
 		{
-			name:  "SQLInjectionAttempt",
-			sql:   "SELECT 1; DROP TABLE system.users; SELECT 2",
-			isErr: true,
+			name:       "SQLInjectionAttempt",
+			sql:        "SELECT 1; DROP TABLE system.users; SELECT 2",
+			isAgentErr: true,
 		},
 	}
 	for _, tc := range tcs {
@@ -594,6 +595,9 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			}
 			if tc.isErr {
 				t.Fatalf("expecting an error from server")
+			}
+			if tc.isAgentErr {
+				return
 			}
 
 			var body map[string]interface{}
@@ -640,18 +644,18 @@ func TestClickHouseEdgeCases(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"execute-sql-tool": map[string]any{
-				"kind":        "clickhouse-execute-sql",
+				"type":        "clickhouse-execute-sql",
 				"source":      "my-instance",
 				"description": "Test create table",
 			},
 			"test-null-values": map[string]any{
-				"kind":        "clickhouse-sql",
+				"type":        "clickhouse-sql",
 				"source":      "my-instance",
 				"description": "Test null values",
 				"statement":   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
 			},
 			"test-concurrent": map[string]any{
-				"kind":        "clickhouse-sql",
+				"type":        "clickhouse-sql",
 				"source":      "my-instance",
 				"description": "Test concurrent queries",
 				"statement":   "SELECT number FROM system.numbers LIMIT ?",
@@ -818,7 +822,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 	t.Logf("✅ Edge case tests completed successfully")
 }
 
-// getClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql kind
+// getClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql type
 func getClickHouseSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String) ENGINE = Memory", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, ?)", tableName)
@@ -830,7 +834,7 @@ func getClickHouseSQLParamToolInfo(tableName string) (string, string, string, st
 	return createStatement, insertStatement, paramStatement, idParamStatement, nameParamStatement, arrayStatement, params
 }
 
-// getClickHouseSQLAuthToolInfo returns statements and param of my-auth-tool for clickhouse-sql kind
+// getClickHouseSQLAuthToolInfo returns statements and param of my-auth-tool for clickhouse-sql type
 func getClickHouseSQLAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id UInt32, name String, email String) ENGINE = Memory", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (?, ?, ?), (?, ?, ?)", tableName)
@@ -839,7 +843,7 @@ func getClickHouseSQLAuthToolInfo(tableName string) (string, string, string, []a
 	return createStatement, insertStatement, authStatement, params
 }
 
-// getClickHouseSQLTmplToolStatement returns statements and param for template parameter test cases for clickhouse-sql kind
+// getClickHouseSQLTmplToolStatement returns statements and param for template parameter test cases for clickhouse-sql type
 func getClickHouseSQLTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -902,12 +906,12 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"test-list-databases": map[string]any{
-				"kind":        "clickhouse-list-databases",
+				"type":        "clickhouse-list-databases",
 				"source":      "my-instance",
 				"description": "Test listing databases",
 			},
 			"test-invalid-source": map[string]any{
-				"kind":        "clickhouse-list-databases",
+				"type":        "clickhouse-list-databases",
 				"source":      "non-existent-source",
 				"description": "Test with invalid source",
 			},
@@ -1031,12 +1035,12 @@ func TestClickHouseListTablesTool(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"test-list-tables": map[string]any{
-				"kind":        "clickhouse-list-tables",
+				"type":        "clickhouse-list-tables",
 				"source":      "my-instance",
 				"description": "Test listing tables",
 			},
 			"test-invalid-source": map[string]any{
-				"kind":        "clickhouse-list-tables",
+				"type":        "clickhouse-list-tables",
 				"source":      "non-existent-source",
 				"description": "Test with invalid source",
 			},
@@ -1119,16 +1123,16 @@ func TestClickHouseListTablesTool(t *testing.T) {
 	t.Run("ListTablesWithMissingDatabase", func(t *testing.T) {
 		api := "http://127.0.0.1:5000/api/tool/test-list-tables/invoke"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode == http.StatusOK {
-			t.Error("Expected error for missing database parameter, but got 200 OK")
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 OK for missing database parameter, but got %d", resp.StatusCode)
 		}
 	})
 
 	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
 		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode == http.StatusOK {
-			t.Error("Expected error for non-existent source, but got 200 OK")
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 OK for non-existent source, but got %d", resp.StatusCode)
 		}
 	})
 
