@@ -1,5 +1,5 @@
 ---
-title: "core"
+title: "Core"
 type: docs
 weight: 8
 description: >
@@ -67,7 +67,7 @@ If you initialize `ToolboxClient` without providing an external session and cann
 
 ## Usage
 
-Import and initialize a Toolbox client, pointing it to the URL of your running
+Import and initialize an MCP Toolbox client, pointing it to the URL of your running
 Toolbox service.
 
 ```py
@@ -235,7 +235,7 @@ asyncio.run(main())
 ## Client to Server Authentication
 
 This section describes how to authenticate the ToolboxClient itself when
-connecting to a Toolbox server instance that requires authentication. This is
+connecting to an MCP Toolbox server instance that requires authentication. This is
 crucial for securing your Toolbox server endpoint, especially when deployed on
 platforms like Cloud Run, GKE,  or any environment where unauthenticated access is restricted.
 
@@ -428,7 +428,7 @@ An auth token getter for a specific name (e.g., `“GOOGLE_ID”`) will replace 
 {{</notice>}}
 
 
-## Binding Parameter Values
+## Parameter Binding
 
 The SDK allows you to pre-set, or "bind", values for specific tool parameters
 before the tool is invoked or even passed to an LLM. These bound values are
