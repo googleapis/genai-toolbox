@@ -3,7 +3,7 @@ title: "Go Quickstart (Local)"
 type: docs
 weight: 4
 description: >
-  How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
+  How to get started running MCP Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
 ---
 
 ## Before you begin
@@ -24,14 +24,14 @@ This guide assumes you have already done the following:
 
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
-## Step 2: Install and configure Toolbox
+## Step 2: Install and configure MCP Toolbox
 
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
-## Step 3: Connect your agent to Toolbox
+## Step 3: Connect your agent to MCP Toolbox
 
 In this section, we will write and run an agent that will load the Tools
-from Toolbox.
+from MCP Toolbox.
 
 1. Initialize a go module:
 
@@ -39,14 +39,39 @@ from Toolbox.
     go mod init main
     ```
 
-1. In a new terminal, install the
-   [SDK](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go).
+1. In a new terminal, install the Go SDK Module:
+    {{< notice warning >}}
+    Breaking Change Notice: As of version `0.6.0`, this SDK has transitioned to a multi-module structure.
+    * For new versions (`v0.6.0`+): You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/core`).
+    * For older versions (`v0.5.1` and below): The SDK remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
+    * Please update your imports and `go.mod` accordingly when upgrading.
+    {{< /notice >}}
 
-    ```bash
-    go get github.com/googleapis/mcp-toolbox-sdk-go
-    ```
+   {{< tabpane persist=header >}}
+    {{< tab header="LangChain Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    {{< /tab >}}
 
-1. Create a new file named `hotelagent.go` and copy the following code to create
+    {{< tab header="Genkit Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    go get github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit
+    {{< /tab >}}
+
+    {{< tab header="Go GenAI" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    {{< /tab >}}
+
+    {{< tab header="OpenAI Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    {{< /tab >}}
+
+    {{< tab header="ADK Go" lang="bash" >}}
+    go get github.com/googleapis/mcp-toolbox-sdk-go/core
+    go get github.com/googleapis/mcp-toolbox-sdk-go/tbadk
+    {{< /tab >}}
+    {{< /tabpane >}}
+
+2. Create a new file named `hotelagent.go` and copy the following code to create
    an agent:
 
     {{< tabpane persist=header >}}

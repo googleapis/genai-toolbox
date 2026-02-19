@@ -133,3 +133,4 @@ instead of hardcoding your secrets into the configuration file.
 | user        |       string       |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
 | password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
 | queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |
+| queryExecMode | string | false | pgx query execution mode. Valid values: `cache_statement` (default), `cache_describe`, `describe_exec`, `exec`, `simple_protocol`. Useful with connection poolers that don't support prepared statement caching. |

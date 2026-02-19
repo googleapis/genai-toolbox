@@ -1,3 +1,5 @@
+// Copyright 2025 Google LLC
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -9,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package main
 
 import (
@@ -19,6 +22,8 @@ import (
 	"strings"
 	"testing"
 )
+
+var goldenKeywords = []string{"Hilton Basel", "Hyatt Regency", "book"}
 
 func TestQuickstartSample(t *testing.T) {
 	framework := os.Getenv("ORCH_NAME")
@@ -59,16 +64,10 @@ func TestQuickstartSample(t *testing.T) {
 		t.Fatal("Script ran successfully but produced no output.")
 	}
 
-	goldenFile, err := os.ReadFile("../golden.txt")
-	if err != nil {
-		t.Fatalf("Could not read golden.txt to check for keywords: %v", err)
-	}
-
-	keywords := strings.Split(string(goldenFile), "\n")
 	var missingKeywords []string
 	outputLower := strings.ToLower(actualOutput)
 
-	for _, keyword := range keywords {
+	for _, keyword := range goldenKeywords {
 		kw := strings.TrimSpace(keyword)
 		if kw != "" && !strings.Contains(outputLower, strings.ToLower(kw)) {
 			missingKeywords = append(missingKeywords, kw)

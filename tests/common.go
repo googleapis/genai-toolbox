@@ -528,6 +528,41 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
+// GetCockroachDBParamToolInfo returns statements and param for my-tool cockroachdb-sql type
+// Uses explicit INT PRIMARY KEY instead of SERIAL to ensure deterministic IDs
+func GetCockroachDBParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT PRIMARY KEY, name TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, $1), (2, $2), (3, $3), (4, $4);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2 ORDER BY id;", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = $1;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2) ORDER BY id;", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+}
+
+// GetCockroachDBAuthToolInfo returns statements and param of my-auth-tool for cockroachdb-sql type
+// Uses explicit INT PRIMARY KEY instead of SERIAL to ensure deterministic IDs
+func GetCockroachDBAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT PRIMARY KEY, name TEXT, email TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, $1, $2), (2, $3, $4)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
+	params := []any{"Alice", ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+// GetCockroachDBWants return the expected wants for cockroachdb
+func GetCockroachDBWants() (string, string, string, string) {
+	select1Want := "[{\"?column?\":1}]"
+	// CockroachDB formats syntax errors differently than PostgreSQL:
+	// - Uses lowercase for SQL keywords in error messages
+	// - Uses format: 'at or near "token": syntax error' instead of 'syntax error at or near "TOKEN"'
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: ERROR: at or near \"selec\": syntax error (SQLSTATE 42601)"}],"isError":true}}`
+	createTableStatement := `"CREATE TABLE t (id INT PRIMARY KEY, name TEXT)"`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
+	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
+}
+
 // GetMSSQLParamToolInfo returns statements and param for my-tool mssql-sql type
 func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
@@ -587,7 +622,7 @@ func GetMySQLTmplToolStatement() (string, string) {
 // GetPostgresWants return the expected wants for postgres
 func GetPostgresWants() (string, string, string, string) {
 	select1Want := "[{\"?column?\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: ERROR: syntax error at or near \"SELEC\" (SQLSTATE 42601)"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -596,7 +631,7 @@ func GetPostgresWants() (string, string, string, string) {
 // GetMSSQLWants return the expected wants for mssql
 func GetMSSQLWants() (string, string, string, string) {
 	select1Want := "[{\"\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: mssql: Could not find stored procedure 'SELEC'."}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id INT IDENTITY(1,1) PRIMARY KEY, name NVARCHAR(MAX))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -605,7 +640,7 @@ func GetMSSQLWants() (string, string, string, string) {
 // GetMySQLWants return the expected wants for mysql
 func GetMySQLWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -937,14 +972,15 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 }
 
 // Finds and drops all tables in a postgres database.
-func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	query := `
-	SELECT table_name FROM information_schema.tables
-	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
+func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool, uniqueID string) {
 
-	rows, err := pool.Query(ctx, query)
+	query := `
+		SELECT table_name FROM information_schema.tables
+		WHERE table_schema = 'public' 
+		AND table_name LIKE $1;`
+	rows, err := pool.Query(ctx, query, "%\\_"+uniqueID)
 	if err != nil {
-		t.Fatalf("Failed to query for all tables in 'public' schema: %v", err)
+		t.Fatalf("Failed to query for tables for uniqueID %s in 'public' schema: %v", uniqueID, err)
 	}
 	defer rows.Close()
 
@@ -959,13 +995,18 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	if len(tablesToDrop) == 0 {
+		t.Logf("INTEGRATION CLEANUP: No tables found for uniqueID: %s", uniqueID)
 		return
 	}
+
+	t.Logf("INTEGRATION CLEANUP: Dropping %d isolated tables: %v", len(tablesToDrop), tablesToDrop)
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
 
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
-		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
+		t.Fatalf("Failed to drop tables for uniqueID %s in 'public' schema: %v", uniqueID, err)
+	} else {
+		t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped all tables for uniqueID: %s", uniqueID)
 	}
 }
 

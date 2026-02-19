@@ -21,6 +21,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.30.0
 	github.com/apache/cassandra-gocql-driver/v2 v2.0.0
 	github.com/cenkalti/backoff/v5 v5.0.3
+	github.com/cockroachdb/cockroach-go/v2 v2.4.2
 	github.com/couchbase/gocb/v2 v2.11.1
 	github.com/couchbase/tools-common/http v1.0.9
 	github.com/elastic/elastic-transport-go/v8 v8.8.0
@@ -28,7 +29,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
-	github.com/go-chi/httplog/v2 v2.1.1
+	github.com/go-chi/httplog/v3 v3.3.0
 	github.com/go-chi/render v1.0.3
 	github.com/go-goquery/goquery v1.0.1
 	github.com/go-playground/validator/v10 v10.28.0
