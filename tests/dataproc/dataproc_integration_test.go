@@ -176,14 +176,14 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 					name:     "missing cluster",
 					toolName: "get-cluster",
 					request:  map[string]any{"clusterName": "INVALID_CLUSTER"},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  fmt.Sprintf("Not found: Cluster projects/%s/regions/%s/clusters/INVALID_CLUSTER", dataprocProject, dataprocRegion),
 				},
 				{
 					name:     "full cluster name",
 					toolName: "get-cluster",
 					request:  map[string]any{"clusterName": missingClusterFullName},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  fmt.Sprintf("clusterName must be a short name without '/': %s", missingClusterFullName),
 				},
 			}
@@ -220,14 +220,14 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 					name:     "missing job",
 					toolName: "get-job",
 					request:  map[string]any{"jobId": "INVALID_JOB"},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  fmt.Sprintf("Not found: Job projects/%s/regions/%s/jobs/INVALID_JOB", dataprocProject, dataprocRegion),
 				},
 				{
 					name:     "full job name",
 					toolName: "get-job",
 					request:  map[string]any{"jobId": missingJobFullName},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  fmt.Sprintf("jobId must be a short name without '/': %s", missingJobFullName),
 				},
 			}
@@ -260,14 +260,14 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 					name:     "zero page size",
 					toolName: "list-clusters",
 					request:  map[string]any{"pageSize": 0},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  "pageSize must be positive: 0",
 				},
 				{
 					name:     "negative page size",
 					toolName: "list-clusters",
 					request:  map[string]any{"pageSize": -1},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  "pageSize must be positive: -1",
 				},
 			}
@@ -301,14 +301,14 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 					name:     "zero page size",
 					toolName: "list-jobs",
 					request:  map[string]any{"pageSize": 0},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  "pageSize must be positive: 0",
 				},
 				{
 					name:     "negative page size",
 					toolName: "list-jobs",
 					request:  map[string]any{"pageSize": -1},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  "pageSize must be positive: -1",
 				},
 			}
@@ -547,13 +547,13 @@ func runGetClusterTest(t *testing.T, client *dataproc.ClusterControllerClient, c
 			{
 				name:     "missing clusterName",
 				request:  map[string]any{},
-				wantCode: http.StatusBadRequest,
+				wantCode: http.StatusOK,
 				wantMsg:  "missing required parameter: clusterName",
 			},
 			{
 				name:     "invalid name with slash",
 				request:  map[string]any{"clusterName": "projects/foo/regions/bar/clusters/baz"}, // Full name requires matching project/region
-				wantCode: http.StatusBadRequest,
+				wantCode: http.StatusOK,
 				wantMsg:  "clusterName must be a short name without '/'",
 			},
 		}
@@ -855,13 +855,13 @@ func runGetJobTest(t *testing.T, client *dataproc.JobControllerClient, ctx conte
 			{
 				name:     "missing jobId",
 				request:  map[string]any{},
-				wantCode: http.StatusBadRequest,
+				wantCode: http.StatusOK,
 				wantMsg:  "missing required parameter: jobId",
 			},
 			{
 				name:     "invalid name with slash",
 				request:  map[string]any{"jobId": "projects/foo/regions/bar/jobs/baz"},
-				wantCode: http.StatusBadRequest,
+				wantCode: http.StatusOK,
 				wantMsg:  "jobId must be a short name without '/'",
 			},
 		}

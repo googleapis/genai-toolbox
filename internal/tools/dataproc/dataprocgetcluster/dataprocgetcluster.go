@@ -17,6 +17,7 @@ package dataprocgetcluster
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -24,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/dataproc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -112,22 +114,26 @@ type compatibleSource interface {
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Config.Source, t.Name, kind)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramMap := params.AsMap()
 	name, ok := paramMap["clusterName"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing required parameter: clusterName")
+		return nil, util.NewAgentError("missing required parameter: clusterName", nil)
 	}
 	if strings.Contains(name, "/") {
-		return nil, fmt.Errorf("clusterName must be a short name without '/': %s", name)
+		return nil, util.NewAgentError(fmt.Sprintf("clusterName must be a short name without '/': %s", name), nil)
 	}
 
-	return source.GetCluster(ctx, name)
+	res, err := source.GetCluster(ctx, name)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return res, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
