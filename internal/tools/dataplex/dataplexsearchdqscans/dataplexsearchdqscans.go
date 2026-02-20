@@ -118,7 +118,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		filters = append(filters, fmt.Sprintf("name = %q", dataScanID))
 	}
 	if tableName != "" {
-		filters = append(filters, fmt.Sprintf("data.entity = %q", tableName))
+		filters = append(filters, fmt.Sprintf("data.resource = %q", tableName))
 	}
 
 	finalFilter := strings.Join(filters, " AND ")
