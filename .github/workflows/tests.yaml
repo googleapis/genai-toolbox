@@ -32,6 +32,12 @@ on:
       - ".github/workflows/tests.yaml"
   pull_request_target:
     types: [labeled]
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**.md"
+      - "!.github/**"
+      - ".github/workflows/tests.yaml"
 
 # Declare default permissions as read only.
 permissions: read-all
