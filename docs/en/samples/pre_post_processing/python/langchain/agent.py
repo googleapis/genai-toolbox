@@ -17,7 +17,6 @@ system_prompt = """
   Don't ask for confirmations from the user.
 """
 
-
 # Pre processing
 @wrap_tool_call
 async def enforce_business_rules(request, handler):
@@ -55,7 +54,6 @@ async def enforce_business_rules(request, handler):
     # POST: Code here runs AFTER the tool execution
     return result
 
-
 # Post processing
 @wrap_tool_call
 async def enrich_response(request, handler):
@@ -92,7 +90,7 @@ async def main():
             # add any pre and post processing methods
             middleware=[enforce_business_rules, enrich_response],
         )
-
+        # Test Post-processing
         user_input = "Book hotel with id 3."
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
@@ -104,7 +102,7 @@ async def main():
 
         # Test Pre-processing
         print("-" * 50)
-        user_input = "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-01-20"
+        user_input = "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-02-20."
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
         )
