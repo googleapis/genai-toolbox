@@ -21,6 +21,12 @@ on:
       - "**.md"
       - ".github/**"
       - "!.github/workflows/lint.yaml"
+  pull_request_target:
+    paths:
+      - "docs/**"
+      - "**.md"
+      - ".github/**"
+      - "!.github/workflows/lint.yaml"
 
 permissions: read-all
 
