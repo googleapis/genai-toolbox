@@ -22,43 +22,43 @@ assign_issues_by:
   - labels:
     - 'product: alloydb'
     to:
-    - 'googleapis/toolbox-alloydb'
+    - 'googleapis/toolbox-alloydb-team'
   - labels:
     - 'product: bigquery'
     to:
-    - 'googleapis/toolbox-bigquery'
+    - 'googleapis/toolbox-bigquery-team'
   - labels:
     - 'product: bigtable'
     to:
-    - 'googleapis/toolbox-bigtable'
+    - 'googleapis/toolbox-bigtable-team'
   - labels:
     - 'product: mssql'
     to:
-    - 'googleapis/toolbox-cloud-sql-mssql'
+    - 'googleapis/toolbox-cloud-sql-mssql-team'
   - labels:
     - 'product: mysql'
     to:
-    - 'googleapis/toolbox-cloud-sql-mysql'
+    - 'googleapis/toolbox-cloud-sql-mysql-team'
   - labels:
     - 'product: postgres'
     to:
-    - 'googleapis/toolbox-cloud-sql-postgres'
+    - 'googleapis/toolbox-cloud-sql-postgres-team'
   - labels:
     - 'product: dataplex'
     to:
-    - 'googleapis/toolbox-dataplex'
+    - 'googleapis/toolbox-dataplex-team'
   - labels:
     - 'product: firestore'
     to:
-    - 'googleapis/toolbox-firestore'
+    - 'googleapis/toolbox-firestore-team'
   - labels:
     - 'product: looker'
     to:
-    - 'googleapis/toolbox-looker'
+    - 'googleapis/toolbox-looker-team'
   - labels:
     - 'product: spanner'
     to:
-    - 'googleapis/toolbox-spanner'
+    - 'googleapis/toolbox-spanner-team'
 assign_prs:
   - Yuan325
   - duwenxin99
@@ -66,41 +66,41 @@ assign_prs_by:
   - labels:
     - 'product: alloydb'
     to:
-    - 'googleapis/toolbox-alloydb'
+    - 'googleapis/toolbox-alloydb-team'
   - labels:
     - 'product: bigquery'
     to:
-    - 'googleapis/toolbox-bigquery'
+    - 'googleapis/toolbox-bigquery-team'
   - labels:
     - 'product: bigtable'
     to:
-    - 'googleapis/toolbox-bigtable'
+    - 'googleapis/toolbox-bigtable-team'
   - labels:
     - 'product: mssql'
     to:
-    - 'googleapis/toolbox-cloud-sql-mssql'
+    - 'googleapis/toolbox-cloud-sql-mssql-team'
   - labels:
     - 'product: mysql'
     to:
-    - 'googleapis/toolbox-cloud-sql-mysql'
+    - 'googleapis/toolbox-cloud-sql-mysql-team'
   - labels:
     - 'product: postgres'
     to:
-    - 'googleapis/toolbox-cloud-sql-postgres'
+    - 'googleapis/toolbox-cloud-sql-postgres-team'
   - labels:
     - 'product: dataplex'
     to:
-    - 'googleapis/toolbox-dataplex'
+    - 'googleapis/toolbox-dataplex-team'
   - labels:
     - 'product: firestore'
     to:
-    - 'googleapis/toolbox-firestore'
+    - 'googleapis/toolbox-firestore-team'
   - labels:
     - 'product: looker'
     to:
-    - 'googleapis/toolbox-looker'
+    - 'googleapis/toolbox-looker-team'
   - labels:
     - 'product: spanner'
     to:
-    - 'googleapis/toolbox-spanner'
+    - 'googleapis/toolbox-spanner-team'
 
