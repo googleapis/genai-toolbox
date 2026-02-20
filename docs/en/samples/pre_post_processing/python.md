@@ -21,9 +21,7 @@ Coming soon.
 {{% tab header="Langchain" text=true %}}
 The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre- and post- processing for tool calls.
 
-```py
-{{< include "python/langchain/agent.py" >}}
-```
+{{< include "python/langchain/agent.py" "python" >}}
 
 You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks) for details on these additional hook types.
 {{% /tab %}}

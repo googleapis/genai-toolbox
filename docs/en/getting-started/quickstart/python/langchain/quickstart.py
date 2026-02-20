@@ -3,15 +3,11 @@ import asyncio
 from langgraph.prebuilt import create_react_agent
 
 # TODO(developer): replace this with another import if needed
-
 from langchain_google_vertexai import ChatVertexAI
-
 # from langchain_google_genai import ChatGoogleGenerativeAI
-
 # from langchain_anthropic import ChatAnthropic
 
 from langgraph.checkpoint.memory import MemorySaver
-
 from toolbox_langchain import ToolboxClient
 
 prompt = """
