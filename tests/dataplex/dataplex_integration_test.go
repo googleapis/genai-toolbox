@@ -268,7 +268,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexLookupEntryToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchAspectTypesToolInvokeTest(t, aspectTypeId)
 	runDataplexLookupContextToolInvokeTest(t, tableName, datasetName)
-	runDataplexSearchDataQualityScansToolInvokeTest(t, dataScanId, tableName)
+	runDataplexSearchDataQualityScansToolInvokeTest(t, dataScanId, tableName, datasetName)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -1059,11 +1059,14 @@ func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, data
 	}
 }
 
-func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId string, tableName string) {
+func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId string, tableName string, datasetName string) {
 	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
+
+	fullDataScanId := fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, dataScanId)
+	fullTableName := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetName, tableName)
 
 	testCases := []struct {
 		name           string
@@ -1078,52 +1081,52 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Success - Scan Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", dataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 200,
 			expectResult:   true,
-			wantContentKey: "data_quality_spec",
+			wantContentKey: "name",
 		},
 		{
 			name:           "Success - Scan Found by Table Name",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"table_name\":\"%s\"}", tableName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"table_name\":\"%s\"}", fullTableName))),
 			wantStatusCode: 200,
 			expectResult:   true,
-			wantContentKey: "data_quality_spec",
+			wantContentKey: "name",
 		},
 		{
 			name:           "Success with Authorization - Scan Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", dataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 200,
 			expectResult:   true,
-			wantContentKey: "data_quality_spec",
+			wantContentKey: "name",
 		},
 		{
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", dataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 401,
 			expectResult:   false,
-			wantContentKey: "data_quality_spec",
+			wantContentKey: "name",
 		},
 		{
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", dataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 401,
 			expectResult:   false,
-			wantContentKey: "data_quality_spec",
+			wantContentKey: "name",
 		},
 		{
 			name:           "Failure - Scan Not Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"data_scan_id":"non-existent-scan"}`)),
+			requestBody:    bytes.NewBuffer([]byte(`{"data_scan_id":"projects/pso-dev-ayala/locations/us-central1/dataScans/non-existent-scan"}`)),
 			wantStatusCode: 200,
 			expectResult:   false,
 			wantContentKey: "",
