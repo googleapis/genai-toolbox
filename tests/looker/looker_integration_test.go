@@ -709,14 +709,14 @@ func TestLooker(t *testing.T) {
 				"parameters": []any{
 					map[string]any{
 						"authSources": []any{},
-						"description": "The id of the project to retrieve LookML tests for.",
+						"description": "The unique ID of the LookML project.",
 						"name":        "project_id",
 						"required":    true,
 						"type":        "string",
 					},
 					map[string]any{
 						"authSources": []any{},
-						"description": "Optional id of the file to filter tests by.",
+						"description": "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').",
 						"name":        "file_id",
 						"required":    false,
 						"type":        "string",
@@ -1807,6 +1807,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"errors\":[]"
 	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "get_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)

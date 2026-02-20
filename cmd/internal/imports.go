@@ -120,6 +120,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetfilters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetlookmltests"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetlooks"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmeasures"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
