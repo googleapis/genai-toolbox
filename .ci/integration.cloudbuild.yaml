@@ -455,7 +455,8 @@ steps:
       - "CLOUD_SQL_MYSQL_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_MYSQL_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
+    secretEnv: ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"] 
+    
     volumes:
       - name: "go"
         path: "/gopath"
