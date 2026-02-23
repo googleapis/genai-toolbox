@@ -464,6 +464,36 @@ preview link will be automatically added as a comment to your PR.
 1. **Deploy Preview:** Apply the `docs: deploy-preview` label to the PR to
    deploy a documentation preview.
 
+### Shortcodes
+
+This repository includes custom shortcodes to help with documentation consistency and maintenance.
+For more information on how they work, see the [Hugo Shortcodes](https://gohugo.io/content-management/shortcodes/) documentation and the guide to [creating custom shortcodes](https://gohugo.io/templates/shortcode/).
+
+#### `include` Shortcode
+
+The `include` shortcode reads a file and optionally fences it with a language.
+
+**Syntax:**
+`{{< include "path/to/file" "language" >}}`
+
+**Example:**
+`{{< include "static/headers/license_header.txt" >}}`
+`{{< include "samples/program.js" "javascript" >}}`
+
+**Source:** [.hugo/layouts/shortcodes/include.html](.hugo/layouts/shortcodes/include.html)
+
+#### `regionInclude` Shortcode
+
+The `regionInclude` shortcode reads a file, extracts content between `[START region_name]` and `[END region_name]`, and optionally fences it.
+
+**Syntax:**
+`{{< regionInclude "path/to/file" "region_name" "language" >}}`
+
+**Example:**
+`{{< regionInclude "samples/program.js" "program_setup" "javascript" >}}`
+
+**Source:** [.hugo/layouts/shortcodes/regionInclude.html](.hugo/layouts/shortcodes/regionInclude.html)
+
 ## Building Toolbox
 
 ### Building the Binary
