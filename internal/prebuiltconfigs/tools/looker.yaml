@@ -959,6 +959,48 @@ tools:
           Output:
           A confirmation message upon successful file deletion.
 
+    get_project_directories:
+        kind: looker-get-project-directories
+        source: looker-source
+        description: |
+          This tool retrieves the list of directories within a specified LookML project.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+
+          Output:
+          A JSON array of strings, where each string is the name of a directory within the project.
+
+    create_project_directory:
+        kind: looker-create-project-directory
+        source: looker-source
+        description: |
+          This tool creates a new directory within a specified LookML project.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - directory_path (required): The path to the new directory within the project.
+
+          Output:
+          A confirmation message upon successful directory creation.
+
+    delete_project_directory:
+        kind: looker-delete-project-directory
+        source: looker-source
+        description: |
+          This tool permanently deletes a specified directory within a LookML project.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - directory_path (required): The path to the directory within the project.
+
+          Output:
+          A confirmation message upon successful directory deletion.
+
     validate_project:
         kind: looker-validate-project
         source: looker-source
@@ -1087,6 +1129,9 @@ toolsets:
         - create_project_file
         - update_project_file
         - delete_project_file
+        - get_project_directories
+        - create_project_directory
+        - delete_project_directory
         - validate_project
         - get_connections
         - get_connection_schemas
