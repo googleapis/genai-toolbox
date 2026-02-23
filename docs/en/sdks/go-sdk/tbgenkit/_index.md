@@ -3,29 +3,27 @@ title: "Genkit Package"
 linkTitle: "Genkit"
 type: docs
 weight: 3
+description: >
+  MCP Toolbox Genkit for integrating functionalities of MCP Toolbox into your Agentic apps.
 ---
 
-![MCP Toolbox Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)
+## Overview
 
-# MCP Toolbox For Go Genkit SDK
-
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
-This package allows you to seamlessly integrate the functionalities of
-[MCP Toolbox](https://github.com/googleapis/genai-toolbox) allowing you to load and
-use tools defined in the service as standard Genkit Tools within your Genkit Go
-applications.
-
-This simplifies integrating external functionalities (like APIs, databases, or
-custom logic) managed by the Toolbox into your workflows, especially those
-involving Large Language Models (LLMs).
+The `tbgenkit` package provides a Go interface to the MCP Toolbox service, enabling you to load and invoke tools from your own applications.
 
 ## Installation
 
 ```bash
-go get github.com/googleapis/mcp-toolbox-sdk-go
+go get github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit
 ```
 This SDK is supported on Go version 1.24.4 and higher.
+
+{{< notice note >}}
+**Breaking Change Notice**: As of version `0.6.0`, this repository has transitioned to a multi-module structure.
+*   **For new versions (`v0.6.0`+)**: You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit`).
+*   **For older versions (`v0.5.1` and below)**: The repository remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
+*   Please update your imports and `go.mod` accordingly when upgrading.
+{{< /notice >}}
 
 ## Quickstart
 

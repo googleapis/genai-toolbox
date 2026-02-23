@@ -3,27 +3,18 @@ title: "ADK Package"
 linkTitle: "ADK"
 type: docs
 weight: 1
+description: >
+  MCP Toolbox ADK for integrating functionalities of MCP Toolbox into your Agentic apps.
 ---
 
-![MCP Toolbox Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)
+## Overview
 
-# MCP Toolbox For Go ADK SDK
-
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
-This SDK allows you to seamlessly integrate the functionalities of
-[MCP Toolbox](https://github.com/googleapis/genai-toolbox) allowing you to load and
-use tools defined in the service as standard Go structs within your ADK Go
-applications.
-
-This simplifies integrating external functionalities (like APIs, databases, or
-custom logic) managed by the Toolbox into your workflows, especially those
-involving Large Language Models (LLMs).
+The `tbadk` package provides a Go interface to the MCP Toolbox service, enabling you to load and invoke tools from your own applications.
 
 ## Installation
 
 ```bash
-go get github.com/googleapis/mcp-toolbox-sdk-go
+go get github.com/googleapis/mcp-toolbox-sdk-go/tbadk
 ```
 This SDK is supported on Go version 1.24.4 and higher.
 
@@ -31,6 +22,12 @@ This SDK is supported on Go version 1.24.4 and higher.
 While the SDK itself is synchronous, you can execute its functions within goroutines to achieve asynchronous behavior.
 {{< /notice >}}
 
+{{< notice note >}}
+**Breaking Change Notice**: As of version `0.6.0`, this repository has transitioned to a multi-module structure.
+*   **For new versions (`v0.6.0`+)**: You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/tbadk`).
+*   **For older versions (`v0.5.1` and below)**: The repository remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
+*   Please update your imports and `go.mod` accordingly when upgrading.
+{{< /notice >}}
 
 ## Quickstart
 
@@ -94,16 +91,21 @@ The SDK supports multiple transport protocols. By default, the client uses the l
 
 You can explicitly select a protocol using the `core.WithProtocol` option during client initialization.
 
-{{< notice note >}}* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
+{{< notice note >}}
+* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
 * **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
 {{< /notice >}}
 
 ### Supported Protocols
 
+{{< notice note >}}
+The native Toolbox protocol (`core.Toolbox`) is deprecated and will be removed on March 4, 2026. Please use `core.MCP` or specific MCP versions.
+{{< /notice >}}
+
 | Constant | Description |
 | :--- | :--- |
 | `core.MCP` | **(Default)** Alias for the latest supported MCP version (currently `v2025-06-18`). |
-| `core.Toolbox` | The native Toolbox HTTP protocol. |
+| `core.Toolbox` | **Deprecated** The native Toolbox HTTP protocol. |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
@@ -522,6 +524,21 @@ dynamicBoundTool, err := tool.ToolFrom(core.WithBindParamStringFunc("param", get
 {{< notice info >}} 
 You don't need to modify tool configurations to bind parameter values.
 {{< /notice >}}
+
+## Default Parameters
+
+Tools defined in the MCP Toolbox server can specify default values for their optional parameters. When invoking a tool using the SDK, if an input for a parameter with a default value is not provided, the SDK will automatically populate the request with the default value.
+
+```go
+tool, err = client.LoadTool("my-tool", ctx)
+
+// If 'my-tool' has a parameter 'param2' with a default value of "default-value",
+// we can omit 'param2' from the inputs.
+inputs := map[string]any{"param1": "value"}
+
+// The invocation will automatically use param2="default-value" if not provided
+result, err := tool.Run(ctx, inputs)
+```
 
 ## Using with ADK Go
 

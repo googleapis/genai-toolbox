@@ -6,42 +6,6 @@ description: >
   Go SDKs to connect to the MCP Toolbox server.
 ---
 
-
-## Overview
-
-![MCP Toolbox
-Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)
-
-# MCP Toolbox SDKs for Go
-
-[![License: Apache
-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://googleapis.github.io/genai-toolbox/)
-[![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
-[![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@mcp_toolbox)
-[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/mcp-toolbox-sdk-go)](https://goreportcard.com/report/github.com/googleapis/mcp-toolbox-sdk-go)
-[![Module Version](https://img.shields.io/github/v/release/googleapis/mcp-toolbox-sdk-go)](https://img.shields.io/github/v/release/googleapis/mcp-toolbox-sdk-go)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/googleapis/mcp-toolbox-sdk-go)](https://img.shields.io/github/go-mod/go-version/googleapis/mcp-toolbox-sdk-go)
-
-This repository contains the Go SDK designed to seamlessly integrate the
-functionalities of the [MCP
-Toolbox](https://github.com/googleapis/genai-toolbox) into your Agentic
-applications. The SDK allow you to load tools defined in Toolbox and use them
-as standard Go tools within popular orchestration frameworks
-or your custom code.
-
-This simplifies the process of incorporating external functionalities (like
-Databases or APIs) managed by Toolbox into your GenAI applications.
-
-<!-- TOC -->
-
-- [Overview](#overview)
-- [Which Package Should I Use?](#which-package-should-i-use)
-- [Available Packages](#available-packages)
-- [Getting Started](#getting-started)
-
-<!-- /TOC -->
-
 ## Overview
 
 The MCP Toolbox service provides a centralized way to manage and expose tools
@@ -103,12 +67,6 @@ To get started using Toolbox tools with an application, follow these general ste
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-3. **Use the SDK:**
-
-    Consult the `README` for your chosen package (linked in the "[Available
-    Packages](#available-packages)" section above) for detailed instructions on
-    how to connect the client, load tool definitions, invoke tools, configure
-    authentication/binding, and integrate them into your application or
-    framework.
-
-[Github](https://github.com/googleapis/mcp-toolbox-sdk-go)
+{{< notice note >}}
+Source code for [Go-sdk](https://github.com/googleapis/mcp-toolbox-sdk-go)
+{{< /notice >}}
