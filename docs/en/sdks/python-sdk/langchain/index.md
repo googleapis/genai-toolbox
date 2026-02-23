@@ -1,7 +1,7 @@
 ---
 title: "LangChain/LangGraph"
 type: docs
-weight: 8
+weight: 3
 description: >
   MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 ---

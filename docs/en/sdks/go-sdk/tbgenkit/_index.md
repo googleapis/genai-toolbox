@@ -2,7 +2,7 @@
 title: "Genkit Package"
 linkTitle: "Genkit"
 type: docs
-weight: 1
+weight: 3
 ---
 
 ![MCP Toolbox Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)

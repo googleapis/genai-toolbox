@@ -2,7 +2,7 @@
 title: "Core Package"
 linkTitle: "Core"
 type: docs
-weight: 1
+weight: 2
 ---
 
 ![MCP Toolbox Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)

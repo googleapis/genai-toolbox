@@ -1,7 +1,7 @@
 ---
 title: "LlamaIndex"
 type: docs
-weight: 8
+weight: 4
 description: >
   MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
 ---
