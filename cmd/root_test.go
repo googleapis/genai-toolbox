@@ -937,6 +937,7 @@ func TestSubcommandWiring(t *testing.T) {
 	}{
 		{[]string{"invoke"}, "invoke"},
 		{[]string{"skills-generate"}, "skills-generate"},
+		{[]string{"serve", "serve"}, "serve"},
 	}
 
 	for _, tc := range tests {
