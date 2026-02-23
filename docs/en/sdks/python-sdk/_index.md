@@ -26,6 +26,15 @@ within your Python applications or AI orchestration frameworks.
 
 Choosing the right package depends on how you are building your application:
 
+* [`toolbox-adk`](ADK):
+  Use this package if you are building your application using Google ADK (Agent Development Kit).
+  It provides tools that are directly compatible with the
+  Google ADK ecosystem (`BaseTool` / `BaseToolset` interface) handling authentication propagation, header management, and tool wrapping automatically.
+* [`toolbox-core`](core):
+  Use this package if you are not using LangChain/LangGraph or any other
+  orchestration framework, or if you need a framework-agnostic way to interact
+  with Toolbox tools (e.g., for custom orchestration logic or direct use in
+  Python scripts).
 * [`toolbox-langchain`](langchain):
   Use this package if you are building your application using the LangChain or
   LangGraph frameworks. It provides tools that are directly compatible with the
@@ -34,15 +43,7 @@ Choosing the right package depends on how you are building your application:
   Use this package if you are building your application using the LlamaIndex framework.
   It provides tools that are directly compatible with the
   LlamaIndex ecosystem (`BaseTool` interface), simplifying integration.
-* [`toolbox-core`](core):
-  Use this package if you are not using LangChain/LangGraph or any other
-  orchestration framework, or if you need a framework-agnostic way to interact
-  with Toolbox tools (e.g., for custom orchestration logic or direct use in
-  Python scripts).
-* [`toolbox-adk`](ADK):
-  Use this package if you are building your application using Google ADK (Agent Development Kit).
-  It provides tools that are directly compatible with the
-  Google ADK ecosystem (`BaseTool` / `BaseToolset` interface) handling authentication propagation, header management, and tool wrapping automatically.
+
 
 ## Available Packages
 
@@ -51,10 +52,10 @@ README for detailed installation and usage instructions:
 
 | Package | Target Use Case | Integration | Path | Details (README) | PyPI Status |
 | :------ | :---------- | :---------- | :---------------------- | :---------- | :--------- 
+| `toolbox-adk` | Google ADK applications | Google ADK | `packages/toolbox-adk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-adk/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-adk.svg) |
 | `toolbox-core` | Framework-agnostic / Custom applications | Use directly / Custom | `packages/toolbox-core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-core.svg) |
 | `toolbox-langchain` | LangChain / LangGraph applications | LangChain / LangGraph | `packages/toolbox-langchain/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-langchain.svg) |
 | `toolbox-llamaindex` | LlamaIndex applications | LlamaIndex | `packages/toolbox-llamaindex/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-llamaindex/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-llamaindex.svg) |
-| `toolbox-adk` | Google ADK applications | Google ADK | `packages/toolbox-adk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-adk/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-adk.svg) |
 
 
 ## Getting Started
@@ -72,6 +73,11 @@ To get started using Toolbox tools with an application, follow these general ste
     Choose the package based on your needs (see "[Which Package Should I Use?](#which-package-should-i-use)" above) and install it:
 
     ```bash
+    # For the Google ADK Integration
+    pip install google-adk[toolbox]
+
+    # OR
+    
     # For the core, framework-agnostic SDK
     pip install toolbox-core
 
@@ -84,11 +90,6 @@ To get started using Toolbox tools with an application, follow these general ste
 
     # For the LlamaIndex integration
     pip install toolbox-llamaindex
-
-    # OR
-    
-    # For the Google ADK Integration
-    pip install google-adk[toolbox]
     ```
 
 
