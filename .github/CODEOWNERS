@@ -3,15 +3,15 @@
 # For syntax help see:
 # https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#codeowners-syntax
 
-*   @googleapis/senseai-eco
+*   @googleapis/senseai-eco-team
 # Code & Tests
-**/alloydb*/ @googleapis/toolbox-alloydb
-**/bigquery/ @googleapis/toolbox-bigquery
-**/bigtable/ @googleapis/toolbox-bigtable
-**/cloudsqlmssql/ @googleapis/toolbox-cloud-sql-mssql
-**/cloudsqlmysql/ @googleapis/toolbox-cloud-sql-mysql
-**/cloudsqlpg/ @googleapis/toolbox-cloud-sql-postgres
-**/dataplex/ @googleapis/toolbox-dataplex
-**/firestore/ @googleapis/toolbox-firestore
-**/looker/ @googleapis/toolbox-looker
-**/spanner/ @googleapis/toolbox-spanner
+**/alloydb*/ @googleapis/toolbox-alloydb-team
+**/bigquery/ @googleapis/toolbox-bigquery-team
+**/bigtable/ @googleapis/toolbox-bigtable-team
+**/cloudsqlmssql/ @googleapis/toolbox-cloud-sql-mssql-team
+**/cloudsqlmysql/ @googleapis/toolbox-cloud-sql-mysql-team
+**/cloudsqlpg/ @googleapis/toolbox-cloud-sql-postgres-team
+**/dataplex/ @googleapis/toolbox-dataplex-team
+**/firestore/ @googleapis/toolbox-firestore-team
+**/looker/ @googleapis/toolbox-looker-team
+**/spanner/ @googleapis/toolbox-spanner-team

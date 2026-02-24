@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -364,7 +364,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			wantStatus:  http.StatusOK,
 			prepareData: func(t *testing.T) {
 				ctx := context.Background()
-				driver, err := neo4j.NewDriverWithContext(Neo4jUri, neo4j.BasicAuth(Neo4jUser, Neo4jPass, ""))
+				driver, err := neo4j.NewDriver(Neo4jUri, neo4j.BasicAuth(Neo4jUser, Neo4jPass, ""))
 				if err != nil {
 					t.Fatalf("failed to create neo4j driver: %v", err)
 				}

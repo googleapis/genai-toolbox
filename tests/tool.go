@@ -1357,12 +1357,12 @@ func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 	}
 }
 
-func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	schemaName := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, owner string, uniqueID string) {
+	schemaName := "test_schema_" + uniqueID
 	cleanup := setupPostgresSchemas(t, ctx, pool, schemaName)
 	defer cleanup()
 
-	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": "postgres", "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
+	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": owner, "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
 
 	invokeTcs := []struct {
 		name           string
@@ -1377,13 +1377,13 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
-		// {
-		// 	name:           "invoke list_schemas with owner name",
-		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, "postgres"))),
-		// 	wantStatusCode: http.StatusOK,
-		// 	want:           []map[string]any{wantSchema},
-		// 	compareSubset:  true,
-		// },
+		{
+			name:           "invoke list_schemas with owner name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSchema},
+			compareSubset:  true,
+		},
 		{
 			name:           "invoke list_schemas with limit 1",
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s","limit": 1}`, schemaName))),
@@ -1438,7 +1438,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 					}
 				}
 				if !found {
-					t.Errorf("Expected schema '%s' not found in the list of all schemas.", wantSchema)
+					t.Errorf("Expected schema '%+v' not found in the list of all schemas.", wantSchema)
 				}
 			} else {
 				if diff := cmp.Diff(tc.want, got); diff != "" {

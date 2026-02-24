@@ -195,7 +195,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	// Run Postgres prebuilt tool tests
 	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, AlloyDBPostgresUser)
 	tests.RunPostgresListViewsTest(t, ctx, pool)
-	tests.RunPostgresListSchemasTest(t, ctx, pool)
+	tests.RunPostgresListSchemasTest(t, ctx, pool, AlloyDBPostgresUser, uniqueID)
 	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
 	tests.RunPostgresListAvailableExtensionsTest(t)
 	tests.RunPostgresListInstalledExtensionsTest(t)
