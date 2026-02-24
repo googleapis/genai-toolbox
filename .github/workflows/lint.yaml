@@ -15,8 +15,20 @@
 name: lint
 on:
   pull_request:
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**.md"
+      - "!.github/**"
+      - ".github/workflows/lint.yaml"
   pull_request_target:
     types: [labeled]
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!**.md"
+      - "!.github/**"
+      - ".github/workflows/lint.yaml"
 
 # Declare default permissions as read only.
 permissions: read-all
