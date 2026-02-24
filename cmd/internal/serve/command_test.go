@@ -17,7 +17,6 @@ package serve
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -44,7 +43,6 @@ func serveCommand(ctx context.Context, args []string) (string, error) {
 }
 
 func TestServe(t *testing.T) {
-	fmt.Println("here")
 	// context will automatically shutdown in 1 second.
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
