@@ -489,8 +489,16 @@ The `regionInclude` shortcode reads a file, extracts content between `[START reg
 **Syntax:**
 `{{< regionInclude "path/to/file" "region_name" "language" >}}`
 
-**Example:**
+**Example Markdown:**
 `{{< regionInclude "samples/program.js" "program_setup" "javascript" >}}`
+
+**Example Code Snippet (`samples/program.js`):**
+```javascript
+// [START program_setup]
+import { Toolbox } from '@googleapis/genai-toolbox';
+const toolbox = new Toolbox();
+// [END program_setup]
+```
 
 **Source:** [.hugo/layouts/shortcodes/regionInclude.html](.hugo/layouts/shortcodes/regionInclude.html)
 
