@@ -42,6 +42,7 @@ var expectedToolSources = []string{
 	"elasticsearch",
 	"firestore",
 	"looker-conversational-analytics",
+	"looker-dev",
 	"looker",
 	"mindsdb",
 	"mssql",
