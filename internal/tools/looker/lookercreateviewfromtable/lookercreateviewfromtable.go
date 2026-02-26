@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package lookercreateviewfromtable
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -122,39 +123,39 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error getting logger from context: %s", err), http.StatusInternalServerError, err)
 	}
 
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error getting sdk: %v", err), http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
 	projectId, ok := mapParams["project_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'project_id' must be a string, got %T", mapParams["project_id"])
+		return nil, util.NewAgentError(fmt.Sprintf("'project_id' must be a string, got %T", mapParams["project_id"]), nil)
 	}
 	connection, ok := mapParams["connection"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'connection' must be a string, got %T", mapParams["connection"])
+		return nil, util.NewAgentError(fmt.Sprintf("'connection' must be a string, got %T", mapParams["connection"]), nil)
 	}
 	folderName, ok := mapParams["folder_name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("'folder_name' must be a string, got %T", mapParams["folder_name"])
+		return nil, util.NewAgentError(fmt.Sprintf("'folder_name' must be a string, got %T", mapParams["folder_name"]), nil)
 	}
 
 	tablesSlice, ok := mapParams["tables"].([]any)
 	if !ok {
-		return nil, fmt.Errorf("'tables' must be an array, got %T", mapParams["tables"])
+		return nil, util.NewAgentError(fmt.Sprintf("'tables' must be an array, got %T", mapParams["tables"]), nil)
 	}
 
 	logger.DebugContext(ctx, "generating views with request", "tables", tablesSlice)
@@ -163,7 +164,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for _, tRaw := range tablesSlice {
 		t, ok := tRaw.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("expected map in tables list, got %T", tRaw)
+			return nil, util.NewClientServerError(fmt.Sprintf("expected map in tables list, got %T", tRaw), http.StatusInternalServerError, nil)
 		}
 
 		var schema, tableName string
@@ -179,7 +180,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		// Enforce required fields for map input
 		if schema == "" || tableName == "" {
-			return nil, fmt.Errorf("schema and table_name are required in table map")
+			return nil, util.NewClientServerError("schema and table_name are required in table map", http.StatusInternalServerError, nil)
 		}
 
 		if pk, ok := t["primary_key"].(string); ok {
@@ -225,7 +226,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	err = lookercommon.CreateViewsFromTables(ctx, sdk, projectId, queryParams, reqBody, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error generating views: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error generating views: %s", err), http.StatusInternalServerError, err)
 	}
 
 	return map[string]string{
