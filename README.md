@@ -1050,7 +1050,8 @@ interactions with official SDKs, and the definitions in the `tools.yaml` file.
 ## Contributing
 
 Contributions are welcome. Please, see the [CONTRIBUTING](CONTRIBUTING.md)
-to get started.
+to get started. For technical details on setting up your development
+environment, see the [DEVELOPER](DEVELOPER.md) guide.
 
 Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms. See
