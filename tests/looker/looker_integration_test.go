@@ -282,7 +282,7 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
-      "create_view_from_table": map[string]any{
+			"create_view_from_table": map[string]any{
 				"type":        "looker-create-view-from-table",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
@@ -735,7 +735,7 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-  tests.RunToolGetTestByName(t, "run_lookml_tests",
+	tests.RunToolGetTestByName(t, "run_lookml_tests",
 		map[string]any{
 			"run_lookml_tests": map[string]any{
 				"description":  "Simple tool to test end to end functionality.",
@@ -773,7 +773,7 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-  tests.RunToolGetTestByName(t, "create_view_from_table",
+	tests.RunToolGetTestByName(t, "create_view_from_table",
 		map[string]any{
 			"create_view_from_table": map[string]any{
 				"description":  "Simple tool to test end to end functionality.",
@@ -798,19 +798,19 @@ func TestLooker(t *testing.T) {
 						"description": "The tables to generate views for.\n\t\tEach item must be a map with:\n\t\t- schema (string, required)\n\t\t- table_name (string, required)\n\t\t- primary_key (string, optional)\n\t\t- base_view (boolean, optional)\n\t\t- columns (array of objects, optional): Each object must have 'column_name' (string).",
 						"items": map[string]any{
 							"additionalProperties": true,
-							"authSources": []any{},
-							"description": "Table definition.",
-							"name":        "table",
-							"required":    true,
-							"type":        "object",
+							"authSources":          []any{},
+							"description":          "Table definition.",
+							"name":                 "table",
+							"required":             true,
+							"type":                 "object",
 						},
-						"name":        "tables",
-						"required":    true,
-						"type":        "array",
+						"name":     "tables",
+						"required": true,
+						"type":     "array",
 					},
 					map[string]any{
 						"authSources": []any{},
-						"default": "views",
+						"default":     "views",
 						"description": "The folder to place the view files in (e.g., 'views').",
 						"name":        "folder_name",
 						"required":    false,
@@ -1897,7 +1897,7 @@ func TestLooker(t *testing.T) {
 	wantResult = "views"
 	tests.RunToolInvokeParametersTest(t, "get_project_directories", []byte(`{"project_id": "the_look"}`), wantResult)
 
-        wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
+	wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
 	tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
 
 	wantResult = "Deleted"
