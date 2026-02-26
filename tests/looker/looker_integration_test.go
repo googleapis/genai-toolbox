@@ -1897,8 +1897,9 @@ func TestLooker(t *testing.T) {
 	wantResult = "views"
 	tests.RunToolInvokeParametersTest(t, "get_project_directories", []byte(`{"project_id": "the_look"}`), wantResult)
 
-	wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
-	tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
+	// Add test back when infrastructure for testing supports it.
+	// wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
+	// tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
 
 	wantResult = "Deleted"
 	tests.RunToolInvokeParametersTest(t, "delete_project_directory", []byte(`{"project_id": "the_look", "directory_path": "views"}`), wantResult)
