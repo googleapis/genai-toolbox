@@ -20,7 +20,6 @@ permissions:
   pull-requests: write
   issues: write
 
-
 jobs:
   link-check:
     runs-on: ubuntu-latest
@@ -29,6 +28,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
+
       - name: Identify Changed Files
         id: changed-files
         shell: bash
@@ -38,25 +38,23 @@ jobs:
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No markdown files changed. Skipping checks."
-            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+            echo "HAS_CHANGES=false" >> "$GITHUB_OUTPUT"
           else
             echo "--- Changed Files to Scan ---"
             echo "$CHANGED_FILES"
             echo "-----------------------------"
             
-            # FIX: Wrap filenames in quotes to handle spaces
             FILES_QUOTED=$(echo "$CHANGED_FILES" | sed 's/^/"/;s/$/"/' | tr '\n' ' ')
             
-            # Write to env using EOF pattern
-            echo "CHECK_FILES<<EOF" >> $GITHUB_ENV
-            echo "$FILES_QUOTED" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+            # Use EOF to write multiline or long strings to GITHUB_OUTPUT
+            echo "HAS_CHANGES=true" >> "$GITHUB_OUTPUT"
+            echo "CHECK_FILES<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$FILES_QUOTED" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
           fi
 
-
       - name: Restore lychee cache
-        if: env.HAS_CHANGES == 'true'
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true'
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: .lycheecache
@@ -65,7 +63,7 @@ jobs:
 
       - name: Link Checker
         id: lychee-check       
-        if: env.HAS_CHANGES == 'true'
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true'
         uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
         continue-on-error: true 
         with:
@@ -75,7 +73,7 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
-            ${{ env.CHECK_FILES }}
+            ${{ steps.changed-files.outputs.CHECK_FILES }}
           output: lychee-report.md
           format: markdown
           fail: true           
@@ -83,6 +81,7 @@ jobs:
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Find comment
         uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4
         id: find-comment
@@ -103,18 +102,16 @@ jobs:
           STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID: ${{ steps.find-comment.outputs.comment-id }}
 
       - name: Prepare Report 
-        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         run: |
           echo "## Link Resolution Note" > full-report.md
-          
-          
-          echo "Local links and directory changes work differently on GitHub than on the docsite.You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
+          echo "Local links and directory changes work differently on GitHub than on the docsite. You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md          
           echo "" >> full-report.md 
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
       - name: Create PR Comment
-        if: env.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
