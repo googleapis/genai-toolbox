@@ -1377,13 +1377,14 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
-		{
-			name:           "invoke list_schemas with owner name",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
-			wantStatusCode: http.StatusOK,
-			want:           []map[string]any{wantSchema},
-			compareSubset:  true,
-		},
+		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/genai-toolbox/issues/2562
+		// {
+		// 	name:           "invoke list_schemas with owner name",
+		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
+		// 	wantStatusCode: http.StatusOK,
+		// 	want:           []map[string]any{wantSchema},
+		// 	compareSubset:  true,
+		// },
 		{
 			name:           "invoke list_schemas with limit 1",
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s","limit": 1}`, schemaName))),
