@@ -18,9 +18,7 @@ This guide demonstrates how to implement these patterns in your Toolbox applicat
 {{% tab header="ADK" text=true %}}
 The following example demonstrates how to use the `beforeToolCallback` and `afterToolCallback` hooks in the ADK `LlmAgent` to implement pre and post processing logic.
 
-```go
-{{< include "go/adk/agent.go" >}}
-```
+{{< include "go/adk/agent.go" "go" >}}
 
 You can also add model-level (`beforeModelCallback`, `afterModelCallback`) and agent-level (`beforeAgentCallback`, `afterAgentCallback`) hooks to intercept messages at different stages of the execution loop.
 

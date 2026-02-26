@@ -23,7 +23,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 )
 
 // ConvertToStringSlice converts a slice of any type to a slice of strings.
@@ -292,6 +292,10 @@ func sortAndClean(nodeLabels []types.NodeLabel, relationships []types.Relationsh
 }
 
 // ConvertValue converts Neo4j value to JSON-compatible value.
+// Uses neo4j-go-driver v6.0.0 API: getters (GetElementId, GetProperties) where present;
+// direct field access (Labels, Type, Nodes, Relationships, Keys, Values, X, Y, Z, SpatialRefId)
+// where the driver still exports those fields. If a future v6.x unexports them and adds getters,
+// this function should be updated to use those getters.
 func ConvertValue(value any) any {
 	switch v := value.(type) {
 	case nil, neo4j.InvalidValue:
@@ -316,11 +320,6 @@ func ConvertValue(value any) any {
 			"startElementId": v.StartElementId,
 			"endElementId":   v.EndElementId,
 			"properties":     ConvertValue(v.GetProperties()),
-		}
-	case neo4j.Entity:
-		return map[string]any{
-			"elementId":  v.GetElementId(),
-			"properties": ConvertValue(v.GetProperties()),
 		}
 	case neo4j.Path:
 		var nodes []any
