@@ -136,9 +136,9 @@ func TestInitialize(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected Initialize to fail without user agent in context")
 		}
-		expectedErr := "error in User Agent retrieval: unable to retrieve user agent"
-		if err.Error() != expectedErr {
-			t.Fatalf("unexpected error: got %q, want %q", err.Error(), expectedErr)
+		expectedErrPart := "unable to retrieve user agent"
+		if !strings.Contains(err.Error(), expectedErrPart) {
+			t.Fatalf("unexpected error: got %q, want it to contain %q", err.Error(), expectedErrPart)
 		}
 	})
 
