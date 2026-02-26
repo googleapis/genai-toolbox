@@ -13,7 +13,7 @@
 # limitations under the License.
 
 sources:
-    looker-source:
+    looker-admin-source:
         kind: looker
         base_url: ${LOOKER_BASE_URL}
         client_id: ${LOOKER_CLIENT_ID:}
@@ -28,7 +28,7 @@ sources:
 tools:
     search_permission_sets:
         type: looker-search-permission-sets
-        source: looker-source
+        source: looker-admin-source
         description: |
           This tool searches for permission sets in the Looker instance.
           Permission sets define what actions a user or group can perform.
