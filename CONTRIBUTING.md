@@ -66,153 +66,16 @@ You can manually trigger the bot by commenting on your Pull Request:
 1. Provide a good PR description as a record of what change is being made and why it was made. Link to a GitHub issue if it exists.
 1. Make sure your code is thoroughly tested with unit tests and integration tests. Remember to clean up the test instances properly in your code to avoid memory leaks.
 
-## Adding a New Database Source or Tool
+## Implementation Guides
 
-Please create an
-[issue](https://github.com/googleapis/genai-toolbox/issues) before
-implementation to ensure we can accept the contribution and no duplicated work.
-This issue should include an overview of the API design. If you have any
-questions, reach out on our [Discord](https://discord.gg/Dmm69peqjh) to chat
-directly with the team.
+For technical details on how to implement new features, please refer to the
+[Developer Documentation](./DEVELOPER.md).
 
-> [!NOTE]
-> New tools can be added for [pre-existing data
-> sources](https://github.com/googleapis/genai-toolbox/tree/main/internal/sources).
-> However, any new database source should also include at least one new tool
-> type.
-
-### Adding a New Database Source
-
-We recommend looking at an [example source
-implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/sources/postgres/postgres.go).
-
-* **Create a new directory** under `internal/sources` for your database type
-  (e.g., `internal/sources/newdb`).
-* **Define a configuration struct** for your data source in a file named
-  `newdb.go`. Create a `Config` struct to include all the necessary parameters
-  for connecting to the database (e.g., host, port, username, password, database
-  name) and a `Source` struct to store necessary parameters for tools (e.g.,
-  Name, Type, connection object, additional config).
-* **Implement the
-  [`SourceConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L57)
-  interface**. This interface requires two methods:
-  * `SourceConfigType() string`: Returns a unique string identifier for your
-    data source (e.g., `"newdb"`).
-  * `Initialize(ctx context.Context, tracer trace.Tracer) (Source, error)`:
-    Creates a new instance of your data source and establishes a connection to
-    the database.
-* **Implement the
-  [`Source`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L63)
-  interface**. This interface requires one method:
-  * `SourceType() string`: Returns the same string identifier as `SourceConfigType()`.
-* **Implement `init()`** to register the new Source.
-* **Implement Unit Tests** in a file named `newdb_test.go`.
-
-### Adding a New Tool
-
-> [!NOTE]
-> Please follow the tool naming convention detailed
-> [here](./DEVELOPER.md#tool-naming-conventions).
-
-We recommend looking at an [example tool
-implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
-
-Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
-
-* **Create a new directory** under `internal/tools` for your tool type (e.g., `internal/tools/newdb/newdbtool`).
-* **Define a configuration struct** for your tool in a file named `newdbtool.go`.
-Create a `Config` struct and a `Tool` struct to store necessary parameters for
-tools.
-* **Implement the
-  [`ToolConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
-  interface**. This interface requires one method:
-  * `ToolConfigType() string`: Returns a unique string identifier for your tool
-    (e.g., `"newdb-tool"`).
-  * `Initialize(sources map[string]Source) (Tool, error)`: Creates a new
-    instance of your tool and validates that it can connect to the specified
-    data source.
-* **Implement the `Tool` interface**. This interface requires the following
-  methods:
-  * `Invoke(ctx context.Context, params map[string]any) ([]any, error)`:
-    Executes the operation on the database using the provided parameters.
-  * `ParseParams(data map[string]any, claims map[string]map[string]any)
-    (ParamValues, error)`: Parses and validates the input parameters.
-  * `Manifest() Manifest`: Returns a manifest describing the tool's capabilities
-    and parameters.
-  * `McpManifest() McpManifest`: Returns an MCP manifest describing the tool for
-    use with the Model Context Protocol.
-  * `Authorized(services []string) bool`: Checks if the tool is authorized to
-    run based on the provided authentication services.
-* **Implement `init()`** to register the new Tool.
-* **Implement Unit Tests** in a file named `newdbtool_test.go`.
-
-### Adding Integration Tests
-
-* **Add a test file** under a new directory `tests/newdb`.
-* **Add pre-defined integration test suites** in the
-  `/tests/newdb/newdb_integration_test.go` that are **required** to be run as
-  long as your code contains related features. Please check each test suites for
-  the config defaults, if your source require test suites config updates, please
-  refer to [config option](./tests/option.go):
-
-     1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
-            tool's manifest.
-
-     2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native
-        Toolbox endpoints.
-
-     3. [RunMCPToolCallMethod][mcp-call]: tests tool calling through the MCP
-            endpoints.
-
-     4. (Optional) [RunExecuteSqlToolInvokeTest][execute-sql]: tests an
-        `execute-sql` tool for any source. Only run this test if you are adding an
-        `execute-sql` tool.
-
-     5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
-            parameters][temp-param-doc]. Only run this test if template
-            parameters apply to your tool.
-
-* **Add additional tests** for the tools that are not covered by the predefined tests. Every tool must be tested!
-
-* **Add the new database to the integration test workflow** in
-  [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
-
-[tool-get]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L41
-[tool-call]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L229
-[mcp-call]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L789
-[execute-sql]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L609
-[temp-param]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
-[temp-param-doc]:
-    https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
-
-### Adding Documentation
-
-* **Update the documentation** to include information about your new data source
-  and tool. This includes:
-  * Adding a new page to the `docs/en/resources/sources` directory for your data
-    source.
-  * Adding a new page to the `docs/en/resources/tools` directory for your tool.
-
-* **(Optional) Add samples** to the `docs/en/samples/<newdb>` directory.
-
-### (Optional) Adding Prebuilt Tools
-
-You can provide developers with a set of "build-time" tools to aid common
-software development user journeys like viewing and creating tables/collections
-and data.
-
-* **Create a set of prebuilt tools** by defining a new `tools.yaml` and adding
-  it to `internal/tools`. Make sure the file name matches the source (i.e. for
-  source "alloydb-postgres" create a file named "alloydb-postgres.yaml").
-* **Update `cmd/root.go`** to add new source to the `prebuilt` flag.
-* **Add tests** in
-  [internal/prebuiltconfigs/prebuiltconfigs_test.go](internal/prebuiltconfigs/prebuiltconfigs_test.go)
-  and [cmd/root_test.go](cmd/root_test.go).
+* [Adding a New Database Source](./DEVELOPER.md#adding-a-new-database-source)
+* [Adding a New Tool](./DEVELOPER.md#adding-a-new-tool)
+* [Adding Integration Tests](./DEVELOPER.md#adding-integration-tests)
+* [Adding Documentation](./DEVELOPER.md#adding-documentation)
+* [Adding Prebuilt Tools](./DEVELOPER.md#adding-prebuilt-tools)
 
 ## Submitting a Pull Request
 
