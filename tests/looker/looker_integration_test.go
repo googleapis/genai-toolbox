@@ -743,26 +743,26 @@ func TestLooker(t *testing.T) {
 				"parameters": []any{
 					map[string]any{
 						"authSources": []any{},
-						"description": "The unique ID of the LookML project.",
+						"description": "The id of the project to run LookML tests for.",
 						"name":        "project_id",
 						"required":    true,
 						"type":        "string",
 					},
 					map[string]any{
 						"authSources": []any{},
-						"description": "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').",
+						"description": "Optional id of the file to run tests for.",
 						"name":        "file_id",
 						"required":    false,
 						"type":        "string",
 					},
-          map[string]any{
+					map[string]any{
 						"authSources": []any{},
 						"description": "Optional name of the test to run.",
 						"name":        "test",
 						"required":    false,
 						"type":        "string",
 					},
-          map[string]any{
+					map[string]any{
 						"authSources": []any{},
 						"description": "Optional name of the model to run tests for.",
 						"name":        "model",
@@ -781,7 +781,7 @@ func TestLooker(t *testing.T) {
 				"parameters": []any{
 					map[string]any{
 						"authSources": []any{},
-						"description": "The unique ID of the LookML project.",
+						"description": "The id of the project to create the view in.",
 						"name":        "project_id",
 						"required":    true,
 						"type":        "string",
@@ -793,16 +793,25 @@ func TestLooker(t *testing.T) {
 						"required":    true,
 						"type":        "string",
 					},
-          map[string]any{
+					map[string]any{
 						"authSources": []any{},
-						"description": "A list of objects to generate views for. Each object must contain 'schema' and 'table_name' (note: table names are case-sensitive). Optional fields include 'primary_key', 'base_view', and 'columns' (array of objects with 'column_name')",
+						"description": "The tables to generate views for.\n\t\tEach item must be a map with:\n\t\t- schema (string, required)\n\t\t- table_name (string, required)\n\t\t- primary_key (string, optional)\n\t\t- base_view (boolean, optional)\n\t\t- columns (array of objects, optional): Each object must have 'column_name' (string).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authSources": []any{},
+							"description": "Table definition.",
+							"name":        "table",
+							"required":    true,
+							"type":        "object",
+						},
 						"name":        "tables",
 						"required":    true,
-						"type":        "string",
+						"type":        "array",
 					},
-          map[string]any{
+					map[string]any{
 						"authSources": []any{},
-						"description": "Optional folder to place the view files in (defaults to 'views/').",
+						"default": "views",
+						"description": "The folder to place the view files in (e.g., 'views').",
 						"name":        "folder_name",
 						"required":    false,
 						"type":        "string",
@@ -1883,13 +1892,16 @@ func TestLooker(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
 
 	wantResult = "Created"
-	tests.RunToolInvokeParametersTest(t, "create_project_directory", []byte(`{"project_id": "the_look", "directory_path": "foo_dir"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "create_project_directory", []byte(`{"project_id": "the_look", "directory_path": "views"}`), wantResult)
 
-	wantResult = "foo_dir"
+	wantResult = "views"
 	tests.RunToolInvokeParametersTest(t, "get_project_directories", []byte(`{"project_id": "the_look"}`), wantResult)
 
+        wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
+	tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
+
 	wantResult = "Deleted"
-	tests.RunToolInvokeParametersTest(t, "delete_project_directory", []byte(`{"project_id": "the_look", "directory_path": "foo_dir"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "delete_project_directory", []byte(`{"project_id": "the_look", "directory_path": "views"}`), wantResult)
 
 	wantResult = "\"errors\":[]"
 	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
@@ -1899,9 +1911,6 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "run_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
-
-  wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
-	tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
