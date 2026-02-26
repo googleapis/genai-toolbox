@@ -122,3 +122,34 @@ func TestFailParseFromYamlGemini(t *testing.T) {
 		})
 	}
 }
+
+func TestInitialize(t *testing.T) {
+	ctx := context.Background()
+	cfg := gemini.Config{
+		Name:  "test-model",
+		Type:  gemini.EmbeddingModelType,
+		Model: "text-embedding-004",
+	}
+
+	t.Run("without user agent in context", func(t *testing.T) {
+		_, err := cfg.Initialize(ctx)
+		if err == nil {
+			t.Fatal("expected Initialize to fail without user agent in context")
+		}
+		expectedErr := "error in User Agent retrieval: unable to retrieve user agent"
+		if err.Error() != expectedErr {
+			t.Fatalf("unexpected error: got %q, want %q", err.Error(), expectedErr)
+		}
+	})
+
+	t.Run("with user agent in context", func(t *testing.T) {
+		ctxWithUA := testutils.ContextWithUserAgent(ctx, "test-version")
+		model, err := cfg.Initialize(ctxWithUA)
+		if err != nil {
+			t.Fatalf("Initialize failed: %v", err)
+		}
+		if model == nil {
+			t.Fatal("expected model to be non-nil")
+		}
+	})
+}
