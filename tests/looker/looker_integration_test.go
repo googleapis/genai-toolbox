@@ -277,6 +277,16 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"run_lookml_tests": map[string]any{
+				"type":        "looker-run-lookml-tests",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+      "create_view_from_table": map[string]any{
+				"type":        "looker-create-view-from-table",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -718,6 +728,82 @@ func TestLooker(t *testing.T) {
 						"authSources": []any{},
 						"description": "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').",
 						"name":        "file_id",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+  tests.RunToolGetTestByName(t, "run_lookml_tests",
+		map[string]any{
+			"run_lookml_tests": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The unique ID of the LookML project.",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').",
+						"name":        "file_id",
+						"required":    false,
+						"type":        "string",
+					},
+          map[string]any{
+						"authSources": []any{},
+						"description": "Optional name of the test to run.",
+						"name":        "test",
+						"required":    false,
+						"type":        "string",
+					},
+          map[string]any{
+						"authSources": []any{},
+						"description": "Optional name of the model to run tests for.",
+						"name":        "model",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+  tests.RunToolGetTestByName(t, "create_view_from_table",
+		map[string]any{
+			"create_view_from_table": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The unique ID of the LookML project.",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The database connection name.",
+						"name":        "connection",
+						"required":    true,
+						"type":        "string",
+					},
+          map[string]any{
+						"authSources": []any{},
+						"description": "A list of objects to generate views for. Each object must contain 'schema' and 'table_name' (note: table names are case-sensitive). Optional fields include 'primary_key', 'base_view', and 'columns' (array of objects with 'column_name')",
+						"name":        "tables",
+						"required":    true,
+						"type":        "string",
+					},
+          map[string]any{
+						"authSources": []any{},
+						"description": "Optional folder to place the view files in (defaults to 'views/').",
+						"name":        "folder_name",
 						"required":    false,
 						"type":        "string",
 					},
@@ -1810,6 +1896,12 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "get_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "run_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
+
+  wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
+	tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
