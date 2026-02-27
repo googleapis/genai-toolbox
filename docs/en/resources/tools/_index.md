@@ -53,11 +53,12 @@ parameters:
 
 MCP Toolbox provides two main approaches for tools: **prebuilt** and **custom**.
 
-**Prebuilt tools** are ready to use out of the box. For example, a tool like
+[**Prebuilt tools**](../../reference/prebuilt-tools/) are ready to use out of
+the box. For example, a tool like
 [`postgres-execute-sql`](postgres/postgres-execute-sql/) has fixed parameters
-and always works the same way, allowing the agent to execute arbitrary SQL. While
-these are convenient, they are typically only safe when a developer is in the
-loop (e.g., during prototyping, developing, or debugging).
+and always works the same way, allowing the agent to execute arbitrary SQL.
+While these are convenient, they are typically only safe when a developer is in
+the loop (e.g., during prototyping, developing, or debugging).
 
 For application use cases, you need to be wary of security risks such as prompt
 injection or data poisoning. Allowing an LLM to execute arbitrary queries in
@@ -71,6 +72,9 @@ typically involves:
 
 *   **Prepared Statements:** Writing a SQL query ahead of time and letting the
     agent only fill in specific [basic parameters](#basic-parameters).
+*   [**Bound Parameters:**](../../sdks/python-sdk/core/#option-a-binding-parameters-to-a-loaded-tool)
+    Passing parameters directly to the underlying engine as bound variables
+    rather than allowing the LLM to provide them.
 *   **Secure Parameters:** Using mechanisms like [authenticated
     parameters](#authenticated-parameters) to restrict what data the agent can
     access based on the logged-in user.
