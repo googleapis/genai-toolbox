@@ -362,7 +362,7 @@ func runQueryParamInvokeTest(t *testing.T) {
 			name:        "invoke query-param-tool (required param nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
-			want:        `"page=1\u0026reqId="`, // reqId becomes "",
+			want:        `{"error":"parameter \"reqId\" is required"}`,
 		},
 	}
 	for _, tc := range invokeTcs {
