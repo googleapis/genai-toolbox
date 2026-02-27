@@ -15,3 +15,7 @@
 **/firestore/ @googleapis/toolbox-firestore-team
 **/looker/ @googleapis/toolbox-looker-team
 **/spanner/ @googleapis/toolbox-spanner-team
+
+# Docs
+/docs/ @googleapis/senseai-eco-team 
+/*.md @googleapis/senseai-eco-team
