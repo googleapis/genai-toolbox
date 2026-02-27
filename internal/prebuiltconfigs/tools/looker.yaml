@@ -1098,6 +1098,68 @@ tools:
           A JSON array of objects, where each object represents a column and contains details
           such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 
+    get_lookml_tests:
+        kind: looker-get-lookml-tests
+        source: looker-source
+        description: |
+          Returns a list of tests which can be run to validate a project's LookML code and/or the underlying data, optionally filtered by the file id.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_id (optional): The ID of the file to filter tests by. This must be the complete file path from the project root (e.g., `models/my_model.model.lkml` or `views/my_view.view.lkml`).
+
+          Output:
+          A JSON array of LookML test objects, each containing:
+          - model_name: The name of the model.
+          - name: The name of the test.
+          - explore_name: The name of the explore being tested.
+          - query_url_params: The query parameters used for the test.
+          - file: The file path where the test is defined.
+          - line: The line number where the test is defined.
+
+    run_lookml_tests:
+        kind: looker-run-lookml-tests
+        source: looker-source
+        description: |
+          This tool runs LookML tests in the project, filtered by file, test, and/or model. These filters work in conjunction (logical AND).
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the project to run LookML tests for.
+          - file_id (optional): The ID of the file to run tests for. This must be the complete file path from the project root (e.g., `models/my_model.model.lkml` or `views/my_view.view.lkml`).
+          - test (optional): The name of the test to run.
+          - model (optional): The name of the model to run tests for.
+
+          Output:
+          A JSON array containing the results of the executed tests, where each object includes:
+          - model_name: Name of the model tested.
+          - test_name: Name of the test.
+          - assertions_count: Total number of assertions in the test.
+          - assertions_failed: Number of assertions that failed.
+          - success: Boolean indicating if the test passed.
+          - errors: Array of error objects (if any), containing details like `message`, `file_path`, `line_number`, and `severity`.
+          - warnings: Array of warning messages (if any).
+
+    create_view_from_table:
+        kind: looker-create-view-from-table
+        source: looker-source
+        description: |
+          This tool generates boilerplate LookML views directly from the database schema.
+          It does not create model or explore files, only view files in the specified folder.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - connection (required): The database connection name.
+          - tables (required): A list of objects to generate views for. Each object must contain `schema` and `table_name` (note: table names are case-sensitive). Optional fields include `primary_key`, `base_view`, and `columns` (array of objects with `column_name`).
+          - folder_name (optional): The folder to place the view files in (defaults to 'views/').
+
+          Output:
+          A confirmation message upon successful view generation, or an error message if the operation fails.
 
 toolsets:
     looker_tools:
@@ -1138,3 +1200,6 @@ toolsets:
         - get_connection_databases
         - get_connection_tables
         - get_connection_table_columns
+        - get_lookml_tests
+        - run_lookml_tests
+        - create_view_from_table
