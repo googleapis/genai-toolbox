@@ -1490,6 +1490,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 
@@ -1551,6 +1552,9 @@ func TestPrebuiltTools(t *testing.T) {
 
 	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
 	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
+
+	t.Setenv("DATAPROC_PROJECT", "your_gcp_project_id")
+	t.Setenv("DATAPROC_REGION", "your_gcp_location")
 
 	t.Setenv("POSTGRES_HOST", "localhost")
 	t.Setenv("POSTGRES_PORT", "5432")
@@ -1729,6 +1733,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"dataplex_tools": tools.ToolsetConfig{
 					Name:      "dataplex_tools",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types"},
+				},
+			},
+		},
+		{
+			name: "dataproc prebuilt tools",
+			in:   dataproc_config,
+			wantToolset: server.ToolsetConfigs{
+				"dataproc_tools": tools.ToolsetConfig{
+					Name:      "dataproc_tools",
+					ToolNames: []string{"list_clusters", "get_cluster", "list_jobs", "get_job"},
 				},
 			},
 		},
