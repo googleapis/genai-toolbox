@@ -798,6 +798,16 @@ func TestParametersParse(t *testing.T) {
 			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "`foo`"}},
 		},
 		{
+			name: "string with escape backticks (injection)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
+			},
+			in: map[string]any{
+				"my_string": "foo ` bar",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "`foo `` bar`"}},
+		},
+		{
 			name: "string with escape double quotes",
 			params: parameters.Parameters{
 				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
@@ -806,6 +816,16 @@ func TestParametersParse(t *testing.T) {
 				"my_string": "foo",
 			},
 			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `"foo"`}},
+		},
+		{
+			name: "string with escape double quotes (injection)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
+			},
+			in: map[string]any{
+				"my_string": `foo " bar`,
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `"foo "" bar"`}},
 		},
 		{
 			name: "string with escape single quotes",
@@ -818,6 +838,16 @@ func TestParametersParse(t *testing.T) {
 			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `'foo'`}},
 		},
 		{
+			name: "string with escape single quotes (injection)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "single-quotes"),
+			},
+			in: map[string]any{
+				"my_string": "foo ' bar",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `'foo '' bar'`}},
+		},
+		{
 			name: "string with escape square brackets",
 			params: parameters.Parameters{
 				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
@@ -826,6 +856,16 @@ func TestParametersParse(t *testing.T) {
 				"my_string": "foo",
 			},
 			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "[foo]"}},
+		},
+		{
+			name: "string with escape square brackets (injection)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
+			},
+			in: map[string]any{
+				"my_string": "foo ] bar",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "[foo ]] bar]"}},
 		},
 		{
 			name: "int",
