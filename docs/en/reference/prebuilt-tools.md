@@ -552,6 +552,9 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_connection_databases`: Get the available databases in a connection.
     *   `get_connection_tables`: Get the available tables in a connection.
     *   `get_connection_table_columns`: Get the available columns for a table.
+    *   `get_lookml_tests`: Retrieves a list of available LookML tests for a project.
+    *   `run_lookml_tests`: Executes specific LookML tests within a project.
+    *   `create_view_from_table`: Generates boilerplate LookML views directly from the database schema.
 
 ## Looker Conversational Analytics
 

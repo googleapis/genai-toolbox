@@ -114,9 +114,7 @@ pip install google-genai
     <br/>
 
 1. Update `my_agent/agent.py` with the following content to connect to MCP Toolbox:
-    ```py
-    {{< regionInclude "quickstart/python/adk/quickstart.py" "quickstart" >}}
-    ```
+    {{< regionInclude "quickstart/python/adk/quickstart.py" "quickstart" "python" >}}
     <br/>
 
 1. Create a `.env` file with your Google API key:
@@ -126,21 +124,15 @@ pip install google-genai
 {{% /tab %}}
 {{% tab header="LangChain" text=true %}}
 Create a new file named `agent.py` and copy the following code:
-```py
-{{< include "quickstart/python/langchain/quickstart.py" >}}
-```
+{{< include "quickstart/python/langchain/quickstart.py" "python" >}}
 {{% /tab %}}
 {{% tab header="LlamaIndex" text=true %}}
 Create a new file named `agent.py` and copy the following code:
-```py
-{{< include "quickstart/python/llamaindex/quickstart.py" >}}
-```
+{{< include "quickstart/python/llamaindex/quickstart.py" "python" >}}
 {{% /tab %}}
 {{% tab header="Core" text=true %}}
 Create a new file named `agent.py` and copy the following code:
-```py
-{{< include "quickstart/python/core/quickstart.py" >}}
-```
+{{< include "quickstart/python/core/quickstart.py" "python" >}}
 {{% /tab %}}
 {{< /tabpane >}}
 
