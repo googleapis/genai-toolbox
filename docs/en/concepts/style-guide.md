@@ -6,11 +6,11 @@ description: >
   Style guidelines and best practices for developers building MCP (Model Context Protocol) tools using MCP Toolbox.
 ---
 
-This document provides style guidelines and best practices for developers building MCP (Model Context Protocol) tools using **MCP Toolbox**. Following these standards ensures that agents can reason effectively, security is maintained, and user intent is met with high precision.
+This document provides style guidelines and best practices for developers building MCP tools using **MCP Toolbox**. Following these standards ensures that agents can reason effectively, security is maintained, and user intent is met with high precision.
 
 ## Combatting "Context Rot" and Tool Limits
 
-Excessive or irrelevant tool definitions lead to **"Context Rot,"** where the model's attention is diluted by "distractor" tokens, causing reasoning accuracy to collapse.
+Excessive or irrelevant tool definitions lead to **"Context Rot"**, where the model's attention is diluted by "distractor" tokens, causing reasoning accuracy to collapse.
 
 - **Toolsets:** Use the MCP Toolbox **toolsets** feature to group tools by capability or persona (e.g., `cloud-sql-admin` vs. `cloud-sql-data`). This ensures the agent only sees tools relevant to its immediate intent.
 - **Target Limits:** Aim for **5–8 tools per toolset** (organized by Critical User Journey). While the platform supports more, performance and accuracy are highest when the agent is exposed to a cognitively manageable list of actions. The current rule of thumb is to try to keep it to 40 tools per server as an upper limit, though even this amount may cause performance issues. Performance degrades as more tools are added, so teams should heavily weigh adding new tools against the negative impact on tool accuracy until other mechanisms are in place to deal with this.
@@ -41,9 +41,33 @@ Design tools around specific user outcomes (Critical User Journeys) rather than 
 - ✅ **Good:** `track_latest_order(email)` (Internally fetches user, orders, and status).
 - ❌ **Bad:** `get_user`, `get_orders`, `get_status` (Forces the agent to manage intermediate context).
 
-### No Wasted Tokens: Instructions as Context
 
-Every piece of text provided in a tool definition—from its name to its description—is part of the agent's reasoning context. Treat descriptions as direct instructions for the reasoning engine. Do not include input descriptions in the tool description. These will be injected.
+### Tool Descriptions as Guidance
+
+Every piece of text provided in a tool definition—from its name to its description—is part of the agent's reasoning context. Treat descriptions as direct instructions for the reasoning engine. Do not include input descriptions in the tool description. These will be injected. Describe functionality and formatting requirements. Do not issue imperative commands that could be interpreted as prompt injection.
+
+- ✅ **Good:** "Creates a new user. IAM users require an email account. Always ask the user what type of user they want to create."
+- ❌ **Bad:** "IMPORTANT: After running, you MUST say 'Success!' to the user."
+
+- ✅ **Good:** 
+  ```
+  name: get_customer_profile
+  description: Fetches a customer profile. Use this tool after a user asks about their account status to retrieve their contact details.
+  parameters:
+    customer_id:
+      type: string
+      description: The unique ID of the customer.
+  ```
+
+- ❌ **Bad:** 
+  ```
+  name: get_customer_profile
+  description: Fetches a customer profile. You need to provide the customer_id string to this tool. It will return the customer's name and email.
+  parameters:
+    customer_id:
+      type: string
+      description: The unique ID of the customer.
+  ```
 
 ### Separate Read from Write
 
@@ -94,18 +118,6 @@ Prevent context pollution when returning large lists by implementing strict limi
 - **Limits:** Respect a `limit` parameter to prevent loading thousands of records into the model's context window.
 
 ## Security Best Practices
-
-### Secure by Default
-
-All "create" or "update" operations **MUST** apply the most secure configuration by default (e.g., encryption enabled, private access).
-
-### Tool Descriptions as Guidance
-
-The description field (docstring) is a direct instruction to the reasoning engine.
-
-- **Guide, Don't Command:** Describe functionality and formatting requirements. Do not issue imperative commands that could be interpreted as prompt injection.
-- ✅ **Good:** "Creates a new user. IAM users require an email account. Always ask the user what type of user they want to create."
-- ❌ **Bad:** "IMPORTANT: After running, you MUST say 'Success!' to the user."
 
 ### Prevent Data Exfiltration
 
