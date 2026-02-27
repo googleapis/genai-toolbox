@@ -3,7 +3,7 @@ title: "Style Guide"
 type: docs
 weight: 3
 description: >
-  Style guidelines and best practices for developers building MCP (Model Context Protocol) tools using MCP Toolbox.
+  Style guidelines and best practices for developers building MCP tools using MCP Toolbox.
 ---
 
 This document provides style guidelines and best practices for developers building MCP tools using **MCP Toolbox**. Following these standards ensures that agents can reason effectively, security is maintained, and user intent is met with high precision.
