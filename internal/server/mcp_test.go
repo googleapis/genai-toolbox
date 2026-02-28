@@ -1168,3 +1168,18 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unexpected read: got %s, want %s", read, want)
 	}
 }
+
+func TestSseManagerGetUnknownSession(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	manager := newSseManager(ctx)
+
+	session, ok := manager.get("unknown-session-id")
+	if ok {
+		t.Fatal("expected unknown session lookup to return ok=false")
+	}
+	if session != nil {
+		t.Fatal("expected unknown session lookup to return nil session")
+	}
+}
