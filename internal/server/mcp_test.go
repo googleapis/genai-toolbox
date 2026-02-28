@@ -1176,10 +1176,7 @@ func TestSseManagerGetUnknownSession(t *testing.T) {
 	manager := newSseManager(ctx)
 
 	session, ok := manager.get("unknown-session-id")
-	if ok {
-		t.Fatal("expected unknown session lookup to return ok=false")
-	}
-	if session != nil {
-		t.Fatal("expected unknown session lookup to return nil session")
+	if ok || session != nil {
+		t.Fatalf("manager.get() with unknown id returned (%v, %v), want (nil, false)", session, ok)
 	}
 }
