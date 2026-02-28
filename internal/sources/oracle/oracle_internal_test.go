@@ -4,6 +4,8 @@ package oracle
 import (
 	"errors"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type fakeResult struct {
@@ -23,25 +25,24 @@ func (f fakeResult) RowsAffected() (int64, error) {
 }
 
 func TestFormatExecResponseWithRowsAffected(t *testing.T) {
+	want := map[string]any{
+		"status":        "success",
+		"rows_affected": int64(7),
+	}
 	got := formatExecResponse(fakeResult{rows: 7})
 
-	if status, ok := got["status"]; !ok || status != "success" {
-		t.Fatalf("expected status=success, got %#v", got["status"])
-	}
-
-	if rows, ok := got["rows_affected"]; !ok || rows != int64(7) {
-		t.Fatalf("expected rows_affected=7, got %#v", got["rows_affected"])
+	if !cmp.Equal(want, got) {
+		t.Fatalf("formatExecResponse() mismatch (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
 
 func TestFormatExecResponseWithoutRowsAffected(t *testing.T) {
+	want := map[string]any{
+		"status": "success",
+	}
 	got := formatExecResponse(fakeResult{err: errors.New("rows affected unavailable")})
 
-	if status, ok := got["status"]; !ok || status != "success" {
-		t.Fatalf("expected status=success, got %#v", got["status"])
-	}
-
-	if _, ok := got["rows_affected"]; ok {
-		t.Fatalf("expected rows_affected to be omitted when unavailable, got %#v", got["rows_affected"])
+	if !cmp.Equal(want, got) {
+		t.Fatalf("formatExecResponse() mismatch (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
