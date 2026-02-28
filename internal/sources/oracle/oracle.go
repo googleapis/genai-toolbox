@@ -143,15 +143,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 			return nil, fmt.Errorf("unable to execute DML statement: %w", err)
 		}
 
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return nil, fmt.Errorf("unable to get rows affected: %w", err)
-		}
-
-		return map[string]any{
-			"status":        "success",
-			"rows_affected": rowsAffected,
-		}, nil
+		return formatExecResponse(result), nil
 	}
 	rows, err := s.OracleDB().QueryContext(ctx, statement, params...)
 	if err != nil {
@@ -251,6 +243,19 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 	}
 
 	return out, nil
+}
+
+func formatExecResponse(result sql.Result) map[string]any {
+	resp := map[string]any{
+		"status": "success",
+	}
+
+	// Some Oracle executions (e.g., PL/SQL blocks with RETURN) do not expose
+	// rows affected. Treat this as a successful execution without row metadata.
+	if rowsAffected, err := result.RowsAffected(); err == nil {
+		resp["rows_affected"] = rowsAffected
+	}
+	return resp
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
