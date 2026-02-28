@@ -200,7 +200,6 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 		msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
 			trace.WithSpanKind(trace.SpanKindServer),
 		)
-		defer span.End()
 
 		v, res, err := processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
 		if err != nil {
@@ -216,9 +215,11 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 		// no responses for notifications
 		if res != nil {
 			if err = s.write(msgCtx, res); err != nil {
+				span.End()
 				return err
 			}
 		}
+		span.End()
 	}
 }
 

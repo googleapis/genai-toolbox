@@ -20,17 +20,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"go.opentelemetry.io/otel"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 const jsonrpcVersion = "2.0"
@@ -1166,5 +1171,79 @@ func TestStdioSession(t *testing.T) {
 	want := fmt.Sprintf(`"%s"`, write) + "\n"
 	if read != want {
 		t.Fatalf("unexpected read: got %s, want %s", read, want)
+	}
+}
+
+func TestStdioSessionReadInputStreamEndsSpansPerMessage(t *testing.T) {
+	spanRecorder := tracetest.NewSpanRecorder()
+	tracerProvider := tracesdk.NewTracerProvider(tracesdk.WithSpanProcessor(spanRecorder))
+	defer func() {
+		if err := tracerProvider.Shutdown(context.Background()); err != nil {
+			t.Fatalf("failed to shutdown tracer provider: %v", err)
+		}
+	}()
+
+	previousTracerProvider := otel.GetTracerProvider()
+	otel.SetTracerProvider(tracerProvider)
+	defer otel.SetTracerProvider(previousTracerProvider)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
+	if err != nil {
+		t.Fatalf("unable to create telemetry instrumentation: %v", err)
+	}
+
+	testLogger, err := log.NewStdLogger(io.Discard, io.Discard, "error")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %v", err)
+	}
+
+	server := &Server{
+		logger:          testLogger,
+		instrumentation: instrumentation,
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	pr, pw := io.Pipe()
+	defer pr.Close()
+
+	stdioSession := NewStdioSession(server, pr, io.Discard)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- stdioSession.readInputStream(ctx)
+	}()
+
+	if _, err := pw.Write([]byte("not-json-1\nnot-json-2\n")); err != nil {
+		t.Fatalf("unable to write test input: %v", err)
+	}
+
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if len(spanRecorder.Ended()) >= 2 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("expected at least 2 ended spans while session is running, got %d", len(spanRecorder.Ended()))
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	select {
+	case err := <-errCh:
+		t.Fatalf("readInputStream returned too early: %v", err)
+	default:
+	}
+
+	cancel()
+	_ = pw.Close()
+
+	select {
+	case err := <-errCh:
+		if err != nil && err != context.Canceled {
+			t.Fatalf("unexpected readInputStream error: %v", err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("readInputStream did not exit after cancellation")
 	}
 }
