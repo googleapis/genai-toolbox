@@ -136,7 +136,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 
 	runGetDatasetToolInvokeTest(t, datasetWant)
 	runListFHIRStoresToolInvokeTest(t, fhirStoreWant)
-	runListDICOMStoresToolInvokeTest(t, dicomStoreID)
+	runListDICOMStoresToolInvokeTest(t)
 	runGetFHIRStoreToolInvokeTest(t, fhirStoreID, fhirStoreWant)
 	runGetFHIRStoreMetricsToolInvokeTest(t, fhirStoreID, `"metrics"`)
 	runGetFHIRResourceToolInvokeTest(t, fhirStoreID, "Patient", patient1ID, `"id":"`+patient1ID+`"`)
