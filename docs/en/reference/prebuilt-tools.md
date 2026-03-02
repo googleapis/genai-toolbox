@@ -466,6 +466,20 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `search_aspect_types`: Finds aspect types relevant to the
         query.
 
+## Dataproc
+
+*   `--prebuilt` value: `dataproc`
+*   **Environment Variables:**
+    *   `DATAPROC_PROJECT`: The GCP project ID.
+    *   `DATAPROC_REGION`: The Dataproc region.
+*   **Permissions:**
+    *   **Dataproc Viewer** (`roles/dataproc.viewer`) to examine clusters and jobs.
+*   **Tools:**
+    *   `list_clusters`: Lists Dataproc clusters.
+    *   `get_cluster`: Gets a Dataproc cluster.
+    *   `list_jobs`: Lists Dataproc jobs.
+    *   `get_job`: Gets a Dataproc job.
+
 ## Elasticsearch
 
 *   `--prebuilt` value: `elasticsearch`
@@ -533,6 +547,23 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `add_dashboard_filter`: Adds a filter to a dashboard.
     *   `generate_embed_url`: Generate an embed url for content.
+
+## Looker Dev
+
+*   `--prebuilt` value: `looker-dev`
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_SHOW_HIDDEN_MODELS`: Whether to show hidden models.
+    *   `LOOKER_SHOW_HIDDEN_EXPLORES`: Whether to show hidden explores.
+    *   `LOOKER_SHOW_HIDDEN_FIELDS`: Whether to show hidden fields.
+*   **Permissions:**
+    *   A Looker account with permissions to access the desired projects
+        and LookML is required.
+*   **Tools:**
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
