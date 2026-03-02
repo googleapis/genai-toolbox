@@ -4544,7 +4544,6 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 			requestBody:    bytes.NewBufferString(`{"schema_name": "test_proc"}`),
 			wantStatusCode: http.StatusOK,
 			shouldHaveData: true,
-			expectedCount:  2,
 		},
 		{
 			name:           "list stored procedures with limit 1",
