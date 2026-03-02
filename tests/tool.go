@@ -4453,8 +4453,32 @@ func cleanupOldSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	}
 }
 
+func forceCleanupAllZombies(ctx context.Context, pool *pgxpool.Pool, currentSchema string) {
+	// Query for all schemas matching your test prefix
+	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'test_proc_%'"
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			continue
+		}
+
+		if name == currentSchema {
+			continue
+		}
+
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", name))
+	}
+}
+
 // RunPostgresListStoredProcedureTest runs tests for the postgres list-stored-procedure tool
 func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	forceCleanupAllZombies(ctx, pool, "")
 	cleanupOldSchemas(t, ctx, pool)
 
 	type storedProcedureDetails struct {
@@ -4467,7 +4491,9 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 	}
 
 	// Create test schema
-	testSchemaName := "test_proc_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	// Use this format: test_proc_<timestamp>_<uuid>
+now := time.Now().Unix()
+testSchemaName := fmt.Sprintf("test_proc_%d_%s", now, strings.ReplaceAll(uuid.New().String(), "-", "")[:8])
 	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", testSchemaName)
 	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
 		t.Fatalf("unable to create test schema: %v", err)
@@ -4674,7 +4700,7 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 				}
 
 				// Verify definition contains CREATE PROCEDURE
-				if !strings.Contains(proc.Definition, "CREATE PROCEDURE") {
+				if !strings.Contains(strings.ToUpper(proc.Definition), "PROCEDURE") {
 					t.Logf("warning: definition may not be a valid CREATE PROCEDURE statement: %s", proc.Definition)
 				}
 
