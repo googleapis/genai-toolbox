@@ -23,5 +23,6 @@ sourceFileExtensions:
   - 'yml'
 ignoreFiles:
   - 'docs/en/getting-started/quickstart/**'
+  - 'docs/en/samples/**'
   - '**/*oracle*'
 

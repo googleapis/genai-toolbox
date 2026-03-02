@@ -330,3 +330,45 @@ func DeleteProjectDirectory(l *v4.LookerSDK, projectId string, directoryPath str
 	path := fmt.Sprintf("/projects/%s/directories", url.PathEscape(projectId))
 	return l.AuthSession.Do(&result, "DELETE", "/4.0", path, query, nil, options)
 }
+
+type ProjectGeneratorColumn struct {
+	ColumnName string `json:"column_name"`
+}
+
+type ProjectGeneratorTable struct {
+	Schema     string                   `json:"schema"`
+	TableName  string                   `json:"table_name"`
+	PrimaryKey *string                  `json:"primary_key,omitempty"`
+	BaseView   *bool                    `json:"base_view,omitempty"`
+	Columns    []ProjectGeneratorColumn `json:"columns,omitempty"`
+}
+
+type ProjectGeneratorRequestBody struct {
+	Tables []ProjectGeneratorTable `json:"tables"`
+}
+
+type ProjectGeneratorQueryParams struct {
+	Connection          string `json:"connection"`
+	FileTypeForExplores string `json:"file_type_for_explores"`
+	FolderName          string `json:"folder_name,omitempty"`
+}
+
+func CreateViewsFromTables(ctx context.Context, l *v4.LookerSDK, projectId string, queryParams ProjectGeneratorQueryParams, reqBody ProjectGeneratorRequestBody, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/generate", url.PathEscape(projectId))
+
+	// Construct query parameter map
+	query := map[string]any{
+		"connection":             queryParams.Connection,
+		"file_type_for_explores": queryParams.FileTypeForExplores,
+		"folder_name":            queryParams.FolderName,
+	}
+
+	// Pass the Tables slice directly as the body, not the wrapped struct.
+	// The API spec defines `tables` as `body_param ... array: true`,
+	// which means the body itself should be the array.
+	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody.Tables, options)
+
+	logger, _ := util.LoggerFromContext(ctx)
+	logger.DebugContext(ctx, fmt.Sprintf("generating views with request: query=%v body=%v error=%v", query, reqBody.Tables, err))
+	return err
+}
