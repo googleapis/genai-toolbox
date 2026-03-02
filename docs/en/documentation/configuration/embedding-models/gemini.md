@@ -3,7 +3,8 @@ title: "Gemini Embedding"
 type: docs
 weight: 1
 description: >
-  Use Google's Gemini models to generate high-performance text embeddings for vector databases.
+  Use Google's Gemini models to generate high-performance text embeddings for
+  vector databases.
 ---
 
 ## About
@@ -13,15 +14,18 @@ high-dimensional vectors.
 
 ### Authentication
 
-Toolbox uses your [Application Default Credentials
-(ADC)][adc] to authorize with the
-Gemini API client.
+Toolbox supports two authentication modes:
 
-Optionally, you can use an [API key][api-key] obtain an API
-Key from the [Google AI Studio][ai-studio].
+1.  **Google AI (API Key):** Used if `useVertexAI` is `false` or unset. You must
+    provide `apiKey` (or set `GOOGLE_API_KEY`/`GEMINI_API_KEY` environment
+    variables). This uses the [Google AI Studio][ai-studio] backend.
+2.  **Vertex AI (ADC):** Used if `useVertexAI` is `true`. This uses [Application
+    Default Credentials (ADC)][adc]. When using this mode, you **must** specify
+    `project` and `location` (or set
+    `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` environment variables).
 
-We recommend using an API key for testing and using application default
-credentials for production.
+We recommend using an API key for quick testing and using Vertex AI with ADC for
+production environments.
 
 [adc]: https://cloud.google.com/docs/authentication#adc
 [api-key]: https://ai.google.dev/gemini-api/docs/api-key#api-keys
@@ -41,13 +45,19 @@ to your database source.
 The `dimension` field must match the expected size of your database column
 (e.g., a `vector(768)` column in PostgreSQL). This setting is supported by newer
 models since 2024 only. You cannot set this value if using the earlier model
-(`models/embedding-001`). Check out [available Gemini models][modellist] for more
-information.
+(`models/embedding-001`). Check out [available Gemini models][modellist] for
+more information.
 
 [modellist]:
-    https://docs.cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#supported-models
+  https://docs.cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings#supported-models
+
 
 ## Example
+
+### Using Google AI
+
+Google AI uses API Key for authentication. You can get an API key from [Google
+AI Studio][ai-studio].
 
 ```yaml
 kind: embeddingModel
@@ -58,16 +68,38 @@ apiKey: ${GOOGLE_API_KEY}
 dimension: 768
 ```
 
+### Using Vertex AI
+
+Vertex AI uses Application Default Credentials (ADC) for authentication. Learn
+how to set up ADC [here][adc].
+
+```yaml
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: text-embedding-004
+useVertexAI: true
+project: ${GOOGLE_CLOUD_PROJECT}
+location: us-central1
+dimension: 768
+```
+
+[adc]: https://docs.cloud.google.com/docs/authentication/provide-credentials-adc
+
+
 {{< notice tip >}}
-Use environment variable replacement with the format ${ENV_NAME}
-instead of hardcoding your secrets into the configuration file.
+  Use environment variable replacement with the format
+  ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                              |
-|-----------|:--------:|:------------:|--------------------------------------------------------------|
-| type      |  string  |     true     | Must be `gemini`.                                            |
-| model     |  string  |     true     | The Gemini model ID to use (e.g., `gemini-embedding-001`).   |
-| apiKey    |  string  |    false     | Your API Key from Google AI Studio.                          |
-| dimension | integer  |    false     | The number of dimensions in the output vector (e.g., `768`). |
+| **field**   | **type** | **required** | **description**                                               |
+| ----------- | :------: | :----------: | ------------------------------------------------------------- |
+| type        |  string  |     true     | Must be `gemini`.                                             |
+| model       |  string  |     true     | The Gemini model ID to use (e.g., `text-embedding-004`).      |
+| useVertexAI | boolean  |     true     | Set to `true` to use Vertex AI. Default is false (Google AI). |
+| project     |  string  |    false     | GCP Project ID (required if `useVertexAI` is `true`).         |
+| location    |  string  |    false     | GCP Location (required if `useVertexAI` is `true`).           |
+| apiKey      |  string  |    false     | Your API Key from Google AI Studio.                           |
+| dimension   | integer  |    false     | The number of dimensions in the output vector (e.g., `768`).  |
