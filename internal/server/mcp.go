@@ -61,7 +61,9 @@ func (m *sseManager) get(id string) (*sseSession, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	session, ok := m.sseSessions[id]
-	session.lastActive = time.Now()
+	if ok {
+		session.lastActive = time.Now()
+	}
 	return session, ok
 }
 
