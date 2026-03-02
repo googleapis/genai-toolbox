@@ -1357,12 +1357,12 @@ func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 	}
 }
 
-func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	schemaName := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, owner string, uniqueID string) {
+	schemaName := "test_schema_" + uniqueID
 	cleanup := setupPostgresSchemas(t, ctx, pool, schemaName)
 	defer cleanup()
 
-	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": "postgres", "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
+	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": owner, "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
 
 	invokeTcs := []struct {
 		name           string
@@ -1377,9 +1377,10 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
+		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/genai-toolbox/issues/2562
 		// {
 		// 	name:           "invoke list_schemas with owner name",
-		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, "postgres"))),
+		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
 		// 	wantStatusCode: http.StatusOK,
 		// 	want:           []map[string]any{wantSchema},
 		// 	compareSubset:  true,
@@ -1438,7 +1439,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 					}
 				}
 				if !found {
-					t.Errorf("Expected schema '%s' not found in the list of all schemas.", wantSchema)
+					t.Errorf("Expected schema '%+v' not found in the list of all schemas.", wantSchema)
 				}
 			} else {
 				if diff := cmp.Diff(tc.want, got); diff != "" {

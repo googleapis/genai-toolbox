@@ -20,7 +20,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 )
 
 func TestHelperFunctions(t *testing.T) {
@@ -457,7 +457,7 @@ func TestConvertValue(t *testing.T) {
 			want:  map[string]any{"x": 1.1, "y": 2.2, "z": 3.3, "srid": uint32(5467)},
 		},
 		{
-			name: "neo4j.Node (handled by Entity case, losing labels)",
+			name: "neo4j.Node",
 			input: neo4j.Node{
 				ElementId: "element-1",
 				Labels:    []string{"Person"},
@@ -470,7 +470,7 @@ func TestConvertValue(t *testing.T) {
 			},
 		},
 		{
-			name: "neo4j.Relationship (handled by Entity case, losing type/endpoints)",
+			name: "neo4j.Relationship",
 			input: neo4j.Relationship{
 				ElementId:      "element-2",
 				StartElementId: "start-1",
@@ -487,7 +487,7 @@ func TestConvertValue(t *testing.T) {
 			},
 		},
 		{
-			name: "neo4j.Path (elements handled by Entity case)",
+			name: "neo4j.Path",
 			input: func() neo4j.Path {
 				node1 := neo4j.Node{ElementId: "n10", Labels: []string{"A"}, Props: map[string]any{"p1": "v1"}}
 				node2 := neo4j.Node{ElementId: "n11", Labels: []string{"B"}, Props: map[string]any{"p2": "v2"}}

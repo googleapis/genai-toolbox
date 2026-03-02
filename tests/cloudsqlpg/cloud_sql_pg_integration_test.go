@@ -179,7 +179,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	// Run Postgres prebuilt tool tests
 	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, CloudSQLPostgresUser)
 	tests.RunPostgresListViewsTest(t, ctx, pool)
-	tests.RunPostgresListSchemasTest(t, ctx, pool)
+	tests.RunPostgresListSchemasTest(t, ctx, pool, CloudSQLPostgresUser, uniqueID)
 	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
 	tests.RunPostgresListAvailableExtensionsTest(t)
 	tests.RunPostgresListInstalledExtensionsTest(t)

@@ -41,10 +41,10 @@ from MCP Toolbox.
 
 1. In a new terminal, install the Go SDK Module:
     {{< notice warning >}}
-    Breaking Change Notice: As of version `0.6.0`, this SDK has transitioned to a multi-module structure.
-    * For new versions (`v0.6.0`+): You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/core`).
-    * For older versions (`v0.5.1` and below): The SDK remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
-    * Please update your imports and `go.mod` accordingly when upgrading.
+Breaking Change Notice: As of version `0.6.0`, this SDK has transitioned to a multi-module structure.
+* For new versions (`v0.6.0`+): You must import specific modules (e.g., `go get github.com/googleapis/mcp-toolbox-sdk-go/core`).
+* For older versions (`v0.5.1` and below): The SDK remains a single-module library (`go get github.com/googleapis/mcp-toolbox-sdk-go`).
+* Please update your imports and `go.mod` accordingly when upgrading.
     {{< /notice >}}
 
    {{< tabpane persist=header >}}

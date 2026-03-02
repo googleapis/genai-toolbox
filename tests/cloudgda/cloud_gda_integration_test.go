@@ -18,78 +18,75 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"net"
 	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
+	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	source "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudgda"
 	"github.com/googleapis/genai-toolbox/tests"
+	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
 	cloudGdaToolType = "cloud-gemini-data-analytics-query"
 )
 
-type cloudGdaTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *cloudGdaTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://geminidataanalytics.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type masterHandler struct {
+type mockDataChatServer struct {
+	geminidataanalyticspb.UnimplementedDataChatServiceServer
 	t *testing.T
 }
 
-func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
+func (s *mockDataChatServer) QueryData(ctx context.Context, req *geminidataanalyticspb.QueryDataRequest) (*geminidataanalyticspb.QueryDataResponse, error) {
+	if req.Prompt == "" {
+		s.t.Errorf("missing prompt")
+		return nil, fmt.Errorf("missing prompt")
 	}
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	return &geminidataanalyticspb.QueryDataResponse{
+		GeneratedQuery:        "SELECT * FROM table;",
+		NaturalLanguageAnswer: "Here is the answer.",
+	}, nil
+}
 
-	// Verify URL structure
-	// Expected: /v1beta/projects/{project}/locations/global:queryData
-	if !strings.Contains(r.URL.Path, ":queryData") || !strings.Contains(r.URL.Path, "locations/global") {
-		h.t.Errorf("unexpected URL path: %s", r.URL.Path)
-		http.Error(w, "Not found", http.StatusNotFound)
-		return
-	}
-
-	var reqBody cloudgda.QueryDataRequest
-	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
-		h.t.Fatalf("failed to decode request body: %v", err)
-	}
-
-	if reqBody.Prompt == "" {
-		http.Error(w, "missing prompt", http.StatusBadRequest)
-		return
-	}
-
-	response := map[string]any{
-		"queryResult":           "SELECT * FROM table;",
-		"naturalLanguageAnswer": "Here is the answer.",
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func getCloudGdaToolsConfig() map[string]any {
+	return map[string]any{
+		"sources": map[string]any{
+			"my-gda-source": map[string]any{
+				"type":      "cloud-gemini-data-analytics",
+				"projectId": "test-project",
+			},
+		},
+		"tools": map[string]any{
+			"cloud-gda-query": map[string]any{
+				"type":        cloudGdaToolType,
+				"source":      "my-gda-source",
+				"description": "Test GDA Tool",
+				"location":    "us-central1",
+				"context": map[string]any{
+					"datasourceReferences": map[string]any{
+						"spannerReference": map[string]any{
+							"databaseReference": map[string]any{
+								"projectId":  "test-project",
+								"instanceId": "test-instance",
+								"databaseId": "test-db",
+								"engine":     "GOOGLE_SQL",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -97,26 +94,37 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	handler := &masterHandler{t: t}
-	server := httptest.NewServer(handler)
-	defer server.Close()
-
-	serverURL, err := url.Parse(server.URL)
+	// Start a gRPC server
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("failed to parse server URL: %v", err)
+		t.Fatalf("failed to listen: %v", err)
 	}
+	s := grpc.NewServer()
+	geminidataanalyticspb.RegisterDataChatServiceServer(s, &mockDataChatServer{t: t})
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			// This might happen on strict shutdown, log if unexpected
+			t.Logf("server executed: %v", err)
+		}
+	}()
+	defer s.Stop()
 
-	originalTransport := http.DefaultClient.Transport
-	if originalTransport == nil {
-		originalTransport = http.DefaultTransport
+	// Configure toolbox to use the gRPC server
+	endpoint := lis.Addr().String()
+
+	// Override client creation
+	origFunc := source.NewDataChatClient
+	defer func() {
+		source.NewDataChatClient = origFunc
+	}()
+
+	source.NewDataChatClient = func(ctx context.Context, opts ...option.ClientOption) (*geminidataanalytics.DataChatClient, error) {
+		opts = append(opts,
+			option.WithEndpoint(endpoint),
+			option.WithoutAuthentication(),
+			option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())))
+		return origFunc(ctx, opts...)
 	}
-	http.DefaultClient.Transport = &cloudGdaTransport{
-		transport: originalTransport,
-		url:       serverURL,
-	}
-	t.Cleanup(func() {
-		http.DefaultClient.Transport = originalTransport
-	})
 
 	var args []string
 	toolsFile := getCloudGdaToolsConfig()
@@ -156,7 +164,7 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 
 	// 2. RunToolInvokeParametersTest
 	params := []byte(`{"query": "test question"}`)
-	tests.RunToolInvokeParametersTest(t, toolName, params, "\"queryResult\":\"SELECT * FROM table;\"")
+	tests.RunToolInvokeParametersTest(t, toolName, params, "\"generated_query\":\"SELECT * FROM table;\"")
 
 	// 3. Manual MCP Tool Call Test
 	// Initialize MCP session
@@ -194,40 +202,5 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	respStr := string(respBody)
 	if !strings.Contains(respStr, "SELECT * FROM table;") {
 		t.Errorf("MCP response does not contain expected query result: %s", respStr)
-	}
-}
-
-func getCloudGdaToolsConfig() map[string]any {
-	// Mocked responses and a dummy `projectId` are used in this integration
-	// test due to limited project-specific allowlisting. API functionality is
-	// verified via internal monitoring; this test specifically validates the
-	// integration flow between the source and the tool.
-	return map[string]any{
-		"sources": map[string]any{
-			"my-gda-source": map[string]any{
-				"type":      "cloud-gemini-data-analytics",
-				"projectId": "test-project",
-			},
-		},
-		"tools": map[string]any{
-			"cloud-gda-query": map[string]any{
-				"type":        cloudGdaToolType,
-				"source":      "my-gda-source",
-				"description": "Test GDA Tool",
-				"location":    "us-central1",
-				"context": map[string]any{
-					"datasourceReferences": map[string]any{
-						"spannerReference": map[string]any{
-							"databaseReference": map[string]any{
-								"projectId":  "test-project",
-								"instanceId": "test-instance",
-								"databaseId": "test-db",
-								"engine":     "GOOGLE_SQL",
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
