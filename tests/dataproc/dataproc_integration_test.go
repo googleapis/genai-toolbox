@@ -386,7 +386,7 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 				want = listClustersRpc(t, client, ctx, tc.filter, tc.wantN)
 			}
 
-			var actual []dataprocsrc.Cluster
+			actual := []dataprocsrc.Cluster{}
 			var pageToken string
 
 			for i := 0; i < tc.numPages; i++ {
