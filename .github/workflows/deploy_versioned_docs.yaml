@@ -35,9 +35,10 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Get Version from Release Tag
-        run: echo "VERSION=${GITHUB_EVENT_RELEASE_TAG_NAME}" >> $GITHUB_ENV
+        id: get_version
         env:
-          GITHUB_EVENT_RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: echo "VERSION=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
@@ -58,7 +59,7 @@ jobs:
         run: hugo --minify
         working-directory: .hugo
         env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ env.VERSION }}/
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ steps.get_version.outputs.VERSION }}/
           HUGO_RELATIVEURLS: false
 
       - name: Deploy
@@ -67,9 +68,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .hugo/public
           publish_branch: versioned-gh-pages
-          destination_dir: ./${{ env.VERSION }}
+          destination_dir: ./${{ steps.get_version.outputs.VERSION }}
           keep_files: true
-          commit_message: "deploy: docs for ${{ env.VERSION }}"
+          commit_message: "deploy: docs for ${{ steps.get_version.outputs.VERSION }}"
 
       - name: Clean Build Directory
         run: rm -rf .hugo/public
@@ -89,4 +90,4 @@ jobs:
           publish_branch: versioned-gh-pages
           keep_files: true
           allow_empty_commit: true
-          commit_message: "deploy: docs to root for ${{ env.VERSION }}"
+          commit_message: "deploy: docs to root for ${{ steps.get_version.outputs.VERSION }}"

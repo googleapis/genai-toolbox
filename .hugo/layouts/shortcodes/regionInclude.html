@@ -20,23 +20,25 @@
   {{ errorf "File %q not found (referenced in %s)" $path .Page.File.Path }}
 {{ end }}
 
-{{ $content := readFile $path }}
+{{ $content := readFile $path | replaceRE "\r\n" "\n" }}
 {{ $start_tag := printf "[START %s]" $region }}
 {{ $end_tag := printf "[END %s]" $region }}
 
-{{ $snippet := "" }}
+{{ $lines := slice }}
 {{ $in_snippet := false }}
 {{ range split $content "\n" }}
   {{ if $in_snippet }}
     {{ if in . $end_tag }}
       {{ $in_snippet = false }}
     {{ else }}
-      {{ $snippet = printf "%s%s\n" $snippet . }}
+      {{ $lines = $lines | append . }}
     {{ end }}
   {{ else if in . $start_tag }}
     {{ $in_snippet = true }}
   {{ end }}
 {{ end }}
+
+{{ $snippet := delimit $lines "\n" }}
 
 {{ if eq (trim $snippet "") "" }}
   {{ errorf "Region %q not found or empty in file %s (referenced in %s)" $region $file .Page.File.Path }}
@@ -45,5 +47,7 @@
 {{ if eq $lang "text" }}
   {{ $snippet | markdownify }}
 {{ else }}
-  {{ highlight (trim $snippet "\n") $lang "" }}
+```{{ $lang }}
+{{ $snippet | safeHTML }}
+```
 {{ end }}
