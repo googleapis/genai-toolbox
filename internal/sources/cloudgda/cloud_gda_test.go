@@ -172,11 +172,9 @@ func TestInitialize(t *testing.T) {
 			if gdaSrc.Client == nil && !tc.wantClientOAuth {
 				t.Fatal("expected non-nil HTTP client for ADC, got nil")
 			}
-			// When client OAuth is true, the source's client should be initialized with a base HTTP client
-			// that includes the user agent round tripper, but not the OAuth token. The token-aware
-			// client is created by GetClient.
-			if gdaSrc.Client == nil && tc.wantClientOAuth {
-				t.Fatal("expected non-nil HTTP client for client OAuth config, got nil")
+			// When client OAuth is true, the source's client should be nil.
+			if gdaSrc.Client != nil && tc.wantClientOAuth {
+				t.Fatal("expected nil HTTP client for client OAuth config, got non-nil")
 			}
 
 			// Test UseClientAuthorization method
@@ -186,15 +184,16 @@ func TestInitialize(t *testing.T) {
 
 			// Test GetClient with accessToken for client OAuth scenarios
 			if tc.wantClientOAuth {
-				client, err := gdaSrc.GetClient(ctx, "dummy-token")
+				client, cleanup, err := gdaSrc.GetClient(ctx, "dummy-token")
 				if err != nil {
 					t.Fatalf("GetClient with token failed: %v", err)
 				}
+				defer cleanup()
 				if client == nil {
 					t.Fatal("expected non-nil HTTP client from GetClient with token, got nil")
 				}
 				// Ensure passing empty token with UseClientOAuth enabled returns error
-				_, err = gdaSrc.GetClient(ctx, "")
+				_, _, err = gdaSrc.GetClient(ctx, "")
 				if err == nil || err.Error() != "client-side OAuth is enabled but no access token was provided" {
 					t.Errorf("expected 'client-side OAuth is enabled but no access token was provided' error, got: %v", err)
 				}
