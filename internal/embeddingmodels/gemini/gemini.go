@@ -34,7 +34,7 @@ type Config struct {
 	Name        string `yaml:"name" validate:"required"`
 	Type        string `yaml:"type" validate:"required"`
 	Model       string `yaml:"model" validate:"required"`
-	UseVertexAI bool   `yaml:"useVertexAI" validate:"required"`
+	UseVertexAI bool   `yaml:"useVertexAI"`
 	ApiKey      string `yaml:"apiKey"`
 	Project     string `yaml:"project"`
 	Location    string `yaml:"location"`
@@ -54,9 +54,9 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 	apiKey := cfg.ApiKey
 	if apiKey == "" {
 		apiKey = os.Getenv("GOOGLE_API_KEY")
-		if apiKey == "" {
-			apiKey = os.Getenv("GEMINI_API_KEY")
-		}
+	}
+	if apiKey == "" {
+		apiKey = os.Getenv("GEMINI_API_KEY")
 	}
 
 	// Determine the Backend
@@ -73,9 +73,6 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 		configs.Location = cfg.Location
 		if configs.Location == "" {
 			configs.Location = os.Getenv("GOOGLE_CLOUD_LOCATION")
-			if configs.Location == "" {
-				configs.Location = "us-central1"
-			}
 		}
 
 		if configs.Project == "" {
