@@ -687,7 +687,7 @@ func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx con
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var want []dataprocsrc.Job
+			want := []dataprocsrc.Job{}
 			if tc.wantN > 0 {
 				want = listJobsRpc(t, client, ctx, tc.filter, tc.wantN)
 			}
