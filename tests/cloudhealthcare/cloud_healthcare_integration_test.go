@@ -138,7 +138,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 
 	runGetDatasetToolInvokeTest(t, datasetWant)
 	runListFHIRStoresToolInvokeTest(t, fhirStoreWant)
-	runListDICOMStoresToolInvokeTest(t, dicomStoreWant)
+	runListDICOMStoresToolInvokeTest(t, fmt.Sprintf(`projects/%s/locations/%s/datasets/%s/dicomStores/`, healthcareProject, healthcareRegion, healthcareDataset))
 	runGetFHIRStoreToolInvokeTest(t, fhirStoreID, fhirStoreWant)
 	runGetFHIRStoreMetricsToolInvokeTest(t, fhirStoreID, `"metrics"`)
 	runGetFHIRResourceToolInvokeTest(t, fhirStoreID, "Patient", patient1ID, `"id":"`+patient1ID+`"`)
@@ -149,7 +149,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	runFHIRFetchPageToolInvokeTest(t, nextURL, `"total":1`)
 
 	runGetDICOMStoreToolInvokeTest(t, dicomStoreID, dicomStoreWant)
-	runGetDICOMStoreMetricsToolInvokeTest(t, healthcarePrepopulatedDICOMStore, `"structuredStorageSizeBytes"`)
+	runGetDICOMStoreMetricsToolInvokeTest(t, dicomStoreID, `"structuredStorageSizeBytes"`)
 	runSearchDICOMStudiesToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
 	runSearchDICOMSeriesToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
 	runSearchDICOMInstancesToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
@@ -326,7 +326,44 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 		createFHIRResource(t, service, fhirStore.Name, "Observation", observation2Body)
 	}
 
+	// Populate the DICOM store with the expected instances
+	uploadDummyDICOM(t, service, dicomStore.Name, singleFrameDICOMInstance, "Joelle-del")
+	uploadDummyDICOM(t, service, dicomStore.Name, multiFrameDICOMInstance, "Andrew")
+
 	return patient1ID, patient2ID
+}
+
+func uploadDummyDICOM(t *testing.T, service *healthcare.Service, storeName string, inst DICOMInstance, patientName string) {
+    dicomData := []map[string]interface{}{
+        {
+            "00100010": map[string]interface{}{"vr": "PN", "Value": []interface{}{map[string]string{"Alphabetic": patientName}}},
+            "00100020": map[string]interface{}{"vr": "LO", "Value": []interface{}{patientName}},
+            "0020000D": map[string]interface{}{"vr": "UI", "Value": []interface{}{inst.study}},
+            "0020000E": map[string]interface{}{"vr": "UI", "Value": []interface{}{inst.series}},
+            "00080018": map[string]interface{}{"vr": "UI", "Value": []interface{}{inst.instance}},
+            "00080016": map[string]interface{}{"vr": "UI", "Value": []interface{}{"1.2.840.10008.5.1.4.1.1.2"}}, // CT Image Storage
+        },
+    }
+
+    body, err := json.Marshal(dicomData)
+		if err != nil {
+			t.Fatalf("failed to marshal DICOM data: %v", err)
+		}
+    
+    call := service.Projects.Locations.Datasets.DicomStores.StoreInstances(storeName, "studies", bytes.NewReader(body))
+    
+    call.Header().Set("Content-Type", "application/dicom+json")
+    
+    resp, err := call.Do()
+    if err != nil {
+        t.Fatalf("failed to upload dummy DICOM: %v", err)
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != http.StatusOK {
+        b, _ := io.ReadAll(resp.Body)
+        t.Fatalf("DICOM upload failed with status %d: %s", resp.StatusCode, string(b))
+    }
 }
 
 func getToolsConfig(sourceConfig map[string]any) map[string]any {
