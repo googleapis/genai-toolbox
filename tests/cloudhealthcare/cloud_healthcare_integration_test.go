@@ -330,7 +330,6 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 
 	return patient1ID, patient2ID
 }
-
 func uploadDummyDICOM(t *testing.T, service *healthcare.Service, storeName string, inst DICOMInstance, patientName string) {
 	buf := new(bytes.Buffer)
 	buf.Write(make([]byte, 128))
@@ -348,17 +347,23 @@ func uploadDummyDICOM(t *testing.T, service *healthcare.Service, storeName strin
 		buf.Write(valBytes)
 	}
 
+	// Standard Meta Header
 	writeTag(0x0002, 0x0002, "UI", "1.2.840.10008.5.1.4.1.1.2")
 	writeTag(0x0002, 0x0010, "UI", "1.2.840.10008.1.2.1")
 
+	// Core Identifiers
 	writeTag(0x0008, 0x0018, "UI", inst.instance)
 	writeTag(0x0010, 0x0010, "PN", patientName)
 	writeTag(0x0010, 0x0020, "LO", patientName)
 	writeTag(0x0020, 0x000D, "UI", inst.study)
 	writeTag(0x0020, 0x000E, "UI", inst.series)
 
-	call := service.Projects.Locations.Datasets.DicomStores.StoreInstances(storeName, "studies", buf)
+	writeTag(0x0008, 0x0020, "DA", "20170101")
+	writeTag(0x0008, 0x0090, "PN", "Frederick^Bryant")
+	writeTag(0x0008, 0x0060, "CS", "SM")
+	writeTag(0x5200, 0x9230, "UI", "1.2.3")
 
+	call := service.Projects.Locations.Datasets.DicomStores.StoreInstances(storeName, "studies", buf)
 	call.Header().Set("Content-Type", "application/dicom")
 
 	resp, err := call.Do()
@@ -2344,7 +2349,7 @@ func runSearchDICOMInstancesToolInvokeTest(t *testing.T, dicomStoreID string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-instances-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "includefield":["52009230"]}`)),
-			want:          `"52009230"`,
+			want:          `52009230`,
 			isErr:         false,
 		},
 	}
