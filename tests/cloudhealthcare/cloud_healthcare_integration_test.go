@@ -359,7 +359,7 @@ func uploadDummyDICOM(t *testing.T, service *healthcare.Service, storeName strin
 	writeTag(0x0020, 0x000E, "UI", inst.series)
 
 	writeTag(0x0008, 0x0020, "DA", "20170101")
-	writeTag(0x0008, 0x0090, "PN", "Frederick^Bryant")
+	writeTag(0x0008, 0x0090, "PN", "Frederick^Bryant^^Ph.D.")
 	writeTag(0x0008, 0x0060, "CS", "SM")
 	writeTag(0x5200, 0x9230, "UI", "1.2.3")
 
