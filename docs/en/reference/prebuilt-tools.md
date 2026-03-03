@@ -551,7 +551,16 @@ See [Usage Examples](../reference/cli.md#examples).
 ## Looker Dev
 
 *   `--prebuilt` value: `looker-dev`
-*   Must be used in combination with Looker, `--prebuilt looker,looker-dev`
+*   May be used in combination with Looker, `--prebuilt looker,looker-dev`
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_SHOW_HIDDEN_MODELS`: Whether to show hidden models.
+    *   `LOOKER_SHOW_HIDDEN_EXPLORES`: Whether to show hidden explores.
+    *   `LOOKER_SHOW_HIDDEN_FIELDS`: Whether to show hidden fields.
 *   **Permissions:**
     *   A Looker account with permissions to access the desired projects
         and LookML is required.
