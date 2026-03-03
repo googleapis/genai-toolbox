@@ -166,7 +166,7 @@ func (s *Source) ListClusters(ctx context.Context, pageSize *int, pageToken, fil
 	}
 	pager := iterator.NewPager(it, ps, req.PageToken)
 
-	var clusterPbs []*dataprocpb.Cluster
+	clusterPbs := []*dataprocpb.Cluster{}
 	nextPageToken, err := pager.NextPage(&clusterPbs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list clusters: %w", err)

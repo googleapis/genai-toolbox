@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.28.0](https://github.com/googleapis/genai-toolbox/compare/v0.27.0...v0.28.0) (2026-03-02)
+
+
+### Features
+
+* Add polling system to dynamic reloading ([#2466](https://github.com/googleapis/genai-toolbox/issues/2466)) ([fcaac9b](https://github.com/googleapis/genai-toolbox/commit/fcaac9bb957226ee3db1baea24330f337ba88ab7))
+* Added basic template for sdks doc migrate ([#1961](https://github.com/googleapis/genai-toolbox/issues/1961)) ([87f2eaf](https://github.com/googleapis/genai-toolbox/commit/87f2eaf79cdecca7b939151e1543eccf2f812a69))
+* **dataproc:** Add dataproc source and list/get clusters/jobs tools ([#2407](https://github.com/googleapis/genai-toolbox/issues/2407)) ([cc05e57](https://github.com/googleapis/genai-toolbox/commit/cc05e5745d1c25a6088702b827cd098250164b7e))
+* **sources/postgres:** Add configurable pgx query execution mode ([#2477](https://github.com/googleapis/genai-toolbox/issues/2477)) ([57b77bc](https://github.com/googleapis/genai-toolbox/commit/57b77bca09ce6ee260bd64af9be5fcef593e9acb))
+* **sources/redis:** Add TLS support for Redis connections ([#2432](https://github.com/googleapis/genai-toolbox/issues/2432)) ([d6af290](https://github.com/googleapis/genai-toolbox/commit/d6af2907fd2dca5a6751d7d42090dd7ebb8ccd48))
+* **tools/looker:** Enable Get All Lookml Tests, Run LookML Tests, and Create View From Table tools for Looker ([#2522](https://github.com/googleapis/genai-toolbox/issues/2522)) ([e01139a](https://github.com/googleapis/genai-toolbox/commit/e01139a90268f8587b9823be1157259c1bcbfd66))
+* **tools/looker:** Tools to list/create/delete directories ([#2488](https://github.com/googleapis/genai-toolbox/issues/2488)) ([0036d8c](https://github.com/googleapis/genai-toolbox/commit/0036d8c35844c3de2079cb5b2479781e8938525b))
+* **ui:** Make tool list panel resizable ([#2253](https://github.com/googleapis/genai-toolbox/issues/2253)) ([276cf60](https://github.com/googleapis/genai-toolbox/commit/276cf604a2bb41861639ed6881557e38dd97a614))
+
+
+### Bug Fixes
+
+* **ci:** Add path for forked PR unit test runs ([#2540](https://github.com/googleapis/genai-toolbox/issues/2540)) ([04dd2a7](https://github.com/googleapis/genai-toolbox/commit/04dd2a77603c7babf01da724dfb77808e3f25fe5))
+* Deflake alloydb omni ([#2431](https://github.com/googleapis/genai-toolbox/issues/2431)) ([62b8309](https://github.com/googleapis/genai-toolbox/commit/62b830987d65c3573214d04e50742476097ee9e9))
+* **docs/adk:** Resolve dependency duplication ([#2418](https://github.com/googleapis/genai-toolbox/issues/2418)) ([4d44abb](https://github.com/googleapis/genai-toolbox/commit/4d44abb4638926ca50b0fa4dcf10a03e7fab657f))
+* **docs/langchain:** Fix core at 0.3.0 and align compatible dependencies ([#2426](https://github.com/googleapis/genai-toolbox/issues/2426)) ([36edfd3](https://github.com/googleapis/genai-toolbox/commit/36edfd3d506e839c092d04cbca1799b5ebc38160))
+* Enforce required validation for explicit null parameter values ([#2519](https://github.com/googleapis/genai-toolbox/issues/2519)) ([d5e9512](https://github.com/googleapis/genai-toolbox/commit/d5e9512a237e658f9b9127fdd8c174ec023c3310))
+* **oracle:** Enable DML operations and resolve incorrect array type error ([#2323](https://github.com/googleapis/genai-toolbox/issues/2323)) ([72146a4](https://github.com/googleapis/genai-toolbox/commit/72146a4b1605bcdd3e1038106bfb1f899e677e39))
+* **server/mcp:** Guard nil dereference in sseManager.get ([#2557](https://github.com/googleapis/genai-toolbox/issues/2557)) ([e534196](https://github.com/googleapis/genai-toolbox/commit/e534196303c2b8d9b6e599ac25add337e6fc9b8f)), closes [#2548](https://github.com/googleapis/genai-toolbox/issues/2548)
+* **tests/postgres:** Implement uuid-based isolation and reliable resource cleanup ([#2377](https://github.com/googleapis/genai-toolbox/issues/2377)) ([8a96fb1](https://github.com/googleapis/genai-toolbox/commit/8a96fb1a8874baa3688e566f3dea8a0912fcf2df))
+* **tests/postgres:** Restore list_schemas test and implement dynamic owner ([#2521](https://github.com/googleapis/genai-toolbox/issues/2521)) ([7041e79](https://github.com/googleapis/genai-toolbox/commit/7041e797347f337d6f7f44ca051ae31acd58babe))
+* **tests:** Resolve LlamaIndex dependency conflict in JS quickstart ([#2597](https://github.com/googleapis/genai-toolbox/issues/2597)) ([ac11f5a](https://github.com/googleapis/genai-toolbox/commit/ac11f5af9c7bcf228d667e1b8e08b5dc49ad91a0))
+
 ## [0.27.0](https://github.com/googleapis/genai-toolbox/compare/v0.26.0...v0.27.0) (2026-02-12)
 
 
