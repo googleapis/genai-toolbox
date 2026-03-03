@@ -144,7 +144,7 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 			// parse non auth-required parameter
 			var ok bool
 			v, ok = data[name]
-			if !ok {
+			if !ok || v == nil {
 				v = p.GetDefault()
 				// if the parameter is required and no value given, throw an error
 				if CheckParamRequired(p.GetRequired(), v) {

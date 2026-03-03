@@ -15,6 +15,7 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -44,14 +45,20 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name           string   `yaml:"name" validate:"required"`
-	Type           string   `yaml:"type" validate:"required"`
-	Address        []string `yaml:"address" validate:"required"`
-	Username       string   `yaml:"username"`
-	Password       string   `yaml:"password"`
-	Database       int      `yaml:"database"`
-	UseGCPIAM      bool     `yaml:"useGCPIAM"`
-	ClusterEnabled bool     `yaml:"clusterEnabled"`
+	Name           string    `yaml:"name" validate:"required"`
+	Type           string    `yaml:"type" validate:"required"`
+	Address        []string  `yaml:"address" validate:"required"`
+	Username       string    `yaml:"username"`
+	Password       string    `yaml:"password"`
+	Database       int       `yaml:"database"`
+	UseGCPIAM      bool      `yaml:"useGCPIAM"`
+	ClusterEnabled bool      `yaml:"clusterEnabled"`
+	TLS            TLSConfig `yaml:"tls"`
+}
+
+type TLSConfig struct {
+	Enabled            bool `yaml:"enabled"`
+	InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -91,6 +98,13 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		}
 	}
 
+	var tlsConfig *tls.Config
+	if r.TLS.Enabled {
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: r.TLS.InsecureSkipVerify,
+		}
+	}
+
 	var client RedisClient
 	var err error
 	if r.ClusterEnabled {
@@ -104,6 +118,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 			CredentialsProviderContext: authFn,
 			Username:                   r.Username,
 			Password:                   r.Password,
+			TLSConfig:                  tlsConfig,
 		})
 		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
 			return shard.Ping(ctx).Err()
@@ -125,6 +140,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		CredentialsProviderContext: authFn,
 		Username:                   r.Username,
 		Password:                   r.Password,
+		TLSConfig:                  tlsConfig,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {

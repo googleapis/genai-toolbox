@@ -4,6 +4,7 @@ package oracle_test
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 	"testing"
 
@@ -189,5 +190,38 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("unexpected error:\ngot:\n%q\nwant:\n%q\n", errStr, tc.err)
 			}
 		})
+	}
+}
+
+// TestRunSQLExecutesDML verifies that RunSQL correctly routes operations to
+// ExecContext instead of QueryContext when the readOnly flag is set to false.
+func TestRunSQLExecutesDML(t *testing.T) {
+	// Initialize a mock database connection.
+	// This connection is not established with a real backend but
+	// satisfies the interface requirements for the test.
+	db, err := sql.Open("oracle", "oracle://user:pass@localhost:1521/service")
+	if err != nil {
+		t.Fatalf("failed to open mock db: %v", err)
+	}
+	defer db.Close()
+
+	src := &oracle.Source{
+		Config: oracle.Config{
+			Name: "test-dml-source",
+			Type: oracle.SourceType,
+			User: "test-user",
+		},
+		DB: db,
+	}
+
+	// Invoke RunSQL with readOnly=false to force the DML execution path.
+	_, err = src.RunSQL(context.Background(),
+		"UPDATE users SET email='x' WHERE id=1", nil, false)
+
+	// We expect an error because the mock database cannot execute the query.
+	// If err is nil, it implies the logic skipped the execution block.
+	if err == nil {
+		t.Fatal("expected error from fake DB execution, but got nil; " +
+			"DML path may not have been executed")
 	}
 }

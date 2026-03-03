@@ -75,6 +75,8 @@ type ServerConfig struct {
 	AllowedHosts []string
 	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
 	UserAgentMetadata []string
+	// PollInterval sets the polling frequency for configuration file updates.
+	PollInterval int
 }
 
 type logFormat string

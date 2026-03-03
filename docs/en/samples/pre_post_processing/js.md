@@ -16,14 +16,18 @@ This guide demonstrates how to implement these patterns in your Toolbox applicat
 
 {{< tabpane persist=header >}}
 {{% tab header="ADK" text=true %}}
-Coming soon.
+The following example demonstrates how to use the `beforeToolCallback` and `afterToolCallback` hooks in the ADK `LlmAgent` to implement pre and post processing logic.
+
+{{< include "js/adk/agent.js" "js" >}}
+
+You can also add model-level (`beforeModelCallback`, `afterModelCallback`) and agent-level (`beforeAgentCallback`, `afterAgentCallback`) hooks to intercept messages at different stages of the execution loop. 
+
+For more information, see the [ADK Callbacks documentation](https://google.github.io/adk-docs/callbacks/types-of-callbacks/).
 {{% /tab %}}
 {{% tab header="Langchain" text=true %}}
-The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre- and post- processing for tool calls.
+The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre and post processing for tool calls.
 
-```js
-{{< include "js/langchain/agent.js" >}}
-```
+{{< include "js/langchain/agent.js" "js" >}}
 
 You can also use the `wrapModelCall` hook to intercept messages before and after model calls.
 You can also use [node-style hooks](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#node-style-hooks) to intercept messages at the agent and model level.

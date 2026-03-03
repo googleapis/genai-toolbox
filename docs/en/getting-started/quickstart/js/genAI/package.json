@@ -12,6 +12,6 @@
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^1.17.0",
-    "@toolbox-sdk/core": "^0.1.2"
+    "@toolbox-sdk/core": "^0.2.0"
   }
 }

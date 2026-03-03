@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -1357,12 +1358,12 @@ func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 	}
 }
 
-func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	schemaName := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, owner string, uniqueID string) {
+	schemaName := "test_schema_" + uniqueID
 	cleanup := setupPostgresSchemas(t, ctx, pool, schemaName)
 	defer cleanup()
 
-	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": "postgres", "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
+	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": owner, "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
 
 	invokeTcs := []struct {
 		name           string
@@ -1377,9 +1378,10 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
+		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/genai-toolbox/issues/2562
 		// {
 		// 	name:           "invoke list_schemas with owner name",
-		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, "postgres"))),
+		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
 		// 	wantStatusCode: http.StatusOK,
 		// 	want:           []map[string]any{wantSchema},
 		// 	compareSubset:  true,
@@ -1438,7 +1440,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 					}
 				}
 				if !found {
-					t.Errorf("Expected schema '%s' not found in the list of all schemas.", wantSchema)
+					t.Errorf("Expected schema '%+v' not found in the list of all schemas.", wantSchema)
 				}
 			} else {
 				if diff := cmp.Diff(tc.want, got); diff != "" {
@@ -4416,8 +4418,45 @@ func RunPostgresListTableStatsTest(t *testing.T, ctx context.Context, pool *pgxp
 	}
 }
 
+// cleanupOldSchemas cleans up schemas that were created more than 1 hour ago
+func cleanupOldSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	rows, err := pool.Query(ctx, "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'test_proc_%'")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	oneHourAgo := time.Now().Add(-1 * time.Hour).Unix()
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			continue
+		}
+
+		parts := strings.Split(name, "_")
+		if len(parts) < 3 {
+			continue
+		}
+
+		timestamp, err := strconv.ParseInt(parts[2], 10, 64)
+		if err != nil {
+			continue
+		}
+
+		if timestamp < oneHourAgo {
+			_, err := pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", name))
+			if err == nil {
+				t.Logf("Cleaned up schema: %s", name)
+			}
+		}
+	}
+}
+
 // RunPostgresListStoredProcedureTest runs tests for the postgres list-stored-procedure tool
 func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	cleanupOldSchemas(t, ctx, pool)
+
 	type storedProcedureDetails struct {
 		SchemaName  string `json:"schema_name"`
 		Name        string `json:"name"`
@@ -4428,7 +4467,9 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 	}
 
 	// Create test schema
-	testSchemaName := "test_proc_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	// Use this format: test_proc_<timestamp>_<uuid>
+	now := time.Now().Unix()
+	testSchemaName := fmt.Sprintf("test_proc_%d_%s", now, strings.ReplaceAll(uuid.New().String(), "-", "")[:8])
 	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", testSchemaName)
 	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
 		t.Fatalf("unable to create test schema: %v", err)
@@ -4635,7 +4676,7 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 				}
 
 				// Verify definition contains CREATE PROCEDURE
-				if !strings.Contains(proc.Definition, "CREATE PROCEDURE") {
+				if !strings.Contains(strings.ToUpper(proc.Definition), "PROCEDURE") {
 					t.Logf("warning: definition may not be a valid CREATE PROCEDURE statement: %s", proc.Definition)
 				}
 
