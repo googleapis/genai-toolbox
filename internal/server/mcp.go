@@ -195,31 +195,37 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			}
 			return err
 		}
-		// This ensures the transport span becomes a child of the client span
-		msgCtx := extractTraceContext(ctx, []byte(line))
 
-		// Create span for STDIO transport
-		msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
-			trace.WithSpanKind(trace.SpanKindServer),
-		)
-		defer span.End()
+		if err := func() error {
+			// This ensures the transport span becomes a child of the client span
+			msgCtx := extractTraceContext(ctx, []byte(line))
 
-		v, res, err := processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
-		if err != nil {
-			// errors during the processing of message will generate a valid MCP Error response.
-			// server can continue to run.
-			s.server.logger.ErrorContext(msgCtx, err.Error())
-			span.SetStatus(codes.Error, err.Error())
-		}
+			// Create span for STDIO transport
+			msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
+				trace.WithSpanKind(trace.SpanKindServer),
+			)
+			defer span.End()
 
-		if v != "" {
-			s.protocol = v
-		}
-		// no responses for notifications
-		if res != nil {
-			if err = s.write(msgCtx, res); err != nil {
-				return err
+			v, res, err := processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
+			if err != nil {
+				// errors during the processing of message will generate a valid MCP Error response.
+				// server can continue to run.
+				s.server.logger.ErrorContext(msgCtx, err.Error())
+				span.SetStatus(codes.Error, err.Error())
 			}
+
+			if v != "" {
+				s.protocol = v
+			}
+			// no responses for notifications
+			if res != nil {
+				if err = s.write(msgCtx, res); err != nil {
+					return err
+				}
+			}
+			return nil
+		}(); err != nil {
+			return err
 		}
 	}
 }
