@@ -112,7 +112,7 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 	defer r.mu.Unlock()
 
 	// Close old sources if they are closeable to prevent leaks (especially goroutines in caches)
-	for name, source := range r.sources {
+	for _, source := range r.sources {
 		if closeable, ok := source.(sources.CloseableSource); ok {
 			_ = closeable.Close()
 		}

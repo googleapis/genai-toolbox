@@ -153,7 +153,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		channels[i] = tileQueryWorker(ctx, sdk, source.LookerApiSettings(), i, element)
 	}
 
-	for resp := range merge(channels...) {
+	for resp := range merge(ctx, channels...) {
 		data["tiles"] = append(data["tiles"].([]any), resp)
 	}
 
@@ -217,7 +217,10 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 		} else {
 			// Just a text element
 			data["element_type"] = "text"
-			out <- data
+			select {
+			case out <- data:
+			case <-ctx.Done():
+			}
 			return
 		}
 
@@ -234,32 +237,45 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 		query_result, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", options)
 		if err != nil {
 			data["query_status"] = "error running query"
-			out <- data
+			select {
+			case out <- data:
+			case <-ctx.Done():
+			}
 			return
 		}
 		var resp []any
 		e := json.Unmarshal([]byte(query_result), &resp)
 		if e != nil {
 			data["query_status"] = "error parsing query result"
-			out <- data
+			select {
+			case out <- data:
+			case <-ctx.Done():
+			}
 			return
 		}
 		data["query_status"] = "success"
 		data["query_result"] = resp
-		out <- data
+		select {
+		case out <- data:
+		case <-ctx.Done():
+		}
 	}()
 	return out
 }
 
-func merge(channels ...<-chan map[string]any) <-chan map[string]any {
+func merge(ctx context.Context, channels ...<-chan map[string]any) <-chan map[string]any {
 	var wg sync.WaitGroup
 	out := make(chan map[string]any)
 
 	output := func(c <-chan map[string]any) {
+		defer wg.Done()
 		for n := range c {
-			out <- n
+			select {
+			case out <- n:
+			case <-ctx.Done():
+				return
+			}
 		}
-		wg.Done()
 	}
 	wg.Add(len(channels))
 	for _, c := range channels {
