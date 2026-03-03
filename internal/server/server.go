@@ -466,5 +466,8 @@ func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writ
 // connections. It uses http.Server.Shutdown() and has the same functionality.
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
+	if s.ResourceMgr != nil {
+		_ = s.ResourceMgr.Close()
+	}
 	return s.srv.Shutdown(ctx)
 }

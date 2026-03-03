@@ -110,6 +110,14 @@ func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset,
 func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
+	// Close old sources if they are closeable to prevent leaks (especially goroutines in caches)
+	for name, source := range r.sources {
+		if closeable, ok := source.(sources.CloseableSource); ok {
+			_ = closeable.Close()
+		}
+	}
+
 	r.sources = sourcesMap
 	r.authServices = authServicesMap
 	r.embeddingModels = embeddingModelsMap
@@ -127,6 +135,19 @@ func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 		copiedMap[k] = v
 	}
 	return copiedMap
+}
+
+// Close closes all closeable resources managed by the ResourceManager.
+func (r *ResourceManager) Close() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, source := range r.sources {
+		if closeable, ok := source.(sources.CloseableSource); ok {
+			_ = closeable.Close()
+		}
+	}
+	return nil
 }
 
 func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {

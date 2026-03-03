@@ -176,6 +176,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	const pollTimeout = 20 * time.Second
 	cutoffTime := time.Now().Add(pollTimeout)
 
+	pollTicker := time.NewTicker(5 * time.Second)
+	defer pollTicker.Stop()
+
 	for time.Now().Before(cutoffTime) {
 		currentOp, err := service.Operations.Get(project, op.Name).Context(ctx).Do()
 		if err != nil {
@@ -202,7 +205,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		select {
 		case <-ctx.Done():
 			return nil, util.NewClientServerError("timed out waiting for operation", http.StatusRequestTimeout, ctx.Err())
-		case <-time.After(5 * time.Second):
+		case <-pollTicker.C:
 		}
 	}
 	return op, nil

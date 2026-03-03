@@ -311,6 +311,23 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+// Close closes the BigQuery source and its associated caches/clients.
+func (s *Source) Close() error {
+	if s.Client != nil {
+		s.Client.Close()
+	}
+	if s.bqClientCache != nil {
+		s.bqClientCache.Stop()
+	}
+	if s.bqRestCache != nil {
+		s.bqRestCache.Stop()
+	}
+	if s.dataplexCache != nil {
+		s.dataplexCache.Stop()
+	}
+	return nil
+}
+
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
 	return s.Client
 }

@@ -37,28 +37,48 @@ type Cache struct {
 	mu      sync.RWMutex
 	items   map[string]Item
 	onEvict OnEvictFunc
+	stop    chan struct{}
 }
 
 // NewCache creates a new cache and cleans up every 55 min
 func NewCache(onEvict OnEvictFunc) *Cache {
 	const cleanupInterval = 55 * time.Minute
 
+	stop := make(chan struct{})
 	c := &Cache{
 		items:   make(map[string]Item),
 		onEvict: onEvict,
+		stop:    stop,
 	}
 
-	go c.startCleanup(cleanupInterval)
+	go c.startCleanup(cleanupInterval, stop)
 	return c
 }
 
+// Stop terminates the background cleanup goroutine
+func (c *Cache) Stop() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.stop != nil {
+		close(c.stop)
+		c.stop = nil
+	}
+}
+
 // startCleanup runs a ticker to periodically delete expired items
-func (c *Cache) startCleanup(interval time.Duration) {
+func (c *Cache) startCleanup(interval time.Duration, stopCh <-chan struct{}) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		c.DeleteExpired()
+	for {
+		select {
+		case <-ticker.C:
+			c.DeleteExpired()
+		case <-stopCh:
+			// stop channel closed
+			return
+		}
 	}
 }
 

@@ -65,6 +65,12 @@ type Source interface {
 	ToConfig() SourceConfig
 }
 
+// CloseableSource is an interface for sources that need to be closed.
+type CloseableSource interface {
+	Source
+	Close() error
+}
+
 // InitConnectionSpan adds a span for database pool connection initialization
 func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceType, sourceName string) (context.Context, trace.Span) {
 	ctx, span := tracer.Start(
