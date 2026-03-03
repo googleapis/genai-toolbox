@@ -381,12 +381,12 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var want []dataprocsrc.Cluster
+			want := []dataprocsrc.Cluster{}
 			if tc.wantN > 0 {
 				want = listClustersRpc(t, client, ctx, tc.filter, tc.wantN)
 			}
 
-			var actual []dataprocsrc.Cluster
+			actual := []dataprocsrc.Cluster{}
 			var pageToken string
 
 			for i := 0; i < tc.numPages; i++ {
@@ -687,12 +687,12 @@ func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx con
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var want []dataprocsrc.Job
+			want := []dataprocsrc.Job{}
 			if tc.wantN > 0 {
 				want = listJobsRpc(t, client, ctx, tc.filter, tc.wantN)
 			}
 
-			var actual []dataprocsrc.Job
+			actual := []dataprocsrc.Job{}
 			var pageToken string
 			for i := 0; i < tc.numPages; i++ {
 				filter := tc.filter
