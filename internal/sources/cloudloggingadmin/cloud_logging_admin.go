@@ -124,13 +124,14 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 // Close closes the Cloud Logging Admin source and its associated caches/clients.
 func (s *Source) Close() error {
+	var err error
 	if s.Client != nil {
-		s.Client.Close()
+		err = s.Client.Close()
 	}
 	if s.logadminClientCache != nil {
 		s.logadminClientCache.Stop()
 	}
-	return nil
+	return err
 }
 
 func (s *Source) UseClientAuthorization() bool {

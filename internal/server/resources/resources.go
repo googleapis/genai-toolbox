@@ -15,6 +15,7 @@
 package resources
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
@@ -142,12 +143,15 @@ func (r *ResourceManager) Close() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	var errs []error
 	for _, source := range r.sources {
 		if closeable, ok := source.(sources.CloseableSource); ok {
-			_ = closeable.Close()
+			if err := closeable.Close(); err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
