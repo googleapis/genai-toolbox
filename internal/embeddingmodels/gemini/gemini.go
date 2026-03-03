@@ -52,7 +52,7 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 
 	ua, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-return nil, fmt.Errorf("failed to get user agent from context: %w", err)
+		return nil, fmt.Errorf("failed to get user agent from context: %w", err)
 	}
 	configs.HTTPOptions = genai.HTTPOptions{
 		Headers: http.Header{
