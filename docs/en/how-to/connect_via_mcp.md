@@ -175,5 +175,5 @@ testing and debugging Toolbox server.
 | Claude Desktop     | ✅         | <https://modelcontextprotocol.io/quickstart/user#1-download-claude-for-desktop> |
 | MCP Inspector      | ✅         | <https://github.com/modelcontextprotocol/inspector>                             |
 | Cursor             | ✅         | <https://docs.cursor.com/context/model-context-protocol>                        |
-| Windsurf           | ✅         | <https://docs.windsurf.com/windsurf/mcp>                                        |
+| Windsurf           | ✅         | <https://docs.windsurf.com/windsurf/cascade/mcp#model-context-protocol-mcp>                                        |
 | VS Code (Insiders) | ✅         | <https://code.visualstudio.com/docs/copilot/chat/mcp-servers>                   |
