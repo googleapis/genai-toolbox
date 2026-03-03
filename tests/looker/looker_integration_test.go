@@ -1882,6 +1882,11 @@ func TestLooker(t *testing.T) {
 	wantResult = "dev"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": true}`), wantResult)
 
+	// Delete the project file if left over from previous run
+	request := "delete_project_file"
+	requestBody := bytes.NewBuffer([]byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`))
+	tests.RunRequest(t, http.MethodPost, fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", request), requestBody, map[string]string{})
+
 	wantResult = "created"
 	tests.RunToolInvokeParametersTest(t, "create_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "view"}`), wantResult)
 
@@ -1890,6 +1895,11 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "deleted"
 	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+
+	// Delete the project directory if left over from previous run
+	request = "delete_project_directory"
+	requestBody = bytes.NewBuffer([]byte(`{"project_id": "the_look", "directory_path": "views"}`))
+	tests.RunRequest(t, http.MethodPost, fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", request), requestBody, map[string]string{})
 
 	wantResult = "Created"
 	tests.RunToolInvokeParametersTest(t, "create_project_directory", []byte(`{"project_id": "the_look", "directory_path": "views"}`), wantResult)
@@ -2024,6 +2034,17 @@ func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
 func testMakeLook(t *testing.T) func() {
 	var id string
 	t.Run("TestMakeLook", func(t *testing.T) {
+
+		sdk := newLookerTestSDK(t)
+		title := "TestLook"
+		request := v4.RequestSearchLooks{
+			Title: &title,
+		}
+		looks, _ := sdk.SearchLooks(request, nil)
+		if len(looks) > 0 {
+			_, _ = sdk.DeleteLook(*looks[0].Id, nil)
+		}
+
 		reqBody := []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestLook"}`)
 
 		url := "http://127.0.0.1:5000/api/tool/make_look/invoke"
@@ -2092,10 +2113,34 @@ func testAddDashboardElement(t *testing.T, dashboardId string) {
 func testMakeDashboard(t *testing.T) (string, func()) {
 	var id string
 	t.Run("TestMakeDashboard", func(t *testing.T) {
-		reqBody := []byte(`{"title": "TestDashboard"}`)
+		sdk := newLookerTestSDK(t)
+		title := "TestDashboard"
+		request := v4.RequestSearchDashboards{
+			Title: &title,
+		}
+		dashboards, _ := sdk.SearchDashboards(request, nil)
+		if len(dashboards) > 0 {
+			_, _ = sdk.DeleteDashboard(*dashboards[0].Id, nil)
+		}
 
-		url := "http://127.0.0.1:5000/api/tool/make_dashboard/invoke"
+		reqBody := []byte(`{"title": "TestDashboard"}`)
+		url := "http://127.0.0.1:5000/api/tool/get_dashboards/invoke"
 		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+		if resp.StatusCode == 200 {
+			var data []map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &data); err != nil {
+				if len(data) > 0 {
+					id := data[0]["id"].(string)
+					sdk := newLookerTestSDK(t)
+					_, _ = sdk.DeleteDashboard(id, nil)
+				}
+			}
+		}
+
+		reqBody = []byte(`{"title": "TestDashboard"}`)
+
+		url = "http://127.0.0.1:5000/api/tool/make_dashboard/invoke"
+		resp, bodyBytes = tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
 
 		if resp.StatusCode != 200 {
 			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
