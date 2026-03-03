@@ -35,7 +35,7 @@ for tool_name in "${TOOL_PACKAGE_NAMES[@]}"; do
 done
 
 # Run integration test
-if ! ./"${TEST_BINARY}" -test.v -test.coverprofile="${COVERAGE_FILE}"; then
+if ! ./"${TEST_BINARY}" -test.v ${EXTRA_TEST_ARGS:-} -test.coverprofile="${COVERAGE_FILE}"; then
   echo "Error: Tests for ${DISPLAY_NAME} failed. Exiting."
   exit 1
 fi

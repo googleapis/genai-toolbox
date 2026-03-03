@@ -1478,6 +1478,7 @@ func TestPrebuiltTools(t *testing.T) {
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
+	looker_dev_config, _ := prebuiltconfigs.Get("looker-dev")
 	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
@@ -1490,6 +1491,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 
@@ -1551,6 +1553,9 @@ func TestPrebuiltTools(t *testing.T) {
 
 	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
 	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
+
+	t.Setenv("DATAPROC_PROJECT", "your_gcp_project_id")
+	t.Setenv("DATAPROC_REGION", "your_gcp_location")
 
 	t.Setenv("POSTGRES_HOST", "localhost")
 	t.Setenv("POSTGRES_PORT", "5432")
@@ -1733,6 +1738,16 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
+			name: "dataproc prebuilt tools",
+			in:   dataproc_config,
+			wantToolset: server.ToolsetConfigs{
+				"dataproc_tools": tools.ToolsetConfig{
+					Name:      "dataproc_tools",
+					ToolNames: []string{"list_clusters", "get_cluster", "list_jobs", "get_job"},
+				},
+			},
+		},
+		{
 			name: "serverless spark prebuilt tools",
 			in:   serverless_spark_config,
 			wantToolset: server.ToolsetConfigs{
@@ -1778,7 +1793,17 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
+				},
+			},
+		},
+		{
+			name: "looker dev prebuilt tools",
+			in:   looker_dev_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_dev_tools": tools.ToolsetConfig{
+					Name:      "looker_dev_tools",
+					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table"},
 				},
 			},
 		},
