@@ -30,7 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 )
 
 // type defines the unique identifier for this tool.
@@ -56,7 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 // compatibleSource defines the interface a data source must implement to be used by this tool.
 // It ensures that the source can provide a Neo4j driver and database name.
 type compatibleSource interface {
-	Neo4jDriver() neo4j.DriverWithContext
+	Neo4jDriver() neo4j.Driver
 	Neo4jDatabase() string
 }
 
@@ -339,11 +339,11 @@ func (t Tool) GetAPOCSchema(ctx context.Context, source compatibleSource) ([]typ
 
 	tasks := []struct {
 		name string
-		fn   func(session neo4j.SessionWithContext) error
+		fn   func(session neo4j.Session) error
 	}{
 		{
 			name: "apoc-schema",
-			fn: func(session neo4j.SessionWithContext) error {
+			fn: func(session neo4j.Session) error {
 				result, err := session.Run(ctx, "CALL apoc.meta.schema({sample: 10}) YIELD value RETURN value", nil)
 				if err != nil {
 					return fmt.Errorf("failed to run APOC schema query: %w", err)
@@ -372,7 +372,7 @@ func (t Tool) GetAPOCSchema(ctx context.Context, source compatibleSource) ([]typ
 		},
 		{
 			name: "apoc-relationships",
-			fn: func(session neo4j.SessionWithContext) error {
+			fn: func(session neo4j.Session) error {
 				query := `
                     MATCH (startNode)-[rel]->(endNode)
                     WITH
@@ -425,7 +425,7 @@ func (t Tool) GetAPOCSchema(ctx context.Context, source compatibleSource) ([]typ
 	for _, task := range tasks {
 		go func(task struct {
 			name string
-			fn   func(session neo4j.SessionWithContext) error
+			fn   func(session neo4j.Session) error
 		}) {
 			defer wg.Done()
 			session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
@@ -468,11 +468,11 @@ func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, source compatibleSource,
 
 	tasks := []struct {
 		name string
-		fn   func(session neo4j.SessionWithContext) error
+		fn   func(session neo4j.Session) error
 	}{
 		{
 			name: "node-schema",
-			fn: func(session neo4j.SessionWithContext) error {
+			fn: func(session neo4j.Session) error {
 				countResult, err := session.Run(ctx, `MATCH (n) UNWIND labels(n) AS label RETURN label, count(*) AS count ORDER BY count DESC`, nil)
 				if err != nil {
 					return fmt.Errorf("node count query failed: %w", err)
@@ -520,7 +520,7 @@ func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, source compatibleSource,
 		},
 		{
 			name: "relationship-schema",
-			fn: func(session neo4j.SessionWithContext) error {
+			fn: func(session neo4j.Session) error {
 				relQuery := `
                     MATCH (start)-[r]->(end)
                     WITH type(r) AS relType, labels(start) AS startLabels, labels(end) AS endLabels, count(*) AS count
@@ -590,7 +590,7 @@ func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, source compatibleSource,
 	for _, task := range tasks {
 		go func(task struct {
 			name string
-			fn   func(session neo4j.SessionWithContext) error
+			fn   func(session neo4j.Session) error
 		}) {
 			defer wg.Done()
 			session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})

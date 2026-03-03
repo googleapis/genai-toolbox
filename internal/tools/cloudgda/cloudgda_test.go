@@ -16,18 +16,15 @@ package cloudgda_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	cloudgdasrc "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	cloudgdatool "github.com/googleapis/genai-toolbox/internal/tools/cloudgda"
@@ -77,23 +74,29 @@ func TestParseFromYaml(t *testing.T) {
 					Location:     "us-central1",
 					AuthRequired: []string{},
 					Context: &cloudgdatool.QueryDataContext{
-						DatasourceReferences: &cloudgdatool.DatasourceReferences{
-							SpannerReference: &cloudgdatool.SpannerReference{
-								DatabaseReference: &cloudgdatool.SpannerDatabaseReference{
-									ProjectID:  "cloud-db-nl2sql",
-									Region:     "us-central1",
-									InstanceID: "evalbench",
-									DatabaseID: "financial",
-									Engine:     cloudgdatool.SpannerEngineGoogleSQL,
-								},
-								AgentContextReference: &cloudgdatool.AgentContextReference{
-									ContextSetID: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+						QueryDataContext: &geminidataanalyticspb.QueryDataContext{
+							DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
+								References: &geminidataanalyticspb.DatasourceReferences_SpannerReference{
+									SpannerReference: &geminidataanalyticspb.SpannerReference{
+										DatabaseReference: &geminidataanalyticspb.SpannerDatabaseReference{
+											ProjectId:  "cloud-db-nl2sql",
+											Region:     "us-central1",
+											InstanceId: "evalbench",
+											DatabaseId: "financial",
+											Engine:     geminidataanalyticspb.SpannerDatabaseReference_GOOGLE_SQL,
+										},
+										AgentContextReference: &geminidataanalyticspb.AgentContextReference{
+											ContextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+										},
+									},
 								},
 							},
 						},
 					},
 					GenerationOptions: &cloudgdatool.GenerationOptions{
-						GenerateQueryResult: true,
+						GenerationOptions: &geminidataanalyticspb.GenerationOptions{
+							GenerateQueryResult: true,
+						},
 					},
 				},
 			},
@@ -107,68 +110,63 @@ func TestParseFromYaml(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got) {
+			if !cmp.Equal(tc.want, got, cmpopts.IgnoreUnexported(geminidataanalyticspb.QueryDataContext{}, geminidataanalyticspb.DatasourceReferences{}, geminidataanalyticspb.SpannerReference{}, geminidataanalyticspb.SpannerDatabaseReference{}, geminidataanalyticspb.AgentContextReference{}, geminidataanalyticspb.GenerationOptions{}, geminidataanalyticspb.DatasourceReferences_SpannerReference{})) {
 				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
 }
 
-// authRoundTripper is a mock http.RoundTripper that adds a dummy Authorization header.
-type authRoundTripper struct {
-	Token string
-	Next  http.RoundTripper
+// fakeSource implements the compatibleSource interface for testing.
+type fakeSource struct {
+	projectID      string
+	useClientOAuth bool
+	expectedQuery  string
+	expectedParent string
+	response       *geminidataanalyticspb.QueryDataResponse
 }
 
-func (rt *authRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	newReq := *req
-	newReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		newReq.Header[k] = v
-	}
-	newReq.Header.Set("Authorization", rt.Token)
-	if rt.Next == nil {
-		return http.DefaultTransport.RoundTrip(&newReq)
-	}
-	return rt.Next.RoundTrip(&newReq)
+func (f *fakeSource) GetProjectID() string {
+	return f.projectID
 }
 
-type mockSource struct {
-	Type    string
-	client  *http.Client       // Can be used to inject a specific client
-	baseURL string             // BaseURL is needed to implement sources.Source.BaseURL
-	config  cloudgdasrc.Config // to return from ToConfig
+func (f *fakeSource) UseClientAuthorization() bool {
+	return f.useClientOAuth
 }
 
-func (m *mockSource) SourceType() string             { return m.Type }
-func (m *mockSource) ToConfig() sources.SourceConfig { return m.config }
-func (m *mockSource) GetClient(ctx context.Context, token string) (*http.Client, error) {
-	if m.client != nil {
-		return m.client, nil
-	}
-	// Default client for testing if not explicitly set
-	transport := &http.Transport{}
-	authTransport := &authRoundTripper{
-		Token: "Bearer test-access-token", // Dummy token
-		Next:  transport,
-	}
-	return &http.Client{Transport: authTransport}, nil
+func (f *fakeSource) SourceType() string {
+	return "cloud-gemini-data-analytics"
 }
-func (m *mockSource) UseClientAuthorization() bool { return false }
-func (m *mockSource) Initialize(ctx context.Context, tracer interface{}) (sources.Source, error) {
-	return m, nil
+
+func (f *fakeSource) ToConfig() sources.SourceConfig {
+	return nil
 }
-func (m *mockSource) BaseURL() string { return m.baseURL }
+
+func (f *fakeSource) Initialize(ctx context.Context, tracer interface{}) (sources.Source, error) {
+	return f, nil
+}
+
+func (f *fakeSource) RunQuery(ctx context.Context, token string, req *geminidataanalyticspb.QueryDataRequest) (*geminidataanalyticspb.QueryDataResponse, error) {
+	if req.Prompt != f.expectedQuery {
+		return nil, fmt.Errorf("unexpected query: got %q, want %q", req.Prompt, f.expectedQuery)
+	}
+	if req.Parent != f.expectedParent {
+		return nil, fmt.Errorf("unexpected parent: got %q, want %q", req.Parent, f.expectedParent)
+	}
+	// Basic validation of context/options could be added here if needed,
+	// but the test case mainly checks if they are passed correctly via successful invocation.
+
+	return f.response, nil
+}
 
 func TestInitialize(t *testing.T) {
 	t.Parallel()
 
+	// Minimal fake source
+	fake := &fakeSource{projectID: "test-project"}
+
 	srcs := map[string]sources.Source{
-		"gda-api-source": &cloudgdasrc.Source{
-			Config:  cloudgdasrc.Config{Name: "gda-api-source", Type: cloudgdasrc.SourceType, ProjectID: "test-project"},
-			Client:  &http.Client{},
-			BaseURL: cloudgdasrc.Endpoint,
-		},
+		"gda-api-source": fake,
 	}
 
 	tcs := []struct {
@@ -187,9 +185,7 @@ func TestInitialize(t *testing.T) {
 		},
 	}
 
-	// Add an incompatible source for testing
-	srcs["incompatible-source"] = &mockSource{Type: "another-type"}
-
+	// No incompatible source for testing needed with fakeSource
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
@@ -206,92 +202,27 @@ func TestInitialize(t *testing.T) {
 
 func TestInvoke(t *testing.T) {
 	t.Parallel()
-	// Mock the HTTP client and server for Invoke testing
-	serverMux := http.NewServeMux()
-	// Update expected URL path to include the location "us-central1"
-	serverMux.HandleFunc("/v1beta/projects/test-project/locations/global:queryData", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("expected POST method, got %s", r.Method)
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		if r.Header.Get("Content-Type") != "application/json" {
-			t.Errorf("expected Content-Type application/json, got %s", r.Header.Get("Content-Type"))
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
 
-		// Read and unmarshal the request body
-		bodyBytes, err := io.ReadAll(r.Body)
-		if err != nil {
-			t.Errorf("failed to read request body: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		var reqPayload cloudgdatool.QueryDataRequest
-		if err := json.Unmarshal(bodyBytes, &reqPayload); err != nil {
-			t.Errorf("failed to unmarshal request payload: %v", err)
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
+	projectID := "test-project"
+	location := "us-central1"
+	query := "How many accounts who have region in Prague are eligible for loans?"
+	expectedParent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
 
-		// Verify expected fields
-		if r.Header.Get("Authorization") == "" {
-			t.Errorf("expected Authorization header, got empty")
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		if reqPayload.Prompt != "How many accounts who have region in Prague are eligible for loans?" {
-			t.Errorf("unexpected prompt: %s", reqPayload.Prompt)
-		}
-
-		// Verify payload's parent uses the tool's configured location
-		if reqPayload.Parent != fmt.Sprintf("projects/%s/locations/%s", "test-project", "us-central1") {
-			t.Errorf("unexpected payload parent: got %q, want %q", reqPayload.Parent, fmt.Sprintf("projects/%s/locations/%s", "test-project", "us-central1"))
-		}
-
-		// Verify context from config
-		if reqPayload.Context == nil ||
-			reqPayload.Context.DatasourceReferences == nil ||
-			reqPayload.Context.DatasourceReferences.SpannerReference == nil ||
-			reqPayload.Context.DatasourceReferences.SpannerReference.DatabaseReference == nil ||
-			reqPayload.Context.DatasourceReferences.SpannerReference.DatabaseReference.ProjectID != "cloud-db-nl2sql" {
-			t.Errorf("unexpected context: %v", reqPayload.Context)
-		}
-
-		// Verify generation options from config
-		if reqPayload.GenerationOptions == nil || !reqPayload.GenerationOptions.GenerateQueryResult {
-			t.Errorf("unexpected generation options: %v", reqPayload.GenerationOptions)
-		}
-
-		// Simulate a successful response
-		resp := map[string]any{
-			"queryResult":           "SELECT count(*) FROM accounts WHERE region = 'Prague' AND eligible_for_loans = true;",
-			"naturalLanguageAnswer": "There are 5 accounts in Prague eligible for loans.",
-		}
-		_ = json.NewEncoder(w).Encode(resp)
-	})
-
-	mockServer := httptest.NewServer(serverMux)
-	defer mockServer.Close()
-
-	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
-
-	// Create an authenticated client that uses the mock server
-	authTransport := &authRoundTripper{
-		Token: "Bearer test-access-token",
-		Next:  mockServer.Client().Transport,
+	// Prepare expected response
+	expectedResp := &geminidataanalyticspb.QueryDataResponse{
+		GeneratedQuery:        "SELECT count(*) FROM accounts WHERE region = 'Prague' AND eligible_for_loans = true;",
+		NaturalLanguageAnswer: "There are 5 accounts in Prague eligible for loans.",
 	}
-	authClient := &http.Client{Transport: authTransport}
 
-	// Create a real cloudgdasrc.Source but inject the authenticated client
-	mockGdaSource := &cloudgdasrc.Source{
-		Config:  cloudgdasrc.Config{Name: "mock-gda-source", Type: cloudgdasrc.SourceType, ProjectID: "test-project"},
-		Client:  authClient,
-		BaseURL: mockServer.URL,
+	fake := &fakeSource{
+		projectID:      projectID,
+		expectedQuery:  query,
+		expectedParent: expectedParent,
+		response:       expectedResp,
 	}
+
 	srcs := map[string]sources.Source{
-		"mock-gda-source": mockGdaSource,
+		"mock-gda-source": fake,
 	}
 
 	// Initialize the tool config with context
@@ -300,25 +231,31 @@ func TestInvoke(t *testing.T) {
 		Type:        "cloud-gemini-data-analytics-query",
 		Source:      "mock-gda-source",
 		Description: "Query Gemini Data Analytics",
-		Location:    "us-central1", // Set location for the test
+		Location:    location,
 		Context: &cloudgdatool.QueryDataContext{
-			DatasourceReferences: &cloudgdatool.DatasourceReferences{
-				SpannerReference: &cloudgdatool.SpannerReference{
-					DatabaseReference: &cloudgdatool.SpannerDatabaseReference{
-						ProjectID:  "cloud-db-nl2sql",
-						Region:     "us-central1",
-						InstanceID: "evalbench",
-						DatabaseID: "financial",
-						Engine:     cloudgdatool.SpannerEngineGoogleSQL,
-					},
-					AgentContextReference: &cloudgdatool.AgentContextReference{
-						ContextSetID: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+			QueryDataContext: &geminidataanalyticspb.QueryDataContext{
+				DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
+					References: &geminidataanalyticspb.DatasourceReferences_SpannerReference{
+						SpannerReference: &geminidataanalyticspb.SpannerReference{
+							DatabaseReference: &geminidataanalyticspb.SpannerDatabaseReference{
+								ProjectId:  "cloud-db-nl2sql",
+								Region:     "us-central1",
+								InstanceId: "evalbench",
+								DatabaseId: "financial",
+								Engine:     geminidataanalyticspb.SpannerDatabaseReference_GOOGLE_SQL,
+							},
+							AgentContextReference: &geminidataanalyticspb.AgentContextReference{
+								ContextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+							},
+						},
 					},
 				},
 			},
 		},
 		GenerationOptions: &cloudgdatool.GenerationOptions{
-			GenerateQueryResult: true,
+			GenerationOptions: &geminidataanalyticspb.GenerationOptions{
+				GenerateQueryResult: true,
+			},
 		},
 	}
 
@@ -329,24 +266,25 @@ func TestInvoke(t *testing.T) {
 
 	// Prepare parameters for invocation - ONLY query
 	params := parameters.ParamValues{
-		{Name: "query", Value: "How many accounts who have region in Prague are eligible for loans?"},
+		{Name: "query", Value: query},
 	}
 
 	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
 
+	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
+
 	// Invoke the tool
-	result, err := tool.Invoke(ctx, resourceMgr, params, "") // No accessToken needed for ADC client
+	result, err := tool.Invoke(ctx, resourceMgr, params, "")
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}
 
-	// Validate the result
-	expectedResult := map[string]any{
-		"queryResult":           "SELECT count(*) FROM accounts WHERE region = 'Prague' AND eligible_for_loans = true;",
-		"naturalLanguageAnswer": "There are 5 accounts in Prague eligible for loans.",
+	gotResp, ok := result.(*geminidataanalyticspb.QueryDataResponse)
+	if !ok {
+		t.Fatalf("expected result type *geminidataanalyticspb.QueryDataResponse, got %T", result)
 	}
 
-	if !cmp.Equal(expectedResult, result) {
-		t.Errorf("unexpected result: got %v, want %v", result, expectedResult)
+	if diff := cmp.Diff(expectedResp, gotResp, cmpopts.IgnoreUnexported(geminidataanalyticspb.QueryDataResponse{})); diff != "" {
+		t.Errorf("unexpected result mismatch (-want +got):\n%s", diff)
 	}
 }

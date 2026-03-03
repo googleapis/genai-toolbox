@@ -173,7 +173,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
-	dataInsightsWant := `(?s)Schema Resolved.*Retrieval Query.*SQL Generated.*Answer`
+	dataInsightsWant := `(?s)(Schema Resolved.*)?(Retrieval Query.*)?SQL Generated.*Data Retrieved.*Answer`
 	// Partial message; the full error message is too long.
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing GCP request: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"f0_\":1}"}]}}`
@@ -2393,7 +2393,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
 				tableRefsJSON,
 			))),
-			want:  "[{\"f0_\":1}]",
+			want:  dataInsightsWant,
 			isErr: false,
 		},
 		{
