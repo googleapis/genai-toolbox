@@ -16,7 +16,7 @@ description: >
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                  | `5000`      |
-|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                          |             |
+|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                 |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
@@ -28,6 +28,7 @@ description: >
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
+|              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                        | `0`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Sub Commands
@@ -133,8 +134,18 @@ used at a time.
 
 ### Hot Reload
 
-Toolbox enables dynamic reloading by default. To disable, use the
-`--disable-reload` flag.
+Toolbox supports two methods for detecting configuration changes: **Push**
+(event-driven) and **Poll** (interval-based). To completely disable all hot
+reloading, use the `--disable-reload` flag.
+
+* **Push (Default):** Toolbox uses a highly efficient push system that listens
+  for instant OS-level file events to reload configurations the moment you save.
+* **Poll (Fallback):** Alternatively, you can use the
+  `--poll-interval=<seconds>` flag to actively check for updates at a set
+  cadence. Unlike the push system, polling "pulls" the file status manually,
+  which is a great fallback for network drives or container volumes where OS
+  events might get dropped. Set the interval to `0` to disable the polling
+  system.
 
 ### Toolbox UI
 

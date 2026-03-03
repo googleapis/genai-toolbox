@@ -12,7 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@genkit-ai/googleai": "^1.18.0",
-    "@toolbox-sdk/core": "^0.1.2",
+    "@toolbox-sdk/core": "^0.2.0",
     "genkit": "^1.18.0"
   }
 }
