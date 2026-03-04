@@ -51,16 +51,16 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name          string                `yaml:"name" validate:"required"`
-	Type          string                `yaml:"type" validate:"required"`
-	Source        string                `yaml:"source" validate:"required"`
-	AuthRequired  []string              `yaml:"authRequired" validate:"required"`
-	Description   string                `yaml:"description" validate:"required"`
-	Database      string                `yaml:"database" validate:"required"`
-	Collection    string                `yaml:"collection" validate:"required"`
-	FilterPayload string                `yaml:"filterPayload" validate:"required"`
-	FilterParams  parameters.Parameters `yaml:"filterParams"`
-	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Name          string                 `yaml:"name" validate:"required"`
+	Type          string                 `yaml:"type" validate:"required"`
+	Source        string                 `yaml:"source" validate:"required"`
+	AuthRequired  []string               `yaml:"authRequired" validate:"required"`
+	Description   string                 `yaml:"description" validate:"required"`
+	Database      string                 `yaml:"database" validate:"required"`
+	Collection    string                 `yaml:"collection" validate:"required"`
+	FilterPayload string                 `yaml:"filterPayload" validate:"required"`
+	FilterParams  parameters.Parameters  `yaml:"filterParams"`
+	Annotations   *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface

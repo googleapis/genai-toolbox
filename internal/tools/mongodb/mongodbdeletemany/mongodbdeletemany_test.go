@@ -91,7 +91,6 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 
 }
 
-
 func TestAnnotations(t *testing.T) {
 	// Test default annotations for destructive tool
 	t.Run("default annotations", func(t *testing.T) {
