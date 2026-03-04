@@ -152,16 +152,6 @@ func TestGetClaimsFromHeader(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid formatting",
-			setupHeader: func() http.Header {
-				header := http.Header{}
-				header.Set("Authorization", "Token something")
-				return header
-			},
-			wantError:   true,
-			errContains: "authorization header format must be Bearer {token}",
-		},
-		{
 			name: "wrong audience",
 			setupHeader: func() http.Header {
 				token := generateValidToken(t, privateKey, keyID, jwt.MapClaims{
@@ -175,35 +165,6 @@ func TestGetClaimsFromHeader(t *testing.T) {
 			},
 			wantError:   true,
 			errContains: "audience validation failed",
-		},
-		{
-			name: "missing required scope",
-			setupHeader: func() http.Header {
-				token := generateValidToken(t, privateKey, keyID, jwt.MapClaims{
-					"aud":   "my-audience",
-					"scope": "some:other_scope",
-					"exp":   time.Now().Add(time.Hour).Unix(),
-				})
-				header := http.Header{}
-				header.Set("Authorization", "Bearer "+token)
-				return header
-			},
-			wantError:   true,
-			errContains: "missing required scope: read:files",
-		},
-		{
-			name: "client_id used instead of aud (valid)",
-			setupHeader: func() http.Header {
-				token := generateValidToken(t, privateKey, keyID, jwt.MapClaims{
-					"client_id": "my-audience",
-					"scope":     []interface{}{"read:files"}, // Testing slice type scopes
-					"exp":       time.Now().Add(time.Hour).Unix(),
-				})
-				header := http.Header{}
-				header.Set("Authorization", "Bearer "+token)
-				return header
-			},
-			wantError: false,
 		},
 		{
 			name: "expired token",

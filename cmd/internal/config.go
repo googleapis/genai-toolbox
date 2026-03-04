@@ -322,6 +322,18 @@ func mergeConfigs(files ...Config) (Config, error) {
 		return Config{}, fmt.Errorf("multiple authServices with mcpEnabled=true detected: %s. Only one MCP authorization server is currently supported", strings.Join(mcpEnabledAuthServers, ", "))
 	}
 
+	// Ensure only one authService has mcpEnabled = true
+	var mcpEnabledAuthServers []string
+	for name, authService := range merged.AuthServices {
+		// Only generic type has McpEnabled right now
+		if genericService, ok := authService.(generic.Config); ok && genericService.McpEnabled {
+			mcpEnabledAuthServers = append(mcpEnabledAuthServers, name)
+		}
+	}
+	if len(mcpEnabledAuthServers) > 1 {
+		return ToolsFile{}, fmt.Errorf("multiple authServices with mcpEnabled=true detected: %s. Only one MCP authorization server is currently supported", strings.Join(mcpEnabledAuthServers, ", "))
+	}
+
 	return merged, nil
 }
 
