@@ -42,6 +42,7 @@ type Config struct {
 	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
+	ReadOnly     *bool    `yaml:"readOnly"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -96,7 +97,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "executing `%s` tool query: %s", resourceType, sqlParam)
-	resp, err := source.RunSQL(ctx, sqlParam, nil, false)
+
+	isReadOnly := true
+	if t.ReadOnly != nil {
+		isReadOnly = *t.ReadOnly
+	}
+
+	resp, err := source.RunSQL(ctx, sqlParam, nil, isReadOnly)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
