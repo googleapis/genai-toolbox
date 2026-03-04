@@ -11,3 +11,5 @@ description: >
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
 - [serverless-spark-create-pyspark-batch](./serverless-spark-create-pyspark-batch.md)
 - [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
+- [serverless-spark-get-session](./serverless-spark-get-session.md)
+- [serverless-spark-list-sessions](./serverless-spark-list-sessions.md)

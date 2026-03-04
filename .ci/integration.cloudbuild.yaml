@@ -968,6 +968,7 @@ steps:
       - "SERVERLESS_SPARK_LOCATION=$_REGION"
       - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
       - "SERVERLESS_SPARK_SERVICE_ACCOUNT=$SERVICE_ACCOUNT_EMAIL"
+      - "EXTRA_TEST_ARGS=-test.parallel=1"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
