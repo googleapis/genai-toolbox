@@ -1962,7 +1962,7 @@ func TestPrebuiltTools(t *testing.T) {
 					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage"},
 				},
 			},
-		},
+		}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
