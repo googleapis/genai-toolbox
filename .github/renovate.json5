@@ -29,6 +29,20 @@
       matchManagers: [
         'gomod',
       ],
+      excludeFileNames: [
+        'docs/**',
+        '.hugo/**',
+      ],
+    },
+    {
+      groupName: 'Go Samples',
+      matchManagers: [
+        'gomod',
+      ],
+      matchFileNames: [
+        'docs/**',
+        '.hugo/**',
+      ],
     },
     {
       groupName: 'Node',
