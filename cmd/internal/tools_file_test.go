@@ -1681,9 +1681,13 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "bigquery prebuilt tools",
 			in:   bigquery_config,
 			wantToolset: server.ToolsetConfigs{
-				"bigquery_database_tools": tools.ToolsetConfig{
-					Name:      "bigquery_database_tools",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
+				"data": tools.ToolsetConfig{
+					Name:      "data",
+					ToolNames: []string{"execute_sql", "list_dataset_ids", "list_table_ids", "get_dataset_info", "get_table_info", "search_catalog"},
+				},
+				"analytics": tools.ToolsetConfig{
+					Name:      "analytics",
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "forecast"},
 				},
 			},
 		},
@@ -1960,6 +1964,16 @@ func TestPrebuiltTools(t *testing.T) {
 			if len(toolsFile.Prompts) != 0 {
 				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
+
+
+			t.Run("check toolset sizes", func(t *testing.T) {
+				for tsName, ts := range toolsFile.Toolsets {
+					if len(ts.ToolNames) > 10 {
+						t.Logf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
+						fmt.Printf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.\n", tsName, tc.name, len(ts.ToolNames))
+					}
+				}
+			})
 		})
 	}
 }
