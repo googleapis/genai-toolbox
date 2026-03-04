@@ -48,6 +48,8 @@ jobs:
     if: "${{ (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) || github.event.label.name == 'tests: run' }}"
     name: unit tests
     runs-on: ${{ matrix.os }}
+    env:
+          GOTOOLCHAIN: go1.26.0+auto
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
@@ -76,8 +78,6 @@ jobs:
 
       - name: Setup Go
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
-        with:
-          go-version: "1.24"
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -94,8 +94,6 @@ jobs:
 
       - name: Run tests with coverage
         if: ${{ runner.os == 'Linux' }}
-        env:
-          GOTOOLCHAIN: go1.26.0+auto
         run: |
           source_dir="./internal/sources/*"
           tool_dir="./internal/tools/*"
