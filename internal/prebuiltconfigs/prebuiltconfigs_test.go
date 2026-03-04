@@ -48,6 +48,7 @@ var expectedToolSources = []string{
 	"mssql",
 	"mysql",
 	"neo4j",
+	"oracledb",
 	"oceanbase",
 	"postgres",
 	"serverless-spark",
@@ -131,6 +132,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	mindsdb_config := getOrFatal(t, "mindsdb")
 	sqlite_config := getOrFatal(t, "sqlite")
 	neo4jconfig := getOrFatal(t, "neo4j")
+	oracle_config := getOrFatal(t, "oracledb")
 	healthcare_config := getOrFatal(t, "cloud-healthcare")
 	snowflake_config := getOrFatal(t, "snowflake")
 	if len(alloydb_omni_config) <= 0 {
@@ -231,6 +233,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(snowflake_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
+	if len(oracle_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch oracle prebuilt tools yaml")
 	}
 }
 

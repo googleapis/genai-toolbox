@@ -1608,6 +1608,14 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("SNOWFLAKE_WAREHOUSE", "your_wh")
 	t.Setenv("SNOWFLAKE_ROLE", "your_role")
 
+	t.Setenv("ORACLE_USERNAME", "your_oracle_db_username")
+	t.Setenv("ORACLE_PASS", "your_oracle_db_password")
+	t.Setenv("ORACLE_HOST", "your_oracle_db_host")
+	t.Setenv("ORACLE_PORT", "your_oracle_db_port")
+	t.Setenv("ORACLE_USE_OCI", "your_oracle_db_use_oci")
+	t.Setenv("ORACLE_WALLET_LOCATION", "your_path_to_oracldb_wallet")
+	t.Setenv("ORACLE_TNS_ADMIN", "your_path_to_tns_admin")
+
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1945,7 +1953,16 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 			},
 		},
-	}
+		{
+			name: "Oracle prebuilt tools",
+			in:   oracle_config,
+			wantToolset: server.ToolsetConfigs{
+				"oracle_tools": tools.ToolsetConfig{
+					Name:      "oracle_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage"},
+				},
+			},
+		},
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
