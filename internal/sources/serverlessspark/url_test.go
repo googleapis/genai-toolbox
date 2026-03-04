@@ -118,3 +118,120 @@ func TestBatchLogsURLFromProto(t *testing.T) {
 		t.Errorf("BatchLogsURLFromProto() = %v, want %v", got, want)
 	}
 }
+
+func TestExtractSessionDetails_Success(t *testing.T) {
+	sessionName := "projects/my-project/locations/us-central1/sessions/my-session"
+	projectID, location, sessionID, err := serverlessspark.ExtractSessionDetails(sessionName)
+	if err != nil {
+		t.Errorf("ExtractSessionDetails() error = %v, want no error", err)
+		return
+	}
+	wantProject := "my-project"
+	wantLocation := "us-central1"
+	wantSessionID := "my-session"
+	if projectID != wantProject {
+		t.Errorf("ExtractSessionDetails() projectID = %v, want %v", projectID, wantProject)
+	}
+	if location != wantLocation {
+		t.Errorf("ExtractSessionDetails() location = %v, want %v", location, wantLocation)
+	}
+	if sessionID != wantSessionID {
+		t.Errorf("ExtractSessionDetails() sessionID = %v, want %v", sessionID, wantSessionID)
+	}
+}
+
+func TestExtractSessionDetails_Failure(t *testing.T) {
+	sessionName := "invalid-name"
+	_, _, _, err := serverlessspark.ExtractSessionDetails(sessionName)
+	wantErr := "failed to parse session name: invalid-name"
+	if err == nil || err.Error() != wantErr {
+		t.Errorf("ExtractSessionDetails() error = %v, want %v", err, wantErr)
+	}
+}
+
+func TestSessionConsoleURL(t *testing.T) {
+	got := serverlessspark.SessionConsoleURL("my-project", "us-central1", "my-session")
+	want := "https://console.cloud.google.com/dataproc/interactive/us-central1/my-session/details?project=my-project"
+	if got != want {
+		t.Errorf("SessionConsoleURL() = %v, want %v", got, want)
+	}
+}
+
+func TestSessionLogsURL(t *testing.T) {
+	startTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
+	got := serverlessspark.SessionLogsURL("my-project", "us-central1", "my-session", startTime, endTime)
+	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
+		"resource.type%3D%22cloud_dataproc_session%22" +
+		"%0Aresource.labels.session_id%3D%22my-session%22" +
+		"%0Aresource.labels.project_id%3D%22my-project%22" +
+		"%0Aresource.labels.location%3D%22us-central1%22" +
+		"%0Atimestamp%3E%3D%222025-10-01T04%3A59%3A00Z%22" + // Minus 1 minute
+		"%0Atimestamp%3C%3D%222025-10-01T06%3A10%3A00Z%22" + // Plus 10 minutes
+		"&project=my-project"
+	if got != want {
+		t.Errorf("SessionLogsURL() = \n%v\nwant \n%v", got, want)
+	}
+}
+
+func TestSessionConsoleURLFromProto(t *testing.T) {
+	sessionPb := &dataprocpb.Session{
+		Name: "projects/my-project/locations/us-central1/sessions/my-session",
+	}
+	got, err := serverlessspark.SessionConsoleURLFromProto(sessionPb)
+	if err != nil {
+		t.Fatalf("SessionConsoleURLFromProto() error = %v", err)
+	}
+	want := "https://console.cloud.google.com/dataproc/interactive/us-central1/my-session/details?project=my-project"
+	if got != want {
+		t.Errorf("SessionConsoleURLFromProto() = %v, want %v", got, want)
+	}
+}
+
+func TestSessionLogsURLFromProto(t *testing.T) {
+	createTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
+	stateTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
+	sessionPb := &dataprocpb.Session{
+		Name:       "projects/my-project/locations/us-central1/sessions/my-session",
+		CreateTime: timestamppb.New(createTime),
+		StateTime:  timestamppb.New(stateTime),
+	}
+	got, err := serverlessspark.SessionLogsURLFromProto(sessionPb)
+	if err != nil {
+		t.Fatalf("SessionLogsURLFromProto() error = %v", err)
+	}
+	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
+		"resource.type%3D%22cloud_dataproc_session%22" +
+		"%0Aresource.labels.session_id%3D%22my-session%22" +
+		"%0Aresource.labels.project_id%3D%22my-project%22" +
+		"%0Aresource.labels.location%3D%22us-central1%22" +
+		"%0Atimestamp%3E%3D%222025-10-01T04%3A59%3A00Z%22" + // Minus 1 minute
+		"%0Atimestamp%3C%3D%222025-10-01T06%3A10%3A00Z%22" + // Plus 10 minutes
+		"&project=my-project"
+	if got != want {
+		t.Errorf("SessionLogsURLFromProto() = \n%v\nwant \n%v", got, want)
+	}
+}
+
+func TestSessionLogsURL_Escaping(t *testing.T) {
+	startTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
+
+	// Input contains a double quote which should be escaped.
+	sessionID := `my-session" OR root`
+	got := serverlessspark.SessionLogsURL("my-project", "us-central1", sessionID, startTime, endTime)
+
+	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
+		"resource.type%3D%22cloud_dataproc_session%22" +
+		// "my-session\" OR root" encoded
+		"%0Aresource.labels.session_id%3D%22my-session%5C%22+OR+root%22" +
+		"%0Aresource.labels.project_id%3D%22my-project%22" +
+		"%0Aresource.labels.location%3D%22us-central1%22" +
+		"%0Atimestamp%3E%3D%222025-10-01T04%3A59%3A00Z%22" +
+		"%0Atimestamp%3C%3D%222025-10-01T06%3A10%3A00Z%22" +
+		"&project=my-project"
+
+	if got != want {
+		t.Errorf("SessionLogsURL_Escaping() = \n%v\nwant \n%v", got, want)
+	}
+}

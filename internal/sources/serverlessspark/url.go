@@ -89,3 +89,64 @@ func BatchLogsURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
 	stateTime := batchPb.GetStateTime().AsTime()
 	return BatchLogsURL(projectID, location, batchID, createTime, stateTime), nil
 }
+
+var sessionFullNameRegex = regexp.MustCompile(`projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/sessions/(?P<session_id>[^/]+)`)
+
+// ExtractSessionDetails extracts the project ID, location, and session ID from a fully qualified session name.
+func ExtractSessionDetails(sessionName string) (projectID, location, sessionID string, err error) {
+	matches := sessionFullNameRegex.FindStringSubmatch(sessionName)
+	if len(matches) < 4 {
+		return "", "", "", fmt.Errorf("failed to parse session name: %s", sessionName)
+	}
+	return matches[1], matches[2], matches[3], nil
+}
+
+// SessionConsoleURL builds a URL to the Google Cloud Console linking to the session summary page.
+func SessionConsoleURL(projectID, location, sessionID string) string {
+	return fmt.Sprintf("https://console.cloud.google.com/dataproc/interactive/%s/%s/details?project=%s", location, sessionID, projectID)
+}
+
+// SessionLogsURL builds a URL to the Google Cloud Console showing Cloud Logging for the given session and time range.
+func SessionLogsURL(projectID, location, sessionID string, startTime, endTime time.Time) string {
+	advancedFilterTemplate := `resource.type="cloud_dataproc_session"
+resource.labels.session_id=%q
+resource.labels.project_id=%q
+resource.labels.location=%q`
+
+	advancedFilter := fmt.Sprintf(advancedFilterTemplate, sessionID, projectID, location)
+
+	if !startTime.IsZero() {
+		actualStart := startTime.Add(-1 * logTimeBufferBefore)
+		advancedFilter += fmt.Sprintf("\ntimestamp>=\"%s\"", actualStart.Format(time.RFC3339Nano))
+	}
+	if !endTime.IsZero() {
+		actualEnd := endTime.Add(logTimeBufferAfter)
+		advancedFilter += fmt.Sprintf("\ntimestamp<=\"%s\"", actualEnd.Format(time.RFC3339Nano))
+	}
+
+	v := url.Values{}
+	v.Add("advancedFilter", advancedFilter)
+	v.Add("project", projectID)
+
+	return "https://console.cloud.google.com/logs/viewer?" + v.Encode()
+}
+
+// SessionConsoleURLFromProto builds a URL to the Google Cloud Console linking to the session summary page.
+func SessionConsoleURLFromProto(sessionPb *dataprocpb.Session) (string, error) {
+	projectID, location, sessionID, err := ExtractSessionDetails(sessionPb.GetName())
+	if err != nil {
+		return "", err
+	}
+	return SessionConsoleURL(projectID, location, sessionID), nil
+}
+
+// SessionLogsURLFromProto builds a URL to the Google Cloud Console showing Cloud Logging for the given session and time range.
+func SessionLogsURLFromProto(sessionPb *dataprocpb.Session) (string, error) {
+	projectID, location, sessionID, err := ExtractSessionDetails(sessionPb.GetName())
+	if err != nil {
+		return "", err
+	}
+	createTime := sessionPb.GetCreateTime().AsTime()
+	stateTime := sessionPb.GetStateTime().AsTime()
+	return SessionLogsURL(projectID, location, sessionID, createTime, stateTime), nil
+}
