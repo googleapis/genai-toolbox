@@ -1621,9 +1621,21 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "alloydb omni prebuilt tools",
 			in:   alloydb_omni_config,
 			wantToolset: server.ToolsetConfigs{
-				"alloydb_omni_database_tools": tools.ToolsetConfig{
-					Name:      "alloydb_omni_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_columnar_configurations", "list_columnar_recommended_columns", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				"data": tools.ToolsetConfig{
+					Name:      "data",
+					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "get_query_plan", "list_indexes", "list_sequences", "list_stored_procedure"},
+				},
+				"monitor": tools.ToolsetConfig{
+					Name:      "monitor",
+					ToolNames: []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "list_database_stats", "replication_stats", "list_replication_slots"},
+				},
+				"config": tools.ToolsetConfig{
+					Name:      "config",
+					ToolNames: []string{"list_columnar_configurations", "list_columnar_recommended_columns", "list_memory_configurations", "list_pg_settings", "list_available_extensions", "list_installed_extensions", "list_roles"},
+				},
+				"optimize": tools.ToolsetConfig{
+					Name:      "optimize",
+					ToolNames: []string{"list_query_stats", "list_table_stats", "get_column_cardinality", "list_top_bloated_tables", "list_invalid_indexes", "list_autovacuum_configurations"},
 				},
 			},
 		},
@@ -1671,9 +1683,25 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "alloydb prebuilt tools",
 			in:   alloydb_config,
 			wantToolset: server.ToolsetConfigs{
-				"alloydb_postgres_database_tools": tools.ToolsetConfig{
-					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				"admin": tools.ToolsetConfig{
+					Name:      "admin",
+					ToolNames: []string{"create_cluster", "get_cluster", "list_clusters", "create_instance", "get_instance", "list_instances", "create_user", "wait_for_operation"},
+				},
+				"data": tools.ToolsetConfig{
+					Name:      "data",
+					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "get_query_plan", "list_stored_procedure", "list_sequences", "list_indexes"},
+				},
+				"monitor": tools.ToolsetConfig{
+					Name:      "monitor",
+					ToolNames: []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "get_system_metrics", "get_query_metrics", "list_database_stats"},
+				},
+				"optimize": tools.ToolsetConfig{
+					Name:      "optimize",
+					ToolNames: []string{"list_query_stats", "list_table_stats", "get_column_cardinality", "list_top_bloated_tables", "list_invalid_indexes", "list_autovacuum_configurations"},
+				},
+				"config": tools.ToolsetConfig{
+					Name:      "config",
+					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_pg_settings", "list_memory_configurations", "list_roles", "replication_stats", "list_replication_slots", "list_publication_tables"},
 				},
 			},
 		},
@@ -1960,6 +1988,16 @@ func TestPrebuiltTools(t *testing.T) {
 			if len(toolsFile.Prompts) != 0 {
 				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
+
+
+			t.Run("check toolset sizes", func(t *testing.T) {
+				for tsName, ts := range toolsFile.Toolsets {
+					if len(ts.ToolNames) > 10 {
+						t.Logf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
+						fmt.Printf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.\n", tsName, tc.name, len(ts.ToolNames))
+					}
+				}
+			})
 		})
 	}
 }
