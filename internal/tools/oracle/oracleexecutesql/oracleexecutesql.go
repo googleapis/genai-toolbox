@@ -34,7 +34,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	OracleDB() *sql.DB
-	RunSQL(context.Context, string, []any) (any, error)
+	RunSQL(context.Context, string, []any, bool) (any, error)
 }
 
 type Config struct {
@@ -96,7 +96,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "executing `%s` tool query: %s", resourceType, sqlParam)
-	resp, err := source.RunSQL(ctx, sqlParam, nil)
+	resp, err := source.RunSQL(ctx, sqlParam, nil, false)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
