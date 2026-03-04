@@ -48,8 +48,6 @@ jobs:
     if: "${{ (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) || github.event.label.name == 'tests: run' }}"
     name: unit tests
     runs-on: ${{ matrix.os }}
-    env:
-          GOTOOLCHAIN: go1.26.0+auto
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
@@ -96,6 +94,8 @@ jobs:
 
       - name: Run tests with coverage
         if: ${{ runner.os == 'Linux' }}
+        env:
+          GOTOOLCHAIN: go1.25.0+auto
         run: |
           source_dir="./internal/sources/*"
           tool_dir="./internal/tools/*"
