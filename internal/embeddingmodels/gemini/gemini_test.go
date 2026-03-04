@@ -43,7 +43,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 				"my-gemini-model": gemini.Config{
 					Name:  "my-gemini-model",
 					Type:  gemini.EmbeddingModelType,
-					Model: "text-embedding-004",
+					Model: "gemini-embedding-001",
 				},
 			},
 		},
@@ -53,7 +53,7 @@ func TestParseFromYamlGemini(t *testing.T) {
             kind: embeddingModel
             name: complex-gemini
             type: gemini
-            model: text-embedding-004
+            model: gemini-embedding-001
             apiKey: "test-api-key"
             dimension: 768
             `,
@@ -61,7 +61,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 				"complex-gemini": gemini.Config{
 					Name:      "complex-gemini",
 					Type:      gemini.EmbeddingModelType,
-					Model:     "text-embedding-004",
+					Model:     "gemini-embedding-001",
 					ApiKey:    "test-api-key",
 					Dimension: 768,
 				},
@@ -73,7 +73,7 @@ func TestParseFromYamlGemini(t *testing.T) {
             kind: embeddingModels
             name: vertex-gemini
             type: gemini
-            model: text-embedding-004
+            model: gemini-embedding-001
             useVertexAI: true
             project: "my-project"
             location: "us-central1"
@@ -83,7 +83,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 				"vertex-gemini": gemini.Config{
 					Name:        "vertex-gemini",
 					Type:        gemini.EmbeddingModelType,
-					Model:       "text-embedding-004",
+					Model:       "gemini-embedding-001",
 					UseVertexAI: true,
 					Project:     "my-project",
 					Location:    "us-central1",
@@ -127,7 +127,7 @@ func TestFailParseFromYamlGemini(t *testing.T) {
             kind: embeddingModel
             name: bad-field
             type: gemini
-            model: text-embedding-004
+            model: gemini-embedding-001
             invalid_param: true
             `,
 			err: "error unmarshaling embeddingModel: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: text-embedding-004\n   3 | name: bad-field\n   4 | type: gemini",

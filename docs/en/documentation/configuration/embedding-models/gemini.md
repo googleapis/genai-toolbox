@@ -76,7 +76,7 @@ how to set up ADC [here][adc].
 kind: embeddingModels
 name: gemini-model
 type: gemini
-model: text-embedding-004
+model: gemini-embedding-001
 useVertexAI: true
 project: ${GOOGLE_CLOUD_PROJECT}
 location: us-central1
@@ -94,7 +94,7 @@ ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 | **field**   | **type** | **required** | **description**                                                                                                                                      |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | type        |  string  |     true     | Must be `gemini`.                                                                                                                                    |
-| model       |  string  |     true     | The Gemini model ID to use (e.g., `text-embedding-004`).                                                                                             |
+| model       |  string  |     true     | The Gemini model ID to use (e.g., `gemini-embedding-001`).                                                                                             |
 | useVertexAI | boolean  |    false     | Set to `true` to use Vertex AI. Default is false (Google AI).                                                                                        |
 | project     |  string  |    false     | GCP Project ID (required if `useVertexAI` is `true`).                                                                                                |
 | location    |  string  |    false     | GCP Location (required if `useVertexAI` is `true`).                                                                                                  |
