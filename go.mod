@@ -1,6 +1,6 @@
 module github.com/googleapis/genai-toolbox
 
-go 1.24.7
+go 1.25.0
 
 toolchain go1.26.0
 
