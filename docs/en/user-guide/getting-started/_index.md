@@ -29,7 +29,7 @@ production is highly dangerous.
 To secure your application, you should **use custom tools** to suit your
 specific schema and application needs. Creating a custom tool restricts the
 agent's capabilities to only what is necessary. For example, you can use the
-[`postgres-sql`](postgres/postgres-sql/) tool to define a specific action. This
+[`postgres-sql`](../../integrations/postgres/postgres-sql.md) tool to define a specific action. This
 typically involves:
 
 *   **Prepared Statements:** Writing a SQL query ahead of time and letting the
