@@ -80,7 +80,7 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	// run server in background
-	srvErr := make(chan error)
+	srvErr := make(chan error, 1)
 	if opts.Cfg.Stdio {
 		go func() {
 			defer close(srvErr)
