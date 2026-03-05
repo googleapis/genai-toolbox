@@ -337,7 +337,7 @@ Annotations appear in the `tools/list` MCP response:
 
 Once your tools are defined in your configuration, you can retrieve them directly from your application code.
 
-Here is how to load and incoke your tools across our supported languages:
+Here is how to load and invoke your tools across our supported languages:
 
 ### Python
 
