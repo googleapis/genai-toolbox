@@ -1,7 +1,7 @@
 ---
 title: "Neo4j"
 type: docs
-weight: 1
+weight: 7
 description: >
   How to get started with Toolbox using Neo4j.
 ---

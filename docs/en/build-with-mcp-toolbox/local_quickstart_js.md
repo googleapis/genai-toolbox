@@ -1,7 +1,7 @@
 ---
 title: "JS Quickstart (Local)"
 type: docs
-weight: 3
+weight: 2
 description: >
   How to get started running MCP Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
 ---

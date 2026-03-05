@@ -294,7 +294,7 @@ to use BigQuery, and then run the Toolbox server.
     Alternatively, you can modify the agent code to load tools individually
     (e.g., using `await toolbox_client.load_tool("search-hotels-by-name")`).
 
-    For more info on tools, check out the [Resources](../../resources/) section
+    For more info on tools, check out the [Configuring Tools](../../user-guide/configuration/tools/_index.md) section
     of the docs.
 
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:

@@ -1,7 +1,7 @@
 ---
 title: "Python Quickstart (Local)"
 type: docs
-weight: 2
+weight: 1
 description: >
   How to get started running MCP Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/),
   [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).

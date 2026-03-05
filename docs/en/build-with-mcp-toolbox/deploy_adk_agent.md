@@ -11,7 +11,7 @@ description: >
 This guide assumes you have already done the following:
 
 1.  Completed the [Python Quickstart
-    (Local)](../getting-started/local_quickstart.md) and have a working ADK
+    (Local)](../build-with-mcp-toolbox/local_quickstart.md) and have a working ADK
     agent running locally.
 2.  Installed the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install).
 3.  A Google Cloud project with billing enabled.
@@ -21,7 +21,7 @@ This guide assumes you have already done the following:
 Before deploying your agent, your MCP Toolbox server needs to be accessible from
 the cloud. We will deploy MCP Toolbox to Cloud Run.
 
-Follow the [Deploy to Cloud Run](deploy_toolbox.md) guide to deploy your MCP
+Follow the [Deploy to Cloud Run](../user-guide/deploy-to/cloud-run/_index.md) guide to deploy your MCP
 Toolbox instance.
 
 {{% alert title="Important" %}}

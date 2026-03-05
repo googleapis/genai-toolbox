@@ -1,7 +1,7 @@
 ---
 title: "Prompts using Gemini CLI"
 type: docs
-weight: 5
+weight: 6
 description: >
   How to get started using Toolbox prompts locally with PostgreSQL and [Gemini CLI](https://pypi.org/project/gemini-cli/).
 ---
@@ -11,7 +11,7 @@ description: >
 This guide assumes you have already done the following:
 
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
- 
+
 [install-postgres]: https://www.postgresql.org/download/
 
 ## Step 1: Set up your database

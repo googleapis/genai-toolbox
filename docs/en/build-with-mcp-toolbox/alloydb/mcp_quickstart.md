@@ -1,7 +1,7 @@
 ---
 title: "Quickstart (MCP with AlloyDB)"
 type: docs
-weight: 1
+weight: 7
 description: >
   How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
 ---
@@ -10,7 +10,7 @@ description: >
 
 [Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
-on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
+on how to [connect to Toolbox via MCP](../../user-guide/connect-to/mcp-client/_index.md).
 
 ## Before you begin
 
@@ -314,7 +314,7 @@ tools:
 ```
 
 For more info on tools, check out the
-[Tools](../../resources/tools/) section.
+[Tools](../../user-guide/configuration/tools/_index.md) section.
 
 ## Step 4: Run the Toolbox server
 
@@ -364,6 +364,6 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ## What's next
 
-- Learn more about [MCP Inspector](../../how-to/connect_via_mcp.md).
-- Learn more about [Toolbox Resources](../../resources/).
-- Learn more about [Toolbox How-to guides](../../how-to/).
+- Learn more about [MCP Inspector](../../user-guide/connect-to/mcp-client/_index.md).
+- Learn more about [Toolbox User Guide](../../user-guide/configuration/_index.md).
+- Learn more about [Toolbox Tutorials](../../build-with-mcp-toolbox/_index.md).
