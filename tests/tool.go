@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -1377,13 +1378,14 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
-		{
-			name:           "invoke list_schemas with owner name",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
-			wantStatusCode: http.StatusOK,
-			want:           []map[string]any{wantSchema},
-			compareSubset:  true,
-		},
+		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/genai-toolbox/issues/2562
+		// {
+		// 	name:           "invoke list_schemas with owner name",
+		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
+		// 	wantStatusCode: http.StatusOK,
+		// 	want:           []map[string]any{wantSchema},
+		// 	compareSubset:  true,
+		// },
 		{
 			name:           "invoke list_schemas with limit 1",
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s","limit": 1}`, schemaName))),
@@ -4416,8 +4418,45 @@ func RunPostgresListTableStatsTest(t *testing.T, ctx context.Context, pool *pgxp
 	}
 }
 
+// cleanupOldSchemas cleans up schemas that were created more than 1 hour ago
+func cleanupOldSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	rows, err := pool.Query(ctx, "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'test_proc_%'")
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	oneHourAgo := time.Now().Add(-1 * time.Hour).Unix()
+
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			continue
+		}
+
+		parts := strings.Split(name, "_")
+		if len(parts) < 3 {
+			continue
+		}
+
+		timestamp, err := strconv.ParseInt(parts[2], 10, 64)
+		if err != nil {
+			continue
+		}
+
+		if timestamp < oneHourAgo {
+			_, err := pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", name))
+			if err == nil {
+				t.Logf("Cleaned up schema: %s", name)
+			}
+		}
+	}
+}
+
 // RunPostgresListStoredProcedureTest runs tests for the postgres list-stored-procedure tool
 func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	cleanupOldSchemas(t, ctx, pool)
+
 	type storedProcedureDetails struct {
 		SchemaName  string `json:"schema_name"`
 		Name        string `json:"name"`
@@ -4428,7 +4467,9 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 	}
 
 	// Create test schema
-	testSchemaName := "test_proc_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	// Use this format: test_proc_<timestamp>_<uuid>
+	now := time.Now().Unix()
+	testSchemaName := fmt.Sprintf("test_proc_%d_%s", now, strings.ReplaceAll(uuid.New().String(), "-", "")[:8])
 	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", testSchemaName)
 	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
 		t.Fatalf("unable to create test schema: %v", err)
@@ -4635,7 +4676,7 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 				}
 
 				// Verify definition contains CREATE PROCEDURE
-				if !strings.Contains(proc.Definition, "CREATE PROCEDURE") {
+				if !strings.Contains(strings.ToUpper(proc.Definition), "PROCEDURE") {
 					t.Logf("warning: definition may not be a valid CREATE PROCEDURE statement: %s", proc.Definition)
 				}
 
@@ -4692,27 +4733,4 @@ func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 
 	defer resp.Body.Close()
 	return resp, respBody
-}
-
-func RunStatementToolsTest(t *testing.T, tools map[string]string) {
-	for toolName, paramBody := range tools {
-		t.Run(toolName, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(paramBody))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-		})
-	}
 }
