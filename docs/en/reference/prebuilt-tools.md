@@ -877,12 +877,11 @@ See [Usage Examples](../reference/cli.md#examples).
 *   **Environment Variables:**
     *   `ORACLE_HOST`: The hostname or IP address of the Oracle server.
     *   `ORACLE_PORT`: The port number for the Oracle server (Default: 1521).
-    *   `ORACLE_CONNECTION_STRING`: The
-    *   `ORACLE_USER`: The
-    *   `ORACLE_PASSWORD`: The
-    *   `ORACLE_WALLET`: The path to Oracle DB Wallet file for the databases that support this authentication type
-    *   `ORACLE_USE_OCI`: true or false, The flag if the Oracle Database is deployed in cloud deployment
-
+    *   `ORACLE_CONNECTION_STRING`: The connection string for the Oracle server (e.g., "hostname:port/servicename").
+    *   `ORACLE_USER`: The database username.
+    *   `ORACLE_PASSWORD`: The password for the database user.
+    *   `ORACLE_WALLET`: The path to the Oracle DB Wallet file for databases that support this authentication type.
+    *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating if the Oracle Database is a cloud deployment that requires the OCI driver.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
         execute queries.
@@ -894,8 +893,4 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
     *   `list_tablespace_usage`: Lists tablespace usage.
     *   `list_invalid_objects`: Lists invalid objects.
-    *   `list_active_sessions`: Lists active database sessions.
-    *   `get_query_plan`: Gets the execution plan for a SQL statement.
-    *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
-    *   `list_tablespace_usage`: Lists tablespace usage.
-    *   `list_invalid_objects`: Lists invalid objects.
+    

@@ -1624,7 +1624,7 @@ func TestPrebuiltTools(t *testing.T) {
 		name        string
 		in          []byte
 		wantToolset server.ToolsetConfigs
-	}{
+	{}
 		{
 			name: "alloydb omni prebuilt tools",
 			in:   alloydb_omni_config,
@@ -1957,9 +1957,9 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "Oracle prebuilt tools",
 			in:   oracle_config,
 			wantToolset: server.ToolsetConfigs{
-				"oracle_tools": tools.ToolsetConfig{
-					Name:      "oracle_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage"},
+				"oracle_database_tools": tools.ToolsetConfig{
+					Name:      "oracle_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage","list_invalid_objects"},
 				},
 			},
 		},

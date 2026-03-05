@@ -52,13 +52,15 @@ tools:
                 AND s.sql_id = sql.sql_id (+)
                 AND s.audsid != userenv('sessionid') -- Exclude current session
             ORDER BY s.last_call_et DESC
-            FETCH FIRST COALESCE(10) ROWS ONLY;
+            FETCH FIRST 50 ROWS ONLY;
 
     get_query_plan:
         kind: oracle-sql
         source: oracle-source
         description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input. following is an example EXPLAIN PLAN FOR {{&query}};"
-        statement: SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
+        statement: |
+            EXPLAIN PLAN FOR {{&query}};
+            SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
 
     list_top_sql_by_resource:
         kind: oracle-sql
@@ -74,6 +76,8 @@ tools:
                 elapsed_time / 1000000 AS elapsed_seconds
             FROM
                 v$sql
+            ORDER BY
+                elapsed_time DESC
             FETCH FIRST 5 ROWS ONLY;
             
     list_tablespace_usage:

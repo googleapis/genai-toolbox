@@ -93,13 +93,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -123,13 +121,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -156,13 +152,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -187,13 +181,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -220,13 +212,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -250,13 +240,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
             "ORACLE_WALLET": "",
-            "ORACLE_WALLET_PASSWORD": ""
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -279,13 +267,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+           "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -308,13 +294,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracle","--stdio"],
           "env": {
-            "ORACLE_HOST": "",
-            "ORACLE_PORT": "1521",
-            "ORACLE_SERVICE": "",
+           "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET_LOCATION": "",
-            "ORACLE_USE_OCI": ""
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
           }
         }
       }
@@ -333,7 +317,12 @@ statements.
 The following tools are available to the LLM:
 
 1. **list_tables**: lists tables and descriptions
-1. **execute_sql**: execute any SQL statement
+2. **execute_sql**: execute any SQL statement
+3. **list_active_sessions**: Lists active database sessions.
+4. **get_query_plan**: Gets the execution plan for a SQL statement.
+5. **list_top_sql_by_resource**: Lists top SQL statements by resource usage.
+6. **list_tablespace_usage**: Lists tablespace usage.
+7. **list_invalid_objects**: Lists invalid objects.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
