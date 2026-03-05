@@ -28,6 +28,6 @@ You do not need to build a full application to use the Toolbox. You can interact
 
 ## IDE Integrations
 
-. By connecting the Toolbox directly to an MCP-compatible IDE, your AI coding assistant gains real-time access to your database schemas, allowing it to write perfectly tailored queries and application code.
+By connecting the Toolbox directly to an MCP-compatible IDE, your AI coding assistant gains real-time access to your database schemas, allowing it to write perfectly tailored queries and application code.
 
 *   **[IDEs](ides/_index.md)**: Guide for connecting your IDE to AlloyDB instances.
