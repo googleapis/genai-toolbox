@@ -60,6 +60,7 @@ func TestFormatParameters(t *testing.T) {
 	tests := []struct {
 		name         string
 		params       []parameters.ParameterManifest
+		envVars      map[string]string
 		wantContains []string
 		wantErr      bool
 	}{
@@ -115,11 +116,29 @@ func TestFormatParameters(t *testing.T) {
 				`"param1"`,
 			},
 		},
+		{
+			name: "parameter with env var default",
+			params: []parameters.ParameterManifest{
+				{
+					Name:        "param1",
+					Description: "Param 1",
+					Type:        "string",
+					Default:     "default-value",
+					Required:    false,
+				},
+			},
+			envVars: map[string]string{
+				"MY_ENV_VAR": "default-value",
+			},
+			wantContains: []string{
+				`"param1": {`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := formatParameters(tt.params)
+			got, err := formatParameters(tt.params, tt.envVars)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("formatParameters() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -154,7 +173,7 @@ func TestGenerateSkillMarkdown(t *testing.T) {
 		},
 	}
 
-	got, err := generateSkillMarkdown("MySkill", "My Description", toolsMap)
+	got, err := generateSkillMarkdown("MySkill", "My Description", toolsMap, nil)
 	if err != nil {
 		t.Fatalf("generateSkillMarkdown() error = %v", err)
 	}

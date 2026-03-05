@@ -72,7 +72,7 @@ type skillTemplateData struct {
 // generateSkillMarkdown generates the content of the SKILL.md file.
 // It includes usage instructions and a reference section for each tool in the skill,
 // detailing its description and parameters.
-func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[string]tools.Tool) (string, error) {
+func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[string]tools.Tool, envVars map[string]string) (string, error) {
 	var toolsData []toolTemplateData
 
 	// Order tools based on name
@@ -86,7 +86,7 @@ func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[stri
 		tool := toolsMap[name]
 		manifest := tool.Manifest()
 
-		parametersSchema, err := formatParameters(manifest.Parameters)
+		parametersSchema, err := formatParameters(manifest.Parameters, envVars)
 		if err != nil {
 			return "", err
 		}
@@ -200,7 +200,7 @@ func generateScriptContent(name string, toolsFileName string) (string, error) {
 
 // formatParameters converts a list of parameter manifests into a formatted JSON schema string.
 // This schema is used in the skill documentation to describe the input parameters for a tool.
-func formatParameters(params []parameters.ParameterManifest) (string, error) {
+func formatParameters(params []parameters.ParameterManifest, envVars map[string]string) (string, error) {
 	if len(params) == 0 {
 		return "", nil
 	}
@@ -214,7 +214,20 @@ func formatParameters(params []parameters.ParameterManifest) (string, error) {
 			"description": p.Description,
 		}
 		if p.Default != nil {
-			paramMap["default"] = p.Default
+			defaultValue := p.Default
+			// Check if default value is pre-configured, if so, remove it as the the value will be
+			// read by the tool at runtime and the agent does not need to be aware of it.
+			if strVal, ok := defaultValue.(string); ok {
+				for _, envVal := range envVars {
+					if envVal == strVal {
+						defaultValue = nil
+						break
+					}
+				}
+			}
+			if defaultValue != nil {
+				paramMap["default"] = defaultValue
+			}
 		}
 		properties[p.Name] = paramMap
 		if p.Required {
