@@ -363,7 +363,7 @@ toolsets:
         - list_top_bloated_tables
         - list_invalid_indexes
         - list_autovacuum_configurations
-    config:
+    view-config:
         - list_available_extensions
         - list_installed_extensions
         - list_pg_settings

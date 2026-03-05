@@ -1629,8 +1629,8 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "monitor",
 					ToolNames: []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "list_database_stats", "replication_stats", "list_replication_slots"},
 				},
-				"config": tools.ToolsetConfig{
-					Name:      "config",
+				"view-config": tools.ToolsetConfig{
+					Name:      "view-config",
 					ToolNames: []string{"list_columnar_configurations", "list_columnar_recommended_columns", "list_memory_configurations", "list_pg_settings", "list_available_extensions", "list_installed_extensions", "list_roles"},
 				},
 				"optimize": tools.ToolsetConfig{
@@ -1699,8 +1699,8 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "optimize",
 					ToolNames: []string{"list_query_stats", "list_table_stats", "get_column_cardinality", "list_top_bloated_tables", "list_invalid_indexes", "list_autovacuum_configurations"},
 				},
-				"config": tools.ToolsetConfig{
-					Name:      "config",
+				"view-config": tools.ToolsetConfig{
+					Name:      "view-config",
 					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_pg_settings", "list_memory_configurations", "list_roles", "replication_stats", "list_replication_slots", "list_publication_tables"},
 				},
 			},
@@ -1988,7 +1988,6 @@ func TestPrebuiltTools(t *testing.T) {
 			if len(toolsFile.Prompts) != 0 {
 				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
-
 
 			t.Run("check toolset sizes", func(t *testing.T) {
 				for tsName, ts := range toolsFile.Toolsets {
