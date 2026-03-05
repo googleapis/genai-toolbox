@@ -1494,6 +1494,7 @@ func TestPrebuiltTools(t *testing.T) {
 	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
+	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1959,12 +1960,12 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"oracle_database_tools": tools.ToolsetConfig{
 					Name:      "oracle_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage","list_invalid_objects"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage", "list_invalid_objects"},
 				},
 			},
 		},
-     }
-	
+	}
+
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			toolsFile, err := parseToolsFile(ctx, tc.in)
