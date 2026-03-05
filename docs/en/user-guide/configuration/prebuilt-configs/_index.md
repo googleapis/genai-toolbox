@@ -547,23 +547,6 @@ See [Usage Examples](../../../reference/cli.md#usage-examples).
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `add_dashboard_filter`: Adds a filter to a dashboard.
     *   `generate_embed_url`: Generate an embed url for content.
-
-## Looker Dev
-
-*   `--prebuilt` value: `looker-dev`
-*   **Environment Variables:**
-    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
-    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
-    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
-    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
-    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
-    *   `LOOKER_SHOW_HIDDEN_MODELS`: Whether to show hidden models.
-    *   `LOOKER_SHOW_HIDDEN_EXPLORES`: Whether to show hidden explores.
-    *   `LOOKER_SHOW_HIDDEN_FIELDS`: Whether to show hidden fields.
-*   **Permissions:**
-    *   A Looker account with permissions to access the desired projects
-        and LookML is required.
-*   **Tools:**
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
@@ -583,9 +566,6 @@ See [Usage Examples](../../../reference/cli.md#usage-examples).
     *   `get_connection_databases`: Get the available databases in a connection.
     *   `get_connection_tables`: Get the available tables in a connection.
     *   `get_connection_table_columns`: Get the available columns for a table.
-    *   `get_lookml_tests`: Retrieves a list of available LookML tests for a project.
-    *   `run_lookml_tests`: Executes specific LookML tests within a project.
-    *   `create_view_from_table`: Generates boilerplate LookML views directly from the database schema.
 
 ## Looker Conversational Analytics
 
@@ -746,8 +726,6 @@ See [Usage Examples](../../../reference/cli.md#usage-examples).
     *   `cancel_batch`: Cancels a Spark batch.
     *   `create_pyspark_batch`: Creates a PySpark batch.
     *   `create_spark_batch`: Creates a Spark batch.
-    *   `list_sessions`: Lists Spark sessions.
-    *   `get_session`: Gets a Spark session.
 
 ## SingleStore
 
