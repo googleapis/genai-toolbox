@@ -30,7 +30,7 @@ steps:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
-      - 'TARGET_ROOT=docs/en/getting-started/quickstart/go'
+      - 'TARGET_ROOT=docs/en/build-with-mcp-toolbox/quickstart/go'
       - 'TARGET_LANG=go'
       - 'TABLE_NAME=hotels_go'
       - 'SQL_FILE=.ci/sample_tests/setup_hotels.sql'

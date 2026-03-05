@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
 
 {{< notice tip>}}
-For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [**Toolbox Quickstart Tutorial**](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart)
+For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [**Toolbox Quickstart Tutorial**](../../../../../build-with-mcp-toolbox/local_quickstart.md)
 {{< /notice >}}
 
 {{< notice note>}}

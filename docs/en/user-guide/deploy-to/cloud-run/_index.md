@@ -140,7 +140,9 @@ deployment will time out.
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
-### Update deployed server to be secure
+### Update deployed server to be 
+
+{{< production-security-warning >}}
 
 To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
 list of hosts. In order to do that, you will
