@@ -33,7 +33,7 @@ agent's capabilities to only what is necessary. For example, you can use the
 typically involves:
 
 *   **Prepared Statements:** Writing a SQL query ahead of time and letting the
-    agent only fill in specific [basic parameters](#basic-parameters). pool, and expose them to your AI agents.
+    agent only fill in specific [basic parameters](../configuration/tools/_index.md#basic-parameters).
 
 ---
 
