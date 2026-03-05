@@ -78,10 +78,6 @@ than in Python.
 ## Is Toolbox compatible with Model Context Protocol (MCP)?
 
 Yes! Toolbox is compatible with [Anthropic's Model Context Protocol
-<<<<<<< HEAD
 (MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via
-=======
-(MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via 
->>>>>>> 4d8e44f0fab (docs: Add reference and other docs)
 MCP](../user-guide/connect-to/mcp-client/_index.md) on how to connect to Toolbox with an MCP
 client.
