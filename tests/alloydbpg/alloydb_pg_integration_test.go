@@ -40,7 +40,7 @@ var (
 	AlloyDBPostgresInstance   = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
 	AlloyDBPostgresDatabase   = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
 	AlloyDBPostgresUser       = os.Getenv("ALLOYDB_POSTGRES_USER")
-	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASS")
+	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASSWORD")
 )
 
 func getAlloyDBPgVars(t *testing.T) map[string]any {
@@ -58,7 +58,7 @@ func getAlloyDBPgVars(t *testing.T) map[string]any {
 	case AlloyDBPostgresUser:
 		t.Fatal("'ALLOYDB_POSTGRES_USER' not set")
 	case AlloyDBPostgresPass:
-		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
+		t.Fatal("'ALLOYDB_POSTGRES_PASSWORD' not set")
 	}
 	return map[string]any{
 		"type":     AlloyDBPostgresSourceType,
