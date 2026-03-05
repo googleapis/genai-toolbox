@@ -2,7 +2,7 @@
 {{ $currentTitle := .Page.Title }}
 {{ $currentPages := .Page.RegularPages }}
 
-{{/* 1. Display Current Directory Tools (if any exist) */}}
+{{/* Display Current Directory Tools (if any exist) */}}
 {{ if $currentPages }}
 <h2>Available Tools</h2>
 <h3>Native {{ $currentTitle }} Tools</h3>
@@ -24,7 +24,7 @@
 </table>
 {{ end }}
 
-{{/* 2. Display Inherited Tools from specified directories */}}
+{{/* Display Inherited Tools from specified directories */}}
 {{ $dirsParam := .Get "dirs" }}
 
 {{ if $dirsParam }}

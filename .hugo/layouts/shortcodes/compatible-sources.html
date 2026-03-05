@@ -1,4 +1,4 @@
-{{/* 1. Automatically identify the "Native" source (the parent _index.md) */}}
+{{/* Automatically identify the "Native" source (the parent _index.md) */}}
 {{ $nativeSource := .Page.Parent }}
 {{ $currentToolTitle := .Page.Title }}
 
@@ -22,7 +22,7 @@
       </tr>
       {{ end }}
 
-      {{/* 2. Process additional sources passed via the "others" parameter */}}
+      {{/* Process additional sources passed via the "others" parameter */}}
       {{ $others := .Get "others" }}
       {{ if $others }}
         {{ range split $others "," }}
