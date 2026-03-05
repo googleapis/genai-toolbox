@@ -10,7 +10,7 @@ description: >
 ## About
 
 The `looker-make-look` creates a saved Look in the user's
-Looker personal folder.s
+Looker personal folder.
 
 `looker-make-look` takes twelve parameters:
 
