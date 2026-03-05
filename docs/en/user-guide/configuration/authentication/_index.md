@@ -177,7 +177,7 @@ func getAuthToken() string {
 }
 
 func main() {
-  URL := 'http://127.0.0.1:5000'
+  URL := "http://127.0.0.1:5000"
   client, err := core.NewToolboxClient(URL)
   if err != nil {
     log.Fatalf("Failed to create Toolbox client: %v", err)
