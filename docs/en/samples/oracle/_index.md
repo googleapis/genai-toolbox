@@ -1,7 +1,8 @@
 ---
-title: "OracleDB"
-type: docs
-weight: 1
-description: >
-  How to get started with Toolbox using Oracle Database.
+  title: "OracleDB"
+  type: docs
+  weight: 1
+  description: >
+    How to get started with Toolbox using Oracle Database.
+
 ---

@@ -34,11 +34,11 @@ to expose your developer assistant tools to an Oracle instance:
 
 1. Create or select an Oracle instance.
 
-1. Create or reuse a database user and have the username and password ready.
+2. Create or reuse a database user and have the username and password ready.
 
 ## Install MCP Toolbox
 
-1. Download the latest version of Toolbox as a binary. Select the [correct
+3. Download the latest version of Toolbox as a binary. Select the [correct
    binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
    to your OS and CPU architecture. You are required to use Toolbox version
    V0.26.0+:
@@ -91,7 +91,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -99,7 +99,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
             "ORACLE_WALLET": "",
             "ORACLE_USE_OCI": "false"
           }
-        }
+          ```
+
+          **Note:** You'll need to update all 8 configuration examples in this file (Claude code, Claude desktop, Cline, Cursor, VS Code, Windsurf, Gemini CLI, and Gemini Code Assist tabs) by replacing `"--prebuilt","oracle"` with `"--prebuilt","oracledb"` in each one.    }
       }
     }
     ```
@@ -119,7 +121,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -150,7 +152,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -179,7 +181,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -210,7 +212,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "servers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -238,7 +240,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -265,7 +267,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
@@ -292,7 +294,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",

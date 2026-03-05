@@ -27,7 +27,10 @@ tools:
         kind: oracle-sql
         source: oracle-source
         description: "Lists all user tables in the connected schema, including segment size, row count, and last analyzed date. Filters by a comma-separated list of names. If names are omitted, lists all tables in the current user's schema."
-        statement: SELECT table_name from user_tables;
+        statement: | 
+          SELECT 
+                table_name 
+          FROM  user_tables;
 
     list_active_sessions:
         kind: oracle-sql
@@ -65,7 +68,7 @@ tools:
     list_top_sql_by_resource:
         kind: oracle-sql
         source: oracle-source
-        description: "List the top N SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time), following is an example of the sql" 
+        description: "List the top N (default 5) SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time), following is an example of the sql" 
         statement: | 
             SELECT
                 sql_id,
@@ -127,3 +130,4 @@ toolsets:
         - list_top_sql_by_resource
         - list_tablespace_usage
         - list_invalid_objects
+        

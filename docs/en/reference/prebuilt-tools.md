@@ -873,18 +873,17 @@ See [Usage Examples](../reference/cli.md#examples).
 
 ## Oracle
 
-*   `--prebuilt` value: `oracle`
+*   `--prebuilt` value: `oracledb`
 *   **Environment Variables:**
-    *   `ORACLE_HOST`: The hostname or IP address of the Oracle server.
-    *   `ORACLE_PORT`: The port number for the Oracle server (Default: 1521).
+   
     *   `ORACLE_CONNECTION_STRING`: The connection string for the Oracle server (e.g., "hostname:port/servicename").
     *   `ORACLE_USER`: The database username.
     *   `ORACLE_PASSWORD`: The password for the database user.
     *   `ORACLE_WALLET`: The path to the Oracle DB Wallet file for databases that support this authentication type.
     *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating if the Oracle Database is a cloud deployment that requires the OCI driver.
 *   **Permissions:**
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
-        execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   For queries dba_data_files and dba_free_space or other which are DBA views. Access to these views typically requires elevated database privileges (like SELECT_CATALOG_ROLE or direct grants) that a standard users may not have .
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
@@ -893,4 +892,3 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
     *   `list_tablespace_usage`: Lists tablespace usage.
     *   `list_invalid_objects`: Lists invalid objects.
-    
