@@ -1684,6 +1684,7 @@ func TestPrebuiltTools(t *testing.T) {
 				"bigquery_database_tools": tools.ToolsetConfig{
 					Name:      "bigquery_database_tools",
 					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
+				},
 			},
 		},
 		{
@@ -1963,7 +1964,6 @@ func TestPrebuiltTools(t *testing.T) {
 			if len(toolsFile.Prompts) != 0 {
 				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
-
 
 			t.Run("check toolset sizes", func(t *testing.T) {
 				for tsName, ts := range toolsFile.Toolsets {
