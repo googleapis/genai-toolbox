@@ -293,7 +293,7 @@ func main() {
 
   // For a single token
   authTool, err := tool.ToolFrom(
-    core.WithAuthTokenSource("my-auth", dynamicTokenSource),
+    core.WithAuthTokenSource("my-auth", dynamicTokenSource1),
   )
 
   // OR, if multiple tokens are needed
