@@ -104,5 +104,5 @@ This file (symlinked as `CLAUDE.md` and `AGENTS.md`) provides context and guidel
 
 ### Adding Documentation
 
--   Add source documentation to `docs/en/resources/sources/`.
--   Add tool documentation to `docs/en/resources/tools/`.
+-   For a new source: Add source documentation to `docs/en/integrations/<source_name>/`.
+-   For a new tool: Add tool documentation to `docs/en/integrations/<source_name>/<tool_name>`.
