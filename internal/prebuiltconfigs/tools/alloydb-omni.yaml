@@ -228,7 +228,7 @@ toolsets:
         - list_database_stats
         - replication_stats
         - list_replication_slots
-    config:
+    view-config:
         - list_columnar_configurations
         - list_columnar_recommended_columns
         - list_memory_configurations
@@ -236,7 +236,7 @@ toolsets:
         - list_available_extensions
         - list_installed_extensions
         - list_roles
-    view-optimize:
+    optimize:
         - list_query_stats
         - list_table_stats
         - get_column_cardinality
