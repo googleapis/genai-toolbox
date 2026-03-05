@@ -32,7 +32,7 @@ tools:
     description: Use this tool to find aspect types relevant to the query.
 
 toolsets:
-  dataplex_tools:
+  discovery:
     - search_entries
     - lookup_entry
     - search_aspect_types
