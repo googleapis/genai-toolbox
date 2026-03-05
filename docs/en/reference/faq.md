@@ -2,7 +2,7 @@
 title: "FAQ"
 type: docs
 weight: 2
-description: Frequently asked questions about Toolbox. 
+description: Frequently asked questions about Toolbox.
 ---
 
 ## How can I deploy or run Toolbox?
@@ -13,8 +13,8 @@ docker images][release-notes] (but you can always compile yourself as well!).
 
 For detailed instructions, check out these resources:
 
-- [Quickstart: How to Run Locally](../getting-started/local_quickstart.md)
-- [Deploy to Cloud Run](../how-to/deploy_toolbox.md)
+- [Quickstart: How to Run Locally](../build-with-mcp-toolbox/local_quickstart.md)
+- [Deploy to Cloud Run](../user-guide/deploy-to/cloud-run/_index.md)
 
 [release-notes]: https://github.com/googleapis/genai-toolbox/releases/
 
@@ -44,11 +44,11 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 
 ## Can Toolbox be used for non-database tools?
 
-**Yes!** While Toolbox is primarily focused on databases, it also supports generic 
-**HTTP tools** (`type: http`). These allow you to connect your agents to REST APIs 
+**Yes!** While Toolbox is primarily focused on databases, it also supports generic
+**HTTP tools** (`type: http`). These allow you to connect your agents to REST APIs
 and other web services, enabling workflows that extend beyond database interactions.
 
-For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).
+For configuration details, see the [HTTP Tools documentation](../integrations/http/_index.md).
 
 ## Can I use _$BAR_ orchestration framework to use tools from Toolbox?
 
@@ -78,6 +78,6 @@ than in Python.
 ## Is Toolbox compatible with Model Context Protocol (MCP)?
 
 Yes! Toolbox is compatible with [Anthropic's Model Context Protocol
-(MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via
-MCP](../how-to/connect_via_mcp.md) on how to connect to Toolbox with an MCP
+(MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via 
+MCP](../user-guide/connect-to/mcp-client/_index.md) on how to connect to Toolbox with an MCP
 client.

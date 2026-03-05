@@ -219,9 +219,9 @@ tools.
 
 * **Update the documentation** to include information about your new data source
   and tool. This includes:
-  * Adding a new page to the `docs/en/resources/sources` directory for your data
-    source.
-  * Adding a new page to the `docs/en/resources/tools` directory for your tool.
+  * Add a new folder in the `docs/en/integrations` directory
+  * If you are adding a new source, add the details in the `_index.md` file in this new folder
+  * If you are adding a new tool, add the details in the `<tool_name>.md` file in this new folder
 
 * **(Optional) Add samples** to the `docs/en/samples/<newdb>` directory.
 
