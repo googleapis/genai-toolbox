@@ -1973,7 +1973,6 @@ func TestPrebuiltTools(t *testing.T) {
 				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
 
-
 			t.Run("check toolset sizes", func(t *testing.T) {
 				for tsName, ts := range toolsFile.Toolsets {
 					if len(ts.ToolNames) > 10 {
