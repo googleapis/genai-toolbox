@@ -1624,7 +1624,7 @@ func TestPrebuiltTools(t *testing.T) {
 		name        string
 		in          []byte
 		wantToolset server.ToolsetConfigs
-	{}
+	}{
 		{
 			name: "alloydb omni prebuilt tools",
 			in:   alloydb_omni_config,
