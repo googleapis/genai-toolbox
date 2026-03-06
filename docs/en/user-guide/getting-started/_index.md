@@ -26,7 +26,7 @@ For application use cases, you need to be wary of security risks such as prompt
 injection or data poisoning. Allowing an LLM to execute arbitrary queries in
 production is highly dangerous.
 
-To secure your application, you should **use custom tools** to suit your
+To secure your application, you should [**use custom tools**](../configuration/tools/_index.md) to suit your
 specific schema and application needs. Creating a custom tool restricts the
 agent's capabilities to only what is necessary. For example, you can use the
 [`postgres-sql`](../../integrations/postgres/postgres-sql.md) tool to define a specific action. This
