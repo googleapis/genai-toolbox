@@ -883,7 +883,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating if the Oracle Database is a cloud deployment that requires the OCI driver.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
-    *   For queries dba_data_files and dba_free_space or other which are DBA views. Access to these views typically requires elevated database privileges (like SELECT_CATALOG_ROLE or direct grants) that a standard users may not have .
+    *   For queries on DBA views like `dba_data_files` and `dba_free_space`, access typically requires elevated database privileges (like `SELECT_CATALOG_ROLE` or direct grants) that a standard user may not have.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
