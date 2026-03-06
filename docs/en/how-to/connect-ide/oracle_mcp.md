@@ -87,23 +87,21 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
    values, and save:
 
     ```json
-    {
-      "mcpServers": {
-        "oracle": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracledb","--stdio"],
-          "env": {
-            "ORACLE_CONNECTION_STRING": "",
-            "ORACLE_USER": "",
-            "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET": "",
-            "ORACLE_USE_OCI": "false"
-          }
-          ```
-
-          **Note:** You'll need to update all 8 configuration examples in this file (Claude code, Claude desktop, Cline, Cursor, VS Code, Windsurf, Gemini CLI, and Gemini Code Assist tabs) by replacing `"--prebuilt","oracle"` with `"--prebuilt","oracledb"` in each one.    }
+{
+  "mcpServers": {
+    "oracle": {
+      "command": "./PATH/TO/toolbox",
+      "args": ["--prebuilt","oracledb","--stdio"],
+      "env": {
+        "ORACLE_CONNECTION_STRING": "",
+        "ORACLE_USER": "",
+        "ORACLE_PASSWORD": "",
+        "ORACLE_WALLET": "",
+        "ORACLE_USE_OCI": "false"
       }
     }
+  }
+}
     ```
 
 1. Restart Claude code to apply the new configuration.
