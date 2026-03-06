@@ -81,3 +81,10 @@ Yes! Toolbox is compatible with [Anthropic's Model Context Protocol
 (MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via
 MCP](../documentation/connect-to/mcp-client/_index.md) on how to connect to Toolbox with an MCP
 client.
+
+## What is the difference between MCP Toolbox and Google Cloud MCP Servers?
+
+MCP Toolbox and [Google Cloud MCP Servers](https://cloud.google.com/blog/products/databases/managed-mcp-servers-for-google-cloud-databases) serve complementary purposes.
+
+- **Google Cloud MCP Servers** provide a managed, enterprise-grade, "Zero Ops" experience that is ideal for developers who want immediate, secure integration with Google Cloud services without any setup.
+- **MCP Toolbox** is open-source and designed for developers who need to build custom applications, connect to non-Google or on-premises data sources, or create custom tools. Because it is self-hosted, it allows developers to access, prototype, and validate the newest agentic workflows and features quickly before they might be available in managed environments.
