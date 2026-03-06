@@ -1,5 +1,5 @@
 ---
-title: "Gemini Data Analytics QueryData"
+title: "cloud-gemini-data-analytics-query"
 type: docs
 weight: 1
 description: >
