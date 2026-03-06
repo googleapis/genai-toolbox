@@ -10,6 +10,8 @@ description: >
 
 A `looker-create-project-directory` tool creates a new directory within a specified LookML project.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

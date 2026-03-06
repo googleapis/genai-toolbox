@@ -17,6 +17,8 @@ The statement field supports any valid SQLite SQL statement, including `SELECT`,
 `INSERT`, `UPDATE`, `DELETE`, `CREATE/ALTER/DROP` table statements, and other
 DDL statements.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ### Example

@@ -12,6 +12,8 @@ A `looker-get-project-files` tool returns all the lookml files in a project in t
 
 `looker-get-project-files` accepts a project_id parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

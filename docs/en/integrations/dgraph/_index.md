@@ -34,6 +34,8 @@ Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

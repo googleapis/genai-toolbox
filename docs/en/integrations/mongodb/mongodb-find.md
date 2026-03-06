@@ -16,6 +16,8 @@ results (**sorting**), and restricting the number of documents returned
 
 The tool returns a JSON array of the documents found.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

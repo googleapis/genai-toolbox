@@ -8,6 +8,8 @@ description: "Create a Cloud SQL for MySQL instance."
 The `cloud-sql-mysql-create-instance` tool creates a new Cloud SQL for MySQL
 instance in a specified Google Cloud project.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Configuration

@@ -13,6 +13,8 @@ A `looker-delete-project-file` tool deletes a LookML file in a project
 
 `looker-delete-project-file` accepts a project_id parameter and a file_path parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

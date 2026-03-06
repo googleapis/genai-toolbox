@@ -22,6 +22,8 @@ and takes around a minute to begin executing; status can be polled using the
   to execute with.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Custom Configuration

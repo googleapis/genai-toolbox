@@ -17,6 +17,8 @@ form of placeholders `?`.
 
 [mysql-prepare]: https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

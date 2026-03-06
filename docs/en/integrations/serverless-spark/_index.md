@@ -16,6 +16,8 @@ Apache Spark.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

@@ -17,6 +17,8 @@ including Hive, Cassandra, relational databases or even proprietary data stores.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

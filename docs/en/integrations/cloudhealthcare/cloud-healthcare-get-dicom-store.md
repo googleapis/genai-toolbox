@@ -13,6 +13,8 @@ A `cloud-healthcare-get-dicom-store` tool retrieves information about a DICOM st
 `cloud-healthcare-get-dicom-store` returns the details of a DICOM store.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

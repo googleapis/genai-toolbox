@@ -15,6 +15,8 @@ database.
 The specified SQL statement expects parameters in the SQL query to be in the
 form of placeholders `?`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

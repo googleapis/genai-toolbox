@@ -15,6 +15,8 @@ their paths.
 an array of document paths to delete. The tool uses Firestore's BulkWriter for
 efficient batch deletion and returns the success status for each document.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

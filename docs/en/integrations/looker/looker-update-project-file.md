@@ -13,6 +13,8 @@ A `looker-update-project-file` tool updates the content of a LookML file.
 `looker-update-project-file` accepts a project_id parameter and a file_path parameter
 as well as the new file content.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

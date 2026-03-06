@@ -16,6 +16,8 @@ distributed architectures, and a flexible approach to schema definition.
 
 [cassandra-docs]: https://cassandra.apache.org/
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

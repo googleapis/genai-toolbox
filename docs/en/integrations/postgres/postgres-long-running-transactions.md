@@ -18,6 +18,8 @@ Parameters:
 - `min_duration` (optional): Only show transactions running at least this long (Postgres interval format, e.g., '5 minutes'). Default: `5 minutes`.
 - `limit` (optional): Maximum number of results to return. Default: `20`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Query

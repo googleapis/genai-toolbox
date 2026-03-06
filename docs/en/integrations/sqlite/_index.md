@@ -25,6 +25,8 @@ SQLite has the following notable characteristics:
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ### Pre-built Configurations

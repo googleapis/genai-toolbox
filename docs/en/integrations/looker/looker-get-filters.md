@@ -15,6 +15,8 @@ in a given model in the source.
 
 `looker-get-filters` accepts two parameters, the `model` and the `explore`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -11,6 +11,8 @@ description: >
 
 The `cockroachdb-sql` tool allows you to execute parameterized SQL queries against a CockroachDB database. This tool supports prepared statements with parameter binding, template parameters for dynamic query construction, and automatic transaction retry for resilience against serialization conflicts.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

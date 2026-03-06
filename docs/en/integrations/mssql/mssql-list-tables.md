@@ -23,6 +23,8 @@ The tool takes the following input parameters:
   schema. `simple` will return only the table names, `detailed` will return the
   full table information. Default: `detailed`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/cloud-sql-mssql">}}
 
 ## Example

@@ -13,6 +13,8 @@ saved Look.
 
 `looker-run-look` takes one parameter, the `look_id`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

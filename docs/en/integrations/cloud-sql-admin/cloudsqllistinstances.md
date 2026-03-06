@@ -8,6 +8,8 @@ description: "List Cloud SQL instances in a project.\n"
 The `cloud-sql-list-instances` tool lists all Cloud SQL instances in a specified
 Google Cloud project.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Configuration

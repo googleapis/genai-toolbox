@@ -10,6 +10,8 @@ description: >
 
 A `looker-get-project-directories` tool retrieves the directories within a specified LookML project.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

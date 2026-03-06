@@ -7,6 +7,8 @@ description: "Clone a Cloud SQL instance."
 
 The `cloud-sql-clone-instance` tool clones a Cloud SQL instance using the Cloud SQL Admin API.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Examples

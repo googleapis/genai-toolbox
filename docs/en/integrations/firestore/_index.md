@@ -23,6 +23,8 @@ basics][firestore-quickstart].
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

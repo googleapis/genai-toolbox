@@ -19,6 +19,7 @@ This tool takes 2 optional input parameters:
   long in seconds, default `0`.
 - `limit` (optional):  max number of queries to return, default `10`.
 
+## Compatible Sources
 
 {{< compatible-sources others="integrations/cloud-sql-mysql">}}
 

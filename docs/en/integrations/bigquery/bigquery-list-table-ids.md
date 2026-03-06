@@ -26,6 +26,8 @@ that the requested dataset is in the allowed list. If it is not, the request is
 denied. If only one dataset is specified in the `allowedDatasets` list, it
 will be used as the default value for the `dataset` parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

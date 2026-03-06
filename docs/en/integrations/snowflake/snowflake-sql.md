@@ -12,6 +12,8 @@ description: >
 A `snowflake-sql` tool executes a pre-defined SQL statement against a Snowflake
 database.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 The specified SQL statement is executed as a prepared statement, and specified

@@ -21,6 +21,8 @@ optimized to handle both transactional and analytical workloads.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

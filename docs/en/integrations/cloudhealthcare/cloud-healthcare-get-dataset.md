@@ -14,6 +14,8 @@ A `cloud-healthcare-get-dataset` tool retrieves metadata for a Healthcare datase
 configured in the source. It takes no extra parameters.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

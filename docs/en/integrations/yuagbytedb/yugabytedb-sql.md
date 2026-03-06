@@ -18,6 +18,8 @@ will be the first parameter specified, `$@` will be the second parameter, and so
 on. If template parameters are included, they will be resolved before execution
 of the prepared statement.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

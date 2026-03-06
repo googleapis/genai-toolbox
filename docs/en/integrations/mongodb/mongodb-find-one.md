@@ -16,6 +16,8 @@ returned. Otherwise, the selection is not guaranteed.
 The tool returns a single JSON object representing the document, wrapped in a
 JSON array.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 ---
 

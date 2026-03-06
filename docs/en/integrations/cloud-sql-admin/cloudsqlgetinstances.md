@@ -9,6 +9,8 @@ description: >
 The `cloud-sql-get-instance` tool retrieves a Cloud SQL instance resource using
 the Cloud SQL Admin API.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -23,6 +23,8 @@ active queries. The tool takes the following input parameters:
   handled. If this parameter is omitted, no applications are excluded.
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 ## Example

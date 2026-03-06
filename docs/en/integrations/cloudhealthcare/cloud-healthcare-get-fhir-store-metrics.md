@@ -13,6 +13,8 @@ A `cloud-healthcare-get-fhir-store-metrics` tool retrieves metrics for a FHIR st
 `cloud-healthcare-get-fhir-store-metrics` returns the metrics of a FHIR store.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

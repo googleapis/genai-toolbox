@@ -18,6 +18,8 @@ This tool is designed for direct execution of SQL statements. It takes a single
 > **Note:** This tool is intended for developer assistant workflows with
 > human-in-the-loop and shouldn't be used for production agents.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

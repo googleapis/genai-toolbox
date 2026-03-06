@@ -12,6 +12,8 @@ A "looker-validate-project" tool checks the syntax of a LookML project and repor
 
 `looker-validate-project` accepts a project_id parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

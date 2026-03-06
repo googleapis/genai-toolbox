@@ -21,6 +21,8 @@ following parameters:
   DATASET, MODEL, ROUTINE, TABLE, VIEW.
 - `pageSize` - Number of results in the search page. Defaults to `5`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Requirements

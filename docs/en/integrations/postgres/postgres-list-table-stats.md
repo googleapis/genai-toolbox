@@ -12,6 +12,8 @@ The `postgres-list-table-stats` tool queries `pg_stat_all_tables` to provide com
 
 The tool returns a JSON array where each element represents statistics for a table, including scan metrics, row counts, and vacuum history. Results are sorted by sequential scans by default and limited to 50 rows.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

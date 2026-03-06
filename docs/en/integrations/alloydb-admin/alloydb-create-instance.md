@@ -40,6 +40,8 @@ The tool takes the following input parameters:
 > The tool sets the `password.enforce_complexity` database flag to `on`,
 > requiring new database passwords to meet complexity rules.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -10,6 +10,8 @@ description: >
 
 The `cloud-logging-admin-list-resource-types` tool lists the monitored resource types available in Google Cloud Logging.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

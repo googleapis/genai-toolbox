@@ -15,6 +15,8 @@ store based on a set of criteria.
 given criteria.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

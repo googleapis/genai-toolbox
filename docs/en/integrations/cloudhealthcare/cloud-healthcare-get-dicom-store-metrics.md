@@ -14,6 +14,8 @@ store.
 `cloud-healthcare-get-dicom-store-metrics` returns the metrics of a DICOM store.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

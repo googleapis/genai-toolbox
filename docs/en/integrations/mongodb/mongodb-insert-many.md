@@ -17,6 +17,8 @@ be a string containing a **JSON array of document objects**. Upon successful
 insertion, the tool returns a JSON array containing the unique `_id` of **each**
 new document that was created.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ---

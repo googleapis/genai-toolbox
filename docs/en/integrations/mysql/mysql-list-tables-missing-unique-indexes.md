@@ -19,6 +19,8 @@ parameters:
   Search all visible tables in all visible databases if not specified.
 - `limit` (optional):  max number of queries to return, default `50`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/cloud-sql-mysql">}}
 
 ## Example

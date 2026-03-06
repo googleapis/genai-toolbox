@@ -25,6 +25,8 @@ the Google Cloud console][spanner-quickstart].
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ### Pre-built Configurations

@@ -19,6 +19,8 @@ total execution time in descending order. The tool takes the following input par
   used within a LIKE clause. Default: `""` (all databases).
 - `limit` (optional): The maximum number of results to return. Default: `50`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

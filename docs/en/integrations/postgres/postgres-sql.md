@@ -19,6 +19,8 @@ of the prepared statement.
 
 [pg-prepare]: https://www.postgresql.org/docs/current/sql-prepare.html
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

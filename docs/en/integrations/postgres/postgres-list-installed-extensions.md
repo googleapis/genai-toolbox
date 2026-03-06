@@ -16,6 +16,8 @@ extensions installed on a Postgres database.
 (extension name, version, schema, owner, description) as JSON. The does not
 support any input parameter.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 ## Example

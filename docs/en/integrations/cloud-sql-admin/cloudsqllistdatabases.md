@@ -8,6 +8,8 @@ description: List Cloud SQL databases in an instance.
 The `cloud-sql-list-databases` tool lists all Cloud SQL databases in a specified
 Google Cloud project and instance.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Configuration

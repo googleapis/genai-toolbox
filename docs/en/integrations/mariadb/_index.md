@@ -14,7 +14,7 @@ features with a focus on performance and reliability.
 
 **Note**: MariaDB is supported using the MySQL source.
 
-
+## Available Tools
 
 {{< list-tools dirs="/integrations/mysql" >}}
 

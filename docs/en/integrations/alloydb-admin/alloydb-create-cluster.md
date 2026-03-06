@@ -37,6 +37,8 @@ The tool takes the following input parameters:
 | `user`     | string | The name for the initial superuser. Default: `postgres`.                                                                  | No       |
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

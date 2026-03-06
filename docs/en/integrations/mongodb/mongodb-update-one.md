@@ -13,6 +13,8 @@ collection. It locates the document to be updated using a `filterPayload` and
 applies modifications defined in an `updatePayload`. If the filter matches
 multiple documents, only the first one found will be updated.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ---

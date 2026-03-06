@@ -16,6 +16,8 @@ The specified SQL statement is executed as a parameterized statement, and specif
 parameters will be used according to their name: e.g. `$id`.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -27,6 +27,8 @@ Starting in Looker v25.18, these queries can be identified in Looker's
 System Activity. In the History explore, use the field API Client Name
 to find MCP Toolbox queries.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

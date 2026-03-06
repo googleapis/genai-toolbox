@@ -14,6 +14,8 @@ or selective field updates using an update mask. When using an update mask,
 fields referenced in the mask but not present in the document data will be
 deleted from the document, following Firestore's native behavior.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Parameters

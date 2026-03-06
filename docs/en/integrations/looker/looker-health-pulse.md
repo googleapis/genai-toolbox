@@ -24,6 +24,8 @@ The `looker-health-pulse` tool performs health checks on a Looker instance. The
 - `check_legacy_features`: Lists enabled legacy features. (*To note, this
   function is not available in Looker Core.*)
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Parameters

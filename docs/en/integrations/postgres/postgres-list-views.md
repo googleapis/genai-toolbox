@@ -20,6 +20,8 @@ parameters:
 - `schema_name` (optional): A string pattern to filter schema names. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

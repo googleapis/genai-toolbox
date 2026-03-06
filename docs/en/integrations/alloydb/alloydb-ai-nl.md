@@ -24,6 +24,8 @@ the development of generative AI applications by transferring the complexity
 of converting natural language to SQL from the application layer to the
 database layer.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Requirements

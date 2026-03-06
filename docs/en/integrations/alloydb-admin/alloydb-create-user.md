@@ -35,6 +35,8 @@ The tool takes the following input parameters:
 | `databaseRoles` | array(string) | Optional. A list of database roles to grant to the new user (e.g., `pg_read_all_data`).                       | No       |
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

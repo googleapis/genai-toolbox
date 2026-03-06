@@ -21,6 +21,8 @@ The behavior of this tool is influenced by the `writeMode` setting on its
   allowing it to interact with temporary resources like `TEMP` tables created
   within that session.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ### GoogleSQL

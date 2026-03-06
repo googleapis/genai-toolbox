@@ -27,6 +27,8 @@ Looker personal folder.
 11. an optional `description`
 12. an optional `folder` id. If not provided, the user's default folder will be used.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

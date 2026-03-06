@@ -15,6 +15,8 @@ This tool supports both template parameters (for SQL statement customization)
 and regular parameters (for prepared statement values), providing flexible
 query execution capabilities.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

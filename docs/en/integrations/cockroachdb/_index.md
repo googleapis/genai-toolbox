@@ -17,6 +17,8 @@ no_list: true
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

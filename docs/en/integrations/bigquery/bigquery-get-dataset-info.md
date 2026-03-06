@@ -27,6 +27,8 @@ The tool's behavior regarding these parameters is influenced by the
   list, it will be used as the default value for the `dataset` parameter.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

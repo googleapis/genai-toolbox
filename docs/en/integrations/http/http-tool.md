@@ -15,6 +15,8 @@ retrieve or manipulate resources.
 Toolbox allows you to configure the request URL, method, headers, query
 parameters, and the request body for an HTTP Tool.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ### URL

@@ -12,6 +12,8 @@ The `postgres-list-locks` tool displays information about active locks by joinin
 
 This tool identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 ## Query

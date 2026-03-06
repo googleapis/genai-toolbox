@@ -17,6 +17,8 @@ compatibility.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

@@ -13,6 +13,8 @@ dashboard.
 
 `looker-run-dashboard` takes one parameter, the `dashboard_id`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

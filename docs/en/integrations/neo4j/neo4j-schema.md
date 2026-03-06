@@ -24,6 +24,8 @@ details, which can be invaluable for providing database context to an LLM. This
 tool is compatible with a `neo4j` source and takes no parameters.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

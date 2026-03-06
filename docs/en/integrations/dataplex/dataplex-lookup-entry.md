@@ -29,6 +29,8 @@ It also optionally accepts following parameters:
     paths within the Entry. It only works for CUSTOM view.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Requirements

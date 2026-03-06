@@ -38,6 +38,8 @@ following config for example:
 If the input is an array of strings `["Alice", "Sid", "Bob"]`,  The final command
 to be executed after argument expansion will be `[SADD, userNames, Alice, Sid, Bob]`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

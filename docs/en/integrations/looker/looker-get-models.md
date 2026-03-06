@@ -12,6 +12,8 @@ A `looker-get-models` tool returns all the models in the source.
 
 `looker-get-models` accepts no parameters.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

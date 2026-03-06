@@ -47,6 +47,8 @@ layer of security by controlling which datasets can be accessed:
 > human-in-the-loop and shouldn't be used for production agents.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

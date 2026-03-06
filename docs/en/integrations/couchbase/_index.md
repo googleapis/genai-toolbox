@@ -14,6 +14,8 @@ allowing tools to execute SQL queries against it.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

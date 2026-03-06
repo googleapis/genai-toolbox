@@ -16,6 +16,8 @@ The tool takes a single `sql` parameter containing the SQL statement to execute 
 > **Note:** This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents. For production use cases with predefined queries, use [cockroachdb-sql](cockroachdb-sql.md) instead.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

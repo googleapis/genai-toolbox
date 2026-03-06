@@ -22,6 +22,8 @@ cluster][alloydb-free-trial].
 [alloydb-docs]: https://cloud.google.com/alloydb/docs
 [alloydb-free-trial]: https://cloud.google.com/alloydb/docs/create-free-trial-cluster
 
+## Available Tools
+
 {{< list-tools dirs="/integrations/postgres" >}}
 
 ### Pre-built Configurations

@@ -45,6 +45,8 @@ dataset specified in the `table_references` parameter.
   request is denied.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -19,6 +19,8 @@ The tool takes the following input parameters:
 | `location` | string | The location of the cluster (e.g., 'us-central1'). | Yes      |
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

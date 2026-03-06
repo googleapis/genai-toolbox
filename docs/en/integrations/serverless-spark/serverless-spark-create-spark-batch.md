@@ -28,6 +28,8 @@ polled using the [get batch](serverless-spark-get-batch.md) tool.
   to execute with.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Custom Configuration

@@ -17,6 +17,8 @@ and expects parameters in the SQL query to be in the form of placeholders `?`.
 
 [tidb-prepare]: https://docs.pingcap.com/tidb/stable/sql-prepared-plan-cache
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

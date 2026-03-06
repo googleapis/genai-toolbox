@@ -15,6 +15,8 @@ their paths.
 array of document paths, and returns the documents' data along with metadata
 such as existence status, creation time, update time, and read time.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

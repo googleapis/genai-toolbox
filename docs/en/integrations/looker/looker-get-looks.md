@@ -20,6 +20,8 @@ Title and description use SQL style wildcards and are case insensitive.
 Limit and offset are used to page through a larger set of matches and
 default to 100 and 0.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

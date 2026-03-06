@@ -26,6 +26,8 @@ This tool enables you to:
 
 [mysql-prepare]: https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example Queries

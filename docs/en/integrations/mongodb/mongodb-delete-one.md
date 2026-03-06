@@ -19,6 +19,8 @@ such as a user account or a single item from an inventory based on a unique ID.
 The tool returns the number of documents deleted, which will be either `1` if a
 document was found and deleted, or `0` if no matching document was found.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ---

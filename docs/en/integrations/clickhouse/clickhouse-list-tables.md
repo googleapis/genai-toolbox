@@ -16,6 +16,8 @@ of all tables in the specified database that are accessible to the configured
 user, making it useful for schema exploration and table discovery tasks.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

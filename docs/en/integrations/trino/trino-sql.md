@@ -15,6 +15,8 @@ The specified SQL statement is executed as a [prepared statement][trino-prepare]
 
 [trino-prepare]: https://trino.io/docs/current/sql/prepare.html
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

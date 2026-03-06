@@ -19,6 +19,8 @@ substituted at runtime.
 **Developer Note**: This tool serves as the general querying foundation that
 developers can use to create custom tools with specific query patterns.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Key Features

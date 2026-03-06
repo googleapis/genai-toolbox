@@ -17,6 +17,8 @@ This tool is useful for:
 - Multi-tenant application analysis
 - Schema-level access control planning
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -32,6 +32,8 @@ query.
 > names, or other parts of the query.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

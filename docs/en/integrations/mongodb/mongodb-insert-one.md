@@ -15,6 +15,8 @@ This tool takes one required parameter named `data`, which must be a string
 containing the JSON object you want to insert. Upon successful insertion, the
 tool returns the unique `_id` of the newly created document.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

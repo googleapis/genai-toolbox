@@ -19,6 +19,8 @@ of tables) as part of the logical replication feature. The tool takes the follow
 - `schema_names` (optional): Filters by a comma-separated list of schema names. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

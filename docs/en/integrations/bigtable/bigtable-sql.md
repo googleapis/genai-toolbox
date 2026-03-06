@@ -28,6 +28,8 @@ inserted according to their name: e.g. `@name`.
 
 [bigtable-googlesql]: https://cloud.google.com/bigtable/docs/googlesql-overview
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

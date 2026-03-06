@@ -14,7 +14,10 @@ server.
 `postgres-database-overview` fetches the current state of the PostgreSQL server
 This tool does not take any input parameters.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
+
 ## Example
 
 ```yaml

@@ -20,6 +20,8 @@ the [official Redis website](https://redis.io/docs/).
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

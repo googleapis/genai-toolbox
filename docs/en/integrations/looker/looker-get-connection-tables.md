@@ -14,6 +14,8 @@ A `looker-get-connection-tables` tool returns all the tables in a connection.
 `looker-get-connection-tables` accepts a `conn` parameter, a `schema` parameter,
 and an optional `db` parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

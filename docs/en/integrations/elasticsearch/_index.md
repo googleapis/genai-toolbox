@@ -35,6 +35,8 @@ for more information.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

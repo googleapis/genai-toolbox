@@ -21,6 +21,8 @@ description: >
 
 The tool inherits the `project` and `location` from the source configuration.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

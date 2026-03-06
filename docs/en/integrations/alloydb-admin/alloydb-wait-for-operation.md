@@ -22,6 +22,8 @@ and shouldn't be used for production agents.
 {{< /notice >}}
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -21,6 +21,8 @@ Looker data.
    answer the question. The form of the entry is `[{"model": "model name",
    "explore": "explore name"}, ...]`
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

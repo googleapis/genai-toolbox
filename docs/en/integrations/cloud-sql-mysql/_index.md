@@ -20,6 +20,8 @@ to a database by following these instructions][csql-mysql-quickstart].
 [csql-mysql-docs]: https://cloud.google.com/sql/docs/mysql
 [csql-mysql-quickstart]: https://cloud.google.com/sql/docs/mysql/connect-instance-local-computer
 
+## Available Tools
+
 {{< list-tools dirs="/integrations/mysql" >}}
 
 

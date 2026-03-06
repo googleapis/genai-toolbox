@@ -20,6 +20,8 @@ the form of placeholders `?`.
     https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

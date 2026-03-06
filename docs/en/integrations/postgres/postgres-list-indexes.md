@@ -20,6 +20,8 @@ takes the following input parameters:
 - `only_unused` (optional): If true, returns indexes that have never been used.
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 ## Example

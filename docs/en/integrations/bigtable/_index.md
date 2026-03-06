@@ -32,6 +32,8 @@ such as avoiding full table scans or complex filters.
 [bigtable-googlesql]:
     https://cloud.google.com/bigtable/docs/googlesql-overview
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

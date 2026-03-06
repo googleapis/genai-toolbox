@@ -16,6 +16,8 @@ for a given patient ID. It can be configured to only return certain resource
 types, or only resources that have been updated after a given time.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

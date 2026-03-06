@@ -16,6 +16,8 @@ databases accessible to the configured user, making it useful for database
 discovery and exploration tasks.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

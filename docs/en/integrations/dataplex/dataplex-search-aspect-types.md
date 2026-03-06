@@ -20,6 +20,8 @@ aspect types based on search query.
   (default), last_modified_timestamp, last_modified_timestamp asc.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Requirements

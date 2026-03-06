@@ -15,6 +15,8 @@ healthcare dataset.
 stores in the dataset of the healthcare source. It takes no extra parameters.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

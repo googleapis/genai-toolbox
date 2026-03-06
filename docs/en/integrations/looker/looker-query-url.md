@@ -23,6 +23,8 @@ Looker so the query can be investigated further.
 8. an optional `tz`
 9. an optional `vis_config`
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -21,6 +21,8 @@ the [official Valkey website](https://valkey.io/topics/quickstart/).
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

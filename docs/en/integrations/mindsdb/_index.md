@@ -43,6 +43,8 @@ on ML and unstructured data.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Supported Datasources

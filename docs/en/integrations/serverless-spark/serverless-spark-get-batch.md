@@ -19,6 +19,8 @@ Serverless Spark batch job.
 The tool gets the `project` and `location` from the source configuration.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

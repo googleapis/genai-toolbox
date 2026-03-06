@@ -14,6 +14,8 @@ The `cloud-monitoring-query-prometheus` tool allows you to query all metrics
 available in Google Cloud Monitoring using the Prometheus Query Language
 (PromQL).
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Prerequisites

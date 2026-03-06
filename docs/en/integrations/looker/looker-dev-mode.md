@@ -14,6 +14,8 @@ A `looker-dev-mode` tool changes the session into and out of dev mode.
 `looker-dev-mode` accepts a boolean parameter, true to enter dev mode and false
 to exit dev mode.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

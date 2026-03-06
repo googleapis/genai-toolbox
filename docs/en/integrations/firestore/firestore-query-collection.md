@@ -11,6 +11,8 @@ description: >
 The `firestore-query-collection` tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Configuration

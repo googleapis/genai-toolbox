@@ -15,6 +15,7 @@ database.
 `mysql-get-query-plan` takes one input parameter `sql_statement` and gets the execution plan for the SQL
 statement against the `source`.
 
+## Compatible Sources
 
 {{< compatible-sources others="integrations/cloud-sql-mysql">}}
 

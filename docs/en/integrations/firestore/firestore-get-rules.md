@@ -15,6 +15,8 @@ current project.
 `firestore-get-rules` takes no input parameters and returns the security rules
 content along with metadata such as the ruleset name, and timestamps.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

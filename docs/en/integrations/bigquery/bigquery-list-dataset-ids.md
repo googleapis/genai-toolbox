@@ -24,6 +24,8 @@ The tool's behavior regarding this parameter is influenced by the
   pre-configured list of dataset IDs from the source, and the `project`
   parameter is ignored.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

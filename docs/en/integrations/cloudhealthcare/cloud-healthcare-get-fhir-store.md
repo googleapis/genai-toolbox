@@ -13,6 +13,8 @@ A `cloud-healthcare-get-fhir-store` tool retrieves information about a FHIR stor
 
 `cloud-healthcare-get-fhir-store` returns the details of a FHIR store.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -28,6 +28,8 @@ statement against the `source`. This tool enables you to:
 - **API Translation**: Automatically translate SQL queries into REST APIs,
   GraphQL, and native protocols
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example Queries

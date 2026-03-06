@@ -12,6 +12,8 @@ description: >
 A `spanner-sql` tool executes a pre-defined SQL statement (either `googlesql` or
 `postgresql`) against a Cloud Spanner database.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ### GoogleSQL

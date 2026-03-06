@@ -21,6 +21,8 @@ instance. The `action` parameter selects the type of analysis to perform:
   classified as **Unused** is determined by whether a field has been used as a
   field or filter within the past 90 days in production.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Parameters

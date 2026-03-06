@@ -11,6 +11,8 @@ long-running Cloud SQL operation to complete. It does this by polling the Cloud
 SQL Admin API operation status endpoint until the operation is finished, using
 exponential backoff.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

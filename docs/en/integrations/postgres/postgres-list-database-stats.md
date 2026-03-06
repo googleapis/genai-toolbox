@@ -20,6 +20,8 @@ takes the following input parameters:
 - `order_by` (optional): Specifies the sorting order. Valid values are `'size'` (descending) or `'commit'` (descending). Default: `database_name` ascending.
 - `limit` (optional): The maximum number of databases to return. Default: `10`
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 ## Example

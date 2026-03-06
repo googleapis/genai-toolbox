@@ -20,6 +20,8 @@ capabilities for monitoring and debugging purposes.
 > human-in-the-loop and shouldn't be used for production agents.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

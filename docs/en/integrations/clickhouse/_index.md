@@ -13,6 +13,8 @@ no_list: true
 
 [clickhouse-docs]: https://clickhouse.com/docs
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

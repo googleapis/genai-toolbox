@@ -19,6 +19,8 @@ statement against the `source`.
 > human-in-the-loop and shouldn't be used for production agents.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

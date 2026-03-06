@@ -21,6 +21,8 @@ Authentication can be handled in two ways:
     expect an OAuth 2.0 access token to be provided by the client (e.g., a web
     browser) for each request.
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

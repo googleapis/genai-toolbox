@@ -12,6 +12,8 @@ The `firestore-validate-rules` tool validates Firestore security rules syntax
 and semantic correctness without deploying them. It provides detailed error
 reporting with source positions and code snippets.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Configuration

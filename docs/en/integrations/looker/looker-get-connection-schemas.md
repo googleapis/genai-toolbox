@@ -13,6 +13,8 @@ A `looker-get-connection-schemas` tool returns all the schemas in a connection.
 
 `looker-get-connection-schemas` accepts a `conn` parameter and an optional `db` parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

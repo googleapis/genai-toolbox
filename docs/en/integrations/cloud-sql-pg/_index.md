@@ -21,6 +21,8 @@ to a database by following these instructions][csql-pg-quickstart].
 [csql-pg-quickstart]:
     https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
+## Available Tools
+
 {{< list-tools dirs="/integrations/postgres" >}}
 
 ### Pre-built Configurations

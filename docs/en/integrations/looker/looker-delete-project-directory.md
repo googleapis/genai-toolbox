@@ -10,6 +10,8 @@ description: >
 
 A `looker-delete-project-directory` tool deletes a directory from a specified LookML project.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

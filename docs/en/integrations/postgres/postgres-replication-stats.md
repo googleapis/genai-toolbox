@@ -12,6 +12,8 @@ The `postgres-replication-stats` tool queries pg_stat_replication to surface the
 
 This tool takes no parameters. It returns a JSON array; each element represents a replication connection on the primary and includes lag metrics formatted by pg_size_pretty.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

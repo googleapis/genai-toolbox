@@ -21,6 +21,8 @@ the following input parameters:
 - `column_name` (optional): The column name for which the cardinality is to be found.
   If not provided, cardinality for all columns will be returned. Default: `""`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 ## Example

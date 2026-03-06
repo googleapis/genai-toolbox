@@ -16,6 +16,8 @@ and other HTTP-accessible resources.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

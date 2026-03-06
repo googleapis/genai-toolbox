@@ -13,6 +13,8 @@ A `looker-create-project-file` tool creates a new LookML file in a project
 `looker-create-project-file` accepts a project_id parameter and a file_path parameter
 as well as the file content.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

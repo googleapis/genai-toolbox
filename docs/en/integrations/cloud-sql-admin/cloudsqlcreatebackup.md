@@ -7,6 +7,8 @@ description: "Creates a backup on a Cloud SQL instance."
 
 The `cloud-sql-create-backup` tool creates an on-demand backup on a Cloud SQL instance using the Cloud SQL Admin API.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Examples

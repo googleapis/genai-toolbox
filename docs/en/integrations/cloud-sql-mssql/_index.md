@@ -20,6 +20,8 @@ to a database by following these instructions][csql-mssql-connect].
 [csql-mssql-docs]: https://cloud.google.com/sql/docs/sqlserver
 [csql-mssql-connect]: https://cloud.google.com/sql/docs/sqlserver/connect-overview
 
+## Available Tools
+
 {{< list-tools dirs="/integrations/mssql" >}}
 
 

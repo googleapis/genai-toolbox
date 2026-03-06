@@ -16,6 +16,8 @@ extensions available for installation on a Postgres database.
 for installation (extension name, default version description) as JSON. The does
 not support any input parameter.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
 

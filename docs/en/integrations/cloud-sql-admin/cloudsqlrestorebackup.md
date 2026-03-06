@@ -7,6 +7,8 @@ description: "Restores a backup of a Cloud SQL instance."
 
 The `cloud-sql-restore-backup` tool restores a backup on a Cloud SQL instance using the Cloud SQL Admin API.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Examples

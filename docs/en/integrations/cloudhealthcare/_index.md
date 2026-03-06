@@ -36,6 +36,8 @@ If you are new to the Cloud Healthcare API, you can try to
 [healthcare-quickstart-curl]:
     https://cloud.google.com/healthcare-api/docs/store-healthcare-data-rest
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

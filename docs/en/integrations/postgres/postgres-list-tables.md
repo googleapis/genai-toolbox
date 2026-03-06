@@ -21,6 +21,8 @@ constraints, indexes, triggers, owner, comment) as JSON for user-created tables
  table names, `detailed` will return the full table information. Default:
  `detailed`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

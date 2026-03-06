@@ -15,6 +15,8 @@ vacuum to perform:
 - `models`: Identifies unused explores within a model.
 - `explores`: Identifies unused joins and fields within an explore.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Parameters

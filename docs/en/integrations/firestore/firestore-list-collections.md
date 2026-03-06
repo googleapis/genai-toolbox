@@ -18,6 +18,8 @@ of a specific document.
 a document path. If provided, it lists all subcollections of that document. If
 not provided, it lists all root-level collections in the database.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

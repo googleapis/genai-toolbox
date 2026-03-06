@@ -12,6 +12,8 @@ A `looker-get-project-file` tool returns the contents of a LookML file.
 
 `looker-get-project-file` accepts a project_id parameter and a file_path parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

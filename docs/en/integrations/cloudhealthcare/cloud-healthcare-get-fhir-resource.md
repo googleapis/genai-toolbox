@@ -16,6 +16,8 @@ from a FHIR store.
 by its type and ID.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -16,6 +16,8 @@ CRITICAL ORDER OF OPERATIONS:
 2. Add any dashboard-level filters using `add_dashboard_filter`.
 3. Then, add elements (tiles) using this tool.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -19,6 +19,8 @@ This tool is read-only and executes pre-defined SQL queries against the
 the database dialect from the source configuration and uses the appropriate SQL
 syntax.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Features

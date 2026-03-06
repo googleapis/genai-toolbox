@@ -17,6 +17,8 @@ in the cloud, on GCP, or on premises.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

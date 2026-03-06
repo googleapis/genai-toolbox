@@ -37,6 +37,8 @@ avoiding full table scans or complex filters.
 [bigquery-googlesql]:
     https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
+## Available Tools
+
 {{< list-tools >}}
 
 ### Pre-built Configurations

@@ -15,6 +15,8 @@ DICOM instance from a DICOM store.
 string of the image in JPEG format.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

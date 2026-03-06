@@ -22,6 +22,8 @@ parameters:
 | `location` | string | The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all locations. Default: `-`. | No       |
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

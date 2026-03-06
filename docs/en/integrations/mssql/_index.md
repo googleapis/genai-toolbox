@@ -17,6 +17,8 @@ amount of data through a structured format.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements

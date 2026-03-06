@@ -20,6 +20,8 @@ array of documents produced by the final stage of the pipeline.
 A `readOnly` flag can be set to `true` as a safety measure to ensure the
 pipeline does not contain any write stages (like `$out` or `$merge`).
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

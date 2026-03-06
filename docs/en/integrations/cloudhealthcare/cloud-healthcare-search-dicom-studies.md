@@ -14,6 +14,8 @@ set of criteria.
 `cloud-healthcare-search-dicom-studies` returns a list of DICOM studies that match the given criteria.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

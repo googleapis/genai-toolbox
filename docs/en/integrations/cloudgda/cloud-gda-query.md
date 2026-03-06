@@ -14,6 +14,8 @@ The `cloud-gemini-data-analytics-query` tool allows you to send natural language
 > Only `alloydb`, `spannerReference`, and `cloudSqlReference` are supported as [datasource references](https://clouddocs.devsite.corp.google.com/gemini/docs/conversational-analytics-api/reference/rest/v1beta/projects.locations.dataAgents#DatasourceReferences).
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

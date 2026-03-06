@@ -15,6 +15,8 @@ The tool returns the total count of documents that were deleted. If the filter
 does not match any documents (i.e., the deleted count is 0), the tool will
 return an error.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ---

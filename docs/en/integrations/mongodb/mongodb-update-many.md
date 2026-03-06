@@ -15,6 +15,8 @@ MongoDB collection that match a given filter. It locates the documents using a
 The tool returns an array of three integers: `[ModifiedCount, UpsertedCount,
 MatchedCount]`.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ---

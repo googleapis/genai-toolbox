@@ -23,6 +23,8 @@ applying artificial intelligence and machine learning.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

@@ -12,6 +12,8 @@ Firestore collection. It supports all Firestore data types using Firestore's
 native JSON format. The tool automatically generates a unique document ID for
 each new document.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Parameters

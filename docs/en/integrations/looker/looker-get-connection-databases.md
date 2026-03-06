@@ -13,6 +13,8 @@ A `looker-get-connection-databases` tool returns all the databases in a connecti
 
 `looker-get-connection-databases` accepts a `conn` parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -25,6 +25,7 @@ The tool takes the following input parameters:
 | `table_names`   | string | Filters by a comma-separated list of names. By default, it lists all tables in user schemas. Default: `""`                                                     | No       |
 | `output_format` | string | Indicate the output format of table schema. `simple` will return only the table names, `detailed` will return the full table information. Default: `detailed`. | No       |
 
+## Compatible Sources
 
 {{< compatible-sources others="integrations/cloud-sql-mysql">}}
 

@@ -9,6 +9,8 @@ description: >
 The `cloud-sql-create-database` tool creates a new database in a specified Cloud
 SQL instance.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

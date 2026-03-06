@@ -18,6 +18,8 @@ This tool is useful for:
 - Documentation and analysis
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

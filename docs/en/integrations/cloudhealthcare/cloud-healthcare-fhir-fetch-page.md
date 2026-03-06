@@ -17,6 +17,8 @@ tool call (like `cloud-healthcare-fhir-patient-search` or
 response bundle.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

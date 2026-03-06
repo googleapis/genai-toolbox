@@ -8,6 +8,8 @@ description: Create a Cloud SQL for PostgreSQL instance.
 The `cloud-sql-postgres-create-instance` tool creates a Cloud SQL for PostgreSQL
 instance using the Cloud SQL Admin API.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

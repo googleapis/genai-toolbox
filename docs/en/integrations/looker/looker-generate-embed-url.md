@@ -23,6 +23,8 @@ It's recommended to use other tools from the Looker MCP toolbox with this tool
 to do things like fetch dashboard id's, generate a query, etc that can be
 supplied to this tool.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

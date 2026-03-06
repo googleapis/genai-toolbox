@@ -12,6 +12,8 @@ A `looker-get-projects` tool returns all the projects in the source.
 
 `looker-get-projects` accepts no parameters.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

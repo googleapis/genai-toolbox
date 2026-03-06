@@ -9,6 +9,8 @@ The `postgres-upgrade-precheck` tool initiates a pre-check on a Cloud SQL for Po
 instance to assess its readiness for a major version upgrade using the Cloud SQL Admin API.
 It helps identify potential incompatibilities or issues before starting the actual upgrade process.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Tool Inputs

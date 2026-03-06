@@ -9,6 +9,8 @@ description: >
 The `cloud-sql-create-users` tool creates a new user in a specified Cloud SQL
 instance. It can create both built-in and IAM users.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

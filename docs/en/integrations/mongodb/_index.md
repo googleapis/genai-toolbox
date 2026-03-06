@@ -16,6 +16,8 @@ flexible, JSON-like documents, making it easy to develop and scale applications.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Example

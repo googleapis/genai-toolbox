@@ -13,6 +13,8 @@ The `postgres-list-stored-procedure` tool queries PostgreSQL system catalogs (`p
 
 The tool returns a JSON array where each element represents a stored procedure with its schema, name, owner, language, complete definition, and optional description. Results are sorted by schema name and procedure name, with a default limit of 20 procedures.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Parameters

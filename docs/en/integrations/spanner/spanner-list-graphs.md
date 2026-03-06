@@ -20,6 +20,8 @@ The tool only works for the GoogleSQL
 source dialect, as Spanner Graph isn't available in the PostgreSQL dialect.
 {{< /notice >}}
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Features

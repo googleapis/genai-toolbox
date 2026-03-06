@@ -17,6 +17,8 @@ See the [official
 documentation](https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started)
 for more information.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -20,6 +20,8 @@ location. The tool takes the following input parameters:
 | `location` | string | The location to list clusters in (e.g., 'us-central1'). Use `-` for all locations. Default: `-`. | No       |
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -13,6 +13,8 @@ A `looker-get-connection-table-columns` tool returns all the columnes for each t
 
 `looker-get-connection-table-columns` accepts a `conn` parameter, a `schema` parameter, a `tables` parameter with a comma separated list of tables, and an optional `db` parameter.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

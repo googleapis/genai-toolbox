@@ -20,6 +20,8 @@ prepared statement.
 
 [fb-prepare]: https://firebirdsql.org/refdocs/langrefupd25-psql-execstat.html
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

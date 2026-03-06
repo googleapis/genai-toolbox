@@ -56,6 +56,8 @@ the `bigquery` source:
     and rejects it if it accesses any table outside the allowed list.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

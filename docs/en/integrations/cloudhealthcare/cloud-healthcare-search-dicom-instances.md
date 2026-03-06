@@ -15,6 +15,8 @@ a DICOM store based on a set of criteria.
 criteria.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

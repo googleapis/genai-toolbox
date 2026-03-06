@@ -16,6 +16,8 @@ takes the following input parameters:
 - `setting_name` (optional): A text to filter results by setting name. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

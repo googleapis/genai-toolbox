@@ -11,6 +11,8 @@ description: >
 The `cloud-logging-admin-query-logs` tool allows you to query log entries from Google Cloud Logging using the advanced logs filter syntax.
 
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

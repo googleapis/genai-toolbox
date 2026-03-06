@@ -22,6 +22,8 @@ tool takes the following input parameters:
   used within a LIKE clause. Default: `""`
 - `limit` (optional): The maximum number of triggers to return. Default: `50`
 
+## Compatible Sources
+
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example

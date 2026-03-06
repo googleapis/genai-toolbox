@@ -13,6 +13,8 @@ A `looker-get-connections` tool returns all the connections in the source.
 
 `looker-get-connections` accepts no parameters.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

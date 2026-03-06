@@ -27,6 +27,8 @@ The return type is an array of maps, each map is formatted like:
 }
 ```
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

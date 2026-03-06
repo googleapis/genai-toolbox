@@ -10,6 +10,8 @@ description: >
 
 The `cloud-logging-admin-list-log-names` tool lists the log names available in the Google Cloud project.
 
+## Compatible Sources
+
 {{< compatible-sources >}}
 
 ## Example

@@ -18,6 +18,8 @@ DW) database workloads.
 
 
 
+## Available Tools
+
 {{< list-tools >}}
 
 ## Requirements
