@@ -73,8 +73,8 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy downloaded-artifact/public --project-name toolbox-docs --branch pr-${{ steps.get_pr.outputs.pr_number }}
 
-      - name: Comment PR Link
-        uses: marocchino/sticky-pull-request-comment@v2
+      - name: Comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
             const prNumber = parseInt('${{ steps.get_pr.outputs.pr_number }}', 10);
