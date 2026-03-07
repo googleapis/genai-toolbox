@@ -128,7 +128,7 @@ description: hello tool
 	}
 
 	// Check assets
-	assetPath := filepath.Join(skillPath, "assets", "hello-sqlite.yaml")
+	assetPath := filepath.Join(skillPath, "assets", "tools.yaml")
 	if _, err := os.Stat(assetPath); os.IsNotExist(err) {
 		t.Fatalf("asset file not created: %s", assetPath)
 	}
