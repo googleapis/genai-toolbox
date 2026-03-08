@@ -52,8 +52,26 @@ type ParamValues []ParamValue
 
 // ParamValue represents the parameter's name and value.
 type ParamValue struct {
-	Name  string
-	Value any
+	Name     string
+	Value    any
+	IsSecure bool
+}
+
+func (pv ParamValue) String() string {
+	return fmt.Sprintf("{%s: %v, secure: %v}", pv.Name, pv.Value, pv.IsSecure)
+}
+
+func (p ParamValues) String() string {
+	var sb strings.Builder
+	sb.WriteString("[")
+	for i, v := range p {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(v.String())
+	}
+	sb.WriteString("]")
+	return sb.String()
 }
 
 // AsSlice returns a slice of the Param's values (in order).
@@ -66,11 +84,24 @@ func (p ParamValues) AsSlice() []any {
 	return params
 }
 
-// AsMap returns a map of ParamValue's names to values.
+// AsMap returns a map of non-secure ParamValue's names to values.
 func (p ParamValues) AsMap() map[string]interface{} {
 	params := make(map[string]interface{})
 	for _, p := range p {
-		params[p.Name] = p.Value
+		if !p.IsSecure {
+			params[p.Name] = p.Value
+		}
+	}
+	return params
+}
+
+// AsSecureMap returns a map of secure ParamValue's names to values.
+func (p ParamValues) AsSecureMap() map[string]interface{} {
+	params := make(map[string]interface{})
+	for _, p := range p {
+		if p.IsSecure {
+			params[p.Name] = p.Value
+		}
 	}
 	return params
 }
@@ -129,21 +160,35 @@ func CheckParamRequired(required bool, defaultV any) bool {
 
 // ParseParams is a helper function for parsing Parameters from an arbitraryJSON object.
 func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
-	params := make([]ParamValue, 0, len(ps))
+	return ParseParamsWithSecure(ps, data, nil, claimsMap)
+}
+
+// ParseParamsWithSecure is a helper function for parsing regular and secure Parameters separately.
+func ParseParamsWithSecure(ps Parameters, data map[string]any, secureData map[string]any, claimsMap map[string]map[string]any) (ParamValues, error) {
+	params := make(ParamValues, 0, len(ps))
 	for _, p := range ps {
 		var v, newV any
 		var err error
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
+		isSecure := p.IsSecureParameter()
+
+		dataSource := data
+		if isSecure {
+			dataSource = secureData
+		}
 
 		sourceParamName := p.GetValueFromParam()
 		if sourceParamName != "" {
-			v = data[sourceParamName]
-
+			if dataSource != nil {
+				v = dataSource[sourceParamName]
+			}
 		} else if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter
 			var ok bool
-			v, ok = data[name]
+			if dataSource != nil {
+				v, ok = dataSource[name]
+			}
 			if !ok || v == nil {
 				v = p.GetDefault()
 				// if the parameter is required and no value given, throw an error
@@ -164,7 +209,7 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 				return nil, util.NewAgentError(fmt.Sprintf("unable to parse value for %q", name), err)
 			}
 		}
-		params = append(params, ParamValue{Name: name, Value: newV})
+		params = append(params, ParamValue{Name: name, Value: newV, IsSecure: isSecure})
 	}
 	return params, nil
 }
@@ -328,6 +373,7 @@ type Parameter interface {
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
+	IsSecureParameter() bool
 }
 
 // McpToolsSchema is the representation of input schema for McpManifest.
@@ -486,11 +532,9 @@ func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 	authParam := make(map[string][]string)
 
 	for _, p := range ps {
-		// If the parameter is sourced from another param, skip it in the MCP manifest
-		if p.GetValueFromParam() != "" {
+		if p.IsSecureParameter() || p.GetValueFromParam() != "" {
 			continue
 		}
-
 		name := p.GetName()
 		paramManifest, authParamList := p.McpManifest()
 		defaultV := p.GetDefault()
@@ -511,6 +555,28 @@ func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 		Properties: properties,
 		Required:   required,
 	}, authParam
+}
+
+func (ps Parameters) McpStateSchema() McpToolsSchema {
+	properties := make(map[string]ParameterMcpManifest)
+	required := make([]string, 0)
+
+	for _, p := range ps {
+		if !p.IsSecureParameter() {
+			continue
+		}
+		name := p.GetName()
+		paramManifest, _ := p.McpManifest()
+		properties[name] = paramManifest
+		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
+			required = append(required, name)
+		}
+	}
+	return McpToolsSchema{
+		Type:       "object",
+		Properties: properties,
+		Required:   required,
+	}
 }
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
@@ -548,6 +614,11 @@ type CommonParameter struct {
 	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	EmbeddedBy     string             `yaml:"embeddedBy"`
 	ValueFromParam string             `yaml:"valueFromParam"`
+	Secure         bool               `yaml:"secure"`
+}
+
+func (p *CommonParameter) IsSecureParameter() bool {
+	return p.Secure
 }
 
 // GetName returns the name specified for the Parameter.

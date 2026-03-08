@@ -153,6 +153,7 @@ type McpManifest struct {
 
 func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *ToolAnnotations) McpManifest {
 	inputSchema, authParams := params.McpManifest()
+	stateSchema := params.McpStateSchema()
 	mcpManifest := McpManifest{
 		Name:        name,
 		Description: desc,
@@ -162,6 +163,9 @@ func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Pa
 
 	// construct metadata, if applicable
 	metadata := make(map[string]any)
+	if len(stateSchema.Properties) > 0 {
+		metadata["toolbox/stateSchema"] = stateSchema
+	}
 	if len(authInvoke) > 0 {
 		metadata["toolbox/authInvoke"] = authInvoke
 	}
@@ -190,6 +194,9 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 
 func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
 	var zero T
+	if resourceMgr == nil {
+		return zero, fmt.Errorf("resource manager is nil")
+	}
 	s, ok := resourceMgr.GetSource(sourceName)
 	if !ok {
 		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)

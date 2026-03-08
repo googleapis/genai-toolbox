@@ -1885,7 +1885,7 @@ func TestMcpManifest(t *testing.T) {
 				Required: []string{"foo-string2", "foo-string3-auth", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any"},
 			},
 			wantAuthParam: map[string][]string{
-				"foo-string3-auth": []string{"my-google-auth-service", "other-auth-service"},
+				"foo-string3-auth": {"my-google-auth-service", "other-auth-service"},
 			},
 		},
 	}
@@ -2364,5 +2364,39 @@ func TestCheckParamRequired(t *testing.T) {
 				t.Fatalf("got %v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestSecureMcpManifest(t *testing.T) {
+	p1 := parameters.NewStringParameter("p1", "standard param")
+	p2 := parameters.NewStringParameter("p2", "secure param")
+	p2.Secure = true
+
+	params := parameters.Parameters{p1, p2}
+
+	// 1. Check standard McpManifest (should only contain p1 in inputSchema)
+	gotSchema, _ := params.McpManifest()
+	wantSchema := parameters.McpToolsSchema{
+		Type: "object",
+		Properties: map[string]parameters.ParameterMcpManifest{
+			"p1": {Type: "string", Description: "standard param"},
+		},
+		Required: []string{"p1"},
+	}
+	if diff := cmp.Diff(wantSchema, gotSchema); diff != "" {
+		t.Errorf("McpManifest() (input) mismatch (-want +got):\n%s", diff)
+	}
+
+	// 2. Check stateSchema (should only contain p2)
+	gotStateSchema := params.McpStateSchema()
+	wantStateSchema := parameters.McpToolsSchema{
+		Type: "object",
+		Properties: map[string]parameters.ParameterMcpManifest{
+			"p2": {Type: "string", Description: "secure param"},
+		},
+		Required: []string{"p2"},
+	}
+	if diff := cmp.Diff(wantStateSchema, gotStateSchema); diff != "" {
+		t.Errorf("McpStateSchema() (state) mismatch (-want +got):\n%s", diff)
 	}
 }

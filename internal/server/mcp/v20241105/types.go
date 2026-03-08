@@ -80,6 +80,7 @@ type CallToolRequest struct {
 	Params struct {
 		Name      string         `json:"name"`
 		Arguments map[string]any `json:"arguments,omitempty"`
+		Meta      map[string]any `json:"_meta,omitempty"`
 	} `json:"params,omitempty"`
 }
 
@@ -159,6 +160,7 @@ type GetPromptRequest struct {
 	Params struct {
 		Name      string         `json:"name"`
 		Arguments map[string]any `json:"arguments,omitempty"`
+		Meta      map[string]any `json:"_meta,omitempty"`
 	} `json:"params"`
 }
 

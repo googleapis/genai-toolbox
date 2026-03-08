@@ -31,6 +31,7 @@ import (
 	database "cloud.google.com/go/spanner/admin/database/apiv1"
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -169,6 +170,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	toolsFile = addTemplateParamConfig(t, toolsFile)
 	toolsFile = addSpannerListTablesConfig(t, toolsFile)
 	toolsFile = addSpannerListGraphsConfig(t, toolsFile)
+	toolsFile = addSpannerSecureConfig(t, toolsFile, tableNameParam)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -213,6 +215,122 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runSpannerListTablesTest(t, tableNameParam, tableNameAuth, tableNameTemplateParam)
 	runSpannerListGraphsTest(t, graphName)
+	runSpannerSecureToolTest(t, tableNameParam)
+}
+
+func addSpannerSecureConfig(t *testing.T, config map[string]any, tableName string) map[string]any {
+	toolsMap, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	toolsMap["secure-query-tool"] = map[string]any{
+		"kind":        "spanner-sql",
+		"source":      "my-instance",
+		"description": "Tool with secure parameters",
+		"statement":   fmt.Sprintf("SELECT name FROM %s WHERE id = @id AND name = @token_name", tableName),
+		"parameters": []map[string]any{
+			{"name": "id", "type": "integer", "description": "user id"},
+			{"name": "token_name", "type": "string", "description": "secure token name", "secure": true},
+		},
+	}
+	config["tools"] = toolsMap
+	return config
+}
+
+func runSpannerSecureToolTest(t *testing.T, tableName string) {
+	sessionId := tests.RunInitialize(t, "2024-11-05")
+	header := map[string]string{}
+	if sessionId != "" {
+		header["Mcp-Session-Id"] = sessionId
+	}
+
+	// 1. Verify tools/list: secure-query-tool should have id in inputSchema, but token_name in _meta
+	listReq := jsonrpc.JSONRPCRequest{
+		Jsonrpc: "2.0",
+		Id:      "list",
+		Request: jsonrpc.Request{Method: "tools/list"},
+	}
+	reqMarshal, _ := json.Marshal(listReq)
+	resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqMarshal), header)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("tools/list failed: %s", respBody)
+	}
+
+	var listResp struct {
+		Result struct {
+			Tools []struct {
+				Name        string `json:"name"`
+				InputSchema struct {
+					Properties map[string]any `json:"properties"`
+				} `json:"inputSchema"`
+				Meta map[string]any `json:"_meta"`
+			} `json:"tools"`
+		} `json:"result"`
+	}
+	json.Unmarshal(respBody, &listResp)
+
+	var found bool
+	for _, tool := range listResp.Result.Tools {
+		if tool.Name == "secure-query-tool" {
+			found = true
+			if _, ok := tool.InputSchema.Properties["id"]; !ok {
+				t.Errorf("secure-query-tool missing 'id' in inputSchema")
+			}
+			if _, ok := tool.InputSchema.Properties["token_name"]; ok {
+				t.Errorf("secure-query-tool should NOT have 'token_name' in inputSchema")
+			}
+			meta, ok := tool.Meta["toolbox/stateSchema"].(map[string]any)
+			if !ok {
+				t.Errorf("secure-query-tool missing 'toolbox/stateSchema' in _meta")
+			} else {
+				props := meta["properties"].(map[string]any)
+				if _, ok := props["token_name"]; !ok {
+					t.Errorf("secure-query-tool _meta.toolbox/stateSchema missing 'token_name'")
+				}
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("secure-query-tool not found in tools/list")
+	}
+
+	// 2. Verify tools/call: pass token_name in _meta
+	callReq := jsonrpc.JSONRPCRequest{
+		Jsonrpc: "2.0",
+		Id:      "call",
+		Request: jsonrpc.Request{Method: "tools/call"},
+		Params: map[string]any{
+			"name": "secure-query-tool",
+			"arguments": map[string]any{
+				"id": 1,
+			},
+			"_meta": map[string]any{
+				"toolbox/state": map[string]any{
+					"token_name": "Alice", // Using 'Alice' as the token value to match the name in DB for row 1
+				},
+			},
+		},
+	}
+	reqMarshal, _ = json.Marshal(callReq)
+	resp, respBody = tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqMarshal), header)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("tools/call failed: %s", respBody)
+	}
+
+	var callResp struct {
+		Result struct {
+			Content []struct {
+				Text string `json:"text"`
+			} `json:"content"`
+		} `json:"result"`
+	}
+	json.Unmarshal(respBody, &callResp)
+	if len(callResp.Result.Content) == 0 {
+		t.Fatalf("tools/call returned empty content: %s", respBody)
+	}
+	if !strings.Contains(callResp.Result.Content[0].Text, "Alice") {
+		t.Errorf("expected 'Alice' in response, got: %s", callResp.Result.Content[0].Text)
+	}
 }
 
 // getSpannerToolInfo returns statements and param for my-tool for spanner-sql type

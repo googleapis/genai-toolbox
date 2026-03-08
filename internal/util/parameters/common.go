@@ -109,15 +109,24 @@ func PopulateTemplateWithFunc(templateName, templateString string, data map[stri
 	return result.String(), nil
 }
 
-// CheckDuplicateParameters verify there are no duplicate parameter names
+// CheckDuplicateParameters verify there are no duplicate parameter names.
+// It allows a regular parameter and a secure parameter to have the same name.
 func CheckDuplicateParameters(ps Parameters) error {
-	seenNames := make(map[string]bool)
+	seenRegular := make(map[string]bool)
+	seenSecure := make(map[string]bool)
 	for _, p := range ps {
 		pName := p.GetName()
-		if _, exists := seenNames[pName]; exists {
-			return fmt.Errorf("parameter name must be unique across all parameter fields. Duplicate parameter: %s", pName)
+		if p.IsSecureParameter() {
+			if seenSecure[pName] {
+				return fmt.Errorf("duplicate secure parameter name: %s", pName)
+			}
+			seenSecure[pName] = true
+		} else {
+			if seenRegular[pName] {
+				return fmt.Errorf("duplicate parameter name: %s", pName)
+			}
+			seenRegular[pName] = true
 		}
-		seenNames[pName] = true
 	}
 	return nil
 }

@@ -149,11 +149,17 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 		err = fmt.Errorf("unable to marshal tools argument: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
-
 	var data map[string]any
 	if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
 		err = fmt.Errorf("unable to decode tools argument: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	var secureData map[string]any
+	if req.Params.Meta != nil {
+		if state, ok := req.Params.Meta["toolbox/state"].(map[string]any); ok {
+			secureData = state
+		}
 	}
 
 	// Tool authentication
@@ -196,7 +202,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
-	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
+	params, err := parameters.ParseParamsWithSecure(tool.GetParameters(), data, secureData, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
