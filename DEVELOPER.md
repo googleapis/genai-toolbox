@@ -41,7 +41,7 @@ Before you begin, ensure you have the following:
    to the endpoint:
 
     ```bash
-    curl http://127.0.0.1:5000
+    curl [http://127.0.0.1:5000](http://127.0.0.1:5000)
     ```
 
 ### Tool Naming Conventions
@@ -228,29 +228,6 @@ tools.
 * **(Optional) Add samples** to the `docs/en/build-with-mcp-toolbox/<newdb>` directory.
 
 * **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `user-guide`, etc.), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, you need to update the "Diátaxis Narrative Framework" preamble in both files so that the AI models understand the purpose of your new section.
-
-#### Integration Documentation Rules
-
-When generating or editing documentation for this repository, you must strictly adhere to the following CI-enforced rules. Failure to do so will break the build.
-
-##### Source Page Constraints (`integrations/**/_index.md`)
-
-1.  **Title Convention:** The YAML frontmatter `title` must always end with "Source" (e.g., `title: "Postgres Source"`).
-2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
-3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
-    *   `## About` (Required)
-    *   `## Available Tools` (Optional)
-    *   `## Requirements` (Optional)
-    *   `## Example` (Required)
-    *   `## Reference` (Required)
-    *   `## Advanced Usage` (Optional)
-    *   `## Troubleshooting` (Optional)
-    *   `## Additional Resources` (Optional)
-4.  **Shortcode Placement:** If you generate the `## Available Tools` section, you must include the `{{< list-tools >}}` shortcode beneath it.
-
-##### Asset Constraints (`docs/`)
-
-1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.
 
 #### Adding Prebuilt Tools
 

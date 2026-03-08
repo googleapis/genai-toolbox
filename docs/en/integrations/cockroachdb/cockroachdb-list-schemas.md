@@ -290,7 +290,8 @@ CockroachDB includes PostgreSQL-compatible system schemas plus CockroachDB-speci
 
 These are automatically filtered from the results.
 
-### User-Defined Flag
+#### System Schemas
+ User-Defined Flag
 
 The `is_user_defined` field helps distinguish:
 - `true`: User-created schemas
