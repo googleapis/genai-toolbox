@@ -1,5 +1,5 @@
 ---
-title: "looker-run-dashboard"
+title: "looker-run-dashboard Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "trino-execute-sql"
+title: "trino-execute-sql Tool"
 type: docs
 weight: 1
 description: >

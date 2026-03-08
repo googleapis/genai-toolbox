@@ -1,5 +1,5 @@
 ---
-title: "firestore-delete-documents"
+title: "firestore-delete-documents Tool"
 type: docs
 weight: 1
 description: >

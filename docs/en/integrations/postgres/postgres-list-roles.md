@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-roles"
+title: "postgres-list-roles Tool"
 type: docs
 weight: 1
 description: >

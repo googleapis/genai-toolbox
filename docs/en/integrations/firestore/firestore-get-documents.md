@@ -1,5 +1,5 @@
 ---
-title: "firestore-get-documents"
+title: "firestore-get-documents Tool"
 type: docs
 weight: 1
 description: >

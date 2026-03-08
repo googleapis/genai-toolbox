@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-stored-procedure"
+title: "postgres-list-stored-procedure Tool"
 type: docs
 weight: 1
 description: >
@@ -12,6 +12,15 @@ The `postgres-list-stored-procedure` tool queries PostgreSQL system catalogs (`p
 
 
 The tool returns a JSON array where each element represents a stored procedure with its schema, name, owner, language, complete definition, and optional description. Results are sorted by schema name and procedure name, with a default limit of 20 procedures.
+
+### Use Cases
+
+- **Code review and auditing**: Export procedure definitions for version control or compliance audits.
+- **Documentation generation**: Automatically extract procedure metadata and descriptions for documentation.
+- **Permission auditing**: Identify procedures owned by specific users or in specific schemas.
+- **Migration planning**: Retrieve all procedure definitions when planning database migrations.
+- **Dependency analysis**: Review procedure definitions to understand dependencies and call chains.
+- **Security assessment**: Audit which roles own and can modify stored procedures.
 
 ## Compatible Sources
 
@@ -103,7 +112,7 @@ description: "Retrieves stored procedure metadata including definitions and owne
 ]
 ```
 
-## Output Fields Reference
+## Output Format
 
 | field       | type    | description |
 |-------------|---------|-------------|
@@ -114,23 +123,16 @@ description: "Retrieves stored procedure metadata including definitions and owne
 | definition  | string  | Complete SQL definition of the stored procedure, including the CREATE PROCEDURE statement. |
 | description | string  | Optional description or comment for the procedure (may be null if no comment is set). |
 
-## Use Cases
+## Advanced Usage
 
-- **Code review and auditing**: Export procedure definitions for version control or compliance audits.
-- **Documentation generation**: Automatically extract procedure metadata and descriptions for documentation.
-- **Permission auditing**: Identify procedures owned by specific users or in specific schemas.
-- **Migration planning**: Retrieve all procedure definitions when planning database migrations.
-- **Dependency analysis**: Review procedure definitions to understand dependencies and call chains.
-- **Security assessment**: Audit which roles own and can modify stored procedures.
-
-## Performance Considerations
+### Performance Considerations
 
 - The tool filters at the database level using LIKE pattern matching, so partial matches are supported.
 - Procedure definitions can be large; consider using the `limit` parameter for large databases with many procedures.
 - Results are ordered by schema name and procedure name for consistent output.
 - The default limit of 20 procedures is suitable for most use cases; increase as needed.
 
-## Notes
+### Notes
 
 - Only stored **procedures** are returned; functions and other callable objects are excluded via the `prokind = 'p'` filter.
 - Filtering uses `LIKE` pattern matching, so filter values support partial matches (e.g., `role_name: "app"` will match "app_user", "app_admin", etc.).

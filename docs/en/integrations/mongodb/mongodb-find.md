@@ -1,5 +1,5 @@
 ---
-title: "mongodb-find"
+title: "mongodb-find Tool"
 type: docs
 weight: 1
 description: >

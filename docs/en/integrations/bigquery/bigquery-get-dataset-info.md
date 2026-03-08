@@ -1,5 +1,5 @@
 ---
-title: "bigquery-get-dataset-info"
+title: "bigquery-get-dataset-info Tool"
 type: docs
 weight: 1
 description: >

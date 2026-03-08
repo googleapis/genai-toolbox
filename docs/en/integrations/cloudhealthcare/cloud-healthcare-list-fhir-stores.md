@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-list-fhir-stores"
+title: "cloud-healthcare-list-fhir-stores Tool"
 type: docs
 weight: 1
 description: >

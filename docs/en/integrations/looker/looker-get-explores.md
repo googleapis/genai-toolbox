@@ -1,5 +1,5 @@
 ---
-title: "looker-get-explores"
+title: "looker-get-explores Tool"
 type: docs
 weight: 1
 description: >

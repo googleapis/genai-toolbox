@@ -1,5 +1,5 @@
 ---
-title: "looker-make-dashboard"
+title: "looker-make-dashboard Tool"
 type: docs
 weight: 1
 description: >

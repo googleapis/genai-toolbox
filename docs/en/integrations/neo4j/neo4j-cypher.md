@@ -1,5 +1,5 @@
 ---
-title: "neo4j-cypher"
+title: "neo4j-cypher Tool"
 type: docs
 weight: 1
 description: >

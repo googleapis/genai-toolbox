@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-fhir-patient-everything"
+title: "cloud-healthcare-fhir-patient-everything Tool"
 type: docs
 weight: 1
 description: >

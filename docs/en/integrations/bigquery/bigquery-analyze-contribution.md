@@ -1,5 +1,5 @@
 ---
-title: "bigquery-analyze-contribution"
+title: "bigquery-analyze-contribution Tool"
 type: docs
 weight: 1
 description: >
@@ -70,7 +70,17 @@ source: my-bigquery-source
 description: Use this tool to run contribution analysis on a dataset in BigQuery.
 ```
 
-## Sample Prompt
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "bigquery-analyze-contribution".           |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+## Advanced Usage
+
+### Sample Prompt
 
 You can prepare a sample table following
 https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights.
@@ -82,11 +92,3 @@ And use the following sample prompts to call this tool:
   `bqml_tutorial.iowa_liquor_sales_sum_data`. The test group is identified by
   the `is_test` column. The dimensions are `store_name`, `city`, `vendor_name`,
   `category_name` and `item_description`.
-
-## Reference
-
-| **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "bigquery-analyze-contribution".           |
-| source      |  string  |     true     | Name of the source the tool should execute on.     |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |

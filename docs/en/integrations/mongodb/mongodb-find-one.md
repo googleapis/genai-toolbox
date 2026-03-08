@@ -1,5 +1,5 @@
 ---
-title: "mongodb-find-one"
+title: "mongodb-find-one Tool"
 type: docs
 weight: 1
 description: >

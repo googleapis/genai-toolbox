@@ -1,5 +1,5 @@
 ---
-title: "firebird-execute-sql"
+title: "firebird-execute-sql Tool"
 type: docs
 weight: 1
 description: >

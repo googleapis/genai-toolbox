@@ -1,5 +1,5 @@
 ---
-title: "neo4j-schema"
+title: "neo4j-schema Tool"
 type: "docs"
 weight: 1
 description: > 

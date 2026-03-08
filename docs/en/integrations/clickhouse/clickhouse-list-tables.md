@@ -1,5 +1,5 @@
 ---
-title: "clickhouse-list-tables"
+title: "clickhouse-list-tables Tool"
 type: docs
 weight: 4
 description: >
@@ -20,6 +20,12 @@ user, making it useful for schema exploration and table discovery tasks.
 
 {{< compatible-sources >}}
 
+## Parameters
+
+| **parameter** | **type** | **required** | **description**                   |
+|---------------|:--------:|:------------:|-----------------------------------|
+| database      |  string  |     true     | The database to list tables from. |
+
 ## Example
 
 ```yaml
@@ -30,13 +36,7 @@ source: my-clickhouse-instance
 description: List all tables in a specific ClickHouse database
 ```
 
-## Parameters
-
-| **parameter** | **type** | **required** | **description**                   |
-|---------------|:--------:|:------------:|-----------------------------------|
-| database      |  string  |     true     | The database to list tables from. |
-
-## Return Value
+## Output Format
 
 The tool returns an array of objects, where each object contains:
 

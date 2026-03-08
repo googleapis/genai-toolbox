@@ -1,5 +1,5 @@
 ---
-title: "yugabytedb-sql"
+title: "yugabytedb-sql Tool"
 type: docs
 weight: 1
 description: > 

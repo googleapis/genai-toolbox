@@ -1,5 +1,5 @@
 ---
-title: "couchbase-sql"
+title: "couchbase-sql Tool"
 type: docs
 weight: 1
 description: >

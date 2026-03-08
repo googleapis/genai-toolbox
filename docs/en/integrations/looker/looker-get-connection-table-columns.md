@@ -1,5 +1,5 @@
 ---
-title: "looker-get-connection-table-columns"
+title: "looker-get-connection-table-columns Tool"
 type: docs
 weight: 1
 description: >

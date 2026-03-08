@@ -1,5 +1,5 @@
 ---
-title: "postgres-execute-sql"
+title: "postgres-execute-sql Tool"
 type: docs
 weight: 1
 description: >

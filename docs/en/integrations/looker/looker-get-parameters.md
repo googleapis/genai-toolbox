@@ -1,5 +1,5 @@
 ---
-title: "looker-get-parameters"
+title: "looker-get-parameters Tool"
 type: docs
 weight: 1
 description: >

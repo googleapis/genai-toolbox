@@ -1,5 +1,5 @@
 ---
-title: "looker-delete-project-file"
+title: "looker-delete-project-file Tool"
 type: docs
 weight: 1
 description: >

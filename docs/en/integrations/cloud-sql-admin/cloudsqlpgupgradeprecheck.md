@@ -1,9 +1,11 @@
 ---
-title: postgres-upgrade-precheck
+title: postgres-upgrade-precheck Tool
 type: docs
 weight: 11
 description: Perform a pre-check for a Cloud SQL for PostgreSQL major version upgrade.
 ---
+
+## About
 
 The `postgres-upgrade-precheck` tool initiates a pre-check on a Cloud SQL for PostgreSQL
 instance to assess its readiness for a major version upgrade using the Cloud SQL Admin API.
@@ -13,9 +15,7 @@ It helps identify potential incompatibilities or issues before starting the actu
 
 {{< compatible-sources >}}
 
-## Tool Inputs
-
-### Example
+## Example
 
 ```yaml
 kind: tools
@@ -25,7 +25,7 @@ source: cloud-sql-admin-source
 description: "Checks if a Cloud SQL PostgreSQL instance is ready for a major version upgrade to the specified target version."
 ```
 
-### Reference
+## Reference
 
 | **field**    | **type** | **required** | **description**                                           |
 | ------------ | :------: | :----------: | --------------------------------------------------------- |

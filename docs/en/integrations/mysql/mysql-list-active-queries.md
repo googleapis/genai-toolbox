@@ -1,5 +1,5 @@
 ---
-title: "mysql-list-active-queries"
+title: "mysql-list-active-queries Tool"
 type: docs
 weight: 1
 description: >

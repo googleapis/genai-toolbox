@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-available-extensions"
+title: "postgres-list-available-extensions Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "bigquery-list-dataset-ids"
+title: "bigquery-list-dataset-ids Tool"
 type: docs
 weight: 1
 description: >

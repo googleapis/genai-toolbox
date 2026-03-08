@@ -1,5 +1,5 @@
 ---
-title: "looker-get-dimensions"
+title: "looker-get-dimensions Tool"
 type: docs
 weight: 1
 description: >

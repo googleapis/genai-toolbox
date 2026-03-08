@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-views"
+title: "postgres-list-views Tool"
 type: docs
 weight: 1
 description: >

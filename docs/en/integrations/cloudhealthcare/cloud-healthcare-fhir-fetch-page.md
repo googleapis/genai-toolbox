@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-fhir-fetch-page"
+title: "cloud-healthcare-fhir-fetch-page Tool"
 type: docs
 weight: 1
 description: >

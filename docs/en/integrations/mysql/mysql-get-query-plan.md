@@ -1,5 +1,5 @@
 ---
-title: "mysql-get-query-plan"
+title: "mysql-get-query-plan Tool"
 type: docs
 weight: 1
 description: >

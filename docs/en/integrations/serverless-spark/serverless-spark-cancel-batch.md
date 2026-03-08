@@ -1,5 +1,5 @@
 ---
-title: "serverless-spark-cancel-batch"
+title: "serverless-spark-cancel-batch Tool"
 type: docs
 weight: 2
 description: >
@@ -35,7 +35,7 @@ source: my-serverless-spark-source
 description: Use this tool to cancel a running serverless spark batch operation.
 ```
 
-## Response Format
+## Output Format
 
 ```json
 "Cancelled [projects/my-project/regions/us-central1/operations/my-operation]."

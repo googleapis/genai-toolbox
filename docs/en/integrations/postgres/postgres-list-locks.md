@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-locks"
+title: "postgres-list-locks Tool"
 type: docs
 weight: 1
 description: >
@@ -16,7 +16,17 @@ This tool identifies all locks held by active processes showing the process ID, 
 
 {{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
 
-## Query
+## Example
+
+```yaml
+kind: tools
+name: list_locks
+type: postgres-list-locks
+source: postgres-source
+description: "Lists active locks with associated process and query information."
+```
+
+### Query
 
 The tool aggregates locks per backend (process) and returns the concatenated transaction ids and lock entries. The SQL used by the tool looks like:
 
@@ -41,15 +51,7 @@ GROUP BY
     locked.pid, locked.usename, locked.query;
 ```
 
-## Example
-
-```yaml
-kind: tools
-name: list_locks
-type: postgres-list-locks
-source: postgres-source
-description: "Lists active locks with associated process and query information."
-```
+## Output Format
 
 Example response element (aggregated per process):
 

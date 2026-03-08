@@ -1,5 +1,5 @@
 ---
-title: "looker-get-projects"
+title: "looker-get-projects Tool"
 type: docs
 weight: 1
 description: >

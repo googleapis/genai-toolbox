@@ -1,5 +1,5 @@
 ---
-title: alloydb-list-users
+title: alloydb-list-users Tool
 type: docs
 weight: 1
 description: "The \"alloydb-list-users\" tool lists all database users within an AlloyDB cluster.\n"

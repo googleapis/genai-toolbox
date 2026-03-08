@@ -1,5 +1,5 @@
 ---
-title: "firestore-list-collections"
+title: "firestore-list-collections Tool"
 type: docs
 weight: 1
 description: >

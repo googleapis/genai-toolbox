@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-active-queries"
+title: "postgres-list-active-queries Tool"
 type: docs
 weight: 1
 description: >

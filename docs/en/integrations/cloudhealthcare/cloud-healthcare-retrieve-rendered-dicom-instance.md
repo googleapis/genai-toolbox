@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-retrieve-rendered-dicom-instance"
+title: "cloud-healthcare-retrieve-rendered-dicom-instance Tool"
 type: docs
 weight: 1
 description: >

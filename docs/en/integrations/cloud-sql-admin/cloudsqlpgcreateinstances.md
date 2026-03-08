@@ -1,9 +1,11 @@
 ---
-title: cloud-sql-postgres-create-instance
+title: cloud-sql-postgres-create-instance Tool
 type: docs
 weight: 10
 description: Create a Cloud SQL for PostgreSQL instance.
 ---
+
+## About
 
 The `cloud-sql-postgres-create-instance` tool creates a Cloud SQL for PostgreSQL
 instance using the Cloud SQL Admin API.

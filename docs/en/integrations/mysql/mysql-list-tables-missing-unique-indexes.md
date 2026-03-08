@@ -1,5 +1,5 @@
 ---
-title: "mysql-list-tables-missing-unique-indexes"
+title: "mysql-list-tables-missing-unique-indexes Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "bigquery-search-catalog"
+title: "bigquery-search-catalog Tool"
 type: docs
 weight: 1
 description: >

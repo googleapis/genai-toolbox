@@ -1,5 +1,5 @@
 ---
-title: alloydb-list-clusters
+title: alloydb-list-clusters Tool
 type: docs
 weight: 1
 description: "The \"alloydb-list-clusters\" tool lists the AlloyDB clusters in a given project and location.\n"

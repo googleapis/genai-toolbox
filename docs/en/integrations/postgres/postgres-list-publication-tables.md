@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-publication-tables"
+title: "postgres-list-publication-tables Tool"
 type: docs
 weight: 1
 description: >

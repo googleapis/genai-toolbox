@@ -1,5 +1,5 @@
 ---
-title: "mindsdb-sql"
+title: "mindsdb-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -29,65 +29,6 @@ This tool enables you to:
 ## Compatible Sources
 
 {{< compatible-sources >}}
-
-## Example Queries
-
-### Cross-Datasource Analytics
-
-```sql
--- Join Salesforce opportunities with GitHub activity
-SELECT 
-    s.opportunity_name,
-    s.amount,
-    g.repository_name,
-    COUNT(g.commits) as commit_count
-FROM salesforce.opportunities s
-JOIN github.repositories g ON s.account_id = g.owner_id
-WHERE s.stage = ?
-GROUP BY s.opportunity_name, s.amount, g.repository_name;
-```
-
-### Email & Communication Analysis
-
-```sql
--- Analyze email patterns with Slack activity
-SELECT 
-    e.sender,
-    e.subject,
-    s.channel_name,
-    COUNT(s.messages) as message_count
-FROM gmail.emails e
-JOIN slack.messages s ON e.sender = s.user_name
-WHERE e.date >= ?
-GROUP BY e.sender, e.subject, s.channel_name;
-```
-
-### ML Model Predictions
-
-```sql
--- Use ML model to predict customer churn
-SELECT 
-    customer_id,
-    customer_name,
-    predicted_churn_probability,
-    recommended_action
-FROM customer_churn_model
-WHERE predicted_churn_probability > ?;
-```
-
-### MongoDB Query
-
-```sql
--- Query MongoDB collections as structured tables
-SELECT 
-    name,
-    email,
-    department,
-    created_at
-FROM mongodb.users
-WHERE department = ?
-ORDER BY created_at DESC;
-```
 
 ## Example
 
@@ -160,6 +101,66 @@ templateParameters:
     type: string
     description: Table to select from
 ```
+
+### Example Queries
+
+#### Cross-Datasource Analytics
+
+```sql
+-- Join Salesforce opportunities with GitHub activity
+SELECT 
+    s.opportunity_name,
+    s.amount,
+    g.repository_name,
+    COUNT(g.commits) as commit_count
+FROM salesforce.opportunities s
+JOIN github.repositories g ON s.account_id = g.owner_id
+WHERE s.stage = ?
+GROUP BY s.opportunity_name, s.amount, g.repository_name;
+```
+
+#### Email & Communication Analysis
+
+```sql
+-- Analyze email patterns with Slack activity
+SELECT 
+    e.sender,
+    e.subject,
+    s.channel_name,
+    COUNT(s.messages) as message_count
+FROM gmail.emails e
+JOIN slack.messages s ON e.sender = s.user_name
+WHERE e.date >= ?
+GROUP BY e.sender, e.subject, s.channel_name;
+```
+
+#### ML Model Predictions
+
+```sql
+-- Use ML model to predict customer churn
+SELECT 
+    customer_id,
+    customer_name,
+    predicted_churn_probability,
+    recommended_action
+FROM customer_churn_model
+WHERE predicted_churn_probability > ?;
+```
+
+#### MongoDB Query
+
+```sql
+-- Query MongoDB collections as structured tables
+SELECT 
+    name,
+    email,
+    department,
+    created_at
+FROM mongodb.users
+WHERE department = ?
+ORDER BY created_at DESC;
+```
+
 
 ## Reference
 

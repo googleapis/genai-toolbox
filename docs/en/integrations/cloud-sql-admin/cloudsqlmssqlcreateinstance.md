@@ -1,9 +1,11 @@
 ---
-title: cloud-sql-mssql-create-instance
+title: cloud-sql-mssql-create-instance Tool
 type: docs
 weight: 10
 description: "Create a Cloud SQL for SQL Server instance."
 ---
+
+## About
 
 The `cloud-sql-mssql-create-instance` tool creates a Cloud SQL for SQL Server
 instance using the Cloud SQL Admin API.

@@ -1,5 +1,5 @@
 ---
-title: "cassandra-cql"
+title: "cassandra-cql Tool"
 type: docs
 weight: 1
 description: >

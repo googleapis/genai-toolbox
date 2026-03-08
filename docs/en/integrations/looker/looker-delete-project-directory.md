@@ -1,5 +1,5 @@
 ---
-title: "looker-delete-project-directory"
+title: "looker-delete-project-directory Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "looker-get-looks"
+title: "looker-get-looks Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "oracle-sql"
+title: "oracle-sql Tool"
 type: docs
 weight: 1
 description: > 

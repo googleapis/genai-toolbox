@@ -1,5 +1,5 @@
 ---
-title: "mongodb-delete-one"
+title: "mongodb-delete-one Tool"
 type: docs
 weight: 1
 description: >

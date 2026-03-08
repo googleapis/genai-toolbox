@@ -1,5 +1,5 @@
 ---
-title: "postgres-replication-stats"
+title: "postgres-replication-stats Tool"
 type: docs
 weight: 1
 description: >

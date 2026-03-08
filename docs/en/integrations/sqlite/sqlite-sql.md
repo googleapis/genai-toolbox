@@ -1,5 +1,5 @@
 ---
-title: "sqlite-sql"
+title: "sqlite-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -21,7 +21,7 @@ DDL statements.
 
 {{< compatible-sources >}}
 
-### Example
+## Example
 
 > **Note:** This tool uses parameterized queries to prevent SQL injections.
 > Query parameters can be used as substitutes for arbitrary expressions.

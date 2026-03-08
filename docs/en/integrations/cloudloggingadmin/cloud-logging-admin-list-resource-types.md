@@ -1,5 +1,5 @@
 ---
-title: "cloud-logging-admin-list-resource-types"
+title: "cloud-logging-admin-list-resource-types Tool"
 type: docs
 description: >
   A "cloud-logging-admin-list-resource-types" tool lists the monitored resource types.

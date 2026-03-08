@@ -1,5 +1,5 @@
 ---
-title: alloydb-create-cluster
+title: alloydb-create-cluster Tool
 type: docs
 weight: 1
 description: "The \"alloydb-create-cluster\" tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location.\n"

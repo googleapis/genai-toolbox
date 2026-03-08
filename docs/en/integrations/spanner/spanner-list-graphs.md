@@ -1,5 +1,5 @@
 ---
-title: "spanner-list-graphs"
+title: "spanner-list-graphs Tool"
 type: docs
 weight: 3
 description: >
@@ -13,6 +13,24 @@ A `spanner-list-graphs` tool retrieves comprehensive schema information about
 graphs in a Cloud Spanner database. It returns detailed metadata including
 node tables, edge tables, labels and property declarations.
 
+### Features
+
+- **Comprehensive Schema Information**: Returns node tables, edge tables, labels
+  and property declarations
+- **Flexible Filtering**: Can list all graphs or filter by specific graph names
+- **Output Format Options**: Choose between simple (graph names only) or detailed
+  (full schema information) output
+
+### Use Cases
+
+1. **Database Documentation**: Generate comprehensive documentation of your
+   database schema
+2. **Schema Validation**: Verify that expected graphs, node and edge exist
+3. **Migration Planning**: Understand the current schema before making changes
+4. **Development Tools**: Build tools that need to understand database structure
+5. **Audit and Compliance**: Track schema changes and ensure compliance with
+   data governance policies
+
 This tool is read-only and executes pre-defined SQL queries against the
 `INFORMATION_SCHEMA` tables to gather metadata. 
 {{< notice warning >}}
@@ -24,13 +42,15 @@ source dialect, as Spanner Graph isn't available in the PostgreSQL dialect.
 
 {{< compatible-sources >}}
 
-## Features
+## Parameters
 
-- **Comprehensive Schema Information**: Returns node tables, edge tables, labels
-  and property declarations
-- **Flexible Filtering**: Can list all graphs or filter by specific graph names
-- **Output Format Options**: Choose between simple (graph names only) or detailed
-  (full schema information) output
+The tool accepts two optional parameters:
+
+| **parameter** | **type** | **default** | **description**                                                                                      |
+|---------------|:--------:|:-----------:|------------------------------------------------------------------------------------------------------|
+| graph_names   |  string  |     ""      | Comma-separated list of graph names to filter. If empty, lists all graphs in user-accessible schemas |
+| output_format |  string  | "detailed"  | Output format: "simple" returns only graph names, "detailed" returns full schema information         |
+
 
 ## Example
 
@@ -67,15 +87,6 @@ description: |
     "output_format": "detailed"
   }
 ```
-
-## Parameters
-
-The tool accepts two optional parameters:
-
-| **parameter** | **type** | **default** | **description**                                                                                      |
-|---------------|:--------:|:-----------:|------------------------------------------------------------------------------------------------------|
-| graph_names   |  string  |     ""      | Comma-separated list of graph names to filter. If empty, lists all graphs in user-accessible schemas |
-| output_format |  string  | "detailed"  | Output format: "simple" returns only graph names, "detailed" returns full schema information         |
 
 ## Output Format
 
@@ -224,17 +235,18 @@ comprehensive schema information:
 ]
 ```
 
-## Use Cases
+## Reference
 
-1. **Database Documentation**: Generate comprehensive documentation of your
-   database schema
-2. **Schema Validation**: Verify that expected graphs, node and edge exist
-3. **Migration Planning**: Understand the current schema before making changes
-4. **Development Tools**: Build tools that need to understand database structure
-5. **Audit and Compliance**: Track schema changes and ensure compliance with
-   data governance policies
+| **field**    | **type** | **required** | **description**                                                 |
+|--------------|:--------:|:------------:|-----------------------------------------------------------------|
+| type         |  string  |     true     | Must be "spanner-list-graphs"                                   |
+| source       |  string  |     true     | Name of the Spanner source to query (dialect must be GoogleSQL) |
+| description  |  string  |    false     | Description of the tool that is passed to the LLM               |
+| authRequired | string[] |    false     | List of auth services required to invoke this tool              |
 
-## Example with Agent Integration
+## Advanced Usage
+
+### Example with Agent Integration
 
 ```yaml
 kind: sources
@@ -262,16 +274,7 @@ description: |
   3. Just get graph names: {"output_format": "simple"}
 ```
 
-## Reference
-
-| **field**    | **type** | **required** | **description**                                                 |
-|--------------|:--------:|:------------:|-----------------------------------------------------------------|
-| type         |  string  |     true     | Must be "spanner-list-graphs"                                   |
-| source       |  string  |     true     | Name of the Spanner source to query (dialect must be GoogleSQL) |
-| description  |  string  |    false     | Description of the tool that is passed to the LLM               |
-| authRequired | string[] |    false     | List of auth services required to invoke this tool              |
-
-## Notes
+## Troubleshooting
 
 - This tool is read-only and does not modify any data
 - The tool only works for the GoogleSQL source dialect

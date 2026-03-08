@@ -1,5 +1,5 @@
 ---
-title: "serverless-spark-list-batches"
+title: "serverless-spark-list-batches Tool"
 type: docs
 weight: 1
 description: >
@@ -39,7 +39,7 @@ source: my-serverless-spark-source
 description: Use this tool to list and filter serverless spark batches.
 ```
 
-## Response Format
+## Output Format
 
 ```json
 {

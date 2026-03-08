@@ -1,5 +1,5 @@
 ---
-title: "clickhouse-list-databases"
+title: "clickhouse-list-databases Tool"
 type: docs
 weight: 3
 description: >
@@ -30,7 +30,7 @@ source: my-clickhouse-instance
 description: List all available databases in the ClickHouse instance
 ```
 
-## Return Value
+## Output Format
 
 The tool returns an array of objects, where each object contains:
 

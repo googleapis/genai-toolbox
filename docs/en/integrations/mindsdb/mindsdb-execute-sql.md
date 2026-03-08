@@ -1,5 +1,5 @@
 ---
-title: "mindsdb-execute-sql"
+title: "mindsdb-execute-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -32,9 +32,19 @@ statement against the `source`. This tool enables you to:
 
 {{< compatible-sources >}}
 
-## Example Queries
+## Example
 
-### Cross-Datasource Analytics
+```yaml
+kind: tools
+name: execute_sql_tool
+type: mindsdb-execute-sql
+source: my-mindsdb-instance
+description: Use this tool to execute SQL statements across multiple datasources and ML models.
+```
+
+### Example Queries
+
+#### Cross-Datasource Analytics
 
 ```sql
 -- Join Salesforce opportunities with GitHub activity
@@ -49,7 +59,7 @@ WHERE s.stage = 'Closed Won'
 GROUP BY s.opportunity_name, s.amount, g.repository_name;
 ```
 
-### Email & Communication Analysis
+#### Email & Communication Analysis
 
 ```sql
 -- Analyze email patterns with Slack activity
@@ -64,7 +74,7 @@ WHERE e.date >= '2024-01-01'
 GROUP BY e.sender, e.subject, s.channel_name;
 ```
 
-### ML Model Predictions
+#### ML Model Predictions
 
 ```sql
 -- Use ML model to predict customer churn
@@ -77,7 +87,7 @@ FROM customer_churn_model
 WHERE predicted_churn_probability > 0.8;
 ```
 
-### MongoDB Query
+#### MongoDB Query
 
 ```sql
 -- Query MongoDB collections as structured tables
@@ -94,15 +104,6 @@ ORDER BY created_at DESC;
 > **Note:** This tool is intended for developer assistant workflows with
 > human-in-the-loop and shouldn't be used for production agents.
 
-## Example
-
-```yaml
-kind: tools
-name: execute_sql_tool
-type: mindsdb-execute-sql
-source: my-mindsdb-instance
-description: Use this tool to execute SQL statements across multiple datasources and ML models.
-```
 
 ### Working Configuration Example
 

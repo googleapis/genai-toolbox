@@ -1,9 +1,11 @@
 ---
-title: alloydb-wait-for-operation
+title: alloydb-wait-for-operation Tool
 type: docs
 weight: 10
 description: "Wait for a long-running AlloyDB operation to complete.\n"
 ---
+
+## About
 
 The `alloydb-wait-for-operation` tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB

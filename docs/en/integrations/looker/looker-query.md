@@ -1,5 +1,5 @@
 ---
-title: "looker-query"
+title: "looker-query Tool"
 type: docs
 weight: 1
 description: >

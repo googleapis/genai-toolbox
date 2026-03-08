@@ -1,9 +1,11 @@
 ---
-title: cloud-sql-list-databases
+title: cloud-sql-list-databases Tool
 type: docs
 weight: 1
 description: List Cloud SQL databases in an instance.
 ---
+
+## About
 
 The `cloud-sql-list-databases` tool lists all Cloud SQL databases in a specified
 Google Cloud project and instance.
@@ -12,7 +14,17 @@ Google Cloud project and instance.
 
 {{< compatible-sources >}}
 
-## Configuration
+## Parameters
+
+The `cloud-sql-list-databases` tool has two required parameters:
+
+| **field** | **type** | **required** | **description**              |
+| --------- | :------: | :----------: | ---------------------------- |
+| project   |  string  |     true     | The Google Cloud project ID. |
+| instance  |  string  |     true     | The Cloud SQL instance ID.   |
+
+
+## Example
 
 Here is an example of how to configure the `cloud-sql-list-databases` tool in your
 `tools.yaml` file:
@@ -28,15 +40,6 @@ type: cloud-sql-list-databases
 source: my-cloud-sql-admin-source
 description: Use this tool to list all Cloud SQL databases in an instance.
 ```
-
-## Parameters
-
-The `cloud-sql-list-databases` tool has two required parameters:
-
-| **field** | **type** | **required** | **description**              |
-| --------- | :------: | :----------: | ---------------------------- |
-| project   |  string  |     true     | The Google Cloud project ID. |
-| instance  |  string  |     true     | The Cloud SQL instance ID.   |
 
 ## Reference
 

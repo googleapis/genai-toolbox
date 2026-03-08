@@ -1,5 +1,5 @@
 ---
-title: alloydb-get-cluster
+title: alloydb-get-cluster Tool
 type: docs
 weight: 1
 description: "The \"alloydb-get-cluster\" tool retrieves details for a specific AlloyDB cluster.\n"

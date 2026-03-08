@@ -1,5 +1,5 @@
 ---
-title: "looker-make-look"
+title: "looker-make-look Tool"
 type: docs
 weight: 1
 description: >

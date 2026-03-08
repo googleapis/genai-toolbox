@@ -1,5 +1,5 @@
 ---
-title: "cloud-logging-admin-list-log-names"
+title: "cloud-logging-admin-list-log-names Tool"
 type: docs
 description: >
   A "cloud-logging-admin-list-log-names" tool lists the log names in the project.

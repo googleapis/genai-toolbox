@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-search-dicom-instances"
+title: "cloud-healthcare-search-dicom-instances Tool"
 type: docs
 weight: 1
 description: >

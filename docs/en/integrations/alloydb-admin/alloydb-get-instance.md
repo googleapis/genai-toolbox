@@ -1,5 +1,5 @@
 ---
-title: alloydb-get-instance
+title: alloydb-get-instance Tool
 type: docs
 weight: 1
 description: "The \"alloydb-get-instance\" tool retrieves details for a specific AlloyDB instance.\n"

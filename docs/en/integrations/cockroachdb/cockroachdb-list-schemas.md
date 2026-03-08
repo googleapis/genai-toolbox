@@ -1,5 +1,5 @@
 ---
-title: "cockroachdb-list-schemas"
+title: "cockroachdb-list-schemas Tool"
 type: docs
 weight: 1
 description: >
@@ -21,6 +21,16 @@ This tool is useful for:
 
 {{< compatible-sources >}}
 
+### Requirements
+
+To list schemas, the user needs:
+- `CONNECT` privilege on the database
+- No specific schema privileges required for listing
+
+To query objects within schemas, the user needs:
+- `USAGE` privilege on the schema
+- Appropriate object privileges (SELECT, INSERT, etc.)
+
 ## Example
 
 ```yaml
@@ -41,24 +51,15 @@ tools:
     source: my_cockroachdb
     description: List all schemas in the database
 ```
+### Usage Example
 
-## Configuration
+```json
+{}
+```
 
-### Required Fields
+No parameters are required. The tool automatically lists all user-defined schemas.
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Must be `cockroachdb-list-schemas` |
-| `source` | string | Name of the CockroachDB source to use |
-| `description` | string | Human-readable description for the LLM |
-
-### Optional Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `authRequired` | array | List of authentication services required |
-
-## Output Structure
+## Output Format
 
 The tool returns a list of schemas with the following information:
 
@@ -85,15 +86,27 @@ The tool returns a list of schemas with the following information:
 | `schema_name` | string | The schema name |
 | `is_user_defined` | boolean | Whether this is a user-created schema (excludes system schemas) |
 
-## Usage Example
 
-```json
-{}
-```
+## Reference
 
-No parameters are required. The tool automatically lists all user-defined schemas.
+### Required Fields
 
-## Default Schemas
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-list-schemas` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description for the LLM |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authRequired` | array | List of authentication services required |
+
+
+## Advanced Usage
+
+### Default Schemas
 
 CockroachDB includes several standard schemas:
 
@@ -105,15 +118,15 @@ CockroachDB includes several standard schemas:
 
 The tool filters out system schemas and only returns user-defined schemas.
 
-## Schema Management in CockroachDB
+### Schema Management in CockroachDB
 
-### Creating Schemas
+#### Creating Schemas
 
 ```sql
 CREATE SCHEMA analytics;
 ```
 
-### Using Schemas
+#### Using Schemas
 
 ```sql
 -- Create table in specific schema
@@ -127,7 +140,7 @@ CREATE TABLE analytics.revenue (
 SELECT * FROM analytics.revenue;
 ```
 
-### Schema Search Path
+#### Schema Search Path
 
 The search path determines which schemas are searched for unqualified object names:
 
@@ -139,7 +152,7 @@ SHOW search_path;
 SET search_path = analytics, public;
 ```
 
-## Multi-Tenant Applications
+### Multi-Tenant Applications
 
 Schemas are commonly used for multi-tenant applications:
 
@@ -165,9 +178,9 @@ tools:
       Each schema represents a separate tenant's data namespace.
 ```
 
-## Best Practices
+### Best Practices
 
-### Use Schemas for Organization
+#### Use Schemas for Organization
 
 Group related tables into schemas:
 
@@ -181,7 +194,7 @@ CREATE TABLE inventory.products (...);
 CREATE TABLE hr.employees (...);
 ```
 
-### Schema Naming Conventions
+#### Schema Naming Conventions
 
 Use clear, descriptive schema names:
 - Lowercase names
@@ -189,7 +202,7 @@ Use clear, descriptive schema names:
 - Avoid reserved keywords
 - Use prefixes for grouped schemas (e.g., `tenant_`, `app_`)
 
-### Schema-Level Permissions
+#### Schema-Level Permissions
 
 Schemas enable fine-grained access control:
 
@@ -202,9 +215,9 @@ GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO analyst_role;
 REVOKE ALL ON SCHEMA hr FROM public;
 ```
 
-## Integration with Other Tools
+### Integration with Other Tools
 
-### Combined with List Tables
+#### Combined with List Tables
 
 ```yaml
 tools:
@@ -221,15 +234,15 @@ tools:
       Use list_schemas first to understand schema organization.
 ```
 
-### Schema Discovery Workflow
+#### Schema Discovery Workflow
 
 1. Call `cockroachdb-list-schemas` to discover schemas
 2. Call `cockroachdb-list-tables` to see tables in each schema
 3. Generate queries using fully qualified names: `schema.table`
 
-## Common Use Cases
+### Common Use Cases
 
-### Discover Database Structure
+#### Discover Database Structure
 
 ```yaml
 tools:
@@ -241,7 +254,7 @@ tools:
       Use this to understand the logical grouping of tables.
 ```
 
-### Multi-Tenant Analysis
+#### Multi-Tenant Analysis
 
 ```yaml
 tools:
@@ -253,7 +266,7 @@ tools:
       Schema names follow the pattern: tenant_<company_name>
 ```
 
-### Schema Migration Planning
+#### Schema Migration Planning
 
 ```yaml
 tools:
@@ -265,26 +278,9 @@ tools:
       Identifies all schemas that need to be migrated.
 ```
 
-## Error Handling
+### CockroachDB-Specific Features
 
-The tool handles common errors:
-- **Connection errors**: Returns connection failure details
-- **Permission errors**: Returns error if user lacks USAGE privilege
-- **Empty results**: Returns empty array if no user schemas exist
-
-## Permissions Required
-
-To list schemas, the user needs:
-- `CONNECT` privilege on the database
-- No specific schema privileges required for listing
-
-To query objects within schemas, the user needs:
-- `USAGE` privilege on the schema
-- Appropriate object privileges (SELECT, INSERT, etc.)
-
-## CockroachDB-Specific Features
-
-### System Schemas
+#### System Schemas
 
 CockroachDB includes PostgreSQL-compatible system schemas plus CockroachDB-specific ones:
 
@@ -294,13 +290,22 @@ CockroachDB includes PostgreSQL-compatible system schemas plus CockroachDB-speci
 
 These are automatically filtered from the results.
 
-### User-Defined Flag
+#### System Schemas
+ User-Defined Flag
 
 The `is_user_defined` field helps distinguish:
 - `true`: User-created schemas
 - `false`: System schemas (already filtered out)
 
-## See Also
+
+## Troubleshooting
+
+The tool handles common errors:
+- **Connection errors**: Returns connection failure details
+- **Permission errors**: Returns error if user lacks USAGE privilege
+- **Empty results**: Returns empty array if no user schemas exist
+
+## Additional Resources
 
 - [cockroachdb-sql](_index.md) - Execute parameterized queries
 - [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - Execute ad-hoc SQL

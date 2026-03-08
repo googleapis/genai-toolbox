@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-indexes"
+title: "postgres-list-indexes Tool"
 type: docs
 weight: 1
 description: >

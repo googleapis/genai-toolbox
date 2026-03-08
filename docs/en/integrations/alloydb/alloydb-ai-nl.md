@@ -1,5 +1,5 @@
 ---
-title: "alloydb-ai-nl"
+title: "alloydb-ai-nl Tool"
 type: docs
 weight: 1
 description: >
@@ -57,9 +57,9 @@ existing configuration and redefine it using the instructions
 [alloydb-ai-gen-nl]:
     https://cloud.google.com/alloydb/docs/ai/generate-sql-queries-natural-language
 
-## Configuration
+### Configuration
 
-### Specifying an `nl_config`
+#### Specifying an `nl_config`
 
 A `nl_config` is a configuration that associates an application to schema
 objects, examples and other contexts that can be used. A large application can
@@ -71,7 +71,7 @@ Once you've followed the steps for configuring context, you can use the
 `context` field when configuring a `alloydb-ai-nl` tool. When this tool is
 invoked, the SQL will be generated and executed using this context.
 
-### Specifying Parameters to PSV's
+#### Specifying Parameters to PSV's
 
 [Parameterized Secure Views (PSVs)][alloydb-psv] are a feature unique to AlloyDB
 that allows you to require one or more named parameter values passed

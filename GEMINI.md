@@ -132,6 +132,23 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Additional Resources` (Optional)
 4.  **Shortcode Placement:** If you generate the `## Available Tools` section, you must include the `{{< list-tools >}}` shortcode beneath it.
 
+##### Tool Page Constraints (`integrations/**/*.md`)
+
+1.  **Title Convention:** The YAML frontmatter `title` must always end with "Tool" (e.g., `title: "Execute SQL Tool"`).
+2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
+3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
+    *   `## About` (Required)
+    *   `## Compatible Sources` (Optional)
+    *   `## Requirements` (Optional)
+    *   `## Parameters` (Optional)
+    *   `## Example` (Required)
+    *   `## Output Format` (Optional)
+    *   `## Reference` (Optional)
+    *   `## Advanced Usage` (Optional)
+    *   `## Troubleshooting` (Optional)
+    *   `## Additional Resources` (Optional)
+4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+
 ##### Asset Constraints (`docs/`)
 
 1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.

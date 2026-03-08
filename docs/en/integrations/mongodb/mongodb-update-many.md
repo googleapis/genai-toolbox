@@ -1,5 +1,5 @@
 ---
-title: "mongodb-update-many"
+title: "mongodb-update-many Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "looker-get-dashboards"
+title: "looker-get-dashboards Tool"
 type: docs
 weight: 1
 description: >

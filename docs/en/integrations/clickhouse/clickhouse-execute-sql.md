@@ -1,5 +1,5 @@
 ---
-title: "clickhouse-execute-sql"
+title: "clickhouse-execute-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -24,6 +24,13 @@ capabilities for monitoring and debugging purposes.
 
 {{< compatible-sources >}}
 
+## Parameters
+
+| **parameter** | **type** | **required** | **description**                                   |
+|---------------|:--------:|:------------:|---------------------------------------------------|
+| sql           |  string  |     true     | The SQL statement to execute against the database |
+
+
 ## Example
 
 ```yaml
@@ -33,12 +40,6 @@ type: clickhouse-execute-sql
 source: my-clickhouse-instance
 description: Use this tool to execute SQL statements against ClickHouse.
 ```
-
-## Parameters
-
-| **parameter** | **type** | **required** | **description**                                   |
-|---------------|:--------:|:------------:|---------------------------------------------------|
-| sql           |  string  |     true     | The SQL statement to execute against the database |
 
 ## Reference
 

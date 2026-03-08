@@ -1,5 +1,5 @@
 ---
-title: "mongodb-insert-many"
+title: "mongodb-insert-many Tool"
 type: docs
 weight: 1
 description: >

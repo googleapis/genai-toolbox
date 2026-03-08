@@ -1,5 +1,5 @@
 ---
-title: "bigquery-forecast"
+title: "bigquery-forecast Tool"
 type: docs
 weight: 1
 description: >
@@ -65,15 +65,6 @@ source: my-bigquery-source
 description: Use this tool to forecast time series data in BigQuery.
 ```
 
-## Sample Prompt
-
-You can use the following sample prompts to call this tool:
-
-- Can you forecast the history time series data in bigquery table
-  `bqml_tutorial.google_analytic`? Use project_id `myproject`.
-- What are the future `total_visits` in bigquery table
-  `bqml_tutorial.google_analytic`?
-
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                         |
@@ -81,3 +72,14 @@ You can use the following sample prompts to call this tool:
 | type        |  string  |     true     | Must be "bigquery-forecast".                            |
 | source      |  string  |     true     | Name of the source the forecast tool should execute on. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+
+## Advanced Usage
+
+### Sample Prompt
+
+You can use the following sample prompts to call this tool:
+
+- Can you forecast the history time series data in bigquery table
+  `bqml_tutorial.google_analytic`? Use project_id `myproject`.
+- What are the future `total_visits` in bigquery table
+  `bqml_tutorial.google_analytic`?

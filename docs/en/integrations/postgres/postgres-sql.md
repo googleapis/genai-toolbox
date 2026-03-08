@@ -1,5 +1,5 @@
 ---
-title: "postgres-sql"
+title: "postgres-sql Tool"
 type: docs
 weight: 1
 description: >

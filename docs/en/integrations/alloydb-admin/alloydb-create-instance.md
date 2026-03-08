@@ -1,5 +1,5 @@
 ---
-title: alloydb-create-instance
+title: alloydb-create-instance Tool
 type: docs
 weight: 1
 description: "The \"alloydb-create-instance\" tool creates a new AlloyDB instance within a specified cluster.\n"

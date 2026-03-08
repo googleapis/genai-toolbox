@@ -1,5 +1,5 @@
 ---
-title: "looker-get-models"
+title: "looker-get-models Tool"
 type: docs
 weight: 1
 description: >

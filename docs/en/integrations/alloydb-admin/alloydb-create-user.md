@@ -1,5 +1,5 @@
 ---
-title: alloydb-create-user
+title: alloydb-create-user Tool
 type: docs
 weight: 2
 description: "The \"alloydb-create-user\" tool creates a new database user within a specified AlloyDB cluster.\n"

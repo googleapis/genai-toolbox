@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-query-stats"
+title: "postgres-list-query-stats Tool"
 type: docs
 weight: 1
 description: >
@@ -22,6 +22,13 @@ total execution time in descending order. The tool takes the following input par
 ## Compatible Sources
 
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
+
+## Requirements
+
+This tool requires the `pg_stat_statements` extension to be installed and enabled
+on the PostgreSQL database. The `pg_stat_statements` extension tracks execution
+statistics for all SQL statements executed by the server, which is useful for
+identifying slow queries and understanding query performance patterns.
 
 ## Example
 
@@ -51,13 +58,6 @@ The response is a json array with the following elements:
   }
 ]
 ```
-
-## Notes
-
-This tool requires the `pg_stat_statements` extension to be installed and enabled
-on the PostgreSQL database. The `pg_stat_statements` extension tracks execution
-statistics for all SQL statements executed by the server, which is useful for
-identifying slow queries and understanding query performance patterns.
 
 ## Reference
 

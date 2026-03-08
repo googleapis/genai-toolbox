@@ -1,10 +1,12 @@
 ---
-title: "cloud-sql-wait-for-operation"
+title: "cloud-sql-wait-for-operation Tool"
 type: docs
 weight: 10
 description: >
   Wait for a long-running Cloud SQL operation to complete.
 ---
+
+## About
 
 The `cloud-sql-wait-for-operation` tool is a utility tool that waits for a
 long-running Cloud SQL operation to complete. It does this by polling the Cloud

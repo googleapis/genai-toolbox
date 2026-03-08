@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-pg-settings"
+title: "postgres-list-pg-settings Tool"
 type: docs
 weight: 1
 description: >

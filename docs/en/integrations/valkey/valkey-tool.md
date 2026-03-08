@@ -1,5 +1,5 @@
 ---
-title: "valkey"
+title: "valkey Tool"
 type: docs
 weight: 1
 description: >

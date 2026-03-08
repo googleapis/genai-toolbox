@@ -1,5 +1,5 @@
 ---
-title: "bigtable-sql"
+title: "bigtable-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -109,7 +109,7 @@ templateParameters:
 | parameters         |   [parameters](../#specifying-parameters)    |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                          |
 | templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
-## Tips
+## Advanced Usage
 
 - [Bigtable Studio][bigtable-studio] is a useful to explore and manage your
   Bigtable data. If you're unfamiliar with the query syntax, [Query

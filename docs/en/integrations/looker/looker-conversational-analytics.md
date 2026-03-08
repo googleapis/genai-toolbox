@@ -1,5 +1,5 @@
 ---
-title: "looker-conversational-analytics"
+title: "looker-conversational-analytics Tool"
 type: docs
 weight: 1
 description: >

@@ -1,9 +1,11 @@
 ---
-title: cloud-sql-clone-instance
+title: cloud-sql-clone-instance Tool
 type: docs
 weight: 10
 description: "Clone a Cloud SQL instance."
 ---
+
+## About
 
 The `cloud-sql-clone-instance` tool clones a Cloud SQL instance using the Cloud SQL Admin API.
 
@@ -11,7 +13,7 @@ The `cloud-sql-clone-instance` tool clones a Cloud SQL instance using the Cloud 
 
 {{< compatible-sources >}}
 
-## Examples
+## Example
 
 Basic clone (current state)
 
@@ -54,7 +56,7 @@ description: "Creates an exact copy of a Cloud SQL instance at a specific point 
 | preferredZone              | string   | false        | (Optional) The preferred zone for the cloned instance. If not specified, defaults to the source instance's zone. |
 | preferredSecondaryZone     | string   | false        | (Optional) The preferred secondary zone for the cloned instance (for HA). |
 
-## Usage Notes
+## Advanced Usage
 
 - The tool supports both basic clone and point-in-time recovery (PITR) clone operations.
 - For PITR, specify the `pointInTime` parameter in RFC3339 format (e.g., `2024-01-01T00:00:00Z`).
@@ -62,7 +64,7 @@ description: "Creates an exact copy of a Cloud SQL instance at a specific point 
 - You can optionally specify the `zone` parameter to set the zone for the cloned instance. If omitted, the zone of the source instance will be used.
 - You can optionally specify the `preferredZone` and `preferredSecondaryZone` (only in REGIONAL instances) to set the preferred zones for the cloned instance. These are useful for high availability (HA) configurations. If omitted, defaults will be used based on the source instance.
 
-## See Also
+## Additional Resources
 - [Cloud SQL Admin API documentation](https://cloud.google.com/sql/docs/mysql/admin-api)
 - [Toolbox Cloud SQL tools documentation](_index.md)
 - [Cloud SQL Clone API documentation](https://cloud.google.com/sql/docs/mysql/clone-instance)

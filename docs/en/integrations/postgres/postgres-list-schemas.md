@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-schemas"
+title: "postgres-list-schemas Tool"
 type: docs
 weight: 1
 description: >

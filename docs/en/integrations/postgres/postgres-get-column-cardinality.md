@@ -1,5 +1,5 @@
 ---
-title: "postgres-get-column-cardinality"
+title: "postgres-get-column-cardinality Tool"
 type: docs
 weight: 1
 description: >
@@ -46,12 +46,6 @@ The response is a json array with the following elements:
 ]
 ```
 
-## Notes
-
-For accurate results, it's recommended to run `ANALYZE` on the table before using this
-tool. The `ANALYZE` command updates the database statistics that this tool relies on
-to estimate cardinality.
-
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
@@ -59,3 +53,9 @@ to estimate cardinality.
 | type        |  string  |     true     | Must be "postgres-get-column-cardinality".           |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+
+## Advanced Usage
+
+For accurate results, it's recommended to run `ANALYZE` on the table before using this
+tool. The `ANALYZE` command updates the database statistics that this tool relies on
+to estimate cardinality.

@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-get-fhir-resource"
+title: "cloud-healthcare-get-fhir-resource Tool"
 linkTitle: "cloud-healthcare-get-fhir-resource"
 type: docs
 weight: 1

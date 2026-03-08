@@ -1,5 +1,5 @@
 ---
-title: "spanner-execute-sql"
+title: "spanner-execute-sql Tool"
 type: docs
 weight: 1
 description: >

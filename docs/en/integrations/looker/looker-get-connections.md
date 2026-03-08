@@ -1,5 +1,5 @@
 ---
-title: "looker-get-connections"
+title: "looker-get-connections Tool"
 type: docs
 weight: 1
 description: >

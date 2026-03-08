@@ -1,5 +1,5 @@
 ---
-title: "looker-add-dashboard-filter"
+title: "looker-add-dashboard-filter Tool"
 type: docs
 weight: 1
 description: >

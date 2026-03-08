@@ -1,5 +1,5 @@
 ---
-title: "dataform-compile-local"
+title: "dataform-compile-local Tool"
 type: docs
 weight: 1
 description: >

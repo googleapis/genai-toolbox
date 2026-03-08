@@ -1,12 +1,12 @@
 ---
-title: "firestore-query"
+title: "firestore-query Tool"
 type: docs
 weight: 1
 description: >
   Query a Firestore collection with parameterizable filters and Firestore native JSON value types
 ---
 
-## Overview
+## About
 
 The `firestore-query` tool allows you to query Firestore collections with
 dynamic, parameterizable filters that support Firestore's native JSON value
@@ -16,14 +16,7 @@ making it flexible for various use cases. This tool is particularly useful when
 you need to create reusable query templates with parameters that can be
 substituted at runtime.
 
-**Developer Note**: This tool serves as the general querying foundation that
-developers can use to create custom tools with specific query patterns.
-
-## Compatible Sources
-
-{{< compatible-sources >}}
-
-## Key Features
+### Key Features
 
 - **Parameterizable Queries**: Use Go template syntax to create dynamic queries
 - **Dynamic Collection Paths**: The collection path can be parameterized for
@@ -35,7 +28,86 @@ developers can use to create custom tools with specific query patterns.
 - **Query Analysis**: Optional query performance analysis with explain metrics
   (non-parameterizable)
 
-## Configuration
+**Developer Note**: This tool serves as the general querying foundation that
+developers can use to create custom tools with specific query patterns.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+### Configuration Parameters
+
+| Parameter        | Type    | Required | Description                                                                                                 |
+|------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
+| `type`           | string  | Yes      | Must be `firestore-query`                                                                                   |
+| `source`         | string  | Yes      | Name of the Firestore source to use                                                                         |
+| `description`    | string  | Yes      | Description of what this tool does                                                                          |
+| `collectionPath` | string  | Yes      | Path to the collection to query (supports templates)                                                        |
+| `filters`        | string  | No       | JSON string defining query filters (supports templates)                                                     |
+| `select`         | array   | No       | Fields to select from documents(supports templates - string or array)                                       |
+| `orderBy`        | object  | No       | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
+| `limit`          | integer | No       | Maximum number of documents to return (default: 100) (supports templates)                                   |
+| `analyzeQuery`   | boolean | No       | Whether to analyze query performance (default: false)                                                       |
+| `parameters`     | array   | Yes      | Parameter definitions for template substitution                                                             |
+
+### Runtime Parameters
+
+Runtime parameters are defined in the `parameters` array and can be used in
+templates throughout the configuration.
+
+### Filter Format
+
+#### Simple Filter
+
+```json
+{
+  "field": "age",
+  "op": ">",
+  "value": {"integerValue": "25"}
+}
+```
+
+#### AND Filter
+
+```json
+{
+  "and": [
+    {"field": "status", "op": "==", "value": {"stringValue": "active"}},
+    {"field": "age", "op": ">=", "value": {"integerValue": "18"}}
+  ]
+}
+```
+
+#### OR Filter
+
+```json
+{
+  "or": [
+    {"field": "role", "op": "==", "value": {"stringValue": "admin"}},
+    {"field": "role", "op": "==", "value": {"stringValue": "moderator"}}
+  ]
+}
+```
+
+#### Nested Filters
+
+```json
+{
+  "or": [
+    {"field": "type", "op": "==", "value": {"stringValue": "premium"}},
+    {
+      "and": [
+        {"field": "type", "op": "==", "value": {"stringValue": "standard"}},
+        {"field": "credits", "op": ">", "value": {"integerValue": "1000"}}
+      ]
+    }
+  ]
+}
+```
+
+## Example
 
 ### Basic Configuration
 
@@ -123,79 +195,7 @@ parameters:
     default: "DESCENDING"
 ```
 
-## Parameters
-
-### Configuration Parameters
-
-| Parameter        | Type    | Required | Description                                                                                                 |
-|------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
-| `type`           | string  | Yes      | Must be `firestore-query`                                                                                   |
-| `source`         | string  | Yes      | Name of the Firestore source to use                                                                         |
-| `description`    | string  | Yes      | Description of what this tool does                                                                          |
-| `collectionPath` | string  | Yes      | Path to the collection to query (supports templates)                                                        |
-| `filters`        | string  | No       | JSON string defining query filters (supports templates)                                                     |
-| `select`         | array   | No       | Fields to select from documents(supports templates - string or array)                                       |
-| `orderBy`        | object  | No       | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
-| `limit`          | integer | No       | Maximum number of documents to return (default: 100) (supports templates)                                   |
-| `analyzeQuery`   | boolean | No       | Whether to analyze query performance (default: false)                                                       |
-| `parameters`     | array   | Yes      | Parameter definitions for template substitution                                                             |
-
-### Runtime Parameters
-
-Runtime parameters are defined in the `parameters` array and can be used in
-templates throughout the configuration.
-
-## Filter Format
-
-### Simple Filter
-
-```json
-{
-  "field": "age",
-  "op": ">",
-  "value": {"integerValue": "25"}
-}
-```
-
-### AND Filter
-
-```json
-{
-  "and": [
-    {"field": "status", "op": "==", "value": {"stringValue": "active"}},
-    {"field": "age", "op": ">=", "value": {"integerValue": "18"}}
-  ]
-}
-```
-
-### OR Filter
-
-```json
-{
-  "or": [
-    {"field": "role", "op": "==", "value": {"stringValue": "admin"}},
-    {"field": "role", "op": "==", "value": {"stringValue": "moderator"}}
-  ]
-}
-```
-
-### Nested Filters
-
-```json
-{
-  "or": [
-    {"field": "type", "op": "==", "value": {"stringValue": "premium"}},
-    {
-      "and": [
-        {"field": "type", "op": "==", "value": {"stringValue": "standard"}},
-        {"field": "credits", "op": ">", "value": {"integerValue": "1000"}}
-      ]
-    }
-  ]
-}
-```
-
-## Firestore Native Value Types
+### Firestore Native Value Types
 
 The tool supports all Firestore native JSON value types:
 
@@ -211,7 +211,7 @@ The tool supports all Firestore native JSON value types:
 | Array     | `{"arrayValue": {"values": [...]}}`                  | See below                                                      |
 | Map       | `{"mapValue": {"fields": {...}}}`                    | See below                                                      |
 
-### Complex Type Examples
+#### Complex Type Examples
 
 **GeoPoint:**
 
@@ -238,7 +238,7 @@ The tool supports all Firestore native JSON value types:
 }
 ```
 
-## Supported Operators
+### Supported Operators
 
 - `<` - Less than
 - `<=` - Less than or equal
@@ -250,8 +250,6 @@ The tool supports all Firestore native JSON value types:
 - `array-contains-any` - Array contains any of the values
 - `in` - Value is in array
 - `not-in` - Value is not in array
-
-## Examples
 
 ### Example 1: Query with Dynamic Collection Path
 
@@ -355,7 +353,7 @@ parameters:
     required: true
 ```
 
-## Usage
+## Advanced Usage
 
 ### Invoking the Tool
 
@@ -410,7 +408,7 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 }
 ```
 
-## Best Practices
+### Best Practices
 
 1. **Use Typed Values**: Always use Firestore's native JSON value types for
    proper type handling
@@ -423,14 +421,14 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
    retrieval
 6. **Field Selection**: Use `select` to retrieve only necessary fields
 
-## Technical Notes
+### Technical Notes
 
 - Queries operate on a single collection (the standard Firestore pattern)
 - Maximum of 100 filters per query (configurable)
 - Template parameters must be properly escaped in JSON contexts
 - Complex nested queries may require composite indexes
 
-## See Also
+## Additional Resources
 
 - [firestore-query-collection](firestore-query-collection.md) -
   Non-parameterizable query tool

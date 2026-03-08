@@ -1,5 +1,5 @@
 ---
-title: cloud-monitoring-query-prometheus
+title: cloud-monitoring-query-prometheus Tool
 type: docs
 weight: 1
 description: The "cloud-monitoring-query-prometheus" tool fetches time series metrics for a project using a given prometheus query.
@@ -14,25 +14,7 @@ The `cloud-monitoring-query-prometheus` tool allows you to query all metrics
 available in Google Cloud Monitoring using the Prometheus Query Language
 (PromQL).
 
-## Compatible Sources
-
-{{< compatible-sources >}}
-
-## Prerequisites
-
-To use this tool, you need to have the following IAM role on your Google Cloud
-project:
-
-- `roles/monitoring.viewer`
-
-## Arguments
-
-| Name        | Type   | Description                      |
-|-------------|--------|----------------------------------|
-| `projectId` | string | The Google Cloud project ID.     |
-| `query`     | string | The Prometheus query to execute. |
-
-## Use Cases
+### Use Cases
 
 - **Ad-hoc analysis:** Quickly investigate performance issues by executing
   direct promql queries for a database instance.
@@ -50,7 +32,26 @@ Here are some common use cases for the `cloud-monitoring-query-prometheus` tool:
 - **System Health:** Get the overall system health for the database instance
   (Can use the [prebuilt tools](../../user-guide/configuration/prebuilt-configs/_index.md)).
 
-## Examples
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+To use this tool, you need to have the following IAM role on your Google Cloud
+project:
+
+- `roles/monitoring.viewer`
+
+## Parameters
+
+| Name        | Type   | Description                      |
+|-------------|--------|----------------------------------|
+| `projectId` | string | The Google Cloud project ID.     |
+| `query`     | string | The Prometheus query to execute. |
+
+
+## Example
 
 Here are some examples of how to use the `cloud-monitoring-query-prometheus`
 tool.

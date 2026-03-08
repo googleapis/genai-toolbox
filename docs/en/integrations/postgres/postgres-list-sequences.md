@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-sequences"
+title: "postgres-list-sequences Tool"
 type: docs
 weight: 1
 description: >

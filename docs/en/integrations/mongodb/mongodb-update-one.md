@@ -1,5 +1,5 @@
 ---
-title: "mongodb-update-one"
+title: "mongodb-update-one Tool"
 type: docs
 weight: 1
 description: >

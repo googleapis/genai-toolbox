@@ -1,5 +1,5 @@
 ---
-title: "oracle-execute-sql"
+title: "oracle-execute-sql Tool"
 type: docs
 weight: 1
 description: > 

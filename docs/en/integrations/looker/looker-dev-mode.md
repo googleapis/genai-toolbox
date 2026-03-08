@@ -1,5 +1,5 @@
 ---
-title: "looker-dev-mode"
+title: "looker-dev-mode Tool"
 type: docs
 weight: 1
 description: >

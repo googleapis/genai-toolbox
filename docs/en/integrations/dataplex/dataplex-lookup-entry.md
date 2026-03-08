@@ -1,5 +1,5 @@
 ---
-title: "dataplex-lookup-entry"
+title: "dataplex-lookup-entry Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-get-dicom-store"
+title: "cloud-healthcare-get-dicom-store Tool"
 type: docs
 weight: 1
 description: >

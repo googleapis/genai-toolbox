@@ -17,8 +17,8 @@ name: Lint Documentation
 on:
   pull_request:
     paths:
-      - 'integrations/**/*.md'
-      - '.ci/lint-docs-source-page.sh'
+      - 'docs/**'
+      - '.ci/lint-docs-*.sh'
 
 jobs:
   lint-source-pages:
@@ -49,8 +49,11 @@ jobs:
             echo "Info: docs/ directory not found. Skipping file size check."
           fi
 
-      - name: Make script executable
-        run: chmod +x .ci/lint-docs-source-page.sh
+      - name: Make scripts executable
+        run: chmod +x .ci/lint-docs-*.sh
 
       - name: Run Structure Linter for Source Pages
         run: .ci/lint-docs-source-page.sh
+
+      - name: Run Structure Linter for Tool Pages
+        run: .ci/lint-docs-tool-page.sh

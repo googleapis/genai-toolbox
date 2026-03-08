@@ -1,12 +1,12 @@
 ---
-title: "elasticsearch-esql"
+title: "elasticsearch-esql Tool"
 type: docs
 weight: 2
 description: >
   Execute ES|QL queries.
 ---
 
-# elasticsearch-esql
+## About
 
 Execute ES|QL queries.
 
@@ -20,6 +20,15 @@ for more information.
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+| **name**   |                **type**                 | **required** | **description**                                                                                                                                     |
+|------------|:---------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| query      |                 string                  |    false     | The ES\|QL query to run. Can also be passed by parameters.                                                                                          |
+| format     |                 string                  |    false     | The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.                                        |
+| timeout    |                 integer                 |    false     | The timeout for the query in seconds. Default is 60 (1 minute).                                                                                     |
+| parameters | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the ES\|QL query.<br/>Only supports “string”, “integer”, “float”, “boolean”. |
 
 ## Example
 
@@ -39,12 +48,3 @@ parameters:
     description: Limit the number of results.
     required: true
 ```
-
-## Parameters
-
-| **name**   |                **type**                 | **required** | **description**                                                                                                                                     |
-|------------|:---------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| query      |                 string                  |    false     | The ES\|QL query to run. Can also be passed by parameters.                                                                                          |
-| format     |                 string                  |    false     | The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.                                        |
-| timeout    |                 integer                 |    false     | The timeout for the query in seconds. Default is 60 (1 minute).                                                                                     |
-| parameters | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the ES\|QL query.<br/>Only supports “string”, “integer”, “float”, “boolean”. |

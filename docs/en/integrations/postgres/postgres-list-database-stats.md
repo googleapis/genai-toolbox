@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-database-stats"
+title: "postgres-list-database-stats Tool"
 type: docs
 weight: 1
 description: >

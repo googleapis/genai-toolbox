@@ -41,7 +41,7 @@ Before you begin, ensure you have the following:
    to the endpoint:
 
     ```bash
-    curl http://127.0.0.1:5000
+    curl [http://127.0.0.1:5000](http://127.0.0.1:5000)
     ```
 
 ### Tool Naming Conventions
@@ -229,29 +229,6 @@ tools.
 
 * **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `user-guide`, etc.), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, you need to update the "Diátaxis Narrative Framework" preamble in both files so that the AI models understand the purpose of your new section.
 
-#### Integration Documentation Rules
-
-When generating or editing documentation for this repository, you must strictly adhere to the following CI-enforced rules. Failure to do so will break the build.
-
-##### Source Page Constraints (`integrations/**/_index.md`)
-
-1.  **Title Convention:** The YAML frontmatter `title` must always end with "Source" (e.g., `title: "Postgres Source"`).
-2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
-3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
-    *   `## About` (Required)
-    *   `## Available Tools` (Optional)
-    *   `## Requirements` (Optional)
-    *   `## Example` (Required)
-    *   `## Reference` (Required)
-    *   `## Advanced Usage` (Optional)
-    *   `## Troubleshooting` (Optional)
-    *   `## Additional Resources` (Optional)
-4.  **Shortcode Placement:** If you generate the `## Available Tools` section, you must include the `{{< list-tools >}}` shortcode beneath it.
-
-##### Asset Constraints (`docs/`)
-
-1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.
-
 #### Adding Prebuilt Tools
 
 You can provide developers with a set of "build-time" tools to aid common
@@ -424,6 +401,36 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
   commits?](https://github.com/googleapis/release-please?tab=readme-ov-file#how-should-i-write-my-commits)
 
 ## Developing Documentation
+
+### Documentation Standards & CI Checks
+
+To maintain consistency and prevent repository bloat, all pull requests must pass the automated documentation linters.
+
+#### Source Page Structure (`integrations/**/_index.md`)
+
+When adding or updating a Source page, your markdown file must strictly adhere to the following architectural rules:
+
+*   **Frontmatter:** The `title` field must end with the word "Source" (e.g., `title: "Firestore Source"`).
+*   **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
+*   **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
+    *   **Required Headings:** `About`, `Example`, `Reference`
+    *   **Allowed Optional Headings:** `Available Tools`, `Requirements`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
+*   **Available Tools Shortcode:** If you include the `## Available Tools` heading, you must place the list-tools shortcode (e.g., `{{< list-tools >}}`) directly beneath it.
+
+#### Tool Page Structure (`integrations/**/*.md`)
+
+When adding or updating a Tool page, your markdown file must strictly adhere to the following architectural rules:
+
+*   **Frontmatter:** The `title` field must end with the word "Tool" (e.g., `title: "execute-sql Tool"`).
+*   **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
+*   **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
+    *   **Required Headings:** `About`, `Example`
+    *   **Allowed Optional Headings:** `Compatible Sources`, `Requirements`, `Parameters`, `Output Format`, `Reference`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
+*   **Compatible Sources Shortcode:** If you include the `## Compatible Sources` heading, you must place the compatible-sources shortcode (e.g., `{{< compatible-sources >}}`) directly beneath it.
+
+#### Repository Asset Limits
+
+*   **Max File Size:** No individual file within the `docs/` directory may exceed 24MB. This prevents repository bloat and ensures fast clone times. If you need to include large assets (like high-resolution videos or massive PDFs), host them externally and link to them in the markdown.
 
 ### Running a Local Hugo Server
 

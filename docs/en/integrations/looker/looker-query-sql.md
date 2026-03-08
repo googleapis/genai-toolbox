@@ -1,5 +1,5 @@
 ---
-title: "looker-query-sql"
+title: "looker-query-sql Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "postgres-database-overview"
+title: "postgres-database-overview Tool"
 type: docs
 weight: 1
 description: >

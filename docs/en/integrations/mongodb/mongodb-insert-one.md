@@ -1,5 +1,5 @@
 ---
-title: "mongodb-insert-one"
+title: "mongodb-insert-one Tool"
 type: docs
 weight: 1
 description: >

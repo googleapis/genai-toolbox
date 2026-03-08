@@ -1,5 +1,5 @@
 ---
-title: "mysql-list-tables"
+title: "mysql-list-tables Tool"
 type: docs
 weight: 1
 description: >

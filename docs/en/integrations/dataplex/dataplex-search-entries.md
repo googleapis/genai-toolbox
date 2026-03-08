@@ -1,5 +1,5 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-search-entries Tool"
 type: docs
 weight: 1
 description: >

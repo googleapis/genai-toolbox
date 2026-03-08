@@ -1,5 +1,5 @@
 ---
-title: "bigquery-get-table-info"
+title: "bigquery-get-table-info Tool"
 type: docs
 weight: 1
 description: >

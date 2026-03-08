@@ -1,5 +1,5 @@
 ---
-title: "mssql-sql"
+title: "mssql-sql Tool"
 type: docs
 weight: 1
 description: >

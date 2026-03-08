@@ -1,5 +1,5 @@
 ---
-title: "clickhouse-sql"
+title: "clickhouse-sql Tool"
 type: docs
 weight: 2
 description: >
@@ -46,7 +46,7 @@ parameters:
     description: Maximum number of results to return
 ```
 
-## Template Parameters Example
+### Template Parameters Example
 
 ```yaml
 kind: tools

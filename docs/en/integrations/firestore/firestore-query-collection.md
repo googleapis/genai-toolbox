@@ -1,5 +1,5 @@
 ---
-title: "firestore-query-collection"
+title: "firestore-query-collection Tool"
 type: docs
 weight: 1
 description: >
@@ -15,7 +15,17 @@ with filters, ordering, and limit capabilities.
 
 {{< compatible-sources >}}
 
-## Configuration
+## Parameters
+
+| **parameters**   |   **type**   | **required** | **default** | **description**                                                       |
+|------------------|:------------:|:------------:|:-----------:|-----------------------------------------------------------------------|
+| `collectionPath` |    string    |     true     |      -      | The Firestore Rules source code to validate                           |
+| `filters`        |    array     |     false    |      -      | Array of filter objects (as JSON strings) to apply to the query       |
+| `orderBy`        |    string    |     false    |      -      | JSON string specifying field and direction to order results           |
+| `limit`          |    integer   |     false    |     100     | Maximum number of documents to return                                 |
+| `analyzeQuery`   |    boolean   |     false    |    false    | If true, returns query explain metrics including execution statistics |
+
+## Example
 
 To use this tool, you need to configure it in your YAML configuration file:
 
@@ -32,16 +42,6 @@ type: firestore-query-collection
 source: my-firestore
 description: Query Firestore collections with advanced filtering
 ```
-
-## Parameters
-
-| **parameters**   |   **type**   | **required** | **default** | **description**                                                       |
-|------------------|:------------:|:------------:|:-----------:|-----------------------------------------------------------------------|
-| `collectionPath` |    string    |     true     |      -      | The Firestore Rules source code to validate                           |
-| `filters`        |    array     |     false    |      -      | Array of filter objects (as JSON strings) to apply to the query       |
-| `orderBy`        |    string    |     false    |      -      | JSON string specifying field and direction to order results           |
-| `limit`          |    integer   |     false    |     100     | Maximum number of documents to return                                 |
-| `analyzeQuery`   |    boolean   |     false    |    false    | If true, returns query explain metrics including execution statistics |
 
 ### Filter Format
 
@@ -93,9 +93,9 @@ Direction values:
 - `ASCENDING`
 - `DESCENDING`
 
-## Example Usage
+### Example Usage
 
-### Query with filters
+#### Query with filters
 
 ```json
 {
@@ -109,7 +109,7 @@ Direction values:
 }
 ```
 
-### Query with array contains filter
+#### Query with array contains filter
 
 ```json
 {
@@ -123,7 +123,7 @@ Direction values:
 }
 ```
 
-### Query with IN operator
+#### Query with IN operator
 
 ```json
 {
@@ -135,7 +135,7 @@ Direction values:
 }
 ```
 
-### Query with explain metrics
+#### Query with explain metrics
 
 ```json
 {
@@ -150,7 +150,7 @@ Direction values:
 }
 ```
 
-## Response Format
+## Output Format
 
 ### Standard Response (analyzeQuery = false)
 
@@ -206,7 +206,7 @@ documents and explain metrics:
 }
 ```
 
-## Error Handling
+## Troubleshooting
 
 The tool will return errors for:
 

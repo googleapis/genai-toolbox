@@ -1,5 +1,5 @@
 ---
-title: "looker-generate-embed-url"
+title: "looker-generate-embed-url Tool"
 type: docs
 weight: 1
 description: >

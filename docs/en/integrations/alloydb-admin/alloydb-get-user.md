@@ -1,5 +1,5 @@
 ---
-title: alloydb-get-user
+title: alloydb-get-user Tool
 type: docs
 weight: 1
 description: "The \"alloydb-get-user\" tool retrieves details for a specific AlloyDB user.\n"

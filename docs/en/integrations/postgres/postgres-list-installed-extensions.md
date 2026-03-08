@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-installed-extensions"
+title: "postgres-list-installed-extensions Tool"
 type: docs
 weight: 1
 description: >

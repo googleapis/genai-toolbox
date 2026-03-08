@@ -1,5 +1,5 @@
 ---
-title: "cockroachdb-list-tables"
+title: "cockroachdb-list-tables Tool"
 type: docs
 weight: 1
 description: >
@@ -22,6 +22,15 @@ This tool is useful for:
 
 {{< compatible-sources >}}
 
+## Parameters
+
+The tool accepts optional runtime parameters:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `table_names` | array | all tables | List of specific table names to retrieve |
+| `output_format` | string | "detailed" | Output format: "simple" or "detailed" |
+
 ## Example
 
 ```yaml
@@ -43,74 +52,15 @@ tools:
     description: List all user tables in the database with their structure
 ```
 
-## Configuration
+### Usage Examples
 
-### Required Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Must be `cockroachdb-list-tables` |
-| `source` | string | Name of the CockroachDB source to use |
-| `description` | string | Human-readable description for the LLM |
-
-### Optional Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `authRequired` | array | List of authentication services required |
-
-## Parameters
-
-The tool accepts optional runtime parameters:
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `table_names` | array | all tables | List of specific table names to retrieve |
-| `output_format` | string | "detailed" | Output format: "simple" or "detailed" |
-
-## Output Formats
-
-### Simple Format
-
-Returns basic table information:
-- Table name
-- Row count estimate
-- Size information
-
-```json
-{
-  "table_names": ["users"],
-  "output_format": "simple"
-}
-```
-
-### Detailed Format (Default)
-
-Returns comprehensive table information:
-- Table name and schema
-- All columns with types and constraints
-- Primary keys
-- Foreign keys and relationships
-- Indexes
-- Check constraints
-- Table size and row counts
-
-```json
-{
-  "table_names": ["users", "orders"],
-  "output_format": "detailed"
-}
-```
-
-## Usage Examples
-
-### List All Tables
+#### List All Tables
 
 ```json
 {}
 ```
 
-### List Specific Tables
+#### List Specific Tables
 
 ```json
 {
@@ -118,7 +68,7 @@ Returns comprehensive table information:
 }
 ```
 
-### Simple Output
+#### Simple Output
 
 ```json
 {
@@ -126,9 +76,9 @@ Returns comprehensive table information:
 }
 ```
 
-## Output Structure
+#### Output Structure
 
-### Simple Format Output
+##### Simple Format Output
 
 ```json
 {
@@ -138,7 +88,7 @@ Returns comprehensive table information:
 }
 ```
 
-### Detailed Format Output
+##### Detailed Format Output
 
 ```json
 {
@@ -190,9 +140,9 @@ Returns comprehensive table information:
 }
 ```
 
-## CockroachDB-Specific Information
+#### CockroachDB-Specific Information
 
-### UUID Primary Keys
+##### UUID Primary Keys
 
 The tool recognizes CockroachDB's recommended UUID primary key pattern:
 
@@ -203,7 +153,7 @@ CREATE TABLE users (
 );
 ```
 
-### Multi-Region Tables
+##### Multi-Region Tables
 
 For multi-region tables, the output includes locality information:
 
@@ -215,7 +165,7 @@ For multi-region tables, the output includes locality information:
 }
 ```
 
-### Interleaved Tables
+##### Interleaved Tables
 
 The tool shows parent-child relationships for interleaved tables (legacy feature):
 
@@ -226,9 +176,61 @@ The tool shows parent-child relationships for interleaved tables (legacy feature
 }
 ```
 
-## Best Practices
+## Output Format
 
-### Use for Schema Discovery
+### Simple Format
+
+Returns basic table information:
+- Table name
+- Row count estimate
+- Size information
+
+```json
+{
+  "table_names": ["users"],
+  "output_format": "simple"
+}
+```
+
+### Detailed Format (Default)
+
+Returns comprehensive table information:
+- Table name and schema
+- All columns with types and constraints
+- Primary keys
+- Foreign keys and relationships
+- Indexes
+- Check constraints
+- Table size and row counts
+
+```json
+{
+  "table_names": ["users", "orders"],
+  "output_format": "detailed"
+}
+```
+
+## Reference
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-list-tables` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description for the LLM |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authRequired` | array | List of authentication services required |
+
+## Advanced Usage
+
+### Best Practices
+
+#### Use for Schema Discovery
 
 The tool is ideal for helping AI assistants understand your database structure:
 
@@ -242,7 +244,7 @@ tools:
       It shows all tables, their columns, data types, and relationships.
 ```
 
-### Filter Large Schemas
+#### Filter Large Schemas
 
 For databases with many tables, specify relevant tables:
 
@@ -253,7 +255,7 @@ For databases with many tables, specify relevant tables:
 }
 ```
 
-### Use Simple Format for Overviews
+#### Use Simple Format for Overviews
 
 When you need just table names and sizes:
 
@@ -263,7 +265,7 @@ When you need just table names and sizes:
 }
 ```
 
-## Excluded Tables
+### Excluded Tables
 
 The tool automatically excludes system tables and schemas:
 - `pg_catalog.*` - PostgreSQL system catalog
@@ -273,16 +275,9 @@ The tool automatically excludes system tables and schemas:
 
 Only user-created tables in the public schema (and other user schemas) are returned.
 
-## Error Handling
+### Integration with AI Assistants
 
-The tool handles common errors:
-- **Table not found**: Returns empty result for non-existent tables
-- **Permission errors**: Returns error if user lacks SELECT privileges
-- **Connection errors**: Returns connection failure details
-
-## Integration with AI Assistants
-
-### Prompt Example
+#### Prompt Example
 
 ```yaml
 tools:
@@ -302,9 +297,9 @@ tools:
       you use correct table and column names.
 ```
 
-## Common Use Cases
+### Common Use Cases
 
-### Generate Context for Queries
+#### Generate Context for Queries
 
 ```json
 {}
@@ -312,7 +307,7 @@ tools:
 
 This provides comprehensive schema information that helps AI assistants generate accurate SQL queries.
 
-### Analyze Table Structure
+#### Analyze Table Structure
 
 ```json
 {
@@ -323,7 +318,7 @@ This provides comprehensive schema information that helps AI assistants generate
 
 Perfect for understanding a specific table's structure, constraints, and relationships.
 
-### Quick Schema Overview
+#### Quick Schema Overview
 
 ```json
 {
@@ -333,14 +328,22 @@ Perfect for understanding a specific table's structure, constraints, and relatio
 
 Gets a quick list of tables with basic statistics.
 
-## Performance Considerations
+### Performance Considerations
 
 - **Simple format** is faster for large databases
 - **Detailed format** queries system tables extensively
 - Specifying `table_names` reduces query time
 - Results are fetched in a single query for efficiency
 
-## See Also
+
+## Troubleshooting
+
+The tool handles common errors:
+- **Table not found**: Returns empty result for non-existent tables
+- **Permission errors**: Returns error if user lacks SELECT privileges
+- **Connection errors**: Returns connection failure details
+
+## Additional Resources
 
 - [cockroachdb-sql](_index.md) - Execute parameterized queries
 - [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - Execute ad-hoc SQL

@@ -1,22 +1,35 @@
 ---
-title: "firestore-validate-rules"
+title: "firestore-validate-rules Tool"
 type: docs
 weight: 1
 description: >
   A "firestore-validate-rules" tool validates Firestore security rules syntax and semantic correctness without deploying them. It provides detailed error reporting with source positions and code snippets.
 ---
 
-## Overview
+## About
 
 The `firestore-validate-rules` tool validates Firestore security rules syntax
 and semantic correctness without deploying them. It provides detailed error
 reporting with source positions and code snippets.
 
+### Use Cases
+
+1. **Pre-deployment validation**: Validate rules before deploying to production
+2. **CI/CD integration**: Integrate rules validation into your build pipeline
+3. **Development workflow**: Quickly check rules syntax while developing
+4. **Error debugging**: Get detailed error locations with code snippets
+
 ## Compatible Sources
 
 {{< compatible-sources >}}
 
-## Configuration
+## Parameters
+
+| **parameters**  |   **type**   | **required** | **description**                              |
+|-----------------|:------------:|:------------:|----------------------------------------------|
+| source          |    string    |     true     | The Firestore Rules source code to validate  |
+
+## Example
 
 ```yaml
 kind: tools
@@ -26,17 +39,7 @@ source: <firestore-source-name>
 description: "Checks the provided Firestore Rules source for syntax and validation errors"
 ```
 
-## Authentication
-
-This tool requires authentication if the source requires authentication.
-
-## Parameters
-
-| **parameters**  |   **type**   | **required** | **description**                              |
-|-----------------|:------------:|:------------:|----------------------------------------------|
-| source          |    string    |     true     | The Firestore Rules source code to validate  |
-
-## Response
+## Output Format
 
 The tool returns a `ValidationResult` object containing:
 
@@ -61,9 +64,15 @@ The tool returns a `ValidationResult` object containing:
 }
 ```
 
-## Example Usage
+## Advanced Usage
 
-### Validate simple rules
+### Authentication
+
+This tool requires authentication if the source requires authentication.
+
+### Example Usage
+
+#### Validate simple rules
 
 ```json
 {
@@ -71,7 +80,7 @@ The tool returns a `ValidationResult` object containing:
 }
 ```
 
-### Example response for valid rules
+#### Example response for valid rules
 
 ```json
 {
@@ -81,7 +90,7 @@ The tool returns a `ValidationResult` object containing:
 }
 ```
 
-### Example response with errors
+#### Example response with errors
 
 ```json
 {
@@ -103,7 +112,7 @@ The tool returns a `ValidationResult` object containing:
 }
 ```
 
-## Error Handling
+## Troubleshooting
 
 The tool will return errors for:
 
@@ -111,14 +120,7 @@ The tool will return errors for:
 - API errors when calling the Firebase Rules service
 - Network connectivity issues
 
-## Use Cases
-
-1. **Pre-deployment validation**: Validate rules before deploying to production
-2. **CI/CD integration**: Integrate rules validation into your build pipeline
-3. **Development workflow**: Quickly check rules syntax while developing
-4. **Error debugging**: Get detailed error locations with code snippets
-
-## Related Tools
+## Additional Resources
 
 - [firestore-get-rules]({{< ref "firestore-get-rules" >}}): Retrieve current
   active rules

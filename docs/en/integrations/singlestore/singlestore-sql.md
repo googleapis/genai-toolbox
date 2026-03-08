@@ -1,5 +1,5 @@
 ---
-title: "singlestore-sql"
+title: "singlestore-sql Tool"
 type: docs
 weight: 1
 description: >

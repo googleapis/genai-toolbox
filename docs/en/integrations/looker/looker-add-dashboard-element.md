@@ -1,5 +1,5 @@
 ---
-title: "looker-add-dashboard-element"
+title: "looker-add-dashboard-element Tool"
 type: docs
 weight: 1
 description: >

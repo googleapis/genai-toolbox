@@ -1,5 +1,5 @@
 ---
-title: "bigquery-conversational-analytics"
+title: "bigquery-conversational-analytics Tool"
 type: docs
 weight: 1
 description: >

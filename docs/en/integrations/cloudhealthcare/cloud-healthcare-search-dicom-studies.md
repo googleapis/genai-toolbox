@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-search-dicom-studies"
+title: "cloud-healthcare-search-dicom-studies Tool"
 type: docs
 weight: 1
 description: >

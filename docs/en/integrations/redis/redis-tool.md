@@ -1,5 +1,5 @@
 ---
-title: "redis"
+title: "redis Tool"
 type: docs
 weight: 1
 description: >

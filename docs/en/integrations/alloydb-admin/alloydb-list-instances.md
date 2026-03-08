@@ -1,5 +1,5 @@
 ---
-title: alloydb-list-instances
+title: alloydb-list-instances Tool
 type: docs
 weight: 1
 description: "The \"alloydb-list-instances\" tool lists the AlloyDB instances for a given project, cluster and location.\n"

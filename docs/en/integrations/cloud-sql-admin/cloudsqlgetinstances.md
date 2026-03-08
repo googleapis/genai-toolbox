@@ -1,10 +1,12 @@
 ---
-title: "cloud-sql-get-instance"
+title: "cloud-sql-get-instance Tool"
 type: docs
 weight: 10
 description: >
   Get a Cloud SQL instance resource.
 ---
+
+## About
 
 The `cloud-sql-get-instance` tool retrieves a Cloud SQL instance resource using
 the Cloud SQL Admin API.

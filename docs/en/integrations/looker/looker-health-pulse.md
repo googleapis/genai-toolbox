@@ -1,5 +1,5 @@
 ---
-title: "looker-health-pulse"
+title: "looker-health-pulse Tool"
 type: docs
 weight: 1
 description: >

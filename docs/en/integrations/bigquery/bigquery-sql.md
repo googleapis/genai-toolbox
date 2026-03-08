@@ -1,5 +1,5 @@
 ---
-title: "bigquery-sql"
+title: "bigquery-sql Tool"
 type: docs
 weight: 1
 description: >

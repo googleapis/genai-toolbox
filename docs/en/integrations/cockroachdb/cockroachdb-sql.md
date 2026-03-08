@@ -1,5 +1,5 @@
 ---
-title: "cockroachdb-sql"
+title: "cockroachdb-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -14,55 +14,6 @@ The `cockroachdb-sql` tool allows you to execute parameterized SQL queries again
 ## Compatible Sources
 
 {{< compatible-sources >}}
-
-## Example
-
-```yaml
-sources:
-  my_cockroachdb:
-    type: cockroachdb
-    host: your-cluster.cockroachlabs.cloud
-    port: "26257"
-    user: myuser
-    password: mypassword
-    database: defaultdb
-    queryParams:
-      sslmode: require
-
-tools:
-  get_user_orders:
-    type: cockroachdb-sql
-    source: my_cockroachdb
-    description: Get all orders for a specific user
-    statement: |
-      SELECT o.id, o.order_date, o.total_amount, o.status
-      FROM orders o
-      WHERE o.user_id = $1
-      ORDER BY o.order_date DESC
-    parameters:
-      - name: user_id
-        type: string
-        description: The UUID of the user
-```
-
-## Configuration
-
-### Required Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `type` | string | Must be `cockroachdb-sql` |
-| `source` | string | Name of the CockroachDB source to use |
-| `description` | string | Human-readable description of what the tool does |
-| `statement` | string | The SQL query to execute |
-
-### Optional Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `parameters` | array | List of parameter definitions for the query |
-| `templateParameters` | array | List of template parameters for dynamic query construction |
-| `authRequired` | array | List of authentication services required |
 
 ## Parameters
 
@@ -106,11 +57,11 @@ tools:
         description: End date in YYYY-MM-DD format
 ```
 
-## Template Parameters
+### Template Parameters
 
 Template parameters enable dynamic query construction by replacing placeholders in the SQL statement before parameter binding. This is useful for dynamic table names, column names, or query structure.
 
-### Example with Template Parameters
+#### Example with Template Parameters
 
 ```yaml
 tools:
@@ -136,7 +87,57 @@ tools:
         description: The user's UUID
 ```
 
-## Best Practices
+## Example
+
+```yaml
+sources:
+  my_cockroachdb:
+    type: cockroachdb
+    host: your-cluster.cockroachlabs.cloud
+    port: "26257"
+    user: myuser
+    password: mypassword
+    database: defaultdb
+    queryParams:
+      sslmode: require
+
+tools:
+  get_user_orders:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Get all orders for a specific user
+    statement: |
+      SELECT o.id, o.order_date, o.total_amount, o.status
+      FROM orders o
+      WHERE o.user_id = $1
+      ORDER BY o.order_date DESC
+    parameters:
+      - name: user_id
+        type: string
+        description: The UUID of the user
+```
+
+## Reference
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-sql` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description of what the tool does |
+| `statement` | string | The SQL query to execute |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `parameters` | array | List of parameter definitions for the query |
+| `templateParameters` | array | List of template parameters for dynamic query construction |
+| `authRequired` | array | List of authentication services required |
+
+
+## Advanced Usage
 
 ### Use UUID Primary Keys
 
@@ -195,16 +196,6 @@ SELECT id, description, COALESCE(notes, 'No notes') as notes
 FROM expenses
 WHERE user_id = $1
 ```
-
-## Error Handling
-
-The tool automatically handles:
-- **Connection errors**: Retried with exponential backoff
-- **Serialization conflicts**: Automatically retried using cockroach-go library
-- **Invalid parameters**: Returns descriptive error messages
-- **SQL syntax errors**: Returns database error details
-
-## Advanced Usage
 
 ### Aggregations
 
@@ -287,7 +278,16 @@ tools:
         description: Start date in YYYY-MM-DD format
 ```
 
-## See Also
+
+## Troubleshooting
+
+The tool automatically handles:
+- **Connection errors**: Retried with exponential backoff
+- **Serialization conflicts**: Automatically retried using cockroach-go library
+- **Invalid parameters**: Returns descriptive error messages
+- **SQL syntax errors**: Returns database error details
+
+## Additional Resources
 
 - [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - For ad-hoc SQL execution
 - [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database

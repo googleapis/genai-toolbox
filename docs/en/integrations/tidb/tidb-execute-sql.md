@@ -1,5 +1,5 @@
 ---
-title: "tidb-execute-sql"
+title: "tidb-execute-sql Tool"
 type: docs
 weight: 1
 description: >

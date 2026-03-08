@@ -1,5 +1,5 @@
 ---
-title: "mysql-sql"
+title: "mysql-sql Tool"
 type: docs
 weight: 1
 description: >

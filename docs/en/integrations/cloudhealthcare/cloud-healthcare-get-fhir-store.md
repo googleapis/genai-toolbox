@@ -1,5 +1,5 @@
 ---
-title: "cloud-healthcare-get-fhir-store"
+title: "cloud-healthcare-get-fhir-store Tool"
 type: docs
 weight: 1
 description: >

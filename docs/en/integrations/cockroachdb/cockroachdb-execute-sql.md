@@ -1,5 +1,5 @@
 ---
-title: "cockroachdb-execute-sql"
+title: "cockroachdb-execute-sql Tool"
 type: docs
 weight: 1
 description: >
@@ -19,6 +19,14 @@ The tool takes a single `sql` parameter containing the SQL statement to execute 
 ## Compatible Sources
 
 {{< compatible-sources >}}
+
+## Parameters
+
+The tool accepts a single runtime parameter:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sql` | string | The SQL statement to execute |
 
 ## Example
 
@@ -41,9 +49,9 @@ tools:
     description: Execute any SQL statement against the CockroachDB database
 ```
 
-## Usage Examples
+### Usage Examples
 
-### Simple SELECT Query
+#### Simple SELECT Query
 
 ```json
 {
@@ -51,7 +59,7 @@ tools:
 }
 ```
 
-### Query with Aggregations
+#### Query with Aggregations
 
 ```json
 {
@@ -59,7 +67,7 @@ tools:
 }
 ```
 
-### Database Introspection
+#### Database Introspection
 
 ```json
 {
@@ -73,7 +81,7 @@ tools:
 }
 ```
 
-### Multi-Region Information
+#### Multi-Region Information
 
 ```json
 {
@@ -87,9 +95,9 @@ tools:
 }
 ```
 
-## CockroachDB-Specific Features
+### CockroachDB-Specific Features
 
-### Check Cluster Version
+#### Check Cluster Version
 
 ```json
 {
@@ -97,7 +105,7 @@ tools:
 }
 ```
 
-### View Node Status
+#### View Node Status
 
 ```json
 {
@@ -105,7 +113,7 @@ tools:
 }
 ```
 
-### Check Replication Status
+#### Check Replication Status
 
 ```json
 {
@@ -113,7 +121,7 @@ tools:
 }
 ```
 
-### View Table Regions
+#### View Table Regions
 
 ```json
 {
@@ -121,7 +129,7 @@ tools:
 }
 ```
 
-## Configuration
+## Reference
 
 ### Required Fields
 
@@ -137,17 +145,11 @@ tools:
 |-------|------|-------------|
 | `authRequired` | array | List of authentication services required |
 
-## Parameters
+## Advanced Usage
 
-The tool accepts a single runtime parameter:
+### Best Practices
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `sql` | string | The SQL statement to execute |
-
-## Best Practices
-
-### Use for Exploration, Not Production
+#### Use for Exploration, Not Production
 
 This tool is ideal for:
 - Interactive database exploration
@@ -157,14 +159,14 @@ This tool is ideal for:
 
 For production use cases, use [cockroachdb-sql](_index.md) with parameterized queries.
 
-### Be Cautious with Data Modification
+#### Be Cautious with Data Modification
 
 While this tool can execute any SQL statement, be careful with:
 - `INSERT`, `UPDATE`, `DELETE` statements
 - `DROP` or `ALTER` statements
 - Schema changes in production
 
-### Use LIMIT for Large Results
+#### Use LIMIT for Large Results
 
 Always use `LIMIT` clauses when exploring data:
 
@@ -172,7 +174,7 @@ Always use `LIMIT` clauses when exploring data:
 SELECT * FROM large_table LIMIT 100
 ```
 
-### Leverage CockroachDB's SQL Extensions
+#### Leverage CockroachDB's SQL Extensions
 
 CockroachDB supports PostgreSQL syntax plus extensions:
 
@@ -187,17 +189,9 @@ SHOW ZONE CONFIGURATION FOR TABLE expenses;
 SHOW CREATE TABLE expenses;
 ```
 
-## Error Handling
+### Security Considerations
 
-The tool will return descriptive errors for:
-- **Syntax errors**: Invalid SQL syntax
-- **Permission errors**: Insufficient user privileges
-- **Connection errors**: Network or authentication issues
-- **Runtime errors**: Constraint violations, type mismatches, etc.
-
-## Security Considerations
-
-### SQL Injection Risk
+#### SQL Injection Risk
 
 Since this tool executes arbitrary SQL, it should only be used with:
 - Trusted users in interactive sessions
@@ -206,7 +200,7 @@ Since this tool executes arbitrary SQL, it should only be used with:
 
 Never expose this tool directly to end users without proper authorization controls.
 
-### Use Authentication
+#### Use Authentication
 
 Configure the `authRequired` field to restrict access:
 
@@ -220,7 +214,7 @@ tools:
       - my-auth-service
 ```
 
-### Read-Only Users
+#### Read-Only Users
 
 For safer exploration, create read-only database users:
 
@@ -229,9 +223,9 @@ CREATE USER readonly_user;
 GRANT SELECT ON DATABASE defaultdb TO readonly_user;
 ```
 
-## Common Use Cases
+### Common Use Cases
 
-### Database Administration
+#### Database Administration
 
 ```sql
 -- View database size
@@ -243,7 +237,7 @@ WHERE table_schema = 'public'
 ORDER BY pg_total_relation_size(table_name::regclass) DESC;
 ```
 
-### Performance Analysis
+#### Performance Analysis
 
 ```sql
 -- Find slow queries
@@ -254,7 +248,7 @@ ORDER BY mean_latency DESC
 LIMIT 10;
 ```
 
-### Data Quality Checks
+#### Data Quality Checks
 
 ```sql
 -- Find NULL values
@@ -269,7 +263,15 @@ GROUP BY user_id, email
 HAVING COUNT(*) > 1;
 ```
 
-## See Also
+## Troubleshooting
+
+The tool will return descriptive errors for:
+- **Syntax errors**: Invalid SQL syntax
+- **Permission errors**: Insufficient user privileges
+- **Connection errors**: Network or authentication issues
+- **Runtime errors**: Constraint violations, type mismatches, etc.
+
+## Additional Resources
 
 - [cockroachdb-sql](_index.md) - For parameterized, production-ready queries
 - [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database

@@ -1,5 +1,5 @@
 ---
-title: "snowflake-sql"
+title: "snowflake-sql Tool"
 type: docs
 weight: 1
 description: >

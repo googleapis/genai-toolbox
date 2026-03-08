@@ -1,12 +1,12 @@
 ---
-title: "serverless-spark-get-batch"
+title: "serverless-spark-get-batch Tool"
 type: docs
 weight: 1
 description: >
   A "serverless-spark-get-batch" tool gets a single Spark batch from the source.
 ---
 
-# serverless-spark-get-batch
+## About
 
 The `serverless-spark-get-batch` tool allows you to retrieve a specific
 Serverless Spark batch job.
@@ -33,7 +33,7 @@ source: my-serverless-spark-source
 description: Use this tool to get a serverless spark batch.
 ```
 
-## Response Format
+## Output Format
 
 The response contains the full Batch object as defined in the [API
 spec](https://cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.batches#Batch),

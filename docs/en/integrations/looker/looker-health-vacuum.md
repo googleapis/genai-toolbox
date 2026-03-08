@@ -1,5 +1,5 @@
 ---
-title: "looker-health-vacuum"
+title: "looker-health-vacuum Tool"
 type: docs
 weight: 1
 description: >

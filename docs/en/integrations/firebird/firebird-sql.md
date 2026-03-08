@@ -1,5 +1,5 @@
 ---
-title: "firebird-sql"
+title: "firebird-sql Tool"
 type: docs
 weight: 1
 description: > 

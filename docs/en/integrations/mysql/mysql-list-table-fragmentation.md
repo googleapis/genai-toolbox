@@ -1,5 +1,5 @@
 ---
-title: "mysql-list-table-fragmentation"
+title: "mysql-list-table-fragmentation Tool"
 type: docs
 weight: 1
 description: >
@@ -26,7 +26,7 @@ This tool takes 4 optional input parameters:
   much free space in bytes. Default 1.
 - `limit` (optional): Max rows to return, default 10.
 
-## Compatible Sourcess
+## Compatible Sources
 
 {{< compatible-sources others="integrations/cloud-sql-mysql">}}
 

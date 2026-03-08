@@ -1,5 +1,5 @@
 ---
-title: "spanner-list-tables"
+title: "spanner-list-tables Tool"
 type: docs
 weight: 3
 description: >
@@ -19,11 +19,7 @@ This tool is read-only and executes pre-defined SQL queries against the
 the database dialect from the source configuration and uses the appropriate SQL
 syntax.
 
-## Compatible Sources
-
-{{< compatible-sources >}}
-
-## Features
+### Features
 
 - **Automatic Dialect Detection**: Adapts queries based on whether the database
   uses GoogleSQL or PostgreSQL dialect
@@ -32,6 +28,31 @@ syntax.
 - **Flexible Filtering**: Can list all tables or filter by specific table names
 - **Output Format Options**: Choose between simple (table names only) or detailed
   (full schema information) output
+
+### Use Cases
+
+1. **Database Documentation**: Generate comprehensive documentation of your
+   database schema
+2. **Schema Validation**: Verify that expected tables and columns exist
+3. **Migration Planning**: Understand the current schema before making changes
+4. **Development Tools**: Build tools that need to understand database structure
+5. **Audit and Compliance**: Track schema changes and ensure compliance with
+   data governance policies
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+The tool accepts two optional parameters:
+
+| **parameter** | **type** | **default** | **description**                                                                                      |
+|---------------|:--------:|:-----------:|------------------------------------------------------------------------------------------------------|
+| table_names   |  string  |     ""      | Comma-separated list of table names to filter. If empty, lists all tables in user-accessible schemas |
+| output_format |  string  | "detailed"  | Output format: "simple" returns only table names, "detailed" returns full schema information         |
+
 
 ## Example
 
@@ -68,15 +89,6 @@ description: |
     "output_format": "detailed"
   }
 ```
-
-## Parameters
-
-The tool accepts two optional parameters:
-
-| **parameter** | **type** | **default** | **description**                                                                                      |
-|---------------|:--------:|:-----------:|------------------------------------------------------------------------------------------------------|
-| table_names   |  string  |     ""      | Comma-separated list of table names to filter. If empty, lists all tables in user-accessible schemas |
-| output_format |  string  | "detailed"  | Output format: "simple" returns only table names, "detailed" returns full schema information         |
 
 ## Output Format
 
@@ -166,17 +178,18 @@ comprehensive schema information:
 ]
 ```
 
-## Use Cases
+## Reference
 
-1. **Database Documentation**: Generate comprehensive documentation of your
-   database schema
-2. **Schema Validation**: Verify that expected tables and columns exist
-3. **Migration Planning**: Understand the current schema before making changes
-4. **Development Tools**: Build tools that need to understand database structure
-5. **Audit and Compliance**: Track schema changes and ensure compliance with
-   data governance policies
+| **field**    | **type** | **required** | **description**                                    |
+|--------------|:--------:|:------------:|----------------------------------------------------|
+| type         |  string  |     true     | Must be "spanner-list-tables"                      |
+| source       |  string  |     true     | Name of the Spanner source to query                |
+| description  |  string  |    false     | Description of the tool that is passed to the LLM  |
+| authRequired | string[] |    false     | List of auth services required to invoke this tool |
 
-## Example with Agent Integration
+## Advanced Usage
+
+### Example with Agent Integration
 
 ```yaml
 kind: sources
@@ -197,23 +210,15 @@ description: |
   - List all tables by leaving table_names empty
   - Get specific table schemas by providing comma-separated table names
   - Choose between simple (names only) or detailed (full schema) output
-  
+
   Examples:
   1. List all tables with details: {"output_format": "detailed"}
   2. Get specific tables: {"table_names": "users,orders", "output_format": "detailed"}
   3. Just get table names: {"output_format": "simple"}
 ```
 
-## Reference
 
-| **field**    | **type** | **required** | **description**                                    |
-|--------------|:--------:|:------------:|----------------------------------------------------|
-| type         |  string  |     true     | Must be "spanner-list-tables"                      |
-| source       |  string  |     true     | Name of the Spanner source to query                |
-| description  |  string  |    false     | Description of the tool that is passed to the LLM  |
-| authRequired | string[] |    false     | List of auth services required to invoke this tool |
-
-## Notes
+## Additional Resources
 
 - This tool is read-only and does not modify any data
 - The tool automatically handles both GoogleSQL and PostgreSQL dialects

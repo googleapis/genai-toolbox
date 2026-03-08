@@ -1,5 +1,5 @@
 ---
-title: "bigquery-list-table-ids"
+title: "bigquery-list-table-ids Tool"
 type: docs
 weight: 1
 description: >

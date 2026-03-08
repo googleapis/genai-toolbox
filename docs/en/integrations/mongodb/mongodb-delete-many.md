@@ -1,5 +1,5 @@
 ---
-title: "mongodb-delete-many"
+title: "mongodb-delete-many Tool"
 type: docs
 weight: 1
 description: >

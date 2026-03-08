@@ -1,5 +1,5 @@
 ---
-title: "looker-validate-project"
+title: "looker-validate-project Tool"
 type: docs
 weight: 1
 description: >

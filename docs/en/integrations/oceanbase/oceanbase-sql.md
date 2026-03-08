@@ -1,5 +1,5 @@
 ---
-title: "oceanbase-sql"
+title: "oceanbase-sql Tool"
 type: docs
 weight: 1
 description: >

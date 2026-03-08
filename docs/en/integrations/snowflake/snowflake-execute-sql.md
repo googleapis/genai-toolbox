@@ -1,5 +1,5 @@
 ---
-title: "snowflake-execute-sql"
+title: "snowflake-execute-sql Tool"
 type: docs
 weight: 1
 description: >

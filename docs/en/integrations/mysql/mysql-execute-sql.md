@@ -1,5 +1,5 @@
 ---
-title: "mysql-execute-sql"
+title: "mysql-execute-sql Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "firestore-add-documents"
+title: "firestore-add-documents Tool"
 type: docs
 weight: 1
 description: >
@@ -24,22 +24,12 @@ each new document.
 | `documentData`   | map     | Yes      | The data to be added as a document to the given collection. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
 | `returnData`     | boolean | No       | If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context                                                                             |
 
-## Output
-
-The tool returns a map containing:
-
-| Field          | Type   | Description                                                                                                                    |
-|----------------|--------|--------------------------------------------------------------------------------------------------------------------------------|
-| `documentPath` | string | The full resource name of the created document (e.g., `projects/{projectId}/databases/{databaseId}/documents/{document_path}`) |
-| `createTime`   | string | The timestamp when the document was created                                                                                    |
-| `documentData` | map    | The data that was added (only included when `returnData` is true)                                                              |
-
-## Data Type Format
+### Data Type Format
 
 The tool requires Firestore's native JSON format for document data. Each field
 must be wrapped with its type indicator:
 
-### Basic Types
+#### Basic Types
 
 - **String**: `{"stringValue": "your string"}`
 - **Integer**: `{"integerValue": "123"}` or `{"integerValue": 123}`
@@ -49,14 +39,14 @@ must be wrapped with its type indicator:
 - **Bytes**: `{"bytesValue": "base64EncodedString"}`
 - **Timestamp**: `{"timestampValue": "2025-01-07T10:00:00Z"}` (RFC3339 format)
 
-### Complex Types
+#### Complex Types
 
 - **GeoPoint**: `{"geoPointValue": {"latitude": 34.052235, "longitude": -118.243683}}`
 - **Array**: `{"arrayValue": {"values": [{"stringValue": "item1"}, {"integerValue": "2"}]}}`
 - **Map**: `{"mapValue": {"fields": {"key1": {"stringValue": "value1"}, "key2": {"booleanValue": true}}}}`
 - **Reference**: `{"referenceValue": "collection/document"}`
 
-## Examples
+## Example
 
 ### Basic Document Creation
 
@@ -243,7 +233,20 @@ Usage:
 }
 ```
 
-## Authentication
+## Output Format
+
+The tool returns a map containing:
+
+| Field          | Type   | Description                                                                                                                    |
+|----------------|--------|--------------------------------------------------------------------------------------------------------------------------------|
+| `documentPath` | string | The full resource name of the created document (e.g., `projects/{projectId}/databases/{databaseId}/documents/{document_path}`) |
+| `createTime`   | string | The timestamp when the document was created                                                                                    |
+| `documentData` | map    | The data that was added (only included when `returnData` is true)                                                              |
+
+
+## Advanced Usage
+
+### Authentication
 
 The tool can be configured to require authentication:
 
@@ -258,16 +261,7 @@ authRequired:
   - api-key
 ```
 
-## Error Handling
-
-Common errors include:
-
-- Invalid collection path
-- Missing or invalid document data
-- Permission denied (if Firestore security rules block the operation)
-- Invalid data type conversions
-
-## Best Practices
+### Best Practices
 
 1. **Always use typed values**: Every field must be wrapped with its appropriate
    type indicator (e.g., `{"stringValue": "text"}`)
@@ -283,7 +277,17 @@ Common errors include:
 7. **Consider security rules**: Ensure your Firestore security rules allow
    document creation in the target collection
 
-## Related Tools
+## Troubleshooting
+
+Common errors include:
+
+- Invalid collection path
+- Missing or invalid document data
+- Permission denied (if Firestore security rules block the operation)
+- Invalid data type conversions
+
+
+## Additional Resources
 
 - [`firestore-get-documents`](firestore-get-documents.md) - Retrieve documents
   by their paths

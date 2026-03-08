@@ -1,5 +1,5 @@
 ---
-title: "sqlite-execute-sql"
+title: "sqlite-execute-sql Tool"
 type: docs
 weight: 1
 description: >

@@ -1,5 +1,5 @@
 ---
-title: "wait"
+title: "wait Tool"
 type: docs
 weight: 1
 description: >

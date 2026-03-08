@@ -1,5 +1,5 @@
 ---
-title: "dataplex-search-aspect-types"
+title: "dataplex-search-aspect-types Tool"
 type: docs
 weight: 1
 description: >

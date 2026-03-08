@@ -1,5 +1,5 @@
 ---
-title: "bigquery-execute-sql"
+title: "bigquery-execute-sql Tool"
 type: docs
 weight: 1
 description: >

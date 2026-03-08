@@ -1,11 +1,11 @@
 ---
-title: "firestore-update-document"
+title: "firestore-update-document Tool"
 type: docs
 weight: 1
 description: >
   A "firestore-update-document" tool updates an existing document in Firestore.
 ---
-## Description
+## About
 
 The `firestore-update-document` tool allows you to update existing documents in
 Firestore. It supports all Firestore data types using Firestore's native JSON
@@ -27,22 +27,12 @@ deleted from the document, following Firestore's native behavior.
 | `updateMask`   | array   | No       | The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document |
 | `returnData`   | boolean | No       | If set to true, the output will include the data of the updated document. Defaults to false to help avoid overloading the context                                                                                                                      |
 
-## Output
-
-The tool returns a map containing:
-
-| Field          | Type   | Description                                                                                 |
-|----------------|--------|---------------------------------------------------------------------------------------------|
-| `documentPath` | string | The full path of the updated document                                                       |
-| `updateTime`   | string | The timestamp when the document was updated                                                 |
-| `documentData` | map    | The current data of the document after the update (only included when `returnData` is true) |
-
-## Data Type Format
+### Data Type Format
 
 The tool requires Firestore's native JSON format for document data. Each field
 must be wrapped with its type indicator:
 
-### Basic Types
+#### Basic Types
 
 - **String**: `{"stringValue": "your string"}`
 - **Integer**: `{"integerValue": "123"}` or `{"integerValue": 123}`
@@ -52,37 +42,30 @@ must be wrapped with its type indicator:
 - **Bytes**: `{"bytesValue": "base64EncodedString"}`
 - **Timestamp**: `{"timestampValue": "2025-01-07T10:00:00Z"}` (RFC3339 format)
 
-### Complex Types
+#### Complex Types
 
 - **GeoPoint**: `{"geoPointValue": {"latitude": 34.052235, "longitude": -118.243683}}`
 - **Array**: `{"arrayValue": {"values": [{"stringValue": "item1"}, {"integerValue": "2"}]}}`
 - **Map**: `{"mapValue": {"fields": {"key1": {"stringValue": "value1"}, "key2": {"booleanValue": true}}}}`
 - **Reference**: `{"referenceValue": "collection/document"}`
 
-## Update Modes
+### Update Modes
 
-### Full Document Update (Merge All)
+#### Full Document Update (Merge All)
 
 When `updateMask` is not provided, the tool performs a merge operation that
 updates all fields specified in `documentData` while preserving other existing
 fields in the document.
 
-### Selective Field Update
+#### Selective Field Update
 
 When `updateMask` is provided, only the fields listed in the mask are updated.
 This allows for precise control over which fields are modified, added, or
 deleted. To delete a field, include it in the `updateMask` but omit it from
 `documentData`.
 
-## Reference
 
-| **field**   | **type** | **required** | **description**                                      |
-|-------------|:--------:|:------------:|------------------------------------------------------|
-| type        |  string  |     true     | Must be "firestore-update-document".                 |
-| source      |  string  |     true     | Name of the Firestore source to update documents in. |
-| description |  string  |     true     | Description of the tool that is passed to the LLM.   |
-
-## Examples
+## Example
 
 ### Basic Document Update (Full Merge)
 
@@ -296,7 +279,28 @@ In this example:
 }
 ```
 
-## Authentication
+## Output Format
+
+The tool returns a map containing:
+
+| Field          | Type   | Description                                                                                 |
+|----------------|--------|---------------------------------------------------------------------------------------------|
+| `documentPath` | string | The full path of the updated document                                                       |
+| `updateTime`   | string | The timestamp when the document was updated                                                 |
+| `documentData` | map    | The current data of the document after the update (only included when `returnData` is true) |
+
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "firestore-update-document".                 |
+| source      |  string  |     true     | Name of the Firestore source to update documents in. |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+
+## Advanced Usage
+
+### Authentication
 
 The tool can be configured to require authentication:
 
@@ -311,17 +315,7 @@ authRequired:
   - api-key
 ```
 
-## Error Handling
-
-Common errors include:
-
-- Document not found (when using update with a non-existent document)
-- Invalid document path
-- Missing or invalid document data
-- Permission denied (if Firestore security rules block the operation)
-- Invalid data type conversions
-
-## Best Practices
+### Best Practices
 
 1. **Use update masks for precision**: When you only need to update specific
    fields, use the `updateMask` parameter to avoid unintended changes
@@ -343,7 +337,7 @@ Common errors include:
 10. **Test with non-production data first**: Always test your updates on
     non-critical documents first
 
-## Differences from Add Documents
+### Differences from Add Documents
 
 - **Purpose**: Updates existing documents vs. creating new ones
 - **Document must exist**: For standard updates (though not using updateMask
@@ -353,7 +347,17 @@ Common errors include:
   mask but not in the data
 - **Returns updateTime**: Instead of createTime
 
-## Related Tools
+## Troubleshooting
+
+Common errors include:
+
+- Document not found (when using update with a non-existent document)
+- Invalid document path
+- Missing or invalid document data
+- Permission denied (if Firestore security rules block the operation)
+- Invalid data type conversions
+
+## Additional Resources
 
 - [`firestore-add-documents`](firestore-add-documents.md) - Add new documents to
   Firestore

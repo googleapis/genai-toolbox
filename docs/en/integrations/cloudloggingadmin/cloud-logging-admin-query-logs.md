@@ -1,5 +1,5 @@
 ---
-title: "cloud-logging-admin-query-logs"
+title: "cloud-logging-admin-query-logs Tool"
 type: docs
 description: >
   A "cloud-logging-admin-query-logs" tool queries log entries.

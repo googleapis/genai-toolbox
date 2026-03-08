@@ -1,5 +1,5 @@
 ---
-title: "postgres-list-table-stats"
+title: "postgres-list-table-stats Tool"
 type: docs
 weight: 1
 description: >
@@ -12,9 +12,28 @@ The `postgres-list-table-stats` tool queries `pg_stat_all_tables` to provide com
 
 The tool returns a JSON array where each element represents statistics for a table, including scan metrics, row counts, and vacuum history. Results are sorted by sequential scans by default and limited to 50 rows.
 
+### Use Cases
+
+- **Finding ineffective indexes**: Identify tables with low `idx_scan_ratio_percent` to evaluate index strategy.
+- **Detecting table bloat**: Sort by `dead_rows` to find tables needing VACUUM.
+- **Monitoring growth**: Track `total_size_bytes` over time for capacity planning.
+- **Audit maintenance**: Check `last_autovacuum` and `last_autoanalyze` timestamps to ensure maintenance tasks are running.
+- **Understanding workload**: Examine `seq_scan` vs `idx_scan` ratios to understand query patterns.
+
 ## Compatible Sources
 
 {{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
+
+## Parameters
+
+| parameter   | type    | required | default | description |
+|-------------|---------|----------|---------|-------------|
+| schema_name | string  | false    | "public" | Optional: A specific schema name to filter by (supports partial matching) |
+| table_name  | string  | false    | null    | Optional: A specific table name to filter by (supports partial matching) |
+| owner       | string  | false    | null    | Optional: A specific owner to filter by (supports partial matching) |
+| sort_by     | string  | false    | null    | Optional: The column to sort by. Valid values: `size`, `dead_rows`, `seq_scan`, `idx_scan` (defaults to `seq_scan`) |
+| limit       | integer | false    | 50      | Optional: The maximum number of results to return |
+
 
 ## Example
 
@@ -100,17 +119,7 @@ description: "Lists table statistics including size, scans, and bloat metrics."
 ]
 ```
 
-## Parameters
-
-| parameter   | type    | required | default | description |
-|-------------|---------|----------|---------|-------------|
-| schema_name | string  | false    | "public" | Optional: A specific schema name to filter by (supports partial matching) |
-| table_name  | string  | false    | null    | Optional: A specific table name to filter by (supports partial matching) |
-| owner       | string  | false    | null    | Optional: A specific owner to filter by (supports partial matching) |
-| sort_by     | string  | false    | null    | Optional: The column to sort by. Valid values: `size`, `dead_rows`, `seq_scan`, `idx_scan` (defaults to `seq_scan`) |
-| limit       | integer | false    | 50      | Optional: The maximum number of results to return |
-
-## Output Fields Reference
+## Output Format
 
 | field                  | type      | description |
 |------------------------|-----------|-------------|
@@ -131,37 +140,31 @@ description: "Lists table statistics including size, scans, and bloat metrics."
 | last_autovacuum        | timestamp | Timestamp of the last automatic vacuum operation on this table. |
 | last_autoanalyze       | timestamp | Timestamp of the last automatic analyze operation on this table. |
 
-## Interpretation Guide
+## Advanced Usage
 
-### Index Scan Ratio (`idx_scan_ratio_percent`)
+### Interpretation Guide
+
+#### Index Scan Ratio (`idx_scan_ratio_percent`)
 
 - **High ratio (> 80%)**: Table queries are efficiently using indexes. This is typically desirable.
 - **Low ratio (< 20%)**: Many sequential scans indicate missing indexes or queries that cannot use existing indexes effectively. Consider adding indexes to frequently searched columns.
 - **0%**: No index scans performed; all queries performed sequential scans. May warrant index investigation.
 
-### Dead Row Ratio (`dead_row_ratio_percent`)
+#### Dead Row Ratio (`dead_row_ratio_percent`)
 
 - **< 2%**: Healthy table with minimal bloat.
 - **2-5%**: Moderate bloat; consider running VACUUM if not recent.
 - **> 5%**: High bloat; may benefit from manual VACUUM or VACUUM FULL.
 
-### Vacuum History
+#### Vacuum History
 
 - **Null `last_vacuum`**: Table has never been manually vacuumed; relies on autovacuum.
 - **Recent `last_autovacuum`**: Autovacuum is actively managing the table.
 - **Stale timestamps**: Consider running manual VACUUM and ANALYZE if maintenance windows exist.
 
-## Performance Considerations
+### Performance Considerations
 
 - Statistics are collected from `pg_stat_all_tables`, which resets on PostgreSQL restart.
 - Run `ANALYZE` on tables to update statistics for accurate query planning.
 - The tool defaults to limiting results to 50 rows; adjust the `limit` parameter for larger result sets.
 - Filtering by schema, table name, or owner uses `LIKE` pattern matching (supports partial matches).
-
-## Use Cases
-
-- **Finding ineffective indexes**: Identify tables with low `idx_scan_ratio_percent` to evaluate index strategy.
-- **Detecting table bloat**: Sort by `dead_rows` to find tables needing VACUUM.
-- **Monitoring growth**: Track `total_size_bytes` over time for capacity planning.
-- **Audit maintenance**: Check `last_autovacuum` and `last_autoanalyze` timestamps to ensure maintenance tasks are running.
-- **Understanding workload**: Examine `seq_scan` vs `idx_scan` ratios to understand query patterns.

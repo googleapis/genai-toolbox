@@ -1,5 +1,5 @@
 ---
-title: "serverless-spark-create-pyspark-batch"
+title: "serverless-spark-create-pyspark-batch Tool"
 type: docs
 weight: 2
 description: >
@@ -26,20 +26,7 @@ and takes around a minute to begin executing; status can be polled using the
 
 {{< compatible-sources >}}
 
-## Custom Configuration
-
-This tool supports custom
-[`runtimeConfig`](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/RuntimeConfig)
-and
-[`environmentConfig`](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/EnvironmentConfig)
-settings, which can be specified in a `tools.yaml` file. These configurations
-are parsed as YAML and passed to the Dataproc API.
-
-**Note:** If your project requires custom runtime or environment configuration,
-you must write a custom `tools.yaml`, you cannot use the `serverless-spark`
-prebuilt config.
-
-### Example `tools.yaml`
+## Example
 
 ```yaml
 kind: tools
@@ -54,7 +41,20 @@ environmentConfig:
     networkUri: "my-network"
 ```
 
-## Response Format
+### Custom Configuration
+
+This tool supports custom
+[`runtimeConfig`](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/RuntimeConfig)
+and
+[`environmentConfig`](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/EnvironmentConfig)
+settings, which can be specified in a `tools.yaml` file. These configurations
+are parsed as YAML and passed to the Dataproc API.
+
+**Note:** If your project requires custom runtime or environment configuration,
+you must write a custom `tools.yaml`, you cannot use the `serverless-spark`
+prebuilt config.
+
+## Output Format
 
 The response contains the
 [operation](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.operations#resource:-operation)
