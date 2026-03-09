@@ -33,12 +33,10 @@
                                     return part.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                                 }).join(' › ');
 
-                                // FIX: Save it to the root 'result' object so Pagefind doesn't render it as a badge!
                                 if (!result.rawTitle) {
                                     result.rawTitle = result.meta.title;
                                 }
 
-                                // Always build using the hidden rawTitle
                                 result.meta.title = breadcrumb + ' › ' + result.rawTitle;
                             }
                             return result;
