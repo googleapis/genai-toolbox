@@ -23,8 +23,9 @@
                         resetStyles: false,
                         bundlePath: "{{ relURL "pagefind/" }}",
                         processResult: function (result) {
+                            const ignoredSegments = ["en", "docs", "dev", "genai-toolbox"];
                             let path = result.url.replace(/^https?:\/\/[^\/]+/, "").split('#')[0].replace(/\/$/, "");
-                            let parts = path.split("/").filter(p => p && p !== "en" && p !== "docs" && p !== "dev" && p !== "genai-toolbox");
+                            let parts = path.split("/").filter(p => p && !ignoredSegments.includes(p));
                             parts.pop();
 
                             if (parts.length > 0) {
