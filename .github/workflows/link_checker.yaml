@@ -14,14 +14,11 @@
 name: Link Checker
 
 on:
-  
   pull_request:
-  pull_request_target:
-    types: [opened, synchronize]
 permissions:
+  contents: read
   pull-requests: write
   issues: write
-  contents: read
 
 jobs:
   link-check:
@@ -30,7 +27,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Identify Changed Files
@@ -77,7 +73,6 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
-            --max-retries 10
             ${{ steps.changed-files.outputs.CHECK_FILES }}
           output: lychee-report.md
           format: markdown
@@ -116,23 +111,13 @@ jobs:
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
       - name: Create PR Comment
-        id: pr-comment
         if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
-        continue-on-error: true
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ github.event.pull_request.number }}
           body-path: full-report.md
           edit-mode: replace
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Report Commenting Failure
-        if: steps.pr-comment.outcome == 'failure'
-        run: |
-          echo "::warning title=GitHub API Error::The bot failed to post a PR comment. This is likely a permission issue with GITHUB_TOKEN on a fork."
-          echo "Check the 'Link Checker' step output below for the results instead." 
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
