@@ -3,7 +3,7 @@ title: "list_tables"
 type: docs
 weight: 1
 description: > 
-   Lists all user tables in the connected schema, including segment size, row count, and last analyzed date. Filters by a comma-separated list of names. If names are omitted, lists all tables in the current user's schema
+   Lists all tables in the current user's schema
 aliases:
 - /resources/tools/oracle-sql
 ---
