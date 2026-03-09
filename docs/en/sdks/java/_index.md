@@ -1,5 +1,5 @@
 ---
-title: "JAVA"
+title: "Java"
 type: docs
 weight: 4
 description: >
@@ -15,7 +15,7 @@ The MCP Toolbox service provides a centralized way to manage and expose tools
 These JAVA SDKs act as clients for that service. They handle the communication needed to:
 
 * Fetch tool definitions from your running Toolbox instance.
-* Provide convenient Python objects or functions representing those tools.
+* Provide convenient Java objects or functions representing those tools.
 * Invoke the tools (calling the underlying APIs/services configured in Toolbox).
 * Handle authentication and parameter binding as needed.
 
