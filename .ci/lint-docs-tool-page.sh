@@ -75,7 +75,7 @@ for filepath in integration_dir.rglob("*.md"):
             file_errors = True
 
     # 3. Strip code blocks from body to avoid linting example markdown headings
-    clean_body = re.sub(r"```.*?```", "", body, flags=re.DOTALL)
+    clean_body = re.sub(r"^(?:```|~~~).*?^(?:```|~~~)", "", body, flags=re.DOTALL | re.MULTILINE)
 
     # 4. Check H1 Headings
     if re.search(r"^#\s+\w+", clean_body, re.MULTILINE):
