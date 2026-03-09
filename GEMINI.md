@@ -57,13 +57,15 @@ This file (symlinked as `CLAUDE.md` and `AGENTS.md`) provides context and guidel
 
 1.  Navigate to `.hugo` directory: `cd .hugo`
 2.  Install dependencies: `npm ci`
-3.  Start server: `hugo server`
+3.  **Generate Search Index:** Because Pagefind requires physical files, `hugo server` alone will not populate the search bar. Build the local index first (using the development environment to block analytics) by running:
+    `hugo --environment development && npx pagefind --site public --output-path static/pagefind`
+4.  Start server: `hugo server`
 
 ### Versioning Workflows
 
 Documentation builds automatically generate standard HTML alongside AI-friendly text files (`llms.txt` and `llms-full.txt`).
 
-There are 6 workflows in total, handling parallel deployments to both GitHub Pages and Cloudflare Pages.
+There are 6 workflows in total, handling parallel deployments to both GitHub Pages and Cloudflare Pages. **All deployment workflows automatically execute `npx pagefind --site public` to generate version-scoped search indexes.**
 
 1.  **Deploy In-development docs**: Commits merged to `main` deploy to the `/dev/` path. Automatically defaults to version `Dev`.
 2.  **Deploy Versioned Docs**: New GitHub releases deploy to `/<version>/` and the root path. The release tag is automatically injected into the build as the documentation version. *(Note: Developers must manually add the new version to the `[[params.versions]]` dropdown array in `hugo.toml` prior to merging a release PR).*

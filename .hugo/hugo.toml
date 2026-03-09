@@ -35,17 +35,24 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   github_repo = "https://github.com/googleapis/genai-toolbox"
   github_project_repo = "https://github.com/googleapis/genai-toolbox"
   github_subdir = "docs"
-  offlineSearch = true
+  offlineSearch = false
   version_menu = "Releases"
   releases_url = "/genai-toolbox/releases.releases"
   global_logo_url = "/genai-toolbox/"
   version = "Dev"
+  pagefind = true
   [params.ui]
     ul_show = 100
     showLightDarkModeMenu = true
-    breadcrumb_disable = true
+    breadcrumb_disable = false
     sidebar_menu_foldable = true
     sidebar_menu_compact = false
+  [params.ui.feedback]
+    enable = true
+    yes = 'Glad to hear it! Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
+    no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
+  [params.ui.readingtime]
+      enable = true
 
 [[params.versions]]
   version = "Dev"
@@ -173,3 +180,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 
 [outputs]
   home = ["HTML", "RSS", "LLMS", "LLMS-FULL", "releases"]
+
+# Google Analytics ID
+[services]
+  [services.googleAnalytics]
+    id = "G-GLSV9KD8BF"

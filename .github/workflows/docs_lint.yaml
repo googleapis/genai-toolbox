@@ -18,6 +18,7 @@ on:
   pull_request:
     paths:
       - 'docs/**'
+      - '.github/workflows/docs**'
       - '.ci/lint-docs-*.sh'
 
 jobs:

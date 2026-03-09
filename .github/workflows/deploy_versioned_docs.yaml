@@ -63,6 +63,10 @@ jobs:
           HUGO_RELATIVEURLS: false
           HUGO_PARAMS_VERSION: ${{ steps.get_version.outputs.VERSION }}
 
+      - name: Build Pagefind Index (Versioned)
+        run: npx pagefind --site public
+        working-directory: .hugo
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
@@ -83,6 +87,10 @@ jobs:
           HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
           HUGO_RELATIVEURLS: false
           HUGO_PARAMS_VERSION: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build Pagefind Index (Root)
+        run: npx pagefind --site public
+        working-directory: .hugo
 
       - name: Deploy to root
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4

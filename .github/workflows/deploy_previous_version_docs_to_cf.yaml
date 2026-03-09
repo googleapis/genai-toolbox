@@ -73,6 +73,10 @@ jobs:
           HUGO_RELATIVEURLS: false
           HUGO_PARAMS_VERSION: ${{ github.event.inputs.version_tag }}
 
+      - name: Build Pagefind Index (Archived Version)
+        run: npx pagefind --site public
+        working-directory: .hugo
+
       - name: Deploy to cloudflare-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -94,6 +98,10 @@ jobs:
           HUGO_BASEURL: https://mcp-toolbox.dev/
           HUGO_RELATIVEURLS: false
           HUGO_PARAMS_VERSION: ${{ github.event.inputs.version_tag }}
+
+      - name: Build Pagefind Index (Root)
+        run: npx pagefind --site public
+        working-directory: .hugo
 
       - name: Deploy to root
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4

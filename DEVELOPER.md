@@ -451,17 +451,27 @@ Follow these steps to preview documentation changes locally using a Hugo server:
     npm ci
     ```
 
-1. **Start the Server:**
+1. **Generate Search Index & Start the Server:** Because the Pagefind search engine requires physical files to build its index, `hugo server` (which runs purely in memory) will not display search results by default. To test the search bar locally, build the physical site once (using the development environment to avoid triggering production analytics), generate the index into the static folder, and then start the server:
 
     ```bash
+    hugo --environment development
+    npx pagefind --site public --output-path static/pagefind
     hugo server
     ```
+    *(Note: The `static/pagefind/` directory is git-ignored to prevent committing local search indexes).*
 
 ### Previewing Documentation on Pull Requests
+
+Documentation preview links are automatically generated and commented on your pull request when working from a branch within the main repository.
+
+**For external contributors (forks):**
+For security reasons, automated deployment previews are disabled for pull requests originating from external forks for the cloudflare deployments. To review your documentation changes, please follow the [Running a Local Hugo Server](#running-a-local-hugo-server) instructions to build and view the site on your local machine before requesting a review.
 
 ### Document Versioning Setup
 
 The documentation uses a dynamic versioning system that outputs standard HTML sites alongside AI-optimized plain text files (`llms.txt` and `llms-full.txt`).
+
+**Search Indexing:** All deployment workflows automatically execute `npx pagefind --site public` to generate a version-scoped search index specific to that deployment's base URL.
 
 There are 6 GHA workflows we use to achieve document versioning (each deployment scenario has one workflow for GitHub Pages and one for Cloudflare Pages):
 

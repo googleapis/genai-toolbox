@@ -1,0 +1,272 @@
+{{ .Scratch.Set "docsy-search" 0 }}
+
+{{ if .Site.Params.pagefind }}
+    {{ .Scratch.Add "docsy-search" 1 }}
+
+    <div class="td-search custom-pagefind-wrapper ms-auto" style="width: 260px; max-width: 100%;">
+        <div class="pagefind-search-container"></div>
+    </div>
+
+    <link href="{{ relURL "pagefind/pagefind-ui.css" }}" rel="stylesheet">
+    <script src="{{ relURL "pagefind/pagefind-ui.js" }}"></script>
+
+    <script>
+        if (!window.pagefindScriptLoaded) {
+            window.pagefindScriptLoaded = true;
+
+            window.addEventListener('DOMContentLoaded', (event) => {
+                document.querySelectorAll('.pagefind-search-container').forEach(el => {
+                    new PagefindUI({
+                        element: el,
+                        showSubResults: true,
+                        showImages: false,
+                        resetStyles: false,
+                        bundlePath: "{{ relURL "pagefind/" }}",
+                        processResult: function (result) {
+                            let path = result.url.replace(/^https?:\/\/[^\/]+/, "").split('#')[0].replace(/\/$/, "");
+                            let parts = path.split("/").filter(p => p && p !== "en" && p !== "docs" && p !== "dev" && p !== "genai-toolbox");
+                            parts.pop();
+
+                            if (parts.length > 0) {
+                                let breadcrumb = parts.map(part => {
+                                    return part.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                }).join(' › ');
+
+                                // FIX: Save it to the root 'result' object so Pagefind doesn't render it as a badge!
+                                if (!result.rawTitle) {
+                                    result.rawTitle = result.meta.title;
+                                }
+
+                                // Always build using the hidden rawTitle
+                                result.meta.title = breadcrumb + ' › ' + result.rawTitle;
+                            }
+                            return result;
+                        }
+                    });
+                });
+            });
+        }
+    </script>
+
+    <style>
+        :root {
+            --pagefind-ui-scale: 0.8;
+            --pagefind-ui-primary: #0d6efd;
+        }
+
+        /* ==========================================
+           DEFAULT (LIGHT MODE) - UNIVERSAL SOLID DESIGN
+           ========================================== */
+
+        .pagefind-ui__search-input { 
+            background-color: #f8f9fa !important;
+            border: 1px solid #ced4da !important;
+            color: #212529 !important;
+            border-radius: 6px !important; 
+            font-weight: 400 !important;
+            transition: all 0.2s ease-in-out !important;
+            height: 38px !important;
+            padding-left: 40px !important; 
+            padding-right: 40px !important; 
+            box-sizing: border-box !important; 
+        }
+
+        .pagefind-ui__search-input::placeholder {
+            color: #6c757d !important;
+            opacity: 1 !important;
+        }
+
+        .pagefind-ui__form {
+            --pagefind-ui-text: #6c757d; 
+            position: relative !important;
+            box-sizing: border-box !important;
+        }
+
+        .pagefind-ui__form::before {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            margin-top: 0 !important;
+        }
+
+        .pagefind-ui__search-clear {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            right: 10px !important;
+            width: 24px !important;
+            height: 24px !important;
+            min-height: 24px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            font-size: 0 !important; 
+            color: transparent !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }
+
+        .pagefind-ui__search-clear::after {
+            content: "\00d7" !important; 
+            font-size: 24px !important; 
+            font-weight: 300 !important;
+            line-height: 1 !important;
+            color: var(--pagefind-ui-text) !important; 
+            display: block !important;
+        }
+
+        .pagefind-ui__search-input:focus {
+            background-color: #ffffff !important;
+            border-color: #86b7fe !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+        
+        .pagefind-ui__form:focus-within {
+            --pagefind-ui-text: #212529; 
+        }
+        
+        /* ==========================================
+           DROPDOWN DRAWER - WIDTH & SCROLL FIXES
+           ========================================== */
+        .pagefind-ui__drawer {
+            position: absolute !important; 
+            top: 100% !important; 
+            
+            width: 450px !important; 
+            max-width: calc(100vw - 2rem) !important; 
+            
+            margin-top: 8px !important;
+            z-index: 99999 !important; 
+            background-color: #ffffff !important;
+            border: 1px solid #dee2e6 !important;
+            border-radius: 6px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            padding: 1rem !important;
+            
+            max-height: 80vh !important; 
+            overflow-y: auto !important;
+            overscroll-behavior: contain !important; 
+        }
+
+        .pagefind-ui__result-title, 
+        .pagefind-ui__result-excerpt,
+        .pagefind-ui__message {
+            color: #212529 !important;
+        }
+
+        .pagefind-ui__drawer mark {
+            background-color: rgba(13, 110, 253, 0.15) !important; 
+            color: #0d6efd !important; 
+            padding: 0 3px !important;
+            border-radius: 3px !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
+        }
+
+        .pagefind-ui__button {
+            margin-top: 0.5rem !important; 
+        }
+
+        .pagefind-ui__hidden { 
+            display: none !important; 
+        }
+
+        /* ==========================================
+           CONTEXT-AWARE FIXES (HEADER VS SIDEBAR)
+           ========================================== */
+           
+        .td-navbar .pagefind-ui__drawer {
+            right: 0 !important;
+            left: auto !important;
+        }
+
+        .td-sidebar .custom-pagefind-wrapper,
+        .td-sidebar .pagefind-search-container,
+        .td-sidebar .pagefind-ui__form,
+        .td-sidebar .pagefind-ui__search-input {
+            width: 100% !important; 
+            max-width: 100% !important;
+            min-width: 0 !important; 
+            margin-left: 0 !important; 
+            box-sizing: border-box !important; 
+        }
+        
+        .td-sidebar .pagefind-ui__drawer {
+            width: 100% !important; 
+            max-width: 100% !important;
+            left: 0 !important; 
+            right: auto !important; 
+            max-height: 80vh !important; 
+        }
+
+        /* ==========================================
+           DARK MODE EXPLICIT OVERRIDES
+           ========================================== */
+           
+        html[data-bs-theme="dark"] .pagefind-ui__search-input,
+        body.td-dark .pagefind-ui__search-input {
+            background-color: #212529 !important;
+            border-color: #495057 !important;
+            color: #f8f9fa !important;
+        }
+
+        html[data-bs-theme="dark"] .pagefind-ui__form,
+        body.td-dark .pagefind-ui__form {
+            --pagefind-ui-text: #adb5bd; 
+        }
+
+        html[data-bs-theme="dark"] .pagefind-ui__search-input:focus,
+        body.td-dark .pagefind-ui__search-input:focus {
+            background-color: #000000 !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+
+        html[data-bs-theme="dark"] .pagefind-ui__form:focus-within,
+        body.td-dark .pagefind-ui__form:focus-within {
+            --pagefind-ui-text: #f8f9fa;
+        }
+
+        html[data-bs-theme="dark"] .pagefind-ui__drawer,
+        body.td-dark .pagefind-ui__drawer {
+            background-color: #212529 !important;
+            border-color: #495057 !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        html[data-bs-theme="dark"] .pagefind-ui__result-title,
+        html[data-bs-theme="dark"] .pagefind-ui__result-excerpt,
+        html[data-bs-theme="dark"] .pagefind-ui__message,
+        body.td-dark .pagefind-ui__result-title,
+        body.td-dark .pagefind-ui__result-excerpt,
+        body.td-dark .pagefind-ui__message {
+            color: #f8f9fa !important;
+        }
+
+        html[data-bs-theme="dark"] .pagefind-ui__drawer mark,
+        body.td-dark .pagefind-ui__drawer mark {
+            background-color: rgba(13, 110, 253, 0.3) !important;
+            color: #86b7fe !important; 
+        }
+        
+        html[data-bs-theme="dark"] .pagefind-ui__button,
+        body.td-dark .pagefind-ui__button {
+            color: #f8f9fa !important;
+            border-color: #495057 !important;
+            background-color: #343a40 !important;
+        }
+    </style>
+{{ end }}
+
+{{ if .Site.Params.offlineSearch }}
+    {{ .Scratch.Add "docsy-search" 1 }}
+    <div class="td-search td-search--offline">
+      <div class="td-search__icon"></div>
+      <input type="search" name="q" class="td-search__input form-control" placeholder="Search" autocomplete="off" data-offline-search-index-json-src="/offline-search-index.json" data-offline-search-base-href="/" data-offline-search-max-results="10">
+    </div>
+{{ end }}

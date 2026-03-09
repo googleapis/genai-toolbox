@@ -11,8 +11,10 @@
     {{ .Content }}
     {{ partial "section-index.html" . }}
     {{ partial "pager.html" . }}
-    {{ if (and (not .Params.hide_feedback) (.Site.Params.ui.feedback.enable) (.Site.GoogleAnalytics)) }}
-        {{ partial "feedback.html" .Site.Params.ui.feedback }}
+    {{ if (and (not .Params.hide_feedback) (.Site.Params.ui.feedback.enable) (.Site.Config.Services.GoogleAnalytics.ID)) }}
+        <hr class="mt-5 mb-4">
+        <div class="mt-4">
+        {{ partial "feedback.html" . }}
         <br />
     {{ end }}
     {{ if (.Site.Params.DisqusShortname) }}
