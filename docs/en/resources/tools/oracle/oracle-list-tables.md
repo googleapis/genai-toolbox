@@ -41,4 +41,3 @@ tools:
       SELECT table_name from user_tables;
     description: |
       Lists all user tables in the connected schema, including segment size, row count, and last analyzed date. Filters by a comma-separated list of names. If names are omitted, lists all tables in the current user's schema
-    

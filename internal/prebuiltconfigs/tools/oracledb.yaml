@@ -1,4 +1,4 @@
-# Copyright 2026 Google LLCExpand commentComment on line R1Resolved
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ tools:
         source: oracle-source
         description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input as a parameter."
         statement: |
-            EXPLAIN PLAN FOR ?;
+            EXPLAIN PLAN FOR {{.sql_statement}};
             SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
 
     list_top_sql_by_resource:
@@ -123,7 +123,6 @@ tools:
 
 toolsets:
     oracle_database_tools:
-        - execute_sql
         - list_tables
         - list_active_sessions
         - get_query_plan

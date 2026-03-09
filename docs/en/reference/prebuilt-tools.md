@@ -880,7 +880,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `ORACLE_USER`: The database username.
     *   `ORACLE_PASSWORD`: The password for the database user.
     *   `ORACLE_WALLET`: The path to the Oracle DB Wallet file for databases that support this authentication type.
-    *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating if the Oracle Database is a cloud deployment that requires the OCI driver.
+    *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating whether to use the OCI-based driver. Setting to `true` is required for features like Oracle Wallet and requires the Oracle Instant Client libraries to be installed.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
     *   For queries on DBA views like `dba_data_files` and `dba_free_space`, access typically requires elevated database privileges (like `SELECT_CATALOG_ROLE` or direct grants) that a standard user may not have.
