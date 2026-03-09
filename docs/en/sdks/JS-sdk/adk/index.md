@@ -206,7 +206,7 @@ const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGe
 
 For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 `Google ID token` authentication, the helper module
-[auth_methods](https://github.com/googleap-sdk-go/blob/main/core/auth.go) provides utility functions.
+[auth_methods](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/auth.go) provides utility functions.
 
 
 ### Step by Step Guide for Cloud Run
