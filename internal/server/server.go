@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -29,6 +30,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog/v3"
+	"github.com/go-chi/render"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -408,10 +410,13 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Use(hostCheck(allowedHostsMap))
 
 	// control plane
-	apiR, err := apiRouter(s)
-	if err != nil {
-		return nil, err
-	}
+	apiR := chi.NewRouter()
+	goneHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := errors.New("the /api endpoints have been permanently removed. Please migrate to the standard Model Context Protocol endpoints at /mcp")
+		_ = render.Render(w, r, newErrResponse(err, http.StatusGone))
+	})
+	apiR.NotFound(goneHandler)
+	apiR.MethodNotAllowed(goneHandler)
 	r.Mount("/api", apiR)
 	mcpR, err := mcpRouter(s)
 	if err != nil {
@@ -425,6 +430,15 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		}
 		r.Mount("/ui", webR)
 	}
+
+	r.Route("/api", func(r chi.Router) {
+		r.HandleFunc("/*", func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusGone)
+			_, _ = w.Write([]byte(`{"error": "The Native HTTP endpoints (/api/...) have been removed. Please use the standard MCP JSON-RPC format via the /mcp endpoint."}`))
+		})
+	})
+
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
@@ -467,4 +481,31 @@ func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writ
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
 	return s.srv.Shutdown(ctx)
+}
+
+var _ render.Renderer = &errResponse{} // Renderer interface for managing response payloads.
+
+// newErrResponse is a helper function initializing an ErrResponse
+func newErrResponse(err error, code int) *errResponse {
+	return &errResponse{
+		Err:            err,
+		HTTPStatusCode: code,
+
+		StatusText: http.StatusText(code),
+		ErrorText:  err.Error(),
+	}
+}
+
+// errResponse is the response sent back when an error has been encountered.
+type errResponse struct {
+	Err            error `json:"-"` // low-level runtime error
+	HTTPStatusCode int   `json:"-"` // http response status code
+
+	StatusText string `json:"status"`          // user-level status message
+	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+}
+
+func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPStatusCode)
+	return nil
 }

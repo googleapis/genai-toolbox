@@ -359,13 +359,21 @@ parameters:
 
 ```bash
 # Using curl
-curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
+curl -X POST http://localhost:5000/mcp \
   -H "Content-Type: application/json" \
   -d '{
-    "continent": "Europe",
-    "minPopulation": "1000000",
-    "maxArea": 500000.5,
-    "isActive": true
+    "jsonrpc": "2.0",
+    "id": "1",
+    "method": "tools/call",
+    "params": {
+      "name": "your-tool-name",
+      "arguments": {
+        "continent": "Europe",
+        "minPopulation": "1000000",
+        "maxArea": 500000.5,
+        "isActive": true
+      }
+    }
   }'
 ```
 
