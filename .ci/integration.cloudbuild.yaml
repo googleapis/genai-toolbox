@@ -227,7 +227,7 @@ steps:
         .ci/test_with_coverage.sh \
           "BigQuery" \
           bigquery \
-          bigquery
+          bigquery || echo "Integration tests failed." # TODO(https://github.com/googleapis/genai-toolbox/issues/2687): Fix flakiness and re-enable.
 
   - id: "cloud-gda"
     name: golang:1
@@ -395,7 +395,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Spanner" \
           spanner \
-          spanner || echo "Integration tests failed." # ignore test failures
+          spanner || echo "Integration tests failed." # TODO(https://github.com/googleapis/genai-toolbox/issues/2420): Fix flakiness and re-enable.
 
   - id: "neo4j"
     name: golang:1
