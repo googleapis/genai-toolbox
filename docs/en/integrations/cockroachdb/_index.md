@@ -189,7 +189,7 @@ The source maintains a connection pool to the CockroachDB cluster. The pool auto
 - Connection retry with exponential backoff
 - Health checking of connections
 
-### Troubleshooting
+## Troubleshooting
 
 ### SSL/TLS Errors
 
