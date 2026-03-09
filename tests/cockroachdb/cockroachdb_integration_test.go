@@ -89,7 +89,13 @@ func TestCockroachDB(t *testing.T) {
 		t.Fatalf("failed to get connection string: %s", err)
 	}
 
-	connString += "?sslmode=disable"
+	if !strings.Contains(connString, "sslmode=") {
+		if strings.Contains(connString, "?") {
+			connString += "&sslmode=disable"
+		} else {
+			connString += "?sslmode=disable"
+		}
+	}
 
 	sourceConfig := getCockroachDBVars(host, port.Port())
 	var args []string
