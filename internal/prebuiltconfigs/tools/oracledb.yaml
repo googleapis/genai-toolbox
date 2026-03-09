@@ -60,15 +60,15 @@ tools:
     get_query_plan:
         kind: oracle-sql
         source: oracle-source
-        description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input. following is an example EXPLAIN PLAN FOR {{&query}};"
+        description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input as a parameter."
         statement: |
-            EXPLAIN PLAN FOR {{&query}};
+            EXPLAIN PLAN FOR ?;
             SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
 
     list_top_sql_by_resource:
         kind: oracle-sql
         source: oracle-source
-        description: "List the top N (default 5) SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time), following is an example of the sql" 
+        description: "List the top N (default 5) SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time). Shows SQL ID, execution count, buffer gets, disk reads, CPU time, and elapsed time." 
         statement: | 
             SELECT
                 sql_id,
