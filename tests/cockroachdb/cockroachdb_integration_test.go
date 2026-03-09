@@ -68,7 +68,11 @@ func TestCockroachDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to start container: %s", err)
 	}
-	defer tccockroachdbContainer.Terminate(ctx)
+	defer func() {
+		if err := tccockroachdbContainer.Terminate(ctx); err != nil {
+			t.Logf("failed to terminate testcontainer: %s", err)
+		}
+	}()
 
 	host, err := tccockroachdbContainer.Host(ctx)
 	if err != nil {
@@ -84,7 +88,7 @@ func TestCockroachDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get connection string: %s", err)
 	}
-	
+
 	connString += "?sslmode=disable"
 
 	sourceConfig := getCockroachDBVars(host, port.Port())
