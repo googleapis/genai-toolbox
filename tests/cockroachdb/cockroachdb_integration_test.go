@@ -17,8 +17,6 @@ package cockroachdb
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -28,37 +26,24 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/testcontainers/testcontainers-go"
+	tccockroachdb "github.com/testcontainers/testcontainers-go/modules/cockroachdb"
 )
 
 var (
 	CockroachDBSourceType = "cockroachdb"
 	CockroachDBToolType   = "cockroachdb-sql"
-	CockroachDBDatabase   = getEnvOrDefault("COCKROACHDB_DATABASE", "defaultdb")
-	CockroachDBHost       = getEnvOrDefault("COCKROACHDB_HOST", "localhost")
-	CockroachDBPort       = getEnvOrDefault("COCKROACHDB_PORT", "26257")
-	CockroachDBUser       = getEnvOrDefault("COCKROACHDB_USER", "root")
-	CockroachDBPass       = getEnvOrDefault("COCKROACHDB_PASS", "")
+	CockroachDBDatabase   = "defaultdb"
 )
 
-func getEnvOrDefault(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
-func getCockroachDBVars(t *testing.T) map[string]any {
-	if CockroachDBHost == "" {
-		t.Skip("COCKROACHDB_HOST not set, skipping CockroachDB integration test")
-	}
-
+func getCockroachDBVars(host, port string) map[string]any {
 	return map[string]any{
 		"type":           CockroachDBSourceType,
-		"host":           CockroachDBHost,
-		"port":           CockroachDBPort,
+		"host":           host,
+		"port":           port,
 		"database":       CockroachDBDatabase,
-		"user":           CockroachDBUser,
-		"password":       CockroachDBPass,
+		"user":           "root",
+		"password":       "",
 		"maxRetries":     5,
 		"retryBaseDelay": "500ms",
 		"queryParams": map[string]string{
@@ -67,15 +52,8 @@ func getCockroachDBVars(t *testing.T) map[string]any {
 	}
 }
 
-func initCockroachDBConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
-	connURL := &url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword(user, pass),
-		Host:     fmt.Sprintf("%s:%s", host, port),
-		Path:     dbname,
-		RawQuery: "sslmode=disable&application_name=cockroachdb-integration-test",
-	}
-	pool, err := pgxpool.New(context.Background(), connURL.String())
+func initCockroachDBConnectionPool(connString string) (*pgxpool.Pool, error) {
+	pool, err := pgxpool.New(context.Background(), connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
@@ -84,13 +62,37 @@ func initCockroachDBConnectionPool(host, port, user, pass, dbname string) (*pgxp
 }
 
 func TestCockroachDB(t *testing.T) {
-	sourceConfig := getCockroachDBVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
+	tccockroachdbContainer, err := tccockroachdb.Run(ctx, "cockroachdb/cockroach:latest-v23.1",
+		testcontainers.WithCmd("start-single-node", "--insecure"),
+	)
+	if err != nil {
+		t.Fatalf("failed to start container: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := tccockroachdbContainer.Terminate(context.Background()); err != nil {
+			t.Logf("failed to terminate testcontainer: %s", err)
+		}
+	})
+
+	host, err := tccockroachdbContainer.Host(ctx)
+	if err != nil {
+		t.Fatalf("failed to get host: %s", err)
+	}
+
+	port, err := tccockroachdbContainer.MappedPort(ctx, "26257/tcp")
+	if err != nil {
+		t.Fatalf("failed to get port: %s", err)
+	}
+
+	connString := fmt.Sprintf("postgres://root@%s:%s/defaultdb?sslmode=disable", host, port.Port())
+
+	sourceConfig := getCockroachDBVars(host, port.Port())
 	var args []string
 
-	pool, err := initCockroachDBConnectionPool(CockroachDBHost, CockroachDBPort, CockroachDBUser, CockroachDBPass, CockroachDBDatabase)
+	pool, err := initCockroachDBConnectionPool(connString)
 	if err != nil {
 		t.Fatalf("unable to create cockroachdb connection pool: %s", err)
 	}
@@ -111,11 +113,6 @@ func TestCockroachDB(t *testing.T) {
 
 	// Generate a unique ID
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
-
-	// This will execute after all tool tests complete (success, fail, or t.Fatal)
-	t.Cleanup(func() {
-		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
-	})
 
 	//Create table names using the UUID
 	tableNameParam := "param_table_" + uniqueID
