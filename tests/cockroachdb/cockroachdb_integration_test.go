@@ -84,18 +84,7 @@ func TestCockroachDB(t *testing.T) {
 		t.Fatalf("failed to get port: %s", err)
 	}
 
-	connString, err := tccockroachdbContainer.ConnectionString(ctx)
-	if err != nil {
-		t.Fatalf("failed to get connection string: %s", err)
-	}
-
-	if !strings.Contains(connString, "sslmode=") {
-		if strings.Contains(connString, "?") {
-			connString += "&sslmode=disable"
-		} else {
-			connString += "?sslmode=disable"
-		}
-	}
+	connString := fmt.Sprintf("postgres://root@%s:%s/defaultdb?sslmode=disable", host, port.Port())
 
 	sourceConfig := getCockroachDBVars(host, port.Port())
 	var args []string
