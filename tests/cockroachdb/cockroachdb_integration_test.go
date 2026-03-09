@@ -71,11 +71,11 @@ func TestCockroachDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to start container: %s", err)
 	}
-	defer func() {
-		if err := tccockroachdbContainer.Terminate(ctx); err != nil {
+	t.Cleanup(func() {
+		if err := tccockroachdbContainer.Terminate(context.Background()); err != nil {
 			t.Logf("failed to terminate testcontainer: %s", err)
 		}
-	}()
+	})
 
 	host, err := tccockroachdbContainer.Host(ctx)
 	if err != nil {
@@ -113,11 +113,6 @@ func TestCockroachDB(t *testing.T) {
 
 	// Generate a unique ID
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
-
-	// This will execute after all tool tests complete (success, fail, or t.Fatal)
-	t.Cleanup(func() {
-		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
-	})
 
 	//Create table names using the UUID
 	tableNameParam := "param_table_" + uniqueID
