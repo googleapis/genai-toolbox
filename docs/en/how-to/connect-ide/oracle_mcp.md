@@ -294,7 +294,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
           "command": "./PATH/TO/toolbox",
           "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
-           "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_CONNECTION_STRING": "",
             "ORACLE_USER": "",
             "ORACLE_PASSWORD": "",
             "ORACLE_WALLET": "",
