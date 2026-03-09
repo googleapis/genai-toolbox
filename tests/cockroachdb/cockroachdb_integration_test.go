@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/testcontainers/testcontainers-go"
 	tccockroachdb "github.com/testcontainers/testcontainers-go/modules/cockroachdb"
 )
 
@@ -64,7 +65,9 @@ func TestCockroachDB(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	tccockroachdbContainer, err := tccockroachdb.Run(ctx, "cockroachdb/cockroach:latest-v23.1")
+	tccockroachdbContainer, err := tccockroachdb.Run(ctx, "cockroachdb/cockroach:latest-v23.1",
+		testcontainers.WithCmd("start-single-node", "--insecure"),
+	)
 	if err != nil {
 		t.Fatalf("failed to start container: %s", err)
 	}
