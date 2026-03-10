@@ -131,7 +131,7 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 }
 
 // LoadConfig checks and merge files that should be loaded into the server
-func (opts *ToolboxOptions) LoadConfig(ctx context.Context) (bool, error) {
+func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFileParser) (bool, error) {
 	// Determine if Custom Files should be loaded
 	// Check for explicit custom flags
 	isCustomConfigured := opts.ToolsFile != "" || len(opts.ToolsFiles) > 0 || opts.ToolsFolder != ""
@@ -167,7 +167,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context) (bool, error) {
 			}
 
 			// Parse into ToolsFile struct
-			parsed, err := parseToolsFile(ctx, buf)
+			parsed, err := parser.ParseToolsFile(ctx, buf)
 			if err != nil {
 				errMsg := fmt.Errorf("unable to parse prebuilt tool configuration for '%s': %w", configName, err)
 				logger.ErrorContext(ctx, errMsg.Error())
@@ -194,11 +194,11 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context) (bool, error) {
 		if len(opts.ToolsFiles) > 0 {
 			// Use tools-files
 			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(opts.ToolsFiles)))
-			customTools, err = LoadAndMergeToolsFiles(ctx, opts.ToolsFiles)
+			customTools, err = parser.LoadAndMergeToolsFiles(ctx, opts.ToolsFiles)
 		} else if opts.ToolsFolder != "" {
 			// Use tools-folder
 			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", opts.ToolsFolder))
-			customTools, err = LoadAndMergeToolsFolder(ctx, opts.ToolsFolder)
+			customTools, err = parser.LoadAndMergeToolsFolder(ctx, opts.ToolsFolder)
 		} else {
 			// Use single file (tools-file or default `tools.yaml`)
 			buf, readFileErr := os.ReadFile(opts.ToolsFile)
@@ -207,7 +207,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context) (bool, error) {
 				logger.ErrorContext(ctx, errMsg.Error())
 				return isCustomConfigured, errMsg
 			}
-			customTools, err = parseToolsFile(ctx, buf)
+			customTools, err = parser.ParseToolsFile(ctx, buf)
 			if err != nil {
 				err = fmt.Errorf("unable to parse tool file at %q: %w", opts.ToolsFile, err)
 			}

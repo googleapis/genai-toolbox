@@ -367,17 +367,17 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 		case <-debounce.C:
 			debounce.Stop()
 			var reloadedToolsFile internal.ToolsFile
-
+			parser := internal.ToolsFileParser{}
 			if watchingFolder {
 				logger.DebugContext(ctx, "Reloading tools folder.")
-				reloadedToolsFile, err = internal.LoadAndMergeToolsFolder(ctx, folderToWatch)
+				reloadedToolsFile, err = parser.LoadAndMergeToolsFolder(ctx, folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading tools folder %s", err))
 					continue
 				}
 			} else {
 				logger.DebugContext(ctx, "Reloading tools file(s).")
-				reloadedToolsFile, err = internal.LoadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
+				reloadedToolsFile, err = parser.LoadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading tools files %s", err))
 					continue
@@ -453,7 +453,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	isCustomConfigured, err := opts.LoadConfig(ctx)
+	isCustomConfigured, err := opts.LoadConfig(ctx, &internal.ToolsFileParser{})
 	if err != nil {
 		return err
 	}
