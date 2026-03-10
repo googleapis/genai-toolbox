@@ -448,7 +448,7 @@ await multiplyNumbers.invoke({ a: 2, b: 3 });
 ```
 
 The `multiplyNumbers` tool is compatible with [Langchain/Langraph
-agents](http://js.langchain.com/docs/concepts/agents/)
+agents](http://js.langchain.com/docs/concepts/agents/).
 
 </details>
 
