@@ -200,9 +200,9 @@ func TestWaitToolEndpoints(t *testing.T) {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
-			
+
 			bodyBytes, _ := io.ReadAll(resp.Body)
-			
+
 			var mcpResp struct {
 				Error *struct {
 					Message string `json:"message"`

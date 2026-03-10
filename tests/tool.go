@@ -201,7 +201,7 @@ func RunMCPToolInvokeParametersTest(t *testing.T, name string, params []byte, si
 				t.Fatalf("expected error, but got response %s", string(respBody))
 				return
 			}
-			
+
 			if tc.want == "" {
 				return
 			}
@@ -434,7 +434,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			if !tc.enabled {
 				return
 			}
-			
+
 			var parsedArgs map[string]any
 			if tc.arguments != "" {
 				if err := json.Unmarshal([]byte(tc.arguments), &parsedArgs); err != nil {
@@ -494,7 +494,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 				t.Fatalf("expected error string but got valid response %s", string(respBody))
 				return
 			}
-			
+
 			// skip response body check
 			if tc.wantBody == "" {
 				return
@@ -658,7 +658,7 @@ func RunMCPToolInvokeWithTemplateParameters(t *testing.T, tableName string, opti
 			// if test case is insert statement and source support insert test cases
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 			if ddlAllow && insertAllow {
-				
+
 				var parsedArgs map[string]any
 				if tc.arguments != "" {
 					if err := json.Unmarshal([]byte(tc.arguments), &parsedArgs); err != nil {
@@ -779,7 +779,7 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 			name:          "invoke my-exec-sql-tool",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
 			want:          select1Want,
 			isErr:         false,
 		},
@@ -787,7 +787,7 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 			name:          "invoke my-exec-sql-tool create table",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   fmt.Sprintf(`{"sql": %s}`, createTableStatement),
+			arguments:     fmt.Sprintf(`{"sql": %s}`, createTableStatement),
 			want:          configs.createWant,
 			isErr:         false,
 		},
@@ -795,7 +795,7 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 			name:          "invoke my-exec-sql-tool select table",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   `{"sql":"SELECT * FROM t"}`,
+			arguments:     `{"sql":"SELECT * FROM t"}`,
 			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
@@ -803,7 +803,7 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 			name:          "invoke my-exec-sql-tool drop table",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   `{"sql":"DROP TABLE t"}`,
+			arguments:     `{"sql":"DROP TABLE t"}`,
 			want:          configs.dropWant,
 			isErr:         false,
 		},
@@ -811,14 +811,14 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 			name:          "invoke my-exec-sql-tool without body",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   `{}`,
+			arguments:     `{}`,
 			isAgentErr:    true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
 			toolName:      "my-auth-exec-sql-tool",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			arguments:   fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
 			isErr:         false,
 			want:          select1Want,
 		},
@@ -826,28 +826,28 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
 			toolName:      "my-auth-exec-sql-tool",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			arguments:   fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
 			toolName:      "my-auth-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with invalid SELECT SQL",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   `{"sql":"SELECT * FROM non_existent_table"}`,
+			arguments:     `{"sql":"SELECT * FROM non_existent_table"}`,
 			isAgentErr:    true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with invalid ALTER SQL",
 			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			arguments:   `{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`,
+			arguments:     `{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`,
 			isAgentErr:    true,
 		},
 	}
@@ -922,7 +922,7 @@ func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1W
 				t.Fatalf("expected agent error string but got valid response %s", string(respBody))
 				return
 			}
-			
+
 			if tc.want == "" {
 				return
 			}
@@ -1386,7 +1386,7 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 	}{
 		{
 			name:           "invoke list_tables all tables detailed output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
@@ -1394,7 +1394,7 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 		},
 		{
 			name:           "invoke list_tables all tables simple output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
@@ -1402,49 +1402,49 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 		},
 		{
 			name:           "invoke list_tables detailed output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
 		{
 			name:           "invoke list_tables simple output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 		{
 			name:           "invoke list_tables with invalid output format",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
 			name:           "invoke list_tables with non-existent table",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
 			wantStatusCode: http.StatusOK,
 			want:           `[]`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
@@ -2241,7 +2241,7 @@ func RunPostgresListAvailableExtensionsTest(t *testing.T) {
 	}{
 		{
 			name:           "invoke list_available_extensions output",
-			api: "http://127.0.0.1:5000/mcp", // list_available_extensions tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_available_extensions tool was here,
 			wantStatusCode: http.StatusOK,
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 		},
@@ -2268,7 +2268,7 @@ func RunPostgresListInstalledExtensionsTest(t *testing.T) {
 	}{
 		{
 			name:           "invoke list_installed_extensions output",
-			api: "http://127.0.0.1:5000/mcp", // list_installed_extensions tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_installed_extensions tool was here,
 			wantStatusCode: http.StatusOK,
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 		},
@@ -2546,7 +2546,7 @@ func RunPostgresListTableSpacesTest(t *testing.T) {
 	}{
 		{
 			name:           "invoke list_tablespaces output",
-			api: "http://127.0.0.1:5000/mcp", // list_tablespaces tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tablespaces tool was here,
 			wantStatusCode: http.StatusOK,
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 		},
@@ -3766,7 +3766,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 	}{
 		{
 			name:           "invoke list_tables for all tables detailed output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    `{"table_names": ""}`,
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
@@ -3774,7 +3774,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		},
 		{
 			name:           "invoke list_tables for all tables simple output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    `{"table_names": "", "output_format": "simple"}`,
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
@@ -3782,49 +3782,49 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		},
 		{
 			name:           "invoke list_tables detailed output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
 		{
 			name:           "invoke list_tables simple output",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 		{
 			name:           "invoke list_tables with invalid output format",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    `{"table_names": "", "output_format": "abcd"}`,
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    `{"table_names": 12345, "output_format": "detailed"}`,
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
 			name:           "invoke list_tables with non-existent table",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    `{"table_names": "non_existent_table"}`,
 			wantStatusCode: http.StatusOK,
 			want:           `[]`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
-			api: "http://127.0.0.1:5000/mcp", // list_tables tool was here,
+			api:            "http://127.0.0.1:5000/mcp", // list_tables tool was here,
 			requestBody:    fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
@@ -4951,7 +4951,7 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 // RunRequest is a helper function to send HTTP requests and return the response
 func RunRequest(t *testing.T, method, requestUrl string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request
-	
+
 	req, err := http.NewRequest(method, requestUrl, body)
 	if err != nil {
 		t.Fatalf("unable to create request: %s", err)
@@ -4973,7 +4973,7 @@ func RunRequest(t *testing.T, method, requestUrl string, body io.Reader, headers
 	}
 
 	defer resp.Body.Close()
-	
+
 	// Transparently unwrap MCP response logic to match legacy API payloads for testing.
 	if resp.StatusCode == http.StatusOK && strings.Contains(requestUrl, "/mcp") {
 		var mcpResp map[string]any
@@ -5004,9 +5004,9 @@ func RunRequest(t *testing.T, method, requestUrl string, body io.Reader, headers
 									legacyResp := map[string]any{"result": string(text)}
 									respBody, _ = json.Marshal(legacyResp)
 								} else {
-                                    legacyResp := map[string]any{"result": text}
+									legacyResp := map[string]any{"result": text}
 									respBody, _ = json.Marshal(legacyResp)
-                                }
+								}
 							}
 						}
 					}
@@ -5014,6 +5014,6 @@ func RunRequest(t *testing.T, method, requestUrl string, body io.Reader, headers
 			}
 		}
 	}
-	
+
 	return resp, respBody
 }

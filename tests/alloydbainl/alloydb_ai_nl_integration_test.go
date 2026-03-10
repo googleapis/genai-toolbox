@@ -190,7 +190,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 				},
 			}
 			reqBytes, _ := json.Marshal(mcpReq)
-			
+
 			// Send Tool invocation request
 			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes))
 			if err != nil {
@@ -232,7 +232,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 				}
 				return
 			}
-			
+
 			if tc.isErr {
 				if mcpResp.Result != nil && mcpResp.Result.IsError {
 					return
@@ -243,7 +243,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 				t.Fatalf("unable to find result text in response body")
 			}
-			
+
 			got := mcpResp.Result.Content[0].Text
 
 			if !strings.Contains(got, tc.want) {
