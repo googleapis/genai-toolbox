@@ -26,7 +26,7 @@ within your Python applications or AI orchestration frameworks.
 
 Choosing the right package depends on how you are building your application:
 
-* [`toolbox-adk`](adk):
+* [`toolbox-adk`](ADK):
   Use this package if you are building your application using Google ADK (Agent Development Kit).
   It provides tools that are directly compatible with the
   Google ADK ecosystem (`BaseTool` / `BaseToolset` interface) handling authentication propagation, header management, and tool wrapping automatically.
