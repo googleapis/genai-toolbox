@@ -34,8 +34,8 @@ When navigating documentation in the `integrations/` directory, it is crucial to
 * **Database:** PostgreSQL 16+ and the `psql` client.
 * **Language Requirements:**
 {{- with .Site.GetPage "/build-with-mcp-toolbox/local_quickstart" }}
-  {{- $match := findRE "(?i)Python \\d+\\.\\d+\\+" .RawContent 1 }}
-  * Python: {{ if $match }}{{ index $match 0 }}{{ else }}Refer to Python Quickstart{{ end }}
+  {{- $match := findRE "(?i)Python\\s+\\(\\d+\\.\\d+\\s+or\\s+higher\\)" .RawContent 1 }}
+  * Python: {{ if $match }}{{ index $match 0 | replaceRE "[\\[\\]]" "" }}{{ else }}Refer to Python Quickstart{{ end }}
 {{- end }}
 {{- with .Site.GetPage "/build-with-mcp-toolbox/local_quickstart_js" }}
   {{- $match := findRE "(?i)Node\\.js \\(v\\d+ or higher\\)" .RawContent 1 }}
