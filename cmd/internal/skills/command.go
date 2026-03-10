@@ -34,9 +34,9 @@ import (
 // skillsCmd is the command for generating skills.
 type skillsCmd struct {
 	*cobra.Command
-	name          string
-	description   string
-	toolset       string
+	name            string
+	description     string
+	toolset         string
 	outputDir       string
 	licenseHeader   string
 	additionalNotes string
