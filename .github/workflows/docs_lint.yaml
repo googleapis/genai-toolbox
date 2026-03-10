@@ -49,4 +49,4 @@ jobs:
         run: bash .ci/lint-docs-source-page.sh
 
       - name: Run Structure Linter for Tool Pages
-        run: .ci/lint-docs-tool-page.sh
+        run: bash .ci/lint-docs-tool-page.sh

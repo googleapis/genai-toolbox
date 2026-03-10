@@ -265,11 +265,20 @@ golangci-lint run --fix
 
 To ensure consistency, we enforce a standardized structure for integration Source pages (_index.md) using a custom linter (.ci/lint_source_pages.sh).
 
-Before pushing changes to integration pages, run the source page linter to verify heading order and required sections:
+Before pushing changes to integration pages:
+
+Run the **source page** linter to validate:
 
 ```bash
 # From the repository root
 ./.ci/lint-docs-source-page.sh
+```
+
+Run the **tool page** linter to validate:
+
+```bash
+# From the repository root
+./.ci/lint-docs-tool-page.sh
 ```
 
 ### Unit Tests

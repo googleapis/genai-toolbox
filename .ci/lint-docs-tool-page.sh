@@ -2,16 +2,35 @@
 set -e
 
 python3 - << 'EOF'
+"""
+MCP TOOLBOX: TOOL PAGE LINTER
+=============================
+This script enforces a standardized structure for individual Tool pages 
+(e.g., integrations/postgres/postgres-sql.md). It ensures that LLM agents 
+can parse tool capabilities and parameter definitions reliably.
+
+MAINTENANCE GUIDE:
+------------------
+1. TO ADD A NEW HEADING: 
+   Add the exact heading text to the 'ALLOWED_ORDER' list in the desired 
+   sequence.
+
+2. TO MAKE A HEADING MANDATORY: 
+   Add the heading text to the 'REQUIRED' set.
+
+3. TO UPDATE SHORTCODE LOGIC:
+   If the shortcode name changes, update 'SHORTCODE_PATTERN'.
+
+4. SCOPE:
+   This script targets all .md files in integrations/ EXCEPT _index.md files.
+"""
+
 import os
 import re
 import sys
 from pathlib import Path
 
-integration_dir = Path("./docs/en/integrations")
-if not integration_dir.exists():
-    print("Info: Directory './docs/en/integrations' not found. Skipping linting.")
-    sys.exit(0)
-
+# --- CONFIGURATION ---
 ALLOWED_ORDER = [
     "About",
     "Compatible Sources",
@@ -25,9 +44,13 @@ ALLOWED_ORDER = [
     "Additional Resources"
 ]
 REQUIRED = {"About", "Example"}
-
-# Regex to catch any variation of the compatible-sources shortcode
 SHORTCODE_PATTERN = r"\{\{<\s*compatible-sources.*?>\}\}"
+# ---------------------
+
+integration_dir = Path("./docs/en/integrations")
+if not integration_dir.exists():
+    print("Info: Directory './docs/en/integrations' not found. Skipping linting.")
+    sys.exit(0)
 
 has_errors = False
 
@@ -48,7 +71,6 @@ for filepath in integration_dir.rglob("*.md"):
         frontmatter = ""
         body = content
 
-    # If the file has no markdown content (metadata placeholder only), skip it entirely
     if not body.strip():
         continue
 
@@ -66,15 +88,13 @@ for filepath in integration_dir.rglob("*.md"):
     sources_section_match = re.search(r"^##\s+Compatible Sources\s*(.*?)(?=^##\s|\Z)", body, re.MULTILINE | re.DOTALL)
     if sources_section_match:
         if not re.search(SHORTCODE_PATTERN, sources_section_match.group(1)):
-            print(f"[{filepath}] Error: The compatible-sources shortcode must be placed under the '## Compatible Sources' heading.")
+            print(f"[{filepath}] Error: The compatible-sources shortcode must be placed under '## Compatible Sources'.")
             file_errors = True
-    else:
-        # Prevent edge case where shortcode is used but the heading was forgotten
-        if re.search(SHORTCODE_PATTERN, body):
-            print(f"[{filepath}] Error: A compatible-sources shortcode was found, but the '## Compatible Sources' heading is missing.")
-            file_errors = True
+    elif re.search(SHORTCODE_PATTERN, body):
+        print(f"[{filepath}] Error: Shortcode found, but '## Compatible Sources' heading is missing.")
+        file_errors = True
 
-    # 3. Strip code blocks from body to avoid linting example markdown headings
+    # 3. Strip code blocks
     clean_body = re.sub(r"^(?:```|~~~).*?^(?:```|~~~)", "", body, flags=re.DOTALL | re.MULTILINE)
 
     # 4. Check H1 Headings
@@ -83,18 +103,15 @@ for filepath in integration_dir.rglob("*.md"):
         file_errors = True
 
     # 5. Check H2 Headings
-    h2s = re.findall(r"^##\s+(.*)", clean_body, re.MULTILINE)
-    h2s = [h2.strip() for h2 in h2s]
+    h2s = [h.strip() for h in re.findall(r"^##\s+(.*)", clean_body, re.MULTILINE)]
 
     # Missing Required
-    missing = REQUIRED - set(h2s)
-    if missing:
+    if missing := (REQUIRED - set(h2s)):
         print(f"[{filepath}] Error: Missing required H2 headings: {missing}")
         file_errors = True
 
     # Unauthorized Headings
-    unauthorized = set(h2s) - set(ALLOWED_ORDER)
-    if unauthorized:
+    if unauthorized := (set(h2s) - set(ALLOWED_ORDER)):
         print(f"[{filepath}] Error: Unauthorized H2 headings found: {unauthorized}")
         file_errors = True
 
