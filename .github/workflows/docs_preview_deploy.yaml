@@ -25,7 +25,7 @@ on:
         description: 'PR Number to deploy (Manual override)'
         required: true
         type: string
-    build_run_id:
+      build_run_id:
         description: 'The Run ID from the successful "Build Docs Preview" workflow'
         required: true
         type: string
