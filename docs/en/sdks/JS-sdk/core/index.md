@@ -249,14 +249,14 @@ Oauth2 tokens) when invoking that specific tool.
 
 ### Supported Authentication Mechanisms
 
-The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation - Authenticated Parameters](../../../resources/tools/_index.md)
+The Toolbox service enables secure tool usage through **Authenticated Parameters**. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation - Authenticated Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 
 ### Step 1: Configure Tools in Toolbox Service
 
 First, ensure the target tool(s) are configured correctly in the Toolbox service
 to require authentication. Refer to the [Toolbox Service Documentation -
 Authenticated
-Parameters](../../../resources/tools/_index.md)
+Parameters](../../../resources/tools/_index.md#authenticated-parameters)
 for instructions.
 
 ### Step 2: Configure SDK Client
