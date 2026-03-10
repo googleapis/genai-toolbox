@@ -150,7 +150,7 @@ func runFirestoreToolGetTest(t *testing.T) {
 	}{
 		{
 			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
+			api:  "http://127.0.0.1:5000/mcp",
 			want: map[string]any{
 				"my-simple-tool": map[string]any{
 					"description": "Simple tool to test end to end functionality.",
@@ -218,7 +218,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 	}{
 		{
 			name: "validate valid rules",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
 			}`)),
@@ -227,7 +227,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 		},
 		{
 			name: "validate rules with syntax error",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;;\n    }\n  }\n}"
 			}`)),
@@ -236,7 +236,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 		},
 		{
 			name: "validate rules with missing version",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "service cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
 			}`)),
@@ -245,13 +245,13 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 		},
 		{
 			name:        "validate empty rules",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"source": ""}`)),
 			isErr:       true,
 		},
 		{
 			name:        "missing source parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-validate-rules/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			isErr:       true,
 		},
@@ -285,9 +285,22 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if tc.wantRegex != "" {
@@ -313,7 +326,7 @@ func runFirestoreGetRulesTest(t *testing.T) {
 	}{
 		{
 			name:        "get firestore rules",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-get-rules/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			wantRegex:   `"content":"[^"]+"`, // Should contain at least one of these fields
 			isErr:       false,
@@ -353,9 +366,22 @@ func runFirestoreGetRulesTest(t *testing.T) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if tc.wantRegex != "" {
@@ -525,7 +551,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 	}
 
 	tools := map[string]any{
-		// Tool for RunToolGetTest
+		// Tool for simple test
 		"my-simple-tool": map[string]any{
 			"type":        "firestore-get-documents",
 			"source":      "my-instance",
@@ -663,7 +689,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 	}{
 		{
 			name: "update document with simple fields",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -676,7 +702,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with selective fields using updateMask",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -690,7 +716,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with field deletion",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -703,7 +729,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with complex types",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -736,7 +762,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with returnData",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -755,7 +781,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update nested fields with updateMask",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -775,19 +801,19 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name:        "missing documentPath parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"documentData": {"test": {"stringValue": "value"}}}`)),
 			isErr:       true,
 		},
 		{
 			name:        "missing documentData parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"documentPath": "%s"}`, docPath))),
 			isErr:       true,
 		},
 		{
 			name: "update non-existent document",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"documentPath": "non-existent-collection/non-existent-doc",
 				"documentData": {
@@ -799,7 +825,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "invalid field in updateMask",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-update-doc/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -839,9 +865,22 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			// Parse the result string as JSON
@@ -892,7 +931,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "add document with simple types",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -908,7 +947,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "add document with complex types",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -944,7 +983,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "add document with returnData",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -963,7 +1002,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "add document with nested maps and arrays",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -1003,19 +1042,19 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name:        "missing collectionPath parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"documentData": {"test": {"stringValue": "value"}}}`)),
 			isErr:       true,
 		},
 		{
 			name:        "missing documentData parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collectionPath": "%s"}`, collectionName))),
 			isErr:       true,
 		},
 		{
 			name:        "invalid documentData format",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-add-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collectionPath": "%s", "documentData": "not an object"}`, collectionName))),
 			isErr:       true,
 		},
@@ -1049,9 +1088,22 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			// Parse the result string as JSON
@@ -1189,34 +1241,34 @@ func runFirestoreGetDocumentsTest(t *testing.T, docPath1, docPath2 string) {
 	}{
 		{
 			name:        "get single document",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-get-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"documentPaths": ["%s"]}`, docPath1))),
 			wantRegex:   `"name":"Alice"`,
 			isErr:       false,
 		},
 		{
 			name:        "get multiple documents",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-get-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"documentPaths": ["%s", "%s"]}`, docPath1, docPath2))),
 			wantRegex:   `"name":"Alice".*"name":"Bob"`,
 			isErr:       false,
 		},
 		{
 			name:        "get non-existent document",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-get-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"documentPaths": ["non-existent-collection/non-existent-doc"]}`)),
 			wantRegex:   `"exists":false`,
 			isErr:       false,
 		},
 		{
 			name:        "missing documentPaths parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-get-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			isErr:       true,
 		},
 		{
 			name:        "empty documentPaths array",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-get-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"documentPaths": []}`)),
 			isErr:       true,
 		},
@@ -1250,9 +1302,22 @@ func runFirestoreGetDocumentsTest(t *testing.T, docPath1, docPath2 string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if tc.wantRegex != "" {
@@ -1278,21 +1343,21 @@ func runFirestoreListCollectionsTest(t *testing.T, collectionName, subCollection
 	}{
 		{
 			name:        "list root collections",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-list-colls/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        collectionName,
 			isErr:       false,
 		},
 		{
 			name:        "list subcollections",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-list-colls/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"parentPath": "%s"}`, parentDocPath))),
 			want:        subCollectionName,
 			isErr:       false,
 		},
 		{
 			name:        "list collections for non-existent parent",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-list-colls/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"parentPath": "non-existent-collection/non-existent-doc"}`)),
 			want:        `[]`, // Empty array for no collections
 			isErr:       false,
@@ -1327,9 +1392,22 @@ func runFirestoreListCollectionsTest(t *testing.T, collectionName, subCollection
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if !strings.Contains(got, tc.want) {
@@ -1349,27 +1427,27 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 	}{
 		{
 			name:        "delete single document",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-delete-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"documentPaths": ["%s"]}`, docPath))),
 			want:        `"success":true`,
 			isErr:       false,
 		},
 		{
 			name:        "delete non-existent document",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-delete-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"documentPaths": ["non-existent-collection/non-existent-doc"]}`)),
 			want:        `"success":true`, // Firestore delete succeeds even if doc doesn't exist
 			isErr:       false,
 		},
 		{
 			name:        "missing documentPaths parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-delete-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			isErr:       true,
 		},
 		{
 			name:        "empty documentPaths array",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-delete-docs/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"documentPaths": []}`)),
 			isErr:       true,
 		},
@@ -1403,9 +1481,22 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if !strings.Contains(got, tc.want) {
@@ -1425,7 +1516,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "query with parameterized filters - age greater than",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": ">",
@@ -1436,7 +1527,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with parameterized filters - exact name match",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": "==",
@@ -1447,7 +1538,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with parameterized filters - age less than or equal",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": "<=",
@@ -1458,13 +1549,13 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 		},
 		{
 			name:        "missing required parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"collection": "test", "operator": ">"}`)),
 			isErr:       true,
 		},
 		{
 			name: "query non-existent collection with parameters",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-param/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collection": "non-existent-collection",
 				"operator": "==",
@@ -1503,9 +1594,22 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if tc.wantRegex != "" {
@@ -1532,7 +1636,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "query with array select fields - single field",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"fields": ["name"]
@@ -1543,7 +1647,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with array select fields - multiple fields",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"fields": ["name", "age"]
@@ -1554,7 +1658,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with empty array select fields",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"fields": []
@@ -1564,7 +1668,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 		},
 		{
 			name:        "missing fields parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-select-array/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{"collection": "%s"}`, collectionName))),
 			isErr:       true,
 		},
@@ -1598,9 +1702,22 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if tc.wantRegex != "" {
@@ -1665,7 +1782,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "query collection with filter",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": ["{\"field\": \"age\", \"op\": \">\", \"value\": 25}"],
@@ -1677,7 +1794,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query collection with orderBy",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -1689,7 +1806,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query collection with multiple filters",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [
@@ -1704,7 +1821,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with limit",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -1716,7 +1833,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query non-existent collection",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collectionPath": "non-existent-collection",
 				"filters": [],
@@ -1728,13 +1845,13 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name:        "missing collectionPath parameter",
-			api:         "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			isErr:       true,
 		},
 		{
 			name: "invalid filter operator",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": ["{\"field\": \"age\", \"op\": \"INVALID\", \"value\": 25}"],
@@ -1744,7 +1861,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with analyzeQuery",
-			api:  "http://127.0.0.1:5000/api/tool/firestore-query-coll/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -1785,9 +1902,22 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if tc.wantRegex != "" {

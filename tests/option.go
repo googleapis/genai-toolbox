@@ -14,10 +14,10 @@
 
 package tests
 
-/* Configurations for RunToolInvokeTest()  */
+/* Configurations for RunMCPToolInvokeTest()  */
 
-// InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
-type InvokeTestConfig struct {
+// MCPToolInvokeTestConfig represents the various configuration options for RunMCPToolInvokeTest()
+type MCPToolInvokeTestConfig struct {
 	myAuthToolWant           string
 	myToolId3NameAliceWant   string
 	myToolById4Want          string
@@ -30,77 +30,77 @@ type InvokeTestConfig struct {
 	supportSelect1Auth       bool
 }
 
-type InvokeTestOption func(*InvokeTestConfig)
+type MCPToolInvokeTestOption func(*MCPToolInvokeTestConfig)
 
 // WithMyAuthToolWant represents the response value for my-auth-tool.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
-func WithMyAuthToolWant(s string) InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
+func WithMyAuthToolWant(s string) MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.myAuthToolWant = s
 	}
 }
 
 // WithMyToolId3NameAliceWant represents the response value for my-tool with id=3 and name=Alice.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolId3NameAliceWant("custom"))
-func WithMyToolId3NameAliceWant(s string) InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.WithMyToolId3NameAliceWant("custom"))
+func WithMyToolId3NameAliceWant(s string) MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.myToolId3NameAliceWant = s
 	}
 }
 
 // WithMyArrayToolWant represents the response value for my-array-tool.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyArrayToolWant("custom"))
-func WithMyArrayToolWant(s string) InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.WithMyArrayToolWant("custom"))
+func WithMyArrayToolWant(s string) MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.myArrayToolWant = s
 	}
 }
 
 // WithMyToolById4Want represents the response value for my-tool-by-id with id=4.
 // This response includes a null value column.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolById4Want("custom"))
-func WithMyToolById4Want(s string) InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.WithMyToolById4Want("custom"))
+func WithMyToolById4Want(s string) MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.myToolById4Want = s
 	}
 }
 
 // WithNullWant represents a response value of null string.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithNullWant("custom"))
-func WithNullWant(s string) InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.WithNullWant("custom"))
+func WithNullWant(s string) MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.nullWant = s
 	}
 }
 
 // DisableOptionalNullParamTest disables tests for optional null parameters.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest())
-func DisableOptionalNullParamTest() InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableOptionalNullParamTest())
+func DisableOptionalNullParamTest() MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.supportOptionalNullParam = false
 	}
 }
 
 // DisableArrayTest disables tests for sources that do not support array.
-// e.g. tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
-func DisableArrayTest() InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+func DisableArrayTest() MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.supportArrayParam = false
 	}
 }
 
 // DisableSelect1Test disables tests for sources that do not support SELECT 1 query.
-// e.g. tests.RunToolInvokeTest(t, "", tests.DisableSelect1Test())
-func DisableSelect1Test() InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, "", tests.DisableSelect1Test())
+func DisableSelect1Test() MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.supportSelect1Want = false
 	}
 }
 
 // DisableSelect1AuthTest disables auth tests for sources that do not support SELECT 1 query.
-// e.g. tests.RunToolInvokeTest(t, "", tests.DisableSelect1AuthTest())
-func DisableSelect1AuthTest() InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+// e.g. tests.RunMCPToolInvokeTest(t, "", tests.DisableSelect1AuthTest())
+func DisableSelect1AuthTest() MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.supportSelect1Auth = false
 	}
 }
@@ -108,8 +108,8 @@ func DisableSelect1AuthTest() InvokeTestOption {
 // EnableClientAuthTest runs the client authorization tests.
 // Only enable it if your source supports the `useClientOAuth` configuration.
 // Currently, this should only be used with the BigQuery tests.
-func EnableClientAuthTest() InvokeTestOption {
-	return func(c *InvokeTestConfig) {
+func EnableClientAuthTest() MCPToolInvokeTestOption {
+	return func(c *MCPToolInvokeTestConfig) {
 		c.supportClientAuth = true
 	}
 }
@@ -156,9 +156,9 @@ func WithMcpSelect1Want(want string) McpTestOption {
 	}
 }
 
-/* Configurations for RunExecuteSqlToolInvokeTest()  */
+/* Configurations for RunMCPExecuteSqlToolInvokeTest()  */
 
-// ExecuteSqlTestConfig represents the various configuration options for RunExecuteSqlToolInvokeTest()
+// ExecuteSqlTestConfig represents the various configuration options for RunMCPExecuteSqlToolInvokeTest()
 type ExecuteSqlTestConfig struct {
 	select1Statement string
 	createWant       string
@@ -169,7 +169,7 @@ type ExecuteSqlTestConfig struct {
 type ExecuteSqlOption func(*ExecuteSqlTestConfig)
 
 // WithSelect1Statement represents the database's statement for `SELECT 1`.
-// e.g. tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithSelect1Statement("custom"))
+// e.g. tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithSelect1Statement("custom"))
 func WithSelect1Statement(s string) ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
 		c.select1Statement = s
@@ -197,7 +197,7 @@ func WithExecuteSelectEmptyWant(s string) ExecuteSqlOption {
 	}
 }
 
-/* Configurations for RunToolInvokeWithTemplateParameters()  */
+/* Configurations for RunMCPToolInvokeWithTemplateParameters()  */
 
 // TemplateParameterTestConfig represents the various configuration options for template parameter tests.
 type TemplateParameterTestConfig struct {
@@ -220,7 +220,7 @@ type TemplateParameterTestConfig struct {
 type TemplateParamOption func(*TemplateParameterTestConfig)
 
 // WithDdlWant represents the response value of ddl statements.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithDdlWant("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithDdlWant("custom"))
 func WithDdlWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.ddlWant = s
@@ -228,7 +228,7 @@ func WithDdlWant(s string) TemplateParamOption {
 }
 
 // WithSelectAllWant represents the response value of select-templateParams-tool.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithSelectAllWant("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithSelectAllWant("custom"))
 func WithSelectAllWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectAllWant = s
@@ -236,7 +236,7 @@ func WithSelectAllWant(s string) TemplateParamOption {
 }
 
 // WithTmplSelectId1Want represents the response value of select-templateParams-combined-tool with id=1.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithTmplSelectId1Want("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithTmplSelectId1Want("custom"))
 func WithTmplSelectId1Want(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectId1Want = s
@@ -244,7 +244,7 @@ func WithTmplSelectId1Want(s string) TemplateParamOption {
 }
 
 // WithTmplSelectNameWant represents the response value of select-filter-templateParams-combined-tool with name.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithTmplSelectNameWant("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithTmplSelectNameWant("custom"))
 func WithTmplSelectNameWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectNameWant = s
@@ -252,7 +252,7 @@ func WithTmplSelectNameWant(s string) TemplateParamOption {
 }
 
 // WithSelectEmptyWant represents the response value of select-templateParams-combined-tool with no results.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithSelectEmptyWant("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithSelectEmptyWant("custom"))
 func WithSelectEmptyWant(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectEmptyWant = s
@@ -260,7 +260,7 @@ func WithSelectEmptyWant(s string) TemplateParamOption {
 }
 
 // WithInsert1Want represents the response value of insert-table-templateParams-tool.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithInsert1Want("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithInsert1Want("custom"))
 func WithInsert1Want(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.insert1Want = s
@@ -268,7 +268,7 @@ func WithInsert1Want(s string) TemplateParamOption {
 }
 
 // WithNameFieldArray represents fields array parameter for select-fields-templateParams-tool.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithNameFieldArray("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithNameFieldArray("custom"))
 func WithNameFieldArray(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.nameFieldArray = s
@@ -276,7 +276,7 @@ func WithNameFieldArray(s string) TemplateParamOption {
 }
 
 // WithNameColFilter represents the columnFilter parameter for select-filter-templateParams-combined-tool.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithNameColFilter("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithNameColFilter("custom"))
 func WithNameColFilter(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.nameColFilter = s
@@ -284,7 +284,7 @@ func WithNameColFilter(s string) TemplateParamOption {
 }
 
 // WithCreateColArray represents the columns array parameter for create-table-templateParams-tool.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithCreateColArray("custom"))
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithCreateColArray("custom"))
 func WithCreateColArray(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.createColArray = s
@@ -292,7 +292,7 @@ func WithCreateColArray(s string) TemplateParamOption {
 }
 
 // DisableDdlTest disables tests for ddl statements for sources that do not support ddl.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableDdlTest())
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableDdlTest())
 func DisableDdlTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.supportDdl = false
@@ -300,7 +300,7 @@ func DisableDdlTest() TemplateParamOption {
 }
 
 // DisableInsertTest disables tests of insert statements for sources that do not support insert.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableInsertTest())
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableInsertTest())
 func DisableInsertTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.supportInsert = false
@@ -308,7 +308,7 @@ func DisableInsertTest() TemplateParamOption {
 }
 
 // DisableInsertTest disables tests of select-fields-templateParams-tool test.
-// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableSelectFilterTest())
+// e.g. tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableSelectFilterTest())
 func DisableSelectFilterTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.supportSelectFields = false

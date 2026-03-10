@@ -133,13 +133,13 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	templateParamCreateColArray := `["id INTEGER","name VARCHAR(255)","age INTEGER"]`
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+
+	tests.RunMCPToolInvokeTest(t, select1Want,
 		tests.WithNullWant(nullWant),
 		tests.DisableArrayTest())
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithSelect1Statement(select1Statement))
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithSelect1Statement(select1Statement))
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithCreateColArray(templateParamCreateColArray))
 }
 

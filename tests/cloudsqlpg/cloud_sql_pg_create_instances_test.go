@@ -210,8 +210,17 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
+			mcpReq := map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "test-1",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      tc.toolName,
+					"arguments": json.RawMessage(tc.body),
+				},
+			}
+			mcpBytes, _ := json.Marshal(mcpReq)
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(mcpBytes))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}

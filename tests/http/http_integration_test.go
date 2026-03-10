@@ -325,8 +325,8 @@ func TestHttpToolEndpoints(t *testing.T) {
 	}
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
+
+	tests.RunMCPToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
 }
@@ -342,25 +342,25 @@ func runQueryParamInvokeTest(t *testing.T) {
 	}{
 		{
 			name:        "invoke query-param-tool (optional omitted)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test1"}`)),
 			want:        `"reqId=test1"`,
 		},
 		{
 			name:        "invoke query-param-tool (some optional nil)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5", "filter": null}`)),
 			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
 		},
 		{
 			name:        "invoke query-param-tool (some optional absent)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5"}`)),
 			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
 		},
 		{
 			name:        "invoke query-param-tool (required param nil)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
 			want:        `{"error":"parameter \"reqId\" is required"}`,
 		},
@@ -416,7 +416,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 	}{
 		{
 			name:          "invoke my-advanced-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
@@ -426,7 +426,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 		},
 		{
 			name:          "invoke my-advanced-tool with wrong params",
-			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))

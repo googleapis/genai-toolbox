@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -62,7 +63,7 @@ func TestTool_Invoke(t *testing.T) {
 	}
 
 	// Invoke the tool
-	result, err := tool.Invoke(context.Background(), nil, params, "")
+	result, err := tool.Invoke(context.Background(), mockProvider{}, params, "")
 	if err != nil {
 		t.Fatalf("Invoke() error = %v", err)
 	}
@@ -105,9 +106,14 @@ func TestTool_Invoke_Error(t *testing.T) {
 		{Name: "query", Value: "up"},
 	}
 
-	// Invoke the tool
-	_, err := tool.Invoke(context.Background(), nil, params, "")
+	_, err := tool.Invoke(context.Background(), mockProvider{}, params, "")
 	if err == nil {
 		t.Fatal("Invoke() error = nil, want error")
 	}
+}
+
+type mockProvider struct{}
+
+func (m mockProvider) GetSource(sourceName string) (sources.Source, bool) {
+	return nil, true
 }

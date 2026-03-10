@@ -207,7 +207,7 @@ func getCloudLoggingAdminToolsConfig(sourceConfig map[string]any) map[string]any
 
 func runListLogNamesTest(t *testing.T, expectedLogName string) {
 	t.Run("list-log-names", func(t *testing.T) {
-		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer([]byte(`{}`)), nil)
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
@@ -232,7 +232,7 @@ func runListLogNamesTest(t *testing.T, expectedLogName string) {
 
 func runListResourceTypesTest(t *testing.T) {
 	t.Run("list-resource-types", func(t *testing.T) {
-		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-resource-types/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer([]byte(`{}`)), nil)
 
 		if resp.StatusCode != 200 {
 			t.Fatalf("expected status 200, got %d", resp.StatusCode)
@@ -300,7 +300,7 @@ func runQueryLogsTest(t *testing.T, logName string) {
 
 func invokeQueryTool(t *testing.T, requestBody string) string {
 	t.Helper()
-	resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/query-logs/invoke", bytes.NewBuffer([]byte(requestBody)), nil)
+	resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer([]byte(requestBody)), nil)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
@@ -321,7 +321,7 @@ func invokeQueryTool(t *testing.T, requestBody string) string {
 
 func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
 	t.Run("auth-list-log-names", func(t *testing.T) {
-		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/auth-list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
+		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != 401 {
 			t.Fatalf("expected status 401 (Unauthorized), got %d", resp.StatusCode)
 		}
@@ -331,7 +331,7 @@ func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
 func runQueryLogsErrorTest(t *testing.T) {
 	t.Run("query-logs-error", func(t *testing.T) {
 		requestBody := `{"filter": "INVALID_FILTER_SYNTAX :::", "limit": 10}`
-		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/query-logs/invoke", bytes.NewBuffer([]byte(requestBody)), nil)
+		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer([]byte(requestBody)), nil)
 		if resp.StatusCode != 200 {
 			t.Errorf("expected 200 OK")
 		}

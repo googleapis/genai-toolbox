@@ -93,7 +93,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 	}{
 		{
 			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-dql-tool/",
+			api:         "http://127.0.0.1:5000/mcp",
 			want: map[string]any{
 				"my-simple-dql-tool": map[string]any{
 					"description":  "Simple tool to test end to end functionality.",
@@ -139,7 +139,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 	}{
 		{
 			name:        "invoke my-simple-dql-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-dql-tool/invoke",
+			api:         "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "{\"result\":[{\"constant\":1}]}",
 		},
@@ -161,10 +161,22 @@ func TestDgraphToolEndpoints(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error parsing response body")
 			}
-			got, ok := body["result"].(string)
-
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if got != tc.want {

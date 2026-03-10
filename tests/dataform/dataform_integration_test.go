@@ -15,7 +15,9 @@
 package dataformcompilelocal
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -120,11 +122,25 @@ func TestDataformCompileTool(t *testing.T) {
 		},
 	}
 
-	api := "http://127.0.0.1:5000/api/tool/my-dataform-compiler/invoke"
+	api := "http://127.0.0.1:5000/mcp"
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, api, strings.NewReader(tc.reqBody), nil)
+			var args map[string]any
+			if err := json.Unmarshal([]byte(tc.reqBody), &args); err != nil {
+				t.Fatalf("failed to decode reqBody: %v", err)
+			}
+			payloadBytes, _ := json.Marshal(map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "test-id",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      "my-dataform-compiler",
+					"arguments": args,
+				},
+			})
+
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, api, bytes.NewReader(payloadBytes), nil)
 
 			if resp.StatusCode != tc.wantStatus {
 				t.Fatalf("unexpected status: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))

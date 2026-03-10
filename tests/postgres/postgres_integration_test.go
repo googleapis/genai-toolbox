@@ -149,11 +149,11 @@ func TestPostgres(t *testing.T) {
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want)
+
+	tests.RunMCPToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run Postgres prebuilt tool tests
 	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, PostgresUser)

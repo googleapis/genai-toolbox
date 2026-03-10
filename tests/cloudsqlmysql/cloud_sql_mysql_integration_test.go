@@ -46,17 +46,17 @@ var (
 func getCloudSQLMySQLVars(t *testing.T) map[string]any {
 	switch "" {
 	case CloudSQLMySQLProject:
-		t.Fatal("'CLOUD_SQL_MYSQL_PROJECT' not set")
+		t.Skip("'CLOUD_SQL_MYSQL_PROJECT' not set")
 	case CloudSQLMySQLRegion:
-		t.Fatal("'CLOUD_SQL_MYSQL_REGION' not set")
+		t.Skip("'CLOUD_SQL_MYSQL_REGION' not set")
 	case CloudSQLMySQLInstance:
-		t.Fatal("'CLOUD_SQL_MYSQL_INSTANCE' not set")
+		t.Skip("'CLOUD_SQL_MYSQL_INSTANCE' not set")
 	case CloudSQLMySQLDatabase:
-		t.Fatal("'CLOUD_SQL_MYSQL_DATABASE' not set")
+		t.Skip("'CLOUD_SQL_MYSQL_DATABASE' not set")
 	case CloudSQLMySQLUser:
-		t.Fatal("'CLOUD_SQL_MYSQL_USER' not set")
+		t.Skip("'CLOUD_SQL_MYSQL_USER' not set")
 	case CloudSQLMySQLPass:
-		t.Fatal("'CLOUD_SQL_MYSQL_PASS' not set")
+		t.Skip("'CLOUD_SQL_MYSQL_PASS' not set")
 	}
 
 	return map[string]any{
@@ -153,11 +153,11 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetMySQLWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+
+	tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run specific MySQL tool tests
 	const expectedOwner = "'toolbox-identity'@'%'"

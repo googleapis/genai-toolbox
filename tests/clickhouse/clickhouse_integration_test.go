@@ -149,11 +149,11 @@ func TestClickHouse(t *testing.T) {
 	select1Want, mcpSelect1Want, mcpMyFailToolWant, createTableStatement, nilIdWant := getClickHouseWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolById4Want(nilIdWant))
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+
+	tests.RunMCPToolInvokeTest(t, select1Want, tests.WithMyToolById4Want(nilIdWant))
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 func addClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
@@ -332,7 +332,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
+
 	t.Logf("✅ ClickHouse basic connection test completed successfully")
 }
 
@@ -467,7 +467,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+			api := "http://127.0.0.1:5000/mcp"
 			resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer(tc.requestBody), nil)
 			if resp.StatusCode != http.StatusOK {
 				if tc.isErr {
@@ -482,9 +482,22 @@ func TestClickHouseSQLTool(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 			t.Logf("result is %s", got)
 
@@ -585,7 +598,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			param := fmt.Sprintf(`{"sql": "%s"}`, tc.sql)
-			api := "http://127.0.0.1:5000/api/tool/execute-sql-tool/invoke"
+			api := "http://127.0.0.1:5000/mcp"
 			resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(param)), nil)
 			if resp.StatusCode != http.StatusOK {
 				if tc.isErr {
@@ -606,9 +619,22 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			var res []any
@@ -688,7 +714,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 		}
 		longQuery := "SELECT 1 WHERE " + strings.Join(conditions, " AND ")
 
-		api := "http://127.0.0.1:5000/api/tool/execute-sql-tool/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		param := fmt.Sprintf(`{"sql": "%s"}`, longQuery)
 		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(param)), nil)
 		if resp.StatusCode != http.StatusOK {
@@ -701,10 +727,23 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("error parsing response body")
 		}
 
-		got, ok := body["result"].(string)
-		if !ok {
-			t.Fatalf("unable to find result in response body")
-		}
+		
+			resultObj, ok := body["result"].(map[string]interface{})
+			if !ok {
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
+			}
 
 		var res []any
 		err = json.Unmarshal([]byte(got), &res)
@@ -741,7 +780,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to insert null value: %v", err)
 		}
 
-		api := "http://127.0.0.1:5000/api/tool/test-null-values/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
@@ -753,10 +792,23 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("error parsing response body")
 		}
 
-		got, ok := body["result"].(string)
-		if !ok {
-			t.Fatalf("unable to find result in response body")
-		}
+		
+			resultObj, ok := body["result"].(map[string]interface{})
+			if !ok {
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
+			}
 
 		var res []any
 		err = json.Unmarshal([]byte(got), &res)
@@ -784,7 +836,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 				defer func() { done <- true }()
 
 				params := fmt.Sprintf(`{"limit": %d}`, n+1)
-				api := "http://127.0.0.1:5000/api/tool/test-concurrent/invoke"
+				api := "http://127.0.0.1:5000/mcp"
 				resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(params)), nil)
 				if resp.StatusCode != http.StatusOK {
 					t.Errorf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
@@ -934,7 +986,7 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 	}
 
 	t.Run("ListDatabases", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-list-databases/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
@@ -985,7 +1037,7 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 	})
 
 	t.Run("ListDatabasesWithInvalidSource", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode == http.StatusOK {
 			t.Fatalf("expected error for non-existent source, but got 200 OK")
@@ -1063,7 +1115,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 	}
 
 	t.Run("ListTables", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-list-tables/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		params := fmt.Sprintf(`{"database": "%s"}`, testDBName)
 		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(params)), nil)
 		if resp.StatusCode != http.StatusOK {
@@ -1121,7 +1173,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 	})
 
 	t.Run("ListTablesWithMissingDatabase", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-list-tables/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 OK for missing database parameter, but got %d", resp.StatusCode)
@@ -1129,7 +1181,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 	})
 
 	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
-		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
+		api := "http://127.0.0.1:5000/mcp"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected 200 OK for non-existent source, but got %d", resp.StatusCode)

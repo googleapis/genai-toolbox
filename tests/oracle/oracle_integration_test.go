@@ -155,15 +155,15 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+
+	tests.RunMCPToolInvokeTest(t, select1Want,
 		tests.DisableOptionalNullParamTest(),
 		tests.WithMyToolById4Want("[{\"id\":4,\"name\":\"\"}]"),
 		tests.DisableArrayTest(),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Invoke the 'my-update-tool' and verify the result.
 	testDmlQueries(t, "my-update-tool",

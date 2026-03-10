@@ -331,12 +331,20 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 }
 
 func invokeTool(toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
-	requestBytes, err := json.Marshal(request)
+	requestBytes, err := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "1",
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name":      toolName,
+			"arguments": request,
+		},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	url := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", toolName)
+	url := "http://127.0.0.1:5000/mcp"
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBytes))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create request: %w", err)
@@ -347,6 +355,26 @@ func invokeTool(toolName string, request map[string]any, headers map[string]stri
 	}
 
 	return http.DefaultClient.Do(req)
+}
+
+func extractMCPResultString(t *testing.T, body map[string]any) string {
+	resultMap, hasResult := body["result"].(map[string]interface{})
+	if !hasResult {
+		t.Fatalf("unable to find result in MCP response body: %v", body)
+	}
+	contentList, hasContent := resultMap["content"].([]interface{})
+	if !hasContent || len(contentList) == 0 {
+		t.Fatalf("unable to find result.content[0] in MCP response body: %v", body)
+	}
+	contentItem, ok := contentList[0].(map[string]interface{})
+	if !ok {
+		t.Fatalf("content item is not map[string]interface{}")
+	}
+	text, ok := contentItem["text"].(string)
+	if !ok {
+		t.Fatalf("unable to extract text value from result.content[0]")
+	}
+	return text
 }
 
 func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient, ctx context.Context) {
@@ -414,10 +442,7 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 					t.Fatalf("error parsing response body: %v", err)
 				}
 
-				result, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("unable to find result in response body")
-				}
+				result := extractMCPResultString(t, body)
 
 				var listResponse dataprocsrc.ListClustersResponse
 				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
@@ -500,10 +525,7 @@ func runGetClusterTest(t *testing.T, client *dataproc.ClusterControllerClient, c
 				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 					t.Fatalf("error parsing response body: %v", err)
 				}
-				resultStr, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("result is not a string, got %T", body["result"])
-				}
+				resultStr := extractMCPResultString(t, body)
 				var wrappedResult map[string]any
 				if err := json.Unmarshal([]byte(resultStr), &wrappedResult); err != nil {
 					t.Fatalf("error unmarshalling result: %s", err)
@@ -724,10 +746,7 @@ func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx con
 					t.Fatalf("error parsing response body: %v", err)
 				}
 
-				result, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("unable to find result in response body")
-				}
+				result := extractMCPResultString(t, body)
 
 				var listResponse dataprocsrc.ListJobsResponse
 				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
@@ -808,10 +827,7 @@ func runGetJobTest(t *testing.T, client *dataproc.JobControllerClient, ctx conte
 				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 					t.Fatalf("error parsing response body: %v", err)
 				}
-				resultStr, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("result is not a string, got %T", body["result"])
-				}
+				resultStr := extractMCPResultString(t, body)
 				var wrappedResult map[string]any
 				if err := json.Unmarshal([]byte(resultStr), &wrappedResult); err != nil {
 					t.Fatalf("error unmarshalling result: %s", err)

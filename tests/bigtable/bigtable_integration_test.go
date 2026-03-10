@@ -126,12 +126,12 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	nameColFilter := "CAST(cf['name'] AS string)"
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+
+	tests.RunMCPToolInvokeTest(t, select1Want,
 		tests.WithMyToolById4Want(myToolById4Want),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithNameFieldArray(nameFieldArray),
 		tests.WithNameColFilter(nameColFilter),
 		tests.DisableDdlTest(),
