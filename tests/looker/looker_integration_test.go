@@ -304,7 +304,6 @@ func TestLooker(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-
 	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunMCPToolInvokeSimpleTest(t, "get_models", wantResult)
 

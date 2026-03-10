@@ -148,7 +148,7 @@ func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 	}{
 		{
 			name:          "invoke my-delete-one-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id" : 100 }`)),
 			want:          delete1Want,
@@ -156,7 +156,7 @@ func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 		},
 		{
 			name:          "invoke my-delete-many-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id" : 101 }`)),
 			want:          deleteManyWant,
@@ -197,7 +197,6 @@ func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -234,7 +233,7 @@ func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 	}{
 		{
 			name:          "invoke my-insert-one-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "data" : "{ \"_id\": { \"$oid\": \"68666e1035bb36bf1b4d47fb\" },  \"id\" : 200 }" }"`)),
 			want:          insert1Want,
@@ -242,7 +241,7 @@ func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 		},
 		{
 			name:          "invoke my-insert-many-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "data" : "[{ \"_id\": { \"$oid\": \"68667a6436ec7d0363668db7\"} , \"id\" : 201 }, { \"_id\" : { \"$oid\": \"68667a6436ec7d0363668db8\"}, \"id\" : 202 }, { \"_id\": { \"$oid\": \"68667a6436ec7d0363668db9\"}, \"id\": 203 }]" }`)),
 			want:          insertManyWant,
@@ -283,7 +282,6 @@ func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -320,7 +318,7 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 	}{
 		{
 			name:          "invoke my-update-one-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id": 300, "name": "Bob" }`)),
 			want:          update1Want,
@@ -328,7 +326,7 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 		},
 		{
 			name:          "invoke my-update-many-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id": 400, "name" : "Alice" }`)),
 			want:          updateManyWant,
@@ -369,7 +367,6 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -406,7 +403,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 	}{
 		{
 			name:          "invoke my-aggregate-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name": "Jane" }`)),
 			want:          aggregate1Want,
@@ -414,7 +411,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 		},
 		{
 			name:          "invoke my-aggregate-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
 			want:          aggregateManyWant,
@@ -422,7 +419,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 		},
 		{
 			name:          "invoke my-read-only-aggregate-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
 			want:          `{"error":"error processing request: this is not a read-only pipeline: {\"$out\":\"target_collection\"}"}`,
@@ -430,7 +427,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 		},
 		{
 			name:          "invoke my-read-write-aggregate-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
 			want:          "[]",
@@ -471,7 +468,6 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")

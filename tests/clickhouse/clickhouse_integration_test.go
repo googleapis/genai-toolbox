@@ -332,7 +332,6 @@ func TestClickHouseBasicConnection(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-
 	t.Logf("✅ ClickHouse basic connection test completed successfully")
 }
 
@@ -482,7 +481,6 @@ func TestClickHouseSQLTool(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -619,7 +617,6 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -727,23 +724,22 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("error parsing response body")
 		}
 
-		
-			resultObj, ok := body["result"].(map[string]interface{})
-			if !ok {
-				t.Fatalf("unable to find result object in response body")
-			}
-			contentList, ok := resultObj["content"].([]interface{})
-			if !ok || len(contentList) == 0 {
-				t.Fatalf("unable to find content array in result")
-			}
-			firstContent, ok := contentList[0].(map[string]interface{})
-			if !ok {
-				t.Fatalf("content is not an object")
-			}
-			got, ok := firstContent["text"].(string)
-			if !ok {
-				t.Fatalf("unable to find text in content")
-			}
+		resultObj, ok := body["result"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("unable to find result object in response body")
+		}
+		contentList, ok := resultObj["content"].([]interface{})
+		if !ok || len(contentList) == 0 {
+			t.Fatalf("unable to find content array in result")
+		}
+		firstContent, ok := contentList[0].(map[string]interface{})
+		if !ok {
+			t.Fatalf("content is not an object")
+		}
+		got, ok := firstContent["text"].(string)
+		if !ok {
+			t.Fatalf("unable to find text in content")
+		}
 
 		var res []any
 		err = json.Unmarshal([]byte(got), &res)
@@ -792,23 +788,22 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("error parsing response body")
 		}
 
-		
-			resultObj, ok := body["result"].(map[string]interface{})
-			if !ok {
-				t.Fatalf("unable to find result object in response body")
-			}
-			contentList, ok := resultObj["content"].([]interface{})
-			if !ok || len(contentList) == 0 {
-				t.Fatalf("unable to find content array in result")
-			}
-			firstContent, ok := contentList[0].(map[string]interface{})
-			if !ok {
-				t.Fatalf("content is not an object")
-			}
-			got, ok := firstContent["text"].(string)
-			if !ok {
-				t.Fatalf("unable to find text in content")
-			}
+		resultObj, ok := body["result"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("unable to find result object in response body")
+		}
+		contentList, ok := resultObj["content"].([]interface{})
+		if !ok || len(contentList) == 0 {
+			t.Fatalf("unable to find content array in result")
+		}
+		firstContent, ok := contentList[0].(map[string]interface{})
+		if !ok {
+			t.Fatalf("content is not an object")
+		}
+		got, ok := firstContent["text"].(string)
+		if !ok {
+			t.Fatalf("unable to find text in content")
+		}
 
 		var res []any
 		err = json.Unmarshal([]byte(got), &res)

@@ -246,7 +246,7 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 					IsError bool `json:"isError"`
 				} `json:"result"`
 			}
-			
+
 			if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
 			}
@@ -262,9 +262,9 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 				}
 				if mcpResp.Result != nil && len(mcpResp.Result.Content) > 0 {
 					text := mcpResp.Result.Content[0].Text
-					if strings.Contains(strings.ToLower(text), "error") || 
-					   strings.Contains(strings.ToLower(text), "invalid") ||
-					   strings.Contains(strings.ToLower(text), "missing") {
+					if strings.Contains(strings.ToLower(text), "error") ||
+						strings.Contains(strings.ToLower(text), "invalid") ||
+						strings.Contains(strings.ToLower(text), "missing") {
 						return
 					}
 					t.Fatalf("expected an error, but got success result: %s", text)

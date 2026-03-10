@@ -218,7 +218,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 	}{
 		{
 			name: "validate valid rules",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
 			}`)),
@@ -227,7 +227,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 		},
 		{
 			name: "validate rules with syntax error",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;;\n    }\n  }\n}"
 			}`)),
@@ -236,7 +236,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 		},
 		{
 			name: "validate rules with missing version",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"source": "service cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}"
 			}`)),
@@ -285,7 +285,6 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -366,7 +365,6 @@ func runFirestoreGetRulesTest(t *testing.T) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -689,7 +687,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 	}{
 		{
 			name: "update document with simple fields",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -702,7 +700,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with selective fields using updateMask",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -716,7 +714,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with field deletion",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -729,7 +727,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with complex types",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -762,7 +760,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update document with returnData",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -781,7 +779,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update nested fields with updateMask",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -813,7 +811,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "update non-existent document",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"documentPath": "non-existent-collection/non-existent-doc",
 				"documentData": {
@@ -825,7 +823,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 		},
 		{
 			name: "invalid field in updateMask",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"documentPath": "%s",
 				"documentData": {
@@ -865,7 +863,6 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -931,7 +928,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "add document with simple types",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -947,7 +944,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "add document with complex types",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -983,7 +980,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "add document with returnData",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -1002,7 +999,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "add document with nested maps and arrays",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"documentData": {
@@ -1088,7 +1085,6 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1302,7 +1298,6 @@ func runFirestoreGetDocumentsTest(t *testing.T, docPath1, docPath2 string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1392,7 +1387,6 @@ func runFirestoreListCollectionsTest(t *testing.T, collectionName, subCollection
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1481,7 +1475,6 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1516,7 +1509,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "query with parameterized filters - age greater than",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": ">",
@@ -1527,7 +1520,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with parameterized filters - exact name match",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": "==",
@@ -1538,7 +1531,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with parameterized filters - age less than or equal",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"operator": "<=",
@@ -1555,7 +1548,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query non-existent collection with parameters",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collection": "non-existent-collection",
 				"operator": "==",
@@ -1594,7 +1587,6 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1636,7 +1628,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "query with array select fields - single field",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"fields": ["name"]
@@ -1647,7 +1639,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with array select fields - multiple fields",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"fields": ["name", "age"]
@@ -1658,7 +1650,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with empty array select fields",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collection": "%s",
 				"fields": []
@@ -1702,7 +1694,6 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1782,7 +1773,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 	}{
 		{
 			name: "query collection with filter",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": ["{\"field\": \"age\", \"op\": \">\", \"value\": 25}"],
@@ -1794,7 +1785,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query collection with orderBy",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -1806,7 +1797,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query collection with multiple filters",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [
@@ -1821,7 +1812,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with limit",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -1833,7 +1824,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query non-existent collection",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(`{
 				"collectionPath": "non-existent-collection",
 				"filters": [],
@@ -1851,7 +1842,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "invalid filter operator",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": ["{\"field\": \"age\", \"op\": \"INVALID\", \"value\": 25}"],
@@ -1861,7 +1852,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 		},
 		{
 			name: "query with analyzeQuery",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(`{
 				"collectionPath": "%s",
 				"filters": [],
@@ -1902,7 +1893,6 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")

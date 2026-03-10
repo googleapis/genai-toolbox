@@ -93,7 +93,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 	}{
 		{
 			name: "get my-simple-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:  "http://127.0.0.1:5000/mcp",
 			want: map[string]any{
 				"my-simple-dql-tool": map[string]any{
 					"description":  "Simple tool to test end to end functionality.",
@@ -161,7 +161,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error parsing response body")
 			}
-			
+
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")

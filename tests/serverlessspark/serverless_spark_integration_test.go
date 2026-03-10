@@ -915,7 +915,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 				if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 					t.Fatalf("error parsing response body: %v", err)
 				}
-				
+
 				if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 					t.Fatalf("unable to find result in response body")
 				}
@@ -1077,7 +1077,7 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 			if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
-			
+
 			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 				t.Fatalf("unable to find result in response body")
 			}
@@ -1409,7 +1409,7 @@ func runGetSessionTest(t *testing.T, client *dataproc.SessionControllerClient, c
 	if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 		t.Fatalf("error parsing response body: %v", err)
 	}
-	
+
 	if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 		t.Fatalf("unable to find result in response body")
 	}

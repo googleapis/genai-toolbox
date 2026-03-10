@@ -143,7 +143,6 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 
 	toolName := "cloud-gda-query"
 
-
 	// 2. RunMCPToolInvokeParametersTest
 	params := []byte(`{"query": "test question"}`)
 	tests.RunMCPToolInvokeParametersTest(t, toolName, params, "\"generated_query\":\"SELECT * FROM table;\"")

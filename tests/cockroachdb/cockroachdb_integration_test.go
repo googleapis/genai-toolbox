@@ -155,8 +155,6 @@ func TestCockroachDB(t *testing.T) {
 	// Get configs for tests (use CockroachDB-specific expectations)
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetCockroachDBWants()
 
-
-
 	t.Run("ToolInvokeTest", func(t *testing.T) {
 		tests.RunMCPToolInvokeTest(t, select1Want)
 	})

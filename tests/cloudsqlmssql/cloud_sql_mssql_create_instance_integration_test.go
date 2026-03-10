@@ -264,7 +264,7 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 			if !ok {
 				t.Fatalf("unable to find result in response body: %v", body)
 			}
-			
+
 			contentList, ok := resultMap["content"].([]interface{})
 			if !ok || len(contentList) == 0 {
 				t.Fatalf("unable to find result.content[0] in response body")

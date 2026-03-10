@@ -141,27 +141,27 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		validateFunc       func(t *testing.T, body string)
 	}{
 		{
-			name:        "invoke my-simple-cypher-tool",
-			toolName:    "my-simple-cypher-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{},
-			want:        "[{\"a\":1}]",
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-simple-cypher-tool",
+			toolName:   "my-simple-cypher-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			want:       "[{\"a\":1}]",
+			wantStatus: http.StatusOK,
 		},
 		{
-			name:        "invoke my-simple-execute-cypher-tool",
-			toolName:    "my-simple-execute-cypher-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{"cypher": "RETURN 1 as a;"},
-			want:        "[{\"a\":1}]",
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-simple-execute-cypher-tool",
+			toolName:   "my-simple-execute-cypher-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{"cypher": "RETURN 1 as a;"},
+			want:       "[{\"a\":1}]",
+			wantStatus: http.StatusOK,
 		},
 		{
-			name:        "invoke my-simple-execute-cypher-tool with dry_run",
-			toolName:    "my-simple-execute-cypher-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{"cypher": "MATCH (n:Test) RETURN n", "dry_run": true},
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-simple-execute-cypher-tool with dry_run",
+			toolName:   "my-simple-execute-cypher-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{"cypher": "MATCH (n:Test) RETURN n", "dry_run": true},
+			wantStatus: http.StatusOK,
 			validateFunc: func(t *testing.T, body string) {
 				var result []map[string]any
 				if err := json.Unmarshal([]byte(body), &result); err != nil {
@@ -196,35 +196,35 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:        "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
-			toolName:    "my-simple-execute-cypher-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{"cypher": "RTN 1", "dry_run": true},
-			wantStatus:  http.StatusOK,
+			name:               "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
+			toolName:           "my-simple-execute-cypher-tool",
+			api:                "http://127.0.0.1:5000/mcp",
+			arguments:          map[string]any{"cypher": "RTN 1", "dry_run": true},
+			wantStatus:         http.StatusOK,
 			wantErrorSubstring: "unable to execute query",
 		},
 		{
-			name:        "invoke readonly tool with write query",
-			toolName:    "my-readonly-execute-cypher-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{"cypher": "CREATE (n:TestNode)"},
-			wantStatus:  http.StatusOK,
+			name:               "invoke readonly tool with write query",
+			toolName:           "my-readonly-execute-cypher-tool",
+			api:                "http://127.0.0.1:5000/mcp",
+			arguments:          map[string]any{"cypher": "CREATE (n:TestNode)"},
+			wantStatus:         http.StatusOK,
 			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
 		},
 		{
-			name:        "invoke readonly tool with write query and dry_run",
-			toolName:    "my-readonly-execute-cypher-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{"cypher": "CREATE (n:TestNode)", "dry_run": true},
-			wantStatus:  http.StatusOK,
+			name:               "invoke readonly tool with write query and dry_run",
+			toolName:           "my-readonly-execute-cypher-tool",
+			api:                "http://127.0.0.1:5000/mcp",
+			arguments:          map[string]any{"cypher": "CREATE (n:TestNode)", "dry_run": true},
+			wantStatus:         http.StatusOK,
 			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
 		},
 		{
-			name:        "invoke my-schema-tool",
-			toolName:    "my-schema-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{},
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-schema-tool",
+			toolName:   "my-schema-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			wantStatus: http.StatusOK,
 			validateFunc: func(t *testing.T, body string) {
 				var result map[string]any
 				if err := json.Unmarshal([]byte(body), &result); err != nil {
@@ -240,11 +240,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:        "invoke my-schema-tool-with-cache",
-			toolName:    "my-schema-tool-with-cache",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{},
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-schema-tool-with-cache",
+			toolName:   "my-schema-tool-with-cache",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			wantStatus: http.StatusOK,
 			validateFunc: func(t *testing.T, body string) {
 				var result map[string]any
 				if err := json.Unmarshal([]byte(body), &result); err != nil {
@@ -260,11 +260,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:        "invoke my-schema-tool with populated data",
-			toolName:    "my-populated-schema-tool",
-			api:         "http://127.0.0.1:5000/mcp",
-			arguments:   map[string]any{},
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-schema-tool with populated data",
+			toolName:   "my-populated-schema-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			wantStatus: http.StatusOK,
 			prepareData: func(t *testing.T) {
 				ctx := context.Background()
 				driver, err := neo4j.NewDriver(Neo4jUri, neo4j.BasicAuth(Neo4jUser, Neo4jPass, ""))
@@ -463,7 +463,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error parsing response body")
 				}
-				
+
 				// Handle tool errors represented via MCP protocol first
 				if tc.wantErrorSubstring != "" {
 					errMap, hasErr := body["error"].(map[string]interface{})
@@ -477,7 +477,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 						t.Fatalf("expected error containing %q but no error found in body: %v", tc.wantErrorSubstring, body)
 					}
 				}
-				
+
 				resultMap, hasResult := body["result"].(map[string]interface{})
 				if !hasResult && tc.want != "" {
 					t.Fatalf("unable to find result in response body")

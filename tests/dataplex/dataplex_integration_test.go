@@ -185,7 +185,6 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-
 	runDataplexSearchEntriesToolInvokeTest(t, tableName, datasetName)
 	runDataplexLookupEntryToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchAspectTypesToolInvokeTest(t, aspectTypeId)
@@ -327,7 +326,6 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 	return toolsFile
 }
 
-
 func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, datasetName string) {
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -416,13 +414,13 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
 			defer resp.Body.Close()
-			
+
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
@@ -439,7 +437,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 					IsError bool `json:"isError"`
 				} `json:"result"`
 			}
-			
+
 			if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 				t.Fatalf("Error parsing response body: %v", err)
 			}
@@ -468,7 +466,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 				t.Fatalf("Expected a result with content, but it was empty")
 			}
-			
+
 			resultStr := mcpResp.Result.Content[0].Text
 
 			var entries []interface{}
@@ -607,7 +605,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
@@ -630,7 +628,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 					IsError bool `json:"isError"`
 				} `json:"result"`
 			}
-			
+
 			if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 				t.Fatalf("Error parsing response body: %v", err)
 			}
@@ -659,7 +657,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 				t.Fatalf("Expected a result with content, but it was empty")
 			}
-			
+
 			resultStr := mcpResp.Result.Content[0].Text
 
 			var entry map[string]interface{}
@@ -772,13 +770,13 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
 			defer resp.Body.Close()
-			
+
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
@@ -795,7 +793,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 					IsError bool `json:"isError"`
 				} `json:"result"`
 			}
-			
+
 			if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 				t.Fatalf("Error parsing response body: %v", err)
 			}
@@ -824,7 +822,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
 				t.Fatalf("Expected a result with content, but it was empty")
 			}
-			
+
 			resultStr := mcpResp.Result.Content[0].Text
 
 			var entries []interface{}

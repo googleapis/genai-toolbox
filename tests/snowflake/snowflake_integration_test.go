@@ -144,8 +144,6 @@ func TestSnowflake(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-
-
 	select1Want, failInvocationWant, createTableStatement, mcpSelect1Want := getSnowflakeWants()
 
 	// Run tests

@@ -227,7 +227,6 @@ func TestCassandra(t *testing.T) {
 	selectIdNameWant, selectIdNullWant, selectArrayParamWant, mcpMyFailToolWant, mcpSelect1Want, mcpMyToolIdWant := getCassandraWants()
 	selectAllWant, selectIdWant, selectNameWant := getCassandraTmplWants()
 
-
 	tests.RunMCPToolInvokeTest(t, "", tests.DisableSelect1Test(),
 		tests.DisableOptionalNullParamTest(),
 		tests.WithMyToolId3NameAliceWant(selectIdNameWant),

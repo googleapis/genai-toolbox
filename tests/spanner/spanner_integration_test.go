@@ -489,7 +489,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 	}{
 		{
 			name:          "invoke my-exec-sql-tool-read-only",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			want:          select1Want,
@@ -497,7 +497,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 		},
 		{
 			name:          "invoke my-exec-sql-tool-read-only with data present in table",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 3 OR name = 'Alice'\"}", tableNameParam))),
 			want:          invokeParamWant,
@@ -505,35 +505,35 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 		},
 		{
 			name:          "invoke my-exec-sql-tool-read-only create table",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool-read-only drop table",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool-read-only insert entry",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool without body",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			want:          select1Want,
@@ -541,21 +541,21 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 		},
 		{
 			name:          "invoke my-exec-sql-tool create table",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool drop table",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool insert entry",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (5, 'test_name')\"}", tableNameParam))),
 			want:          "null",
@@ -563,14 +563,14 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 		},
 		{
 			name:          "invoke my-exec-sql-tool without body",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         false,
@@ -578,14 +578,14 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
@@ -623,7 +623,6 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -872,7 +871,7 @@ func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	}{
 		{
 			name:          "invoke list-tables-read-only",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			want:          accessSchemaWant,
@@ -880,7 +879,7 @@ func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 		},
 		{
 			name:          "invoke list-tables",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
@@ -918,7 +917,6 @@ func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")

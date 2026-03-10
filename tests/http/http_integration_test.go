@@ -416,7 +416,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 	}{
 		{
 			name:          "invoke my-advanced-tool",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
@@ -426,7 +426,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 		},
 		{
 			name:          "invoke my-advanced-tool with wrong params",
-			api:         "http://127.0.0.1:5000/mcp",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))

@@ -962,7 +962,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 	}{
 		{
 			name:          "invoke my-exec-sql-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			want:          `{"error":"parameter \"sql\" is required"}`,
@@ -970,7 +970,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			want:          select1Want,
@@ -978,7 +978,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool create table",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
 			want:          ddlWant,
@@ -986,7 +986,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool with data present in table",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT id, name FROM %s WHERE id = 3 OR name = 'Alice' ORDER BY id\"}", tableNameParam))),
 			want:          invokeParamWant,
@@ -994,7 +994,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool with no matching rows",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 999\"}", tableNameParam))),
 			want:          `"The query returned 0 rows."`,
@@ -1002,7 +1002,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool drop table",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
 			want:          ddlWant,
@@ -1010,7 +1010,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool insert entry",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (4, 'test_name')\"}", tableNameParam))),
 			want:          ddlWant,
@@ -1018,7 +1018,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "invoke my-exec-sql-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			want:          `{"error":"parameter \"sql\" is required"}`,
@@ -1026,7 +1026,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         false,
@@ -1034,21 +1034,21 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-exec-sql-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			want:          "[{\"f0_\":1}]",
@@ -1056,7 +1056,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		},
 		{
 			name:          "Invoke my-client-auth-exec-sql-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
@@ -1064,7 +1064,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 		{
 
 			name:          "Invoke my-client-auth-exec-sql-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1"}`)),
 			isErr:         true,
@@ -1102,7 +1102,6 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1354,7 +1353,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 	}{
 		{
 			name:          "invoke my-exec-sql-tool with dryRun",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
 			want:          `\"statementType\": \"SELECT\"`,
@@ -1362,7 +1361,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 		},
 		{
 			name:          "invoke my-exec-sql-tool with dryRun create table",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql":"CREATE TABLE %s (id INT64, name STRING)", "dry_run": true}`, newTableName))),
 			want:          `\"statementType\": \"CREATE_TABLE\"`,
@@ -1370,7 +1369,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 		},
 		{
 			name:          "invoke my-exec-sql-tool with dryRun execute immediate",
-			api: "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql":"EXECUTE IMMEDIATE \"CREATE TABLE %s (id INT64, name STRING)\"", "dry_run": true}`, newTableName))),
 			want:          `\"statementType\": \"SCRIPT\"`,
@@ -1378,7 +1377,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with dryRun and auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
 			isErr:         false,
@@ -1386,14 +1385,14 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with dryRun and invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1","dry_run": true}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with dryRun and without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-exec-sql-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT 1", "dry_run": true}`)),
 			isErr:         true,
@@ -1431,7 +1430,6 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1482,14 +1480,14 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 	}{
 		{
 			name:          "invoke my-forecast-tool without required params",
-			api: "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s"}`, historyDataTable))),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-forecast-tool with table",
-			api: "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			want:          `"forecast_timestamp"`,
@@ -1497,7 +1495,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 		},
 		{
 			name:          "invoke my-forecast-tool with query and horizon",
-			api: "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data", "horizon": 5}`, historyDataQuery))),
 			want:          `"forecast_timestamp"`,
@@ -1505,7 +1503,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 		},
 		{
 			name:          "invoke my-forecast-tool with id_cols",
-			api: "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-forecast-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data", "id_cols": ["id"]}`, historyDataTable))),
 			want:          `"id"`,
@@ -1513,7 +1511,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 		},
 		{
 			name:          "invoke my-auth-forecast-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-forecast-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			want:          `"forecast_timestamp"`,
@@ -1521,14 +1519,14 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 		},
 		{
 			name:          "invoke my-auth-forecast-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-forecast-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-forecast-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-forecast-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			want:          `"forecast_timestamp"`,
@@ -1536,7 +1534,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 		},
 		{
 			name:          "Invoke my-client-auth-forecast-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-forecast-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			isErr:         true,
@@ -1544,7 +1542,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 		{
 
 			name:          "Invoke my-client-auth-forecast-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-forecast-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-forecast-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
 			isErr:         true,
@@ -1582,7 +1580,6 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1632,14 +1629,14 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 	}{
 		{
 			name:          "invoke my-analyze-contribution-tool without required params",
-			api: "http://127.0.0.1:5000/mcp", // my-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s"}`, dataTable))),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-analyze-contribution-tool with table",
-			api: "http://127.0.0.1:5000/mcp", // my-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			want:          `"relative_difference"`,
@@ -1647,7 +1644,7 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 		},
 		{
 			name:          "invoke my-auth-analyze-contribution-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			want:          `"relative_difference"`,
@@ -1655,14 +1652,14 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 		},
 		{
 			name:          "invoke my-auth-analyze-contribution-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-analyze-contribution-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			want:          `"relative_difference"`,
@@ -1670,7 +1667,7 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 		},
 		{
 			name:          "Invoke my-client-auth-analyze-contribution-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			isErr:         true,
@@ -1678,7 +1675,7 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 		{
 
 			name:          "Invoke my-client-auth-analyze-contribution-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-analyze-contribution-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-analyze-contribution-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			isErr:         true,
@@ -1716,7 +1713,6 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1753,7 +1749,7 @@ func runBigQueryDataTypeTests(t *testing.T) {
 	}{
 		{
 			name:          "invoke my-scalar-datatype-tool with values",
-			api: "http://127.0.0.1:5000/mcp", // my-scalar-datatype-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-scalar-datatype-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"int_val": 123, "string_val": "hello", "float_val": 3.14, "bool_val": true}`)),
 			want:          `[{"id":1,"int_val":123,"string_val":"hello","float_val":3.14,"bool_val":true}]`,
@@ -1761,7 +1757,7 @@ func runBigQueryDataTypeTests(t *testing.T) {
 		},
 		{
 			name:          "invoke my-scalar-datatype-tool with missing params",
-			api: "http://127.0.0.1:5000/mcp", // my-scalar-datatype-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-scalar-datatype-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"int_val": 123}`)),
 			want:          `{"error":"parameter \"string_val\" is required"}`,
@@ -1769,7 +1765,7 @@ func runBigQueryDataTypeTests(t *testing.T) {
 		},
 		{
 			name:          "invoke my-array-datatype-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-array-datatype-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-array-datatype-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"int_array": [123, 789], "string_array": ["hello", "test"], "float_array": [3.14, 100.1], "bool_array": [true]}`)),
 			want:          `[{"id":1,"int_val":123,"string_val":"hello","float_val":3.14,"bool_val":true},{"id":3,"int_val":789,"string_val":"test","float_val":100.1,"bool_val":true}]`,
@@ -1808,7 +1804,6 @@ func runBigQueryDataTypeTests(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1858,7 +1853,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 	}{
 		{
 			name:          "invoke my-list-dataset-ids-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
@@ -1866,7 +1861,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 		},
 		{
 			name:          "invoke my-list-dataset-ids-tool with project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s\"}", BigqueryProject))),
 			isErr:         false,
@@ -1874,14 +1869,14 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 		},
 		{
 			name:          "invoke my-list-dataset-ids-tool with non-existent project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s-%s\"}", BigqueryProject, uuid.NewString()))),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-auth-list-dataset-ids-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
@@ -1889,7 +1884,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 		},
 		{
 			name:          "Invoke my-client-auth-list-dataset-ids-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         false,
@@ -1897,7 +1892,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 		},
 		{
 			name:          "Invoke my-client-auth-list-dataset-ids-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
@@ -1905,7 +1900,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 		{
 
 			name:          "Invoke my-client-auth-list-dataset-ids-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-list-dataset-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-list-dataset-ids-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
@@ -1943,7 +1938,6 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -1993,14 +1987,14 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 	}{
 		{
 			name:          "invoke my-get-dataset-info-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-get-dataset-info-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          datasetInfoWant,
@@ -2008,7 +2002,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 		},
 		{
 			name:          "Invoke my-auth-get-dataset-info-tool with correct project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s\", \"dataset\":\"%s\"}", BigqueryProject, datasetName))),
 			want:          datasetInfoWant,
@@ -2016,21 +2010,21 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 		},
 		{
 			name:          "Invoke my-auth-get-dataset-info-tool with non-existent project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s-%s\", \"dataset\":\"%s\"}", BigqueryProject, uuid.NewString(), datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-auth-get-dataset-info-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-get-dataset-info-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          datasetInfoWant,
@@ -2038,21 +2032,21 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 		},
 		{
 			name:          "Invoke my-auth-get-dataset-info-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-get-dataset-info-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-get-dataset-info-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          datasetInfoWant,
@@ -2060,7 +2054,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 		},
 		{
 			name:          "Invoke my-client-auth-get-dataset-info-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
@@ -2068,7 +2062,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 		{
 
 			name:          "Invoke my-client-auth-get-dataset-info-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-get-dataset-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-get-dataset-info-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
@@ -2106,7 +2100,6 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -2156,14 +2149,14 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 	}{
 		{
 			name:          "invoke my-list-table-ids-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-list-table-ids-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          tablename_want,
@@ -2171,14 +2164,14 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 		},
 		{
 			name:          "invoke my-list-table-ids-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-list-table-ids-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          tablename_want,
@@ -2186,7 +2179,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 		},
 		{
 			name:          "Invoke my-auth-list-table-ids-tool with correct project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s\", \"dataset\":\"%s\"}", BigqueryProject, datasetName))),
 			want:          tablename_want,
@@ -2194,28 +2187,28 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 		},
 		{
 			name:          "Invoke my-auth-list-table-ids-tool with non-existent project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s-%s\", \"dataset\":\"%s\"}", BigqueryProject, uuid.NewString(), datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-list-table-ids-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-list-table-ids-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-list-table-ids-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			want:          tablename_want,
@@ -2223,7 +2216,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 		},
 		{
 			name:          "Invoke my-client-auth-list-table-ids-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
@@ -2231,7 +2224,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 		{
 
 			name:          "Invoke my-client-auth-list-table-ids-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-list-table-ids-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-list-table-ids-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\"}", datasetName))),
 			isErr:         true,
@@ -2269,7 +2262,6 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -2319,14 +2311,14 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 	}{
 		{
 			name:          "invoke my-get-table-info-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-get-table-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-get-table-info-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-get-table-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			want:          tableInfoWant,
@@ -2334,14 +2326,14 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 		},
 		{
 			name:          "invoke my-auth-get-table-info-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-get-table-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-get-table-info-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			want:          tableInfoWant,
@@ -2349,7 +2341,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 		},
 		{
 			name:          "Invoke my-auth-get-table-info-tool with correct project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s\", \"dataset\":\"%s\", \"table\":\"%s\"}", BigqueryProject, datasetName, tableName))),
 			want:          tableInfoWant,
@@ -2357,28 +2349,28 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 		},
 		{
 			name:          "Invoke my-auth-get-table-info-tool with non-existent project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"project\":\"%s-%s\", \"dataset\":\"%s\", \"table\":\"%s\"}", BigqueryProject, uuid.NewString(), datasetName, tableName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-get-table-info-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-get-table-info-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-get-table-info-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			want:          tableInfoWant,
@@ -2386,7 +2378,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 		},
 		{
 			name:          "Invoke my-client-auth-get-table-info-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			isErr:         true,
@@ -2394,7 +2386,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 		{
 
 			name:          "Invoke my-client-auth-get-table-info-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-get-table-info-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-get-table-info-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataset\":\"%s\", \"table\":\"%s\"}", datasetName, tableName))),
 			isErr:         true,
@@ -2432,7 +2424,6 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 				t.Fatalf("error parsing response body")
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -2486,7 +2477,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	}{
 		{
 			name:          "invoke my-conversational-analytics-tool successfully",
-			api: "http://127.0.0.1:5000/mcp", // my-conversational-analytics-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-conversational-analytics-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -2497,7 +2488,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 		},
 		{
 			name:          "invoke my-auth-conversational-analytics-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-conversational-analytics-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-conversational-analytics-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -2508,14 +2499,14 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 		},
 		{
 			name:          "invoke my-auth-conversational-analytics-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-conversational-analytics-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-conversational-analytics-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"user_query_with_context": "What are the names in the table?"}`)),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-conversational-analytics-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-conversational-analytics-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-conversational-analytics-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -2526,7 +2517,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 		},
 		{
 			name:          "Invoke my-client-auth-conversational-analytics-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-conversational-analytics-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-conversational-analytics-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -2537,7 +2528,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 		{
 
 			name:          "Invoke my-client-auth-conversational-analytics-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-conversational-analytics-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-conversational-analytics-tool tool was here,
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"user_query_with_context": "What are the names in the table?", "table_references": %q}`,
@@ -2612,7 +2603,6 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 				t.Fatalf("error parsing response body: %v", err)
 			}
 
-			
 			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("unable to find result object in response body")
@@ -3061,14 +3051,14 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 	}{
 		{
 			name:          "invoke my-search-catalog-tool without body",
-			api: "http://127.0.0.1:5000/mcp", // my-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-search-catalog-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-search-catalog-tool",
-			api: "http://127.0.0.1:5000/mcp", // my-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-search-catalog-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			wantKey:       "DisplayName",
@@ -3076,7 +3066,7 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 		},
 		{
 			name:          "Invoke my-auth-search-catalog-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			wantKey:       "DisplayName",
@@ -3084,7 +3074,7 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 		},
 		{
 			name:          "Invoke my-auth-search-catalog-tool with correct project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, datasetName))),
 			wantKey:       "DisplayName",
@@ -3092,35 +3082,35 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 		},
 		{
 			name:          "Invoke my-auth-search-catalog-tool with non-existent project",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s-%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, uuid.NewString(), datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-search-catalog-tool with invalid auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-search-catalog-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
-			api: "http://127.0.0.1:5000/mcp", // my-client-auth-search-catalog-tool tool was here,
+			api:           "http://127.0.0.1:5000/mcp", // my-client-auth-search-catalog-tool tool was here,
 			requestHeader: map[string]string{"Authorization": accessToken},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
 			wantKey:       "DisplayName",
