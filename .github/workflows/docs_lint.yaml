@@ -34,23 +34,16 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Check for large files in docs/
+      - name: Check for large files (>24MB)
         run: |
-          if [ -d "docs" ]; then
-            LARGE_FILES=$(find docs/ -type f -size +24M)
-            if [ -n "$LARGE_FILES" ]; then
-              echo "Error: The following files in the docs/ directory exceed the 24MB size limit:"
-              echo "$LARGE_FILES"
-              exit 1
-            else
-              echo "Success: No files in docs/ exceed 24MB."
-            fi
-          else
-            echo "Info: docs/ directory not found. Skipping file size check."
+          LARGE_FILES=$(find docs/ -type f -size +24M)
+          if [ -n "$LARGE_FILES" ]; then
+            echo "Error: Files exceed 24MB limit: $LARGE_FILES"
+            exit 1
           fi
 
       - name: Make script executable
         run: chmod +x .ci/lint-docs-source-page.sh
 
       - name: Run Structure Linter for Source Pages
-        run: .ci/lint-docs-source-page.sh
+        run: bash .ci/lint-docs-source-page.sh

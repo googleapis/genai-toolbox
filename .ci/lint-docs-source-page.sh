@@ -117,4 +117,5 @@ if has_errors:
     print("Linting failed. Fix structure errors above.")
     sys.exit(1)
 print("Success: Source pages validated.")
+sys.exit(0)
 EOF
