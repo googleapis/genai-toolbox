@@ -57,7 +57,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
-	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 	var err error
 	defer func() {
 		if err != nil {

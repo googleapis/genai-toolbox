@@ -15,16 +15,11 @@
 package skills
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 	"text/template"
 
-	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -39,10 +34,10 @@ description: {{.SkillDescription}}
 All scripts can be executed using Node.js. Replace ` + "`" + `<param_name>` + "`" + ` and ` + "`" + `<param_value>` + "`" + ` with actual values.
 
 **Bash:**
-` + "`" + `node scripts/<script_name>.js '{"<param_name>": "<param_value>"}'` + "`" + `
+` + "`" + `node <skill_dir>/scripts/<script_name>.js '{"<param_name>": "<param_value>"}'` + "`" + `
 
 **PowerShell:**
-` + "`" + `node scripts/<script_name>.js '{\"<param_name>\": \"<param_value>\"}'` + "`" + `
+` + "`" + `node <skill_dir>/scripts/<script_name>.js '{\"<param_name>\": \"<param_value>\"}'` + "`" + `
 
 ## Scripts
 
@@ -72,7 +67,7 @@ type skillTemplateData struct {
 // generateSkillMarkdown generates the content of the SKILL.md file.
 // It includes usage instructions and a reference section for each tool in the skill,
 // detailing its description and parameters.
-func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[string]tools.Tool) (string, error) {
+func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[string]tools.Tool, envVars map[string]string) (string, error) {
 	var toolsData []toolTemplateData
 
 	// Order tools based on name
@@ -86,7 +81,7 @@ func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[stri
 		tool := toolsMap[name]
 		manifest := tool.Manifest()
 
-		parametersSchema, err := formatParameters(manifest.Parameters)
+		parametersSchema, err := formatParameters(manifest.Parameters, envVars)
 		if err != nil {
 			return "", err
 		}
@@ -118,29 +113,33 @@ func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[stri
 }
 
 const nodeScriptTemplate = `#!/usr/bin/env node
-
+{{if .LicenseHeader}}
+{{.LicenseHeader}}
+{{end}}
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 const toolName = "{{.Name}}";
-const toolsFileName = "{{.ToolsFileName}}";
+const configArgs = [{{.ConfigArgs}}];
 
 function getToolboxPath() {
+    if (process.env.GEMINI_CLI === '1') {
+        const localPath = path.resolve(__dirname, '../../../toolbox');
+        if (fs.existsSync(localPath)) {
+            return localPath;
+        }
+    }
     try {
         const checkCommand = process.platform === 'win32' ? 'where toolbox' : 'which toolbox';
         const globalPath = execSync(checkCommand, { stdio: 'pipe', encoding: 'utf-8' }).trim();
         if (globalPath) {
             return globalPath.split('\n')[0].trim();
         }
+        throw new Error("Toolbox binary not found");
     } catch (e) {
-        // Ignore error;
+        throw new Error("Toolbox binary not found");
     }
-    const localPath = path.resolve(__dirname, '../../../toolbox');
-    if (fs.existsSync(localPath)) {
-        return localPath;
-    }
-    throw new Error("Toolbox binary not found");
 }
 
 let toolboxBinary;
@@ -151,15 +150,38 @@ try {
     process.exit(1);
 }
 
-let configArgs = [];
-if (toolsFileName) {
-  configArgs.push("--tools-file", path.join(__dirname, "..", "assets", toolsFileName));
+function getEnv() {
+    const envPath = path.resolve(__dirname, '../../../.env');
+    const env = { ...process.env };
+    if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf-8');
+        envContent.split('\n').forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#')) {
+                const splitIdx = trimmed.indexOf('=');
+                if (splitIdx !== -1) {
+                    const key = trimmed.slice(0, splitIdx).trim();
+                    let value = trimmed.slice(splitIdx + 1).trim();
+                    value = value.replace(/(^['"]|['"]$)/g, '');
+                    if (env[key] === undefined) {
+                        env[key] = value;
+                    }
+                }
+            }
+        });
+    }
+    return env;
+}
+
+let env = process.env;
+if (process.env.GEMINI_CLI === '1') {
+    env = getEnv();
 }
 
 const args = process.argv.slice(2);
-const toolboxArgs = [...configArgs, "invoke", toolName, ...args];
+const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, ...args];
 
-const child = spawn(toolboxBinary, toolboxArgs, { stdio: 'inherit' });
+const child = spawn(toolboxBinary, toolboxArgs, { stdio: 'inherit', env });
 
 child.on('close', (code) => {
   process.exit(code);
@@ -173,16 +195,18 @@ child.on('error', (err) => {
 
 type scriptData struct {
 	Name          string
-	ToolsFileName string
+	ConfigArgs    string
+	LicenseHeader string
 }
 
 // generateScriptContent creates the content for a Node.js wrapper script.
 // This script invokes the toolbox CLI with the appropriate configuration
 // (using a generated tools file) and arguments to execute the specific tool.
-func generateScriptContent(name string, toolsFileName string) (string, error) {
+func generateScriptContent(name string, configArgs string, licenseHeader string) (string, error) {
 	data := scriptData{
 		Name:          name,
-		ToolsFileName: toolsFileName,
+		ConfigArgs:    configArgs,
+		LicenseHeader: licenseHeader,
 	}
 
 	tmpl, err := template.New("script").Parse(nodeScriptTemplate)
@@ -200,97 +224,36 @@ func generateScriptContent(name string, toolsFileName string) (string, error) {
 
 // formatParameters converts a list of parameter manifests into a formatted JSON schema string.
 // This schema is used in the skill documentation to describe the input parameters for a tool.
-func formatParameters(params []parameters.ParameterManifest) (string, error) {
+func formatParameters(params []parameters.ParameterManifest, envVars map[string]string) (string, error) {
 	if len(params) == 0 {
 		return "", nil
 	}
 
-	properties := make(map[string]interface{})
-	var required []string
+	var sb strings.Builder
+	sb.WriteString("#### Parameters\n\n")
+	sb.WriteString("| Name | Type | Description | Required | Default |\n")
+	sb.WriteString("| :--- | :--- | :--- | :--- | :--- |\n")
 
 	for _, p := range params {
-		paramMap := map[string]interface{}{
-			"type":        p.Type,
-			"description": p.Description,
-		}
-		if p.Default != nil {
-			paramMap["default"] = p.Default
-		}
-		properties[p.Name] = paramMap
+		required := "No"
 		if p.Required {
-			required = append(required, p.Name)
+			required = "Yes"
 		}
-	}
-
-	schema := map[string]interface{}{
-		"type":       "object",
-		"properties": properties,
-	}
-	if len(required) > 0 {
-		schema["required"] = required
-	}
-
-	schemaJSON, err := json.MarshalIndent(schema, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("error generating parameters schema: %w", err)
-	}
-
-	return fmt.Sprintf("#### Parameters\n\n```json\n%s\n```", string(schemaJSON)), nil
-}
-
-// generateToolConfigYAML generates the YAML configuration for a single tool and its dependency (source).
-// It extracts the relevant tool and source configurations from the server config and formats them
-// into a YAML document suitable for inclusion in the skill's assets.
-func generateToolConfigYAML(cfg server.ServerConfig, toolName string) ([]byte, error) {
-	toolCfg, ok := cfg.ToolConfigs[toolName]
-	if !ok {
-		return nil, fmt.Errorf("error finding tool config: %s", toolName)
-	}
-
-	var buf bytes.Buffer
-	encoder := yaml.NewEncoder(&buf)
-
-	// Process Tool Config
-	toolWrapper := struct {
-		Kind   string           `yaml:"kind"`
-		Config tools.ToolConfig `yaml:",inline"`
-	}{
-		Kind:   "tools",
-		Config: toolCfg,
-	}
-
-	if err := encoder.Encode(toolWrapper); err != nil {
-		return nil, fmt.Errorf("error encoding tool config: %w", err)
-	}
-
-	// Process Source Config
-	var toolMap map[string]interface{}
-	b, err := yaml.Marshal(toolCfg)
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling tool config: %w", err)
-	}
-	if err := yaml.Unmarshal(b, &toolMap); err != nil {
-		return nil, fmt.Errorf("error unmarshaling tool config map: %w", err)
-	}
-
-	if sourceName, ok := toolMap["source"].(string); ok && sourceName != "" {
-		sourceCfg, ok := cfg.SourceConfigs[sourceName]
-		if !ok {
-			return nil, fmt.Errorf("error finding source config: %s", sourceName)
+		defaultValue := ""
+		if p.Default != nil {
+			defaultValue = fmt.Sprintf("`%v`", p.Default)
+			// Check if default value matches any env var
+			if strVal, ok := p.Default.(string); ok {
+				for _, envVal := range envVars {
+					if envVal == strVal {
+						defaultValue = ""
+						break
+					}
+				}
+			}
 		}
-
-		sourceWrapper := struct {
-			Kind   string               `yaml:"kind"`
-			Config sources.SourceConfig `yaml:",inline"`
-		}{
-			Kind:   "sources",
-			Config: sourceCfg,
-		}
-
-		if err := encoder.Encode(sourceWrapper); err != nil {
-			return nil, fmt.Errorf("error encoding source config: %w", err)
-		}
+		fmt.Fprintf(&sb, "| %s | %s | %s | %s | %s |\n", p.Name, p.Type, p.Description, required, defaultValue)
 	}
 
-	return buf.Bytes(), nil
+	return sb.String(), nil
 }
