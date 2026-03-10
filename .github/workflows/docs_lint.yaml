@@ -22,7 +22,7 @@ on:
 
 jobs:
   lint-source-pages:
-    name: Validate Source Page Structure
+    name: Lint Documentation
     runs-on: ubuntu-latest
 
     steps:
