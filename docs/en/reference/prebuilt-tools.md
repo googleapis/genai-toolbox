@@ -888,7 +888,6 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
     *   `list_active_sessions`: Lists active database sessions.
-    *   `get_query_plan`: Gets the execution plan for a SQL statement.
     *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
     *   `list_tablespace_usage`: Lists tablespace usage.
     *   `list_invalid_objects`: Lists invalid objects.

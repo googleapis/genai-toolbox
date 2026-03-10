@@ -319,10 +319,9 @@ The following tools are available to the LLM:
 1. **list_tables**: lists tables and descriptions
 2. **execute_sql**: execute any SQL statement
 3. **list_active_sessions**: Lists active database sessions.
-4. **get_query_plan**: Gets the execution plan for a SQL statement.
-5. **list_top_sql_by_resource**: Lists top SQL statements by resource usage.
-6. **list_tablespace_usage**: Lists tablespace usage.
-7. **list_invalid_objects**: Lists invalid objects.
+4. **list_top_sql_by_resource**: Lists top SQL statements by resource usage.
+5. **list_tablespace_usage**: Lists tablespace usage.
+6. **list_invalid_objects**: Lists invalid objects.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

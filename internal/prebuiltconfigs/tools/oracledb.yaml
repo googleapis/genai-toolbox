@@ -62,8 +62,13 @@ tools:
         source: oracle-source
         description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input as a parameter."
         statement: |
-            EXPLAIN PLAN FOR {{.sql_statement}};
+            EXPLAIN PLAN FOR (FORMAT JSON) {{.query}};;
             SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
+        templateParameters:
+            - name: query
+              type: string
+              description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
+              required: true
 
     list_top_sql_by_resource:
         kind: oracle-sql
