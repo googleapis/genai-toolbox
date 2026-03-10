@@ -25,6 +25,10 @@ on:
         description: 'PR Number to deploy (Manual override)'
         required: true
         type: string
+    build_run_id:
+        description: 'The Run ID from the successful "Build Docs Preview" workflow'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -48,7 +52,7 @@ jobs:
         with:
           name: docs-preview-data
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id || github.event.run_id }}
+          run-id: ${{ github.event.inputs.build_run_id || github.event.workflow_run.id }}
           path: downloaded-artifact
 
       - name: Read PR Number
