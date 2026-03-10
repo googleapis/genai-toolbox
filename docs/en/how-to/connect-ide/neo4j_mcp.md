@@ -5,7 +5,7 @@ weight: 2
 description: "Connect your IDE to Neo4j using Toolbox."
 ---
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introdu) is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to
 expose your developer assistant tools to a Neo4j instance:
