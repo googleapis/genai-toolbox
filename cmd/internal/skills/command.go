@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/internal/server"
@@ -33,10 +34,11 @@ import (
 // skillsCmd is the command for generating skills.
 type skillsCmd struct {
 	*cobra.Command
-	name        string
-	description string
-	toolset     string
-	outputDir   string
+	name          string
+	description   string
+	toolset       string
+	outputDir     string
+	licenseHeader string
 }
 
 // NewCommand creates a new Command.
@@ -54,6 +56,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd.Flags().StringVar(&cmd.description, "description", "", "Description of the generated skill")
 	cmd.Flags().StringVar(&cmd.toolset, "toolset", "", "Name of the toolset to convert into a skill. If not provided, all tools will be included.")
 	cmd.Flags().StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
+	cmd.Flags().StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
 
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("description")
@@ -72,7 +75,8 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	_, err = opts.LoadConfig(ctx)
+	parser := internal.ToolsFileParser{}
+	_, err = opts.LoadConfig(ctx, &parser)
 	if err != nil {
 		return err
 	}
@@ -122,6 +126,40 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
+	var jsConfigArgs []string
+	if len(opts.PrebuiltConfigs) > 0 {
+		for _, pc := range opts.PrebuiltConfigs {
+			jsConfigArgs = append(jsConfigArgs, `"--prebuilt"`, fmt.Sprintf(`"%s"`, pc))
+		}
+	}
+
+	if opts.ToolsFolder != "" {
+		folderName := filepath.Base(opts.ToolsFolder)
+		destFolder := filepath.Join(assetsPath, folderName)
+		if err := copyDir(opts.ToolsFolder, destFolder); err != nil {
+			return err
+		}
+		jsConfigArgs = append(jsConfigArgs, `"--tools-folder"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, folderName))
+	} else if len(opts.ToolsFiles) > 0 {
+		for _, f := range opts.ToolsFiles {
+			baseName := filepath.Base(f)
+			destPath := filepath.Join(assetsPath, baseName)
+			if err := copyFile(f, destPath); err != nil {
+				return err
+			}
+			jsConfigArgs = append(jsConfigArgs, `"--tools-files"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
+		}
+	} else if opts.ToolsFile != "" {
+		baseName := filepath.Base(opts.ToolsFile)
+		destPath := filepath.Join(assetsPath, baseName)
+		if err := copyFile(opts.ToolsFile, destPath); err != nil {
+			return err
+		}
+		jsConfigArgs = append(jsConfigArgs, `"--tools-file"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
+	}
+
+	configArgsStr := strings.Join(jsConfigArgs, ", ")
+
 	// Iterate over keys to ensure deterministic order
 	var toolNames []string
 	for name := range allTools {
@@ -130,26 +168,8 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	sort.Strings(toolNames)
 
 	for _, toolName := range toolNames {
-		// Generate YAML config in asset directory
-		minimizedContent, err := generateToolConfigYAML(opts.Cfg, toolName)
-		if err != nil {
-			errMsg := fmt.Errorf("error generating filtered config for %s: %w", toolName, err)
-			opts.Logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-
-		specificToolsFileName := fmt.Sprintf("%s.yaml", toolName)
-		if minimizedContent != nil {
-			destPath := filepath.Join(assetsPath, specificToolsFileName)
-			if err := os.WriteFile(destPath, minimizedContent, 0644); err != nil {
-				errMsg := fmt.Errorf("error writing filtered config for %s: %w", toolName, err)
-				opts.Logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
-		}
-
 		// Generate wrapper script in scripts directory
-		scriptContent, err := generateScriptContent(toolName, specificToolsFileName)
+		scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader)
 		if err != nil {
 			errMsg := fmt.Errorf("error generating script content for %s: %w", toolName, err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -165,7 +185,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	}
 
 	// Generate SKILL.md
-	skillContent, err := generateSkillMarkdown(cmd.name, cmd.description, allTools)
+	skillContent, err := generateSkillMarkdown(cmd.name, cmd.description, allTools, parser.EnvVars)
 	if err != nil {
 		errMsg := fmt.Errorf("error generating SKILL.md content: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -211,4 +231,29 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 	}
 
 	return result, nil
+}
+
+func copyFile(src, dst string) error {
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(dst, data, 0644)
+}
+
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		destPath := filepath.Join(dst, relPath)
+		if info.IsDir() {
+			return os.MkdirAll(destPath, 0755)
+		}
+		return copyFile(path, destPath)
+	})
 }
