@@ -27,7 +27,8 @@ toolbox <tool-source> skills-generate \
   --name <skill-name> \
   --toolset <toolset-name> \
   --description <description> \
-  --output-dir <output-directory>
+  --output-dir <output-directory> \
+  --license-header <license-header>
 ```
 
 - `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
@@ -35,6 +36,7 @@ toolbox <tool-source> skills-generate \
 - `--description`: Description of the generated skill.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+- `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
 
 {{< notice note >}}
 **Note:** The `<skill-name>` must follow the Agent Skill [naming convention](https://agentskills.io/specification): it must contain only lowercase alphanumeric characters and hyphens, cannot start or end with a hyphen, and cannot contain consecutive hyphens (e.g., `my-skill`, `data-processing`).
@@ -78,8 +80,7 @@ toolbox <tool-source> skills-generate \
    └── my-skill/
        ├── SKILL.md
        ├── assets/
-       │   ├── tool_a.yaml
-       │   └── tool_b.yaml
+       │   └── tools.yaml
        └── scripts/
            ├── tool_a.js
            └── tool_b.js

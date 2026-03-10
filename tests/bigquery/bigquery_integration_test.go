@@ -883,6 +883,11 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		"project":        BigqueryProject,
 		"useClientOAuth": true,
 	}
+	sources["my-custom-client-auth-source"] = map[string]any{
+		"type":           BigquerySourceType,
+		"project":        BigqueryProject,
+		"useClientOAuth": "X-Custom-Auth",
+	}
 	config["sources"] = sources
 	return config
 }
@@ -920,6 +925,12 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		"type":        "bigquery-sql",
 		"source":      "my-client-auth-source",
 		"description": "Tool to test client authorization.",
+		"statement":   "SELECT 1",
+	}
+	tools["my-custom-client-auth-tool"] = map[string]any{
+		"type":        "bigquery-sql",
+		"source":      "my-custom-client-auth-source",
+		"description": "Tool to test custom client authorization header.",
 		"statement":   "SELECT 1",
 	}
 	config["tools"] = tools
