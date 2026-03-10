@@ -20,6 +20,11 @@ on:
     types:
       - completed
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number to deploy (Manual override)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -27,10 +32,12 @@ permissions:
 
 jobs:
   deploy-preview:
-    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    if: >
+      github.event_name == 'workflow_dispatch' || 
+      (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-24.04
     concurrency:
-      group: "deploy-${{ github.event.workflow_run.pull_requests[0].number }}"
+      group: "deploy-${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number }}"
       cancel-in-progress: true
     steps:
       - name: Checkout base repository
@@ -41,16 +48,20 @@ jobs:
         with:
           name: docs-preview-data
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
+          run-id: ${{ github.event.workflow_run.id || github.event.run_id }}
           path: downloaded-artifact
 
       - name: Read PR Number
         id: get_pr
         run: |
-          PR_NUMBER=$(cat downloaded-artifact/pr_number.txt)
+          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          else
+            PR_NUMBER=$(cat downloaded-artifact/pr_number.txt)
+          fi
           
           if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
-            echo "Error: PR number must contain only digits."
+            echo "Error: PR number [$PR_NUMBER] is invalid."
             exit 1
           fi
           
