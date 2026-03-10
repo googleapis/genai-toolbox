@@ -14,10 +14,8 @@
 name: Link Checks
 
 on:
-  pull_request:
-  push:
-#   schedule:
-#     - cron: '0 0 * * 1'
+  schedule:
+    - cron: '0 0 * * 1'
 jobs:
   linkChecker:
     runs-on: ubuntu-latest
@@ -31,7 +29,7 @@ jobs:
 
       - name: Link Checker
         id: lychee-check
-        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2
+        uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
         continue-on-error: true
         with:
           args: >
@@ -56,13 +54,13 @@ jobs:
           echo "" >> full-report.md 
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
-      # - name: Create Issue From File
-      #   if: steps.lychee-check.outcome == 'failure'
-      #   uses: peter-evans/create-issue-from-file@fca9117c27cdc29c6c4db3b86c48e4115a786710 # v6
-      #   with:
-      #     title: Link Checker Report
-      #     content-filepath: full-report.md
-      #     labels: report, automated issue, link checker
+      - name: Create Issue From File
+        if: steps.lychee-check.outcome == 'failure'
+        uses: peter-evans/create-issue-from-file@fca9117c27cdc29c6c4db3b86c48e4115a786710 # v6
+        with:
+          title: Link Checker Report
+          content-filepath: full-report.md
+          labels: report, automated issue, link checker
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
