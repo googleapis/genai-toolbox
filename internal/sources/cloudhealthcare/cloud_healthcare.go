@@ -339,7 +339,7 @@ func (s *Source) FHIRPatientSearch(storeID, tokenStr string, opts []googleapi.Ca
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
-	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.SearchType(name, "Patient").Do(opts...)
+	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.SearchType(name, "Patient", nil).Do(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search patient resources: %w", err)
 	}
