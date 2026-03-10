@@ -27,6 +27,9 @@ permissions: read-all
 jobs:
   build-preview:
     runs-on: ubuntu-24.04
+    env:
+      PR_NUMBER: ${{ github.event.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     concurrency:
       group: "preview-${{ github.event.number }}"
       cancel-in-progress: true
@@ -37,7 +40,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           # Checkout the PR's HEAD commit (supports forks).
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ env.HEAD_SHA }}
           fetch-depth: 0 
 
       - name: Setup Hugo
@@ -63,7 +66,7 @@ jobs:
       
       - run: hugo --minify
         env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ github.event.number }}/
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ env.PR_NUMBER }}/
           HUGO_ENVIRONMENT: preview
           HUGO_RELATIVEURLS: false
 
@@ -71,7 +74,7 @@ jobs:
         run: |
           mkdir -p ../artifact-payload
           cp -r public ../artifact-payload/public
-          echo ${{ github.event.number }} > ../artifact-payload/pr_number.txt
+          echo $PR_NUMBER > ../artifact-payload/pr_number.txt
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
