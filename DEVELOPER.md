@@ -288,11 +288,6 @@ golangci-lint run --fix
 
 To ensure consistency, we enforce a standardized structure for integration Source pages (_index.md) using a custom linter (.ci/lint_source_pages.sh).
 
-**Enforced Rules:**
-* Title Convention: Frontmatter title must always end with "Source" (e.g., title: "Postgres Source").
-* No H1 Tags: Markdown bodies must not use H1 (#) tags. Use H2 (##) for top-level sections.
-* Strict H2 Ordering: H2 headings must follow the approved sequence (About, Available Tools, Requirements, Example, Reference, etc.).
-* Shortcode Placement: The {{< list-tools >}} shortcode must be placed under the ## Available Tools heading.
 Before pushing changes to integration pages, run the source page linter to verify heading order and required sections:
 
 ```bash
