@@ -1,5 +1,5 @@
 ---
-title: "AlloyDB for PostgreSQL "
+title: "AlloyDB for PostgreSQL Source"
 linkTitle: "AlloyDB"
 type: docs
 weight: 1
