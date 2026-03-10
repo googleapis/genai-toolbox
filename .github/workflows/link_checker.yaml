@@ -44,6 +44,7 @@ jobs:
       #     else
       #       echo "--- Changed Files to Scan ---"
       #       echo "$CHANGED_FILES"
+      
       #       echo "-----------------------------"
             
       #       FILES_QUOTED=$(echo "$CHANGED_FILES" | sed 's/^/"/;s/$/"/' | tr '\n' ' ')
