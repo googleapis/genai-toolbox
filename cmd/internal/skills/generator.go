@@ -41,6 +41,7 @@ All scripts can be executed using Node.js. Replace ` + "`" + `<param_name>` + "`
 {{if .AdditionalNotes}}
 {{.AdditionalNotes}}
 {{end}}
+
 ## Scripts
 
 {{range .Tools}}
