@@ -81,3 +81,13 @@ jobs:
         with:
           name: docs-preview-data
           path: artifact-payload/
+
+      - name: Deployment Link
+        run: |
+          DEPLOY_URL="https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/workflows/docs_preview_deploy.yaml"
+          
+          echo "### Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "The build for PR #${{ env.PR_NUMBER }} succeeded." >> $GITHUB_STEP_SUMMARY
+          echo "The deployment workflow is now starting in the background." >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "#### [Track Deployment Progress]($DEPLOY_URL)" >> $GITHUB_STEP_SUMMARY
