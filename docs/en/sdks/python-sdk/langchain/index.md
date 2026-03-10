@@ -41,7 +41,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
             message.pretty_print()
 ```
 {{< notice tip >}}
-For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](getting-started/local_quickstart)
+For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](../../../getting-started/local_quickstart.md)
 {{< /notice >}}
 
 ## Usage
