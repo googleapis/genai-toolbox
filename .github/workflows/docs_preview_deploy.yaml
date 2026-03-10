@@ -29,7 +29,7 @@ jobs:
     if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
     concurrency:
-      group: "docs-deploy"
+      group: "preview-${{ github.event.number }}"
       cancel-in-progress: true
     steps:
       - name: Checkout base repository
