@@ -317,8 +317,8 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	sessionId := uuid.New().String()
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
-	span.SetAttributes(attribute.String("session_id", sessionId))
-	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("mcp.session.id", sessionId))
+	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -467,7 +467,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	promptsetName := chi.URLParam(r, "promptsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
-	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
 	defer func() {
 		if err != nil {
