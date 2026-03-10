@@ -178,13 +178,9 @@ if (process.env.GEMINI_CLI === '1') {
     env = getEnv();
 }
 
+const userAgent = env.USER_AGENT_METADATA || "skills";
+
 const args = process.argv.slice(2);
-
-function getClientMetadata() {
-    return env.USER_AGENT_METADATA || "skills";
-}
-
-const userAgent = getClientMetadata();
 
 const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...args];
 
