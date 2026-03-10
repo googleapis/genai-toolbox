@@ -22,7 +22,11 @@ sources:
         useOCI: ${ORACLE_USE_OCI:false}
 
 tools:
-   
+    execute_sql:
+        kind: oracle-execute-sql
+        source: oracle-source
+        description: "Executes any SQL statement."
+
     list_tables:
         kind: oracle-sql
         source: oracle-source
@@ -60,15 +64,21 @@ tools:
     get_query_plan:
         kind: oracle-sql
         source: oracle-source
-        description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input as a parameter."
+        description: "Generate a full execution plan for a single SQL statement using EXPLAIN PLAN. This can be used to analyze query performance without execution. Requires the SQL statement as input as a parameter."
         statement: |
-            EXPLAIN PLAN FOR (FORMAT JSON) {{.query}};;
-            SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
-        templateParameters:
+            DECLARE
+                plan_output CLOB;
+            BEGIN
+                EXECUTE IMMEDIATE 'EXPLAIN PLAN FOR ' || :query;
+                SELECT DBMS_XPLAN.DISPLAY() INTO plan_output FROM DUAL;
+                -- The result of a PL/SQL block with an OUT parameter is returned by the driver.
+                -- We use a dummy SELECT to conform to tool structure, but the actual output is plan_output.
+                :plan := plan_output;
+            END;
+        parameters:
             - name: query
               type: string
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
-              required: true
 
     list_top_sql_by_resource:
         kind: oracle-sql
@@ -128,6 +138,7 @@ tools:
 
 toolsets:
     oracle_database_tools:
+        - execute_sql
         - list_tables
         - list_active_sessions
         - get_query_plan
