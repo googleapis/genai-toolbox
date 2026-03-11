@@ -587,6 +587,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_lookml_tests`: Retrieves a list of available LookML tests for a project.
     *   `run_lookml_tests`: Executes specific LookML tests within a project.
     *   `create_view_from_table`: Generates boilerplate LookML views directly from the database schema.
+    *   `project_git_branch`: Fetch and manipulate the git branch of a LookML project.
 
 ## Looker Conversational Analytics
 
