@@ -72,3 +72,4 @@ toolsets:
         - analyze_contribution
         - ask_data_insights
         - forecast
+        - search_catalog
