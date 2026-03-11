@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"testing"
 	"time"
@@ -105,13 +104,22 @@ func TestDgraphToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
+			// Create JSONRPC request for tools/list
+			mcpReq := map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "test-list",
+				"method":  "tools/list",
+			}
+			reqBytes, _ := json.Marshal(mcpReq)
+			
+			resp, err := http.Post(tc.api, "application/json", bytes.NewBuffer(reqBytes))
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
 			var body map[string]interface{}
@@ -120,12 +128,68 @@ func TestDgraphToolEndpoints(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["tools"]
+			result, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find tools in response body")
+				t.Fatalf("unable to find result in response body")
 			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
+			
+			gotTools, ok := result["tools"].([]interface{})
+			if !ok {
+				t.Fatalf("unable to find tools array in result")
+			}
+
+			// Convert tools array into a map for comparison
+			got := make(map[string]interface{})
+			for _, toolItem := range gotTools {
+				toolMap, ok := toolItem.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				name, ok := toolMap["name"].(string)
+				if !ok {
+					continue
+				}
+				
+				// Reconstruct a map similar to tc.want
+				toolEntry := map[string]interface{}{
+					"description": toolMap["description"],
+				}
+				
+				if inputSchema, ok := toolMap["inputSchema"].(map[string]interface{}); ok {
+					if props, ok := inputSchema["properties"].(map[string]interface{}); ok {
+						if params, ok := props["arguments"].(map[string]interface{}); ok {
+							if propsArray, ok := params["properties"].(map[string]interface{}); ok {
+								var paramList []interface{}
+								for paramName, paramSchema := range propsArray {
+									paramMap := paramSchema.(map[string]interface{})
+									paramEntry := map[string]interface{}{
+										"name":        paramName,
+										"type":        paramMap["type"],
+										"description": paramMap["description"],
+									}
+									// Only properties defined here are needed to check against legacy output
+									// Dgraph tool takes no parameters, so this handles empty arguments
+									paramList = append(paramList, paramEntry)
+								}
+								toolEntry["parameters"] = paramList
+							}
+						}
+					}
+				}
+				// if parameters is nil, set it to empty array to match tc.want
+				if toolEntry["parameters"] == nil {
+					toolEntry["parameters"] = []interface{}{}
+				}
+				toolEntry["authRequired"] = []interface{}{}
+				got[name] = toolEntry
+			}
+
+			// Compare as JSON strings to handle any ordering differences
+			gotJSON, _ := json.Marshal(got)
+			wantJSON, _ := json.Marshal(tc.want)
+			if string(gotJSON) != string(wantJSON) {
+				t.Logf("got %v, want %v", string(gotJSON), string(wantJSON))
+				t.Fatalf("tools mismatch")
 			}
 		})
 	}

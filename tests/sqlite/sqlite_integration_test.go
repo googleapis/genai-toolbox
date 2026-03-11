@@ -232,7 +232,7 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 			name:       "select no rows",
 			sql:        fmt.Sprintf("SELECT name FROM %s WHERE id = 999", tableName),
 			wantStatus: 200,
-			wantBody:   "null",
+			wantBody:   `"content":[]`,
 		},
 		{
 			name:       "invalid SQL",
@@ -245,7 +245,8 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			api := "http://127.0.0.1:5000/mcp"
-			reqBody := strings.NewReader(fmt.Sprintf(`{"sql":"%s"}`, tc.sql))
+			mcpReq := fmt.Sprintf(`{"jsonrpc":"2.0","id":"1","method":"tools/call","params":{"name":"my-exec-sql-tool","arguments":{"sql":"%s"}}}`, tc.sql)
+			reqBody := strings.NewReader(mcpReq)
 			req, err := http.NewRequest("POST", api, reqBody)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)

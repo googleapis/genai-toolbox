@@ -122,7 +122,7 @@ func RunMCPToolInvokeSimpleTest(t *testing.T, name string, simpleWant string) {
 			}
 
 			if !strings.Contains(got, tc.want) {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				t.Fatalf("unexpected value: got %q, want %q\nGOT HEX: %x\nWANT HEX: %x", got, tc.want, got, tc.want)
 			}
 		})
 	}
@@ -318,7 +318,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			arguments:      `{}`,
-			wantBody:       `parameter \"id\" is required`,
+			wantBody:       `parameter "id" is required`,
 			wantStatusCode: http.StatusOK,
 			isMCPLevelErr:  true,
 		},
@@ -328,7 +328,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			arguments:      `{"id": 1}`,
-			wantBody:       `parameter \"name\" is required`,
+			wantBody:       `parameter "name" is required`,
 			wantStatusCode: http.StatusOK,
 			isMCPLevelErr:  true,
 		},
@@ -386,17 +386,17 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			arguments:      `{}`,
 			wantBody:       "",
-			wantStatusCode: http.StatusOK,
+			wantStatusCode: http.StatusUnauthorized,
 			isAgentErr:     true,
 		},
 		{
 			name:           "Invoke my-auth-required-tool without auth token",
-			toolName:       "my-auth-tool",
+			toolName:       "my-auth-required-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			arguments:      `{}`,
 			wantBody:       "",
-			wantStatusCode: http.StatusOK,
+			wantStatusCode: http.StatusUnauthorized,
 			isAgentErr:     true,
 		},
 		{
@@ -415,7 +415,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			requestHeader:  map[string]string{},
 			arguments:      `{}`,
 			wantBody:       "",
-			wantStatusCode: http.StatusOK,
+			wantStatusCode: http.StatusUnauthorized,
 			isAgentErr:     true,
 		},
 		{
@@ -425,7 +425,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
 			arguments:      `{}`,
 			wantBody:       "",
-			wantStatusCode: http.StatusOK,
+			wantStatusCode: http.StatusUnauthorized,
 			isAgentErr:     true,
 		},
 	}
@@ -502,7 +502,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 
 			resultMap, hasResult := body["result"].(map[string]interface{})
 			if !hasResult && tc.wantBody != "" {
-				t.Fatalf("unable to find result in response body: %s", string(respBody))
+				t.Fatalf("unable to find result in response body. RequestURL: %s - Body: %s", resp.Request.URL.String(), string(respBody))
 			}
 
 			contentList, hasContent := resultMap["content"].([]interface{})
@@ -4973,47 +4973,6 @@ func RunRequest(t *testing.T, method, requestUrl string, body io.Reader, headers
 	}
 
 	defer resp.Body.Close()
-
-	// Transparently unwrap MCP response logic to match legacy API payloads for testing.
-	if resp.StatusCode == http.StatusOK && strings.Contains(requestUrl, "/mcp") {
-		var mcpResp map[string]any
-		if err := json.Unmarshal(respBody, &mcpResp); err == nil {
-			if mcpErr, ok := mcpResp["error"]; ok {
-				// Server returned an MCP protocol error. Tests might expect 400 or other codes.
-				if errMap, ok := mcpErr.(map[string]any); ok {
-					if msg, ok := errMap["message"].(string); ok {
-						if strings.Contains(msg, "is required") || strings.Contains(msg, "Invalid value") || strings.Contains(msg, "malformed") {
-							resp.StatusCode = http.StatusBadRequest
-						} else {
-							resp.StatusCode = http.StatusInternalServerError
-						}
-						// Construct a legacy API style error response
-						legacyErr := map[string]any{"error": msg}
-						respBody, _ = json.Marshal(legacyErr)
-					}
-				}
-			} else if mcpResult, ok := mcpResp["result"]; ok {
-				if resMap, ok := mcpResult.(map[string]any); ok {
-					if contentList, ok := resMap["content"].([]any); ok && len(contentList) > 0 {
-						if contentItem, ok := contentList[0].(map[string]any); ok {
-							if text, ok := contentItem["text"].(string); ok {
-								// Construct a legacy API style text response wrapper
-								// Note: some tools expect text directly, some expect a wrapper
-								var innerObj any
-								if err := json.Unmarshal([]byte(text), &innerObj); err == nil {
-									legacyResp := map[string]any{"result": string(text)}
-									respBody, _ = json.Marshal(legacyResp)
-								} else {
-									legacyResp := map[string]any{"result": text}
-									respBody, _ = json.Marshal(legacyResp)
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 
 	return resp, respBody
 }

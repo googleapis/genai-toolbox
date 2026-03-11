@@ -26,6 +26,15 @@ import (
 var ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 var ClientId = os.Getenv("CLIENT_ID")
 
+func init() {
+	if ClientId == "" {
+		ClientId = "test-client-id"
+	}
+	if ServiceAccountEmail == "" {
+		ServiceAccountEmail = "test-service-account@example.com"
+	}
+}
+
 // GetGoogleIdToken retrieve and return the Google ID token
 func GetGoogleIdToken(audience string) (string, error) {
 	// For local testing - use gcloud command to print personal ID token
