@@ -70,6 +70,8 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 - `--description`: Description of the generated skill.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+- `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
+- `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
 
 For more detailed instructions, see [Generate Agent Skills](../how-to/generate_skill.md).
 

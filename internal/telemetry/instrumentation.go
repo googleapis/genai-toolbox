@@ -26,22 +26,21 @@ const (
 	TracerName = "github.com/googleapis/genai-toolbox/internal/opentel"
 	MetricName = "github.com/googleapis/genai-toolbox/internal/opentel"
 
-	toolsetGetCountName = "toolbox.server.toolset.get.count"
-	toolGetCountName    = "toolbox.server.tool.get.count"
-	toolInvokeCountName = "toolbox.server.tool.invoke.count"
-	mcpSseCountName     = "toolbox.server.mcp.sse.count"
-	mcpPostCountName    = "toolbox.server.mcp.post.count"
+	// OTel semconv metrics
+	mcpOperationDurationName  = "mcp.server.operation.duration"
+	mcpSessionDurationName    = "mcp.server.session.duration"
+	mcpActiveSessionsName     = "toolbox.server.mcp.active_sessions"
+	toolExecutionDurationName = "toolbox.tool.execution.duration"
 )
 
 // Instrumentation defines the telemetry instrumentation for toolbox
 type Instrumentation struct {
-	Tracer     trace.Tracer
-	meter      metric.Meter
-	ToolsetGet metric.Int64Counter
-	ToolGet    metric.Int64Counter
-	ToolInvoke metric.Int64Counter
-	McpSse     metric.Int64Counter
-	McpPost    metric.Int64Counter
+	Tracer                trace.Tracer
+	meter                 metric.Meter
+	McpOperationDuration  metric.Float64Histogram
+	McpSessionDuration    metric.Float64Histogram
+	McpActiveSessions     metric.Int64UpDownCounter
+	ToolExecutionDuration metric.Float64Histogram
 }
 
 func CreateTelemetryInstrumentation(versionString string) (*Instrumentation, error) {
@@ -51,59 +50,50 @@ func CreateTelemetryInstrumentation(versionString string) (*Instrumentation, err
 	)
 
 	meter := otel.Meter(MetricName, metric.WithInstrumentationVersion(versionString))
-	toolsetGet, err := meter.Int64Counter(
-		toolsetGetCountName,
-		metric.WithDescription("Number of toolset GET API calls."),
-		metric.WithUnit("{call}"),
+
+	mcpOperationDuration, err := meter.Float64Histogram(
+		mcpOperationDurationName,
+		metric.WithDescription("Duration of a single MCP JSON-RPC operation."),
+		metric.WithUnit("s"),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create %s metric: %w", toolsetGetCountName, err)
+		return nil, fmt.Errorf("unable to create %s metric: %w", mcpOperationDurationName, err)
 	}
 
-	toolGet, err := meter.Int64Counter(
-		toolGetCountName,
-		metric.WithDescription("Number of tool GET API calls."),
-		metric.WithUnit("{call}"),
+	mcpSessionDuration, err := meter.Float64Histogram(
+		mcpSessionDurationName,
+		metric.WithDescription("Duration of an MCP session."),
+		metric.WithUnit("s"),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create %s metric: %w", toolGetCountName, err)
+		return nil, fmt.Errorf("unable to create %s metric: %w", mcpSessionDurationName, err)
 	}
 
-	toolInvoke, err := meter.Int64Counter(
-		toolInvokeCountName,
-		metric.WithDescription("Number of tool Invoke API calls."),
-		metric.WithUnit("{call}"),
+	mcpActiveSessions, err := meter.Int64UpDownCounter(
+		mcpActiveSessionsName,
+		metric.WithDescription("Current count of active MCP sessions."),
+		metric.WithUnit("{session}"),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create %s metric: %w", toolInvokeCountName, err)
+		return nil, fmt.Errorf("unable to create %s metric: %w", mcpActiveSessionsName, err)
 	}
 
-	mcpSse, err := meter.Int64Counter(
-		mcpSseCountName,
-		metric.WithDescription("Number of MCP SSE connection requests."),
-		metric.WithUnit("{connection}"),
+	toolExecutionDuration, err := meter.Float64Histogram(
+		toolExecutionDurationName,
+		metric.WithDescription("Duration of backend tool execution."),
+		metric.WithUnit("s"),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create %s metric: %w", mcpSseCountName, err)
-	}
-
-	mcpPost, err := meter.Int64Counter(
-		mcpPostCountName,
-		metric.WithDescription("Number of MCP Post calls."),
-		metric.WithUnit("{call}"),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create %s metric: %w", mcpPostCountName, err)
+		return nil, fmt.Errorf("unable to create %s metric: %w", toolExecutionDurationName, err)
 	}
 
 	instrumentation := &Instrumentation{
-		Tracer:     tracer,
-		meter:      meter,
-		ToolsetGet: toolsetGet,
-		ToolGet:    toolGet,
-		ToolInvoke: toolInvoke,
-		McpSse:     mcpSse,
-		McpPost:    mcpPost,
+		Tracer:                tracer,
+		meter:                 meter,
+		McpOperationDuration:  mcpOperationDuration,
+		McpSessionDuration:    mcpSessionDuration,
+		McpActiveSessions:     mcpActiveSessions,
+		ToolExecutionDuration: toolExecutionDuration,
 	}
 	return instrumentation, nil
 }
