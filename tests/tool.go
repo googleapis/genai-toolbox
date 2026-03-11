@@ -111,19 +111,36 @@ func RunMCPToolInvokeSimpleTest(t *testing.T, name string, simpleWant string) {
 			if !hasResult && !tc.isErr {
 				t.Fatalf("unable to find result in response body: %s", string(respBody))
 			}
-			contentList, hasContent := resultMap["content"].([]interface{})
-			if !hasContent || len(contentList) == 0 {
-				t.Fatalf("unable to find result.content[0] in response body: %s", string(respBody))
-			}
-			contentItem := contentList[0].(map[string]interface{})
-			got, ok := contentItem["text"].(string)
-			if !ok {
-				t.Fatalf("unable to extract text value from result.content[0]")
-			}
+				contentList, hasContent := resultMap["content"].([]interface{})
+				if !hasContent {
+					t.Fatalf("unable to find result.content in response body: %s", string(respBody))
+				}
+				var combined []string
+				for _, item := range contentList {
+					if cMap, ok := item.(map[string]interface{}); ok {
+						if txt, ok := cMap["text"].(string); ok {
+							combined = append(combined, txt)
+						}
+					}
+				}
+				got := ""
+				wantStr := tc.want
+				if len(combined) == 0 {
+					got = "null"
+				} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+					got = "[" + strings.Join(combined, ",") + "]"
+				} else {
+					got = combined[0]
+				}
 
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("unexpected value: got %q, want %q\nGOT HEX: %x\nWANT HEX: %x", got, tc.want, got, tc.want)
-			}
+				if !strings.Contains(got, wantStr) {
+					var gotObj, wantObj interface{}
+					err1 := json.Unmarshal([]byte(got), &gotObj)
+					err2 := json.Unmarshal([]byte(wantStr), &wantObj)
+					if err1 != nil || err2 != nil || !reflect.DeepEqual(gotObj, wantObj) {
+						t.Fatalf("unexpected value: got %q, want %q\nGOT HEX: %x\nWANT HEX: %x", got, wantStr, got, wantStr)
+					}
+				}
 		})
 	}
 }
@@ -212,23 +229,35 @@ func RunMCPToolInvokeParametersTest(t *testing.T, name string, params []byte, si
 			}
 
 			contentList, hasContent := resultMap["content"].([]interface{})
-			if !hasContent || len(contentList) == 0 {
-				t.Fatalf("unable to find result.content[0] in response body: %s", string(respBody))
+			if !hasContent {
+				t.Fatalf("unable to find result.content in response body: %s", string(respBody))
 			}
-			contentItem := contentList[0].(map[string]interface{})
-			got, ok := contentItem["text"].(string)
-			if !ok {
-				t.Fatalf("unable to extract text value from result.content[0]")
+			var combined []string
+			for _, item := range contentList {
+				if cMap, ok := item.(map[string]interface{}); ok {
+					if txt, ok := cMap["text"].(string); ok {
+						combined = append(combined, txt)
+					}
+				}
+			}
+			got := ""
+			wantStr := tc.want
+			if len(combined) == 0 {
+				got = "null"
+			} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+				got = "[" + strings.Join(combined, ",") + "]"
+			} else {
+				got = combined[0]
 			}
 
-			if !strings.Contains(got, tc.want) {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			if !strings.Contains(got, wantStr) {
+				t.Fatalf("unexpected value: got %q, want %q", got, wantStr)
 			}
 		})
 	}
 }
 
-// RunToolInvoke runs the tool invoke endpoint
+// RunMCPToolInvoke runs the tool invoke endpoint
 func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolInvokeTestOption) {
 	// Resolve options
 	// Default values for MCPToolInvokeTestConfig
@@ -506,17 +535,29 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolIn
 			}
 
 			contentList, hasContent := resultMap["content"].([]interface{})
-			if !hasContent || len(contentList) == 0 {
-				t.Fatalf("unable to find result.content[0] in response body: %s", string(respBody))
+			if !hasContent {
+				t.Fatalf("unable to find result.content in response body: %s", string(respBody))
 			}
-			contentItem := contentList[0].(map[string]interface{})
-			got, ok := contentItem["text"].(string)
-			if !ok {
-				t.Fatalf("unable to extract text value from result.content[0]")
+			var combined []string
+			for _, item := range contentList {
+				if cMap, ok := item.(map[string]interface{}); ok {
+					if txt, ok := cMap["text"].(string); ok {
+						combined = append(combined, txt)
+					}
+				}
+			}
+			got := ""
+			wantStr := tc.wantBody
+			if len(combined) == 0 {
+				got = "null"
+			} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+				got = "[" + strings.Join(combined, ",") + "]"
+			} else {
+				got = combined[0]
 			}
 
-			if got != tc.wantBody {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
+			if got != wantStr {
+				t.Fatalf("unexpected value: got %q, want %q", got, wantStr)
 			}
 		})
 	}
@@ -725,17 +766,34 @@ func RunMCPToolInvokeWithTemplateParameters(t *testing.T, tableName string, opti
 					t.Fatalf("unable to find result in response body: %s", string(respBody))
 				}
 				contentList, hasContent := resultMap["content"].([]interface{})
-				if !hasContent || len(contentList) == 0 {
-					t.Fatalf("unable to find result.content[0] in response body: %s", string(respBody))
+				if !hasContent {
+					t.Fatalf("unable to find result.content in response body: %s", string(respBody))
 				}
-				contentItem := contentList[0].(map[string]interface{})
-				got, ok := contentItem["text"].(string)
-				if !ok {
-					t.Fatalf("unable to extract text value from result.content[0]")
+				var combined []string
+				for _, item := range contentList {
+					if cMap, ok := item.(map[string]interface{}); ok {
+						if txt, ok := cMap["text"].(string); ok {
+							combined = append(combined, txt)
+						}
+					}
+				}
+				got := ""
+				wantStr := tc.want
+				if len(combined) == 0 {
+					got = "null"
+				} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+					got = "[" + strings.Join(combined, ",") + "]"
+				} else {
+					got = combined[0]
 				}
 
-				if got != tc.want {
-					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				if got != wantStr {
+					var gotObj, wantObj interface{}
+					err1 := json.Unmarshal([]byte(got), &gotObj)
+					err2 := json.Unmarshal([]byte(wantStr), &wantObj)
+					if err1 != nil || err2 != nil || !reflect.DeepEqual(gotObj, wantObj) {
+						t.Fatalf("unexpected value: got %q, want %q", got, wantStr)
+					}
 				}
 			}
 		})
