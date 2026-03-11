@@ -126,6 +126,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	oceanbase_config := getOrFatal(t, "oceanbase")
 	postgresconfig := getOrFatal(t, "postgres")
 	singlestore_config := getOrFatal(t, "singlestore")
+	serverlessspark_config := getOrFatal(t, "serverless-spark")
 	spanner_config := getOrFatal(t, "spanner")
 	spannerpg_config := getOrFatal(t, "spanner-postgres")
 	mindsdb_config := getOrFatal(t, "mindsdb")
@@ -204,6 +205,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(singlestore_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
+	}
+	if len(serverlessspark_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch serverless spark prebuilt tools yaml")
 	}
 	if len(snowflake_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
