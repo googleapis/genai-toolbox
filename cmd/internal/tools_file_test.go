@@ -1687,7 +1687,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"analytics": tools.ToolsetConfig{
 					Name:      "analytics",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "forecast"},
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "forecast", "search_catalog"},
 				},
 			},
 		},
