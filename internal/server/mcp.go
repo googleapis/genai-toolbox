@@ -43,6 +43,31 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// newErrResponse is a helper function initalizing an ErrResponse
+func newErrResponse(err error, code int) *errResponse {
+	return &errResponse{
+		Err:            err,
+		HTTPStatusCode: code,
+
+		StatusText: http.StatusText(code),
+		ErrorText:  err.Error(),
+	}
+}
+
+// errResponse is the response sent back when an error has been encountered.
+type errResponse struct {
+	Err            error `json:"-"` // low-level runtime error
+	HTTPStatusCode int   `json:"-"` // http response status code
+
+	StatusText string `json:"status"`          // user-level status message
+	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
+}
+
+func (e *errResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPStatusCode)
+	return nil
+}
+
 type sseSession struct {
 	writer     http.ResponseWriter
 	flusher    http.Flusher

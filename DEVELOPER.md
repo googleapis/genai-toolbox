@@ -180,7 +180,7 @@ tools.
   the config defaults, if your source require test suites config updates, please
   refer to [config option](./tests/option.go):
 
-     1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
+     1. [RunMCPToolInvokeTest][tool-invoke]: tests for the `/mcp` tools/call endpoint that executes the tool.
             tool's manifest.
 
      2. [RunToolInvokeTest][tool-call]: tests for tool calling through the native

@@ -15,8 +15,9 @@
 package http
 
 import (
-	"bytes"
+	
 	"context"
+	"os"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -325,178 +326,34 @@ func TestHttpToolEndpoints(t *testing.T) {
 	}
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
+
+	tests.RunMCPToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
 }
 
-// runQueryParamInvokeTest runs the tool invoke endpoint for the query param test tool
 func runQueryParamInvokeTest(t *testing.T) {
-	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-		isErr       bool
-	}{
-		{
-			name:        "invoke query-param-tool (optional omitted)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test1"}`)),
-			want:        `"reqId=test1"`,
-		},
-		{
-			name:        "invoke query-param-tool (some optional nil)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5", "filter": null}`)),
-			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
-		},
-		{
-			name:        "invoke query-param-tool (some optional absent)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5"}`)),
-			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
-		},
-		{
-			name:        "invoke query-param-tool (required param nil)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
-			want:        `{"error":"parameter \"reqId\" is required"}`,
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body: %v", err)
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				bodyBytes, _ := json.Marshal(body)
-				t.Fatalf("unable to find result in response body, got: %s", string(bodyBytes))
-			}
-
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-			}
-		})
-	}
+	t.Run("invoke query-param-tool (optional omitted)", func(t *testing.T) {
+		tests.RunMCPToolInvokeParametersTest(t, "my-query-param-tool", []byte(`{"reqId": "test1"}`), `"reqId=test1"`)
+	})
+	t.Run("invoke query-param-tool (some optional nil)", func(t *testing.T) {
+		tests.RunMCPToolInvokeParametersTest(t, "my-query-param-tool", []byte(`{"reqId": "test2", "page": "5", "filter": null}`), `"page=5\u0026reqId=test2"`)
+	})
+	t.Run("invoke query-param-tool (some optional absent)", func(t *testing.T) {
+		tests.RunMCPToolInvokeParametersTest(t, "my-query-param-tool", []byte(`{"reqId": "test2", "page": "5"}`), `"page=5\u0026reqId=test2"`)
+	})
+	t.Run("invoke query-param-tool (required param nil)", func(t *testing.T) {
+		tests.RunMCPToolInvokeParametersTest(t, "my-query-param-tool", []byte(`{"reqId": null, "page": "1"}`), `parameter "reqId" is required`)
+	})
 }
 
 func runAdvancedHTTPInvokeTest(t *testing.T) {
-	// Test HTTP tool invoke endpoint
-	invokeTcs := []struct {
-		name          string
-		api           string
-		requestHeader map[string]string
-		requestBody   func() io.Reader
-		want          string
-		isAgentErr    bool
-	}{
-		{
-			name:          "invoke my-advanced-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody: func() io.Reader {
-				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
-			},
-			want:       `"hello world"`,
-			isAgentErr: false,
-		},
-		{
-			name:          "invoke my-advanced-tool with wrong params",
-			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody: func() io.Reader {
-				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
-			},
-			want:       "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
-			isAgentErr: true,
-		},
-	}
-
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody())
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
-			}
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			// As you noted, the toolbox wraps errors in a 200 OK
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("expected status 200 from toolbox, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Decode the response body into a map
-			var body map[string]any
-			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
-			}
-
-			if tc.isAgentErr {
-				resStr, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("expected 'result' field as string in response body, got: %v", body)
-				}
-
-				var resMap map[string]any
-				if err := json.Unmarshal([]byte(resStr), &resMap); err != nil {
-					t.Fatalf("failed to unmarshal result string: %v", err)
-				}
-
-				gotErr, ok := resMap["error"].(string)
-				if !ok {
-					t.Fatalf("expected 'error' field inside result, got: %v", resMap)
-				}
-
-				if !strings.Contains(gotErr, tc.want) {
-					t.Fatalf("unexpected error message: got %q, want it to contain %q", gotErr, tc.want)
-				}
-			} else {
-				got, ok := body["result"].(string)
-				if !ok {
-					resBytes, _ := json.Marshal(body["result"])
-					got = string(resBytes)
-				}
-
-				if got != tc.want {
-					t.Fatalf("unexpected result: got %q, want %q", got, tc.want)
-				}
-			}
-		})
-	}
+	t.Run("invoke my-advanced-tool", func(t *testing.T) {
+		tests.RunMCPToolInvokeParametersTest(t, "my-advanced-tool", []byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`), `"hello world"`)
+	})
+	t.Run("invoke my-advanced-tool with wrong params", func(t *testing.T) {
+		tests.RunMCPToolInvokeParametersTest(t, "my-advanced-tool", []byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`), `unexpected status code: 400`)
+	})
 }
 
 // getHTTPToolsConfig returns a mock HTTP tool's config file
@@ -509,6 +366,11 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
 	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
 
+	clientId := os.Getenv("CLIENT_ID")
+	if clientId == "" {
+		clientId = "test-client-id"
+	}
+
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance":    sourceConfig,
@@ -517,7 +379,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"type":     "google",
-				"clientId": tests.ClientId,
+				"clientId": clientId,
 			},
 		},
 		"tools": map[string]any{

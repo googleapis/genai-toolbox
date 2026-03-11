@@ -227,10 +227,10 @@ func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpl
 }
 
 // RunToolInvoke runs the tool invoke endpoint
-func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
+func RunToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolInvokeTestOption) {
 	// Resolve options
-	// Default values for InvokeTestConfig
-	configs := &InvokeTestConfig{
+	// Default values for MCPToolInvokeTestConfig
+	configs := &MCPToolInvokeTestConfig{
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
 		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
@@ -4772,3 +4772,973 @@ func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 	defer resp.Body.Close()
 	return resp, respBody
 }
+
+func RunMCPToolInvokeSimpleTest(t *testing.T, name string, simpleWant string) {
+	sessionId := RunInitialize(t, "2024-11-05")
+	tcs := []struct {
+		name          string
+		requestHeader map[string]string
+		requestBody   jsonrpc.JSONRPCRequest
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          fmt.Sprintf("MCP Invoke %s", name),
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      name,
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      name,
+					"arguments": map[string]any{},
+				},
+			},
+			want:  simpleWant,
+			isErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBytes, _ := json.Marshal(tc.requestBody)
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
+			for k, v := range tc.requestHeader {
+				headers[k] = v
+			}
+
+			resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			if errMap, hasErr := body["error"].(map[string]interface{}); hasErr {
+				if tc.isErr {
+					return
+				}
+				errMsg, _ := errMap["message"].(string)
+				if tc.want != "" && strings.Contains(errMsg, tc.want) {
+					return
+				}
+				t.Fatalf("MCP returned an error: %v", errMap["message"])
+			}
+
+			if tc.want == "" {
+				return
+			}
+
+			resultMap, hasResult := body["result"].(map[string]interface{})
+			if !hasResult && !tc.isErr {
+				t.Fatalf("unable to find result in response body: %s", string(respBody))
+			}
+				contentList, hasContent := resultMap["content"].([]interface{})
+				if !hasContent {
+					t.Fatalf("unable to find result.content in response body: %s", string(respBody))
+				}
+				var combined []string
+				for _, item := range contentList {
+					if cMap, ok := item.(map[string]interface{}); ok {
+						if txt, ok := cMap["text"].(string); ok {
+							combined = append(combined, txt)
+						}
+					}
+				}
+				got := ""
+				wantStr := tc.want
+				if len(combined) == 0 {
+					got = "null"
+				} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+					got = "[" + strings.Join(combined, ",") + "]"
+				} else {
+					got = combined[0]
+				}
+
+				if !strings.Contains(got, wantStr) {
+					var gotObj, wantObj interface{}
+					err1 := json.Unmarshal([]byte(got), &gotObj)
+					err2 := json.Unmarshal([]byte(wantStr), &wantObj)
+					if err1 != nil || err2 != nil || !reflect.DeepEqual(gotObj, wantObj) {
+						t.Fatalf("unexpected value: got %q, want %q\nGOT HEX: %x\nWANT HEX: %x", got, wantStr, got, wantStr)
+					}
+				}
+		})
+	}
+}
+
+func RunMCPToolInvokeParametersTest(t *testing.T, name string, params []byte, simpleWant string) {
+	sessionId := RunInitialize(t, "2024-11-05")
+	var arguments map[string]any
+	if err := json.Unmarshal(params, &arguments); err != nil {
+		t.Fatalf("failed to unmarshal parameters: %v", err)
+	}
+
+	tcs := []struct {
+		name          string
+		requestHeader map[string]string
+		requestBody   jsonrpc.JSONRPCRequest
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          fmt.Sprintf("MCP Invoke %s", name),
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      name,
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      name,
+					"arguments": arguments,
+				},
+			},
+			want:  simpleWant,
+			isErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBytes, _ := json.Marshal(tc.requestBody)
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
+			for k, v := range tc.requestHeader {
+				headers[k] = v
+			}
+
+			resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			if errMap, hasErr := body["error"].(map[string]interface{}); hasErr {
+				if tc.isErr || tc.want == "" {
+					return
+				}
+				errMsg, _ := errMap["message"].(string)
+				if strings.Contains(errMsg, tc.want) {
+					return
+				}
+				t.Fatalf("MCP returned an error: %v", errMap["message"])
+			}
+
+			if tc.want == "" && tc.isErr {
+				t.Fatalf("expected error, but got response %s", string(respBody))
+				return
+			}
+
+			if tc.want == "" {
+				return
+			}
+
+			resultMap, hasResult := body["result"].(map[string]interface{})
+			if !hasResult && !tc.isErr {
+				t.Fatalf("unable to find result in response body: %s", string(respBody))
+			}
+
+			contentList, hasContent := resultMap["content"].([]interface{})
+			if !hasContent {
+				t.Fatalf("unable to find result.content in response body: %s", string(respBody))
+			}
+			var combined []string
+			for _, item := range contentList {
+				if cMap, ok := item.(map[string]interface{}); ok {
+					if txt, ok := cMap["text"].(string); ok {
+						combined = append(combined, txt)
+					}
+				}
+			}
+			got := ""
+			wantStr := tc.want
+			if len(combined) == 0 {
+				got = "null"
+			} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+				got = "[" + strings.Join(combined, ",") + "]"
+			} else {
+				got = combined[0]
+			}
+
+			if !strings.Contains(got, wantStr) {
+				t.Fatalf("unexpected value: got %q, want %q", got, wantStr)
+			}
+		})
+	}
+}
+
+// RunMCPToolInvoke runs the tool invoke endpoint
+func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...MCPToolInvokeTestOption) {
+	// Resolve options
+	// Default values for MCPToolInvokeTestConfig
+	configs := &MCPToolInvokeTestConfig{
+		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		nullWant:                 "null",
+		supportOptionalNullParam: true,
+		supportArrayParam:        true,
+		supportClientAuth:        false,
+		supportSelect1Want:       true,
+		supportSelect1Auth:       true,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
+	// Get ID token
+	idToken, err := GetGoogleIdToken(ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	sessionId := RunInitialize(t, "2024-11-05")
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name           string
+		toolName       string
+		enabled        bool
+		requestHeader  map[string]string
+		arguments      string
+		wantStatusCode int
+		wantBody       string
+		isAgentErr     bool
+		isMCPLevelErr  bool
+	}{
+		{
+			name:           "invoke my-simple-tool",
+			toolName:       "my-simple-tool",
+			enabled:        configs.supportSelect1Want,
+			requestHeader:  map[string]string{},
+			arguments:      `{}`,
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke my-tool",
+			toolName:       "my-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			arguments:      `{"id": 3, "name": "Alice"}`,
+			wantBody:       configs.myToolId3NameAliceWant,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke my-tool-by-id with nil response",
+			toolName:       "my-tool-by-id",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			arguments:      `{"id": 4}`,
+			wantBody:       configs.myToolById4Want,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke my-tool-by-name with nil response",
+			toolName:       "my-tool-by-name",
+			enabled:        configs.supportOptionalNullParam,
+			requestHeader:  map[string]string{},
+			arguments:      `{}`,
+			wantBody:       configs.nullWant,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-tool without parameters",
+			toolName:       "my-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			arguments:      `{}`,
+			wantBody:       `parameter "id" is required`,
+			wantStatusCode: http.StatusOK,
+			isMCPLevelErr:  true,
+		},
+		{
+			name:           "Invoke my-tool with insufficient parameters",
+			toolName:       "my-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			arguments:      `{"id": 1}`,
+			wantBody:       `parameter "name" is required`,
+			wantStatusCode: http.StatusOK,
+			isMCPLevelErr:  true,
+		},
+		{
+			name:           "invoke my-array-tool",
+			toolName:       "my-array-tool",
+			enabled:        configs.supportArrayParam,
+			requestHeader:  map[string]string{},
+			arguments:      `{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`,
+			wantBody:       configs.myArrayToolWant,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-auth-tool with auth token",
+			toolName:       "my-auth-tool",
+			enabled:        configs.supportSelect1Auth,
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			arguments:      `{}`,
+			wantBody:       configs.myAuthToolWant,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-auth-tool with invalid auth token",
+			toolName:       "my-auth-tool",
+			enabled:        configs.supportSelect1Auth,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			arguments:      `{}`,
+			wantBody:       "",
+			wantStatusCode: http.StatusOK,
+			isAgentErr:     true,
+		},
+		{
+			name:           "Invoke my-auth-tool without auth token",
+			toolName:       "my-auth-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			arguments:      `{}`,
+			wantBody:       "",
+			wantStatusCode: http.StatusOK,
+			isAgentErr:     true,
+		},
+		{
+			name:           "Invoke my-auth-required-tool with auth token",
+			toolName:       "my-auth-required-tool",
+			enabled:        configs.supportSelect1Auth,
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			arguments:      `{}`,
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-auth-required-tool with invalid auth token",
+			toolName:       "my-auth-required-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			arguments:      `{}`,
+			wantBody:       "",
+			wantStatusCode: http.StatusUnauthorized,
+			isAgentErr:     true,
+		},
+		{
+			name:           "Invoke my-auth-required-tool without auth token",
+			toolName:       "my-auth-required-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			arguments:      `{}`,
+			wantBody:       "",
+			wantStatusCode: http.StatusUnauthorized,
+			isAgentErr:     true,
+		},
+		{
+			name:           "Invoke my-client-auth-tool with auth token",
+			toolName:       "my-client-auth-tool",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": accessToken},
+			arguments:      `{}`,
+			wantBody:       select1Want,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "Invoke my-client-auth-tool without auth token",
+			toolName:       "my-client-auth-tool",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{},
+			arguments:      `{}`,
+			wantBody:       "",
+			wantStatusCode: http.StatusUnauthorized,
+			isAgentErr:     true,
+		},
+		{
+			name:           "Invoke my-client-auth-tool with invalid auth token",
+			toolName:       "my-client-auth-tool",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
+			arguments:      `{}`,
+			wantBody:       "",
+			wantStatusCode: http.StatusUnauthorized,
+			isAgentErr:     true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
+
+			var parsedArgs map[string]any
+			if tc.arguments != "" {
+				if err := json.Unmarshal([]byte(tc.arguments), &parsedArgs); err != nil {
+					t.Fatalf("failed to parse arguments %s: %v", tc.arguments, err)
+				}
+			} else {
+				parsedArgs = map[string]any{}
+			}
+
+			requestBody := jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      tc.toolName,
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      tc.toolName,
+					"arguments": parsedArgs,
+				},
+			}
+			reqBytes, _ := json.Marshal(requestBody)
+
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
+			for k, v := range tc.requestHeader {
+				headers[k] = v
+			}
+
+			// Send Tool invocation request
+			resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
+
+			// Check status code
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Errorf("StatusCode mismatch: got %d, want %d. Response body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			if errMap, hasErr := body["error"].(map[string]interface{}); hasErr {
+				if tc.isAgentErr {
+					return
+				}
+				errMsg, _ := errMap["message"].(string)
+				if tc.isMCPLevelErr && strings.Contains(errMsg, tc.wantBody) {
+					return
+				}
+				t.Fatalf("MCP returned an error: %v, string response: %s", errMap["message"], string(respBody))
+			}
+
+			if tc.isAgentErr || tc.isMCPLevelErr {
+				t.Fatalf("expected error string but got valid response %s", string(respBody))
+				return
+			}
+
+			// skip response body check
+			if tc.wantBody == "" {
+				return
+			}
+
+			resultMap, hasResult := body["result"].(map[string]interface{})
+			if !hasResult && tc.wantBody != "" {
+				t.Fatalf("unable to find result in response body. RequestURL: %s - Body: %s", resp.Request.URL.String(), string(respBody))
+			}
+
+			contentList, hasContent := resultMap["content"].([]interface{})
+			if !hasContent {
+				t.Fatalf("unable to find result.content in response body: %s", string(respBody))
+			}
+			var combined []string
+			for _, item := range contentList {
+				if cMap, ok := item.(map[string]interface{}); ok {
+					if txt, ok := cMap["text"].(string); ok {
+						combined = append(combined, txt)
+					}
+				}
+			}
+			got := ""
+			wantStr := tc.wantBody
+			if len(combined) == 0 {
+				got = "null"
+			} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+				got = "[" + strings.Join(combined, ",") + "]"
+			} else {
+				got = combined[0]
+			}
+
+			if got != wantStr {
+				t.Fatalf("unexpected value: got %q, want %q", got, wantStr)
+			}
+		})
+	}
+}
+
+// RunMCPToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
+func RunMCPToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
+	// Resolve options
+	// Default values for TemplateParameterTestConfig
+	configs := &TemplateParameterTestConfig{
+		ddlWant:         "null",
+		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
+		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectNameWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectEmptyWant: "null",
+		insert1Want:     "null",
+
+		nameFieldArray: `["name"]`,
+		nameColFilter:  "name",
+		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
+
+		supportDdl:    true,
+		supportInsert: true,
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
+	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
+	sessionId := RunInitialize(t, "2024-11-05")
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		enabled       bool
+		ddl           bool
+		insert        bool
+		toolName      string
+		requestHeader map[string]string
+		arguments     string
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke create-table-templateParams-tool",
+			enabled:       true,
+			ddl:           true,
+			toolName:      "create-table-templateParams-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray),
+			want:          configs.ddlWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke insert-table-templateParams-tool",
+			enabled:       true,
+			insert:        true,
+			toolName:      "insert-table-templateParams-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName),
+			want:          configs.insert1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke insert-table-templateParams-tool",
+			enabled:       true,
+			insert:        true,
+			toolName:      "insert-table-templateParams-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName),
+			want:          configs.insert1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-templateParams-tool",
+			enabled:       true,
+			toolName:      "select-templateParams-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"tableName": "%s"}`, tableName),
+			want:          configs.selectAllWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-templateParams-combined-tool",
+			enabled:       true,
+			toolName:      "select-templateParams-combined-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName),
+			want:          configs.selectId1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-templateParams-combined-tool with no results",
+			enabled:       true,
+			toolName:      "select-templateParams-combined-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName),
+			want:          configs.selectEmptyWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-fields-templateParams-tool",
+			enabled:       configs.supportSelectFields,
+			toolName:      "select-fields-templateParams-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray),
+			want:          selectOnlyNamesWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke select-filter-templateParams-combined-tool",
+			enabled:       true,
+			toolName:      "select-filter-templateParams-combined-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter),
+			want:          configs.selectNameWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke drop-table-templateParams-tool",
+			enabled:       true,
+			ddl:           true,
+			toolName:      "drop-table-templateParams-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"tableName": "%s"}`, tableName),
+			want:          configs.ddlWant,
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
+			// if test case is DDL and source support ddl test cases
+			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
+			// if test case is insert statement and source support insert test cases
+			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
+			if ddlAllow && insertAllow {
+
+				var parsedArgs map[string]any
+				if tc.arguments != "" {
+					if err := json.Unmarshal([]byte(tc.arguments), &parsedArgs); err != nil {
+						t.Fatalf("failed to parse arguments %s: %v", tc.arguments, err)
+					}
+				} else {
+					parsedArgs = map[string]any{}
+				}
+
+				requestBody := jsonrpc.JSONRPCRequest{
+					Jsonrpc: "2.0",
+					Id:      tc.toolName,
+					Request: jsonrpc.Request{
+						Method: "tools/call",
+					},
+					Params: map[string]any{
+						"name":      tc.toolName,
+						"arguments": parsedArgs,
+					},
+				}
+				reqBytes, _ := json.Marshal(requestBody)
+
+				headers := map[string]string{}
+				if sessionId != "" {
+					headers["Mcp-Session-Id"] = sessionId
+				}
+				for k, v := range tc.requestHeader {
+					headers[k] = v
+				}
+
+				// Send Tool invocation request
+				resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
+				if resp.StatusCode != http.StatusOK {
+					if tc.isErr {
+						return
+					}
+					t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+				}
+
+				// Check response body
+				var body map[string]interface{}
+				err := json.Unmarshal(respBody, &body)
+				if err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+
+				if errMap, hasErr := body["error"].(map[string]interface{}); hasErr {
+					if tc.isErr {
+						return
+					}
+					errMsg, _ := errMap["message"].(string)
+					if tc.want != "" && strings.Contains(errMsg, tc.want) {
+						return
+					}
+					t.Fatalf("MCP returned an error: %v", errMap["message"])
+				}
+
+				if tc.want == "" {
+					return
+				}
+
+				resultMap, hasResult := body["result"].(map[string]interface{})
+				if !hasResult && !tc.isErr {
+					t.Fatalf("unable to find result in response body: %s", string(respBody))
+				}
+				contentList, hasContent := resultMap["content"].([]interface{})
+				if !hasContent {
+					t.Fatalf("unable to find result.content in response body: %s", string(respBody))
+				}
+				var combined []string
+				for _, item := range contentList {
+					if cMap, ok := item.(map[string]interface{}); ok {
+						if txt, ok := cMap["text"].(string); ok {
+							combined = append(combined, txt)
+						}
+					}
+				}
+				got := ""
+				wantStr := tc.want
+				if len(combined) == 0 {
+					got = "null"
+				} else if strings.HasPrefix(wantStr, "[") && strings.HasSuffix(wantStr, "]") {
+					got = "[" + strings.Join(combined, ",") + "]"
+				} else {
+					got = combined[0]
+				}
+
+				if got != wantStr {
+					var gotObj, wantObj interface{}
+					err1 := json.Unmarshal([]byte(got), &gotObj)
+					err2 := json.Unmarshal([]byte(wantStr), &wantObj)
+					if err1 != nil || err2 != nil || !reflect.DeepEqual(gotObj, wantObj) {
+						t.Fatalf("unexpected value: got %q, want %q", got, wantStr)
+					}
+				}
+			}
+		})
+	}
+}
+
+func RunMCPExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want string, options ...ExecuteSqlOption) {
+	// Resolve options
+	// Default values for ExecuteSqlTestConfig
+	configs := &ExecuteSqlTestConfig{
+		select1Statement: `"SELECT 1"`,
+		createWant:       "null",
+		dropWant:         "null",
+		selectEmptyWant:  "null",
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(configs)
+	}
+
+	// Get ID token
+	idToken, err := GetGoogleIdToken(ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	sessionId := RunInitialize(t, "2024-11-05")
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		toolName      string
+		requestHeader map[string]string
+		arguments     string
+		want          string
+		isErr         bool
+		isAgentErr    bool
+	}{
+		{
+			name:          "invoke my-exec-sql-tool",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			want:          select1Want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool create table",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"sql": %s}`, createTableStatement),
+			want:          configs.createWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool select table",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     `{"sql":"SELECT * FROM t"}`,
+			want:          configs.selectEmptyWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool drop table",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     `{"sql":"DROP TABLE t"}`,
+			want:          configs.dropWant,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-exec-sql-tool without body",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     `{}`,
+			isAgentErr:    true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with auth token",
+			toolName:      "my-auth-exec-sql-tool",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			isErr:         false,
+			want:          select1Want,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
+			toolName:      "my-auth-exec-sql-tool",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-exec-sql-tool without auth token",
+			toolName:      "my-auth-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     fmt.Sprintf(`{"sql": %s}`, configs.select1Statement),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with invalid SELECT SQL",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     `{"sql":"SELECT * FROM non_existent_table"}`,
+			isAgentErr:    true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with invalid ALTER SQL",
+			toolName:      "my-exec-sql-tool",
+			requestHeader: map[string]string{},
+			arguments:     `{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`,
+			isAgentErr:    true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+
+			var parsedArgs map[string]any
+			if tc.arguments != "" {
+				if err := json.Unmarshal([]byte(tc.arguments), &parsedArgs); err != nil {
+					t.Fatalf("failed to parse arguments %s: %v", tc.arguments, err)
+				}
+			} else {
+				parsedArgs = map[string]any{}
+			}
+
+			requestBody := jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      tc.toolName,
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      tc.toolName,
+					"arguments": parsedArgs,
+				},
+			}
+			reqBytes, _ := json.Marshal(requestBody)
+
+			headers := map[string]string{}
+			if sessionId != "" {
+				headers["Mcp-Session-Id"] = sessionId
+			}
+			for k, v := range tc.requestHeader {
+				headers[k] = v
+			}
+
+			// Send Tool invocation request
+			resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes), headers)
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			if errMap, hasErr := body["error"].(map[string]interface{}); hasErr {
+				if tc.isErr {
+					return
+				}
+				if tc.isAgentErr {
+					return
+				}
+				errMsg, _ := errMap["message"].(string)
+				if tc.want != "" && strings.Contains(errMsg, tc.want) {
+					return
+				}
+				t.Fatalf("MCP returned an error: %v, string response: %s", errMap["message"], string(respBody))
+			}
+
+			if tc.want == "" && tc.isErr {
+				t.Fatalf("expected error string but got valid response %s", string(respBody))
+				return
+			}
+			if tc.isAgentErr {
+				t.Fatalf("expected agent error string but got valid response %s", string(respBody))
+				return
+			}
+
+			if tc.want == "" {
+				return
+			}
+
+			resultMap, hasResult := body["result"].(map[string]interface{})
+			if !hasResult && !tc.isErr {
+				t.Fatalf("unable to find result in response body: %s", string(respBody))
+			}
+
+			contentList, hasContent := resultMap["content"].([]interface{})
+			if !hasContent || len(contentList) == 0 {
+				t.Fatalf("unable to find result.content[0] in response body: %s", string(respBody))
+			}
+			contentItem := contentList[0].(map[string]interface{})
+			got, ok := contentItem["text"].(string)
+			if !ok {
+				t.Fatalf("unable to extract text value from result.content[0]")
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// RunInitialize runs the initialize lifecycle for mcp to set up client-server connection
