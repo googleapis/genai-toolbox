@@ -366,10 +366,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
 	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
 
-	clientId := os.Getenv("CLIENT_ID")
-	if clientId == "" {
-		clientId = "test-client-id"
-	}
+	clientId := tests.ClientId
 
 	toolsFile := map[string]any{
 		"sources": map[string]any{
