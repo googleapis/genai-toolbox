@@ -6,49 +6,62 @@
    <div w3-include-html="{{ .Site.Params.releases_url }}" w3-include-html-default='<a class="dropdown-item" href="{{ .Site.Params.global_logo_url }}dev/">Dev</a>'></div>
 
    <script>
-     w3.includeHTML(function() {
-       const basePath = "{{ site.BaseURL | relURL }}";
+      w3.includeHTML(function() {
+      const basePath = "{{ site.BaseURL | relURL }}";
 
-       function stripBase(path) {
-           if (path.startsWith(basePath)) return path.substring(basePath.length);
-           if (basePath === "/" && path.startsWith("/")) return path.substring(1);
-           return path.replace(/^\//, '');
-       }
+      function stripBase(path) {
+          if (path.startsWith(basePath)) return path.substring(basePath.length);
+          if (basePath === "/" && path.startsWith("/")) return path.substring(1);
+          return path.replace(/^\//, '');
+      }
 
-       document.getElementById('version-dropdown-menu').addEventListener('click', function(e) {
-         const link = e.target.closest('a.dropdown-item');
-         if (!link) return;
-         e.preventDefault();
+      document.getElementById('version-dropdown-menu').addEventListener('click', function(e) {
+        const link = e.target.closest('a.dropdown-item');
+        if (!link) return;
+        e.preventDefault();
 
-         let targetPath = link.pathname;
-         if (!targetPath.endsWith('/')) targetPath += '/';
+        let targetPath = link.pathname;
+        if (!targetPath.endsWith('/')) targetPath += '/';
 
-         let cleanCurrentPath = stripBase(window.location.pathname);
+        let cleanCurrentPath = stripBase(window.location.pathname);
+        const allLinks = document.querySelectorAll('#version-dropdown-menu a.dropdown-item');
+        let currentVersionPrefix = "";
 
-         const allLinks = document.querySelectorAll('#version-dropdown-menu a.dropdown-item');
-         let currentVersionPrefix = "";
+        allLinks.forEach(a => {
+            let cleanVPath = stripBase(a.pathname);
+            if (!cleanVPath.endsWith('/')) cleanVPath += '/';
+            if (cleanVPath !== "" && cleanVPath !== "/" && cleanCurrentPath.startsWith(cleanVPath)) {
+                if (cleanVPath.length > currentVersionPrefix.length) {
+                    currentVersionPrefix = cleanVPath;
+                }
+            }
+        });
 
-         allLinks.forEach(a => {
-             let cleanVPath = stripBase(a.pathname);
-             if (!cleanVPath.endsWith('/')) cleanVPath += '/';
+        let deepPath = cleanCurrentPath;
+        if (currentVersionPrefix !== "") {
+            deepPath = cleanCurrentPath.substring(currentVersionPrefix.length);
+        }
+        deepPath = deepPath.replace(/^\//, '');
 
-             if (cleanVPath !== "" && cleanVPath !== "/" && cleanCurrentPath.startsWith(cleanVPath)) {
-                 if (cleanVPath.length > currentVersionPrefix.length) {
-                     currentVersionPrefix = cleanVPath;
-                 }
-             }
-         });
+        const fullTargetPath = targetPath + deepPath;
 
-         let deepPath = cleanCurrentPath;
-         if (currentVersionPrefix !== "") {
-             deepPath = cleanCurrentPath.substring(currentVersionPrefix.length);
-         }
-         deepPath = deepPath.replace(/^\//, '');
-
-         // Execute the deep route
-         window.location.href = targetPath + deepPath;
-       });
-     });
+        // Perform a HEAD request to check if the deep route exists
+        fetch(fullTargetPath, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              // Page exists! Redirect to deep path
+              window.location.href = fullTargetPath;
+            } else {
+              // 404 or other error: Fallback to the version root
+              window.location.href = targetPath;
+            }
+          })
+          .catch(() => {
+            // If the fetch fails entirely, fallback to root
+            window.location.href = targetPath;
+          });
+      });
+    });
    </script>
 </div>
 {{ end -}}
