@@ -205,29 +205,39 @@ toolsets:
         - list_tables
         - list_views
         - list_schemas
-        - get_query_plan
-        - list_stored_procedure
-        - list_sequences
+        - list_triggers
         - list_indexes
+        - list_sequences
+        - list_stored_procedure
     monitor:
-        - database_overview
+        - get_system_metrics
+        - get_query_metrics
+        - list_query_stats
+        - get_query_plan
+        - list_database_stats
         - list_active_queries
         - long_running_transactions
         - list_locks
-        - list_database_stats
-    optimize:
-        - list_query_stats
-        - list_table_stats
-        - get_column_cardinality
+    health:
         - list_top_bloated_tables
         - list_invalid_indexes
+        - list_table_stats
+        - get_column_cardinality
         - list_autovacuum_configurations
-    config:
+        - list_tablespaces
+        - database_overview
+        - list_pg_settings
+    view-config:
         - list_available_extensions
         - list_installed_extensions
-        - list_pg_settings
         - list_memory_configurations
-        - list_roles
+        - list_pg_settings
+        - database_overview
+        - get_instance
+    replication:
         - replication_stats
         - list_replication_slots
         - list_publication_tables
+        - list_roles
+        - list_pg_settings
+        - database_overview
