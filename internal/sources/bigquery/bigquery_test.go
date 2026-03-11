@@ -70,12 +70,52 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:        "my-project",
 					Location:       "asia",
 					WriteMode:      "blocked",
-					UseClientOAuth: false,
+					UseClientOAuth: "",
 				},
 			},
 		},
 		{
 			desc: "use client auth example",
+			in: `
+			kind: sources
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: "true"
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "true",
+				},
+			},
+		},
+		{
+			desc: "with custom auth header name example",
+			in: `
+			kind: sources
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: X-Custom-Auth
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "X-Custom-Auth",
+				},
+			},
+		},
+		{
+			desc: "use client auth with unquoted true",
 			in: `
 			kind: sources
 			name: my-instance
@@ -90,7 +130,27 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Type:           bigquery.SourceType,
 					Project:        "my-project",
 					Location:       "us",
-					UseClientOAuth: true,
+					UseClientOAuth: "true",
+				},
+			},
+		},
+		{
+			desc: "use client auth with unquoted false",
+			in: `
+			kind: sources
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: false
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "false",
 				},
 			},
 		},
@@ -253,7 +313,7 @@ func TestInitialize_MaxQueryResultRows(t *testing.T) {
 				Name:           "test-default",
 				Type:           bigquery.SourceType,
 				Project:        "test-project",
-				UseClientOAuth: true,
+				UseClientOAuth: "true",
 			},
 			want: 50,
 		},
@@ -263,7 +323,7 @@ func TestInitialize_MaxQueryResultRows(t *testing.T) {
 				Name:               "test-configured",
 				Type:               bigquery.SourceType,
 				Project:            "test-project",
-				UseClientOAuth:     true,
+				UseClientOAuth:     "true",
 				MaxQueryResultRows: 100,
 			},
 			want: 100,
