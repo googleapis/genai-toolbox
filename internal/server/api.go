@@ -28,7 +28,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric"
 )
 
 // apiRouter creates a router that represents the routes under /api
@@ -64,17 +63,6 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			span.SetStatus(codes.Error, err.Error())
 		}
 		span.End()
-
-		status := "success"
-		if err != nil {
-			status = "error"
-		}
-		s.instrumentation.ToolsetGet.Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolsetName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
-		)
 	}()
 
 	toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
@@ -101,18 +89,8 @@ func toolGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			span.SetStatus(codes.Error, err.Error())
 		}
 		span.End()
-
-		status := "success"
-		if err != nil {
-			status = "error"
-		}
-		s.instrumentation.ToolGet.Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
-		)
 	}()
+
 	tool, ok := s.ResourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
@@ -146,17 +124,6 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			span.SetStatus(codes.Error, err.Error())
 		}
 		span.End()
-
-		status := "success"
-		if err != nil {
-			status = "error"
-		}
-		s.instrumentation.ToolInvoke.Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.name", toolName)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
-		)
 	}()
 
 	tool, ok := s.ResourceMgr.GetTool(toolName)

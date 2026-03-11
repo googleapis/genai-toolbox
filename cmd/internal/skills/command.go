@@ -34,11 +34,12 @@ import (
 // skillsCmd is the command for generating skills.
 type skillsCmd struct {
 	*cobra.Command
-	name          string
-	description   string
-	toolset       string
-	outputDir     string
-	licenseHeader string
+	name            string
+	description     string
+	toolset         string
+	outputDir       string
+	licenseHeader   string
+	additionalNotes string
 }
 
 // NewCommand creates a new Command.
@@ -57,6 +58,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd.Flags().StringVar(&cmd.toolset, "toolset", "", "Name of the toolset to convert into a skill. If not provided, all tools will be included.")
 	cmd.Flags().StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
 	cmd.Flags().StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
+	cmd.Flags().StringVar(&cmd.additionalNotes, "additional-notes", "", "Additional notes to add under the Usage section of the generated SKILL.md")
 
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("description")
@@ -185,7 +187,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	}
 
 	// Generate SKILL.md
-	skillContent, err := generateSkillMarkdown(cmd.name, cmd.description, allTools, parser.EnvVars)
+	skillContent, err := generateSkillMarkdown(cmd.name, cmd.description, cmd.additionalNotes, allTools, parser.EnvVars)
 	if err != nil {
 		errMsg := fmt.Errorf("error generating SKILL.md content: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())

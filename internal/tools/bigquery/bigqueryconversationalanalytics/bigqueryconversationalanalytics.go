@@ -63,6 +63,7 @@ type compatibleSource interface {
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -241,9 +242,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
 
 	headers := map[string]string{
-		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":      "application/json",
-		"X-Goog-API-Client": util.GDAClientID,
+		source.GetAuthTokenHeaderName(): fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":                  "application/json",
+		"X-Goog-API-Client":             util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -578,7 +579,11 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	if err != nil {
+		return "", err
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }
 
 func (t Tool) GetParameters() parameters.Parameters {

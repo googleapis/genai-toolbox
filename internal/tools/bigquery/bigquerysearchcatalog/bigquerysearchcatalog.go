@@ -52,6 +52,7 @@ type compatibleSource interface {
 	MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
 	BigQueryProject() string
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
 }
 
 type Config struct {
@@ -278,7 +279,11 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	if err != nil {
+		return "", err
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }
 
 func (t Tool) GetParameters() parameters.Parameters {
