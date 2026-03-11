@@ -108,8 +108,8 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	mcpAuthRequiredWant := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"_id\":3,\"id\":3,\"name\":\"Sid\"}"}]}}`
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+
+	tests.RunMCPToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(myToolId3NameAliceWant),
 		tests.WithMyArrayToolWant(myToolId3NameAliceWant),
 		tests.WithMyToolById4Want(myToolById4Want),
@@ -148,7 +148,7 @@ func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 	}{
 		{
 			name:          "invoke my-delete-one-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-delete-one-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id" : 100 }`)),
 			want:          delete1Want,
@@ -156,7 +156,7 @@ func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 		},
 		{
 			name:          "invoke my-delete-many-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-delete-many-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id" : 101 }`)),
 			want:          deleteManyWant,
@@ -197,9 +197,21 @@ func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if got != tc.want {
@@ -221,7 +233,7 @@ func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 	}{
 		{
 			name:          "invoke my-insert-one-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-insert-one-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "data" : "{ \"_id\": { \"$oid\": \"68666e1035bb36bf1b4d47fb\" },  \"id\" : 200 }" }"`)),
 			want:          insert1Want,
@@ -229,7 +241,7 @@ func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 		},
 		{
 			name:          "invoke my-insert-many-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-insert-many-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "data" : "[{ \"_id\": { \"$oid\": \"68667a6436ec7d0363668db7\"} , \"id\" : 201 }, { \"_id\" : { \"$oid\": \"68667a6436ec7d0363668db8\"}, \"id\" : 202 }, { \"_id\": { \"$oid\": \"68667a6436ec7d0363668db9\"}, \"id\": 203 }]" }`)),
 			want:          insertManyWant,
@@ -270,9 +282,21 @@ func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if got != tc.want {
@@ -294,7 +318,7 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 	}{
 		{
 			name:          "invoke my-update-one-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-update-one-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id": 300, "name": "Bob" }`)),
 			want:          update1Want,
@@ -302,7 +326,7 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 		},
 		{
 			name:          "invoke my-update-many-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-update-many-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "id": 400, "name" : "Alice" }`)),
 			want:          updateManyWant,
@@ -343,9 +367,21 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if got != tc.want {
@@ -367,7 +403,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 	}{
 		{
 			name:          "invoke my-aggregate-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-aggregate-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name": "Jane" }`)),
 			want:          aggregate1Want,
@@ -375,7 +411,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 		},
 		{
 			name:          "invoke my-aggregate-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-aggregate-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
 			want:          aggregateManyWant,
@@ -383,7 +419,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 		},
 		{
 			name:          "invoke my-read-only-aggregate-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-read-only-aggregate-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
 			want:          `{"error":"error processing request: this is not a read-only pipeline: {\"$out\":\"target_collection\"}"}`,
@@ -391,7 +427,7 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 		},
 		{
 			name:          "invoke my-read-write-aggregate-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-read-write-aggregate-tool/invoke",
+			api:           "http://127.0.0.1:5000/mcp",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
 			want:          "[]",
@@ -432,9 +468,21 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			resultObj, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result object in response body")
+			}
+			contentList, ok := resultObj["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find content array in result")
+			}
+			firstContent, ok := contentList[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("content is not an object")
+			}
+			got, ok := firstContent["text"].(string)
+			if !ok {
+				t.Fatalf("unable to find text in content")
 			}
 
 			if got != tc.want {

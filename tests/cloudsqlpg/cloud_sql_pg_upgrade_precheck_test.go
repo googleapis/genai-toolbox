@@ -304,7 +304,7 @@ func TestPreCheckToolEndpoints(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+			api := "http://127.0.0.1:5000/mcp"
 			req, err := http.NewRequestWithContext(ctx, http.MethodPost, api, bytes.NewBufferString(tc.body))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)

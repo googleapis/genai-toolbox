@@ -31,7 +31,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	source "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudgda"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -144,27 +143,9 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 
 	toolName := "cloud-gda-query"
 
-	// 1. RunToolGetTestByName
-	expectedManifest := map[string]any{
-		toolName: map[string]any{
-			"description": "Test GDA Tool\n\n" + cloudgda.Guidance,
-			"parameters": []any{
-				map[string]any{
-					"name":        "query",
-					"type":        "string",
-					"description": "A natural language formulation of a database query.",
-					"required":    true,
-					"authSources": []any{},
-				},
-			},
-			"authRequired": []any{},
-		},
-	}
-	tests.RunToolGetTestByName(t, toolName, expectedManifest)
-
-	// 2. RunToolInvokeParametersTest
+	// 2. RunMCPToolInvokeParametersTest
 	params := []byte(`{"query": "test question"}`)
-	tests.RunToolInvokeParametersTest(t, toolName, params, "\"generated_query\":\"SELECT * FROM table;\"")
+	tests.RunMCPToolInvokeParametersTest(t, toolName, params, "\"generated_query\":\"SELECT * FROM table;\"")
 
 	// 3. Manual MCP Tool Call Test
 	// Initialize MCP session

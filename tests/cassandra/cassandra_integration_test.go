@@ -227,14 +227,13 @@ func TestCassandra(t *testing.T) {
 	selectIdNameWant, selectIdNullWant, selectArrayParamWant, mcpMyFailToolWant, mcpSelect1Want, mcpMyToolIdWant := getCassandraWants()
 	selectAllWant, selectIdWant, selectNameWant := getCassandraTmplWants()
 
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, "", tests.DisableSelect1Test(),
+	tests.RunMCPToolInvokeTest(t, "", tests.DisableSelect1Test(),
 		tests.DisableOptionalNullParamTest(),
 		tests.WithMyToolId3NameAliceWant(selectIdNameWant),
 		tests.WithMyToolById4Want(selectIdNullWant),
 		tests.WithMyArrayToolWant(selectArrayParamWant),
 		tests.DisableSelect1AuthTest())
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.DisableSelectFilterTest(),
 		tests.WithSelectAllWant(selectAllWant),
 		tests.DisableDdlTest(), tests.DisableInsertTest(), tests.WithTmplSelectId1Want(selectIdWant), tests.WithTmplSelectNameWant(selectNameWant))

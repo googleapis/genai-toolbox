@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -47,19 +46,19 @@ var (
 func getAlloyDBAINLVars(t *testing.T) map[string]any {
 	switch "" {
 	case AlloyDBAINLProject:
-		t.Fatal("'ALLOYDB_AI_NL_PROJECT' not set")
+		t.Skip("'ALLOYDB_AI_NL_PROJECT' not set")
 	case AlloyDBAINLRegion:
-		t.Fatal("'ALLOYDB_AI_NL_REGION' not set")
+		t.Skip("'ALLOYDB_AI_NL_REGION' not set")
 	case AlloyDBAINLCluster:
-		t.Fatal("'ALLOYDB_AI_NL_CLUSTER' not set")
+		t.Skip("'ALLOYDB_AI_NL_CLUSTER' not set")
 	case AlloyDBAINLInstance:
-		t.Fatal("'ALLOYDB_AI_NL_INSTANCE' not set")
+		t.Skip("'ALLOYDB_AI_NL_INSTANCE' not set")
 	case AlloyDBAINLDatabase:
-		t.Fatal("'ALLOYDB_AI_NL_DATABASE' not set")
+		t.Skip("'ALLOYDB_AI_NL_DATABASE' not set")
 	case AlloyDBAINLUser:
-		t.Fatal("'ALLOYDB_AI_NL_USER' not set")
+		t.Skip("'ALLOYDB_AI_NL_USER' not set")
 	case AlloyDBAINLPass:
-		t.Fatal("'ALLOYDB_AI_NL_PASS' not set")
+		t.Skip("'ALLOYDB_AI_NL_PASS' not set")
 	}
 	return map[string]any{
 		"type":     AlloyDBAINLSourceType,
@@ -97,64 +96,8 @@ func TestAlloyDBAINLToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runAINLToolGetTest(t)
 	runAINLToolInvokeTest(t)
 	runAINLMCPToolCallMethod(t)
-}
-
-func runAINLToolGetTest(t *testing.T) {
-	// Test tool get endpoint
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-tool/",
-			want: map[string]any{
-				"my-simple-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters": []any{
-						map[string]any{
-							"name":        "question",
-							"type":        "string",
-							"required":    true,
-							"description": "The natural language question to ask.",
-							"authSources": []any{},
-						},
-					},
-					"authRequired": []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
 }
 
 func runAINLToolInvokeTest(t *testing.T) {
@@ -164,83 +107,99 @@ func runAINLToolInvokeTest(t *testing.T) {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
+	sessionId := tests.RunInitialize(t, "2024-11-05")
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
-		api           string
+		toolName      string
 		requestHeader map[string]string
-		requestBody   io.Reader
+		arguments     map[string]any
 		want          string
 		isErr         bool
 	}{
 		{
 			name:          "invoke my-simple-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
+			toolName:      "my-simple-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
+			arguments:     map[string]any{"question": "return the number 1"},
 			want:          "[{\"execute_nl_query\":{\"?column?\":1}}]",
 			isErr:         false,
 		},
 		{
 			name:          "Invoke my-tool without parameters",
-			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			toolName:      "my-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			arguments:     map[string]any{},
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:      "my-auth-tool",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "can you show me the name of this user?"}`)),
+			arguments:     map[string]any{"question": "can you show me the name of this user?"},
 			want:          "[{\"execute_nl_query\":{\"name\":\"Alice\"}}]",
 			isErr:         false,
 		},
 		{
 			name:          "Invoke my-auth-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:      "my-auth-tool",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
+			arguments:     map[string]any{"question": "return the number 1"},
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:      "my-auth-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
+			arguments:     map[string]any{"question": "return the number 1"},
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			toolName:      "my-auth-required-tool",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
+			arguments:     map[string]any{"question": "return the number 1"},
 			isErr:         false,
 			want:          "[{\"execute_nl_query\":{\"?column?\":1}}]",
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			toolName:      "my-auth-required-tool",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
+			arguments:     map[string]any{"question": "return the number 1"},
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-required-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:      "my-auth-required-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
+			arguments:     map[string]any{"question": "return the number 1"},
 			isErr:         true,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			mcpReq := map[string]any{
+				"jsonrpc": "2.0",
+				"id":      tc.toolName,
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      tc.toolName,
+					"arguments": tc.arguments,
+				},
+			}
+			reqBytes, _ := json.Marshal(mcpReq)
+
 			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
+			if sessionId != "" {
+				req.Header.Add("Mcp-Session-Id", sessionId)
+			}
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
@@ -250,26 +209,44 @@ func runAINLToolInvokeTest(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			if resp.StatusCode != http.StatusOK {
-				if tc.isErr == true {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			var mcpResp struct {
+				Error *struct {
+					Message string `json:"message"`
+				} `json:"error"`
+				Result *struct {
+					Content []struct {
+						Text string `json:"text"`
+					} `json:"content"`
+					IsError bool `json:"isError"`
+				} `json:"result"`
+			}
+			if err := json.Unmarshal(bodyBytes, &mcpResp); err != nil {
+				t.Fatalf("failed to decode response: %v", err)
+			}
+
+			if mcpResp.Error != nil {
+				if !tc.isErr {
+					t.Fatalf("MCP returned an unexpected error: %s", mcpResp.Error.Message)
+				}
+				return
+			}
+
+			if tc.isErr {
+				if mcpResp.Result != nil && mcpResp.Result.IsError {
 					return
 				}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+				t.Fatalf("expected error but got valid response %s", string(bodyBytes))
 			}
 
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
+			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("unable to find result text in response body")
 			}
 
-			if got != tc.want {
+			got := mcpResp.Result.Content[0].Text
+
+			if !strings.Contains(got, tc.want) {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
 		})

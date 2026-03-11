@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -176,8 +175,17 @@ func TestWaitToolEndpoints(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
+			mcpReq := map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "test-1",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      tc.toolName,
+					"arguments": json.RawMessage(tc.body),
+				},
+			}
+			mcpBytes, _ := json.Marshal(mcpReq)
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(mcpBytes))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
@@ -192,28 +200,38 @@ func TestWaitToolEndpoints(t *testing.T) {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
-			var response struct {
-				Result any `json:"result"`
+
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			var mcpResp struct {
+				Error *struct {
+					Message string `json:"message"`
+				} `json:"error"`
+				Result *struct {
+					Content []struct {
+						Text string `json:"text"`
+					} `json:"content"`
+					IsError bool `json:"isError"`
+				} `json:"result"`
 			}
-			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			if err := json.Unmarshal(bodyBytes, &mcpResp); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
 			var got string
-			// Check if the result is a string (which contains JSON)
-			if s, ok := response.Result.(string); ok {
-				got = s
-			} else {
-				b, err := json.Marshal(response.Result)
-				if err != nil {
-					t.Fatalf("failed to marshal result object: %v", err)
+			if mcpResp.Error != nil {
+				got = mcpResp.Error.Message
+			} else if mcpResp.Result != nil && len(mcpResp.Result.Content) > 0 {
+				got = mcpResp.Result.Content[0].Text
+				if mcpResp.Result.IsError && !strings.HasPrefix(got, `{"error":`) {
+					got = `{"error":"` + got + `"}`
 				}
-				got = string(b)
 			}
 
 			// Clean up both strings to ignore whitespace differences
 			got = strings.ReplaceAll(strings.ReplaceAll(got, " ", ""), "\n", "")
 			want := strings.ReplaceAll(strings.ReplaceAll(tc.want, " ", ""), "\n", "")
+			want = strings.ReplaceAll(want, `\"`, `"`)
 
 			if tc.wantSubstring {
 				if !strings.Contains(got, want) {

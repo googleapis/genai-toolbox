@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -129,105 +128,12 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Test tool `GET` endpoints to verify their manifests are correct.
-	tcs := []struct {
-		name string
-		api  string
-		want map[string]any
-	}{
-		{
-			name: "get my-simple-cypher-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/",
-			want: map[string]any{
-				"my-simple-cypher-tool": map[string]any{
-					"description":  "Simple tool to test end to end functionality.",
-					"parameters":   []any{},
-					"authRequired": []any{},
-				},
-			},
-		},
-		{
-			name: "get my-simple-execute-cypher-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/",
-			want: map[string]any{
-				"my-simple-execute-cypher-tool": map[string]any{
-					"description": "Simple tool to test end to end functionality.",
-					"parameters": []any{
-						map[string]any{
-							"name":        "cypher",
-							"type":        "string",
-							"required":    true,
-							"description": "The cypher to execute.",
-							"authSources": []any{},
-						},
-						map[string]any{
-							"name":        "dry_run",
-							"type":        "boolean",
-							"required":    false,
-							"description": "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
-							"default":     false,
-							"authSources": []any{},
-						},
-					},
-					"authRequired": []any{},
-				},
-			},
-		},
-		{
-			name: "get my-schema-tool",
-			api:  "http://127.0.0.1:5000/api/tool/my-schema-tool/",
-			want: map[string]any{
-				"my-schema-tool": map[string]any{
-					"description":  "A tool to get the Neo4j schema.",
-					"parameters":   []any{},
-					"authRequired": []any{},
-				},
-			},
-		},
-		{
-			name: "get my-schema-tool-with-cache",
-			api:  "http://127.0.0.1:5000/api/tool/my-schema-tool-with-cache/",
-			want: map[string]any{
-				"my-schema-tool-with-cache": map[string]any{
-					"description":  "A schema tool with a custom cache expiration.",
-					"parameters":   []any{},
-					"authRequired": []any{},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := http.Get(tc.api)
-			if err != nil {
-				t.Fatalf("error when sending a request: %s", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200")
-			}
-
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-
-			got, ok := body["tools"]
-			if !ok {
-				t.Fatalf("unable to find tools in response body")
-			}
-			if !reflect.DeepEqual(got, tc.want) {
-				t.Fatalf("got %q, want %q", got, tc.want)
-			}
-		})
-	}
-
 	// Test tool `invoke` endpoints to verify their functionality.
 	invokeTcs := []struct {
 		name               string
+		toolName           string
 		api                string
-		requestBody        io.Reader
+		arguments          any
 		want               string
 		wantStatus         int
 		wantErrorSubstring string
@@ -235,24 +141,27 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 		validateFunc       func(t *testing.T, body string)
 	}{
 		{
-			name:        "invoke my-simple-cypher-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-cypher-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			want:        "[{\"a\":1}]",
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-simple-cypher-tool",
+			toolName:   "my-simple-cypher-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			want:       "[{\"a\":1}]",
+			wantStatus: http.StatusOK,
 		},
 		{
-			name:        "invoke my-simple-execute-cypher-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RETURN 1 as a;"}`)),
-			want:        "[{\"a\":1}]",
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-simple-execute-cypher-tool",
+			toolName:   "my-simple-execute-cypher-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{"cypher": "RETURN 1 as a;"},
+			want:       "[{\"a\":1}]",
+			wantStatus: http.StatusOK,
 		},
 		{
-			name:        "invoke my-simple-execute-cypher-tool with dry_run",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"cypher": "MATCH (n:Test) RETURN n", "dry_run": true}`)),
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-simple-execute-cypher-tool with dry_run",
+			toolName:   "my-simple-execute-cypher-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{"cypher": "MATCH (n:Test) RETURN n", "dry_run": true},
+			wantStatus: http.StatusOK,
 			validateFunc: func(t *testing.T, body string) {
 				var result []map[string]any
 				if err := json.Unmarshal([]byte(body), &result); err != nil {
@@ -287,43 +196,35 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:        "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
-			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
-			wantStatus:  http.StatusOK,
-			validateFunc: func(t *testing.T, body string) {
-				if !strings.Contains(body, "unable to execute query") {
-					t.Errorf("expected error message not found in body: %s", body)
-				}
-			},
+			name:               "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
+			toolName:           "my-simple-execute-cypher-tool",
+			api:                "http://127.0.0.1:5000/mcp",
+			arguments:          map[string]any{"cypher": "RTN 1", "dry_run": true},
+			wantStatus:         http.StatusOK,
+			wantErrorSubstring: "unable to execute query",
 		},
 		{
-			name:        "invoke readonly tool with write query",
-			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
-			wantStatus:  http.StatusOK,
-			validateFunc: func(t *testing.T, body string) {
-				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
-					t.Errorf("expected error message not found in body: %s", body)
-				}
-			},
+			name:               "invoke readonly tool with write query",
+			toolName:           "my-readonly-execute-cypher-tool",
+			api:                "http://127.0.0.1:5000/mcp",
+			arguments:          map[string]any{"cypher": "CREATE (n:TestNode)"},
+			wantStatus:         http.StatusOK,
+			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
 		},
 		{
-			name:        "invoke readonly tool with write query and dry_run",
-			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
-			wantStatus:  http.StatusOK,
-			validateFunc: func(t *testing.T, body string) {
-				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
-					t.Errorf("expected error message not found in body: %s", body)
-				}
-			},
+			name:               "invoke readonly tool with write query and dry_run",
+			toolName:           "my-readonly-execute-cypher-tool",
+			api:                "http://127.0.0.1:5000/mcp",
+			arguments:          map[string]any{"cypher": "CREATE (n:TestNode)", "dry_run": true},
+			wantStatus:         http.StatusOK,
+			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
 		},
 		{
-			name:        "invoke my-schema-tool",
-			api:         "http://127.0.0.1:5000/api/tool/my-schema-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-schema-tool",
+			toolName:   "my-schema-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			wantStatus: http.StatusOK,
 			validateFunc: func(t *testing.T, body string) {
 				var result map[string]any
 				if err := json.Unmarshal([]byte(body), &result); err != nil {
@@ -339,10 +240,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:        "invoke my-schema-tool-with-cache",
-			api:         "http://127.0.0.1:5000/api/tool/my-schema-tool-with-cache/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-schema-tool-with-cache",
+			toolName:   "my-schema-tool-with-cache",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			wantStatus: http.StatusOK,
 			validateFunc: func(t *testing.T, body string) {
 				var result map[string]any
 				if err := json.Unmarshal([]byte(body), &result); err != nil {
@@ -358,10 +260,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:        "invoke my-schema-tool with populated data",
-			api:         "http://127.0.0.1:5000/api/tool/my-populated-schema-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{}`)),
-			wantStatus:  http.StatusOK,
+			name:       "invoke my-schema-tool with populated data",
+			toolName:   "my-populated-schema-tool",
+			api:        "http://127.0.0.1:5000/mcp",
+			arguments:  map[string]any{},
+			wantStatus: http.StatusOK,
 			prepareData: func(t *testing.T) {
 				ctx := context.Background()
 				driver, err := neo4j.NewDriver(Neo4jUri, neo4j.BasicAuth(Neo4jUser, Neo4jPass, ""))
@@ -538,15 +441,21 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				tc.prepareData(t)
 			}
 
-			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
+			payloadBytes, _ := json.Marshal(map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "1",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      tc.toolName,
+					"arguments": tc.arguments,
+				},
+			})
+
+			resp, err := http.Post(tc.api, "application/json", bytes.NewBuffer(payloadBytes))
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode != tc.wantStatus {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code: got %d, want %d: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))
-			}
 
 			if tc.wantStatus == http.StatusOK {
 				var body map[string]interface{}
@@ -554,9 +463,34 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				if err != nil {
 					t.Fatalf("error parsing response body")
 				}
-				got, ok := body["result"].(string)
-				if !ok {
+
+				// Handle tool errors represented via MCP protocol first
+				if tc.wantErrorSubstring != "" {
+					errMap, hasErr := body["error"].(map[string]interface{})
+					if hasErr {
+						errMsg, _ := errMap["message"].(string)
+						if !strings.Contains(errMsg, tc.wantErrorSubstring) {
+							t.Fatalf("response payload %q does not contain expected error %q", errMsg, tc.wantErrorSubstring)
+						}
+						return
+					} else {
+						t.Fatalf("expected error containing %q but no error found in body: %v", tc.wantErrorSubstring, body)
+					}
+				}
+
+				resultMap, hasResult := body["result"].(map[string]interface{})
+				if !hasResult && tc.want != "" {
 					t.Fatalf("unable to find result in response body")
+				}
+
+				contentList, hasContent := resultMap["content"].([]interface{})
+				if !hasContent || len(contentList) == 0 {
+					t.Fatalf("unable to find result.content[0] in response body: %v", body)
+				}
+				contentItem := contentList[0].(map[string]interface{})
+				got, ok := contentItem["text"].(string)
+				if !ok {
+					t.Fatalf("unable to extract text value from result.content[0]")
 				}
 
 				if tc.validateFunc != nil {
@@ -567,13 +501,9 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 				}
 			} else {
-				bodyBytes, err := io.ReadAll(resp.Body)
-				if err != nil {
-					t.Fatalf("failed to read error response body: %s", err)
-				}
-				bodyString := string(bodyBytes)
-				if !strings.Contains(bodyString, tc.wantErrorSubstring) {
-					t.Fatalf("response body %q does not contain expected error %q", bodyString, tc.wantErrorSubstring)
+				if resp.StatusCode != tc.wantStatus {
+					bodyBytes, _ := io.ReadAll(resp.Body)
+					t.Fatalf("response status code: got %d, want %d: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))
 				}
 			}
 		})

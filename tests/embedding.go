@@ -106,20 +106,6 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, se
 		want        string
 	}{
 		{
-			name:        "HTTP invoke insert_docs",
-			api:         "http://127.0.0.1:5000/api/tool/insert_docs/invoke",
-			isMcp:       false,
-			requestBody: `{"content": "The quick brown fox jumps over the lazy dog"}`,
-			want:        insertWant,
-		},
-		{
-			name:        "HTTP invoke search_docs",
-			api:         "http://127.0.0.1:5000/api/tool/search_docs/invoke",
-			isMcp:       false,
-			requestBody: `{"query": "fast fox jumping"}`,
-			want:        searchWant,
-		},
-		{
 			name:  "MCP invoke insert_docs",
 			api:   "http://127.0.0.1:5000/mcp",
 			isMcp: true,

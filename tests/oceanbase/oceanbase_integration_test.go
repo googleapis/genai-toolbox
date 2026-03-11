@@ -128,11 +128,11 @@ func TestOceanBaseToolEndpoints(t *testing.T) {
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := getOceanBaseWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+
+	tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // OceanBase specific parameter tool info

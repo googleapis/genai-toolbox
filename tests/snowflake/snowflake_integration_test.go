@@ -144,13 +144,11 @@ func TestSnowflake(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
-
 	select1Want, failInvocationWant, createTableStatement, mcpSelect1Want := getSnowflakeWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+
+	tests.RunMCPToolInvokeTest(t, select1Want,
 		tests.DisableArrayTest(),
 		tests.WithMyToolId3NameAliceWant(`[{"ID":"1","NAME":"Alice"},{"ID":"3","NAME":"Sid"}]`),
 		tests.WithMyToolById4Want(`[{"ID":"4","NAME":null}]`),
@@ -158,10 +156,10 @@ func TestSnowflake(t *testing.T) {
 	)
 	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want, tests.WithMcpMyToolId3NameAliceWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"ID\":\"1\",\"NAME\":\"Alice\"}"},{"type":"text","text":"{\"ID\":\"3\",\"NAME\":\"Sid\"}"}]}}`))
 
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want,
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want,
 		tests.WithExecuteCreateWant(`[{"status":"Table T successfully created."}]`),
 		tests.WithExecuteDropWant(`[{"status":"T successfully dropped."}]`))
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // addSnowflakeExecuteSqlConfig gets the tools config for `snowflake-execute-sql`

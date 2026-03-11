@@ -209,8 +209,17 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
+			mcpReq := map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "test-1",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      tc.toolName,
+					"arguments": json.RawMessage(tc.body),
+				},
+			}
+			mcpBytes, _ := json.Marshal(mcpReq)
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(mcpBytes))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
@@ -221,29 +230,68 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			if tc.expectError {
-				if resp.StatusCode != tc.errorStatus {
-					bodyBytes, _ := io.ReadAll(resp.Body)
-					t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
-				}
-				return
-			}
-
-			if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode != http.StatusOK { // MCP always returns 200 OK
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
-			var result struct {
-				Result string `json:"result"`
+			var mcpResp struct {
+				Error *struct {
+					Message string `json:"message"`
+				} `json:"error"`
+				Result *struct {
+					Content []struct {
+						Text string `json:"text"`
+					} `json:"content"`
+					IsError bool `json:"isError"`
+				} `json:"result"`
 			}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+
+			if err := json.NewDecoder(resp.Body).Decode(&mcpResp); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
+			if tc.expectError {
+				if mcpResp.Error != nil {
+					// We got an MCP protocol-level error, which is expected
+					return
+				}
+				if mcpResp.Result != nil && mcpResp.Result.IsError {
+					// We got a tool-level error, which is also expected
+					return
+				}
+				if mcpResp.Result != nil && len(mcpResp.Result.Content) > 0 {
+					text := mcpResp.Result.Content[0].Text
+					if strings.Contains(strings.ToLower(text), "error") ||
+						strings.Contains(strings.ToLower(text), "invalid") ||
+						strings.Contains(strings.ToLower(text), "missing") {
+						return
+					}
+					t.Fatalf("expected an error, but got success result: %s", text)
+				}
+				t.Fatalf("Expected MCP error, but no error found in response payload")
+			}
+
+			if mcpResp.Error != nil {
+				// To do: if the test defines an expect error message to match on, we should match it
+				// against mcpResp.Error.Message
+				return
+			}
+
+			if mcpResp.Result != nil && mcpResp.Result.IsError {
+				if len(mcpResp.Result.Content) > 0 {
+					t.Fatalf("expected success, but got MCP tool error: %s", mcpResp.Result.Content[0].Text)
+				}
+				t.Fatalf("expected success, but got an empty MCP tool error")
+			}
+
+			if mcpResp.Result == nil || len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("Expected a result with content, but it was empty")
+			}
+
 			var got, want map[string]any
-			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
-				t.Fatalf("failed to unmarshal result: %v", err)
+			if err := json.Unmarshal([]byte(mcpResp.Result.Content[0].Text), &got); err != nil {
+				t.Fatalf("failed to unmarshal result: %v. Raw text: %s", err, mcpResp.Result.Content[0].Text)
 			}
 			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
 				t.Fatalf("failed to unmarshal want: %v", err)

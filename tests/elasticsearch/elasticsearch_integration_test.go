@@ -137,8 +137,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	wants := getElasticsearchWants()
 
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, wants.Select1,
+	tests.RunMCPToolInvokeTest(t, wants.Select1,
 		tests.DisableArrayTest(),
 
 		tests.WithMyToolId3NameAliceWant(wants.MyToolId3NameAlice),

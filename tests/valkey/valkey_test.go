@@ -104,8 +104,8 @@ func TestValkeyToolEndpoints(t *testing.T) {
 	select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpSelect1Want, mcpInvokeParamWant := tests.GetRedisValkeyWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+
+	tests.RunMCPToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(invokeParamWant),
 		tests.WithMyArrayToolWant(invokeParamWant),
 		tests.WithMyToolById4Want(invokeIdNullWant),

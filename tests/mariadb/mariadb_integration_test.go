@@ -137,11 +137,11 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := GetMariaDBWants()
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+
+	tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run specific MySQL tool tests
 	RunMariDBListTablesTest(t, MariaDBDatabase, tableNameParam, tableNameAuth)
@@ -255,7 +255,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			const api = "http://127.0.0.1:5000/api/tool/list_tables/invoke"
+			const api = "http://127.0.0.1:5000/mcp"
 			resp, body := tests.RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))

@@ -66,15 +66,15 @@ func RunWaitTool(t *testing.T) {
 	}{
 		{
 			name:        "invoke my-wait-for-tool",
-			api:         "http://127.0.0.1:5001/api/tool/my-wait-for-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"duration": "1s"}`)),
+			api:         "http://127.0.0.1:5001/mcp",
+			requestBody: bytes.NewBuffer([]byte(`{"jsonrpc": "2.0", "id": "1", "method": "tools/call", "params": {"name": "my-wait-for-tool", "arguments": {"duration": "1s"}}}`)),
 			want:        `["Wait for 1s completed successfully."]`,
 			isErr:       false,
 		},
 		{
 			name:        "invoke my-wait-for-tool with invalid duration",
-			api:         "http://127.0.0.1:5001/api/tool/my-wait-for-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"duration": "invalid"}`)),
+			api:         "http://127.0.0.1:5001/mcp",
+			requestBody: bytes.NewBuffer([]byte(`{"jsonrpc": "2.0", "id": "2", "method": "tools/call", "params": {"name": "my-wait-for-tool", "arguments": {"duration": "invalid"}}}`)),
 			isErr:       true,
 		},
 	}
@@ -105,9 +105,26 @@ func RunWaitTool(t *testing.T) {
 				t.Fatalf("error parsing response body")
 			}
 
-			got, ok := body["result"].(string)
+			if tc.isErr {
+				if _, hasErr := body["error"]; !hasErr {
+					t.Fatalf("expected error from MCP, got normal response: %v", body)
+				}
+				return
+			}
+
+			resultMap, ok := body["result"].(map[string]interface{})
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find result in response body: %v", body)
+			}
+
+			contentList, ok := resultMap["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find result.content[0] in response body")
+			}
+			contentItem := contentList[0].(map[string]interface{})
+			got, ok := contentItem["text"].(string)
+			if !ok {
+				t.Fatalf("unable to extract text out of result.content[0]")
 			}
 
 			if got != tc.want {

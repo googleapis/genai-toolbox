@@ -150,8 +150,7 @@ func TestYugabyteDB(t *testing.T) {
 
 	select1Want, mcpMyFailToolWant, _, mcpSelect1Want := tests.GetPostgresWants()
 
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunMCPToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }

@@ -143,10 +143,10 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	selectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
 
 	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want)
+
+	tests.RunMCPToolInvokeTest(t, select1Want)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, collectionNameTemplateParam,
+	tests.RunMCPToolInvokeWithTemplateParameters(t, collectionNameTemplateParam,
 		tests.WithTmplSelectId1Want(tmplSelectId1Want),
 		tests.WithSelectAllWant(selectAllWant),
 		tests.DisableDdlTest(),

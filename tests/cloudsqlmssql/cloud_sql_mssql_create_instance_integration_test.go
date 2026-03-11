@@ -198,18 +198,32 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 			want:     `{"name":"op2","status":"RUNNING"}`,
 		},
 		{
-			name:     "missing required parameter",
-			toolName: "create-instance-prod",
-			body:     `{"name": "instance1"}`,
-			want:     `{"error":"parameter \"project\" is required"}`,
+			name:        "missing required parameter",
+			toolName:    "create-instance-prod",
+			body:        `{"name": "instance1"}`,
+			expectError: true,
+			want:        `parameter \"project\" is required`,
 		},
 	}
 
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
+			api := "http://127.0.0.1:5000/mcp"
+			var args map[string]any
+			if err := json.Unmarshal([]byte(tc.body), &args); err != nil {
+				t.Fatalf("failed to decode reqBody: %v", err)
+			}
+			payloadBytes, _ := json.Marshal(map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "test-id",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name":      tc.toolName,
+					"arguments": args,
+				},
+			})
+			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBuffer(payloadBytes))
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
@@ -221,9 +235,17 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 			defer resp.Body.Close()
 
 			if tc.expectError {
-				if resp.StatusCode != tc.errorStatus {
-					bodyBytes, _ := io.ReadAll(resp.Body)
-					t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
+				var body map[string]interface{}
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("failed to decode response: %v", err)
+				}
+				errMap, hasErr := body["error"].(map[string]interface{})
+				if !hasErr {
+					t.Fatalf("expected error from MCP, got normal response: %v", body)
+				}
+				errMsg, _ := errMap["message"].(string)
+				if !strings.Contains(errMsg, tc.want) {
+					t.Fatalf("expected error containing %q but got %q", tc.want, errMsg)
 				}
 				return
 			}
@@ -233,15 +255,28 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
-			var result struct {
-				Result string `json:"result"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			var body map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
+			resultMap, ok := body["result"].(map[string]interface{})
+			if !ok {
+				t.Fatalf("unable to find result in response body: %v", body)
+			}
+
+			contentList, ok := resultMap["content"].([]interface{})
+			if !ok || len(contentList) == 0 {
+				t.Fatalf("unable to find result.content[0] in response body")
+			}
+			contentItem := contentList[0].(map[string]interface{})
+			gotStr, ok := contentItem["text"].(string)
+			if !ok {
+				t.Fatalf("unable to extract text out of result.content[0]")
+			}
+
 			var got, want map[string]any
-			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
+			if err := json.Unmarshal([]byte(gotStr), &got); err != nil {
 				t.Fatalf("failed to unmarshal result: %v", err)
 			}
 			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
