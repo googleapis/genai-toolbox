@@ -551,6 +551,7 @@ See [Usage Examples](../reference/cli.md#examples).
 ## Looker Dev
 
 *   `--prebuilt` value: `looker-dev`
+*   May be used in combination with Looker, `--prebuilt looker,looker-dev`
 *   **Environment Variables:**
     *   `LOOKER_BASE_URL`: The URL of your Looker instance.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
