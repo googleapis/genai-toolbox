@@ -1,0 +1,93 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "Build Docs Preview"
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs**'
+      - '.hugo/**'
+
+# Read-only token for code execution
+permissions: read-all
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-24.04
+    env:
+      PR_NUMBER: ${{ github.event.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    concurrency:
+      group: "preview-${{ github.event.number }}"
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: .hugo
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          # Checkout the PR's HEAD commit (supports forks).
+          ref: ${{ env.HEAD_SHA }}
+          fetch-depth: 0 
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+        with:
+          hugo-version: "0.145.0"
+          extended: true
+
+      - name: Setup Node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: "22"
+
+      - name: Cache dependencies
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - run: npm ci --ignore-scripts
+      
+      - run: hugo --minify
+        env:
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ env.PR_NUMBER }}/
+          HUGO_ENVIRONMENT: preview
+          HUGO_RELATIVEURLS: false
+
+      - name: Prepare Artifact Payload
+        run: |
+          mkdir -p ../artifact-payload
+          cp -r public ../artifact-payload/public
+          echo $PR_NUMBER > ../artifact-payload/pr_number.txt
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-preview-data
+          path: artifact-payload/
+
+      - name: Deployment Link
+        run: |
+          DEPLOY_URL="https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/workflows/docs_preview_deploy.yaml"
+          
+          echo "### Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "The build for PR #${{ env.PR_NUMBER }} succeeded." >> $GITHUB_STEP_SUMMARY
+          echo "The deployment workflow is now starting in the background." >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "#### [Track Deployment Progress]($DEPLOY_URL)" >> $GITHUB_STEP_SUMMARY

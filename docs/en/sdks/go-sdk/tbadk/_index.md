@@ -179,7 +179,7 @@ result, err := tool.Run(ctx, inputs)
 
 {{< notice tip >}}For a more comprehensive guide on setting up the Toolbox service itself, which
 you'll need running to use this SDK, please refer to the [Toolbox Quickstart
-Guide](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart).
+Guide](../../../getting-started/local_quickstart.md).
 {{< /notice >}}
 
 ## Client to Server Authentication
@@ -247,7 +247,7 @@ client, err := tbadk.NewToolboxClient(
 
 For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 `Google ID token` authentication, the helper module
-[auth_methods](/core/auth.go) provides utility functions.
+[auth_methods](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/auth.go) provides utility functions.
 
 ### Step by Step Guide for Cloud Run
 
