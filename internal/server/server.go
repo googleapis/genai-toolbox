@@ -407,12 +407,6 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 	r.Use(hostCheck(allowedHostsMap))
 
-	// control plane
-	apiR, err := apiRouter(s)
-	if err != nil {
-		return nil, err
-	}
-	r.Mount("/api", apiR)
 	mcpR, err := mcpRouter(s)
 	if err != nil {
 		return nil, err
@@ -425,6 +419,15 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		}
 		r.Mount("/ui", webR)
 	}
+
+	r.Route("/api", func(r chi.Router) {
+		r.HandleFunc("/*", func(w http.ResponseWriter, req *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusGone)
+			_, _ = w.Write([]byte(`{"error": "The Native HTTP endpoints (/api/...) have been removed. Please use the standard MCP JSON-RPC format via the /mcp endpoint."}`))
+		})
+	})
+
 	// default endpoint for validating server is running
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
