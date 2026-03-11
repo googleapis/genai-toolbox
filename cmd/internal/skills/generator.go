@@ -38,6 +38,9 @@ All scripts can be executed using Node.js. Replace ` + "`" + `<param_name>` + "`
 
 **PowerShell:**
 ` + "`" + `node <skill_dir>/scripts/<script_name>.js '{\"<param_name>\": \"<param_value>\"}'` + "`" + `
+{{if .AdditionalNotes}}
+{{.AdditionalNotes}}
+{{end}}
 
 ## Scripts
 
@@ -61,13 +64,14 @@ type toolTemplateData struct {
 type skillTemplateData struct {
 	SkillName        string
 	SkillDescription string
+	AdditionalNotes  string
 	Tools            []toolTemplateData
 }
 
 // generateSkillMarkdown generates the content of the SKILL.md file.
 // It includes usage instructions and a reference section for each tool in the skill,
 // detailing its description and parameters.
-func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[string]tools.Tool, envVars map[string]string) (string, error) {
+func generateSkillMarkdown(skillName, skillDescription, additionalNotes string, toolsMap map[string]tools.Tool, envVars map[string]string) (string, error) {
 	var toolsData []toolTemplateData
 
 	// Order tools based on name
@@ -96,6 +100,7 @@ func generateSkillMarkdown(skillName, skillDescription string, toolsMap map[stri
 	data := skillTemplateData{
 		SkillName:        skillName,
 		SkillDescription: skillDescription,
+		AdditionalNotes:  additionalNotes,
 		Tools:            toolsData,
 	}
 

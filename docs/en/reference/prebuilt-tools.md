@@ -748,6 +748,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_spark_batch`: Creates a Spark batch.
     *   `list_sessions`: Lists Spark sessions.
     *   `get_session`: Gets a Spark session.
+    *   `get_session_template`: Gets a Spark session template.
 
 ## SingleStore
 
