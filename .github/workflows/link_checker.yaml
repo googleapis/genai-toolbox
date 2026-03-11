@@ -11,15 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: Link Check
+name: Link Checker
 
 on:
+  
   pull_request:
-
+  pull_request_target:
+    types: [opened, synchronize]
 permissions:
-  contents: read
   pull-requests: write
   issues: write
+  contents: read
 
 jobs:
   link-check:
@@ -28,11 +30,35 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Identify Changed Files
+        id: changed-files
+        shell: bash
+        run: |
+          git fetch origin main
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT origin/main...HEAD -- '*.md')
 
-     
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No markdown files changed. Skipping checks."
+            echo "HAS_CHANGES=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "--- Changed Files to Scan ---"
+            echo "$CHANGED_FILES"
+            echo "-----------------------------"
+            
+            FILES_QUOTED=$(echo "$CHANGED_FILES" | sed 's/^/"/;s/$/"/' | tr '\n' ' ')
+            
+            # Use EOF to write multiline or long strings to GITHUB_OUTPUT
+            echo "HAS_CHANGES=true" >> "$GITHUB_OUTPUT"
+            echo "CHECK_FILES<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$FILES_QUOTED" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Restore lychee cache
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true'
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: .lycheecache
@@ -41,6 +67,7 @@ jobs:
 
       - name: Link Checker
         id: lychee-check       
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true'
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2
         continue-on-error: true 
         with:
@@ -50,9 +77,8 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
-            README.md
-            docs/
-
+            --max-retries 10
+            ${{ steps.changed-files.outputs.CHECK_FILES }}
           output: lychee-report.md
           format: markdown
           fail: true           
@@ -61,9 +87,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Find comment
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: "## Link Resolution Note"
+
+      - name: Delete comment on success
+        if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
+        run: |
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/issues/comments/${STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID: ${{ steps.find-comment.outputs.comment-id }}
 
       - name: Prepare Report 
-        # if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         run: |
           echo "## Link Resolution Note" > full-report.md
           echo "Local links and directory changes work differently on GitHub than on the docsite. You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
@@ -71,6 +115,24 @@ jobs:
           echo "" >> full-report.md 
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
+      - name: Create PR Comment
+        id: pr-comment
+        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
+        continue-on-error: true
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: full-report.md
+          edit-mode: replace
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report Commenting Failure
+        if: steps.pr-comment.outcome == 'failure'
+        run: |
+          echo "::warning title=GitHub API Error::The bot failed to post a PR comment. This is likely a permission issue with GITHUB_TOKEN on a fork."
+          echo "Check the 'Link Checker' step output below for the results instead." 
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
@@ -81,3 +143,4 @@ jobs:
           
           # Fail the job
           exit 1
+          
