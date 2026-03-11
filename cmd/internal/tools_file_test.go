@@ -1615,7 +1615,7 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("SNOWFLAKE_ROLE", "your_role")
 
 	t.Setenv("ORACLE_USERNAME", "your_oracle_db_username")
-	t.Setenv("ORACLE_PASS", "your_oracle_db_password")
+	t.Setenv("ORACLE_PASSWORD", "your_oracle_db_password")
 	t.Setenv("ORACLE_HOST", "your_oracle_db_host")
 	t.Setenv("ORACLE_PORT", "your_oracle_db_port")
 	t.Setenv("ORACLE_USE_OCI", "your_oracle_db_use_oci")
