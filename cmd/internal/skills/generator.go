@@ -174,11 +174,11 @@ function getEnv() {
 }
 
 let env = process.env;
+let userAgent = "skills";
 if (process.env.GEMINI_CLI === '1') {
     env = getEnv();
+    userAgent = "skills-geminicli";
 }
-
-const userAgent = env.USER_AGENT_METADATA || "skills";
 
 const args = process.argv.slice(2);
 
