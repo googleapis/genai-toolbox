@@ -347,11 +347,11 @@ toolsets:
     - list_pg_settings
     - database_overview
   data:
-    - execute_sql,
+    - execute_sql
     - list_tables
     - list_views
     - list_schemas
-    - list_triggers,
+    - list_triggers
     - list_indexes
     - list_sequences
     - list_stored_procedure

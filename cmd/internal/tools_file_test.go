@@ -1623,7 +1623,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"data": tools.ToolsetConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas,", "list_triggers", "list_indexes", "list_sequences,", "list_stored_procedure"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
 				"performance": tools.ToolsetConfig{
 					Name:      "performance",
@@ -1705,7 +1705,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"data": tools.ToolsetConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql,", "list_tables", "list_views", "list_schemas", "list_triggers,", "list_indexes", "list_sequences", "list_stored_procedure"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
@@ -2013,7 +2013,6 @@ func TestPrebuiltTools(t *testing.T) {
 				for tsName, ts := range toolsFile.Toolsets {
 					if len(ts.ToolNames) > 10 {
 						t.Logf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
-						fmt.Printf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.\n", tsName, tc.name, len(ts.ToolNames))
 					}
 				}
 			})
