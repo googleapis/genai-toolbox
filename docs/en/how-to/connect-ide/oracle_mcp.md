@@ -63,13 +63,13 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
-1. Make the binary executable:
+4. Make the binary executable:
 
     ```bash
     chmod +x toolbox
     ```
 
-1. Verify the installation:
+5. Verify the installation:
 
     ```bash
     ./toolbox --version
