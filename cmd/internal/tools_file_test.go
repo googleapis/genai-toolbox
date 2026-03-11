@@ -1966,7 +1966,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"oracle_database_tools": tools.ToolsetConfig{
 					Name:      "oracle_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "list_top_sql_by_resource", "get_query_plan", "list_tablespace_usage", "list_invalid_objects"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
 				},
 			},
 		},

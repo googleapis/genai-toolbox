@@ -316,8 +316,8 @@ statements.
 
 The following tools are available to the LLM:
 
-1. **list_tables**: lists tables and descriptions
-2. **execute_sql**: execute any SQL statement
+1. **execute_sql**: execute any SQL statement
+2. **list_tables**: lists tables and descriptions
 3. **list_active_sessions**: Lists active database sessions.
 4. **get_query_plan**: Generates the execution plan for a SQL statement.
 5. **list_top_sql_by_resource**: Lists top SQL statements by resource usage.
