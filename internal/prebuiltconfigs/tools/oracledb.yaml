@@ -17,7 +17,7 @@ sources:
         kind: "oracle"
         connectionString: ${ORACLE_CONNECTION_STRING}
         walletLocation: ${ORACLE_WALLET:}
-        user: ${ORACLE_USER}
+        user: ${ORACLE_USERNAME}
         password: ${ORACLE_PASSWORD}
         useOCI: ${ORACLE_USE_OCI:false}
 

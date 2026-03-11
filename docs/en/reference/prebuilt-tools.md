@@ -878,7 +878,7 @@ See [Usage Examples](../reference/cli.md#examples).
 *   **Environment Variables:**
    
     *   `ORACLE_CONNECTION_STRING`: The connection string for the Oracle server (e.g., "hostname:port/servicename").
-    *   `ORACLE_USER`: The database username.
+    *   `ORACLE_USERNAME`: The database username.
     *   `ORACLE_PASSWORD`: The password for the database user.
     *   `ORACLE_WALLET`: The path to the Oracle DB Wallet file for databases that support this authentication type.
     *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating whether to use the OCI-based driver. Setting to `true` is required for features like Oracle Wallet and requires the Oracle Instant Client libraries to be installed.
