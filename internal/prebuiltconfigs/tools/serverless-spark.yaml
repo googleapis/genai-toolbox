@@ -34,6 +34,9 @@ tools:
   create_spark_batch:
     kind: serverless-spark-create-spark-batch
     source: serverless-spark-source
+  get_session_template:
+    kind: serverless-spark-get-session-template
+    source: serverless-spark-source
   list_sessions:
     kind: serverless-spark-list-sessions
     source: serverless-spark-source
@@ -48,5 +51,6 @@ toolsets:
     - cancel_batch
     - create_pyspark_batch
     - create_spark_batch
+    - get_session_template
     - list_sessions
     - get_session

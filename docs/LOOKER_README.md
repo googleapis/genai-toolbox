@@ -27,7 +27,7 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
     > `>=0.26.0`. To update MCP Toolbox, use:
     > ```npm i -g @toolbox-sdk/server@latest```
     > To always run the latest version, update the MCP server configuration to use:
-    > ```npx -y @toolbox-sdk/server@latest --prebuilt looker```.
+    > ```npx -y @toolbox-sdk/server@latest --prebuilt looker,looker-dev```.
 
 2. Add the required inputs for your [instance](https://docs.cloud.google.com/looker/docs/set-up-and-administer-looker) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
@@ -83,7 +83,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "looker": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker,looker-dev", "--stdio"],
       "env": {
         "LOOKER_BASE_URL": "https://your.looker.instance.com",
         "LOOKER_CLIENT_ID": "your-client-id",
