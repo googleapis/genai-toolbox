@@ -179,6 +179,15 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"get-session-template": map[string]any{
+				"kind":   "serverless-spark-get-session-template",
+				"source": "my-spark",
+			},
+			"get-session-template-with-auth": map[string]any{
+				"kind":         "serverless-spark-get-session-template",
+				"source":       "my-spark",
+				"authRequired": []string{"my-google-auth"},
+			},
 		},
 	}
 
@@ -197,11 +206,18 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	}
 
 	endpoint := fmt.Sprintf("%s-dataproc.googleapis.com:443", serverlessSparkLocation)
-	client, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint))
+	batchClient, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint))
 	if err != nil {
-		t.Fatalf("failed to create dataproc client: %v", err)
+		t.Fatalf("failed to create dataproc batch client: %v", err)
 	}
-	defer client.Close()
+	defer batchClient.Close()
+
+	sessionTemplateClient, err := dataproc.NewSessionTemplateControllerClient(ctx, option.WithEndpoint(endpoint))
+	if err != nil {
+		t.Fatalf("failed to create dataproc session template client: %v", err)
+	}
+	defer sessionTemplateClient.Close()
+
 	sessionClient, err := dataproc.NewSessionControllerClient(ctx, option.WithEndpoint(endpoint))
 	if err != nil {
 		t.Fatalf("failed to create dataproc session client: %v", err)
@@ -211,7 +227,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	t.Run("list-batches", func(t *testing.T) {
 		// list-batches is sensitive to state changes, so this test must run sequentially.
 		t.Run("success", func(t *testing.T) {
-			runListBatchesTest(t, client, ctx)
+			runListBatchesTest(t, batchClient, ctx)
 		})
 		t.Run("errors", func(t *testing.T) {
 			t.Parallel()
@@ -296,10 +312,10 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	t.Run("parallel-tool-tests", func(t *testing.T) {
 		t.Run("get-batch", func(t *testing.T) {
 			t.Parallel()
-			fullName := listBatchesRpc(t, client, ctx, "", 1, true)[0].Name
+			fullName := listBatchesRpc(t, batchClient, ctx, "", 1, true)[0].Name
 			t.Run("success", func(t *testing.T) {
 				t.Parallel()
-				runGetBatchTest(t, client, ctx, fullName)
+				runGetBatchTest(t, batchClient, ctx, fullName)
 			})
 			t.Run("errors", func(t *testing.T) {
 				t.Parallel()
@@ -389,6 +405,56 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 			})
 		})
 
+		t.Run("get-session-template", func(t *testing.T) {
+			t.Parallel()
+			// Try to find an existing session template to test success case
+			sessionTemplates := listSessionTemplatesRpc(t, sessionTemplateClient, ctx, "", 1, false)
+			if len(sessionTemplates) > 0 {
+				fullName := sessionTemplates[0].Name
+				t.Run("success", func(t *testing.T) {
+					t.Parallel()
+					runGetSessionTemplateTest(t, sessionTemplateClient, ctx, fullName)
+				})
+				t.Run("auth", func(t *testing.T) {
+					t.Parallel()
+					runAuthTest(t, "get-session-template-with-auth", map[string]any{"name": shortName(fullName)}, http.StatusOK)
+				})
+			}
+
+			t.Run("errors", func(t *testing.T) {
+				t.Parallel()
+				missingSessionTemplateFullName := fmt.Sprintf("projects/%s/locations/%s/sessionTemplates/INVALID_SESSION_TEMPLATE", serverlessSparkProject, serverlessSparkLocation)
+				tcs := []struct {
+					name     string
+					toolName string
+					request  map[string]any
+					wantCode int
+					wantMsg  string
+				}{
+					{
+						name:     "missing session template",
+						toolName: "get-session-template",
+						request:  map[string]any{"name": "INVALID_SESSION_TEMPLATE"},
+						wantCode: http.StatusOK,
+						wantMsg:  fmt.Sprintf("Not found: Session Template projects/%s/locations/%s/sessionTemplates/INVALID_SESSION_TEMPLATE", serverlessSparkProject, serverlessSparkLocation),
+					},
+					{
+						name:     "full session name",
+						toolName: "get-session-template",
+						request:  map[string]any{"name": missingSessionTemplateFullName},
+						wantCode: http.StatusOK,
+						wantMsg:  fmt.Sprintf("name must be a short session template name without '/': %s", missingSessionTemplateFullName),
+					},
+				}
+				for _, tc := range tcs {
+					t.Run(tc.name, func(t *testing.T) {
+						t.Parallel()
+						testError(t, tc.toolName, tc.request, tc.wantCode, tc.wantMsg)
+					})
+				}
+			})
+		})
+
 		t.Run("create-pyspark-batch", func(t *testing.T) {
 			t.Parallel()
 
@@ -446,7 +512,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+						runCreateSparkBatchTest(t, batchClient, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
 					})
 				}
 			})
@@ -551,7 +617,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+						runCreateSparkBatchTest(t, batchClient, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
 					})
 				}
 			})
@@ -610,13 +676,13 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 					{
 						name: "running batch",
 						getBatchName: func(t *testing.T) string {
-							return createBatch(t, client, ctx)
+							return createBatch(t, batchClient, ctx)
 						},
 					},
 					{
 						name: "succeeded batch",
 						getBatchName: func(t *testing.T) string {
-							return listBatchesRpc(t, client, ctx, "state = SUCCEEDED", 1, true)[0].Name
+							return listBatchesRpc(t, batchClient, ctx, "state = SUCCEEDED", 1, true)[0].Name
 						},
 					},
 				}
@@ -624,14 +690,14 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCancelBatchTest(t, client, ctx, tc.getBatchName(t))
+						runCancelBatchTest(t, batchClient, ctx, tc.getBatchName(t))
 					})
 				}
 			})
 			t.Run("errors", func(t *testing.T) {
 				t.Parallel()
 				// Find a batch that's already completed.
-				completedBatchOp := listBatchesRpc(t, client, ctx, "state = SUCCEEDED", 1, true)[0].Operation
+				completedBatchOp := listBatchesRpc(t, batchClient, ctx, "state = SUCCEEDED", 1, true)[0].Operation
 				fullOpName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", serverlessSparkProject, serverlessSparkLocation, shortName(completedBatchOp))
 				tcs := []struct {
 					name     string
@@ -1309,5 +1375,93 @@ func runGetSessionTest(t *testing.T, client *dataproc.SessionControllerClient, c
 	if !cmp.Equal(&session, &wantSessionPb, protocmp.Transform()) {
 		diff := cmp.Diff(&session, &wantSessionPb, protocmp.Transform())
 		t.Errorf("GetSession() returned diff (-got +want):\n%s", diff)
+	}
+}
+
+func listSessionTemplatesRpc(t *testing.T, client *dataproc.SessionTemplateControllerClient, ctx context.Context, filter string, n int, exact bool) []serverlessspark.SessionTemplate {
+	parent := fmt.Sprintf("projects/%s/locations/%s", serverlessSparkProject, serverlessSparkLocation)
+	req := &dataprocpb.ListSessionTemplatesRequest{
+		Parent:   parent,
+		PageSize: int32(n),
+	}
+	if filter != "" {
+		req.Filter = filter
+	}
+
+	it := client.ListSessionTemplates(ctx, req)
+	pager := iterator.NewPager(it, n, "")
+	var sessionTemplatePbs []*dataprocpb.SessionTemplate
+	_, err := pager.NextPage(&sessionTemplatePbs)
+	if err != nil {
+		t.Fatalf("failed to list session templates: %s", err)
+	}
+	if exact && len(sessionTemplatePbs) != n {
+		t.Fatalf("expected exactly %d templates, got %d", n, len(sessionTemplatePbs))
+	}
+	if !exact && (len(sessionTemplatePbs) == 0 || len(sessionTemplatePbs) > n) {
+		t.Fatalf("expected between 1 and %d session templates, got %d", n, len(sessionTemplatePbs))
+	}
+	sessionTemplates, err := serverlessspark.ToSessionTemplates(sessionTemplatePbs)
+	if err != nil {
+		t.Fatalf("failed to convert session templates to JSON: %v", err)
+	}
+
+	return sessionTemplates
+}
+
+func runGetSessionTemplateTest(t *testing.T, client *dataproc.SessionTemplateControllerClient, ctx context.Context, fullName string) {
+	req := &dataprocpb.GetSessionTemplateRequest{
+		Name: fullName,
+	}
+	rawWantSessionTemplatePb, err := client.GetSessionTemplate(ctx, req)
+	if err != nil {
+		t.Fatalf("failed to get session template: %s", err)
+	}
+
+	jsonBytes, err := protojson.Marshal(rawWantSessionTemplatePb)
+	if err != nil {
+		t.Fatalf("failed to marshal session template to JSON: %s", err)
+	}
+	var wantSessionTemplatePb dataprocpb.SessionTemplate
+	if err := protojson.Unmarshal(jsonBytes, &wantSessionTemplatePb); err != nil {
+		t.Fatalf("error unmarshalling result: %s", err)
+	}
+
+	request := map[string]any{"name": shortName(fullName)}
+	resp, err := invokeTool("get-session-template", request, nil)
+	if err != nil {
+		t.Fatalf("invokeTool failed: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+	var body map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error parsing response body: %v", err)
+	}
+	result, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+	var wrappedResult map[string]any
+	if err := json.Unmarshal([]byte(result), &wrappedResult); err != nil {
+		t.Fatalf("error unmarshalling result: %s", err)
+	}
+
+	sessionTemplateJSON, err := json.Marshal(wrappedResult["sessionTemplate"])
+	if err != nil {
+		t.Fatalf("failed to marshal session template: %v", err)
+	}
+
+	var sessionTemplate dataprocpb.SessionTemplate
+	if err := protojson.Unmarshal(sessionTemplateJSON, &sessionTemplate); err != nil {
+		t.Fatalf("error unmarshalling session template from wrapped result: %s", err)
+	}
+
+	if !cmp.Equal(&sessionTemplate, &wantSessionTemplatePb, protocmp.Transform()) {
+		diff := cmp.Diff(&sessionTemplate, &wantSessionTemplatePb, protocmp.Transform())
+		t.Errorf("GetSessionTemplate() returned diff (-got +want):\n%s", diff)
 	}
 }

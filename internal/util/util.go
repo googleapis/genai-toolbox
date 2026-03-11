@@ -190,3 +190,27 @@ func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation
 	}
 	return nil, fmt.Errorf("unable to retrieve instrumentation")
 }
+
+// GenAIMetricAttrs holds gen_ai and network attributes for metrics
+type GenAIMetricAttrs struct {
+	OperationName          string
+	ToolName               string
+	PromptName             string
+	NetworkProtocolName    string
+	NetworkProtocolVersion string
+}
+
+const genAIMetricAttrsKey contextKey = "genAIMetricAttrs"
+
+// WithGenAIMetricAttrs adds GenAIMetricAttrs to the context
+func WithGenAIMetricAttrs(ctx context.Context, attrs *GenAIMetricAttrs) context.Context {
+	return context.WithValue(ctx, genAIMetricAttrsKey, attrs)
+}
+
+// GenAIMetricAttrsFromContext retrieves GenAIMetricAttrs from context
+func GenAIMetricAttrsFromContext(ctx context.Context) *GenAIMetricAttrs {
+	if attrs, ok := ctx.Value(genAIMetricAttrsKey).(*GenAIMetricAttrs); ok {
+		return attrs
+	}
+	return nil
+}

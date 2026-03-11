@@ -13,7 +13,7 @@
 # limitations under the License.
 
 sources:
-    looker-dev-source:
+    looker-source:
         kind: looker
         base_url: ${LOOKER_BASE_URL}
         client_id: ${LOOKER_CLIENT_ID:}
@@ -28,7 +28,7 @@ sources:
 tools:
     health_pulse:
         kind: looker-health-pulse
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool performs various health checks on a Looker instance.
 
@@ -49,7 +49,7 @@ tools:
 
     health_analyze:
         kind: looker-health-analyze
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool calculates the usage statistics for Looker projects, models, and explores.
 
@@ -66,7 +66,7 @@ tools:
 
     health_vacuum:
         kind: looker-health-vacuum
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool identifies and suggests LookML models or explores that can be
           safely removed due to inactivity or low usage.
@@ -84,7 +84,7 @@ tools:
 
     dev_mode:
         kind: looker-dev-mode
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool allows toggling the Looker IDE session between Development Mode and Production Mode.
           Development Mode enables making and testing changes to LookML projects.
@@ -96,7 +96,7 @@ tools:
 
     get_projects:
         kind: looker-get-projects
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of all LookML projects available on the Looker instance.
           It is useful for identifying projects before performing actions like retrieving
@@ -111,7 +111,7 @@ tools:
 
     get_project_files:
         kind: looker-get-project-files
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of all LookML files within a specified project,
           providing details about each file.
@@ -125,7 +125,7 @@ tools:
 
     get_project_file:
         kind: looker-get-project-file
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves the raw content of a specific LookML file from within a project.
 
@@ -139,7 +139,7 @@ tools:
 
     create_project_file:
         kind: looker-create-project-file
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool creates a new LookML file within a specified project, populating
           it with the provided content.
@@ -156,7 +156,7 @@ tools:
 
     update_project_file:
         kind: looker-update-project-file
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool modifies the content of an existing LookML file within a specified project.
 
@@ -172,7 +172,7 @@ tools:
 
     delete_project_file:
         kind: looker-delete-project-file
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool permanently deletes a specified LookML file from within a project.
           Use with caution, as this action cannot be undone through the API.
@@ -188,7 +188,7 @@ tools:
 
     get_project_directories:
         kind: looker-get-project-directories
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves the list of directories within a specified LookML project.
 
@@ -200,7 +200,7 @@ tools:
 
     create_project_directory:
         kind: looker-create-project-directory
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool creates a new directory within a specified LookML project.
 
@@ -215,7 +215,7 @@ tools:
 
     delete_project_directory:
         kind: looker-delete-project-directory
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool permanently deletes a specified directory within a LookML project.
 
@@ -230,7 +230,7 @@ tools:
 
     validate_project:
         kind: looker-validate-project
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool checks a LookML project for syntax errors.
 
@@ -245,7 +245,7 @@ tools:
 
     get_connections:
         kind: looker-get-connections
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of all database connections configured in the Looker system.
 
@@ -262,7 +262,7 @@ tools:
 
     get_connection_schemas:
         kind: looker-get-connection-schemas
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of database schemas available through a specified
           Looker connection.
@@ -277,7 +277,7 @@ tools:
 
     get_connection_databases:
         kind: looker-get-connection-databases
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of databases available through a specified Looker connection.
           This is only applicable for connections that support multiple databases.
@@ -292,7 +292,7 @@ tools:
 
     get_connection_tables:
         kind: looker-get-connection-tables
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of tables available within a specified database schema
           through a Looker connection.
@@ -308,7 +308,7 @@ tools:
 
     get_connection_table_columns:
         kind: looker-get-connection-table-columns
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool retrieves a list of columns for one or more specified tables within a
           given database schema and connection.
@@ -327,7 +327,7 @@ tools:
 
     get_lookml_tests:
         kind: looker-get-lookml-tests
-        source: looker-dev-source
+        source: looker-source
         description: |
           Returns a list of tests which can be run to validate a project's LookML code and/or the underlying data, optionally filtered by the file id.
 
@@ -348,7 +348,7 @@ tools:
 
     run_lookml_tests:
         kind: looker-run-lookml-tests
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool runs LookML tests in the project, filtered by file, test, and/or model. These filters work in conjunction (logical AND).
 
@@ -372,7 +372,7 @@ tools:
 
     create_view_from_table:
         kind: looker-create-view-from-table
-        source: looker-dev-source
+        source: looker-source
         description: |
           This tool generates boilerplate LookML views directly from the database schema.
           It does not create model or explore files, only view files in the specified folder.
