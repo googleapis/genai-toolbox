@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -115,42 +115,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 [[params.versions]]
   version = "v0.17.0"
   url = "https://mcp-toolbox.dev/v0.17.0/"
-
-[[params.versions]]
-  version = "v0.16.0"
-  url = "https://mcp-toolbox.dev/v0.16.0/"
-
-[[params.versions]]
-  version = "v0.15.0"
-  url = "https://mcp-toolbox.dev/v0.15.0/"
-
-[[params.versions]]
-  version = "v0.14.0"
-  url = "https://mcp-toolbox.dev/v0.14.0/"
-
-[[params.versions]]
-  version = "v0.13.0"
-  url = "https://mcp-toolbox.dev/v0.13.0/"
-
-[[params.versions]]
-  version = "v0.12.0"
-  url = "https://mcp-toolbox.dev/v0.12.0/"
-
-[[params.versions]]
-  version = "v0.11.0"
-  url = "https://mcp-toolbox.dev/v0.11.0/"
-
-[[params.versions]]
-  version = "v0.10.0"
-  url = "https://mcp-toolbox.dev/v0.10.0/"
-
-[[params.versions]]
-  version = "v0.9.0"
-  url = "https://mcp-toolbox.dev/v0.9.0/"
-
-[[params.versions]]
-  version = "v0.8.0"
-  url = "https://mcp-toolbox.dev/v0.8.0/"
 
 [[menu.main]]
   name = "GitHub"
