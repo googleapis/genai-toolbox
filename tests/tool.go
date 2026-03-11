@@ -1025,6 +1025,44 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
+			name:    "MCP Invoke my-custom-client-auth-tool with custom access token",
+			enabled: configs.supportClientAuth,
+			api:     "http://127.0.0.1:5000/mcp",
+			// Note: This assumes my-custom-client-auth-tool is configured to use X-Custom-Auth
+			requestHeader: map[string]string{"X-Custom-Auth": accessToken},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-custom-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-custom-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusOK,
+			wantBody:       "{\"jsonrpc\":\"2.0\",\"id\":\"invoke my-custom-client-auth-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"f0_\\\":1}\"}]}}",
+		},
+		{
+			name:          "MCP Invoke my-custom-client-auth-tool without access token",
+			enabled:       configs.supportClientAuth,
+			api:           "http://127.0.0.1:5000/mcp",
+			requestHeader: map[string]string{},
+			requestBody: jsonrpc.JSONRPCRequest{
+				Jsonrpc: "2.0",
+				Id:      "invoke my-custom-client-auth-tool",
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: map[string]any{
+					"name":      "my-custom-client-auth-tool",
+					"arguments": map[string]any{},
+				},
+			},
+			wantStatusCode: http.StatusUnauthorized,
+		},
+		{
 			name:          "MCP Invoke my-fail-tool",
 			api:           "http://127.0.0.1:5000/mcp",
 			enabled:       true,
