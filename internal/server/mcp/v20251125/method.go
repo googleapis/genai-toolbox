@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
@@ -29,6 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -109,6 +111,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Populate gen_ai attributes for operation duration metric
+	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
+		genAIAttrs.OperationName = "execute_tool"
+		genAIAttrs.ToolName = toolName
 	}
 
 	// Get access token
@@ -203,8 +211,34 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
+	// Get instrumentation for recording tool execution duration
+	instrumentation, instrumentationErr := util.InstrumentationFromContext(ctx)
+
 	// run tool invocation and generate response.
+	executionStart := time.Now()
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
+	executionDuration := time.Since(executionStart).Seconds()
+
+	// Record tool execution duration metric
+	if instrumentationErr == nil {
+		execAttrs := []attribute.KeyValue{
+			attribute.String("gen_ai.tool.name", toolName),
+		}
+		// Add network protocol attributes from context
+		if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
+			if genAIAttrs.NetworkProtocolName != "" {
+				execAttrs = append(execAttrs, attribute.String("network.protocol.name", genAIAttrs.NetworkProtocolName))
+			}
+			if genAIAttrs.NetworkProtocolVersion != "" {
+				execAttrs = append(execAttrs, attribute.String("network.protocol.version", genAIAttrs.NetworkProtocolVersion))
+			}
+		}
+		if err != nil {
+			execAttrs = append(execAttrs, attribute.String("error.type", err.Error()))
+		}
+		instrumentation.ToolExecutionDuration.Record(ctx, executionDuration, metric.WithAttributes(execAttrs...))
+	}
+
 	if err != nil {
 		var tbErr util.ToolboxError
 
@@ -324,6 +358,12 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Populate gen_ai attributes for operation duration metric
+	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
+		genAIAttrs.OperationName = "get_prompt"
+		genAIAttrs.PromptName = promptName
 	}
 
 	// Parse the arguments provided in the request.

@@ -183,7 +183,7 @@ func TestGenerateSkillMarkdown(t *testing.T) {
 		},
 	}
 
-	got, err := generateSkillMarkdown("MySkill", "My Description", toolsMap, nil)
+	got, err := generateSkillMarkdown("MySkill", "My Description", "Some extra notes", toolsMap, nil)
 	if err != nil {
 		t.Fatalf("generateSkillMarkdown() error = %v", err)
 	}
@@ -197,6 +197,7 @@ func TestGenerateSkillMarkdown(t *testing.T) {
 		"`node <skill_dir>/scripts/<script_name>.js '{\"<param_name>\": \"<param_value>\"}'`",
 		"**PowerShell:**",
 		"`node <skill_dir>/scripts/<script_name>.js '{\"<param_name>\": \"<param_value>\"}'`",
+		"Some extra notes",
 		"## Scripts",
 		"### tool1",
 		"First tool",
