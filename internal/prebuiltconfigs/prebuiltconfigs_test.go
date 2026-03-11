@@ -63,6 +63,7 @@ var expectedToolSources = []string{
 func TestGetPrebuiltSources(t *testing.T) {
 	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
 		sources := GetPrebuiltSources()
+		slices.Sort(expectedToolSources)
 		slices.Sort(sources)
 		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
@@ -97,6 +98,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		t.Log(expectedKeys)
 		t.Log(keys)
 
+		slices.Sort(expectedKeys)
 		slices.Sort(keys)
 		if diff := cmp.Diff(expectedKeys, keys); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
