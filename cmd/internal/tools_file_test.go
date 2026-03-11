@@ -1773,7 +1773,11 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"data": tools.ToolsetConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
+				},
+				"monitor": tools.ToolsetConfig{
+					Name:      "monitor",
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_tables_missing_unique_indexes"},
 				},
 			},
 		},
@@ -1823,19 +1827,23 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"data": tools.ToolsetConfig{
 					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "get_query_plan", "list_stored_procedure", "list_sequences", "list_indexes"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "list_database_stats"},
+					ToolNames: []string{"list_query_stats", "get_query_plan", "list_database_stats", "list_active_queries", "long_running_transactions", "list_locks"},
 				},
-				"optimize": tools.ToolsetConfig{
-					Name:      "optimize",
-					ToolNames: []string{"list_query_stats", "list_table_stats", "get_column_cardinality", "list_top_bloated_tables", "list_invalid_indexes", "list_autovacuum_configurations"},
+				"health": tools.ToolsetConfig{
+					Name:      "health",
+					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "list_pg_settings"},
 				},
-				"config": tools.ToolsetConfig{
-					Name:      "config",
-					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_pg_settings", "list_memory_configurations", "list_roles", "replication_stats", "list_replication_slots", "list_publication_tables"},
+				"view-config": tools.ToolsetConfig{
+					Name:      "view-config",
+					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview"},
+				},
+				"replication": tools.ToolsetConfig{
+					Name:      "replication",
+					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_roles", "list_pg_settings", "database_overview"},
 				},
 			},
 		},
