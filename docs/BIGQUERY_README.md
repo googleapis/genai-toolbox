@@ -74,7 +74,7 @@ The BigQuery MCP server is configured using environment variables.
 ```bash
 export BIGQUERY_PROJECT="<your-gcp-project-id>"
 export BIGQUERY_LOCATION="<your-dataset-location>"  # Optional
-export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional
+export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional: true, false, or a custom header name
 export BIGQUERY_SCOPES="<comma-separated-scopes>"  # Optional
 ```
 
