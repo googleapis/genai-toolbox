@@ -17,6 +17,7 @@ package http
 import (
 	
 	"context"
+	"os"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -365,7 +366,10 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
 	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
 
-	clientId := tests.ClientId
+	clientId := os.Getenv("CLIENT_ID")
+	if clientId == "" {
+		clientId = "test-client-id"
+	}
 
 	toolsFile := map[string]any{
 		"sources": map[string]any{
