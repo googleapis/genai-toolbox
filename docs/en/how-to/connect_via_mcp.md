@@ -151,7 +151,7 @@ testing and debugging Toolbox server.
    tools!
 {{% /tab %}}
 {{% tab header="Streamable HTTP" lang="en" %}}
-1. [Run Toolbox](../getting-started/introduction/#running-the-server).
+1. [Run Toolbox](../getti/introduction/#running-the-server).
 
 1. In a separate terminal, run Inspector directly through `npx`:
 

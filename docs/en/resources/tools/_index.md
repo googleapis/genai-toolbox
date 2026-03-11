@@ -200,7 +200,7 @@ information decoded from [ID
 tokens](../authServices/#specifying-id-tokens-from-clients) that are passed in
 request headers. They do not take input values in request bodies like other
 parameters. To use authenticated parameters, you must configure the tool to map
-the required [authServices](../authServices/) to specific claims within the
+the required [authServices](..//) to specific claims within the
 user's ID token.
 
 ```yaml
@@ -297,7 +297,7 @@ templateParameters:
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
-[authServices](../authServices/) defined in the previous section.
+[authServices](../authSrvices/) defined in the previous section.
 
 ```yaml
 kind: tools
