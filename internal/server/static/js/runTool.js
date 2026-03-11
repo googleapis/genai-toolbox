@@ -15,7 +15,7 @@
 import { isParamIncluded } from "./toolDisplay.js";
 
 /**
- * Runs a specific tool using the /api/tools/toolName/invoke endpoint
+ * Runs a specific tool using the MCP /mcp JSON-RPC endpoint
  * @param {string} toolId The unique identifier for the tool.
  * @param {!HTMLFormElement} form The form element containing parameter inputs.
  * @param {!HTMLTextAreaElement} responseArea The textarea to display results or errors.
@@ -80,16 +80,35 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
 
     console.debug('Running tool:', toolId, 'with typed params:', typedParams);
     try {
-        const response = await fetch(`/api/tool/${toolId}/invoke`, {
+        const rpcPayload = {
+            jsonrpc: "2.0",
+            id: crypto.randomUUID(),
+            method: "tools/call",
+            params: {
+                name: toolId,
+                arguments: typedParams
+            }
+        };
+
+        const response = await fetch(`/mcp`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(typedParams)
+            body: JSON.stringify(rpcPayload)
         });
+
         if (!response.ok) {
             const errorBody = await response.text();
             throw new Error(`HTTP error ${response.status}: ${errorBody}`);
         }
-        const results = await response.json();
+
+        const rpcResponse = await response.json();
+        
+        if (rpcResponse.error) {
+            throw new Error(`MCP error ${rpcResponse.error.code}: ${rpcResponse.error.message}`);
+        }
+
+        const results = rpcResponse.result;
+
         updateLastResults(results);
         displayResults(results, responseArea, prettifyCheckbox.checked);
     } catch (error) {
@@ -145,7 +164,12 @@ export function displayResults(results, responseArea, prettify) {
         return;
     }
     try {
-        const resultJson = JSON.parse(results.result);
+        let content = results;
+        if (results.content && results.content.length > 0 && results.content[0].text) {
+             content = results.content[0].text;
+        }
+
+        const resultJson = JSON.parse(content);
         if (prettify) {
             responseArea.value = JSON.stringify(resultJson, null, 2);
         } else {
@@ -153,10 +177,12 @@ export function displayResults(results, responseArea, prettify) {
         }
     } catch (error) {
         console.error("Error parsing or stringifying results:", error);
-        if (typeof results.result === 'string') {
-            responseArea.value = results.result;
+        if (results.content && results.content.length > 0 && results.content[0].text) {
+             responseArea.value = results.content[0].text;
+        } else if (typeof results === 'string') {
+             responseArea.value = results;
         } else {
-            responseArea.value = "Error displaying results. Invalid format.";
+             responseArea.value = JSON.stringify(results, null, 2);
         }
     }
 }

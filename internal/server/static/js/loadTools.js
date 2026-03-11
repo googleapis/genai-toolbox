@@ -27,12 +27,31 @@ let toolDetailsAbortController = null;
 export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) {
     secondNavContent.innerHTML = '<p>Fetching tools...</p>';
     try {
-        const response = await fetch(`/api/toolset/${toolsetName}`);
+        const rpcPayload = {
+            jsonrpc: "2.0",
+            id: crypto.randomUUID(),
+            method: "tools/list",
+            params: {}
+        };
+
+        const response = await fetch('/mcp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(rpcPayload)
+        });
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const apiResponse = await response.json();
-        renderToolList(apiResponse, secondNavContent, toolDisplayArea);
+        
+        if (apiResponse.error) {
+            throw new Error(`MCP error ${apiResponse.error.code}: ${apiResponse.error.message}`);
+        }
+
+        renderToolList(apiResponse.result, secondNavContent, toolDisplayArea);
     } catch (error) {
         console.error('Failed to load tools:', error);
         secondNavContent.innerHTML = `<p class="error">Failed to load tools: <pre><code>${escapeHtml(String(error))}</code></pre></p>`;
@@ -48,14 +67,14 @@ export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) 
 function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
     secondNavContent.innerHTML = '';
 
-    if (!apiResponse || typeof apiResponse.tools !== 'object' || apiResponse.tools === null) {
-        console.error('Error: Expected an object with a "tools" property, but received:', apiResponse);
-        secondNavContent.textContent = 'Error: Invalid response format from toolset API.';
+    if (!apiResponse || !Array.isArray(apiResponse.tools)) {
+        console.error('Error: Expected a "tools" array, but received:', apiResponse);
+        secondNavContent.textContent = 'Error: Invalid response format from tools API.';
         return;
     }
 
-    const toolsObject = apiResponse.tools;
-    const toolNames = Object.keys(toolsObject);
+    const toolsArray = apiResponse.tools;
+    const toolNames = toolsArray.map(t => t.name);
 
     if (toolNames.length === 0) {
         secondNavContent.textContent = 'No tools found.';
@@ -113,56 +132,80 @@ async function fetchToolDetails(toolName, toolDisplayArea) {
     toolDisplayArea.innerHTML = '<p>Loading tool details...</p>';
 
     try {
-        const response = await fetch(`/api/tool/${encodeURIComponent(toolName)}`, { signal });
-        if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const apiResponse = await response.json();
+        const rpcPayload = {
+            jsonrpc: "2.0",
+            id: crypto.randomUUID(),
+            method: "tools/list",
+            params: {}
+        };
 
-        if (!apiResponse.tools || !apiResponse.tools[toolName]) {
+        const response = await fetch('/mcp', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rpcPayload),
+            signal 
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const apiResponse = await response.json();
+        if (apiResponse.error) {
+            throw new Error(`MCP error ${apiResponse.error.code}: ${apiResponse.error.message}`);
+        }
+
+        const toolsArray = apiResponse.result?.tools || [];
+        const toolObject = toolsArray.find(t => t.name === toolName);
+
+        if (!toolObject) {
             throw new Error(`Tool "${toolName}" data not found in API response.`);
         }
-        const toolObject = apiResponse.tools[toolName];
         console.debug("Received tool object: ", toolObject)
 
+        // Parse MCP JSON Schema parameters back into internal UI format
+        let parameters = [];
+        if (toolObject.inputSchema && toolObject.inputSchema.properties) {
+             const props = toolObject.inputSchema.properties;
+             const requiredCols = toolObject.inputSchema.required || [];
+             parameters = Object.keys(props).map(paramName => {
+                 const paramSchema = props[paramName];
+                 let inputType = 'text'; 
+                 const apiType = paramSchema.type ? paramSchema.type.toLowerCase() : 'string';
+                 let valueType = 'string'; 
+                 let label = paramSchema.description || paramName;
+
+                 if (apiType === 'integer' || apiType === 'number') {
+                     inputType = 'number';
+                     valueType = 'number';
+                 } else if (apiType === 'boolean') {
+                     inputType = 'checkbox';
+                     valueType = 'boolean';
+                 } else if (apiType === 'array') {
+                     inputType = 'textarea'; 
+                     const itemType = paramSchema.items && paramSchema.items.type ? paramSchema.items.type.toLowerCase() : 'string';
+                     valueType = `array<${itemType}>`;
+                     label += ' (Array)';
+                 }
+
+                 return {
+                     name: paramName,
+                     type: inputType,    
+                     valueType: valueType, 
+                     label: label,
+                     required: requiredCols.includes(paramName)
+                 };
+             });
+        }
+
         const toolInterfaceData = {
-            id: toolName,
-            name: toolName,
-            description: toolObject.description || "No description provided.",
-            authRequired: toolObject.authRequired || [],
-            parameters: (toolObject.parameters || []).map(param => {
-                let inputType = 'text'; 
-                const apiType = param.type ? param.type.toLowerCase() : 'string';
-                let valueType = 'string'; 
-                let label = param.description || param.name;
-
-                if (apiType === 'integer' || apiType === 'float') {
-                    inputType = 'number';
-                    valueType = 'number';
-                } else if (apiType === 'boolean') {
-                    inputType = 'checkbox';
-                    valueType = 'boolean';
-                } else if (apiType === 'array') {
-                    inputType = 'textarea'; 
-                    const itemType = param.items && param.items.type ? param.items.type.toLowerCase() : 'string';
-                    valueType = `array<${itemType}>`;
-                    label += ' (Array)';
-                }
-
-                return {
-                    name: param.name,
-                    type: inputType,    
-                    valueType: valueType, 
-                    label: label,
-                    authServices: param.authSources,
-                    required: param.required || false,
-                    // defaultValue: param.default, can't do this yet bc tool manifest doesn't have default
-                };
-            })
+             id: toolObject.name,
+             name: toolObject.name,
+             description: toolObject.description || "No description provided.",
+             parameters: parameters
         };
 
         console.debug("Transformed toolInterfaceData:", toolInterfaceData);
-
         renderToolInterface(toolInterfaceData, toolDisplayArea);
     } catch (error) {
         if (error.name === 'AbortError') {
