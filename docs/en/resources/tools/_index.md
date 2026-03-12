@@ -49,6 +49,39 @@ parameters:
     description: 1 to 4 digit number
 ```
 
+## Prebuilt vs. Custom Tools
+
+MCP Toolbox provides two main approaches for tools: **prebuilt** and **custom**.
+
+[**Prebuilt tools**](../../reference/prebuilt-tools.md) are ready to use out of
+the box. For example, a tool like
+[`postgres-execute-sql`](postgres/postgres-execute-sql.md) has fixed parameters
+and always works the same way, allowing the agent to execute arbitrary SQL.
+While these are convenient, they are typically only safe when a developer is in
+the loop (e.g., during prototyping, developing, or debugging).
+
+For application use cases, you need to be wary of security risks such as prompt
+injection or data poisoning. Allowing an LLM to execute arbitrary queries in
+production is highly dangerous.
+
+To secure your application, you should **use custom tools** to suit your
+specific schema and application needs. Creating a custom tool restricts the
+agent's capabilities to only what is necessary. For example, you can use the
+[`postgres-sql`](postgres/postgres-sql.md) tool to define a specific action. This
+typically involves:
+
+*   **Prepared Statements:** Writing a SQL query ahead of time and letting the
+    agent only fill in specific [basic parameters](#basic-parameters).
+*   [**Bound Parameters:**](../../sdks/python-sdk/core/#option-a-binding-parameters-to-a-loaded-tool)
+    Passing parameters directly to the underlying engine as bound variables
+    rather than allowing the LLM to provide them.
+*   **Secure Parameters:** Using mechanisms like [authenticated
+    parameters](#authenticated-parameters) to restrict what data the agent can
+    access based on the logged-in user.
+
+By creating custom tools, you significantly reduce the attack surface and ensure
+the agent operates within defined, safe boundaries.
+
 ## Specifying Parameters
 
 Parameters for each Tool will define what inputs the agent will need to provide
@@ -277,6 +310,59 @@ statement: |
 authRequired:
   - my-google-auth
   - other-auth-service
+```
+
+## Tool Annotations
+
+Tool annotations provide semantic metadata that helps MCP clients understand tool
+behavior. These hints enable clients to make better decisions about tool usage
+and provide appropriate user experiences.
+
+### Available Annotations
+
+| **annotation**     |  **type**   | **default** | **description**                                                        |
+|--------------------|:-----------:|:-----------:|------------------------------------------------------------------------|
+| readOnlyHint       |    bool     |    false    | Tool only reads data, no modifications to the environment.             |
+| destructiveHint    |    bool     |    true     | Tool may create, update, or delete data.                               |
+| idempotentHint     |    bool     |    false    | Repeated calls with same arguments have no additional effect.          |
+| openWorldHint      |    bool     |    true     | Tool interacts with external entities beyond its local environment.    |
+
+### Specifying Annotations
+
+Annotations can be specified in YAML tool configuration:
+
+```yaml
+tools:
+  my_query_tool:
+    kind: mongodb-find-one
+    source: my-mongodb
+    description: Find a single document
+    database: mydb
+    collection: users
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+```
+
+### Default Annotations
+
+If not specified, tools use sensible defaults based on their operation type:
+
+- **Read operations** (find, aggregate, list): `readOnlyHint: true`
+- **Write operations** (insert, update, delete): `destructiveHint: true`, `readOnlyHint: false`
+
+### MCP Client Response
+
+Annotations appear in the `tools/list` MCP response:
+
+```json
+{
+  "name": "my_query_tool",
+  "description": "Find a single document",
+  "annotations": {
+    "readOnlyHint": true
+  }
+}
 ```
 
 ## Kinds of tools

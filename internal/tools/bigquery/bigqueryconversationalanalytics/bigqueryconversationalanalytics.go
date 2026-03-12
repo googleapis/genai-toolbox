@@ -63,6 +63,7 @@ type compatibleSource interface {
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -241,9 +242,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
 
 	headers := map[string]string{
-		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":      "application/json",
-		"X-Goog-API-Client": util.GDAClientID,
+		source.GetAuthTokenHeaderName(): fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":                  "application/json",
+		"X-Goog-API-Client":             util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -482,30 +483,33 @@ func handleTextResponse(resp *TextResponse) map[string]any {
 }
 
 func handleSchemaResponse(resp *SchemaResponse) map[string]any {
+	res := make(map[string]any)
 	if resp.Query != nil {
-		return map[string]any{"Question": resp.Query.Question}
+		res["Question"] = resp.Query.Question
 	}
 	if resp.Result != nil {
 		var formattedSources []map[string]any
 		for _, ds := range resp.Result.Datasources {
 			formattedSources = append(formattedSources, formatDatasourceAsDict(&ds))
 		}
-		return map[string]any{"Schema Resolved": formattedSources}
+		res["Schema Resolved"] = formattedSources
 	}
-	return nil
+	if len(res) == 0 {
+		return nil
+	}
+	return res
 }
 
 func handleDataResponse(resp *DataResponse, maxRows int) map[string]any {
+	res := make(map[string]any)
 	if resp.Query != nil {
-		return map[string]any{
-			"Retrieval Query": map[string]any{
-				"Query Name": resp.Query.Name,
-				"Question":   resp.Query.Question,
-			},
+		res["Retrieval Query"] = map[string]any{
+			"Query Name": resp.Query.Name,
+			"Question":   resp.Query.Question,
 		}
 	}
 	if resp.GeneratedSQL != "" {
-		return map[string]any{"SQL Generated": resp.GeneratedSQL}
+		res["SQL Generated"] = resp.GeneratedSQL
 	}
 	if resp.Result != nil {
 		var headers []string
@@ -533,15 +537,16 @@ func handleDataResponse(resp *DataResponse, maxRows int) map[string]any {
 			summary = fmt.Sprintf("Showing the first %d of %d total rows.", numRowsToDisplay, totalRows)
 		}
 
-		return map[string]any{
-			"Data Retrieved": map[string]any{
-				"headers": headers,
-				"rows":    compactRows,
-				"summary": summary,
-			},
+		res["Data Retrieved"] = map[string]any{
+			"headers": headers,
+			"rows":    compactRows,
+			"summary": summary,
 		}
 	}
-	return nil
+	if len(res) == 0 {
+		return nil
+	}
+	return res
 }
 
 func handleError(resp *ErrorResponse) map[string]any {
@@ -557,16 +562,28 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 	if newMessage == nil {
 		return messages
 	}
-	if len(messages) > 0 {
-		if _, ok := messages[len(messages)-1]["Data Retrieved"]; ok {
-			messages = messages[:len(messages)-1]
+
+	if _, hasData := newMessage["Data Retrieved"]; hasData {
+		// Only keep the last data result while preserving SQL and other metadata.
+		for i := len(messages) - 1; i >= 0; i-- {
+			if _, ok := messages[i]["Data Retrieved"]; ok {
+				delete(messages[i], "Data Retrieved")
+				if len(messages[i]) == 0 {
+					messages = append(messages[:i], messages[i+1:]...)
+				}
+				break
+			}
 		}
 	}
 	return append(messages, newMessage)
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	if err != nil {
+		return "", err
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }
 
 func (t Tool) GetParameters() parameters.Parameters {

@@ -18,6 +18,9 @@ node_modules
 # coverage
 .coverage
 
+# python
+__pycache__/
+
 # executable
 genai-toolbox
 toolbox

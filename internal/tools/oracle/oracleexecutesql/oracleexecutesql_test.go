@@ -16,6 +16,9 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
+
+	valTrue := true
+	valFalse := false
 	tcs := []struct {
 		desc string
 		in   string
@@ -57,6 +60,48 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 					Type:         "oracle-execute-sql",
 					Source:       "db-dev",
 					Description:  "Runs a simple update operation.",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "example with explicit readOnly true",
+			in: `
+            kind: tools
+            name: safe_query
+            type: oracle-execute-sql
+            source: db-prod
+            description: Safe read operation.
+            readOnly: true
+            `,
+			want: server.ToolConfigs{
+				"safe_query": oracleexecutesql.Config{
+					Name:         "safe_query",
+					Type:         "oracle-execute-sql",
+					Source:       "db-prod",
+					Description:  "Safe read operation.",
+					ReadOnly:     &valTrue,
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "example with explicit readOnly false (DML)",
+			in: `
+            kind: tools
+            name: update_user
+            type: oracle-execute-sql
+            source: db-prod
+            description: Updates user table.
+            readOnly: false
+            `,
+			want: server.ToolConfigs{
+				"update_user": oracleexecutesql.Config{
+					Name:         "update_user",
+					Type:         "oracle-execute-sql",
+					Source:       "db-prod",
+					Description:  "Updates user table.",
+					ReadOnly:     &valFalse,
 					AuthRequired: []string{},
 				},
 			},

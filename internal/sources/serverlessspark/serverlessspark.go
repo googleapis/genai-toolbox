@@ -17,6 +17,7 @@ package serverlessspark
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -69,19 +70,29 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("error in User Agent retrieval: %s", err)
 	}
 	endpoint := fmt.Sprintf("%s-dataproc.googleapis.com:443", r.Location)
-	client, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
+	batchClient, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create dataproc client: %w", err)
+		return nil, fmt.Errorf("failed to create dataproc batch client: %w", err)
+	}
+	sessionTemplateClient, err := dataproc.NewSessionTemplateControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dataproc session template client: %w", err)
 	}
 	opsClient, err := longrunning.NewOperationsClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create longrunning client: %w", err)
 	}
+	sessionClient, err := dataproc.NewSessionControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dataproc session client: %w", err)
+	}
 
 	s := &Source{
-		Config:    r,
-		Client:    client,
-		OpsClient: opsClient,
+		Config:                r,
+		BatchClient:           batchClient,
+		SessionTemplateClient: sessionTemplateClient,
+		OpsClient:             opsClient,
+		SessionClient:         sessionClient,
 	}
 	return s, nil
 }
@@ -90,8 +101,10 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client    *dataproc.BatchControllerClient
-	OpsClient *longrunning.OperationsClient
+	BatchClient           *dataproc.BatchControllerClient
+	SessionTemplateClient *dataproc.SessionTemplateControllerClient
+	OpsClient             *longrunning.OperationsClient
+	SessionClient         *dataproc.SessionControllerClient
 }
 
 func (s *Source) SourceType() string {
@@ -111,7 +124,15 @@ func (s *Source) GetLocation() string {
 }
 
 func (s *Source) GetBatchControllerClient() *dataproc.BatchControllerClient {
-	return s.Client
+	return s.BatchClient
+}
+
+func (s *Source) GetSessionTemplateControllerClient() *dataproc.SessionTemplateControllerClient {
+	return s.SessionTemplateClient
+}
+
+func (s *Source) GetSessionControllerClient() *dataproc.SessionControllerClient {
+	return s.SessionClient
 }
 
 func (s *Source) GetOperationsClient(ctx context.Context) (*longrunning.OperationsClient, error) {
@@ -119,13 +140,7 @@ func (s *Source) GetOperationsClient(ctx context.Context) (*longrunning.Operatio
 }
 
 func (s *Source) Close() error {
-	if err := s.Client.Close(); err != nil {
-		return err
-	}
-	if err := s.OpsClient.Close(); err != nil {
-		return err
-	}
-	return nil
+	return errors.Join(s.BatchClient.Close(), s.SessionClient.Close(), s.SessionTemplateClient.Close(), s.OpsClient.Close())
 }
 
 func (s *Source) CancelOperation(ctx context.Context, operation string) (any, error) {
@@ -291,4 +306,172 @@ func (s *Source) GetBatch(ctx context.Context, name string) (map[string]any, err
 	}
 
 	return wrappedResult, nil
+}
+
+// SessionTemplate represents a single session template.
+type SessionTemplate struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Creator     string `json:"creator"`
+	CreateTime  string `json:"createTime"`
+}
+
+func (s *Source) GetSessionTemplate(ctx context.Context, name string) (map[string]any, error) {
+	client := s.GetSessionTemplateControllerClient()
+	req := &dataprocpb.GetSessionTemplateRequest{
+		Name: fmt.Sprintf("projects/%s/locations/%s/sessionTemplates/%s", s.GetProject(), s.GetLocation(), name),
+	}
+
+	sessionTemplatePb, err := client.GetSessionTemplate(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session template: %w", err)
+	}
+
+	jsonBytes, err := protojson.Marshal(sessionTemplatePb)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal session template to JSON: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(jsonBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal session template JSON: %w", err)
+	}
+
+	wrappedResult := map[string]any{
+		"sessionTemplate": result,
+	}
+
+	return wrappedResult, nil
+}
+
+// ToSessionTemplates converts a slice of protobuf SessionTemplate messages to a slice of SessionTemplate structs.
+func ToSessionTemplates(sessionTemplatePbs []*dataprocpb.SessionTemplate) ([]SessionTemplate, error) {
+	sessionTemplates := make([]SessionTemplate, 0, len(sessionTemplatePbs))
+	for _, sessionTemplatePb := range sessionTemplatePbs {
+
+		sessionTemplate := SessionTemplate{
+			Name:        sessionTemplatePb.Name,
+			Description: sessionTemplatePb.Description,
+			Creator:     sessionTemplatePb.Creator,
+			CreateTime:  sessionTemplatePb.CreateTime.AsTime().Format(time.RFC3339),
+		}
+		sessionTemplates = append(sessionTemplates, sessionTemplate)
+	}
+	return sessionTemplates, nil
+}
+
+// ListSessionsResponse is the response from the list sessions API.
+type ListSessionsResponse struct {
+	Sessions      []Session `json:"sessions"`
+	NextPageToken string    `json:"nextPageToken"`
+}
+
+// Session represents a single session job.
+type Session struct {
+	Name       string `json:"name"`
+	UUID       string `json:"uuid"`
+	State      string `json:"state"`
+	Creator    string `json:"creator"`
+	CreateTime string `json:"createTime"`
+	ConsoleURL string `json:"consoleUrl"`
+	LogsURL    string `json:"logsUrl"`
+}
+
+func (s *Source) ListSessions(ctx context.Context, ps *int, pt, filter string) (any, error) {
+	client := s.GetSessionControllerClient()
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.GetProject(), s.GetLocation())
+	req := &dataprocpb.ListSessionsRequest{
+		Parent: parent,
+	}
+
+	if ps != nil {
+		req.PageSize = int32(*ps)
+	}
+	if pt != "" {
+		req.PageToken = pt
+	}
+	if filter != "" {
+		req.Filter = filter
+	}
+
+	it := client.ListSessions(ctx, req)
+	pager := iterator.NewPager(it, int(req.PageSize), req.PageToken)
+
+	var sessionPbs []*dataprocpb.Session
+	nextPageToken, err := pager.NextPage(&sessionPbs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list sessions: %w", err)
+	}
+
+	sessions, err := ToSessions(sessionPbs)
+	if err != nil {
+		return nil, err
+	}
+
+	return ListSessionsResponse{Sessions: sessions, NextPageToken: nextPageToken}, nil
+}
+
+func (s *Source) GetSession(ctx context.Context, name string) (map[string]any, error) {
+	client := s.GetSessionControllerClient()
+	req := &dataprocpb.GetSessionRequest{
+		Name: fmt.Sprintf("projects/%s/locations/%s/sessions/%s", s.GetProject(), s.GetLocation(), name),
+	}
+
+	sessionPb, err := client.GetSession(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session: %w", err)
+	}
+
+	jsonBytes, err := protojson.Marshal(sessionPb)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal session to JSON: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(jsonBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal session JSON: %w", err)
+	}
+
+	consoleUrl, err := SessionConsoleURLFromProto(sessionPb)
+	if err != nil {
+		return nil, fmt.Errorf("error generating console url: %v", err)
+	}
+	logsUrl, err := SessionLogsURLFromProto(sessionPb)
+	if err != nil {
+		return nil, fmt.Errorf("error generating logs url: %v", err)
+	}
+
+	wrappedResult := map[string]any{
+		"consoleUrl": consoleUrl,
+		"logsUrl":    logsUrl,
+		"session":    result,
+	}
+
+	return wrappedResult, nil
+}
+
+// ToSessions converts a slice of protobuf Session messages to a slice of Session structs.
+func ToSessions(sessionPbs []*dataprocpb.Session) ([]Session, error) {
+	sessions := make([]Session, 0, len(sessionPbs))
+	for _, sessionPb := range sessionPbs {
+		consoleUrl, err := SessionConsoleURLFromProto(sessionPb)
+		if err != nil {
+			return nil, fmt.Errorf("error generating console url: %v", err)
+		}
+		logsUrl, err := SessionLogsURLFromProto(sessionPb)
+		if err != nil {
+			return nil, fmt.Errorf("error generating logs url: %v", err)
+		}
+		session := Session{
+			Name:       sessionPb.Name,
+			UUID:       sessionPb.Uuid,
+			State:      sessionPb.State.Enum().String(),
+			Creator:    sessionPb.Creator,
+			CreateTime: sessionPb.CreateTime.AsTime().Format(time.RFC3339),
+			ConsoleURL: consoleUrl,
+			LogsURL:    logsUrl,
+		}
+		sessions = append(sessions, session)
+	}
+	return sessions, nil
 }

@@ -11,9 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@llamaindex/google": "^0.3.20",
-    "@llamaindex/workflow": "^1.1.22",
-    "@toolbox-sdk/core": "^0.1.2",
-    "llamaindex": "^0.12.0"
+    "@llamaindex/core": "^0.6.22",
+    "@llamaindex/google": "^0.4.0",
+    "@llamaindex/workflow": "^1.1.24",
+    "llamaindex": "0.12.1",
+    "@toolbox-sdk/core": "^0.3.0"
   }
 }
