@@ -13,3 +13,4 @@ description: >
 - [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
 - [serverless-spark-get-session](./serverless-spark-get-session.md)
 - [serverless-spark-list-sessions](./serverless-spark-list-sessions.md)
+- [serverless-spark-get-session-template](./serverless-spark-get-session-template.md)
