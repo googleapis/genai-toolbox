@@ -99,8 +99,8 @@ When implementing `Invoke()` or `ParseParams()`, you must return the appropriate
 
 | Category | Description | HTTP Status | MCP Result |
 |---|---|---|---|
-| **Agent Error** (`ToolCallAgentError`) | Input/Execution logic errors (e.g., SQL syntax, missing records, invalid params). The agent can fix this. | 200 OK | `isError: true` |
-| **Server Error** (`ToolCallServerError`) | Infrastructure failures (e.g., DB down, auth failure, network failure). The agent cannot fix this. | 500 Internal Error | JSON-RPC Error |
+| **Agent Error** (`AgentError`) | Input/Execution logic errors (e.g., SQL syntax, missing records, invalid params). The agent can fix this. | 200 OK | `isError: true` |
+| **Server Error** (`ClientServerError`) | Infrastructure failures (e.g., DB down, auth failure, network failure). The agent cannot fix this. | 500 Internal Error | JSON-RPC Error |
 
 #### Implementation Guidelines
 
@@ -116,16 +116,14 @@ When implementing `Invoke()` or `ParseParams()`, you must return the appropriate
 
 **Example:**
 
-```go
-func (t *MyTool) Invoke(ctx context.Context, params parameters.ParamValues) (any, util.ToolboxError) {
+func (t *MyTool) Invoke(ctx context.Context, sp tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
     res, err := t.db.Exec(ctx, params.SQL)
     if err != nil {
         // Driver error is likely a syntax issue the LLM can fix
-        return nil, &util.AgentError{"invalid or missing 'project' parameter; expected a non-empty string", err}
+        return nil, util.NewAgentError("error executing SQL query", err)
     }
     return res, nil
 }
-```
 
 ## Implementation Guides
 
