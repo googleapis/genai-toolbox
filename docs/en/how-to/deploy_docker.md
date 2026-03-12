@@ -67,7 +67,7 @@ networks:
 
 ```
 
-    {{< notice tip >}}  
+{{< notice tip >}}  
 To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
 list of hosts for validation. E.g. `command: ["--tools-file",
 "/config/tools.yaml", "--address", "0.0.0.0","--allowed-hosts",
