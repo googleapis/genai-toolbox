@@ -235,3 +235,33 @@ func TestSessionLogsURL_Escaping(t *testing.T) {
 		t.Errorf("SessionLogsURL_Escaping() = \n%v\nwant \n%v", got, want)
 	}
 }
+
+func TestExtractSessionTemplateDetails_Success(t *testing.T) {
+	sessionTemplateName := "projects/my-project/locations/us-central1/sessionTemplates/my-session-template"
+	projectID, location, sessionTemplateID, err := serverlessspark.ExtractSessionTemplateDetails(sessionTemplateName)
+	if err != nil {
+		t.Errorf("ExtractSessionTemplateDetails() error = %v, want no error", err)
+		return
+	}
+	wantProject := "my-project"
+	wantLocation := "us-central1"
+	wantSessionTemplateID := "my-session-template"
+	if projectID != wantProject {
+		t.Errorf("ExtractSessionTemplateDetails() projectID = %v, want %v", projectID, wantProject)
+	}
+	if location != wantLocation {
+		t.Errorf("ExtractSessionTemplateDetails() location = %v, want %v", location, wantLocation)
+	}
+	if sessionTemplateID != wantSessionTemplateID {
+		t.Errorf("ExtractSessionTemplateDetails() sessionTemplateID = %v, want %v", sessionTemplateID, wantSessionTemplateID)
+	}
+}
+
+func TestExtractSessionTemplateDetails_Failure(t *testing.T) {
+	sessionTemplateName := "invalid-name"
+	_, _, _, err := serverlessspark.ExtractSessionTemplateDetails(sessionTemplateName)
+	wantErr := "failed to parse session template name: invalid-name"
+	if err == nil || err.Error() != wantErr {
+		t.Errorf("ExtractSessionTemplateDetails() error = %v, want %v", err, wantErr)
+	}
+}

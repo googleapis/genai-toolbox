@@ -61,10 +61,15 @@ func (m *sseManager) get(id string) (*sseSession, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	session, ok := m.sseSessions[id]
-	if ok {
-		session.lastActive = time.Now()
+	if !ok || session == nil {
+		// Be defensive: a nil session entry should be treated as unavailable.
+		if ok && session == nil {
+			delete(m.sseSessions, id)
+		}
+		return nil, false
 	}
-	return session, ok
+	session.lastActive = time.Now()
+	return session, true
 }
 
 func newSseManager(ctx context.Context) *sseManager {
@@ -184,11 +189,45 @@ func (s *stdioSession) Start(ctx context.Context) error {
 
 // readInputStream reads requests/notifications from MCP clients through stdin
 func (s *stdioSession) readInputStream(ctx context.Context) error {
+	sessionStart := time.Now()
+
+	// Define attributes for session metrics
+	// Note: mcp.protocol.version is added dynamically after protocol negotiation
+	sessionAttrs := []attribute.KeyValue{
+		attribute.String("network.transport", "pipe"),
+		attribute.String("network.protocol.name", "stdio"),
+	}
+
+	s.server.instrumentation.McpActiveSessions.Add(ctx, 1, metric.WithAttributes(sessionAttrs...))
+
+	var err error
+	defer func() {
+		// Build full attributes including mcp.protocol.version if negotiated
+		fullAttrs := sessionAttrs
+		if s.protocol != "" {
+			fullAttrs = append(fullAttrs, attribute.String("mcp.protocol.version", s.protocol))
+		}
+
+		// Decrement active sessions counter
+		s.server.instrumentation.McpActiveSessions.Add(ctx, -1, metric.WithAttributes(fullAttrs...))
+
+		// Record session duration
+		sessionDuration := time.Since(sessionStart).Seconds()
+		durationAttrs := make([]attribute.KeyValue, len(fullAttrs))
+		copy(durationAttrs, fullAttrs)
+		if err != nil && err != io.EOF {
+			durationAttrs = append(durationAttrs, attribute.String("error.type", err.Error()))
+		}
+		s.server.instrumentation.McpSessionDuration.Record(ctx, sessionDuration, metric.WithAttributes(durationAttrs...))
+	}()
+
 	for {
-		if err := ctx.Err(); err != nil {
+		if err = ctx.Err(); err != nil {
 			return err
 		}
-		line, err := s.readLine(ctx)
+
+		var line string
+		line, err = s.readLine(ctx)
 		if err != nil {
 			if err == io.EOF {
 				return nil
@@ -206,7 +245,9 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			)
 			defer span.End()
 
-			v, res, err := processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
+			var v string
+			var res any
+			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
 			if err != nil {
 				// errors during the processing of message will generate a valid MCP Error response.
 				// server can continue to run.
@@ -309,6 +350,7 @@ func mcpRouter(s *Server) (chi.Router, error) {
 
 // sseHandler handles sse initialization and message.
 func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	sessionStart := time.Now()
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp/sse",
 		trace.WithSpanKind(trace.SpanKindServer),
 	)
@@ -317,31 +359,42 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	sessionId := uuid.New().String()
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
-	span.SetAttributes(attribute.String("session_id", sessionId))
-	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("mcp.session.id", sessionId))
+	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
+	// Define attributes for session metrics
+	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
+	sessionAttrs := []attribute.KeyValue{
+		attribute.String("network.transport", "tcp"),
+		attribute.String("network.protocol.name", "http"),
+		attribute.String("network.protocol.version", networkProtocolVersion),
+		attribute.String("mcp.protocol.version", "2024-11-05"),
+		attribute.String("toolset.name", toolsetName),
+	}
+
+	// Increment active sessions counter
+	s.instrumentation.McpActiveSessions.Add(ctx, 1, metric.WithAttributes(sessionAttrs...))
+
 	var err error
 	defer func() {
+		// Decrement active sessions counter
+		s.instrumentation.McpActiveSessions.Add(ctx, -1, metric.WithAttributes(sessionAttrs...))
+
+		// Record session duration
+		sessionDuration := time.Since(sessionStart).Seconds()
+		durationAttrs := make([]attribute.KeyValue, len(sessionAttrs))
+		copy(durationAttrs, sessionAttrs)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
+			durationAttrs = append(durationAttrs, attribute.String("error.type", err.Error()))
 		}
+		s.instrumentation.McpSessionDuration.Record(ctx, sessionDuration, metric.WithAttributes(durationAttrs...))
 		span.End()
-		status := "success"
-		if err != nil {
-			status = "error"
-		}
-		s.instrumentation.McpSse.Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.toolset.name", toolsetName)),
-			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", sessionId)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
-		)
 	}()
 
 	flusher, ok := w.(http.Flusher)
@@ -441,7 +494,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		var ok bool
 		session, ok = s.sseManager.get(sessionId)
 		if !ok {
-			s.logger.DebugContext(ctx, "sse session not available")
+			err := fmt.Errorf("sse session not available")
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+			return
 		}
 	}
 
@@ -467,24 +523,13 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	promptsetName := chi.URLParam(r, "promptsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
-	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
 	defer func() {
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 		}
 		span.End()
-
-		status := "success"
-		if err != nil {
-			status = "error"
-		}
-		s.instrumentation.McpPost.Add(
-			r.Context(),
-			1,
-			metric.WithAttributes(attribute.String("toolbox.sse.sessionId", sessionId)),
-			metric.WithAttributes(attribute.String("toolbox.operation.status", status)),
-		)
 	}()
 
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
@@ -540,6 +585,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 // processMcpMessage process the messages received from clients
 func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
+	operationStart := time.Now()
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -590,6 +637,44 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		networkProtocolName = "http"
 	}
 
+	var metricErrorType string
+	genAIAttrs := &util.GenAIMetricAttrs{
+		NetworkProtocolName:    networkProtocolName,
+		NetworkProtocolVersion: networkProtocolVersion,
+	}
+	ctx = util.WithGenAIMetricAttrs(ctx, genAIAttrs)
+
+	// Record operation duration metric on function exit
+	defer func() {
+		operationDuration := time.Since(operationStart).Seconds()
+		durationAttrs := []attribute.KeyValue{
+			attribute.String("mcp.method.name", baseMessage.Method),
+			attribute.String("network.transport", networkTransport),
+			attribute.String("network.protocol.name", networkProtocolName),
+			attribute.String("toolset.name", toolsetName),
+		}
+		if protocolVersion != "" {
+			durationAttrs = append(durationAttrs, attribute.String("mcp.protocol.version", protocolVersion))
+		}
+		if networkProtocolVersion != "" {
+			durationAttrs = append(durationAttrs, attribute.String("network.protocol.version", networkProtocolVersion))
+		}
+		// Add gen_ai attributes populated by method handlers
+		if genAIAttrs.OperationName != "" {
+			durationAttrs = append(durationAttrs, attribute.String("gen_ai.operation.name", genAIAttrs.OperationName))
+		}
+		if genAIAttrs.ToolName != "" {
+			durationAttrs = append(durationAttrs, attribute.String("gen_ai.tool.name", genAIAttrs.ToolName))
+		}
+		if genAIAttrs.PromptName != "" {
+			durationAttrs = append(durationAttrs, attribute.String("gen_ai.prompt.name", genAIAttrs.PromptName))
+		}
+		if metricErrorType != "" {
+			durationAttrs = append(durationAttrs, attribute.String("error.type", metricErrorType))
+		}
+		s.instrumentation.McpOperationDuration.Record(ctx, operationDuration, metric.WithAttributes(durationAttrs...))
+	}()
+
 	// Set required semantic attributes for span according to OTEL MCP semcov
 	// ref: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/#server
 	span.SetAttributes(
@@ -625,6 +710,9 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		return "", nil, err
 	}
 
+	// Add instrumentation to context for use in method handlers
+	ctx = util.WithInstrumentation(ctx, s.instrumentation)
+
 	// Process the method
 	switch baseMessage.Method {
 	case mcputil.INITIALIZE:
@@ -632,7 +720,8 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
-				span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+				metricErrorType = rpcErr.Error.String()
+				span.SetAttributes(attribute.String("error.type", metricErrorType))
 			}
 			return "", result, err
 		}
@@ -643,16 +732,18 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		if !ok {
 			err := fmt.Errorf("toolset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
+			metricErrorType = rpcErr.Error.String()
 			span.SetStatus(codes.Error, err.Error())
-			span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
 		promptset, ok := s.ResourceMgr.GetPromptset(promptsetName)
 		if !ok {
 			err := fmt.Errorf("promptset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
+			metricErrorType = rpcErr.Error.String()
 			span.SetStatus(codes.Error, err.Error())
-			span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
 		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
@@ -660,8 +751,9 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
+				metricErrorType = rpcErr.Error.String()
 				span.SetAttributes(attribute.Int("jsonrpc.error.code", rpcErr.Error.Code))
-				span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+				span.SetAttributes(attribute.String("error.type", metricErrorType))
 			}
 		}
 		return "", result, err
