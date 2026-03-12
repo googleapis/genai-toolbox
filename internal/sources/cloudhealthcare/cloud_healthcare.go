@@ -15,6 +15,7 @@
 package cloudhealthcare
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -339,7 +340,11 @@ func (s *Source) FHIRPatientSearch(storeID, tokenStr string, opts []googleapi.Ca
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
-	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.SearchType(name, "Patient", &healthcare.SearchResourcesRequest{ResourceType: "Patient"}).Do(opts...)
+	body, err := json.Marshal(map[string]any{"ResourceType": "Patient"})
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling body")
+	}
+	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.SearchType(name, "Patient", bytes.NewReader(body)).Do(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search patient resources: %w", err)
 	}
