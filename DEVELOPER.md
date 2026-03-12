@@ -253,10 +253,32 @@ project "toolbox-testing-438616".
 
 ### Linting
 
+### Code Linting
+
 Run the lint check to ensure code quality:
 
 ```bash
 golangci-lint run --fix
+```
+
+### Documentation Structure Linting
+
+To ensure consistency, we enforce a standardized structure for integration Source pages (_index.md) using a custom linter (.ci/lint_source_pages.sh).
+
+Before pushing changes to integration pages:
+
+Run the **source page** linter to validate:
+
+```bash
+# From the repository root
+./.ci/lint-docs-source-page.sh
+```
+
+Run the **tool page** linter to validate:
+
+```bash
+# From the repository root
+./.ci/lint-docs-tool-page.sh
 ```
 
 ### Unit Tests
