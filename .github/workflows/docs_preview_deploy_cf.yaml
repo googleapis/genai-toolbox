@@ -72,6 +72,9 @@ jobs:
           HUGO_ENVIRONMENT: preview
           HUGO_RELATIVEURLS: false
 
+      - name: Build Pagefind Search Index
+        run: npx pagefind --site public
+
       - name: Deploy to Cloudflare Pages via Wrangler
         id: cf_deploy
         uses: cloudflare/wrangler-action@v3
