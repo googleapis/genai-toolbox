@@ -4,6 +4,7 @@ set -e
 python3 - << 'EOF'
 """
 MCP TOOLBOX: TOOL PAGE LINTER
+===============================
 This script enforces a standardized structure for individual Tool pages 
 (e.g., integrations/postgres/postgres-sql.md). It ensures that LLM agents 
 can parse tool capabilities and parameter definitions reliably.
