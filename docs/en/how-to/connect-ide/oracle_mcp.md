@@ -102,40 +102,6 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
     }
   }
 }
-    ```
-
-1. Restart Claude code to apply the new configuration.
-{{% /tab %}}
-
-{{% tab header="Claude desktop" lang="en" %}}
-
-1. Open Claude desktop and navigate to Settings.
-1. Under the Developer tab, tap Edit Config to open the configuration file.
-1. Add the following configuration, replace the environment variables with your
-   values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "oracle": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracledb","--stdio"],
-          "env": {
-            "ORACLE_CONNECTION_STRING": "",
-            "ORACLE_USERNAME": "",
-            "ORACLE_PASSWORD": "",
-            "ORACLE_WALLET": "",
-            "ORACLE_USE_OCI": "false"
-          }
-        }
-      }
-    }
-    ```
-
-1. Restart Claude desktop.
-1. From the new chat screen, you should see a hammer (MCP) icon appear with the
-   new MCP server available.
-{{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
 
