@@ -179,12 +179,15 @@ function getEnv() {
 }
 
 let env = process.env;
+let userAgent = "skills";
 if (process.env.GEMINI_CLI === '1') {
     env = getEnv();
+    userAgent = "skills-geminicli";
 }
 
 const args = process.argv.slice(2);
-const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, ...args];
+
+const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...args];
 
 const child = spawn(toolboxBinary, toolboxArgs, { stdio: 'inherit', env });
 
