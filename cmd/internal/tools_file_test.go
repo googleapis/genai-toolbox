@@ -85,7 +85,8 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			got, err := parseEnv(tc.in)
+			parser := &ToolsFileParser{}
+			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {
 					t.Fatalf("expected error not found")
@@ -754,7 +755,8 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			parser := ToolsFileParser{}
+			toolsFile, err := parser.ParseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -1100,7 +1102,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			parser := ToolsFileParser{}
+			toolsFile, err := parser.ParseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -1437,7 +1440,8 @@ func TestEnvVarReplacement(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			parser := ToolsFileParser{}
+			toolsFile, err := parser.ParseToolsFile(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -1458,6 +1462,7 @@ func TestEnvVarReplacement(t *testing.T) {
 			}
 		})
 	}
+
 }
 
 func TestPrebuiltTools(t *testing.T) {
@@ -1757,7 +1762,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"serverless_spark_tools": tools.ToolsetConfig{
 					Name:      "serverless_spark_tools",
-					ToolNames: []string{"list_batches", "get_batch", "cancel_batch", "create_pyspark_batch", "create_spark_batch", "list_sessions", "get_session"},
+					ToolNames: []string{"list_batches", "get_batch", "cancel_batch", "create_pyspark_batch", "create_spark_batch", "get_session_template", "list_sessions", "get_session"},
 				},
 			},
 		},
@@ -1765,9 +1770,13 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "firestore prebuilt tools",
 			in:   firestoreconfig,
 			wantToolset: server.ToolsetConfigs{
-				"firestore_database_tools": tools.ToolsetConfig{
-					Name:      "firestore_database_tools",
-					ToolNames: []string{"get_documents", "add_documents", "update_document", "list_collections", "delete_documents", "query_collection", "get_rules", "validate_rules"},
+				"data": tools.ToolsetConfig{
+					Name:      "data",
+					ToolNames: []string{"get_documents", "add_documents", "update_document", "delete_documents", "query_collection", "list_collections"},
+				},
+				"security": tools.ToolsetConfig{
+					Name:      "security",
+					ToolNames: []string{"get_rules", "validate_rules"},
 				},
 			},
 		},
@@ -1953,7 +1962,8 @@ func TestPrebuiltTools(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, tc.in)
+			parser := ToolsFileParser{}
+			toolsFile, err := parser.ParseToolsFile(ctx, tc.in)
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
@@ -1969,7 +1979,6 @@ func TestPrebuiltTools(t *testing.T) {
 				for tsName, ts := range toolsFile.Toolsets {
 					if len(ts.ToolNames) > 10 {
 						t.Logf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
-						fmt.Printf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.\n", tsName, tc.name, len(ts.ToolNames))
 					}
 				}
 			})
@@ -2159,8 +2168,8 @@ tools:
 		t.Run(tc.desc, func(t *testing.T) {
 			// Indent parameters to match YAML structure
 			yamlContent := fmt.Sprintf(baseYaml, tc.params)
-
-			_, err := parseToolsFile(ctx, []byte(yamlContent))
+			parser := ToolsFileParser{}
+			_, err := parser.ParseToolsFile(ctx, []byte(yamlContent))
 
 			if tc.wantErr {
 				if err == nil {
