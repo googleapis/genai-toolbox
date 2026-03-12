@@ -1686,9 +1686,13 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "bigquery prebuilt tools",
 			in:   bigquery_config,
 			wantToolset: server.ToolsetConfigs{
-				"bigquery_database_tools": tools.ToolsetConfig{
-					Name:      "bigquery_database_tools",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
+				"data": tools.ToolsetConfig{
+					Name:      "data",
+					ToolNames: []string{"execute_sql", "list_dataset_ids", "list_table_ids", "get_dataset_info", "get_table_info", "search_catalog"},
+				},
+				"analytics": tools.ToolsetConfig{
+					Name:      "analytics",
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "forecast", "search_catalog"},
 				},
 			},
 		},
