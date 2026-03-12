@@ -15,6 +15,8 @@ to expose your developer assistant tools to an Oracle instance:
 * [Windsurf][windsurf] (Codium)
 * [Visual Studio Code][vscode] (Copilot)
 * [Cline][cline]  (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
 * [Gemini CLI][geminicli]
 * [Gemini Code Assist][geminicodeassist]
 
@@ -74,6 +76,66 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
     ```
 
 ## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1. Install [Claude
+   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1. Create a `.mcp.json` file in your project root if it doesn't exist.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+{
+  "mcpServers": {
+    "oracle": {
+      "command": "./PATH/TO/toolbox",
+      "args": ["--prebuilt","oracledb","--stdio"],
+      "env": {
+        "ORACLE_CONNECTION_STRING": "",
+        "ORACLE_USERNAME": "",
+        "ORACLE_PASSWORD": "",
+        "ORACLE_WALLET": "",
+        "ORACLE_USE_OCI": "false"
+      }
+    }
+  }
+}
+    ```
+
+1. Restart Claude code to apply the new configuration.
+{{% /tab %}}
+
+{{% tab header="Claude desktop" lang="en" %}}
+
+1. Open Claude desktop and navigate to Settings.
+1. Under the Developer tab, tap Edit Config to open the configuration file.
+1. Add the following configuration, replace the environment variables with your
+   values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "oracle": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","oracledb","--stdio"],
+          "env": {
+            "ORACLE_CONNECTION_STRING": "",
+            "ORACLE_USERNAME": "",
+            "ORACLE_PASSWORD": "",
+            "ORACLE_WALLET": "",
+            "ORACLE_USE_OCI": "false"
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude desktop.
+1. From the new chat screen, you should see a hammer (MCP) icon appear with the
+   new MCP server available.
+{{% /tab %}}
 
 {{% tab header="Cline" lang="en" %}}
 
@@ -265,4 +327,4 @@ The following tools are available to the LLM:
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
 will adapt to the tools available, so this shouldn't affect most users.
-{{< /notice >}}
+{{< /notice >}} 
