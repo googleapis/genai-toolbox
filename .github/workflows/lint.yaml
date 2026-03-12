@@ -21,21 +21,12 @@ on:
       - "!**.md"
       - "!.github/**"
       - ".github/workflows/lint.yaml"
-  pull_request_target:
-    types: [labeled]
-    paths:
-      - "**"
-      - "!docs/**"
-      - "!**.md"
-      - "!.github/**"
-      - ".github/workflows/lint.yaml"
 
 # Declare default permissions as read only.
 permissions: read-all
 
 jobs:
   lint:
-    if: "${{ github.event.action != 'labeled' || github.event.label.name == 'tests: run' }}"
     name: lint
     runs-on: ubuntu-latest
     concurrency:
@@ -43,40 +34,21 @@ jobs:
       cancel-in-progress: true
     permissions:
       contents: 'read'
-      issues: 'write'
-      pull-requests: 'write'
     steps:
-      - name: Remove PR Label
-        if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              await github.rest.issues.removeLabel({
-                name: 'tests: run',
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number
-              });
-            } catch (e) {
-              console.log('Failed to remove label. Another job may have already removed it!');
-            }
       - name: Setup Go
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version: "1.25"
+          
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: >
           Verify go mod tidy. If you're reading this and the check has
           failed, run `goimports -w . && go mod tidy && golangci-lint run`
         run: |
           go mod tidy && git diff --exit-code
+          
       - name: golangci-lint
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
