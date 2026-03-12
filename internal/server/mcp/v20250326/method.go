@@ -199,7 +199,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{Type: "text", Text: err.Error()}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
@@ -207,7 +212,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	params, err = tool.EmbedParams(ctx, params, embeddingModels)
 	if err != nil {
 		err = fmt.Errorf("error embedding parameters: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		text := TextContent{Type: "text", Text: err.Error()}
+		return jsonrpc.JSONRPCResponse{
+			Jsonrpc: jsonrpc.JSONRPC_VERSION,
+			Id:      id,
+			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
+		}, nil
 	}
 
 	// run tool invocation and generate response.
