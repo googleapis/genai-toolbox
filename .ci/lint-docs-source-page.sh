@@ -4,6 +4,7 @@ set -e
 python3 - << 'EOF'
 """
 MCP TOOLBOX: SOURCE PAGE LINTER
+===============================
 This script enforces a standardized structure for integration Source pages 
 (_index.md files). It ensures users can predictably find 
 information across all database integrations.
