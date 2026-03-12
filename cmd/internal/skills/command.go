@@ -112,14 +112,6 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
-	// Generate assets directory
-	assetsPath := filepath.Join(skillPath, "assets")
-	if err := os.MkdirAll(assetsPath, 0755); err != nil {
-		errMsg := fmt.Errorf("error creating assets dir: %w", err)
-		opts.Logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
-	}
-
 	// Generate scripts directory
 	scriptsPath := filepath.Join(skillPath, "scripts")
 	if err := os.MkdirAll(scriptsPath, 0755); err != nil {
