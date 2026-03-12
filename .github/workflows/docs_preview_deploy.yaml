@@ -45,10 +45,10 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Checkout base repository
-        uses: actions/checkout@v4 
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4 
 
       - name: Download Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: docs-preview-data
           github-token: ${{ secrets.GITHUB_TOKEN }}
