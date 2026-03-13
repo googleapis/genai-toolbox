@@ -1754,6 +1754,12 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 
 func setupPostgresPublicationTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string, pubName string) func(t *testing.T) {
 	t.Helper()
+	if _, err := pool.Exec(ctx, fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
+		t.Errorf("unable to drop publication %s: %v", pubName, err)
+	}
+	if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
+		t.Errorf("unable to drop table %s: %v", tableName, err)
+	}
 	createTableStmt := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
 	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
 		t.Fatalf("unable to create table %s: %v", tableName, err)
@@ -4786,4 +4792,27 @@ func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 
 	defer resp.Body.Close()
 	return resp, respBody
+}
+
+func RunStatementToolsTest(t *testing.T, tools map[string]string) {
+	for toolName, paramBody := range tools {
+		t.Run(toolName, func(t *testing.T) {
+			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", toolName)
+			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(paramBody))
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+		})
+	}
 }
