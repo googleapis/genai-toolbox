@@ -1754,6 +1754,12 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 
 func setupPostgresPublicationTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string, pubName string) func(t *testing.T) {
 	t.Helper()
+	if _, err := pool.Exec(ctx, fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
+		t.Errorf("unable to drop publication %s: %v", pubName, err)
+	}
+	if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
+		t.Errorf("unable to drop table %s: %v", tableName, err)
+	}
 	createTableStmt := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
 	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
 		t.Fatalf("unable to create table %s: %v", tableName, err)
