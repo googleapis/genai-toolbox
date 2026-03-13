@@ -28,9 +28,15 @@ import (
 func PersistentFlags(parentCmd *cobra.Command, opts *ToolboxOptions) {
 	persistentFlags := parentCmd.PersistentFlags()
 
-	persistentFlags.StringVar(&opts.ToolsFile, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
-	persistentFlags.StringSliceVar(&opts.ToolsFiles, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
-	persistentFlags.StringVar(&opts.ToolsFolder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
+	persistentFlags.StringVar(&opts.Config, "config", "", "File path specifying the tool configuration. Cannot be used with --configs, or --config-folder.")
+	persistentFlags.StringVar(&opts.Config, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
+	_ = persistentFlags.MarkDeprecated("tools-file", "please use --config instead") // DEPRECATED
+	persistentFlags.StringSliceVar(&opts.Configs, "configs", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --config, or --config-folder.")
+	persistentFlags.StringSliceVar(&opts.Configs, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
+	_ = persistentFlags.MarkDeprecated("tools-files", "please use --configs instead") // DEPRECATED
+	persistentFlags.StringVar(&opts.ConfigFolder, "config-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config, or --configs.")
+	persistentFlags.StringVar(&opts.ConfigFolder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
+	_ = persistentFlags.MarkDeprecated("tools-folder", "please use --config-folder instead") // DEPRECATED
 	persistentFlags.Var(&opts.Cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	persistentFlags.Var(&opts.Cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 	persistentFlags.BoolVar(&opts.Cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")

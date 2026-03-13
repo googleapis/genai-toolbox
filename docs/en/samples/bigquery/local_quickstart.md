@@ -299,7 +299,7 @@ to use BigQuery, and then run the Toolbox server.
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
     {{< notice note >}}

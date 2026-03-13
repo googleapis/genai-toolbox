@@ -7,7 +7,7 @@ description: >
 ---
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools-file
+have multiple files, you can tell toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the

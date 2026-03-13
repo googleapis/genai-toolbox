@@ -112,7 +112,7 @@ redeploying your application.
 You can run Toolbox directly with a [configuration file](#configuration):
 
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
 ```
 
 This runs the latest version of the toolbox server with your configuration file.
@@ -258,7 +258,7 @@ execute `toolbox` to start the server:
 To run Toolbox from binary:
 
 ```sh
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 > ⓘ Note  
@@ -278,7 +278,7 @@ export VERSION=0.24.0 # Use the version you pulled
 docker run -p 5000:5000 \
 -v $(pwd)/tools.yaml:/app/tools.yaml \
 us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
---tools-file "/app/tools.yaml"
+--config "/app/tools.yaml"
 ```
 
 > ⓘ Note  
@@ -315,7 +315,7 @@ binary is available in your system path. You can start the server with the same
 command:
 
 ```sh
-toolbox --tools-file "tools.yaml"
+toolbox --config "tools.yaml"
 ```
 
 </details>
@@ -325,7 +325,7 @@ toolbox --tools-file "tools.yaml"
 
 To run Toolbox directly without manually downloading the binary (requires Node.js):
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
 ```
 
 </details>
@@ -927,7 +927,7 @@ To use [prebuilt tools][prebuilt] with Gemini CLI:
 ## Configuration
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools-file
+have multiple files, you can tell toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the

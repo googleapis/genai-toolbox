@@ -40,9 +40,9 @@ type ToolboxOptions struct {
 	IOStreams       IOStreams
 	Logger          log.Logger
 	Cfg             server.ServerConfig
-	ToolsFile       string
-	ToolsFiles      []string
-	ToolsFolder     string
+	Config          string
+	Configs         []string
+	ConfigFolder    string
 	PrebuiltConfigs []string
 }
 
@@ -131,16 +131,16 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 }
 
 // LoadConfig checks and merge files that should be loaded into the server
-func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFileParser) (bool, error) {
+func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser) (bool, error) {
 	// Determine if Custom Files should be loaded
 	// Check for explicit custom flags
-	isCustomConfigured := opts.ToolsFile != "" || len(opts.ToolsFiles) > 0 || opts.ToolsFolder != ""
+	isCustomConfigured := opts.Config != "" || len(opts.Configs) > 0 || opts.ConfigFolder != ""
 
 	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
-	useDefaultToolsFile := len(opts.PrebuiltConfigs) == 0 && !isCustomConfigured
+	useDefaultConfig := len(opts.PrebuiltConfigs) == 0 && !isCustomConfigured
 
-	if useDefaultToolsFile {
-		opts.ToolsFile = "tools.yaml"
+	if useDefaultConfig {
+		opts.Config = "tools.yaml"
 		isCustomConfigured = true
 	}
 
@@ -149,7 +149,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFilePar
 		return isCustomConfigured, err
 	}
 
-	var allToolsFiles []ToolsFile
+	var allConfigs []Config
 
 	// Load Prebuilt Configuration
 
@@ -166,50 +166,50 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFilePar
 				return isCustomConfigured, err
 			}
 
-			// Parse into ToolsFile struct
-			parsed, err := parser.ParseToolsFile(ctx, buf)
+			// Parse into Config struct
+			parsed, err := parser.ParseConfig(ctx, buf)
 			if err != nil {
 				errMsg := fmt.Errorf("unable to parse prebuilt tool configuration for '%s': %w", configName, err)
 				logger.ErrorContext(ctx, errMsg.Error())
 				return isCustomConfigured, errMsg
 			}
-			allToolsFiles = append(allToolsFiles, parsed)
+			allConfigs = append(allConfigs, parsed)
 		}
 	}
 
 	// Load Custom Configurations
 	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (opts.ToolsFile != "" && len(opts.ToolsFiles) > 0) ||
-			(opts.ToolsFile != "" && opts.ToolsFolder != "") ||
-			(len(opts.ToolsFiles) > 0 && opts.ToolsFolder != "") {
-			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
+		// Enforce exclusivity among custom flags (config vs configs vs config-folder)
+		if (opts.Config != "" && len(opts.Configs) > 0) ||
+			(opts.Config != "" && opts.ConfigFolder != "") ||
+			(len(opts.Configs) > 0 && opts.ConfigFolder != "") {
+			errMsg := fmt.Errorf("--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously")
 			logger.ErrorContext(ctx, errMsg.Error())
 			return isCustomConfigured, errMsg
 		}
 
-		var customTools ToolsFile
+		var customTools Config
 		var err error
 
-		if len(opts.ToolsFiles) > 0 {
-			// Use tools-files
-			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(opts.ToolsFiles)))
-			customTools, err = parser.LoadAndMergeToolsFiles(ctx, opts.ToolsFiles)
-		} else if opts.ToolsFolder != "" {
-			// Use tools-folder
-			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", opts.ToolsFolder))
-			customTools, err = parser.LoadAndMergeToolsFolder(ctx, opts.ToolsFolder)
+		if len(opts.Configs) > 0 {
+			// Use configs
+			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(opts.Configs)))
+			customTools, err = parser.LoadAndMergeConfigs(ctx, opts.Configs)
+		} else if opts.ConfigFolder != "" {
+			// Use config-folder
+			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", opts.ConfigFolder))
+			customTools, err = parser.LoadAndMergeConfigFolder(ctx, opts.ConfigFolder)
 		} else {
-			// Use single file (tools-file or default `tools.yaml`)
-			buf, readFileErr := os.ReadFile(opts.ToolsFile)
+			// Use single file (config or default `tools.yaml`)
+			buf, readFileErr := os.ReadFile(opts.Config)
 			if readFileErr != nil {
-				errMsg := fmt.Errorf("unable to read tool file at %q: %w", opts.ToolsFile, readFileErr)
+				errMsg := fmt.Errorf("unable to read tool file at %q: %w", opts.Config, readFileErr)
 				logger.ErrorContext(ctx, errMsg.Error())
 				return isCustomConfigured, errMsg
 			}
-			customTools, err = parser.ParseToolsFile(ctx, buf)
+			customTools, err = parser.ParseConfig(ctx, buf)
 			if err != nil {
-				err = fmt.Errorf("unable to parse tool file at %q: %w", opts.ToolsFile, err)
+				err = fmt.Errorf("unable to parse tool file at %q: %w", opts.Config, err)
 			}
 		}
 
@@ -217,7 +217,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFilePar
 			logger.ErrorContext(ctx, err.Error())
 			return isCustomConfigured, err
 		}
-		allToolsFiles = append(allToolsFiles, customTools)
+		allConfigs = append(allConfigs, customTools)
 	}
 
 	// Modify version string based on loaded configurations
@@ -234,18 +234,18 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFilePar
 
 	// Merge Everything
 	// This will error if custom tools collide with prebuilt tools
-	finalToolsFile, err := mergeToolsFiles(allToolsFiles...)
+	finalConfig, err := mergeConfigs(allConfigs...)
 	if err != nil {
 		logger.ErrorContext(ctx, err.Error())
 		return isCustomConfigured, err
 	}
 
-	opts.Cfg.SourceConfigs = finalToolsFile.Sources
-	opts.Cfg.AuthServiceConfigs = finalToolsFile.AuthServices
-	opts.Cfg.EmbeddingModelConfigs = finalToolsFile.EmbeddingModels
-	opts.Cfg.ToolConfigs = finalToolsFile.Tools
-	opts.Cfg.ToolsetConfigs = finalToolsFile.Toolsets
-	opts.Cfg.PromptConfigs = finalToolsFile.Prompts
+	opts.Cfg.SourceConfigs = finalConfig.Sources
+	opts.Cfg.AuthServiceConfigs = finalConfig.AuthServices
+	opts.Cfg.EmbeddingModelConfigs = finalConfig.EmbeddingModels
+	opts.Cfg.ToolConfigs = finalConfig.Tools
+	opts.Cfg.ToolsetConfigs = finalConfig.Toolsets
+	opts.Cfg.PromptConfigs = finalConfig.Prompts
 
 	return isCustomConfigured, nil
 }

@@ -115,10 +115,6 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 
 	flags.StringVarP(&opts.Cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&opts.Cfg.Port, "port", "p", 5000, "Port the server will listen on.")
-
-	flags.StringVar(&opts.ToolsFile, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
-	// deprecate tools_file
-	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
 	flags.BoolVar(&opts.Cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&opts.Cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
@@ -138,7 +134,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	return cmd
 }
 
-func handleDynamicReload(ctx context.Context, toolsFile internal.ToolsFile, s *server.Server) error {
+func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *server.Server) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -158,7 +154,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.ToolsFile, s *s
 
 // validateReloadEdits checks that the reloaded tools file configs can initialized without failing
 func validateReloadEdits(
-	ctx context.Context, toolsFile internal.ToolsFile,
+	ctx context.Context, toolsFile internal.Config,
 ) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
@@ -366,27 +362,27 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 		case <-debounce.C:
 			debounce.Stop()
-			var reloadedToolsFile internal.ToolsFile
-			parser := internal.ToolsFileParser{}
+			var reloadedConfig internal.Config
+			parser := internal.ConfigParser{}
 			if watchingFolder {
 				logger.DebugContext(ctx, "Reloading tools folder.")
-				reloadedToolsFile, err = parser.LoadAndMergeToolsFolder(ctx, folderToWatch)
+				reloadedConfig, err = parser.LoadAndMergeConfigFolder(ctx, folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading tools folder %s", err))
 					continue
 				}
 			} else {
 				logger.DebugContext(ctx, "Reloading tools file(s).")
-				reloadedToolsFile, err = parser.LoadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
+				reloadedConfig, err = parser.LoadAndMergeConfigs(ctx, slices.Collect(maps.Keys(watchedFiles)))
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading tools files %s", err))
 					continue
 				}
 			}
 
-			err = handleDynamicReload(ctx, reloadedToolsFile, s)
+			err = handleDynamicReload(ctx, reloadedConfig, s)
 			if err != nil {
-				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", reloadedToolsFile, err)
+				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", reloadedConfig, err)
 				logger.WarnContext(ctx, errMsg.Error())
 				continue
 			}
@@ -453,7 +449,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	isCustomConfigured, err := opts.LoadConfig(ctx, &internal.ToolsFileParser{})
+	isCustomConfigured, err := opts.LoadConfig(ctx, &internal.ConfigParser{})
 	if err != nil {
 		return err
 	}
@@ -498,7 +494,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	if isCustomConfigured && !opts.Cfg.DisableReload {
-		watchDirs, watchedFiles := resolveWatcherInputs(opts.ToolsFile, opts.ToolsFiles, opts.ToolsFolder)
+		watchDirs, watchedFiles := resolveWatcherInputs(opts.Config, opts.Configs, opts.ConfigFolder)
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
 		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval)
 	}

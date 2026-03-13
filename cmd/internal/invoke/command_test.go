@@ -84,23 +84,23 @@ tools:
 	}{
 		{
 			desc: "success - basic tool call",
-			args: []string{"invoke", "hello-sqlite", "--tools-file", toolsFilePath},
+			args: []string{"invoke", "hello-sqlite", "--config", toolsFilePath},
 			want: `"greeting": "hello"`,
 		},
 		{
 			desc: "success - tool call with parameters",
-			args: []string{"invoke", "echo-tool", `{"message": "world"}`, "--tools-file", toolsFilePath},
+			args: []string{"invoke", "echo-tool", `{"message": "world"}`, "--config", toolsFilePath},
 			want: `"msg": "world"`,
 		},
 		{
 			desc:    "error - tool not found",
-			args:    []string{"invoke", "non-existent", "--tools-file", toolsFilePath},
+			args:    []string{"invoke", "non-existent", "--config", toolsFilePath},
 			wantErr: true,
 			errStr:  `tool "non-existent" not found`,
 		},
 		{
 			desc:    "error - invalid JSON params",
-			args:    []string{"invoke", "echo-tool", `invalid-json`, "--tools-file", toolsFilePath},
+			args:    []string{"invoke", "echo-tool", `invalid-json`, "--config", toolsFilePath},
 			wantErr: true,
 			errStr:  `params must be a valid JSON string`,
 		},
@@ -142,7 +142,7 @@ tools:
 		t.Fatalf("failed to write tools file: %v", err)
 	}
 
-	args := []string{"invoke", "bq-tool", "--tools-file", toolsFilePath}
+	args := []string{"invoke", "bq-tool", "--config", toolsFilePath}
 	_, err := invokeCommand(args)
 	if err == nil {
 		t.Fatal("expected error for tool requiring client auth, but got nil")

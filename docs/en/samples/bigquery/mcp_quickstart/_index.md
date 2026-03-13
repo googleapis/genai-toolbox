@@ -206,7 +206,7 @@ In this section, we will download Toolbox, configure our tools in a
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
 ## Step 3: Connect to MCP Inspector
