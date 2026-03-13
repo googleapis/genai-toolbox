@@ -13,71 +13,63 @@
 # limitations under the License.
 
 sources:
-  bigquery-source:
-    kind: "bigquery"
-    project: ${BIGQUERY_PROJECT}
-    location: ${BIGQUERY_LOCATION:}
-    useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
-    scopes: ${BIGQUERY_SCOPES:}
-    maxQueryResultRows: ${BIGQUERY_MAX_QUERY_RESULT_ROWS:50}
-
+    bigquery-source:
+        kind: "bigquery"
+        project: ${BIGQUERY_PROJECT}
+        location: ${BIGQUERY_LOCATION:}
+        useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
+        scopes: ${BIGQUERY_SCOPES:}
+        maxQueryResultRows: ${BIGQUERY_MAX_QUERY_RESULT_ROWS:50}
 tools:
-  analyze_contribution:
-    kind: bigquery-analyze-contribution
-    source: bigquery-source
-    description: Use this tool to analyze the contribution about changes to key metrics in multi-dimensional data.
-
-  ask_data_insights:
-    kind: bigquery-conversational-analytics
-    source: bigquery-source
-    description: |
-      Use this tool to perform data analysis, get insights,
-      or answer complex questions about the contents of specific
-      BigQuery tables.
-
-  execute_sql:
-    kind: bigquery-execute-sql
-    source: bigquery-source
-    description: Use this tool to execute sql statement.
-
-  forecast:
-    kind: bigquery-forecast
-    source: bigquery-source
-    description: Use this tool to forecast time series data.
-
-  get_dataset_info:
-    kind: bigquery-get-dataset-info
-    source: bigquery-source
-    description: Use this tool to get dataset metadata.
-
-  get_table_info:
-    kind: bigquery-get-table-info
-    source: bigquery-source
-    description: Use this tool to get table metadata.
-
-  list_dataset_ids:
-    kind: bigquery-list-dataset-ids
-    source: bigquery-source
-    description: Use this tool to list datasets.
-
-  list_table_ids:
-    kind: bigquery-list-table-ids
-    source: bigquery-source
-    description: Use this tool to list tables.
-
-  search_catalog:
-    kind: bigquery-search-catalog
-    source: bigquery-source
-    description: Use this tool to find tables, views, models, routines or connections.
-
+    analyze_contribution:
+        kind: bigquery-analyze-contribution
+        source: bigquery-source
+        description: Use this tool to analyze the contribution about changes to key metrics in multi-dimensional data.
+    ask_data_insights:
+        kind: bigquery-conversational-analytics
+        source: bigquery-source
+        description: |
+            Use this tool to perform data analysis, get insights,
+            or answer complex questions about the contents of specific
+            BigQuery tables.
+    execute_sql:
+        kind: bigquery-execute-sql
+        source: bigquery-source
+        description: Use this tool to execute sql statement.
+    forecast:
+        kind: bigquery-forecast
+        source: bigquery-source
+        description: Use this tool to forecast time series data.
+    get_dataset_info:
+        kind: bigquery-get-dataset-info
+        source: bigquery-source
+        description: Use this tool to get dataset metadata.
+    get_table_info:
+        kind: bigquery-get-table-info
+        source: bigquery-source
+        description: Use this tool to get table metadata.
+    list_dataset_ids:
+        kind: bigquery-list-dataset-ids
+        source: bigquery-source
+        description: Use this tool to list datasets.
+    list_table_ids:
+        kind: bigquery-list-table-ids
+        source: bigquery-source
+        description: Use this tool to list tables.
+    search_catalog:
+        kind: bigquery-search-catalog
+        source: bigquery-source
+        description: Use this tool to find tables, views, models, routines or connections.
 toolsets:
-  bigquery_database_tools:
-    - analyze_contribution
-    - ask_data_insights
-    - execute_sql
-    - forecast
-    - get_dataset_info
-    - get_table_info
-    - list_dataset_ids
-    - list_table_ids
-    - search_catalog
+    data:
+        - execute_sql
+        - list_dataset_ids
+        - list_table_ids
+        - get_dataset_info
+        - get_table_info
+        - search_catalog
+    analytics:
+        - analyze_contribution
+        - ask_data_insights
+        - forecast
+        - search_catalog

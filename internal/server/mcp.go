@@ -61,10 +61,15 @@ func (m *sseManager) get(id string) (*sseSession, bool) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	session, ok := m.sseSessions[id]
-	if ok {
-		session.lastActive = time.Now()
+	if !ok || session == nil {
+		// Be defensive: a nil session entry should be treated as unavailable.
+		if ok && session == nil {
+			delete(m.sseSessions, id)
+		}
+		return nil, false
 	}
-	return session, ok
+	session.lastActive = time.Now()
+	return session, true
 }
 
 func newSseManager(ctx context.Context) *sseManager {
@@ -489,7 +494,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		var ok bool
 		session, ok = s.sseManager.get(sessionId)
 		if !ok {
-			s.logger.DebugContext(ctx, "sse session not available")
+			err := fmt.Errorf("sse session not available")
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+			return
 		}
 	}
 
