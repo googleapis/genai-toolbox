@@ -266,6 +266,9 @@ tools:
   create_cluster:
     kind: alloydb-create-cluster
     source: alloydb-admin-source
+  list_users:
+    kind: alloydb-list-users
+    source: alloydb-admin-source
   create_user:
     kind: alloydb-create-user
     source: alloydb-admin-source
