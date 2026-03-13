@@ -47,6 +47,8 @@
 * **ui:** Remove module from script ([#2703](https://github.com/googleapis/genai-toolbox/issues/2703)) ([6943ab6](https://github.com/googleapis/genai-toolbox/commit/6943ab6839d21da7b6a4241700c7891c6f4a9b2c))
 * Update toolset attributes naming ([#2554](https://github.com/googleapis/genai-toolbox/issues/2554)) ([3d6ae4e](https://github.com/googleapis/genai-toolbox/commit/3d6ae4eeaf5acfbde83374a244573edd8fc9012b))
 
+## [0.28.0](https://github.com/googleapis/genai-toolbox/compare/v0.27.0...v0.28.0) (2026-03-02)
+
 
 ### Features
 
