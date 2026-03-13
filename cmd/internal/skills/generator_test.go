@@ -227,7 +227,7 @@ func TestGenerateScriptContent(t *testing.T) {
 			wantContains: []string{
 				`const toolName = "test-tool";`,
 				`const configArgs = ["--prebuilt", "test"];`,
-				`const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, ...args];`,
+				`const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...args];`,
 			},
 		},
 		{
