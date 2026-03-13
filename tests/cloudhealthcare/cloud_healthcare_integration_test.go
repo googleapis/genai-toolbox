@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -79,6 +80,53 @@ var (
 		instance: "1.2.826.0.1.3680043.9.5704.983743739.2",
 	}
 )
+
+func TestMain(m *testing.M) {
+	if healthcareProject != "" && healthcareRegion != "" && healthcareDataset != "" {
+		ctx := context.Background()
+		if service, err := newHealthcareService(ctx); err == nil {
+			cleanupOrphanedStores(ctx, service)
+		}
+	}
+	os.Exit(m.Run())
+}
+
+func cleanupOrphanedStores(ctx context.Context, service *healthcare.Service) {
+	now := time.Now().Unix()
+	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", healthcareProject, healthcareRegion, healthcareDataset)
+
+	// Cleanup FHIR stores over 2 hours old
+	_ = service.Projects.Locations.Datasets.FhirStores.List(datasetName).Pages(ctx, func(page *healthcare.ListFhirStoresResponse) error {
+		for _, store := range page.FhirStores {
+			if !strings.Contains(store.Name, "/fhirStores/fhir-store-") {
+				continue
+			}
+			createdAtStr, ok := store.Labels["created_at"]
+			createdAt, err := strconv.ParseInt(createdAtStr, 10, 64)
+			if !ok || err != nil || now-createdAt > 2*3600 {
+				fmt.Printf("Cleaning up orphaned FHIR store: %s\n", store.Name)
+				_, _ = service.Projects.Locations.Datasets.FhirStores.Delete(store.Name).Context(ctx).Do()
+			}
+		}
+		return nil
+	})
+
+	// Cleanup DICOM stores over 2 hours old
+	_ = service.Projects.Locations.Datasets.DicomStores.List(datasetName).Pages(ctx, func(page *healthcare.ListDicomStoresResponse) error {
+		for _, store := range page.DicomStores {
+			if !strings.Contains(store.Name, "/dicomStores/dicom-store-") {
+				continue
+			}
+			createdAtStr, ok := store.Labels["created_at"]
+			createdAt, err := strconv.ParseInt(createdAtStr, 10, 64)
+			if !ok || err != nil || now-createdAt > 2*3600 {
+				fmt.Printf("Cleaning up orphaned DICOM store: %s\n", store.Name)
+				_, _ = service.Projects.Locations.Datasets.DicomStores.Delete(store.Name).Context(ctx).Do()
+			}
+		}
+		return nil
+	})
+}
 
 func getHealthcareVars(t *testing.T) map[string]any {
 	switch "" {
@@ -257,7 +305,10 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 	var err error
 
 	// Create FHIR store
-	fhirStore := &healthcare.FhirStore{Version: "R4"}
+	fhirStore := &healthcare.FhirStore{
+		Version: "R4",
+		Labels:  map[string]string{"created_at": strconv.FormatInt(time.Now().Unix(), 10)},
+	}
 	if fhirStore, err = service.Projects.Locations.Datasets.FhirStores.Create(datasetName, fhirStore).FhirStoreId(fhirStoreID).Do(); err != nil {
 		t.Fatalf("failed to create fhir store: %v", err)
 	}
@@ -269,7 +320,9 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 	})
 
 	// Create DICOM store
-	dicomStore := &healthcare.DicomStore{}
+	dicomStore := &healthcare.DicomStore{
+		Labels: map[string]string{"created_at": strconv.FormatInt(time.Now().Unix(), 10)},
+	}
 	if dicomStore, err = service.Projects.Locations.Datasets.DicomStores.Create(datasetName, dicomStore).DicomStoreId(dicomStoreID).Do(); err != nil {
 		t.Fatalf("failed to create dicom store: %v", err)
 	}
