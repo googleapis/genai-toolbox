@@ -272,6 +272,9 @@ tools:
   create_user:
     kind: alloydb-create-user
     source: alloydb-admin-source
+  get_user:
+    kind: alloydb-get-user
+    source: alloydb-admin-source
   wait_for_operation:
     kind: alloydb-wait-for-operation
     source: alloydb-admin-source
