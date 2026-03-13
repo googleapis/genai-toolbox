@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGetDashboards(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-dashboards
             source: my-instance
@@ -82,7 +82,7 @@ func TestFailParseFromYamlLookerGetDashboards(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-dashboards
             source: my-instance

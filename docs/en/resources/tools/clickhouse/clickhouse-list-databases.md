@@ -21,7 +21,7 @@ discovery and exploration tasks.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_clickhouse_databases
 type: clickhouse-list-databases
 source: my-clickhouse-instance

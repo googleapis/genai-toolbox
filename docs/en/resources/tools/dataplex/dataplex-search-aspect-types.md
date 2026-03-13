@@ -49,7 +49,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: dataplex-search-aspect-types
 type: dataplex-search-aspect-types
 source: my-dataplex-source

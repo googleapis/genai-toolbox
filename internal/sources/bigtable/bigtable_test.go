@@ -34,7 +34,7 @@ func TestParseFromYamlBigtableDb(t *testing.T) {
 		{
 			desc: "can configure with a bigtable table",
 			in: `
-			kind: sources
+			kind: source
 			name: my-bigtable-instance
 			type: bigtable
 			project: my-project
@@ -73,7 +73,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-bigtable-instance
 			type: bigtable
 			project: my-project
@@ -85,7 +85,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-bigtable-instance
 			type: bigtable
 			project: my-project

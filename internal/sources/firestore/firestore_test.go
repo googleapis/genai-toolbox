@@ -35,7 +35,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "basic example with default database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			project: my-project
@@ -52,7 +52,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "with custom database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			project: my-project
@@ -90,7 +90,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			project: my-project
@@ -101,7 +101,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			`,

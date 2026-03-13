@@ -20,7 +20,7 @@ compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_dicom_store
 type: cloud-healthcare-get-dicom-store
 source: my-healthcare-source

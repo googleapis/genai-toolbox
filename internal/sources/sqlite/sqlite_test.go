@@ -34,7 +34,7 @@ func TestParseFromYamlSQLite(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: sources
+            kind: source
             name: my-sqlite-db
             type: sqlite
             database: /path/to/database.db
@@ -70,7 +70,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-            kind: sources
+            kind: source
             name: my-sqlite-db
             type: sqlite
             database: /path/to/database.db
@@ -81,7 +81,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-            kind: sources
+            kind: source
             name: my-sqlite-db
             type: sqlite
             `,

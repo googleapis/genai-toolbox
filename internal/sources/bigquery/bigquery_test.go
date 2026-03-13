@@ -38,7 +38,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -56,7 +56,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "all fields specified",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -77,7 +77,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -97,7 +97,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with custom auth header name example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -117,7 +117,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth with unquoted true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -137,7 +137,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth with unquoted false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -157,7 +157,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with allowed datasets example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -178,7 +178,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with service account impersonation example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -198,7 +198,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with custom scopes example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -220,7 +220,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with max query result rows example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -260,7 +260,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -272,7 +272,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			location: us

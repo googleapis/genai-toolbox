@@ -37,7 +37,7 @@ func TestParseFromYamlLookerAddDashboardFilter(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-add-dashboard-filter
             source: my-instance
@@ -82,7 +82,7 @@ func TestFailParseFromYamlLookerAddDashboardFilter(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-add-dashboard-filter
             source: my-instance

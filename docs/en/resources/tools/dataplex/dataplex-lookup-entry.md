@@ -56,7 +56,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: lookup_entry
 type: dataplex-lookup-entry
 source: my-dataplex-source

@@ -34,7 +34,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-tidb-instance
 			type: tidb
 			host: 0.0.0.0
@@ -59,7 +59,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 		{
 			desc: "with SSL enabled",
 			in: `
-			kind: sources
+			kind: source
 			name: my-tidb-cloud
 			type: tidb
 			host: gateway01.us-west-2.prod.aws.tidbcloud.com
@@ -85,7 +85,7 @@ func TestParseFromYamlTiDB(t *testing.T) {
 		{
 			desc: "Change SSL enabled due to TiDB Cloud host",
 			in: `
-			kind: sources
+			kind: source
 			name: my-tidb-cloud
 			type: tidb
 			host: gateway01.us-west-2.prod.aws.tidbcloud.com
@@ -131,7 +131,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-tidb-instance
 			type: tidb
 			host: 0.0.0.0
@@ -147,7 +147,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-tidb-instance
 			type: tidb
 			port: my-port

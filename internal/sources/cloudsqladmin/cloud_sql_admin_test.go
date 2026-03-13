@@ -35,7 +35,7 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			type: cloud-sql-admin
 			`,
@@ -50,7 +50,7 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			type: cloud-sql-admin
 			useClientOAuth: true
@@ -89,7 +89,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			type: cloud-sql-admin
 			project: test-project
@@ -99,7 +99,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			useClientOAuth: true
 			`,

@@ -34,7 +34,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-neo4j-instance
 			type: neo4j
 			uri: neo4j+s://my-host:7687
@@ -77,7 +77,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-neo4j-instance
 			type: neo4j
 			uri: neo4j+s://my-host:7687
@@ -91,7 +91,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-neo4j-instance
 			type: neo4j
 			uri: neo4j+s://my-host:7687

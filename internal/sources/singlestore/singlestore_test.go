@@ -34,7 +34,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -58,7 +58,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with query timeout",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -105,7 +105,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -120,7 +120,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			port: my-port

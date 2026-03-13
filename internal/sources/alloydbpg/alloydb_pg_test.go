@@ -34,7 +34,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: alloydb-postgres
 			project: my-project
@@ -63,7 +63,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 		{
 			desc: "public ipType",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: alloydb-postgres
 			project: my-project
@@ -93,7 +93,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 		{
 			desc: "private ipType",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: alloydb-postgres
 			project: my-project
@@ -144,7 +144,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid ipType",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: alloydb-postgres
 			project: my-project
@@ -161,7 +161,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: alloydb-postgres
 			project: my-project
@@ -178,7 +178,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: alloydb-postgres
 			region: my-region

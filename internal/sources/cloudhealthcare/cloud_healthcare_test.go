@@ -34,7 +34,7 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-healthcare
 			project: my-project
@@ -55,7 +55,7 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-healthcare
 			project: my-project
@@ -77,7 +77,7 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 		{
 			desc: "with allowed stores example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-healthcare
 			project: my-project
@@ -124,7 +124,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-healthcare
 			project: my-project
@@ -137,7 +137,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-healthcare
 			project: my-project

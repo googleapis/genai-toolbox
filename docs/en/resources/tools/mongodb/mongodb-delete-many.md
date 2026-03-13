@@ -29,7 +29,7 @@ Here is an example that performs a cleanup task by deleting all products from
 the `inventory` collection that belong to a discontinued brand.
 
 ```yaml
-kind: tools
+kind: tool
 name: retire_brand_products
 type: mongodb-delete-many
 source: my-mongo-source

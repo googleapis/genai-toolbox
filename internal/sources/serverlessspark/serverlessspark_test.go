@@ -34,7 +34,7 @@ func TestParseFromYamlServerlessSpark(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: serverless-spark
 				project: my-project
@@ -73,7 +73,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: serverless-spark
 				project: my-project
@@ -85,7 +85,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field project",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: serverless-spark
 				location: my-location
@@ -95,7 +95,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field location",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: serverless-spark
 				project: my-project

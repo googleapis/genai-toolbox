@@ -34,7 +34,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			dgraphUrl: https://localhost:8080
@@ -58,7 +58,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic example minimal field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			dgraphUrl: https://localhost:8080
@@ -97,7 +97,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			dgraphUrl: https://localhost:8080
@@ -108,7 +108,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			`,

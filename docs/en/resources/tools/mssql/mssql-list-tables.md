@@ -32,7 +32,7 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: mssql_list_tables
 type: mssql-list-tables
 source: mssql-source

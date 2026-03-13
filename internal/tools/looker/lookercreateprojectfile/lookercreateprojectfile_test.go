@@ -37,7 +37,7 @@ func TestParseFromYamlLookerCreateProjectFile(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-create-project-file
             source: my-instance
@@ -82,7 +82,7 @@ func TestFailParseFromYamlLookerCreateProjectFile(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-create-project-file
             source: my-instance

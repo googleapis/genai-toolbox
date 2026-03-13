@@ -34,7 +34,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			base_url: http://example.looker.com/
@@ -82,7 +82,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			base_url: http://example.looker.com/
@@ -95,7 +95,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			client_id: jasdl;k;tjl

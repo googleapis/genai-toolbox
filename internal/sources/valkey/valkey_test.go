@@ -35,7 +35,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 		{
 			desc: "default setting",
 			in: `
-			kind: sources
+			kind: source
 			name: my-valkey-instance
 			type: valkey
 			address:
@@ -57,7 +57,7 @@ func TestParseFromYamlValkey(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-valkey-instance
 			type: valkey
 			address:
@@ -105,7 +105,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-valkey-instance
 			type: valkey
 			address:
@@ -118,7 +118,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-valkey-instance
 			type: valkey
 			address:
@@ -131,7 +131,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-valkey-instance
 			type: valkey
 			`,

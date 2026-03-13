@@ -50,7 +50,7 @@ This section details the purpose and conventions for MCP Toolbox's tools naming
 properties, **tool name** and **tool type**.
 
 ```
-kind: tools
+kind: tool
 name: cancel_hotel <- tool name
 type: postgres-sql  <- tool type
 source: my_pg_source

@@ -34,7 +34,7 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-sql-mssql
 			project: my-project
@@ -61,7 +61,7 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 		{
 			desc: "psc ipType",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-sql-mssql
 			project: my-project
@@ -110,7 +110,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid ipType",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-sql-mssql
 			project: my-project
@@ -126,7 +126,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-sql-mssql
 			project: my-project
@@ -142,7 +142,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-sql-mssql
 			region: my-region

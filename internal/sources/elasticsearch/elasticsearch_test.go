@@ -35,7 +35,7 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-es-instance
 			type: elasticsearch
 			addresses:
@@ -74,7 +74,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-es-instance
 			type: elasticsearch
 			addresses:

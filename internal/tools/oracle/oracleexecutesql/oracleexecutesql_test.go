@@ -27,7 +27,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 		{
 			desc: "basic example with auth",
 			in: `
-            kind: tools
+            kind: tool
             name: run_adhoc_query
             type: oracle-execute-sql
             source: my-oracle-instance
@@ -48,7 +48,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 		{
 			desc: "example without authRequired",
 			in: `
-            kind: tools
+            kind: tool
             name: run_simple_update
             type: oracle-execute-sql
             source: db-dev
@@ -67,7 +67,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 		{
 			desc: "example with explicit readOnly true",
 			in: `
-            kind: tools
+            kind: tool
             name: safe_query
             type: oracle-execute-sql
             source: db-prod
@@ -88,7 +88,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 		{
 			desc: "example with explicit readOnly false (DML)",
 			in: `
-            kind: tools
+            kind: tool
             name: update_user
             type: oracle-execute-sql
             source: db-prod

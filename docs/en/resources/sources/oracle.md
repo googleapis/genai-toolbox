@@ -90,7 +90,7 @@ using a TNS (Transparent Network Substrate) alias.
 This example demonstrates the four connection methods you could choose from:
 
 ```yaml
-kind: sources
+kind: source
 name: my-oracle-source
 type: oracle
 
@@ -122,7 +122,7 @@ Oracle Wallet allows you to store credentails used for database connection. Depe
 The `go-ora` driver uses the `walletLocation` field to connect to a database secured with an Oracle Wallet without standard username and password.
 
 ```yaml
-kind: sources
+kind: source
 name: pure-go-wallet
 type: oracle
 connectionString: "127.0.0.1:1521/XEPDB1"
@@ -138,7 +138,7 @@ walletLocation: "/path/to/my/wallet/directory"
 For the OCI-based driver, wallet authentication is triggered by setting tnsAdmin to the wallet directory and connecting via a tnsAlias. 
 
 ```yaml
-kind: sources
+kind: source
 name: oci-wallet
 type: oracle
 connectionString: "127.0.0.1:1521/XEPDB1"

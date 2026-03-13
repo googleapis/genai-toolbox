@@ -32,7 +32,7 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -48,7 +48,7 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "with client oauth",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -66,7 +66,7 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "with service account impersonation",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -104,7 +104,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -115,7 +115,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			`,

@@ -36,7 +36,7 @@ func TestParseFromYamlBigQueryGetTableInfo(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: bigquery-get-table-info
             source: my-instance

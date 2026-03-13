@@ -34,7 +34,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			connectionString: localhost
@@ -58,7 +58,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "with TLS configuration",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			connectionString: couchbases://localhost
@@ -112,7 +112,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			connectionString: localhost
@@ -127,7 +127,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			username: Administrator

@@ -38,7 +38,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-mysql-instance
 			type: mysql
 			host: 0.0.0.0
@@ -62,7 +62,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		{
 			desc: "with query timeout",
 			in: `
-			kind: sources
+			kind: source
 			name: my-mysql-instance
 			type: mysql
 			host: 0.0.0.0
@@ -88,7 +88,7 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		{
 			desc: "with query params",
 			in: `
-			kind: sources
+			kind: source
 			name: my-mysql-instance
 			type: mysql
 			host: 0.0.0.0
@@ -141,7 +141,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-mysql-instance
 			type: mysql
 			host: 0.0.0.0
@@ -156,7 +156,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-mysql-instance
 			type: mysql
 			port: my-port
@@ -169,7 +169,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid query params type",
 			in: `
-			kind: sources
+			kind: source
 			name: my-mysql-instance
 			type: mysql
 			host: 0.0.0.0

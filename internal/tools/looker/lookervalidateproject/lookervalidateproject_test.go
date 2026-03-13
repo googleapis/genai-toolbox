@@ -37,7 +37,7 @@ func TestParseFromYamlLookerValidateProject(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-validate-project
             source: my-instance
@@ -82,7 +82,7 @@ func TestFailParseFromYamlLookerValidateProject(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-validate-project
             source: my-instance

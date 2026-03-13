@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGetConnectionDatabases(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-connection-databases
             source: my-instance
@@ -82,7 +82,7 @@ func TestFailParseFromYamlLookerGetConnectionDatabases(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-connection-databases
             source: my-instance

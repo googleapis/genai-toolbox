@@ -34,7 +34,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: embeddingModels
+			kind: embeddingModel
 			name: my-gemini-model
 			type: gemini
 			model: text-embedding-004
@@ -50,7 +50,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "full example with optional fields",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: complex-gemini
             type: gemini
             model: text-embedding-004
@@ -90,7 +90,7 @@ func TestFailParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "missing required model field",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: bad-model
             type: gemini
             `,
@@ -100,7 +100,7 @@ func TestFailParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "unknown field",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: bad-field
             type: gemini
             model: text-embedding-004

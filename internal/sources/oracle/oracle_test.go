@@ -23,7 +23,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "connection string and useOCI=true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-cs
 			type: oracle
 			connectionString: "my-host:1521/XEPDB1"
@@ -45,7 +45,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "host/port/serviceName and default useOCI=false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-host
 			type: oracle
 			host: my-host
@@ -70,7 +70,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "tnsAlias and TnsAdmin specified with explicit useOCI=true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-tns-oci
 			type: oracle
 			tnsAlias: FINANCE_DB
@@ -176,7 +176,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -190,7 +190,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required password field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -202,7 +202,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing connection method fields (validate fails)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			user: my_user
@@ -213,7 +213,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "multiple connection methods provided (validate fails)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -227,7 +227,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "fail on tnsAdmin with useOCI=false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-fail
 			type: oracle
 			tnsAlias: FINANCE_DB

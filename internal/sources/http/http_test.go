@@ -34,7 +34,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -52,7 +52,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -116,7 +116,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			baseUrl: http://test_server/
 			`,

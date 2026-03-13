@@ -37,7 +37,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "only required fields",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-instance
 			type: yugabytedb
 			host: yb-host
@@ -61,7 +61,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "with loadBalance only",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-instance
 			type: yugabytedb
 			host: yb-host
@@ -87,7 +87,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "loadBalance with topologyKeys",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-instance
 			type: yugabytedb
 			host: yb-host
@@ -115,7 +115,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "with fallback only",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-instance
 			type: yugabytedb
 			host: yb-host
@@ -145,7 +145,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "with refresh interval and reconnect delay",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-instance
 			type: yugabytedb
 			host: yb-host
@@ -175,7 +175,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "all fields set",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-instance
 			type: yugabytedb
 			host: yb-host
@@ -230,7 +230,7 @@ func TestFailParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-source
 			type: yugabytedb
 			host: yb-host
@@ -245,7 +245,7 @@ func TestFailParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "missing required field (password)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-source
 			type: yugabytedb
 			host: yb-host
@@ -258,7 +258,7 @@ func TestFailParseFromYamlYugabyteDB(t *testing.T) {
 		{
 			desc: "missing required field (host)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-yb-source
 			type: yugabytedb
 			port: yb-port

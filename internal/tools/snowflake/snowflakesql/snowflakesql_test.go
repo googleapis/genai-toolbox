@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				kind: tools
+				kind: tool
 				name: my-snowflake-tool
 				type: snowflake-sql
 				source: my-snowflake-source
@@ -84,7 +84,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-				kind: tools
+				kind: tool
 				name: my-snowflake-tool
 				type: snowflake-sql
 				source: my-snowflake-source

@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGetMeasures(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-measures
             source: my-instance
@@ -82,7 +82,7 @@ func TestFailParseFromYamlLookerGetMeasures(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-measures
             source: my-instance

@@ -35,7 +35,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "default setting",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			address:
@@ -54,7 +54,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			address:
@@ -107,7 +107,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			address:
@@ -120,7 +120,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			project: my-project
@@ -134,7 +134,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			`,

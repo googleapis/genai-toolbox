@@ -34,7 +34,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "basic example (without optional fields)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			hosts:
@@ -60,7 +60,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "with optional fields",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			hosts:
@@ -115,7 +115,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			hosts:
@@ -127,7 +127,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			`,

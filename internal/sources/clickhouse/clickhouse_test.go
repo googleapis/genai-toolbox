@@ -36,7 +36,7 @@ func TestParseFromYamlClickhouse(t *testing.T) {
 		{
 			desc: "all fields specified",
 			in: `
-			kind: sources
+			kind: source
 			name: test-clickhouse
 			type: clickhouse
 			host: localhost
@@ -64,7 +64,7 @@ func TestParseFromYamlClickhouse(t *testing.T) {
 		{
 			desc: "minimal configuration with defaults",
 			in: `
-			kind: sources
+			kind: source
 			name: minimal-clickhouse
 			type: clickhouse
 			host: 127.0.0.1
@@ -109,7 +109,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: test-clickhouse
 			type: clickhouse
 			host: localhost

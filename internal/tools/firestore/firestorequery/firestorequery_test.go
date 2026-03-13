@@ -37,7 +37,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 		{
 			desc: "basic example with parameterized collection path",
 			in: `
-            kind: tools
+            kind: tool
             name: query_users_tool
             type: firestore-query
             source: my-firestore-instance
@@ -66,7 +66,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 		{
 			desc: "with parameterized filters",
 			in: `
-            kind: tools
+            kind: tool
             name: query_products_tool
             type: firestore-query
             source: prod-firestore
@@ -114,7 +114,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 		{
 			desc: "with select fields and orderBy",
 			in: `
-            kind: tools
+            kind: tool
             name: query_orders_tool
             type: firestore-query
             source: orders-firestore
@@ -157,7 +157,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 		{
 			desc: "with auth requirements and complex filters",
 			in: `
-            kind: tools
+            kind: tool
             name: secure_query_tool
             type: firestore-query
             source: secure-firestore
@@ -225,7 +225,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 		{
 			desc: "with Firestore native JSON value types and template parameters",
 			in: `
-            kind: tools
+            kind: tool
             name: query_with_typed_values
             type: firestore-query
             source: typed-firestore
@@ -324,7 +324,7 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: query_user_posts
 	type: firestore-query
 	source: social-firestore
@@ -363,7 +363,7 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 		  description: Sort order (ASCENDING or DESCENDING)
 		  default: "DESCENDING"
 ---
-	kind: tools
+	kind: tool
 	name: query_inventory
 	type: firestore-query
 	source: inventory-firestore
@@ -382,7 +382,7 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 		  description: Quantity threshold for low stock
 		  required: true
 ---
-	kind: tools
+	kind: tool
 	name: query_transactions
 	type: firestore-query
 	source: finance-firestore

@@ -37,7 +37,7 @@ func TestParseFromYamlLookerQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-query
 			source: my-instance
@@ -81,7 +81,7 @@ func TestFailParseFromYamlLookerQuery(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-query
 			source: my-instance

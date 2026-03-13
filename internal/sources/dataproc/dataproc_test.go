@@ -33,7 +33,7 @@ func TestParseFromYamlDataproc(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				project: my-project
@@ -72,7 +72,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				project: my-project
@@ -84,7 +84,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field project",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				region: my-region
@@ -94,7 +94,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field region",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				project: my-project
