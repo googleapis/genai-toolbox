@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 )
 
@@ -236,8 +237,10 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 	for fileIndex, file := range files {
 		// Check for conflicts and merge sources
 		for name, source := range file.Sources {
-			if _, exists := merged.Sources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
+			if mergedSource, exists := merged.Sources[name]; exists {
+				if !cmp.Equal(mergedSource, source) {
+					conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
+				}
 			} else {
 				merged.Sources[name] = source
 			}

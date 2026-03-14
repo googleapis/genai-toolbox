@@ -154,6 +154,30 @@ func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP s
 		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(gcpExporter)))
 	}
 
+	// Configure custom histogram bucket boundaries for duration metrics as per MCP semantic conventions.
+	// Source: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/#metric-mcpserversessionduration
+	durationBuckets := []float64{0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300}
+
+	// Create views for duration histograms
+	durationHistogramNames := []string{
+		mcpOperationDurationName,
+		mcpSessionDurationName,
+		toolExecutionDurationName,
+	}
+
+	views := make([]metric.View, 0, len(durationHistogramNames))
+	for _, name := range durationHistogramNames {
+		views = append(views, metric.NewView(
+			metric.Instrument{Name: name},
+			metric.Stream{
+				Aggregation: metric.AggregationExplicitBucketHistogram{
+					Boundaries: durationBuckets,
+				},
+			},
+		))
+	}
+	metricOpts = append(metricOpts, metric.WithView(views...))
+
 	meterProvider := metric.NewMeterProvider(metricOpts...)
 	return meterProvider, nil
 }
