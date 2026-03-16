@@ -128,7 +128,7 @@ func (m EmbeddingModel) EmbedParameters(ctx context.Context, parameters []string
 		return nil, err
 	}
 
-	logger.InfoContext(ctx, fmt.Sprintf("Successfully embedded %d text parameters using model %s", len(parameters), m.Model))
+logger.InfoContext(ctx, "Successfully embedded %d text parameters using model %s", len(parameters), m.Model)
 	return embeddings, nil
 }
 
