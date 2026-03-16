@@ -29,7 +29,7 @@ https://dgraph.io/docs
 https://claude.ai/download
 
 # Google Cloud Run product page
-^https?://([\w-]+\.)*cloud\.google\.com(/.*)?$
+https://cloud.google.com/run
 
 # These specific deep links are known to cause redirect loops or 403s in automated scrapers
 https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
