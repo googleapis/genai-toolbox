@@ -285,7 +285,7 @@ func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[s
 			return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
 		}
 		return actual, nil
-	case hfinferenceoai.EmbeddingModelType, "huggingface":
+case hfinferenceoai.EmbeddingModelType:
 		actual := hfinferenceoai.Config{Name: name}
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
