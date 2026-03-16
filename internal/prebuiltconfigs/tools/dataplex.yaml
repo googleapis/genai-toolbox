@@ -36,7 +36,7 @@ tools:
     description: Use this tool to find aspect types relevant to the query.
 
 toolsets:
-  dataplex_tools:
+  discovery:
     - lookup_context
     - search_entries
     - lookup_entry
