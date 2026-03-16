@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	name := parameters.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
-	resources := parameters.NewArrayParameter("resources", "Put resource description here", parameters.NewStringParameter("resource", "Names of resource"))
+	resources := parameters.NewArrayParameter("resources", "A list of up to 10 resources names for which metadata is needed.", parameters.NewStringParameter("resource", "Name of a resource in the following format: projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}."))
 	params := parameters.Parameters{name, resources}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
