@@ -41,7 +41,7 @@ Before you begin, ensure you have the following:
    to the endpoint:
 
     ```bash
-    curl [http://127.0.0.1:5000](http://127.0.0.1:5000)
+    curl http://127.0.0.1:5000
     ```
 
 ### Tool Naming Conventions
