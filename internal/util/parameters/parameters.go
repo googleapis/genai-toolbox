@@ -485,7 +485,7 @@ type ParameterManifest struct {
 	Type                 string             `json:"type"`
 	Required             bool               `json:"required"`
 	Description          string             `json:"description"`
-	AuthServices         []string           `json:"authSources"` // TODO: to remove when the native endpoint is no longer supported.
+	AuthServices         []string           `json:"authServices"`
 	Items                *ParameterManifest `json:"items,omitempty"`
 	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
