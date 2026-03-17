@@ -45,7 +45,7 @@ func invokeCommand(args []string) (string, error) {
 }
 
 func TestInvokeTool(t *testing.T) {
-	// Create a temporary tools file
+	// Create a temporary config
 	tmpDir := t.TempDir()
 
 	toolsFileContent := `
@@ -72,7 +72,7 @@ tools:
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	tcs := []struct {
@@ -139,7 +139,7 @@ tools:
 `
 	toolsFilePath := filepath.Join(tmpDir, "auth_tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	args := []string{"invoke", "bq-tool", "--config", toolsFilePath}

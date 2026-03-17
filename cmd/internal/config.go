@@ -342,7 +342,7 @@ func (p *ConfigParser) LoadAndMergeConfigFolder(ctx context.Context, folderPath 
 	// Check if directory exists
 	info, err := os.Stat(folderPath)
 	if err != nil {
-		return Config{}, fmt.Errorf("unable to access tools folder at %q: %w", folderPath, err)
+		return Config{}, fmt.Errorf("unable to access config folder at %q: %w", folderPath, err)
 	}
 	if !info.IsDir() {
 		return Config{}, fmt.Errorf("path %q is not a directory", folderPath)

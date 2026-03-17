@@ -209,7 +209,7 @@ type scriptData struct {
 
 // generateScriptContent creates the content for a Node.js wrapper script.
 // This script invokes the toolbox CLI with the appropriate configuration
-// (using a generated tools file) and arguments to execute the specific tool.
+// (using a generated config) and arguments to execute the specific tool.
 func generateScriptContent(name string, configArgs string, licenseHeader string) (string, error) {
 	data := scriptData{
 		Name:          name,

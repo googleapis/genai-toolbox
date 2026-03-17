@@ -203,13 +203,13 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 			// Use single file (config or default `tools.yaml`)
 			buf, readFileErr := os.ReadFile(opts.Config)
 			if readFileErr != nil {
-				errMsg := fmt.Errorf("unable to read tool file at %q: %w", opts.Config, readFileErr)
+				errMsg := fmt.Errorf("unable to read config at %q: %w", opts.Config, readFileErr)
 				logger.ErrorContext(ctx, errMsg.Error())
 				return isCustomConfigured, errMsg
 			}
 			customTools, err = parser.ParseConfig(ctx, buf)
 			if err != nil {
-				err = fmt.Errorf("unable to parse tool file at %q: %w", opts.Config, err)
+				err = fmt.Errorf("unable to parse config at %q: %w", opts.Config, err)
 			}
 		}
 

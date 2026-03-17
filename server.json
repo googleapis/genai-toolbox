@@ -96,7 +96,7 @@
                 {
                     "type": "named",
                     "name": "--disable-reload",
-                    "description": "Disables dynamic reloading of tools file.",
+                    "description": "Disables dynamic reloading of config.",
                     "format": "boolean",
                     "isRequired": false
                 },

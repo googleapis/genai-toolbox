@@ -70,7 +70,7 @@ tools:
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	args := []string{
@@ -174,7 +174,7 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	tmpDir := t.TempDir()
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte("tools: {}"), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	tests := []struct {

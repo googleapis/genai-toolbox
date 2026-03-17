@@ -470,7 +470,7 @@ func TestResolveWatcherInputs(t *testing.T) {
 		wantWatchedFiles map[string]bool
 	}{
 		{
-			description:      "single tools file",
+			description:      "single config",
 			toolsFile:        "tools_folder/example_tools.yaml",
 			toolsFiles:       []string{},
 			toolsFolder:      "",
@@ -478,7 +478,7 @@ func TestResolveWatcherInputs(t *testing.T) {
 			wantWatchedFiles: map[string]bool{"tools_folder/example_tools.yaml": true},
 		},
 		{
-			description:      "default tools file (root dir)",
+			description:      "default config (root dir)",
 			toolsFile:        "tools.yaml",
 			toolsFiles:       []string{},
 			toolsFolder:      "",
@@ -576,7 +576,7 @@ func TestSingleEdit(t *testing.T) {
 
 	fileToWatch, cleanup, err := tmpFileWithCleanup([]byte("initial content"))
 	if err != nil {
-		t.Fatalf("error editing tools file %s", err)
+		t.Fatalf("error editing config %s", err)
 	}
 	defer cleanup()
 
@@ -676,7 +676,7 @@ func TestFileLoadingErrors(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected an error for non-existent file but got none")
 		}
-		if !strings.Contains(err.Error(), "unable to read tool file") {
+		if !strings.Contains(err.Error(), "unable to read config") {
 			t.Errorf("expected error about reading file, but got: %v", err)
 		}
 	})
@@ -692,7 +692,7 @@ func TestFileLoadingErrors(t *testing.T) {
 		if err == nil {
 			t.Fatal("expected an error for non-existent folder but got none")
 		}
-		if !strings.Contains(err.Error(), "unable to access tools folder") {
+		if !strings.Contains(err.Error(), "unable to access config folder") {
 			t.Errorf("expected error about accessing folder, but got: %v", err)
 		}
 	})
@@ -700,7 +700,7 @@ func TestFileLoadingErrors(t *testing.T) {
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
-	// Setup custom tools file
+	// Setup custom config
 	customContent := `
 kind: tool
 name: custom_tool

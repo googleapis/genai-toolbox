@@ -62,11 +62,11 @@ type CmdExec struct {
 func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*CmdExec, func(), error) {
 	b, err := yaml.Marshal(toolsFile)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to marshal tools file: %s", err)
+		return nil, nil, fmt.Errorf("unable to marshal config: %s", err)
 	}
 	path, cleanup, err := tmpFileWithCleanup(b)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to write tools file: %s", err)
+		return nil, nil, fmt.Errorf("unable to write config: %s", err)
 	}
 	args = append(args, "--config", path)
 
