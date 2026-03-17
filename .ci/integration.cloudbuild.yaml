@@ -94,6 +94,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudsqlpg" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud SQL Postgres tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud SQL Postgres integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud SQL Postgres" \
           cloudsqlpg \
@@ -117,6 +123,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "alloydb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: AlloyDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: AlloyDB integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "AlloyDB" \
           alloydb \
@@ -141,6 +153,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "alloydbpg" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: AlloyDB Postgres tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: AlloyDB Postgres integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "AlloyDB Postgres" \
           alloydbpg \
@@ -166,6 +184,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "alloydbainl" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: AlloyDB AI NL tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: AlloyDB AI NL integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "AlloyDB AI NL" \
           alloydbainl \
@@ -183,6 +207,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "alloydbomni" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: AlloyDB Omni tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: AlloyDB Omni integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "AlloyDB Omni" \
           alloydbomni \
@@ -204,6 +234,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "bigtable" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Bigtable tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Bigtable integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Bigtable" \
           bigtable \
@@ -224,6 +260,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "bigquery" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: BigQuery tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: BigQuery integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "BigQuery" \
           bigquery \
@@ -244,6 +286,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudgda" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud Gemini Data Analytics tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud Gemini Data Analytics integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud Gemini Data Analytics" \
           cloudgda \
@@ -264,6 +312,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "dataplex" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Dataplex tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Dataplex integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Dataplex" \
           dataplex \
@@ -282,6 +336,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "dataform" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Dataform tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Dataform integration tests (Shard: $_DB_SHARD)"
         apt-get update && apt-get install -y npm && \
         npm install -g @dataform/cli && \
         .ci/test_with_coverage.sh \
@@ -306,6 +366,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudhealthcare" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud Healthcare API tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud Healthcare API integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud Healthcare API" \
           cloudhealthcare \
@@ -325,6 +391,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudloggingadmin" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud Logging Admin tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud Logging Admin integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud Logging Admin" \
           cloudloggingadmin \
@@ -347,6 +419,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "postgres" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Postgres tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Postgres integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Postgres" \
           postgres \
@@ -367,6 +445,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cockroachdb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: CockroachDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: CockroachDB integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "CockroachDB" \
           cockroachdb \
@@ -392,6 +476,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "spanner" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Spanner tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Spanner integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Spanner" \
           spanner \
@@ -412,6 +502,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "neo4j" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Neo4j tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Neo4j integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Neo4j" \
           neo4j \
@@ -436,6 +532,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudsqlmssql" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud SQL MSSQL tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud SQL MSSQL integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud SQL MSSQL" \
           cloudsqlmssql \
@@ -459,6 +561,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudsqlmysql" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud SQL MySQL tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud SQL MySQL integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud SQL MySQL" \
           cloudsqlmysql \
@@ -481,6 +589,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "mysql" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: MySQL tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: MySQL integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "MySQL" \
           mysql \
@@ -503,10 +617,17 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "mssql" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: MSSQL tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: MSSQL integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "MSSQL" \
           mssql \
           mssql
+        
 
   # - id: "dgraph"
   #   name: golang:1
@@ -539,10 +660,16 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "HTTP" \
-          http \
-          http
+        if [ "$_DB_SHARD" == "http" ] || [ -z "$_DB_SHARD" ]; then
+          echo "RUNNING: HTTP integration tests (Shard: $_DB_SHARD)"
+          .ci/test_with_coverage.sh \
+            "HTTP" \
+            http \
+            http
+        else
+          echo "SKIPPING: HTTP tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
 
   - id: "sqlite"
     name: golang:1
@@ -558,6 +685,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "sqlite" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: SQLite tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: SQLite integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "SQLite" \
           sqlite \
@@ -580,6 +713,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "couchbase" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Couchbase tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Couchbase integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Couchbase" \
           couchbase \
@@ -599,6 +738,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "redis" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Redis tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Redis integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Redis" \
           redis \
@@ -619,6 +764,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "valkey" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Valkey tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Valkey integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Valkey" \
           valkey \
@@ -641,6 +792,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "oceanbase" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: OceanBase tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: OceanBase integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "OceanBase" \
           oceanbase \
@@ -661,6 +818,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "firestore" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Firestore tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Firestore integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Firestore" \
           firestore \
@@ -681,6 +844,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "mongodb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: MongoDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: MongoDB integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "MongoDB" \
           mongodb \
@@ -710,6 +879,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "looker" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Looker tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Looker integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Looker" \
           looker \
@@ -731,6 +906,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "mindsdb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: MindsDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: MindsDB integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "MindsDB" \
           mindsdb \
@@ -749,6 +930,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cloudsql" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cloud SQL Wait for Operation tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cloud SQL Wait for Operation integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cloud SQL Wait for Operation" \
           cloudsql \
@@ -771,6 +958,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "tidb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: TiDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: TiDB integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "TiDB" \
           tidb \
@@ -793,6 +986,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "firebird" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Firebird tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Firebird integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Firebird" \
           firebird \
@@ -815,6 +1014,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "clickhouse" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: ClickHouse tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: ClickHouse integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "ClickHouse" \
           clickhouse \
@@ -838,6 +1043,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "trino" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Trino tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Trino integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Trino" \
           trino \
@@ -861,6 +1072,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "yugabytedb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: YugabyteDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: YugabyteDB integration tests (Shard: $_DB_SHARD)"
         ./yugabytedb.test -test.v
 
   - id: "elasticsearch"
@@ -877,6 +1094,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "elasticsearch" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Elasticsearch tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Elasticsearch integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Elasticsearch" \
           elasticsearch \
@@ -898,6 +1121,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "snowflake" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Snowflake tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Snowflake integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Snowflake" \
           snowflake \
@@ -917,6 +1146,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "cassandra" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Cassandra tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Cassandra integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Cassandra" \
           cassandra \
@@ -937,6 +1172,13 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "oracle" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Oracle tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Oracle integration tests (Shard: $_DB_SHARD)"
+        
         # Install the C compiler and Oracle SDK headers needed for cgo
         dnf install -y gcc oracle-instantclient-devel
         # Install Go
@@ -974,6 +1216,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "serverlessspark" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: Serverless Spark tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: Serverless Spark integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "Serverless Spark" \
           serverlessspark
@@ -1015,6 +1263,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "singlestore" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: SingleStore tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: SingleStore integration tests (Shard: $_DB_SHARD)"
         .ci/test_with_coverage.sh \
           "SingleStore" \
           singlestore \
@@ -1036,6 +1290,12 @@ steps:
     args:
       - -c
       - |
+        if [ "$_DB_SHARD" != "mariadb" ] && [ -n "$_DB_SHARD" ]; then
+          echo "SKIPPING: MariaDB tests (Active shard is $_DB_SHARD)"
+          exit 0
+        fi
+
+        echo "RUNNING: MariaDB integration tests (Shard: $_DB_SHARD)"
         # skip coverage check as it re-uses current MySQL implementation
         go test ./tests/mariadb
 
