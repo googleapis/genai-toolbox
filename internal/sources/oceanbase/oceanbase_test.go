@@ -116,7 +116,7 @@ func TestFailParseFromYamlOceanBase(t *testing.T) {
 			password: ob_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oceanbase-instance\" as \"oceanbase\": [2:1] unknown field \"foo\"\n   1 | database: ob_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-oceanbase-instance\n   5 | password: ob_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-oceanbase-instance\" as \"oceanbase\": [2:1] unknown field \"foo\"\n   1 | database: ob_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-oceanbase-instance\n   5 | password: ob_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -129,7 +129,7 @@ func TestFailParseFromYamlOceanBase(t *testing.T) {
 			user: ob_user
 			password: ob_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oceanbase-instance\" as \"oceanbase\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-oceanbase-instance\" as \"oceanbase\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

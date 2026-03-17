@@ -142,7 +142,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			ssl: false
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-tidb-instance\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-tidb-instance\" as \"tidb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-tidb-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -156,7 +156,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			ssl: false
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-tidb-instance\" as \"tidb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-tidb-instance\" as \"tidb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

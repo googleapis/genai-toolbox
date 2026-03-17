@@ -151,7 +151,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-mysql-instance\" as \"mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-mysql-instance\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-mysql-instance\" as \"mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-mysql-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -164,7 +164,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-mysql-instance\" as \"mysql\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-mysql-instance\" as \"mysql\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 		{
 			desc: "invalid query params type",
@@ -179,7 +179,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			queryParams: not-a-map
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-mysql-instance\" as \"mysql\": [6:14] string was used where mapping is expected\n   3 | name: my-mysql-instance\n   4 | password: my_pass\n   5 | port: 3306\n>  6 | queryParams: not-a-map\n                    ^\n   7 | type: mysql\n   8 | user: my_user",
+			err: "error unmarshaling source: unable to parse source \"my-mysql-instance\" as \"mysql\": [6:14] string was used where mapping is expected\n   3 | name: my-mysql-instance\n   4 | password: my_pass\n   5 | port: 3306\n>  6 | queryParams: not-a-map\n                    ^\n   7 | type: mysql\n   8 | user: my_user",
 		},
 	}
 	for _, tc := range tcs {

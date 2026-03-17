@@ -77,7 +77,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			uri: "mongodb+srv://username:password@host/dbname"
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: mongo-db\n   3 | type: mongodb\n   4 | uri: mongodb+srv://username:password@host/dbname",
+			err: "error unmarshaling source: unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: mongo-db\n   3 | type: mongodb\n   4 | uri: mongodb+srv://username:password@host/dbname",
 		},
 		{
 			desc: "missing required field",
@@ -86,7 +86,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: mongo-db
 			type: mongodb
 			`,
-			err: "error unmarshaling sources: unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

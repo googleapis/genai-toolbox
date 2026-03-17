@@ -132,7 +132,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			dataset: my-dataset
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-healthcare\": [2:1] unknown field \"foo\"\n   1 | dataset: my-dataset\n>  2 | foo: bar\n       ^\n   3 | name: my-instance\n   4 | project: my-project\n   5 | region: us-central1\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"cloud-healthcare\": [2:1] unknown field \"foo\"\n   1 | dataset: my-dataset\n>  2 | foo: bar\n       ^\n   3 | name: my-instance\n   4 | project: my-project\n   5 | region: us-central1\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -143,7 +143,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			project: my-project
 			region: us-central1
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-healthcare\": Key: 'Config.Dataset' Error:Field validation for 'Dataset' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"cloud-healthcare\": Key: 'Config.Dataset' Error:Field validation for 'Dataset' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

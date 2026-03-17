@@ -113,7 +113,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			database: my-db
 			useGCPIAM: false
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-valkey-instance\" as \"valkey\": [3:11] cannot unmarshal string into Go struct field Config.Database of type int\n   1 | address:\n   2 | - 127.0.0.1\n>  3 | database: my-db\n                 ^\n   4 | name: my-valkey-instance\n   5 | type: valkey\n   6 | useGCPIAM: false",
+			err: "error unmarshaling source: unable to parse source \"my-valkey-instance\" as \"valkey\": [3:11] cannot unmarshal string into Go struct field Config.Database of type int\n   1 | address:\n   2 | - 127.0.0.1\n>  3 | database: my-db\n                 ^\n   4 | name: my-valkey-instance\n   5 | type: valkey\n   6 | useGCPIAM: false",
 		},
 		{
 			desc: "extra field",
@@ -126,7 +126,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			project: proj
 			database: 1
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-valkey-instance\" as \"valkey\": [5:1] unknown field \"project\"\n   2 | - 127.0.0.1\n   3 | database: 1\n   4 | name: my-valkey-instance\n>  5 | project: proj\n       ^\n   6 | type: valkey",
+			err: "error unmarshaling source: unable to parse source \"my-valkey-instance\" as \"valkey\": [5:1] unknown field \"project\"\n   2 | - 127.0.0.1\n   3 | database: 1\n   4 | name: my-valkey-instance\n>  5 | project: proj\n       ^\n   6 | type: valkey",
 		},
 		{
 			desc: "missing required field",
@@ -135,7 +135,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-valkey-instance
 			type: valkey
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-valkey-instance\" as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-valkey-instance\" as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

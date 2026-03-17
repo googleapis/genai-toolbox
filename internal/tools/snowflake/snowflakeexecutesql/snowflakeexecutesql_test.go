@@ -85,7 +85,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			type: snowflake-execute-sql
 			source: my-snowflake-source
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-execute-sql\": Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag",
+			err: "error unmarshaling tool: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-execute-sql\": Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

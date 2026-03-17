@@ -149,7 +149,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | name: my-pg-instance\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | name: my-pg-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -162,7 +162,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			database: my_db
 			user: my_user
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 		{
 			desc: "invalid query exec mode",
@@ -177,7 +177,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			queryExecMode: invalid_mode
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": [6:16] Key: 'Config.QueryExecMode' Error:Field validation for 'QueryExecMode' failed on the 'oneof' tag\n   3 | name: my-pg-instance\n   4 | password: my_pass\n   5 | port: my-port\n>  6 | queryExecMode: invalid_mode\n                      ^\n   7 | type: postgres\n   8 | user: my_user",
+			err: "error unmarshaling source: unable to parse source \"my-pg-instance\" as \"postgres\": [6:16] Key: 'Config.QueryExecMode' Error:Field validation for 'QueryExecMode' failed on the 'oneof' tag\n   3 | name: my-pg-instance\n   4 | password: my_pass\n   5 | port: my-port\n>  6 | queryExecMode: invalid_mode\n                      ^\n   7 | type: postgres\n   8 | user: my_user",
 		},
 	}
 	for _, tc := range tcs {

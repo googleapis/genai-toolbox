@@ -122,7 +122,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				- "my-host"
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | name: my-cassandra-instance\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | name: my-cassandra-instance\n   5 | ",
 		},
 		{
 			desc: "missing required field",
@@ -131,7 +131,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-cassandra-instance
 			type: cassandra
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-cassandra-instance\" as \"cassandra\": Key: 'Config.Hosts' Error:Field validation for 'Hosts' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-cassandra-instance\" as \"cassandra\": Key: 'Config.Hosts' Error:Field validation for 'Hosts' failed on the 'required' tag",
 		},
 	}
 

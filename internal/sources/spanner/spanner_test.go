@@ -128,7 +128,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			dialect: fail
 			database: my_db
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-spanner-instance\" as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
+			err: "error unmarshaling source: unable to parse source \"my-spanner-instance\" as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
 		},
 		{
 			desc: "extra field",
@@ -141,7 +141,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			database: my_db
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | name: my-spanner-instance\n   5 | project: my-project\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | name: my-spanner-instance\n   5 | project: my-project\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -152,7 +152,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			project: my-project
 			instance: my-instance
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-spanner-instance\" as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-spanner-instance\" as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

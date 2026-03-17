@@ -89,7 +89,7 @@ func TestFailParseFromYamlLookerDeleteProjectFile(t *testing.T) {
             method: GOT
             description: some description
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"example_tool\" as type \"looker-delete-project-file\": [3:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n>  3 | method: GOT\n       ^\n   4 | name: example_tool\n   5 | source: my-instance\n   6 | type: looker-delete-project-file",
+			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-delete-project-file\": [3:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n>  3 | method: GOT\n       ^\n   4 | name: example_tool\n   5 | source: my-instance\n   6 | type: looker-delete-project-file",
 		},
 	}
 	for _, tc := range tcs {

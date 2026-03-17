@@ -94,7 +94,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			type: cloud-monitoring
 			project: test-project
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-cloud-monitoring-instance\" as \"cloud-monitoring\": [2:1] unknown field \"project\"\n   1 | name: my-cloud-monitoring-instance\n>  2 | project: test-project\n       ^\n   3 | type: cloud-monitoring",
+			err: "error unmarshaling source: unable to parse source \"my-cloud-monitoring-instance\" as \"cloud-monitoring\": [2:1] unknown field \"project\"\n   1 | name: my-cloud-monitoring-instance\n>  2 | project: test-project\n       ^\n   3 | type: cloud-monitoring",
 		},
 		{
 			desc: "missing required field",
@@ -103,7 +103,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-cloud-monitoring-instance
 			useClientOAuth: true
 			`,
-			err: "error unmarshaling sources: missing 'type' field or it is not a string",
+			err: "error unmarshaling source: missing 'type' field or it is not a string",
 		},
 	}
 	for _, tc := range tcs {

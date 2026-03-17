@@ -90,7 +90,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				source: my-snowflake-source
 				description: Execute parameterized SQL on Snowflake
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-sql\": Key: 'Config.Statement' Error:Field validation for 'Statement' failed on the 'required' tag",
+			err: "error unmarshaling tool: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-sql\": Key: 'Config.Statement' Error:Field validation for 'Statement' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

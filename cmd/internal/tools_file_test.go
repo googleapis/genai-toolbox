@@ -230,7 +230,7 @@ dimension: 768
             toolsets:
                 example_toolset:
                     - example_tool`,
-			want: `kind: tools
+			want: `kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance

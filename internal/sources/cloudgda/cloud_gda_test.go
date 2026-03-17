@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-gda-instance
 			type: cloud-gemini-data-analytics
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-gda-instance\" as \"cloud-gemini-data-analytics\": Key: 'Config.ProjectID' Error:Field validation for 'ProjectID' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-gda-instance\" as \"cloud-gemini-data-analytics\": Key: 'Config.ProjectID' Error:Field validation for 'ProjectID' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

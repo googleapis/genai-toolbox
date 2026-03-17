@@ -76,7 +76,7 @@ func TestFailParseFromYaml(t *testing.T) {
             database: /path/to/database.db
             foo: bar
             `,
-			err: "error unmarshaling sources: unable to parse source \"my-sqlite-db\" as \"sqlite\": [2:1] unknown field \"foo\"\n   1 | database: /path/to/database.db\n>  2 | foo: bar\n       ^\n   3 | name: my-sqlite-db\n   4 | type: sqlite",
+			err: "error unmarshaling source: unable to parse source \"my-sqlite-db\" as \"sqlite\": [2:1] unknown field \"foo\"\n   1 | database: /path/to/database.db\n>  2 | foo: bar\n       ^\n   3 | name: my-sqlite-db\n   4 | type: sqlite",
 		},
 		{
 			desc: "missing required field",
@@ -85,7 +85,7 @@ func TestFailParseFromYaml(t *testing.T) {
             name: my-sqlite-db
             type: sqlite
             `,
-			err: "error unmarshaling sources: unable to parse source \"my-sqlite-db\" as \"sqlite\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-sqlite-db\" as \"sqlite\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

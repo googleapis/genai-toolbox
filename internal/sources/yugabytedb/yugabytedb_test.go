@@ -240,7 +240,7 @@ func TestFailParseFromYamlYugabyteDB(t *testing.T) {
 			password: yb_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-yb-source\" as \"yugabytedb\": [2:1] unknown field \"foo\"\n   1 | database: yb_db\n>  2 | foo: bar\n       ^\n   3 | host: yb-host\n   4 | name: my-yb-source\n   5 | password: yb_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-yb-source\" as \"yugabytedb\": [2:1] unknown field \"foo\"\n   1 | database: yb_db\n>  2 | foo: bar\n       ^\n   3 | host: yb-host\n   4 | name: my-yb-source\n   5 | password: yb_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field (password)",
@@ -253,7 +253,7 @@ func TestFailParseFromYamlYugabyteDB(t *testing.T) {
 			database: yb_db
 			user: yb_user
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-yb-source\" as \"yugabytedb\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-yb-source\" as \"yugabytedb\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 		{
 			desc: "missing required field (host)",
@@ -266,7 +266,7 @@ func TestFailParseFromYamlYugabyteDB(t *testing.T) {
 			user: yb_user
 			password: yb_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-yb-source\" as \"yugabytedb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-yb-source\" as \"yugabytedb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

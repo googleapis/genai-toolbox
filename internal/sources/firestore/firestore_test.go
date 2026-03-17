@@ -96,7 +96,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			project: my-project
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-firestore\n   3 | project: my-project\n   4 | type: firestore",
+			err: "error unmarshaling source: unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-firestore\n   3 | project: my-project\n   4 | type: firestore",
 		},
 		{
 			desc: "missing required field",
@@ -105,7 +105,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			name: my-firestore
 			type: firestore
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

@@ -80,7 +80,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				location: my-location
 				foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"serverless-spark\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: my-location\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"serverless-spark\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: my-location\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
 		},
 		{
 			desc: "missing required field project",
@@ -90,7 +90,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				type: serverless-spark
 				location: my-location
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"serverless-spark\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"serverless-spark\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 		{
 			desc: "missing required field location",
@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				type: serverless-spark
 				project: my-project
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"serverless-spark\": Key: 'Config.Location' Error:Field validation for 'Location' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"serverless-spark\": Key: 'Config.Location' Error:Field validation for 'Location' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
