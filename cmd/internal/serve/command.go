@@ -58,7 +58,7 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		case syscall.SIGINT:
 			opts.Logger.DebugContext(sCtx, "Received SIGINT signal to shutdown.")
 		case syscall.SIGTERM:
-			opts.Logger.DebugContext(sCtx, "Sending SIGTERM signal to shutdown.")
+			opts.Logger.DebugContext(sCtx, "Received SIGTERM signal to shutdown.")
 		}
 		cancel()
 	}(ctx)
