@@ -201,7 +201,7 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	}
 }
 
-func TestGenerateSkill_Validation(t *testing.T) {
+func TestGenerateSkill_FlagValidation(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    []string
