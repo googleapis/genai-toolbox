@@ -105,8 +105,8 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 
 	// set up test logs and wait for logs to be injested.
 	setupTestLogs(t, loggingClient, logName)
-	t.Logf("Waiting 15 seconds for log ingestion...")
-	time.Sleep(15 * time.Second)
+	t.Logf("Waiting 30 seconds for log ingestion...")
+	time.Sleep(30 * time.Second)
 
 	// Delete test logs once test is over
 	defer teardownTestLogs(t, ctx, LogAdminProject, logName)
@@ -230,6 +230,42 @@ func runListLogNamesTest(t *testing.T, expectedLogName string) {
 	})
 }
 
+func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+	requestHeader := map[string]string{"my-google-auth_token": idToken}
+	t.Run("auth-list-log-names", func(t *testing.T) {
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/auth-list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), requestHeader)
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("expected status 200, got %d", resp.StatusCode)
+		}
+
+		var body map[string]interface{}
+		if err := json.Unmarshal(respBody, &body); err != nil {
+			t.Fatalf("error parsing response body")
+		}
+
+		result, ok := body["result"].(string)
+		if !ok {
+			t.Fatalf("expected result to be string")
+		}
+
+		if !strings.Contains(result, expectedLogName) {
+			t.Errorf("expected log name %s not found in result: %s", expectedLogName, result)
+		}
+	})
+	t.Run("auth-list-log-names-missing-header", func(t *testing.T) {
+		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/auth-list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
+		if resp.StatusCode != 401 {
+			t.Fatalf("expected status 401 (Unauthorized), got %d", resp.StatusCode)
+		}
+	})
+}
+
 func runListResourceTypesTest(t *testing.T) {
 	t.Run("list-resource-types", func(t *testing.T) {
 		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-resource-types/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
@@ -317,15 +353,6 @@ func invokeQueryTool(t *testing.T, requestBody string) string {
 		t.Fatalf("expected result to be string")
 	}
 	return result
-}
-
-func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
-	t.Run("auth-list-log-names", func(t *testing.T) {
-		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/auth-list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode != 401 {
-			t.Fatalf("expected status 401 (Unauthorized), got %d", resp.StatusCode)
-		}
-	})
 }
 
 func runQueryLogsErrorTest(t *testing.T) {
