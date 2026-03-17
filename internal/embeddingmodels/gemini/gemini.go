@@ -17,6 +17,7 @@ package gemini
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -47,6 +48,16 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 	configs := &genai.ClientConfig{}
 	if cfg.ApiKey != "" {
 		configs.APIKey = cfg.ApiKey
+	}
+
+	ua, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user agent from context: %w", err)
+	}
+	configs.HTTPOptions = genai.HTTPOptions{
+		Headers: http.Header{
+			"User-Agent": []string{ua},
+		},
 	}
 
 	// Create new Gemini API client

@@ -177,20 +177,12 @@ func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, 
 	// Configure the connection to the database
 	db := fmt.Sprintf("projects/%s/instances/%s/databases/%s", project, instance, dbname)
 
-	// Configure session pool to automatically clean inactive transactions
-	sessionPoolConfig := spanner.SessionPoolConfig{
-		TrackSessionHandles: true,
-		InactiveTransactionRemovalOptions: spanner.InactiveTransactionRemovalOptions{
-			ActionOnInactiveTransaction: spanner.WarnAndClose,
-		},
-	}
-
 	// Create spanner client
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	client, err := spanner.NewClientWithConfig(ctx, db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig, UserAgent: userAgent})
+	client, err := spanner.NewClientWithConfig(ctx, db, spanner.ClientConfig{UserAgent: userAgent})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new client: %w", err)
 	}
