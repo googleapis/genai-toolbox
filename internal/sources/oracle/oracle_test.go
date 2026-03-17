@@ -1,6 +1,6 @@
 // Copyright © 2025, Oracle and/or its affiliates.
 
-package oracle_test
+package oracle
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
@@ -33,9 +32,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			useOCI: true
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-cs": oracle.Config{
+				"my-oracle-cs": Config{
 					Name:             "my-oracle-cs",
-					Type:             oracle.SourceType,
+					Type:             SourceType,
 					ConnectionString: "my-host:1521/XEPDB1",
 					User:             "my_user",
 					Password:         "my_pass",
@@ -56,9 +55,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-host": oracle.Config{
+				"my-oracle-host": Config{
 					Name:        "my-oracle-host",
-					Type:        oracle.SourceType,
+					Type:        SourceType,
 					Host:        "my-host",
 					Port:        1521,
 					ServiceName: "ORCLPDB",
@@ -81,9 +80,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			useOCI: true 
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-tns-oci": oracle.Config{
+				"my-oracle-tns-oci": Config{
 					Name:     "my-oracle-tns-oci",
-					Type:     oracle.SourceType,
+					Type:     SourceType,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
 					User:     "my_user",
@@ -101,6 +100,68 @@ func TestParseFromYamlOracle(t *testing.T) {
 			}
 			if !cmp.Equal(tc.want, got) {
 				t.Fatalf("incorrect parse:\nwant: %v\ngot:  %v\ndiff: %s", tc.want, got, cmp.Diff(tc.want, got))
+			}
+		})
+	}
+}
+
+func TestBuildGoOraConnString(t *testing.T) {
+	t.Parallel()
+
+	tcs := []struct {
+		name           string
+		user           string
+		password       string
+		connectBase    string
+		walletLocation string
+		want           string
+	}{
+		{
+			name:           "encodes_credentials_and_wallet",
+			user:           "user[client]",
+			password:       "pa:ss@word",
+			connectBase:    "dbhost:1521/XEPDB1",
+			walletLocation: "/tmp/my wallet",
+			want:           "oracle://user%5Bclient%5D:pa%3Ass%40word@dbhost:1521/XEPDB1?ssl=true&wallet=%2Ftmp%2Fmy+wallet",
+		},
+		{
+			name:        "no_wallet",
+			user:        "scott",
+			password:    "tiger",
+			connectBase: "dbhost:1521/ORCL",
+			want:        "oracle://scott:tiger@dbhost:1521/ORCL",
+		},
+		{
+			name:        "does_not_double_encode_percent_encoded_user",
+			user:        "app_user%5BCLIENT_A%5D",
+			password:    "secret",
+			connectBase: "dbhost:1521/ORCL",
+			want:        "oracle://app_user%5BCLIENT_A%5D:secret@dbhost:1521/ORCL",
+		},
+		{
+			name:           "uses_trimmed_wallet_location",
+			user:           "scott",
+			password:       "tiger",
+			connectBase:    "dbhost:1521/ORCL",
+			walletLocation: "  /tmp/wallet  ",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+		{
+			name:           "appends_wallet_query_to_existing_query",
+			user:           "scott",
+			password:       "tiger",
+			connectBase:    "dbhost:1521/ORCL?custom_opt=true",
+			walletLocation: " /tmp/wallet ",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?custom_opt=true&ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := buildGoOraConnString(tc.user, tc.password, tc.connectBase, tc.walletLocation)
+			if got != tc.want {
+				t.Fatalf("buildGoOraConnString() = %q, want %q", got, tc.want)
 			}
 		})
 	}
@@ -205,10 +266,10 @@ func TestRunSQLExecutesDML(t *testing.T) {
 	}
 	defer db.Close()
 
-	src := &oracle.Source{
-		Config: oracle.Config{
+	src := &Source{
+		Config: Config{
 			Name: "test-dml-source",
-			Type: oracle.SourceType,
+			Type: SourceType,
 			User: "test-user",
 		},
 		DB: db,
