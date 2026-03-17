@@ -333,7 +333,7 @@ func (p *ToolsFileParser) LoadAndMergeToolsFiles(ctx context.Context, filePaths 
 }
 
 // GetPathsFromToolsFolder loads all YAML files from a directory and merges them
-func (p *ToolsFileParser) GetPathsFromToolsFolder(ctx context.Context, folderPath string) ([]string, error) {
+func GetPathsFromToolsFolder(ctx context.Context, folderPath string) ([]string, error) {
 	// Check if directory exists
 	info, err := os.Stat(folderPath)
 	if err != nil {

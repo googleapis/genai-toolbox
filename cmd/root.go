@@ -364,7 +364,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			parser := internal.ToolsFileParser{}
 			if watchingFolder {
 				logger.DebugContext(ctx, "Reloading tools folder.")
-				allFiles, err = parser.GetPathsFromToolsFolder(ctx, folderToWatch)
+				allFiles, err = internal.GetPathsFromToolsFolder(ctx, folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading tools folder %s", err))
 					continue

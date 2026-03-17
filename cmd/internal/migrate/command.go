@@ -19,8 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/cmd/internal"
@@ -37,8 +35,8 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd := &migrateCmd{}
 	cmd.Command = &cobra.Command{
 		Use:   "migrate",
-		Short: "Migrate local configuration files",
-		Long:  "Migrate all configuration files provided to the v2 format, updating deprecated fields and ensuring compatibility.",
+		Short: "Migrate all configuration files to flat format",
+		Long:  "Migrate all configuration files provided to the flat format, updating deprecated fields and ensuring compatibility.",
 	}
 	flags := cmd.Flags()
 	internal.ConfigFileFlags(flags, opts)
@@ -50,26 +48,6 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 func runMigrate(cmd *migrateCmd, opts *internal.ToolboxOptions) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
-
-	// watch for sigterm / sigint signals
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
-	go func(sCtx context.Context) {
-		var s os.Signal
-		select {
-		case <-sCtx.Done():
-			// this should only happen when the context supplied when testing is canceled
-			return
-		case s = <-signals:
-		}
-		switch s {
-		case syscall.SIGINT:
-			opts.Logger.DebugContext(sCtx, "Received SIGINT signal to shutdown.")
-		case syscall.SIGTERM:
-			opts.Logger.DebugContext(sCtx, "Sending SIGTERM signal to shutdown.")
-		}
-		cancel()
-	}(ctx)
 
 	ctx, shutdown, err := opts.Setup(ctx)
 	if err != nil {
@@ -134,6 +112,9 @@ func runMigrate(cmd *migrateCmd, opts *internal.ToolboxOptions) error {
 			if err != nil {
 				errMsg := fmt.Errorf("failed to write to file: %w", err)
 				// restoring original file
+				if removeErr := os.Remove(filePath); removeErr != nil { // Attempt to remove the possibly partial file to ensure Rename succeeds.
+					errMsg = errors.Join(errMsg, removeErr)
+				}
 				if restoreErr := os.Rename(backupFile, filePath); restoreErr != nil {
 					fullRestoreErr := fmt.Errorf("failed to restore original file: %w", restoreErr)
 					errMsg = errors.Join(errMsg, fullRestoreErr)

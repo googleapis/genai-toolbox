@@ -46,13 +46,8 @@ require (
 	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/sijms/go-ora/v2 v2.9.0
-<<<<<<< HEAD
 	github.com/snowflakedb/gosnowflake v1.19.0
 	github.com/spf13/cobra v1.10.2
-=======
-	github.com/snowflakedb/gosnowflake v1.18.1
-	github.com/spf13/cobra v1.10.1
->>>>>>> d9cf2b18e63 (feat: add serve subcommand)
 	github.com/spf13/pflag v1.0.9
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.40.0

@@ -58,11 +58,7 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		case syscall.SIGINT:
 			opts.Logger.DebugContext(sCtx, "Received SIGINT signal to shutdown.")
 		case syscall.SIGTERM:
-<<<<<<< HEAD
 			opts.Logger.DebugContext(sCtx, "Received SIGTERM signal to shutdown.")
-=======
-			opts.Logger.DebugContext(sCtx, "Sending SIGTERM signal to shutdown.")
->>>>>>> d9cf2b18e63 (feat: add serve subcommand)
 		}
 		cancel()
 	}(ctx)
@@ -84,11 +80,7 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	// run server in background
-<<<<<<< HEAD
 	srvErr := make(chan error, 1)
-=======
-	srvErr := make(chan error)
->>>>>>> d9cf2b18e63 (feat: add serve subcommand)
 	if opts.Cfg.Stdio {
 		go func() {
 			defer close(srvErr)
