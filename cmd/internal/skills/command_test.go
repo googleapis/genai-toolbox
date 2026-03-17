@@ -28,11 +28,18 @@ import (
 )
 
 func invokeCommand(args []string) (string, error) {
-	parentCmd := &cobra.Command{Use: "toolbox"}
+	parentCmd := &cobra.Command{
+		Use:           "toolbox",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 
 	buf := new(bytes.Buffer)
 	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
 	internal.PersistentFlags(parentCmd, opts)
+
+	parentCmd.SetOut(buf)
+	parentCmd.SetErr(buf)
 
 	cmd := NewCommand(opts)
 	parentCmd.AddCommand(cmd)
@@ -189,6 +196,32 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 			got, err := invokeCommand(tt.args)
 			if err == nil {
 				t.Fatalf("expected command to fail due to missing arguments, but it succeeded\nOutput: %s", got)
+			}
+		})
+	}
+}
+
+func TestGenerateSkill_FlagValidation(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		wantSub string
+	}{
+		{
+			name:    "unexpected positional arg",
+			args:    []string{"skills-generate", "--name", "test", "--description", "test", "extra"},
+			wantSub: "unknown command \"extra\"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := invokeCommand(tt.args)
+			if err == nil {
+				t.Fatalf("expected error containing %q, but got nil\nOutput: %s", tt.wantSub, got)
+			}
+			if !strings.Contains(err.Error(), tt.wantSub) && !strings.Contains(got, tt.wantSub) {
+				t.Errorf("expected error or output to contain %q\nError: %v\nOutput: %s", tt.wantSub, err, got)
 			}
 		})
 	}

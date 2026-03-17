@@ -48,6 +48,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd.Command = &cobra.Command{
 		Use:   "skills-generate",
 		Short: "Generate skills from tool configurations",
+		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			return run(cmd, opts)
 		},
