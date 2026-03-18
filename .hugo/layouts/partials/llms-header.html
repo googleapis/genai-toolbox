@@ -33,15 +33,15 @@ When navigating documentation in the `integrations/` directory, it is crucial to
 * **Configuration:** `tools.yaml` is the ultimate source of truth for server configuration.
 * **Database:** PostgreSQL 16+ and the `psql` client.
 * **Language Requirements:**
-{{- with .Site.GetPage "/build-with-mcp-toolbox/local_quickstart" }}
+{{- with .Site.GetPage "/documentation/getting-started/local_quickstart" }}
   {{- $match := findRE "(?i)Python\\s+\\(\\d+\\.\\d+\\s+or\\s+higher\\)" .RawContent 1 }}
   * Python: {{ if $match }}{{ index $match 0 | replaceRE "[\\[\\]]" "" }}{{ else }}Refer to Python Quickstart{{ end }}
 {{- end }}
-{{- with .Site.GetPage "/build-with-mcp-toolbox/local_quickstart_js" }}
+{{- with .Site.GetPage "/documentation/getting-started/local_quickstart_js" }}
   {{- $match := findRE "(?i)Node\\.js \\(v\\d+ or higher\\)" .RawContent 1 }}
   * JavaScript/Node: {{ if $match }}{{ index $match 0 }}{{ else }}Refer to JS Quickstart{{ end }}
 {{- end }}
-{{- with .Site.GetPage "/build-with-mcp-toolbox/local_quickstart_go" }}
+{{- with .Site.GetPage "/documentation/getting-started/local_quickstart_go" }}
   {{- $match := findRE "(?i)Go \\(v\\d+\\.\\d+\\.\\d+ or higher\\)" .RawContent 1 }}
   * Go: {{ if $match }}{{ index $match 0 }}{{ else }}Refer to Go Quickstart{{ end }}
 {{- end }}

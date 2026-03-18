@@ -13,7 +13,7 @@ docker images][release-notes] (but you can always compile yourself as well!).
 
 For detailed instructions, check out these resources:
 
-- [Quickstart: How to Run Locally](../build-with-mcp-toolbox/local_quickstart.md)
+- [Quickstart: How to Run Locally](../documentation/getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../documentation/deploy-to/cloud-run/_index.md)
 
 [release-notes]: https://github.com/googleapis/genai-toolbox/releases/

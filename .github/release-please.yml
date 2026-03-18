@@ -18,10 +18,10 @@ releaseType: simple
 versionFile: "cmd/version.txt"
 extraFiles: [
     "README.md",
-    "docs/en/build-with-mcp-toolbox/colab_quickstart.ipynb",
+    "docs/en/documentation/getting-started/colab_quickstart.ipynb",
     "docs/en/documentation/introduction/_index.md",
-    "docs/en/build-with-mcp-toolbox/mcp_quickstart/_index.md",
-    "docs/en/build-with-mcp-toolbox/quickstart/shared/configure_toolbox.md",
+    "docs/en/documentation/getting-started/mcp_quickstart/_index.md",
+    "docs/en/documentation/getting-started/quickstart/shared/configure_toolbox.md",
     "docs/en/build-with-mcp-toolbox/alloydb/_index.md",
     "docs/en/build-with-mcp-toolbox/alloydb/mcp_quickstart.md",
     "docs/en/build-with-mcp-toolbox/alloydb/ai-nl/alloydb_ai_nl.ipynb",

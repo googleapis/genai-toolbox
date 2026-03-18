@@ -11,7 +11,7 @@ description: >
 This guide assumes you have already done the following:
 
 1.  Completed the [Python Quickstart
-    (Local)](../build-with-mcp-toolbox/local_quickstart.md) and have a working ADK
+    (Local)](../documentation/getting-started/local_quickstart.md) and have a working ADK
     agent running locally.
 2.  Installed the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install).
 3.  A Google Cloud project with billing enabled.
