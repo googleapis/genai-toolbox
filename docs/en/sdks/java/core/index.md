@@ -1,5 +1,5 @@
 ---
-title: "SDK"
+title: "Core"
 type: docs
 weight: 2
 description: >
@@ -12,16 +12,16 @@ The package provides a java interface to the MCP Toolbox service, enabling you t
 
 ## Installation
 
-This SDK is distributed via a Maven Central Repository.
+This SDK is distributed via a [Maven Central Repository](https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java).
 
 ### Maven
 Add the dependency to your `pom.xml`:
 ```xml
-<!-- Source: https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java -->
 <dependency>
     <groupId>com.google.cloud.mcp</groupId>
     <artifactId>mcp-toolbox-sdk-java</artifactId>
-    <version>0.2.0</version> <!-- {x-version-update:mcp-toolbox-sdk-java:current} -->
+    <!-- Replace 'VERSION' with the latest version from https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java -->
+    <version>VERSION</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -30,10 +30,55 @@ Add the dependency to your `pom.xml`:
 
 ```
 dependencies {
-    // Source: https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java
-    implementation("com.google.cloud.mcp:mcp-toolbox-sdk-java:0.2.0") 
+    // Replace 'VERSION' with the latest version from https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java
+    implementation("com.google.cloud.mcp:mcp-toolbox-sdk-java:VERSION") 
 }
 ```
+
+## Quickstart
+
+Here is the minimal code needed to connect to a mcp toolbox and invoke a tool.
+
+```java
+import com.google.cloud.mcp.McpToolboxClient;
+import java.util.Map;
+
+public class App {
+    public static void main(String[] args) {
+        // 1. Create the Client
+        McpToolboxClient client = McpToolboxClient.builder()
+            .baseUrl("https://my-toolbox-service.a.run.app/mcp") 
+            .build();
+
+        // 2. Invoke a Tool
+        client.invokeTool("get-toy-price", Map.of("description", "plush dinosaur"))
+            .thenAccept(result -> {
+                // Pick the first item from the response.
+                System.out.println("Tool Output: " + result.content().get(0).text());
+            })
+            .exceptionally(ex -> {
+                System.err.println("Error: " + ex.getMessage());
+                return null;
+            })
+            .join(); // Wait for completion
+    }
+}
+```
+
+For a detailed example, check the [ExampleUsage.java file](https://github.com/googleapis/mcp-toolbox-sdk-java/blob/main/example/src/main/java/cloudcode/helloworld/ExampleUsage.java) in the example folder of [Java SDK Repo](https://github.com/googleapis/mcp-toolbox-sdk-java).
+
+{{< notice tip >}}
+The SDK is Async-First, using Java's `CompletableFuture` to bridge both patterns naturally.
+- Chain methods using `.thenCompose()`, `.thenAccept()`, and `.exceptionally()` for non-blocking execution.
+- If you prefer synchronous execution, simply call `.join()` on the result to block until completion.
+
+```java
+// Async (Non-blocking)
+client.invokeTool("tool-name", args).thenAccept(result -> ...);
+// Sync (Blocking)
+ToolResult result = client.invokeTool("tool-name", args).join();
+```
+{{< /notice >}}
 
 ## Usage
 
@@ -107,61 +152,17 @@ client.invokeTool("get-toy-price", args).thenAccept(result -> {
 });
 ```
 
-## Quickstart
-
-Here is the minimal code needed to connect to a toolbox and invoke a tool.
-
-```java
-import com.google.cloud.mcp.McpToolboxClient;
-import java.util.Map;
-
-public class App {
-    public static void main(String[] args) {
-        // 1. Create the Client
-        McpToolboxClient client = McpToolboxClient.builder()
-            .baseUrl("https://my-toolbox-service.a.run.app/mcp") 
-            .build();
-
-        // 2. Invoke a Tool
-        client.invokeTool("get-toy-price", Map.of("description", "plush dinosaur"))
-            .thenAccept(result -> {
-                // Pick the first item from the response.
-                System.out.println("Tool Output: " + result.content().get(0).text());
-            })
-            .exceptionally(ex -> {
-                System.err.println("Error: " + ex.getMessage());
-                return null;
-            })
-            .join(); // Wait for completion
-    }
-}
-```
-
-For a detailed example, check the ExampleUsage.java file in the example folder of this repo.
-
-{{< notice note >}}
-The SDK is Async-First, using Java's `CompletableFuture` to bridge both patterns naturally.
-- Chain methods using `.thenCompose()`, `.thenAccept()`, and `.exceptionally()` for non-blocking execution.
-- If you prefer synchronous execution, simply call `.join()` on the result to block until completion.
-{{< /notice >}}
-```java
-// Async (Non-blocking)
-client.invokeTool("tool-name", args).thenAccept(result -> ...);
-// Sync (Blocking)
-ToolResult result = client.invokeTool("tool-name", args).join();
-```
-
 ## Authentication
 
 ### Client to Server Authentication
 
-This section describes how to authenticate the `ToolboxClient` itself when connecting to a Toolbox server instance that requires authentication. This is crucial for securing your Toolbox server endpoint, especially when deployed on platforms like Cloud Run, GKE, or any environment where unauthenticated access is restricted.
+This section describes how to authenticate the `ToolboxClient` itself when connecting to a MCP Toolbox server instance that requires authentication. This is crucial for securing your MCP Toolbox server endpoint, especially when deployed on platforms like Cloud Run, GKE, or any environment where unauthenticated access is restricted.
 
 ### When is Client-to-Server Authentication Needed
 
-You'll need this if your Toolbox server is configured to deny unauthenticated requests. For example:
+You'll need this if your MCP Toolbox server is configured to deny unauthenticated requests. For example:
 
-* Your Toolbox server is deployed on **Google Cloud Run** and configured to "Require authentication" (default).  
+* Your MCP Toolbox server is deployed on **Google Cloud Run** and configured to "Require authentication" (default).  
 * Your server is behind an Identity-Aware Proxy (IAP).  
 * You have custom authentication middleware.
 
@@ -171,11 +172,13 @@ Without proper client authentication, attempts to connect (like `listTools`) wil
 
 The Java SDK handles the generation of **Authorization headers** (Bearer tokens) using the **Google Auth Library**. It follows the **Application Default Credentials (ADC)** strategy to find the correct credentials based on the environment where your code is running.
 
-You need to set up [ADC](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment).
+{{< notice note >}}
+To get started with local development, you'll need to set up [Application Default Credentials (ADC)](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment).
+{{< /notice >}}
 
 ### Authenticating with Google Cloud Servers (Cloud Run)
 
-For Toolbox servers hosted on Google Cloud (e.g., Cloud Run), the SDK provides seamless OIDC authentication.
+For MCP Toolbox servers hosted on Google Cloud (e.g., Cloud Run), the SDK provides seamless OIDC authentication.
 
 #### 1\. Configure Permissions
 
@@ -192,7 +195,7 @@ Grant the **`roles/run.invoker`** IAM role on the Cloud Run service to the princ
 gcloud auth application-default login
 ```
 
-The SDK will automatically detect these credentials and generate an OIDC ID Token intended for your Toolbox URL.
+The SDK will automatically detect these credentials and generate an OIDC ID Token intended for your MCP Toolbox URL.
 
 **Option B: Google Cloud Environments** When running within Google Cloud (e.g., Compute Engine, GKE, another Cloud Run service, Cloud Functions), ADC is configured automatically. The SDK uses the environment's default service account. No extra code or configuration is required.
 
@@ -212,24 +215,24 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
 
 ### Authenticating the Tools
 
-Tools can be configured within the Toolbox service to require authentication, ensuring only authorized users or applications can invoke them, especially when accessing sensitive data.
+Tools can be configured within the MCP Toolbox service to require authentication, ensuring only authorized users or applications can invoke them, especially when accessing sensitive data.
 
 {{< notice info >}}
-Always use HTTPS to connect your application with the Toolbox service, especially in production environments or whenever the communication involves sensitive data (including scenarios where tools require authentication tokens). Using plain HTTP lacks encryption and exposes your application and data to significant security risks, such as eavesdropping and tampering.
+Always use HTTPS to connect your application with the MCP Toolbox service, especially in production environments or whenever the communication involves sensitive data (including scenarios where tools require authentication tokens). Using plain HTTP lacks encryption and exposes your application and data to significant security risks, such as eavesdropping and tampering.
 {{< /notice >}}
 
 
 ### When is Authentication Needed?
 
-Authentication is configured per-tool within the Toolbox service itself. If a tool you intend to use is marked as requiring authentication in the service, you must configure the SDK client to provide the necessary credentials (currently Oauth2 tokens) when invoking that specific tool.
+Authentication is configured per-tool within the MCP Toolbox service itself. If a tool you intend to use is marked as requiring authentication in the service, you must configure the SDK client to provide the necessary credentials (currently Oauth2 tokens) when invoking that specific tool.
 
 ### Supported Authentication Mechanisms
 
-The Toolbox service enables secure tool usage through Authenticated Parameters. For detailed information on how these mechanisms work within the Toolbox service and how to configure them, please refer to [Toolbox Service Documentation \- Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters)
+The MCP Toolbox service enables secure tool usage through Authenticated Parameters. For detailed information on how these mechanisms work within the MCP Toolbox service and how to configure them, please refer to [MCP Toolbox Service Documentation \- Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters)
 
-### Step 1: Configure Tools in Toolbox Service
+### Step 1: Configure Tools in MCP Toolbox Service
 
-First, ensure the target tool(s) are configured correctly in the Toolbox service to require authentication. Refer to the [Toolbox Service Documentation \- Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters) for instructions.
+First, ensure the target tool(s) are configured correctly in the MCP Toolbox service to require authentication. Refer to the [MCP Toolbox Service Documentation \- Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters) for instructions.
 
 ### Step 2: Configure SDK Client
 
@@ -257,7 +260,7 @@ client.loadTool("search-salesforce").thenCompose(tool -> {
 });
 ```
 
-{{< notice note >}}
+{{< notice tip >}}
 Your token retriever function is invoked every time an authenticated parameter requires a token for a tool call. Consider implementing caching logic within this function to avoid redundant token fetching or generation, especially for tokens with longer validity periods or if the retrieval process is resource-intensive.
 {{< /notice >}}
 
@@ -313,11 +316,11 @@ The SDK allows you to pre-set, or "bind", values for specific tool parameters be
 * Pre-filling known data: Providing defaults or context.
 
 {{< notice info >}}
-The parameter names used for binding (e.g., `"api_key"`) must exactly match the parameter names defined in the tool's configuration within the Toolbox service.
+The parameter names used for binding (e.g., `"api_key"`) must exactly match the parameter names defined in the tool's configuration within the MCP Toolbox service.
 {{< /notice >}}
 
-{{< notice note >}}
-You do not need to modify the tool's configuration in the Toolbox service to bind parameter values using the SDK.
+{{< notice tip >}}
+You do not need to modify the tool's configuration in the MCP Toolbox service to bind parameter values using the SDK.
 {{< /notice >}}
 
 ### Option A: Static Binding
@@ -348,7 +351,7 @@ client.loadTool("check-order-status").thenCompose(tool -> {
 });
 ```
 
-{{< notice info >}}
+{{< notice tip >}}
 You don't need to modify tool configurations to bind parameter values.
 {{< /notice >}}
 
