@@ -17,6 +17,7 @@ package looker
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -1818,6 +1819,8 @@ func TestLooker(t *testing.T) {
 		},
 	)
 
+	randstr := rand.Text()[0:8]
+
 	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
 
@@ -1883,18 +1886,18 @@ func TestLooker(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": true}`), wantResult)
 
 	wantResult = "created"
-	tests.RunToolInvokeParametersTest(t, "create_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "view"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "create_project_file", []byte(fmt.Sprintf(`{"project_id": "the_look", "file_path": "foo%s.view.lkml", "file_content": "view"}`, randstr)), wantResult)
 
 	wantResult = "updated"
-	tests.RunToolInvokeParametersTest(t, "update_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "model"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "update_project_file", []byte(fmt.Sprintf(`{"project_id": "the_look", "file_path": "foo%s.view.lkml", "file_content": "model"}`, randstr)), wantResult)
 
 	wantResult = "deleted"
-	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(fmt.Sprintf(`{"project_id": "the_look", "file_path": "foo%s.view.lkml"}`, randstr)), wantResult)
 
 	wantResult = "Created"
-	tests.RunToolInvokeParametersTest(t, "create_project_directory", []byte(`{"project_id": "the_look", "directory_path": "views"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "create_project_directory", []byte(fmt.Sprintf(`{"project_id": "the_look", "directory_path": "views%s"}`, randstr)), wantResult)
 
-	wantResult = "views"
+	wantResult = fmt.Sprintf("views%s", randstr)
 	tests.RunToolInvokeParametersTest(t, "get_project_directories", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	// Add test back when infrastructure for testing supports it.
@@ -1902,7 +1905,7 @@ func TestLooker(t *testing.T) {
 	// tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
 
 	wantResult = "Deleted"
-	tests.RunToolInvokeParametersTest(t, "delete_project_directory", []byte(`{"project_id": "the_look", "directory_path": "views"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "delete_project_directory", []byte(fmt.Sprintf(`{"project_id": "the_look", "directory_path": "views%s"}`, randstr)), wantResult)
 
 	wantResult = "\"errors\":[]"
 	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
@@ -1936,10 +1939,10 @@ func TestLooker(t *testing.T) {
 
 	runConversationalAnalytics(t, "system__activity", "content_usage")
 
-	deleteLook := testMakeLook(t)
+	deleteLook := testMakeLook(t, randstr)
 	defer deleteLook()
 
-	dashboardId, deleteDashboard := testMakeDashboard(t)
+	dashboardId, deleteDashboard := testMakeDashboard(t, randstr)
 	defer deleteDashboard()
 	testAddDashboardFilter(t, dashboardId)
 	testAddDashboardElement(t, dashboardId)
@@ -2021,10 +2024,10 @@ func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
 	return v4.NewLookerSDK(rtl.NewAuthSession(cfg))
 }
 
-func testMakeLook(t *testing.T) func() {
+func testMakeLook(t *testing.T, randstr string) func() {
 	var id string
 	t.Run("TestMakeLook", func(t *testing.T) {
-		reqBody := []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestLook"}`)
+		reqBody := []byte(fmt.Sprintf(`{"model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestLook%s"}`, randstr))
 
 		url := "http://127.0.0.1:5000/api/tool/make_look/invoke"
 		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
@@ -2089,10 +2092,10 @@ func testAddDashboardElement(t *testing.T, dashboardId string) {
 	})
 }
 
-func testMakeDashboard(t *testing.T) (string, func()) {
+func testMakeDashboard(t *testing.T, randstr string) (string, func()) {
 	var id string
 	t.Run("TestMakeDashboard", func(t *testing.T) {
-		reqBody := []byte(`{"title": "TestDashboard"}`)
+		reqBody := []byte(fmt.Sprintf(`{"title": "TestDashboard%s"}`, randstr))
 
 		url := "http://127.0.0.1:5000/api/tool/make_dashboard/invoke"
 		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)

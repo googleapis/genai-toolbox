@@ -208,7 +208,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/toolset/init",
-				trace.WithAttributes(attribute.String("toolset_name", name)),
+				trace.WithAttributes(attribute.String("toolset.name", name)),
 			)
 			defer span.End()
 			t, err := tc.Initialize(cfg.Version, toolsMap)

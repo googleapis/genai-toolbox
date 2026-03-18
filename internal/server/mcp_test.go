@@ -1184,3 +1184,19 @@ func TestSseManagerGetNonExistentSession(t *testing.T) {
 		t.Error("expected nil session for non-existent ID")
 	}
 }
+
+func TestSseManagerGetNilSessionValue(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	m := newSseManager(ctx)
+	m.sseSessions["nil-session-id"] = nil
+
+	session, ok := m.get("nil-session-id")
+	if ok {
+		t.Error("expected ok to be false for nil session value")
+	}
+	if session != nil {
+		t.Error("expected nil session for nil session value")
+	}
+}
