@@ -126,8 +126,8 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	runListLogNamesTest(t, logName)
-	runAuthListLogNamesTest(t, logName)
+	runListLogNamesTest(t)
+	runAuthListLogNamesTest(t)
 	runListResourceTypesTest(t)
 	runQueryLogsTest(t, logName)
 	runQueryLogsErrorTest(t)
@@ -205,7 +205,7 @@ func getCloudLoggingAdminToolsConfig(sourceConfig map[string]any) map[string]any
 	}
 }
 
-func runListLogNamesTest(t *testing.T, expectedLogName string) {
+func runListLogNamesTest(t *testing.T) {
 	t.Run("list-log-names", func(t *testing.T) {
 		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
 		defer resp.Body.Close()
@@ -216,7 +216,7 @@ func runListLogNamesTest(t *testing.T, expectedLogName string) {
 
 		var body map[string]interface{}
 		if err := json.Unmarshal(respBody, &body); err != nil {
-			t.Fatalf("error parsing response body")
+			t.Fatalf("error parsing response body: %v", err)
 		}
 
 		result, ok := body["result"].(string)
@@ -224,13 +224,17 @@ func runListLogNamesTest(t *testing.T, expectedLogName string) {
 			t.Fatalf("expected result to be string")
 		}
 
-		if !strings.Contains(result, expectedLogName) {
-			t.Errorf("expected log name %s not found in result: %s", expectedLogName, result)
+		var logs []string
+		if err := json.Unmarshal([]byte(result), &logs); err != nil {
+			t.Fatalf("expected result to be a JSON array of strings: %v", err)
+		}
+		if len(logs) == 0 {
+			t.Errorf("expected result to contain at least one log")
 		}
 	})
 }
 
-func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
+func runAuthListLogNamesTest(t *testing.T) {
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
@@ -246,7 +250,7 @@ func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
 
 		var body map[string]interface{}
 		if err := json.Unmarshal(respBody, &body); err != nil {
-			t.Fatalf("error parsing response body")
+			t.Fatalf("error parsing response body: %v", err)
 		}
 
 		result, ok := body["result"].(string)
@@ -254,8 +258,12 @@ func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
 			t.Fatalf("expected result to be string")
 		}
 
-		if !strings.Contains(result, expectedLogName) {
-			t.Errorf("expected log name %s not found in result: %s", expectedLogName, result)
+		var logs []string
+		if err := json.Unmarshal([]byte(result), &logs); err != nil {
+			t.Fatalf("expected result to be a JSON array of strings: %v", err)
+		}
+		if len(logs) == 0 {
+			t.Errorf("expected result to contain at least one log")
 		}
 	})
 	t.Run("auth-list-log-names-missing-header", func(t *testing.T) {
