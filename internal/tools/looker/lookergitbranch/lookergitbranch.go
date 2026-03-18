@@ -143,6 +143,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		return resp, nil
 	case "create":
+		if branch == "" {
+			return nil, util.NewClientServerError(fmt.Sprintf("%s operation: branch must be specified", operation), http.StatusInternalServerError, nil)
+		}
 		body := v4.WriteGitBranch{
 			Name: &branch,
 		}
@@ -155,6 +158,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		return resp, nil
 	case "switch":
+		if branch == "" {
+			return nil, util.NewClientServerError(fmt.Sprintf("%s operation: branch must be specified", operation), http.StatusInternalServerError, nil)
+		}
 		body := v4.WriteGitBranch{
 			Name: &branch,
 		}
@@ -167,6 +173,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		return resp, nil
 	case "delete":
+		if branch == "" {
+			return nil, util.NewClientServerError(fmt.Sprintf("%s operation: branch must be specified", operation), http.StatusInternalServerError, nil)
+		}
 		_, err := sdk.DeleteGitBranch(projectId, branch, source.LookerApiSettings())
 		if err != nil {
 			return nil, util.NewClientServerError(fmt.Sprintf("error making delete_git_branch request: %s", err), http.StatusInternalServerError, err)
