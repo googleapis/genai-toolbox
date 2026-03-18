@@ -22,6 +22,7 @@ Before you begin, ensure you have the following:
 ### Running from Local Source
 
 1. **Configuration:** Create a `tools.yaml` file to configure your sources and
+
    tools. See the [Configuration section in the
    README](./README.md#Configuration) for details.
 1. **CLI Flags:** List available command-line flags for the Toolbox server:
