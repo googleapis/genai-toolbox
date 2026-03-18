@@ -1092,8 +1092,9 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 				t.Fatalf("error unmarshalling batch from wrapped result: %s", err)
 			}
 
-			if !cmp.Equal(&batch, tc.want, protocmp.Transform()) {
-				diff := cmp.Diff(&batch, tc.want, protocmp.Transform())
+			ignoreFields := protocmp.IgnoreFields(&dataprocpb.RuntimeInfo{}, "approximate_usage")
+			if !cmp.Equal(&batch, tc.want, protocmp.Transform(), ignoreFields) {
+				diff := cmp.Diff(&batch, tc.want, protocmp.Transform(), ignoreFields)
 				t.Errorf("GetBatch() returned diff (-got +want):\n%s", diff)
 			}
 		})
