@@ -141,7 +141,7 @@ For a detailed example, check the ExampleUsage.java file in the example folder o
 
 {{< notice note >}}
 The SDK is Async-First, using Java's `CompletableFuture` to bridge both patterns naturally.
-- Asynchronous: Chain methods using `.thenCompose()`, `.thenAccept()`, and `.exceptionally()` for non-blocking execution.
+- Chain methods using `.thenCompose()`, `.thenAccept()`, and `.exceptionally()` for non-blocking execution.
 - If you prefer synchronous execution, simply call `.join()` on the result to block until completion.
 {{< /notice >}}
 ```java
