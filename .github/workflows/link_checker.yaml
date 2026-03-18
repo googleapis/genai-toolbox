@@ -87,25 +87,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Find comment
-        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4
-        id: find-comment
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: "## Link Resolution Note"
-
-      - name: Delete comment on success
-        if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
-        run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/issues/comments/${STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID: ${{ steps.find-comment.outputs.comment-id }}
-
       - name: Prepare Report 
         if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         run: |
@@ -115,24 +96,6 @@ jobs:
           echo "" >> full-report.md 
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
-      - name: Create PR Comment
-        id: pr-comment
-        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9
-        continue-on-error: true
-        with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: full-report.md
-          edit-mode: replace
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Report Commenting Failure
-        if: steps.pr-comment.outcome == 'failure'
-        run: |
-          echo "::warning title=GitHub API Error::The bot failed to post a PR comment. This is likely a permission issue with GITHUB_TOKEN on a fork."
-          echo "Check the 'Link Checker' step output below for the results instead." 
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
