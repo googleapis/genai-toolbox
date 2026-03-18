@@ -10,7 +10,7 @@ description: >
 
 [Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
-on how to [connect to Toolbox via MCP](../../user-guide/connect-to/mcp-client/_index.md).
+on how to [connect to Toolbox via MCP](../../documentation/connect-to/mcp-client/_index.md).
 
 ## Before you begin
 
@@ -314,7 +314,7 @@ tools:
 ```
 
 For more info on tools, check out the
-[Tools](../../user-guide/configuration/tools/_index.md) section.
+[Tools](../../documentation/configuration/tools/_index.md) section.
 
 ## Step 4: Run the Toolbox server
 
@@ -364,6 +364,6 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ## What's next
 
-- Learn more about [MCP Inspector](../../user-guide/connect-to/mcp-client/_index.md).
-- Learn more about [Toolbox User Guide](../../user-guide/configuration/_index.md).
+- Learn more about [MCP Inspector](../../documentation/connect-to/mcp-client/_index.md).
+- Learn more about [Toolbox User Guide](../../documentation/configuration/_index.md).
 - Learn more about [Toolbox Tutorials](../../build-with-mcp-toolbox/_index.md).

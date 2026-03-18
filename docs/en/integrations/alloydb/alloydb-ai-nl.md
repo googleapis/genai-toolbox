@@ -80,7 +80,7 @@ database queries.
 
 You can use the `nlConfigParameters` to list the parameters required for your
 `nl_config`. You **must** supply all parameters required for all PSVs in the
-context. It's strongly recommended to use features like [Authenticated Parameters](../../user-guide/configuration/tools/_index.md#authenticated-parameters) or Bound Parameters to provide secure
+context. It's strongly recommended to use features like [Authenticated Parameters](../../documentation/configuration/tools/_index.md#authenticated-parameters) or Bound Parameters to provide secure
 access to queries generated using natural language, as these parameters are not
 visible to the LLM.
 

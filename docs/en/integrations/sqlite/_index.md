@@ -31,7 +31,7 @@ SQLite has the following notable characteristics:
 
 ### Pre-built Configurations
 
-- [SQLite using MCP](../../user-guide/connect-to/ides/sqlite_mcp.md)
+- [SQLite using MCP](../../documentation/connect-to/ides/sqlite_mcp.md)
 Connect your IDE to SQlite using Toolbox.
 
 ## Requirements

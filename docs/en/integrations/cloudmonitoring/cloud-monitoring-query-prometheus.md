@@ -25,12 +25,12 @@ Here are some common use cases for the `cloud-monitoring-query-prometheus` tool:
 
 - **Monitoring resource utilization:** Track CPU, memory, and disk usage for
   your database instance (Can use the [prebuilt
-  tools](../../user-guide/configuration/prebuilt-configs/_index.md)).
+  tools](../../documentation/configuration/prebuilt-configs/_index.md)).
 - **Monitoring query performance:** Monitor latency, execution_time, wait_time
   for database instance or even for the queries running (Can use the [prebuilt
-  tools](../../user-guide/configuration/prebuilt-configs/_index.md)).
+  tools](../../documentation/configuration/prebuilt-configs/_index.md)).
 - **System Health:** Get the overall system health for the database instance
-  (Can use the [prebuilt tools](../../user-guide/configuration/prebuilt-configs/_index.md)).
+  (Can use the [prebuilt tools](../../documentation/configuration/prebuilt-configs/_index.md)).
 
 ## Compatible Sources
 

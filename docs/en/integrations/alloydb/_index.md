@@ -28,10 +28,10 @@ cluster][alloydb-free-trial].
 
 ### Pre-built Configurations
 
-- [AlloyDB using MCP](../../user-guide/connect-to/ides/alloydb_pg_mcp.md)
+- [AlloyDB using MCP](../../documentation/connect-to/ides/alloydb_pg_mcp.md)
 Connect your IDE to AlloyDB using Toolbox.
 
-- [AlloyDB Admin API using MCP](../../user-guide/connect-to/ides/alloydb_pg_admin_mcp.md)
+- [AlloyDB Admin API using MCP](../../documentation/connect-to/ides/alloydb_pg_admin_mcp.md)
 Create your AlloyDB database with MCP Toolbox.
 
 ## Requirements

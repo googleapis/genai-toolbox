@@ -102,7 +102,7 @@ between agents and applications and update those tools without necessarily
 redeploying your application.
 
 <p align="center">
-<img src="docs/en/user-guide/introduction/architecture.png" alt="architecture" width="50%"/>
+<img src="docs/en/documentation/introduction/architecture.png" alt="architecture" width="50%"/>
 </p>
 
 ## Getting Started

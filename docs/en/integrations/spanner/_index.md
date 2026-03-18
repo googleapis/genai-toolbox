@@ -31,7 +31,7 @@ the Google Cloud console][spanner-quickstart].
 
 ### Pre-built Configurations
 
-- [Spanner using MCP](../../user-guide/connect-to/ides/spanner_mcp.md)
+- [Spanner using MCP](../../documentation/connect-to/ides/spanner_mcp.md)
 Connect your IDE to Spanner using Toolbox.
 
 ## Requirements

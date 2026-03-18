@@ -14,7 +14,7 @@ docker images][release-notes] (but you can always compile yourself as well!).
 For detailed instructions, check out these resources:
 
 - [Quickstart: How to Run Locally](../build-with-mcp-toolbox/local_quickstart.md)
-- [Deploy to Cloud Run](../user-guide/deploy-to/cloud-run/_index.md)
+- [Deploy to Cloud Run](../documentation/deploy-to/cloud-run/_index.md)
 
 [release-notes]: https://github.com/googleapis/genai-toolbox/releases/
 
@@ -79,5 +79,5 @@ than in Python.
 
 Yes! Toolbox is compatible with [Anthropic's Model Context Protocol
 (MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via
-MCP](../user-guide/connect-to/mcp-client/_index.md) on how to connect to Toolbox with an MCP
+MCP](../documentation/connect-to/mcp-client/_index.md) on how to connect to Toolbox with an MCP
 client.

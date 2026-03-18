@@ -21,7 +21,7 @@ This guide assumes you have already done the following:
 Before deploying your agent, your MCP Toolbox server needs to be accessible from
 the cloud. We will deploy MCP Toolbox to Cloud Run.
 
-Follow the [Deploy to Cloud Run](../user-guide/deploy-to/cloud-run/_index.md) guide to deploy your MCP
+Follow the [Deploy to Cloud Run](../documentation/deploy-to/cloud-run/_index.md) guide to deploy your MCP
 Toolbox instance.
 
 {{% alert title="Important" %}}

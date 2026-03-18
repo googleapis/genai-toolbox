@@ -27,7 +27,7 @@ to a database by following these instructions][csql-mssql-connect].
 
 ### Pre-built Configurations
 
-- [Cloud SQL for SQL Server using MCP](../../user-guide/connect-to/ides/cloud_sql_mssql_mcp.md)
+- [Cloud SQL for SQL Server using MCP](../../documentation/connect-to/ides/cloud_sql_mssql_mcp.md)
 Connect your IDE to Cloud SQL for SQL Server using Toolbox.
 
 ## Requirements

@@ -23,7 +23,7 @@ reputation for reliability, feature robustness, and performance.
 
 ### Pre-built Configurations
 
-- [PostgreSQL using MCP](../../user-guide/connect-to/ides/postgres_mcp.md)
+- [PostgreSQL using MCP](../../documentation/connect-to/ides/postgres_mcp.md)
 Connect your IDE to PostgreSQL using Toolbox.
 
 ## Requirements

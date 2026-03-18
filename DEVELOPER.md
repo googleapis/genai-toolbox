@@ -227,7 +227,7 @@ tools.
 
 * **(Optional) Add samples** to the `docs/en/build-with-mcp-toolbox/<newdb>` directory.
 
-* **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `user-guide`, etc.), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, you need to update the "Diátaxis Narrative Framework" preamble in both files so that the AI models understand the purpose of your new section.
+* **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `documentation`, etc.), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, you need to update the "Diátaxis Narrative Framework" preamble in both files so that the AI models understand the purpose of your new section.
 
 #### Adding Prebuilt Tools
 

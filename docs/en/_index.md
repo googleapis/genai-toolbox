@@ -7,7 +7,7 @@ weight: 1
 
 <html>
   <head>
-    <link rel="canonical" href="user-guide/introduction/"/>
-    <meta http-equiv="refresh" content="0;url=user-guide/introduction/"/>
+    <link rel="canonical" href="documentation/introduction/"/>
+    <meta http-equiv="refresh" content="0;url=documentation/introduction/"/>
   </head>
 </html>
