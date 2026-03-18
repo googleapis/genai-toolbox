@@ -33,6 +33,7 @@ import (
 	// Importing the cmd/internal package also import packages for side effect of registration
 	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/cmd/internal/invoke"
+	"github.com/googleapis/genai-toolbox/cmd/internal/serve"
 	"github.com/googleapis/genai-toolbox/cmd/internal/skills"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -110,30 +111,21 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 
 	// setup flags that are common across all commands
 	internal.PersistentFlags(cmd, opts)
-
 	flags := cmd.Flags()
-
-	flags.StringVarP(&opts.Cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
-	flags.IntVarP(&opts.Cfg.Port, "port", "p", 5000, "Port the server will listen on.")
-
+	internal.ConfigFileFlags(flags, opts)
+	internal.ServeFlags(flags, opts)
 	flags.StringVar(&opts.ToolsFile, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.BoolVar(&opts.Cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
-	flags.BoolVar(&opts.Cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
-	// TODO: Insecure by default. Might consider updating this for v1.0.0
-	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
-	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
 	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
-
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
 
-	// Register subcommands for tool invocation
+	// Register subcommands
 	cmd.AddCommand(invoke.NewCommand(opts))
-	// Register subcommands for skill generation
 	cmd.AddCommand(skills.NewCommand(opts))
+	cmd.AddCommand(serve.NewCommand(opts))
 
 	return cmd
 }
