@@ -216,7 +216,7 @@ func runListLogNamesTest(t *testing.T) {
 
 		var body map[string]interface{}
 		if err := json.Unmarshal(respBody, &body); err != nil {
-			t.Fatalf("error parsing response body")
+			t.Fatalf("error parsing response body: %v", err)
 		}
 
 		result, ok := body["result"].(string)
@@ -226,7 +226,7 @@ func runListLogNamesTest(t *testing.T) {
 
 		var logs []string
 		if err := json.Unmarshal([]byte(result), &logs); err != nil {
-			t.Fatalf("expected result to be a JSON array of strings")
+			t.Fatalf("expected result to be a JSON array of strings: %v", err)
 		}
 		if len(logs) == 0 {
 			t.Errorf("expected result to contain at least one log")
@@ -250,7 +250,7 @@ func runAuthListLogNamesTest(t *testing.T) {
 
 		var body map[string]interface{}
 		if err := json.Unmarshal(respBody, &body); err != nil {
-			t.Fatalf("error parsing response body")
+			t.Fatalf("error parsing response body: %v", err)
 		}
 
 		result, ok := body["result"].(string)
@@ -260,7 +260,7 @@ func runAuthListLogNamesTest(t *testing.T) {
 
 		var logs []string
 		if err := json.Unmarshal([]byte(result), &logs); err != nil {
-			t.Fatalf("expected result to be a JSON array of strings")
+			t.Fatalf("expected result to be a JSON array of strings: %v", err)
 		}
 		if len(logs) == 0 {
 			t.Errorf("expected result to contain at least one log")
