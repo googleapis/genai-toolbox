@@ -37,7 +37,7 @@ dependencies {
 
 ## Quickstart
 
-Here is the minimal code needed to connect to a mcp toolbox and invoke a tool.
+Here is the minimal code needed to connect to a MCP Toolbox and invoke a tool.
 
 ```java
 import com.google.cloud.mcp.McpToolboxClient;
@@ -224,7 +224,7 @@ Always use HTTPS to connect your application with the MCP Toolbox service, espec
 
 ### When is Authentication Needed?
 
-Authentication is configured per-tool within the MCP Toolbox service itself. If a tool you intend to use is marked as requiring authentication in the service, you must configure the SDK client to provide the necessary credentials (currently Oauth2 tokens) when invoking that specific tool.
+Authentication is configured per-tool within the MCP Toolbox service itself. If a tool you intend to use is marked as requiring authentication in the service, you must configure the SDK client to provide the necessary credentials (currently OAuth2 tokens) when invoking that specific tool.
 
 ### Supported Authentication Mechanisms
 
