@@ -18,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfind"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
@@ -98,6 +99,29 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		})
 	}
 
+}
+
+func TestAnnotations(t *testing.T) {
+	// Test default annotations for read-only tool
+	t.Run("default annotations", func(t *testing.T) {
+		annotations := tools.GetAnnotationsOrDefault(nil, tools.NewReadOnlyAnnotations)
+		if annotations == nil {
+			t.Fatal("expected non-nil annotations")
+		}
+		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != true {
+			t.Error("expected readOnlyHint to be true")
+		}
+	})
+
+	// Test custom annotations override default
+	t.Run("custom annotations", func(t *testing.T) {
+		customReadOnly := false
+		custom := &tools.ToolAnnotations{ReadOnlyHint: &customReadOnly}
+		annotations := tools.GetAnnotationsOrDefault(custom, tools.NewReadOnlyAnnotations)
+		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != false {
+			t.Error("expected custom readOnlyHint to be false")
+		}
+	})
 }
 
 func TestFailParseFromYamlMongoQuery(t *testing.T) {

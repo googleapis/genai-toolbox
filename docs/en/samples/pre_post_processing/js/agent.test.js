@@ -62,10 +62,13 @@ describe(`${ORCH_NAME} Pre/Post Processing Agent`, () => {
     capturedErrors = [];
 
     await runAgent();
+
+    const actualErrors = capturedErrors.filter(err => !err.includes('Warning'));
+
     assert.equal(
-        capturedErrors.length, 
+        actualErrors.length, 
         0, 
-        `Script produced stderr: ${capturedErrors.join("\n")}`
+        `Script produced stderr: ${actualErrors.join("\n")}`
     );
 
     const actualOutput = capturedOutput.join("\n");

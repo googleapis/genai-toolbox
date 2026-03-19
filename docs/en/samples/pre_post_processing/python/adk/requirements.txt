@@ -1,3 +1,3 @@
-google-adk[toolbox]==1.23.0
-toolbox-adk==0.5.8
-google-genai==1.62.0
+google-adk[toolbox]==1.27.2
+toolbox-adk==0.7.0
+google-genai==1.67.0

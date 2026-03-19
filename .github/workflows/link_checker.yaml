@@ -55,7 +55,7 @@ jobs:
 
       - name: Restore lychee cache
         if: steps.changed-files.outputs.HAS_CHANGES == 'true'
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: .lycheecache
           key: cache-lychee-${{ github.sha }}
@@ -64,7 +64,7 @@ jobs:
       - name: Link Checker
         id: lychee-check       
         if: steps.changed-files.outputs.HAS_CHANGES == 'true'
-        uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
+        uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2
         continue-on-error: true 
         with:
           args: >

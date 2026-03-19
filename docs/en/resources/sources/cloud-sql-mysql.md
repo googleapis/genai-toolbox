@@ -147,13 +147,13 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                                      |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "cloud-sql-mysql".                                                                           |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
-| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                             |
-| user      |  string  |     false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified.                                            |
-| password  |  string  |     false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.                                                    |
-| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                                         |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------------------------------------------------|
+| type      |  string  |     true     | Must be "cloud-sql-mysql".                                                                                              |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                           |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                            |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                                                 |
+| database  |  string  |    false     | Name of the MySQL database to connect to (e.g. "my_db").                                                                |
+| user      |  string  |    false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
+| password  |  string  |    false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.              |
+| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`.                    |

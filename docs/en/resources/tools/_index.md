@@ -53,9 +53,9 @@ parameters:
 
 MCP Toolbox provides two main approaches for tools: **prebuilt** and **custom**.
 
-[**Prebuilt tools**](../../reference/prebuilt-tools/) are ready to use out of
+[**Prebuilt tools**](../../reference/prebuilt-tools.md) are ready to use out of
 the box. For example, a tool like
-[`postgres-execute-sql`](postgres/postgres-execute-sql/) has fixed parameters
+[`postgres-execute-sql`](postgres/postgres-execute-sql.md) has fixed parameters
 and always works the same way, allowing the agent to execute arbitrary SQL.
 While these are convenient, they are typically only safe when a developer is in
 the loop (e.g., during prototyping, developing, or debugging).
@@ -67,7 +67,7 @@ production is highly dangerous.
 To secure your application, you should **use custom tools** to suit your
 specific schema and application needs. Creating a custom tool restricts the
 agent's capabilities to only what is necessary. For example, you can use the
-[`postgres-sql`](postgres/postgres-sql/) tool to define a specific action. This
+[`postgres-sql`](postgres/postgres-sql.md) tool to define a specific action. This
 typically involves:
 
 *   **Prepared Statements:** Writing a SQL query ahead of time and letting the
@@ -310,6 +310,59 @@ statement: |
 authRequired:
   - my-google-auth
   - other-auth-service
+```
+
+## Tool Annotations
+
+Tool annotations provide semantic metadata that helps MCP clients understand tool
+behavior. These hints enable clients to make better decisions about tool usage
+and provide appropriate user experiences.
+
+### Available Annotations
+
+| **annotation**     |  **type**   | **default** | **description**                                                        |
+|--------------------|:-----------:|:-----------:|------------------------------------------------------------------------|
+| readOnlyHint       |    bool     |    false    | Tool only reads data, no modifications to the environment.             |
+| destructiveHint    |    bool     |    true     | Tool may create, update, or delete data.                               |
+| idempotentHint     |    bool     |    false    | Repeated calls with same arguments have no additional effect.          |
+| openWorldHint      |    bool     |    true     | Tool interacts with external entities beyond its local environment.    |
+
+### Specifying Annotations
+
+Annotations can be specified in YAML tool configuration:
+
+```yaml
+tools:
+  my_query_tool:
+    kind: mongodb-find-one
+    source: my-mongodb
+    description: Find a single document
+    database: mydb
+    collection: users
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+```
+
+### Default Annotations
+
+If not specified, tools use sensible defaults based on their operation type:
+
+- **Read operations** (find, aggregate, list): `readOnlyHint: true`
+- **Write operations** (insert, update, delete): `destructiveHint: true`, `readOnlyHint: false`
+
+### MCP Client Response
+
+Annotations appear in the `tools/list` MCP response:
+
+```json
+{
+  "name": "my_query_tool",
+  "description": "Find a single document",
+  "annotations": {
+    "readOnlyHint": true
+  }
+}
 ```
 
 ## Kinds of tools

@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,91 +12,83 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "docs"
+name: "Deploy Docs Preview"
+
+on:
+  workflow_run:
+    workflows: ["Build Docs Preview"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number to deploy (Manual override)'
+        required: true
+        type: string
+      build_run_id:
+        description: 'The Run ID from the successful "Build Docs Preview" workflow'
+        required: true
+        type: string
 
 permissions:
   contents: write
   pull-requests: write
-  
-# This Workflow depends on 'github.event.number',
-# not compatible with branch or manual triggers.
-on:
-  pull_request:
-    # Sync with github_actions_preview_fallback.yml on.pull_request.paths-ignore
-    paths:
-      - 'docs/**'
-      - 'github/workflows/docs**'
-      - '.hugo/**'
-  pull_request_target:
-    types: [labeled]
-    paths:
-      - 'docs/**'
-      - 'github/workflows/docs**'
-      - '.hugo/**'
 
 jobs:
-  preview:
-    # run job on proper workflow event triggers (skip job for pull_request event
-    # from forks and only run pull_request_target for "docs: deploy-preview"
-    # label)
-    if: "${{ (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) || github.event.label.name == 'docs: deploy-preview' }}"
+  deploy-preview:
+    if: >
+      github.event_name == 'workflow_dispatch' || 
+      (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-24.04
-    defaults:
-      run:
-        working-directory: .hugo
     concurrency:
-      # Shared concurrency group wih preview cleanup.
-      group: "preview-${{ github.event.number }}"
+      group: "deploy-${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number }}"
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          # Checkout the PR's HEAD commit (supports forks).
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
+      - name: Checkout base repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6 
 
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+      - name: Download Artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          hugo-version: "0.145.0"
-          extended: true
+          name: docs-preview-data
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.inputs.build_run_id || github.event.workflow_run.id }}
+          path: downloaded-artifact
 
-      - name: Setup Node
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
-        with:
-          node-version: "22"
-
-      - name: Cache dependencies
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - run: npm ci
-      - run: hugo --minify
-        env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ github.event.number }}/
-          HUGO_ENVIRONMENT: preview
-          HUGO_RELATIVEURLS: false
+      - name: Read PR Number
+        id: get_pr
+        run: |
+          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          else
+            PR_NUMBER=$(cat downloaded-artifact/pr_number.txt)
+          fi
+          
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Error: PR number [$PR_NUMBER] is invalid."
+            exit 1
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .hugo/public
+          publish_dir: downloaded-artifact/public
           publish_branch: versioned-gh-pages
-          destination_dir: ./previews/PR-${{ github.event.number }}
-          commit_message: "stage: PR-${{ github.event.number }}: ${{ github.event.head_commit.message }}"
+          destination_dir: ./previews/PR-${{ steps.get_pr.outputs.pr_number }}
+          commit_message: "stage: PR-${{ steps.get_pr.outputs.pr_number }} preview"
 
       - name: Comment
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.payload.number,
+            const prNumber = parseInt('${{ steps.get_pr.outputs.pr_number }}', 10);
+            
+            await github.rest.issues.createComment({
+              issue_number: prNumber,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "🔎 Preview at https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${{ github.event.number }}/"
-            })
+              body: `🔎 Preview at https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/previews/PR-${prNumber}/`
+            });
