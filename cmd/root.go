@@ -33,6 +33,7 @@ import (
 	// Importing the cmd/internal package also import packages for side effect of registration
 	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/cmd/internal/invoke"
+	"github.com/googleapis/genai-toolbox/cmd/internal/migrate"
 	"github.com/googleapis/genai-toolbox/cmd/internal/serve"
 	"github.com/googleapis/genai-toolbox/cmd/internal/skills"
 	"github.com/googleapis/genai-toolbox/internal/auth"
@@ -126,6 +127,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd.AddCommand(invoke.NewCommand(opts))
 	cmd.AddCommand(skills.NewCommand(opts))
 	cmd.AddCommand(serve.NewCommand(opts))
+	cmd.AddCommand(migrate.NewCommand(opts))
 
 	return cmd
 }
@@ -358,22 +360,24 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 		case <-debounce.C:
 			debounce.Stop()
-			var reloadedToolsFile internal.ToolsFile
+			var allFiles []string
 			parser := internal.ToolsFileParser{}
 			if watchingFolder {
 				logger.DebugContext(ctx, "Reloading tools folder.")
-				reloadedToolsFile, err = parser.LoadAndMergeToolsFolder(ctx, folderToWatch)
+				allFiles, err = internal.GetPathsFromToolsFolder(ctx, folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading tools folder %s", err))
 					continue
 				}
+
 			} else {
-				logger.DebugContext(ctx, "Reloading tools file(s).")
-				reloadedToolsFile, err = parser.LoadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
-				if err != nil {
-					logger.WarnContext(ctx, fmt.Sprintf("error loading tools files %s", err))
-					continue
-				}
+				allFiles = slices.Collect(maps.Keys(watchedFiles))
+			}
+			logger.DebugContext(ctx, "Reloading tools file(s).")
+			reloadedToolsFile, err := parser.LoadAndMergeToolsFiles(ctx, allFiles)
+			if err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("error loading tools files %s", err))
+				continue
 			}
 
 			err = handleDynamicReload(ctx, reloadedToolsFile, s)
