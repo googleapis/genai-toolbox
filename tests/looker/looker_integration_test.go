@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -285,6 +285,11 @@ func TestLooker(t *testing.T) {
 			},
 			"create_view_from_table": map[string]any{
 				"type":        "looker-create-view-from-table",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"project_git_branch": map[string]any{
+				"type":        "looker-git-branch",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -1818,6 +1823,46 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "project_git_branch",
+		map[string]any{
+			"project_git_branch": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The project_id",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The operation, one of `list`, `get`, `create`, `switch`, or `delete`",
+						"name":        "operation",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The git branch on which to operate. Not required for `list` or `get` operations.",
+						"name":        "branch",
+						"required":    false,
+						"type":        "string",
+						"default":     "",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The ref to use as the start of a new branch. If not specified for a `create` operation it will default to HEAD of current branch. If supplied with a `switch` operation will `reset --hard` the branch.",
+						"name":        "ref",
+						"required":    false,
+						"type":        "string",
+						"default":     "",
+					},
+				},
+			},
+		},
+	)
 
 	randstr := rand.Text()[0:8]
 
@@ -1909,6 +1954,24 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"errors\":[]"
 	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "master"
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "list", "project_id": "the_look"}`), wantResult)
+
+	wantResult = "test_branch"
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "create", "project_id": "the_look", "branch": "test_branch"}`), wantResult)
+
+	wantResult = "d2d4eafdf8932837b2a12b773282c165a43fb0c0"
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "switch", "project_id": "the_look", "branch": "test_branch", "ref": "d2d4eafdf8932837b2a12b773282c165a43fb0c0"}`), wantResult)
+
+	wantResult = "test_branch"
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "get", "project_id": "the_look"}`), wantResult)
+
+	wantResult = "dev-mike-deangelo-twqb"
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "switch", "project_id": "the_look", "branch": "dev-mike-deangelo-twqb"}`), wantResult)
+
+	wantResult = "Deleted"
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "delete", "project_id": "the_look", "branch": "test_branch"}`), wantResult)
 
 	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "get_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
