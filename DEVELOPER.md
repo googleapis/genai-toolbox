@@ -678,7 +678,6 @@ Cloud project, `database-toolbox`.
   Releases and release PRs.
 
 ### How-to Release a new Version
-### How-to Release a new Version
 
 1. [Optional] If you want to override the version number, send a
    [PR](https://github.com/googleapis/genai-toolbox/pull/31) to trigger
