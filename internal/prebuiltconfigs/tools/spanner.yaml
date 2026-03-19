@@ -43,7 +43,7 @@ tools:
     description: "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema)."
 
 toolsets:
-  spanner-database-tools:
+  data:
     - execute_sql
     - execute_sql_dql
     - list_tables

@@ -34,11 +34,12 @@ import (
 // skillsCmd is the command for generating skills.
 type skillsCmd struct {
 	*cobra.Command
-	name          string
-	description   string
-	toolset       string
-	outputDir     string
-	licenseHeader string
+	name            string
+	description     string
+	toolset         string
+	outputDir       string
+	licenseHeader   string
+	additionalNotes string
 }
 
 // NewCommand creates a new Command.
@@ -47,17 +48,20 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	cmd.Command = &cobra.Command{
 		Use:   "skills-generate",
 		Short: "Generate skills from tool configurations",
+		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			return run(cmd, opts)
 		},
 	}
 
-	cmd.Flags().StringVar(&cmd.name, "name", "", "Name of the generated skill.")
-	cmd.Flags().StringVar(&cmd.description, "description", "", "Description of the generated skill")
-	cmd.Flags().StringVar(&cmd.toolset, "toolset", "", "Name of the toolset to convert into a skill. If not provided, all tools will be included.")
-	cmd.Flags().StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
-	cmd.Flags().StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
-
+	flags := cmd.Flags()
+	internal.ConfigFileFlags(flags, opts)
+	flags.StringVar(&cmd.name, "name", "", "Name of the generated skill.")
+	flags.StringVar(&cmd.description, "description", "", "Description of the generated skill")
+	flags.StringVar(&cmd.toolset, "toolset", "", "Name of the toolset to convert into a skill. If not provided, all tools will be included.")
+	flags.StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
+	flags.StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
+	flags.StringVar(&cmd.additionalNotes, "additional-notes", "", "Additional notes to add under the Usage section of the generated SKILL.md")
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("description")
 	return cmd.Command
@@ -87,7 +91,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
-	opts.Logger.InfoContext(ctx, fmt.Sprintf("Generating skill '%s'...", cmd.name))
+	opts.Logger.InfoContext(ctx, "Generating skillagent skills...")
 
 	// Group the collected tools by toolset they belong to
 	skillsToTools, err := cmd.collectTools(ctx, opts)
@@ -199,7 +203,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		}
 
 		// Generate SKILL.md
-		skillContent, err := generateSkillMarkdown(skillName, cmd.description, allTools, parser.EnvVars)
+		skillContent, err := generateSkillMarkdown(skillName, cmd.description, cmd.additionalNotes, allTools, parser.EnvVars)
 		if err != nil {
 			errMsg := fmt.Errorf("error generating SKILL.md content: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -229,12 +233,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 
 	skillsToTools := make(map[string]map[string]tools.Tool)
 
-	if c.toolset != "" {
-		ts, ok := resourceMgr.GetToolset(c.toolset)
-		if !ok {
-			return nil, fmt.Errorf("toolset %q not found", c.toolset)
-		}
-
+	getToolsFromToolset := func(ts tools.Toolset) map[string]tools.Tool {
 		toolsetTools := make(map[string]tools.Tool)
 		for _, t := range ts.Tools {
 			if t != nil {
@@ -242,7 +241,16 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 				toolsetTools[tool.McpManifest().Name] = tool
 			}
 		}
-		skillsToTools[c.name] = toolsetTools
+		return toolsetTools
+	}
+
+	if c.toolset != "" {
+		ts, ok := resourceMgr.GetToolset(c.toolset)
+		if !ok {
+			return nil, fmt.Errorf("toolset %q not found", c.toolset)
+		}
+
+		skillsToTools[c.name] = getToolsFromToolset(ts)
 		return skillsToTools, nil
 	}
 
@@ -257,15 +265,8 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		if tsName == "" {
 			continue
 		}
-		toolsetTools := make(map[string]tools.Tool)
-		for _, t := range ts.Tools {
-			if t != nil {
-				tool := *t
-				toolsetTools[tool.McpManifest().Name] = tool
-			}
-		}
 		skillName := fmt.Sprintf("%s-%s", c.name, tsName)
-		skillsToTools[skillName] = toolsetTools
+		skillsToTools[skillName] = getToolsFromToolset(ts)
 	}
 
 	return skillsToTools, nil

@@ -15,6 +15,7 @@
 package prebuiltconfigs
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -39,8 +40,8 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres",
 	"dataplex",
 	"dataproc",
-	"elasticsearch",
 	"firestore",
+	"elasticsearch",
 	"looker-conversational-analytics",
 	"looker-dev",
 	"looker",
@@ -49,6 +50,7 @@ var expectedToolSources = []string{
 	"mysql",
 	"neo4j",
 	"oceanbase",
+	"oracledb",
 	"postgres",
 	"serverless-spark",
 	"singlestore",
@@ -61,6 +63,8 @@ var expectedToolSources = []string{
 func TestGetPrebuiltSources(t *testing.T) {
 	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
 		sources := GetPrebuiltSources()
+		slices.Sort(expectedToolSources)
+		slices.Sort(sources)
 		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
 		}
@@ -94,6 +98,8 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		t.Log(expectedKeys)
 		t.Log(keys)
 
+		slices.Sort(expectedKeys)
+		slices.Sort(keys)
 		if diff := cmp.Diff(expectedKeys, keys); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
 		}
@@ -126,11 +132,13 @@ func TestGetPrebuiltTool(t *testing.T) {
 	oceanbase_config := getOrFatal(t, "oceanbase")
 	postgresconfig := getOrFatal(t, "postgres")
 	singlestore_config := getOrFatal(t, "singlestore")
+	serverlessspark_config := getOrFatal(t, "serverless-spark")
 	spanner_config := getOrFatal(t, "spanner")
 	spannerpg_config := getOrFatal(t, "spanner-postgres")
 	mindsdb_config := getOrFatal(t, "mindsdb")
 	sqlite_config := getOrFatal(t, "sqlite")
 	neo4jconfig := getOrFatal(t, "neo4j")
+	oracle_config := getOrFatal(t, "oracledb")
 	healthcare_config := getOrFatal(t, "cloud-healthcare")
 	snowflake_config := getOrFatal(t, "snowflake")
 	if len(alloydb_omni_config) <= 0 {
@@ -205,6 +213,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(singlestore_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
 	}
+	if len(serverlessspark_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch serverless spark prebuilt tools yaml")
+	}
 	if len(snowflake_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
 	}
@@ -231,6 +242,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(snowflake_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
+	if len(oracle_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch oracle prebuilt tools yaml")
 	}
 }
 

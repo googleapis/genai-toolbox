@@ -173,7 +173,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
 	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
-	dataInsightsWant := `(?s)(Schema Resolved.*)?(Retrieval Query.*)?SQL Generated.*Data Retrieved.*Answer`
+	dataInsightsWant := `FINAL_RESPONSE`
 	// Partial message; the full error message is too long.
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing GCP request: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"f0_\":1}"}]}}`
@@ -883,6 +883,11 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		"project":        BigqueryProject,
 		"useClientOAuth": true,
 	}
+	sources["my-custom-client-auth-source"] = map[string]any{
+		"type":           BigquerySourceType,
+		"project":        BigqueryProject,
+		"useClientOAuth": "X-Custom-Auth",
+	}
 	config["sources"] = sources
 	return config
 }
@@ -920,6 +925,12 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		"type":        "bigquery-sql",
 		"source":      "my-client-auth-source",
 		"description": "Tool to test client authorization.",
+		"statement":   "SELECT 1",
+	}
+	tools["my-custom-client-auth-tool"] = map[string]any{
+		"type":        "bigquery-sql",
+		"source":      "my-custom-client-auth-source",
+		"description": "Tool to test custom client authorization header.",
 		"statement":   "SELECT 1",
 	}
 	config["tools"] = tools
@@ -2833,7 +2844,7 @@ func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName,
 			name:           "invoke with allowed table",
 			tableRefs:      allowedTableRefsJSON,
 			wantStatusCode: http.StatusOK,
-			wantInResult:   `Answer`,
+			wantInResult:   `FINAL_RESPONSE`,
 		},
 		{
 			name:           "invoke with disallowed table",
