@@ -46,6 +46,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Pre-1.0.0 Versioning](#pre-100-versioning)
   - [Post-1.0.0 Versioning](#post-100-versioning)
 - [Contributing](#contributing)
+- [Telemetry](#telemetry)
 - [Community](#community)
 
 <!-- /TOC -->
