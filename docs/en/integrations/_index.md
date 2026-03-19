@@ -15,4 +15,3 @@ You can define the connection the **Source** just once in your `tools.yaml` file
 
 Select an integration below to view its configuration requirements. Depending on the integration, the documentation will provide the tools.yaml snippets needed to establish a source connection, detail any specific tools available to your agents, or both.
 
-{{< list-db >}}
