@@ -206,7 +206,7 @@ represents the processing of a single MCP request or notification.
 
 <br> 
 
-The span name followsthe format `{mcp.method.name} {target}` where target is 
+The span name follows the format `{mcp.method.name} {target}` where target is 
 `{gen_ai.tool.name}` or `{gen_ai.prompt.name}` when applicable, otherwise just 
 `{mcp.method.name}`. Span status is set to `ERROR` when an error occurs, 
 with the status description set to the JSON-RPC error message.
