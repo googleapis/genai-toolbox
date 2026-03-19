@@ -25,7 +25,7 @@ active queries. The tool takes the following input parameters:
 
 ## Compatible Sources
 
-{{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
+{{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example
 

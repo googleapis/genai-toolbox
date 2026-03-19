@@ -18,7 +18,7 @@ not support any input parameter.
 
 ## Compatible Sources
 
-{{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
+{{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 
 ## Example

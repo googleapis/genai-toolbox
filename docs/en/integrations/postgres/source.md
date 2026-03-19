@@ -1,5 +1,6 @@
 ---
 title: "PostgreSQL Source"
+linkTitle: "Source"
 type: docs
 weight: 1
 description: >

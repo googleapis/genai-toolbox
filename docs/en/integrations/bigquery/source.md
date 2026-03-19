@@ -1,5 +1,6 @@
 ---
-title: "BigQuery"
+title: "BigQuery Source"
+linkTitle: "Source"
 weight: 1
 description: >
   BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective

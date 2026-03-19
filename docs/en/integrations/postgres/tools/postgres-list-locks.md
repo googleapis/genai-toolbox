@@ -14,7 +14,7 @@ This tool identifies all locks held by active processes showing the process ID, 
 
 ## Compatible Sources
 
-{{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
+{{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example
 

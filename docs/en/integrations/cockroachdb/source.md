@@ -1,5 +1,6 @@
 ---
-title: "CockroachDB"
+title: "CockroachDB Source"
+linkTitle: "Source"
 weight: 1
 description: >
   CockroachDB is a distributed SQL database built for cloud applications.

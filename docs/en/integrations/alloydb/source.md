@@ -24,7 +24,7 @@ cluster][alloydb-free-trial].
 
 ## Available Tools
 
-{{< list-tools dirs="/integrations/postgres" >}}
+{{< list-tools dirs="/integrations/postgres/tools" >}}
 
 ### Pre-built Configurations
 

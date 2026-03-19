@@ -16,7 +16,7 @@ This tool does not take any input parameters.
 
 ## Compatible Sources
 
-{{< compatible-sources others="integrations/alloydb-pg, integrations/cloud-sql-pg">}}
+{{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
 
 ## Example
 
