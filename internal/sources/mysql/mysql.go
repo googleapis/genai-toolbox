@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
 	"time"
 
 	driver "github.com/go-sql-driver/mysql"
@@ -163,6 +162,7 @@ func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 
 	config := driver.NewConfig()
 	config.Addr = fmt.Sprintf("%s:%s", host, port)
+	config.Net = "tcp"
 	if user != "" {
 		config.User = user
 		// password will require user
@@ -195,7 +195,7 @@ func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 	if err != nil {
 		return nil, err
 	}
-	config.ConnectionAttributes = fmt.Sprintf("program_name:%s", url.QueryEscape(userAgent))
+	config.ConnectionAttributes = fmt.Sprintf("program_name:%s", userAgent)
 	dsn := config.FormatDSN()
 
 	// Interact with the driver directly as you normally would
