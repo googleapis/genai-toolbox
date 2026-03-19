@@ -43,24 +43,18 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			type: mysql
 			host: 0.0.0.0
 			port: my-port
-			database: my_db
-			user: my_user
-			password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-mysql-instance": mysql.Config{
-					Name:     "my-mysql-instance",
-					Type:     mysql.SourceType,
-					Host:     "0.0.0.0",
-					Port:     "my-port",
-					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					Name: "my-mysql-instance",
+					Type: mysql.SourceType,
+					Host: "0.0.0.0",
+					Port: "my-port",
 				},
 			},
 		},
 		{
-			desc: "with query timeout",
+			desc: "with non-required fields",
 			in: `
 			kind: sources
 			name: my-mysql-instance

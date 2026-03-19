@@ -33,9 +33,9 @@ toolbox <tool-source> skills-generate \
 ```
 
 - `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
-- `--name`: Name of the generated skill.
+- `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
 - `--description`: Description of the generated skill.
-- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
 - `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
