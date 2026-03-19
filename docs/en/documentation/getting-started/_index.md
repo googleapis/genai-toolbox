@@ -16,7 +16,7 @@ MCP Toolbox provides two main approaches for tools: **prebuilt** and **custom**.
 
 [**Prebuilt tools**](../configuration/prebuilt-configs/_index.md) are ready to use out of
 the box. For example, a tool like
-[`postgres-execute-sql`](../../integrations/postgres/postgres-execute-sql.md) has fixed parameters
+[`postgres-execute-sql`](../../integrations/postgres/tools/postgres-execute-sql.md) has fixed parameters
 and always works the same way, allowing the agent to execute arbitrary SQL.
 While these are convenient, they are typically only safe when a developer is in
 the loop (e.g., during prototyping, developing, or debugging).
@@ -28,7 +28,7 @@ production is highly dangerous.
 To secure your application, you should [**use custom tools**](../configuration/tools/_index.md) to suit your
 specific schema and application needs. Creating a custom tool restricts the
 agent's capabilities to only what is necessary. For example, you can use the
-[`postgres-sql`](../../integrations/postgres/postgres-sql.md) tool to define a specific action. This
+[`postgres-sql`](../../integrations/postgres/tools/postgres-sql.md) tool to define a specific action. This
 typically involves:
 
 *   **Prepared Statements:** Writing a SQL query ahead of time and letting the

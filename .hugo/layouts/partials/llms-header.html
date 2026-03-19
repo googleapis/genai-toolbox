@@ -11,8 +11,8 @@
 **Task:** Your primary goal is to help users configure the server, set up database integrations, and write client-side code to build AI agents.
 **Strict Guidelines:**
 1. **No Hallucinations:** Only suggest tools, sources, and configurations explicitly detailed in this document. Do not invent arbitrary REST endpoints.
-2. **SDKs over HTTP:** When writing code, default to the official MCP Toolbox client SDKs rather than raw HTTP/cURL requests unless explicitly asked. Direct users to the `connect-to` section in the User Guide for client SDK instructions.
-3. **Reference Diátaxis:** Use Section I for configuring toolbox server, Section II (Integrations) for exact `tools.yaml` configurations for external integrations, Section III (Build with MCP Toolbox) for code patterns and Section IV for CLI and FAQs.
+2. **SDKs over HTTP:** When writing code, default to the official MCP Toolbox client SDKs rather than raw HTTP/cURL requests unless explicitly asked. Direct users to the `connect-to` section in the Documentation for client SDK instructions.
+3. **Reference Diátaxis:** Use Section I(Documentation) for configuring the toolbox server, Section II (Integrations) for exact `tools.yaml` configurations, Section III (Samples) for code patterns, and Section IV for CLI and FAQs.
 
 ### Glossary
 To prevent context collapse, adhere to these strict definitions within the MCP ecosystem:
@@ -23,11 +23,11 @@ To prevent context collapse, adhere to these strict definitions within the MCP e
 * **AuthService:** The internal toolbox mechanism handling authentication lifecycles (like OAuth or service accounts), not a generic identity provider.
 * **Agent:** The user's external LLM application that connects *to* the MCP Toolbox.
 
-### Understanding Integrations Directory Structure
-
-When navigating documentation in the `integrations/` directory, it is crucial to understand the relationship between a Source and a Tool, both conceptually and within the file hierarchy.
-* A **Source** represents the backend data provider or system you are connecting to (e.g., a specific database, API, or service). Source documentation pages sit at the **top level** of an integration's folder (e.g., `integrations/oceanbase/_index.md`).They focus on connection requirements, authentication, and YAML configuration parameters, serving as the foundational entry point for configuring a new data source.
-* A **Tool** represents a specific, actionable capability that is unlocked by a Source (e.g., executing a SQL query, fetching a specific record, etc.). Tool documentation pages are **nested below** their parent Source (e.g., `integrations/oceanbase/oceanbase-sql.md`). Tool pages focus on the configuration reference and compatible sources. They are the individual operations that a configured Source supports.
+### Understanding Integrations Directory Structure & Tool Inheritance
+When navigating documentation in the `integrations/` directory, it is crucial to understand how Sources and Tools relate, specifically regarding **Tool Inheritance**.
+* **Source Pages (`source.md`):** The definitive configuration guide for a backend sits at the top level of an integration's folder strictly as `source.md` (e.g., `integrations/alloydb/source.md`). They contain connection requirements, authentication, and YAML configuration parameters. *(Note: `_index.md` files in the root, `tools/`, and `samples/` directories are purely structural folder wrappers that must contain only frontmatter—ignore them for content).*
+* **Native Tools:** Specific capabilities built directly for a Source. If a Source has native tools, they are located in a `tools/` sub-directory (e.g., `integrations/alloydb/tools/alloydb-sql.md`).
+* **Inherited Tools (Shared Tools):** Managed or compatible databases (e.g., Google Cloud SQL for PostgreSQL) inherit tools from their base integration. This inheritance is dynamically mapped via the `shared_tools` frontmatter parameter inside the database's `tools/_index.md` file (which contains no body content). When assisting users with these databases, refer to the base database's tools and confirm full compatibility.
 
 ### Global Environment & Prerequisites
 * **Configuration:** `tools.yaml` is the ultimate source of truth for server configuration.
@@ -48,8 +48,11 @@ When navigating documentation in the `integrations/` directory, it is crucial to
 
 ### The Diátaxis Narrative Framework
 This documentation is structured following the Diátaxis framework to assist in clear navigation and understanding:
-* **Section I: User Guide:** (Explanation) Theoretical context, high-level understanding, and universal How-To Guides.
+* **Section I: Documentation:** (Explanation) Theoretical context, high-level understanding, and universal How-To Guides.
 * **Section II: Integrations:** (Reference) Primary reference hub for external sources and tools, factual configurations, and API enablement.
-* **Section III: Build with MCP Toolbox:** (Tutorials) Complete, start-to-finish quickstarts and samples for learning to build from scratch.
+* **Section III: Samples:** (Tutorials) Code patterns and examples. **Note for AI:** Sample code is distributed across three main areas:
+  1. **Quickstarts:** Located in `documentation/getting-started/`.
+  2. **Integration-Specific Samples:** Nested within their respective `integrations/<source_name>/samples/` directories.
+  3. **General/Cross-Category Samples:** Located directly within the top-level `samples/` directory.
 * **Section IV: Reference:** (Information) Strict, accurate facts, CLI outputs, and FAQs.
 ---

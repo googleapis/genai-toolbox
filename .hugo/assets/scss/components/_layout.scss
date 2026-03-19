@@ -1,0 +1,27 @@
+/* ==========================================================================
+   LAYOUT ALIGNMENT & STACKING CONTEXTS
+   Manages global spacing and z-index hierarchy.
+   ========================================================================== */
+
+/*Global Reset */
+body { 
+  padding-top: 0 !important; 
+}
+
+/* Zero-Spacing Elements */
+.td-main, .td-outer, .td-sidebar {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* =Elements Requiring Top Padding */
+main[role="main"], #td-section-nav, .td-sidebar-toc {
+  margin-top: 0 !important;
+  padding-top: 1.5rem !important;
+}
+
+/* Z-Index Hierarchy */
+.td-main, .td-content, .td-sidebar-toc, .td-page-meta, .td-toc {
+  position: relative;
+  z-index: 10 !important;
+}

@@ -4,6 +4,8 @@ type: docs
 weight: 4
 description: >
   How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to an MCP Toolbox deployed on Cloud Run.
+sample_filters: ["Python", "ADK", "Agent"]
+is_sample: true
 ---
 
 ## Before you begin

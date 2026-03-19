@@ -1,3 +1,5 @@
+<a class="dropdown-item" href="{{ .Site.Params.global_logo_url | default `/` }}">latest</a>
+
 {{ if .Site.Params.versions -}}
   {{ $path := "" -}}
   {{ if .Site.Params.version_menu_pagelinks -}}

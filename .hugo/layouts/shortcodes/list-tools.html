@@ -1,42 +1,73 @@
-{{/* Capture the current page's title (e.g., "AlloyDB") */}}
-{{ $currentTitle := .Page.Title }}
-{{ $currentPages := .Page.RegularPages }}
+{{/* Set Database Title  */}}
+{{ $dbTitle := .Page.Title }}
 
-{{/* Display Current Directory Tools (if any exist) */}}
-{{ if $currentPages }}
-<h3>{{ $currentTitle }} Tools</h3>
-<table>
-  <thead>
-    <tr>
-      <th>Tool Name</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    {{ range $currentPages }}
-    <tr>
-      <td><a href="{{ .RelPermalink }}"><strong>{{ .Title }}</strong></a></td>
-      <td>{{ .Description | default "No description provided." }}</td>
-    </tr>
+{{/* Gather & Pre-filter Native Tools (from the local "tools" sub-folder) */}}
+{{ $validNativeTools := slice }}
+{{ $localTools := .Page.GetPage "tools" }}
+
+{{ if $localTools }}
+  {{ range $localTools.RegularPages }}
+    {{ if not .Params.is_wrapper }}
+      {{ $validNativeTools = $validNativeTools | append . }}
     {{ end }}
-  </tbody>
-</table>
+  {{ end }}
 {{ end }}
 
-{{/* Display Inherited Tools from specified directories */}}
+{{/* Track if we've printed the main H3 header yet */}}
+{{ $headerPrinted := false }}
+
+{{/* Display Native Tools ONLY if valid ones exist */}}
+{{ if gt (len $validNativeTools) 0 }}
+  <h3>{{ $dbTitle }} Tools</h3>
+  {{ $headerPrinted = true }}
+  <table>
+    <thead>
+      <tr>
+        <th>Tool Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range $validNativeTools }}
+        <tr>
+          <td><a href="{{ .RelPermalink }}"><strong>{{ .Title }}</strong></a></td>
+          <td>{{ .Description | default "No description provided." }}</td>
+        </tr>
+      {{ end }}
+    </tbody>
+  </table>
+{{ end }}
+
+{{/* Gather & Display Inherited Tools */}}
 {{ $dirsParam := .Get "dirs" }}
 
 {{ if $dirsParam }}
   {{ range split $dirsParam "," }}
     {{ $dirPath := trim . " " }}
-    {{ $toolDir := site.GetPage $dirPath }}
 
-    {{ if $toolDir }}
-      {{ $externalPages := $toolDir.RegularPages }}
+    {{ $targetDir := site.GetPage $dirPath }}
 
-      {{ if $externalPages }}
-        {{/* Print the dynamic compatibility sentence */}}
-        <p><em><strong>{{ $currentTitle }}</strong> maintains full compatibility with <strong>{{ $toolDir.Title }}</strong>, allowing you to use the following tools with your <strong>{{ $currentTitle }}</strong> source:</em></p>
+    {{ if $targetDir }}
+      {{/* Since $targetDir is the "tools" folder, the DB name is simply its parent */}}
+      {{ $remoteDbTitle := $targetDir.Parent.Title }}
+
+      {{/* Pre-filter Inherited Tools */}}
+      {{ $validExternalTools := slice }}
+      {{ range $targetDir.RegularPages }}
+        {{ if not .Params.is_wrapper }}
+          {{ $validExternalTools = $validExternalTools | append . }}
+        {{ end }}
+      {{ end }}
+
+      {{ if gt (len $validExternalTools) 0 }}
+
+        {{/* Print the main H3 if the native tools block didn't already print it */}}
+        {{ if not $headerPrinted }}
+          <h3>{{ $dbTitle }} Tools</h3>
+          {{ $headerPrinted = true }}
+        {{ end }}
+
+        <p><em><strong>{{ $dbTitle }}</strong> maintains full compatibility with <strong>{{ $remoteDbTitle }}</strong>, allowing you to use the following tools with this connection:</em></p>
 
         <table>
           <thead>
@@ -46,11 +77,11 @@
             </tr>
           </thead>
           <tbody>
-            {{ range $externalPages }}
-            <tr>
-              <td><a href="{{ .RelPermalink }}"><strong>{{ .Title }}</strong></a></td>
-              <td>{{ .Description | default "No description provided." }}</td>
-            </tr>
+            {{ range $validExternalTools }}
+              <tr>
+                <td><a href="{{ .RelPermalink }}"><strong>{{ .Title }}</strong></a></td>
+                <td>{{ .Description | default "No description provided." }}</td>
+              </tr>
             {{ end }}
           </tbody>
         </table>
@@ -62,7 +93,7 @@
   {{ end }}
 {{ end }}
 
-{{/* Fallback if absolutely no tools exist anywhere */}}
-{{ if and (not $currentPages) (not $dirsParam) }}
+{{/* Fallback if absolutely NO tools exist anywhere */}}
+{{ if and (not $headerPrinted) (not $dirsParam) }}
   <p><em>No tools found to display.</em></p>
 {{ end }}

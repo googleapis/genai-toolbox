@@ -160,5 +160,5 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 ## What's next
 
 - Learn more about [MCP Inspector](../../../documentation/connect-to/mcp-client/_index.md).
-- Learn more about [Toolbox User Guide](../../../documentation/configuration/_index.md).
-- Learn more about [Toolbox Tutorials](../../../samples-hub/_index.md).
+- Learn more about [Toolbox Configuration](../../../documentation/configuration/_index.md).
+- Learn more about [Toolbox Tutorials](../../../samples/_index.md).

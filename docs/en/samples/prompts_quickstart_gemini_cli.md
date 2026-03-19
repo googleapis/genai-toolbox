@@ -4,6 +4,8 @@ type: docs
 weight: 6
 description: >
   How to get started using Toolbox prompts locally with PostgreSQL and [Gemini CLI](https://pypi.org/project/gemini-cli/).
+sample_filters: ["Prompts", "Gemini CLI"]
+is_sample: true
 ---
 
 ## Before you begin

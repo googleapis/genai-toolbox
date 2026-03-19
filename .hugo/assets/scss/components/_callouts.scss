@@ -1,0 +1,26 @@
+/* ==========================================================================
+   CALLOUTS & NOTICES
+   Styling for alerts, tips, and admonition blocks.
+   ========================================================================== */
+
+.td-content .alert code,
+.td-content .notice code,
+.td-content .admonition code {
+  background-color: #ffffff !important;
+  color: rgba(32, 33, 36, 0.95) !important; 
+  padding: 0.2rem 0.4rem !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  font-weight: 500 !important;
+}
+
+html[data-bs-theme="dark"] .td-content .alert code, 
+body.dark .td-content .alert code,
+html[data-bs-theme="dark"] .td-content .notice code, 
+body.dark .td-content .notice code,
+html[data-bs-theme="dark"] .td-content .admonition code, 
+body.dark .td-content .admonition code {
+  background-color: rgba(255, 255, 255, 0.15) !important; 
+  color: #ffffff !important; 
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}

@@ -1,5 +1,5 @@
-{{/* Automatically identify the "Native" source (the parent _index.md) */}}
-{{ $nativeSource := .Page.Parent }}
+{{/* Automatically identify the "Native" source (Grandparent _index.md, since this is strictly used inside tools/) */}}
+{{ $nativeSource := .Page.Parent.Parent }}
 
 <div class="compatibility-section">
   <p>This tool can be used with the following database sources:</p>

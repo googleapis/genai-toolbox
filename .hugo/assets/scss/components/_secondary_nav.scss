@@ -1,0 +1,43 @@
+/* ==========================================================================
+   Secondary Navigation Header Styles
+   ========================================================================== */
+
+/* Base Layout */
+.sec-nav-container { display: flex; align-items: center; height: 100%; width: 100%; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.sec-nav-container::-webkit-scrollbar { display: none; }
+.sec-nav-list { display: flex; align-items: center; list-style: none; padding: 0; margin: 0; gap: 1.25rem; flex-shrink: 0; }
+.sec-nav-icons { display: flex; gap: 1.5rem; list-style: none; margin: 0 0 0 auto; padding: 0 1rem 0 2rem; align-items: center; flex-shrink: 0; }
+
+/* Typography & Links */
+.sec-nav-item-left { display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem; font-weight: 500; color: rgba(255, 255, 255, 0.75) !important; text-decoration: none; transition: all 0.2s; white-space: nowrap; height: 100%; border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.sec-nav-item-right { display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 700; color: rgba(255, 255, 255, 0.85) !important; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+
+/* Active States */
+.sec-nav-list a:hover, .sec-nav-list a.active { color: #ffffff !important; opacity: 1; }
+.sec-nav-list a.active { font-weight: 600; border-bottom: 2px solid #ffffff !important; }
+.sec-nav-icons a:hover { color: #ffffff !important; opacity: 1; }
+
+/* Icons */
+.pop-icon { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; font-size: 1rem; transition: opacity 0.2s ease; }
+.pop-icon.fa-discord { background: #5865F2 !important; color: #ffffff !important; box-shadow: 0 4px 10px rgba(88, 101, 242, 0.35) !important; }
+.pop-icon.fa-medium { background: #000000 !important; color: #ffffff !important; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25) !important; }
+.sec-nav-icons a:hover .pop-icon { opacity: 0.85 !important; }
+
+/* Dark Mode Overrides */
+html[data-bs-theme="dark"] .sec-nav-item-left { color: rgba(255, 255, 255, 0.75) !important; }
+html[data-bs-theme="dark"] .sec-nav-item-right { color: rgba(255, 255, 255, 0.85) !important; }
+html[data-bs-theme="dark"] .sec-nav-list a.active { color: #ffffff !important; background-color: transparent !important; border-bottom: 2px solid #ffffff !important; font-weight: 600 !important; }
+html[data-bs-theme="dark"] .pop-icon.fa-discord { background: #5865F2 !important; color: #ffffff !important; box-shadow: 0 4px 10px rgba(88, 101, 242, 0.35) !important; }
+html[data-bs-theme="dark"] .pop-icon.fa-medium { background: #f8f9fa !important; color: #202124 !important; box-shadow: 0 4px 10px rgba(255, 255, 255, 0.15) !important; }
+html[data-bs-theme="dark"] .dropdown-item.active-version { color: #8ab4f8 !important; background-color: rgba(138, 180, 248, 0.15) !important; border-left-color: #8ab4f8 !important; }
+
+/* Responsive Layout */
+@media (max-width: 991.98px) {
+  .sec-nav-icons { margin-left: 0; padding-left: 1rem; }
+  .sec-nav-list { gap: 1rem; }
+  .sec-nav-item-left, .sec-nav-item-right { font-size: 0.9rem; }
+  html[data-bs-theme="dark"] #secondary-nav .sec-nav-list a.active,
+  body.dark #secondary-nav .sec-nav-list a.active {
+      color: #4484f4 !important; background-color: #ffffff !important; border-bottom: none !important; 
+  }
+}

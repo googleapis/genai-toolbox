@@ -1,0 +1,213 @@
+/* ==========================================================================
+   HEADER & NAVIGATION
+   Primary navbar, secondary tabbed nav, utilities, and mobile layouts.
+   ========================================================================== */
+
+/* Main Header Structure */
+header { position: sticky !important; top: 0; z-index: 1060; width: 100%; background-color: var(--bs-body-bg, #ffffff); transform: translateZ(0); }
+header, .td-navbar { z-index: 1060 !important; }
+
+.td-navbar {
+  position: relative !important; width: 100% !important;
+
+  /* Header Utility Buttons */
+  .navbar-nav {
+    gap: 0.35rem; align-items: center;
+
+    li.td-light-dark-menu > button,
+    li.nav-item:has(a[href*="github"]) > a,
+    li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a {
+      background-color: transparent !important; background-image: none !important; border: 1.5px solid transparent !important; 
+      box-shadow: none !important; outline: none !important; color: rgba(255, 255, 255, 0.85) !important; 
+      font-weight: 500 !important; font-size: 0.95rem !important; text-decoration: none !important; white-space: nowrap;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; 
+
+      i, svg { font-size: 1.15rem !important; fill: rgba(255, 255, 255, 0.85) !important; transition: all 0.2s ease-in-out !important; }
+
+      &:hover {
+        background-color: #ffffff !important; color: $primary !important; 
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), 0 0 0 2px rgba(255, 255, 255, 0.2) !important; 
+        transform: translateY(-1px) !important; opacity: 1;
+        i, svg { fill: $primary !important; opacity: 1; }
+      }
+      &:active { transform: translateY(0px) !important; background-color: rgba(255, 255, 255, 0.15) !important; }
+    }
+
+    li.nav-item:has(a[href*="github"]) > a,
+    li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a {
+      border-radius: 50px !important; padding: 0.35rem 1.1rem !important; 
+      i, svg { margin-right: 0.4rem !important; }
+    }
+
+    li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a.dropdown-toggle::after {
+      display: inline-block !important; margin-left: 0.5rem !important; vertical-align: middle !important;
+      border-top: 0.4em solid; border-right: 0.4em solid transparent; border-bottom: 0; border-left: 0.4em solid transparent;
+      transition: transform 0.2s ease; 
+    }
+
+    li.nav-item.show > a.dropdown-toggle::after,
+    a.dropdown-toggle.show::after { transform: rotate(180deg); }
+
+    li.td-light-dark-menu > button {
+      width: 38px !important; height: 38px !important; padding: 0 !important; border-radius: 50% !important; 
+      &::after { display: none !important; } 
+      i, svg { margin: 0 !important; width: 1.15rem !important; height: 1.15rem !important; }
+    }
+  }
+
+  /* Universal Dropdowns */
+  .dropdown-menu {
+    z-index: 1065 !important; margin-top: 0.6rem !important; background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important; border-radius: 12px !important; 
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.15) !important; padding: 0.6rem !important; 
+    min-width: 200px !important; max-height: 60vh !important; overflow-y: auto !important;
+    scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+    animation: dropdownFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; transform-origin: top right;
+
+    &::-webkit-scrollbar { width: 8px; display: block !important; }
+    &::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05) !important; border-radius: 10px; margin: 5px; }
+    &::-webkit-scrollbar-thumb { 
+      background: rgba(0, 0, 0, 0.2) !important; border-radius: 10px; border: 2px solid transparent; background-clip: content-box;
+      &:hover { background: rgba(0, 0, 0, 0.35) !important; background-clip: content-box; }
+    }
+  }
+
+  .dropdown-item {
+    border-radius: 8px !important; padding: 0.6rem 1rem !important; color: #495057 !important; 
+    margin-bottom: 4px !important; transition: all 0.2s ease !important; display: flex !important;
+    align-items: center !important; font-weight: 500 !important;
+
+    i, svg { margin-right: 12px !important; width: 16px !important; text-align: center; }
+
+    &:hover, &:focus {
+      background-color: rgba(68, 132, 244, 0.08) !important; color: #4484f4 !important; transform: translateX(4px) !important;
+    }
+
+    &:not(.active-version):not(.active):not(:has(i)):not(:has(svg)) {
+      opacity: 0.75 !important; font-weight: 400 !important; transition: opacity 0.2s ease !important;
+      &:hover { opacity: 1 !important; }
+    }
+
+    &.active-version, &.active {
+      background-color: rgba(68, 132, 244, 0.08) !important; color: #4484f4 !important; font-weight: 600 !important;
+      position: relative; padding-left: 2rem !important; border-left: 4px solid #4484f4 !important; 
+      &:hover { background-color: rgba(68, 132, 244, 0.12) !important; transform: translateX(4px) !important; }
+    }
+  }
+}
+
+/* Tabbed Secondary Navbar */
+#secondary-nav {
+  position: fixed; top: 4rem; left: 0; right: 0; height: 52px; z-index: 1055 !important;
+  background: linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)), $primary; 
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(0, 0, 0, 0.1); 
+  display: flex; align-items: center; position: relative !important; top: 0 !important;               
+  width: 100%; max-width: 100vw; box-sizing: border-box;        
+
+  .container-fluid { 
+    display: flex; align-items: center; width: 100%; height: 100%; overflow-x: auto !important; flex-wrap: nowrap !important;
+    scrollbar-width: none; -ms-overflow-style: none; -webkit-overflow-scrolling: touch; 
+    &::-webkit-scrollbar { display: none; }
+  }
+  .sec-nav-list {
+    display: flex; margin: 0; padding: 0 1.5rem; list-style: none; gap: 28px;
+    align-items: center; height: 100%; width: auto; flex-shrink: 0 !important; flex-wrap: nowrap; overflow: visible !important; 
+  }
+  .sec-nav-icons { display: flex; gap: 1.5rem; list-style: none; margin: 0 0 0 auto; padding: 0 1.5rem 0 2rem; align-items: center; flex-shrink: 0 !important; }
+  li { height: 100%; display: flex; align-items: center; }
+  a {
+    color: rgba(255, 255, 255, 0.7) !important; font-weight: 500; text-decoration: none;
+    font-size: 14.5px; letter-spacing: 0.2px; height: 100%; display: flex; align-items: center;
+    padding: 0 2px; border-bottom: 2px solid transparent; margin-bottom: 0; transition: color 0.15s ease, border-color 0.15s ease; white-space: nowrap;
+    &:hover { color: #ffffff !important; } 
+    &.active { color: #ffffff !important; font-weight: 600; border-bottom: 2px solid #ffffff; }
+  }
+}
+
+/* Dark Mode Overrides */
+html[data-bs-theme="dark"], body.dark {
+  .td-navbar .navbar-nav {
+    li.td-light-dark-menu > button,
+    li.nav-item:has(a[href*="github"]) > a,
+    li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a {
+      background-color: transparent !important; box-shadow: none !important; color: #e8eaed !important; 
+      i, svg { fill: #e8eaed !important; }
+      &:hover {
+        background-color: #303134 !important; color: #f8f9fa !important; border-color: #8ab4f8 !important; 
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(138, 180, 248, 0.15) !important;
+        i, svg { fill: #f8f9fa !important; }
+      }
+    }
+  }
+  .td-navbar .dropdown-menu {
+    background-color: #202124 !important; border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6) !important; scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+  }
+  .td-navbar .dropdown-item {
+    color: #e8eaed !important;
+    &:hover, &:focus { background-color: rgba(138, 180, 248, 0.12) !important; color: #8ab4f8 !important; }
+    &.active-version, &.active {
+      background-color: rgba(138, 180, 248, 0.12) !important; color: #8ab4f8 !important; border-left-color: #8ab4f8 !important;
+      &::before { color: #8ab4f8; }
+      &:hover { background-color: rgba(138, 180, 248, 0.18) !important; }
+    }
+  }
+  #secondary-nav {
+    background: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15)), $primary; box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.3); border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+    a { color: rgba(255, 255, 255, 0.7) !important; &:hover { color: #ffffff !important; } &.active { color: #ffffff !important; border-bottom-color: #ffffff; } }
+  }
+}
+
+/* Desktop Adjustments */
+@media (min-width: 992px) {
+  .td-navbar .custom-pagefind-wrapper {
+    position: relative !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; 
+    width: 100% !important; max-width: 500px !important; margin: 0 !important; z-index: 1060 !important;
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out, box-shadow 0.15s ease-out !important;
+  }
+  .td-navbar .pagefind-ui__drawer { left: 0 !important; right: 0 !important; width: 100% !important; max-width: 100% !important; }
+}
+
+/* Mobile Layout & Scaling */
+@media (max-width: 991.98px) {
+  header, .td-navbar { position: relative !important; }
+  .td-navbar { height: auto !important; padding-bottom: 0.5rem !important; flex-wrap: nowrap !important; justify-content: space-between !important; min-height: 4rem !important; }
+  header .navbar-toggler { display: inline-flex !important; z-index: 1080 !important; margin-left: auto !important; }
+  .td-navbar .container-fluid { display: flex !important; flex-wrap: wrap !important; justify-content: space-between !important; align-items: center !important; }
+  .td-navbar .navbar-nav, .td-navbar .navbar-toggler { flex-direction: row !important; order: 2 !important; width: auto !important; margin-left: auto !important; }
+  .td-navbar .custom-pagefind-wrapper { display: none !important; }
+  
+  .td-navbar .dropdown-menu {
+    background-color: #ffffff !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important; border: 1px solid rgba(0, 0, 0, 0.08) !important; 
+    min-width: 180px !important; padding: 0.5rem !important; position: absolute !important; z-index: 1065 !important;
+  }
+  .td-navbar .navbar-nav .dropdown-menu { right: 0 !important; left: auto !important; margin-top: 0.5rem !important; }
+  .td-navbar .dropdown-item { padding: 0.6rem 1rem !important; font-size: 0.95rem !important; }
+
+  #secondary-nav { position: relative !important; top: 0 !important; margin-top: 0 !important; height: auto !important; min-height: 52px; padding: 10px 0 !important; z-index: 1050 !important; clear: both !important; }
+  #secondary-nav .container-fluid { padding: 0 15px !important; }
+  #secondary-nav .sec-nav-list { padding: 0 !important; gap: 12px !important; }
+  #secondary-nav .sec-nav-icons { margin-left: 20px !important; padding: 0 !important; }
+  #secondary-nav li { height: auto !important; }
+  #secondary-nav a { height: 34px !important; padding: 0 12px !important; background: rgba(0, 0, 0, 0.1); border-radius: 20px; border-bottom: none !important; }
+  #secondary-nav a.active { background: #ffffff !important; color: $primary !important; }
+}
+
+@media (max-width: 767.98px) {
+  .td-navbar .navbar-nav { gap: 0.25rem !important; }
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="github"], a[href*="Releases"]) span { display: none !important; }
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="github"]) > a, 
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a { padding: 0.25rem 0.6rem !important; font-size: 0.85rem !important; }
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="github"]) > a i, 
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="github"]) > a svg, 
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a i, 
+  .td-navbar .navbar-nav li.nav-item:has(a[href*="Releases"], .dropdown-toggle):not(.td-light-dark-menu) > a svg { font-size: 1rem !important; margin-right: 0 !important; }
+  .td-navbar .navbar-nav a.dropdown-toggle::after { display: none !important; }
+  .td-navbar .navbar-nav li.td-light-dark-menu > button { width: 32px !important; height: 32px !important; }
+  .td-navbar .navbar-nav li.td-light-dark-menu > button i, 
+  .td-navbar .navbar-nav li.td-light-dark-menu > button svg { width: 1rem !important; height: 1rem !important; }
+  
+  #secondary-nav a { font-size: 13px !important; padding: 0 10px !important; height: 30px !important; }
+  #secondary-nav .sec-nav-list { gap: 8px !important; }
+}

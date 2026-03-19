@@ -23,5 +23,5 @@ sourceFileExtensions:
   - 'yml'
 ignoreFiles:
   - 'docs/en/documentation/**/*.go'
-  - 'docs/en/samples-hub/**/*'
+  - 'docs/en/samples/**/*'
   - '**/*oracle*'

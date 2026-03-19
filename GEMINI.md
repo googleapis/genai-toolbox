@@ -20,7 +20,11 @@ This file (symlinked as `CLAUDE.md` and `AGENTS.md`) provides context and guidel
 -   `internal/sources/`: Implementations of database sources (e.g., Postgres, BigQuery).
 -   `internal/tools/`: Implementations of specific tools for each source.
 -   `tests/`: Integration tests.
--   `docs/`: Project documentation (Hugo site).
+-   `docs/`: Project documentation. Separated logically into:
+    - `documentation/`: Documentation and concepts (Section I).
+    - `integrations/`: Reference architectures for DB connectivity and tools (Section II).
+    - `samples/`: Tutorials and code samples (Section III).
+    - `reference/`: CLI info and FAQs (Section IV).
 
 ## Development Workflow
 
@@ -110,8 +114,10 @@ There are 6 workflows in total, handling parallel deployments to both GitHub Pag
 
 ### Adding Documentation
 
--   For a new source: Add source documentation to `docs/en/integrations/<source_name>/`. Be sure to include the `{{< list-tools >}}` shortcode on this page to dynamically display its available tools.
--   For a new tool: Add tool documentation to `docs/en/integrations/<source_name>/<tool_name>`. Be sure to include the `{{< compatible-sources >}}` shortcode on this page to list its supported data sources.
+-   **For a new source:** Add source documentation to `docs/en/integrations/<source_name>/source.md`. Ensure the root `_index.md` file contains **strictly only frontmatter** and no markdown body text.
+-   **For a new native tool:** Add tool documentation to `docs/en/integrations/<source_name>/tools/<tool_name>.md`. Ensure the `tools/_index.md` file contains **strictly only frontmatter**.
+-   **Adding Integration Samples:** Add integration-specific samples to `docs/en/integrations/<source_name>/samples/`. Ensure the `samples/_index.md` file contains **strictly only frontmatter**.
+-   **Tool Inheritance (Shared Tools):** Managed databases (e.g., Cloud SQL Postgres) that use the tools of their underlying engine (e.g., Postgres) map their inherited tools by utilizing the `shared_tools` frontmatter parameter inside their `tools/_index.md` file. This file must contain only frontmatter.
 -   **New Top-Level Directories:** If adding a completely new top-level section to the documentation site, you must update the "Diátaxis Narrative Framework" section inside both `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt` to keep the AI context synced with the site structure.
 
 
@@ -119,11 +125,13 @@ There are 6 workflows in total, handling parallel deployments to both GitHub Pag
 
 When generating or editing documentation for this repository, you must strictly adhere to the following CI-enforced rules. Failure to do so will break the build.
 
-##### Source Page Constraints (`integrations/**/_index.md`)
+##### Source Page Constraints (`integrations/**/source.md`)
 
-1.  **Title Convention:** The YAML frontmatter `title` must always end with "Source" (e.g., `title: "Postgres Source"`).
-2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
-3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
+1.  **File Naming:** The primary connection guide for a source must be named `source.md`. Use `_index.md` solely as an empty structural folder wrapper containing **only YAML frontmatter**.
+2.  **LinkTitle:** The linkTitle has to be set to the string `Source` always.
+3.  **Title Convention:** The YAML frontmatter `title` must always end with "Source" (e.g., `title: "Postgres Source"`).
+4.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
+5.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
     *   `## About` (Required)
     *   `## Available Tools` (Optional)
     *   `## Requirements` (Optional)
@@ -132,13 +140,14 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Advanced Usage` (Optional)
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
-4.  **Shortcode Placement:** If you generate the `## Available Tools` section, you must include the `{{< list-tools >}}` shortcode beneath it.
+6.  **Shortcode Placement:** If you generate the `## Available Tools` section, you must include the `{{< list-tools >}}` shortcode beneath it.
 
-##### Tool Page Constraints (`integrations/**/*.md`)
+##### Tool Page Constraints (`integrations/**/tools/*.md`)
 
-1.  **Title Convention:** The YAML frontmatter `title` must always end with "Tool" (e.g., `title: "Execute SQL Tool"`).
-2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
-3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
+1.  **Location:** All native tools must reside inside a nested `tools/` subdirectory. The `tools/` directory must contain an `_index.md` file consisting **strictly of frontmatter**.
+2.  **Title Convention:** The YAML frontmatter `title` must always end with "Tool" (e.g., `title: "Execute SQL Tool"`).
+3.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
+4.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
     *   `## About` (Required)
     *   `## Compatible Sources` (Optional)
     *   `## Requirements` (Optional)
@@ -149,7 +158,14 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Advanced Usage` (Optional)
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
-4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+5.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+
+##### Samples Architecture Constraints
+Sample code is aggregated visually in the UI via the "Samples Hub", but the physical markdown files are distributed logically based on their scope. When adding samples, use the correct location and apply proper frontmatter tags for the gallery filtering:
+1.  **Quickstarts:** `docs/en/documentation/getting-started/`
+2.  **Integration-Specific Samples:** `docs/en/integrations/<source_name>/samples/`. (The `samples/_index.md` wrapper must contain **strictly only frontmatter**).
+3.  **General/Cross-Category Samples:** `docs/en/samples/`
+
 
 ##### Asset Constraints (`docs/`)
 
