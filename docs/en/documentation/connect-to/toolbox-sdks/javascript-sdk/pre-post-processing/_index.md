@@ -4,7 +4,7 @@ type: docs
 weight: 2
 description: >
   How to add pre- and post- processing to your Agents using JS.
-sample_filters: ["Pre & Post Processing", "Javascript", "ADK", "LangChain"]
+sample_filters: ["Pre & Post Processing", "JavaScript", "ADK", "LangChain"]
 is_sample: true
 ---
 
