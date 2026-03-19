@@ -521,7 +521,7 @@ tools:
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := convertToolsFile([]byte(tc.in))
+			output, err := ConvertToolsFile([]byte(tc.in))
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
@@ -1499,6 +1499,7 @@ func TestPrebuiltTools(t *testing.T) {
 	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
+	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1612,6 +1613,15 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("SNOWFLAKE_SCHEMA", "your_schema")
 	t.Setenv("SNOWFLAKE_WAREHOUSE", "your_wh")
 	t.Setenv("SNOWFLAKE_ROLE", "your_role")
+
+	t.Setenv("ORACLE_USERNAME", "your_oracle_db_username")
+	t.Setenv("ORACLE_CONNECTION_STRING", "your_oracle_connection_string")
+	t.Setenv("ORACLE_PASSWORD", "your_oracle_db_password")
+	t.Setenv("ORACLE_HOST", "your_oracle_db_host")
+	t.Setenv("ORACLE_PORT", "your_oracle_db_port")
+	t.Setenv("ORACLE_USE_OCI", "false")
+	t.Setenv("ORACLE_WALLET", "your_path_to_oracldb_wallet")
+	t.Setenv("ORACLE_TNS_ADMIN", "your_path_to_tns_admin")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1916,7 +1926,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_dev_tools": tools.ToolsetConfig{
 					Name:      "looker_dev_tools",
-					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table"},
+					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table", "project_git_branch"},
 				},
 			},
 		},
@@ -2071,6 +2081,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"snowflake_tools": tools.ToolsetConfig{
 					Name:      "snowflake_tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "Oracle prebuilt tools",
+			in:   oracle_config,
+			wantToolset: server.ToolsetConfigs{
+				"oracle_database_tools": tools.ToolsetConfig{
+					Name:      "oracle_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
 				},
 			},
 		},

@@ -130,18 +130,60 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 	return ctx, shutdownFunc, nil
 }
 
-// LoadConfig checks and merge files that should be loaded into the server
-func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFileParser) (bool, error) {
+// GetCustomConfigFiles retrieves the list of custom config file paths
+func (opts *ToolboxOptions) GetCustomConfigFiles(ctx context.Context) ([]string, bool, error) {
 	// Determine if Custom Files should be loaded
 	// Check for explicit custom flags
 	isCustomConfigured := opts.ToolsFile != "" || len(opts.ToolsFiles) > 0 || opts.ToolsFolder != ""
 
-	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
-	useDefaultToolsFile := len(opts.PrebuiltConfigs) == 0 && !isCustomConfigured
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, isCustomConfigured, err
+	}
 
+	// Load Custom Configurations
+	if isCustomConfigured {
+		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
+		if (opts.ToolsFile != "" && len(opts.ToolsFiles) > 0) ||
+			(opts.ToolsFile != "" && opts.ToolsFolder != "") ||
+			(len(opts.ToolsFiles) > 0 && opts.ToolsFolder != "") {
+			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
+			logger.ErrorContext(ctx, errMsg.Error())
+			return nil, isCustomConfigured, errMsg
+		}
+
+		if len(opts.ToolsFiles) > 0 {
+			// Use tools-files
+			logger.InfoContext(ctx, fmt.Sprintf("retrieving %d tool configuration files", len(opts.ToolsFiles)))
+			return opts.ToolsFiles, isCustomConfigured, nil
+		} else if opts.ToolsFolder != "" {
+			// Use tools-folder
+			allFiles, err := GetPathsFromToolsFolder(ctx, opts.ToolsFolder)
+			return allFiles, isCustomConfigured, err
+		} else {
+			// use tools-file
+			return []string{opts.ToolsFile}, isCustomConfigured, nil
+		}
+	}
+
+	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
+	useDefaultToolsFile := len(opts.PrebuiltConfigs) == 0
 	if useDefaultToolsFile {
-		opts.ToolsFile = "tools.yaml"
-		isCustomConfigured = true
+		// else we will add the default path regardless
+		return []string{"tools.yaml"}, true, nil
+	}
+
+	// no custom config files are found
+	// server are likely using prebuilt configs
+	return []string{}, false, nil
+}
+
+// LoadConfig checks and merge files that should be loaded into the server
+func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFileParser) (bool, error) {
+	// get all the file paths for custom config file
+	filesPaths, isCustomConfigured, err := opts.GetCustomConfigFiles(ctx)
+	if err != nil {
+		return isCustomConfigured, err
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
@@ -152,7 +194,6 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFilePar
 	var allToolsFiles []ToolsFile
 
 	// Load Prebuilt Configuration
-
 	if len(opts.PrebuiltConfigs) > 0 {
 		slices.Sort(opts.PrebuiltConfigs)
 		sourcesList := strings.Join(opts.PrebuiltConfigs, ", ")
@@ -179,40 +220,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ToolsFilePar
 
 	// Load Custom Configurations
 	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (opts.ToolsFile != "" && len(opts.ToolsFiles) > 0) ||
-			(opts.ToolsFile != "" && opts.ToolsFolder != "") ||
-			(len(opts.ToolsFiles) > 0 && opts.ToolsFolder != "") {
-			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
-			logger.ErrorContext(ctx, errMsg.Error())
-			return isCustomConfigured, errMsg
-		}
-
-		var customTools ToolsFile
-		var err error
-
-		if len(opts.ToolsFiles) > 0 {
-			// Use tools-files
-			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(opts.ToolsFiles)))
-			customTools, err = parser.LoadAndMergeToolsFiles(ctx, opts.ToolsFiles)
-		} else if opts.ToolsFolder != "" {
-			// Use tools-folder
-			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", opts.ToolsFolder))
-			customTools, err = parser.LoadAndMergeToolsFolder(ctx, opts.ToolsFolder)
-		} else {
-			// Use single file (tools-file or default `tools.yaml`)
-			buf, readFileErr := os.ReadFile(opts.ToolsFile)
-			if readFileErr != nil {
-				errMsg := fmt.Errorf("unable to read tool file at %q: %w", opts.ToolsFile, readFileErr)
-				logger.ErrorContext(ctx, errMsg.Error())
-				return isCustomConfigured, errMsg
-			}
-			customTools, err = parser.ParseToolsFile(ctx, buf)
-			if err != nil {
-				err = fmt.Errorf("unable to parse tool file at %q: %w", opts.ToolsFile, err)
-			}
-		}
-
+		customTools, err := parser.LoadAndMergeToolsFiles(ctx, filesPaths)
 		if err != nil {
 			logger.ErrorContext(ctx, err.Error())
 			return isCustomConfigured, err
