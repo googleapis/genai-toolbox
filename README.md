@@ -1057,6 +1057,12 @@ Please note that this project is released with a Contributor Code of Conduct.
 By participating in this project you agree to abide by its terms. See
 [Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
 
+## Telemetry
+
+Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
+to export to any OTLP-compatible backend like Google Cloud, Agnost AI, or 
+others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
+
 ## Community
 
 Join our [discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers!

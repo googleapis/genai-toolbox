@@ -106,3 +106,33 @@ There are a couple of steps to run and use a Collector.
     https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/googlemanagedprometheusexporter#example-configuration
 [metrics-explorer]: https://console.cloud.google.com/monitoring/metrics-explorer
 [trace-explorer]: https://console.cloud.google.com/traces
+
+## Telemetry with Agnost AI
+
+[Agnost AI][agnost] provides a managed OTLP endpoint, so you can send telemetry
+directly from Toolbox without running a local Collector.
+
+[agnost]: https://app.agnost.ai
+
+### Setup
+
+1. Sign in to Agnost and retrieve your **Organization ID** from Agnost AI dashboard.
+
+1. Set your organization ID as an OTLP header before running Toolbox:
+
+    ```bash
+    export OTEL_EXPORTER_OTLP_HEADERS="X-Agnost-Org-Id=<your-agnost-org-id>"
+    ```
+
+    Alternatively, add this to your shell profile or environment configuration
+    so it is set automatically on each run.
+
+1. Run Toolbox with the `--telemetry-otlp` flag pointing to the Agnost
+   endpoint:
+
+    ```bash
+    ./toolbox --telemetry-otlp=otel.agnost.ai
+    ```
+
+Toolbox will now export traces and metrics directly to Agnost. No local
+Collector is required.
