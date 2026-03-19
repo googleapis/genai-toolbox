@@ -64,7 +64,6 @@ tools_pages_found = 0
 # Specifically target the tools directories
 for filepath in integration_dir.rglob("tools/*.md"):
     tools_pages_found += 1
-    
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 

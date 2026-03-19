@@ -446,8 +446,8 @@ When adding or updating a Source page, your markdown file must strictly adhere t
   * **Frontmatter:** The `title` field must end with the word "Source" (e.g., `title: "Firestore Source"`).
   * **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
   * **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
-      * **Required Headings:** `About`, `Example`, `Reference`, `Available Tools`
-      * **Allowed Optional Headings:** `Requirements`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
+      * **Required Headings:** `About`, `Example`, `Reference`
+      * **Allowed Optional Headings:** `Available Tools`, `Requirements`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
   * **Available Tools Shortcode:** If you include the `## Available Tools` heading, you must place the list-tools shortcode (e.g., `{{< list-tools >}}`) directly beneath it.
 
 #### Tool Page Structure (`integrations/**/tools/*.md`)
