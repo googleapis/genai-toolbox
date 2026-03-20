@@ -25,7 +25,7 @@ The tool gets the `project` and `location` from the source configuration.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_my_batch
 type: serverless-spark-get-batch
 source: my-serverless-spark-source

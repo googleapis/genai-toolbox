@@ -36,7 +36,7 @@ func TestParseFromYamlPostgresListIndexes(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-indexes
             source: my-postgres-instance
@@ -58,7 +58,7 @@ func TestParseFromYamlPostgresListIndexes(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-indexes
             source: my-postgres-instance

@@ -24,7 +24,7 @@ The `postgres-list-tablespaces` tool lists available tablespaces in the database
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_tablespaces
 type: postgres-list-tablespaces
 source: postgres-source

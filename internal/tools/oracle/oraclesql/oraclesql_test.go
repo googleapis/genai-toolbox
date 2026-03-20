@@ -27,7 +27,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "basic example with statement and auth",
 			in: `
-            kind: tools
+            kind: tool
             name: get_user_by_id
             type: oracle-sql
             source: my-oracle-instance
@@ -51,7 +51,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "example with parameters and template parameters",
 			in: `
-            kind: tools
+            kind: tool
             name: get_orders
             type: oracle-sql
             source: db-prod
@@ -73,7 +73,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "explicit: readOnly set to true",
 			in: `
-			kind: tools
+			kind: tool
 			name: safe_query
 			type: oracle-sql
 			source: db-prod
@@ -96,7 +96,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "example with readonly flag set to false (DML)",
 			in: `
-			kind: tools
+			kind: tool
 			name: update_user
 			type: oracle-sql
 			source: db-prod

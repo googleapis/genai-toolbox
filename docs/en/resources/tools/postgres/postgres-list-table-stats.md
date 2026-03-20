@@ -23,7 +23,7 @@ The tool returns a JSON array where each element represents statistics for a tab
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table_stats
 type: postgres-list-table-stats
 source: postgres-source

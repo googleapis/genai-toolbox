@@ -43,7 +43,7 @@ prebuilt config.
 ### Example `tools.yaml`
 
 ```yaml
-kind: tools
+kind: tool
 name: serverless-spark-create-pyspark-batch
 type: serverless-spark-create-pyspark-batch
 source: "my-serverless-spark-source"

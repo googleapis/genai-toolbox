@@ -692,7 +692,7 @@ func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
 	// Setup custom tools file
 	customContent := `
-kind: tools
+kind: tool
 name: custom_tool
 type: http
 source: my-http
@@ -700,7 +700,7 @@ method: GET
 path: /
 description: "A custom tool for testing"
 ---
-kind: sources
+kind: source
 name: my-http
 type: http
 baseUrl: http://example.com
@@ -713,7 +713,7 @@ baseUrl: http://example.com
 	// Tool Conflict File
 	// SQLite prebuilt has a tool named 'list_tables'
 	toolConflictContent := `
-kind: tools
+kind: tool
 name: list_tables
 type: http
 source: my-http
@@ -721,7 +721,7 @@ method: GET
 path: /
 description: "Conflicting tool"
 ---
-kind: sources
+kind: source
 name: my-http
 type: http
 baseUrl: http://example.com
@@ -734,12 +734,12 @@ baseUrl: http://example.com
 	// Source Conflict File
 	// SQLite prebuilt has a source named 'sqlite-source'
 	sourceConflictContent := `
-kind: sources
+kind: source
 name: sqlite-source
 type: http
 baseUrl: http://example.com
 ---
-kind: tools
+kind: tool
 name: dummy_tool
 type: http
 source: sqlite-source
@@ -755,12 +755,12 @@ description: "Dummy"
 	// Toolset Conflict File
 	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
 	toolsetConflictContent := `
-kind: sources
+kind: source
 name: dummy-src
 type: http
 baseUrl: http://example.com
 ---
-kind: tools
+kind: tool
 name: dummy_tool
 type: http
 source: dummy-src
@@ -768,7 +768,7 @@ method: GET
 path: /
 description: "Dummy"
 ---
-kind: toolsets
+kind: toolset
 name: sqlite_database_tools
 tools:
 - dummy_tool

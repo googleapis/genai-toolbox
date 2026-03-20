@@ -14,7 +14,7 @@ exponential backoff.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: cloudsql-operations-get
 type: cloud-sql-wait-for-operation
 source: my-cloud-sql-source

@@ -36,7 +36,7 @@ to find MCP Toolbox queries.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: query
 type: looker-query
 source: looker-source

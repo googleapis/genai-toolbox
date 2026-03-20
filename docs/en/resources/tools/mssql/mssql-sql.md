@@ -36,7 +36,7 @@ db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: mssql-sql
 source: my-instance
@@ -82,7 +82,7 @@ parameters:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: mssql-sql
 source: my-instance

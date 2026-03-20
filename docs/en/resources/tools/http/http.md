@@ -31,12 +31,12 @@ For example, the following config allows you to reach different paths of the
 same server using multiple Tools:
 
 ```yaml
-kind: sources
+kind: source
 name: my-http-source
 type: http
 baseUrl: https://api.example.com
 ---
-kind: tools
+kind: tool
 name: my-post-tool
 type: http
 source: my-http-source
@@ -44,7 +44,7 @@ method: POST
 path: /update
 description: Tool to update information to the example API
 ---
-kind: tools
+kind: tool
 name: my-get-tool
 type: http
 source: my-http-source
@@ -52,7 +52,7 @@ method: GET
 path: /search
 description: Tool to search information from the example API
 ---
-kind: tools
+kind: tool
 name: my-dynamic-path-tool
 type: http
 source: my-http-source
@@ -79,7 +79,7 @@ The HTTP Tool allows you to specify headers in two different ways:
   same for every invocation:
 
 ```yaml
-kind: tools
+kind: tool
 name: my-http-tool
 type: http
 source: my-http-source
@@ -96,7 +96,7 @@ headers:
   is determined by the LLM input upon Tool invocation:
 
 ```yaml
-kind: tools
+kind: tool
 name: my-http-tool
 type: http
 source: my-http-source
@@ -119,7 +119,7 @@ filtering or sorting data.
   the URL itself:
 
 ```yaml
-kind: tools
+kind: tool
 name: my-http-tool
 type: http
 source: my-http-source
@@ -132,7 +132,7 @@ description: Tool to search for item with ID 1 in English
   `queryParams` section:
 
 ```yaml
-kind: tools
+kind: tool
 name: my-http-tool
 type: http
 source: my-http-source
@@ -156,7 +156,7 @@ body payload upon Tool invocation.
 Example:
 
 ```yaml
-kind: tools
+kind: tool
 name: my-http-tool
 type: http
 source: my-http-source
@@ -218,7 +218,7 @@ will send the following output:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: my-http-tool
 type: http
 source: my-http-source

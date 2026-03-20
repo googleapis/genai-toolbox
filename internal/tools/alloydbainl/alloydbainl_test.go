@@ -37,7 +37,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: alloydb-ai-nl
             source: my-alloydb-instance
@@ -71,7 +71,7 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 		{
 			desc: "with multiple parameters",
 			in: `
-            kind: tools
+            kind: tool
             name: complex_tool
             type: alloydb-ai-nl
             source: my-alloydb-instance
