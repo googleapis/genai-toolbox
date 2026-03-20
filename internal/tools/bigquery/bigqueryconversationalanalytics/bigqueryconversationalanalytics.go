@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -307,7 +308,7 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 330 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)

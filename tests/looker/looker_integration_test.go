@@ -1958,20 +1958,21 @@ func TestLooker(t *testing.T) {
 	wantResult = "master"
 	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "list", "project_id": "the_look"}`), wantResult)
 
-	wantResult = "test_branch"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "create", "project_id": "the_look", "branch": "test_branch"}`), wantResult)
+	wantResult = fmt.Sprintf("test_branch_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(fmt.Sprintf(`{"operation": "create", "project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
 
+	time.Sleep(5 * time.Second)
 	wantResult = "d2d4eafdf8932837b2a12b773282c165a43fb0c0"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "switch", "project_id": "the_look", "branch": "test_branch", "ref": "d2d4eafdf8932837b2a12b773282c165a43fb0c0"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(fmt.Sprintf(`{"operation": "switch", "project_id": "the_look", "branch": "test_branch_%s", "ref": "d2d4eafdf8932837b2a12b773282c165a43fb0c0"}`, randstr)), wantResult)
 
-	wantResult = "test_branch"
+	wantResult = fmt.Sprintf("test_branch_%s", randstr)
 	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "get", "project_id": "the_look"}`), wantResult)
 
 	wantResult = "dev-mike-deangelo-twqb"
 	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "switch", "project_id": "the_look", "branch": "dev-mike-deangelo-twqb"}`), wantResult)
 
 	wantResult = "Deleted"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "delete", "project_id": "the_look", "branch": "test_branch"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(fmt.Sprintf(`{"operation": "delete", "project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
 
 	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "get_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)

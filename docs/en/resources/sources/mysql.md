@@ -70,13 +70,13 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**    | **type** | **required** | **description**                                                                                 |
-| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
-| type         |  string  |     true     | Must be "mysql".                                                                                |
-| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
-| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
-| database     |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                        |
-| user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
-| password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
-| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
-| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
+| **field**    |      **type**      | **required** | **description**                                                                                                                                 |
+|--------------|:------------------:|:------------:|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| type         |       string       |     true     | Must be "mysql".                                                                                                                                |
+| host         |       string       |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                                                    |
+| port         |       string       |     true     | Port to connect to (e.g. "3306").                                                                                                               |
+| user         |       string       |    false     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                                                                    |
+| password     |       string       |    false     | Password of the MySQL user (e.g. "my-password").                                                                                                |
+| database     |       string       |    false     | Name of the MySQL database to connect to (e.g. "my_db").                                                                                        |
+| queryTimeout |       string       |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied.                                                 |
+| queryParams  | map<string,string> |    false     | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |

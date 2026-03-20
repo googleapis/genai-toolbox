@@ -20,6 +20,9 @@ It's compatible with the following sources:
 entries are filtered and returned to the user. It also optionally accepts
 following parameters:
 
+- `scope` - A scope limits the search space to a particular project or organization.
+  It must be in the format: organizations/<org_id> or projects/<project_id>
+  or projects/<project_number>.
 - `pageSize` - Number of results in the search page. Defaults to `5`.
 - `orderBy` - Specifies the ordering of results. Supported values are: relevance
   (default), last_modified_timestamp, last_modified_timestamp asc.
