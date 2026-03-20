@@ -294,7 +294,7 @@ public class AuthExample {
         // 3. Load tool, attach auth, and execute
         client.loadTool("my-tool")
             .thenCompose(tool -> {
-                // "my_auth" must match the name in the tool's authSources config
+                // "my_auth" must match the name in the tool's authService config
                 tool.addAuthTokenGetter("my_auth", tokenGetter);
                 
                 return tool.execute(Map.of("input", "some input"));

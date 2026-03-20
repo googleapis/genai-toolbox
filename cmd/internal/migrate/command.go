@@ -76,7 +76,7 @@ func runMigrate(cmd *migrateCmd, opts *internal.ToolboxOptions) error {
 			errs = append(errs, errMsg)
 			continue
 		}
-		newBuf, err := internal.ConvertToolsFile(buf)
+		newBuf, err := internal.ConvertConfig(buf)
 		if err != nil {
 			logger.ErrorContext(ctx, err.Error())
 			errs = append(errs, err)

@@ -512,7 +512,7 @@ tools:
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := convertConfig([]byte(tc.in))
+			output, err := ConvertConfig([]byte(tc.in))
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}

@@ -147,7 +147,7 @@ func (opts *ToolboxOptions) GetCustomConfigFiles(ctx context.Context) ([]string,
 		if (opts.Config != "" && len(opts.Configs) > 0) ||
 			(opts.Config != "" && opts.ConfigFolder != "") ||
 			(len(opts.Configs) > 0 && opts.ConfigFolder != "") {
-			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
+			errMsg := fmt.Errorf("--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously")
 			logger.ErrorContext(ctx, errMsg.Error())
 			return nil, isCustomConfigured, errMsg
 		}

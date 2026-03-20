@@ -83,7 +83,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 	raw = []byte(output)
 
-	raw, err = convertConfig(raw)
+	raw, err = ConvertConfig(raw)
 	if err != nil {
 		return config, fmt.Errorf("error converting config file: %s", err)
 	}
@@ -96,8 +96,8 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	return config, nil
 }
 
-// convertConfig converts configuration file to flat format.
-func convertConfig(raw []byte) ([]byte, error) {
+// ConvertConfig converts configuration file to flat format.
+func ConvertConfig(raw []byte) ([]byte, error) {
 	var input yaml.MapSlice
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 

@@ -361,7 +361,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 			parser := internal.ConfigParser{}
 			if watchingFolder {
 				logger.DebugContext(ctx, "Reloading config folder.")
-				allFiles, err = parser.LoadAndMergeConfigFolder(ctx, folderToWatch)
+				allFiles, err = internal.GetPathsFromConfigFolder(ctx, folderToWatch)
 				if err != nil {
 					logger.WarnContext(ctx, fmt.Sprintf("error loading config folder %s", err))
 					continue
