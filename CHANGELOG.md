@@ -5,11 +5,11 @@
 
 ### Features
 
-* Add migrate subcommand ([#2679](https://github.com/googleapis/genai-toolbox/issues/2679)) ([12171f7](https://github.com/googleapis/genai-toolbox/commit/12171f7a02bcd34ce647db10abdb79bb2dac7ace))
+* **cli:** Add migrate subcommand ([#2679](https://github.com/googleapis/genai-toolbox/issues/2679)) ([12171f7](https://github.com/googleapis/genai-toolbox/commit/12171f7a02bcd34ce647db10abdb79bb2dac7ace))
 * **cli:** Add serve subcommand ([#2550](https://github.com/googleapis/genai-toolbox/issues/2550)) ([1e2c7c7](https://github.com/googleapis/genai-toolbox/commit/1e2c7c7804c67bebf5e2ee9b67c6feb6f05292fd))
 * **skill:** One skill per toolset ([#2733](https://github.com/googleapis/genai-toolbox/issues/2733)) ([5b85c65](https://github.com/googleapis/genai-toolbox/commit/5b85c65960dba9bfaf4cadca6d44532a153976e1))
 * **source/oracledb:** Add Oracle DB for MCP tools and configurations, updated tools and documentation ([#2625](https://github.com/googleapis/genai-toolbox/issues/2625)) ([e350fc7](https://github.com/googleapis/genai-toolbox/commit/e350fc7879182aaf592a70c3509ed061164b3913))
-* **tool/looker:** Git_branch tools for looker. ([#2718](https://github.com/googleapis/genai-toolbox/issues/2718)) ([70ed8a0](https://github.com/googleapis/genai-toolbox/commit/70ed8a0dcb8e654b748a6e3e1c5ef283c26006da))
+* **tools/looker:** Support git_branch tools for looker. ([#2718](https://github.com/googleapis/genai-toolbox/issues/2718)) ([70ed8a0](https://github.com/googleapis/genai-toolbox/commit/70ed8a0dcb8e654b748a6e3e1c5ef283c26006da))
 * **tools/dataplex-search-entries:** Add `scope` support to search_entries tool ([#2740](https://github.com/googleapis/genai-toolbox/issues/2740)) ([10af468](https://github.com/googleapis/genai-toolbox/commit/10af4682ccd51070463604124293968944d05017))
 
 
