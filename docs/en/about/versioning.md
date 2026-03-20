@@ -9,14 +9,14 @@ description: How MCP Toolbox manages versions and breaking changes.
 
 MCP Toolbox for Databases follows [Semantic Versioning](https://semver.org/).
 
-## **Ecosystem Components: Definition of the Public API**
+## **Definition of the Public API**
 
 For the purposes of this policy, the "Public API" includes:
 
 * **Server**   
   * **CLI:** The execution engine and lifecycle manager for tool hosting.  
   * **Configuration Manifests:** The structural specification of `tools.yaml`.  
-  * **Pre-built Configs:** Curated sets of tools (and other MCP primitives) including the CLI flag, source configuration, toolsets names, and tools. (Note: in the future, prompts, resources and server instructions may be added to configs).  
+  * **Pre-built Configs:** Curated sets of tools (and other MCP primitives) including the CLI flag, source configuration, toolsets names, and tools. 
   * **MCP versions**: Supporting MCP revisions and transport protocols.   
 * **Client SDKs:** Both the foundational "Base SDKs" and the orchestration-specific "Integrated SDKs".
 
@@ -26,7 +26,7 @@ A major version bump (e.g., v1.x to v2.0) is required for the following modifica
 
 * **Server:** Supporting MCP revisions and transport protocols.   
   * **CLI & Config:** Removing existing CLI flags or introducing backwards-incompatible changes to the core configuration format.  
-  * **Pre-built Configs:** Renaming or removing the name of a pre-built toolset (in the future prompts). Agents rely on the toolset names for discovery, so altering them breaks downstream integrations.  
+  * **Pre-built Configs:** Renaming or removing the name of a pre-built toolset. Agents rely on the toolset names for discovery, so altering them breaks downstream integrations.  
 * **Client SDKs:** Removing or renaming public methods, modifying expected input payload structures, or changing expected return types.  
 * **MCP Protocol Support:** Removing support for an existing MCP protocol version. Until official MCP protocol guidelines dictate otherwise, dropping an MCP version counts as a major breaking change. A deprecation warning will be provided prior to removal, aligning with typical new specification cycle timelines.
 
