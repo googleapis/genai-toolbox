@@ -124,6 +124,21 @@ func ConvertToolsFile(raw []byte) ([]byte, error) {
 				// fields such as "tools" in toolsets might pass the first check but
 				// fail to convert to MapSlice
 				if slice, ok := item.Value.(yaml.MapSlice); ok {
+					// Deprecated: convert authSources to authServices
+					switch key {
+					case "authSources", "authServices":
+						key = "authService"
+					case "sources":
+						key = "source"
+					case "embeddingModels":
+						key = "embeddingModel"
+					case "tools":
+						key = "tool"
+					case "toolsets":
+						key = "toolset"
+					case "prompts":
+						key = "prompt"
+					}
 					transformed, err := transformDocs(key, slice)
 					if err != nil {
 						return nil, err
@@ -141,7 +156,7 @@ func ConvertToolsFile(raw []byte) ([]byte, error) {
 					// ---
 					// tools:
 					// - tool_a
-					// kind: toolsets
+					// kind: toolset
 					// ---
 					continue
 				}
@@ -166,7 +181,7 @@ func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 		if !ok {
 			return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
 		}
-		entryBody := processValue(entry.Value, kind == "toolsets")
+		entryBody := processValue(entry.Value, kind == "toolset")
 
 		currentTransformed := yaml.MapSlice{
 			{Key: "kind", Value: kind},
@@ -218,7 +233,7 @@ func processValue(v any, isToolset bool) any {
 
 // mergeToolsFiles merges multiple ToolsFile structs into one.
 // Detects and raises errors for resource conflicts in sources, authServices, tools, and toolsets.
-// All resource names (sources, authServices, tools, toolsets) must be unique across all files.
+// All resource names (source, authService, tool, toolset) must be unique across all files.
 func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 	merged := ToolsFile{
 		Sources:         make(server.SourceConfigs),

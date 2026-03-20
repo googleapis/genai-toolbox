@@ -44,7 +44,7 @@ for more details.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: my_dataform_compiler
 type: dataform-compile-local
 description: Use this tool to compile a local Dataform project.

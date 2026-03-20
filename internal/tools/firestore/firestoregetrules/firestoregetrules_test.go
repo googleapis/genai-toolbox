@@ -36,7 +36,7 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: get_rules_tool
 			type: firestore-get-rules
 			source: my-firestore-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			kind: tools
+			kind: tool
 			name: secure_get_rules
 			type: firestore-get-rules
 			source: prod-firestore
@@ -94,7 +94,7 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: get_dev_rules
 	type: firestore-get-rules
 	source: dev-firestore
@@ -102,13 +102,13 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	authRequired:
 		- dev-auth
 ---
-	kind: tools
+	kind: tool
 	name: get_staging_rules
 	type: firestore-get-rules
 	source: staging-firestore
 	description: Get staging Firestore rules
 ---
-	kind: tools
+	kind: tool
 	name: get_prod_rules
 	type: firestore-get-rules
 	source: prod-firestore

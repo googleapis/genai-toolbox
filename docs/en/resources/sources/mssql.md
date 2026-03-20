@@ -39,7 +39,7 @@ SQL Server user][mssql-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-mssql-source
 type: mssql
 host: 127.0.0.1

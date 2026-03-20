@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-generate-embed-url
 			source: my-instance
@@ -80,7 +80,7 @@ func TestFailParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 		{
 			desc: "Invalid field",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-generate-embed-url
 			source: my-instance

@@ -36,7 +36,7 @@ func TestParseFromYamlDataformCompile(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: dataform-compile-local
 			description: some description

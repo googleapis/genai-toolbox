@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareListFHIRStores(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-list-fhir-stores
             source: my-instance

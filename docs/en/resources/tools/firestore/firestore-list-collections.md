@@ -26,7 +26,7 @@ not provided, it lists all root-level collections in the database.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_firestore_collections
 type: firestore-list-collections
 source: my-firestore-source

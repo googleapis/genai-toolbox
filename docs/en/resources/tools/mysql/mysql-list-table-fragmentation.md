@@ -34,7 +34,7 @@ This tool takes 4 optional input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table_fragmentation
 type: mysql-list-table-fragmentation
 source: my-mysql-instance

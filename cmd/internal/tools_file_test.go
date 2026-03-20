@@ -153,7 +153,7 @@ func TestConvertToolsFile(t *testing.T) {
                     model: gemini-embedding-001
                     apiKey: some-key
                     dimension: 768`,
-			want: `kind: sources
+			want: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -163,12 +163,12 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -179,12 +179,12 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
 ---
-kind: prompts
+kind: prompt
 name: code_review
 description: ask llm to analyze code quality
 messages:
@@ -193,7 +193,7 @@ arguments:
 - name: code
   description: the code to review
 ---
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001
@@ -230,7 +230,7 @@ dimension: 768
             toolsets:
                 example_toolset:
                     - example_tool`,
-			want: `kind: tools
+			want: `kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -241,7 +241,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: sources
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -251,12 +251,12 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
@@ -306,19 +306,19 @@ tools:
                     apiKey: some-key
                     dimension: 768
 ---
-            kind: sources
+            kind: source
             name: my-pg-instance2
             type: cloud-sql-postgres
             project: my-project
             region: my-region
             instance: my-instance
 ---
-            kind: authServices
+            kind: authService
             name: my-google-auth2
             type: google
             clientId: testing-id
 ---
-            kind: tools
+            kind: tool
             name: example_tool2
             type: postgres-sql
             source: my-pg-instance
@@ -329,17 +329,17 @@ tools:
               type: string
               description: some description
 ---
-            kind: toolsets
+            kind: toolset
             name: example_toolset2
             tools:
             - example_tool
 ---
             tools:
             - example_tool
-            kind: toolsets
+            kind: toolset
             name: example_toolset3
 ---
-            kind: prompts
+            kind: prompt
             name: code_review2
             description: ask llm to analyze code quality
             messages:
@@ -348,10 +348,10 @@ tools:
             - name: code
               description: the code to review
 ---
-            kind: embeddingModels
+            kind: embeddingModel
             name: gemini-model2
             type: gemini`,
-			want: `kind: sources
+			want: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -361,12 +361,12 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -377,12 +377,12 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
 ---
-kind: prompts
+kind: prompt
 name: code_review
 description: ask llm to analyze code quality
 messages:
@@ -391,26 +391,26 @@ arguments:
 - name: code
   description: the code to review
 ---
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001
 apiKey: some-key
 dimension: 768
 ---
-kind: sources
+kind: source
 name: my-pg-instance2
 type: cloud-sql-postgres
 project: my-project
 region: my-region
 instance: my-instance
 ---
-kind: authServices
+kind: authService
 name: my-google-auth2
 type: google
 clientId: testing-id
 ---
-kind: tools
+kind: tool
 name: example_tool2
 type: postgres-sql
 source: my-pg-instance
@@ -421,17 +421,17 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset2
 tools:
 - example_tool
 ---
 tools:
 - example_tool
-kind: toolsets
+kind: toolset
 name: example_toolset3
 ---
-kind: prompts
+kind: prompt
 name: code_review2
 description: ask llm to analyze code quality
 messages:
@@ -440,14 +440,14 @@ arguments:
 - name: code
   description: the code to review
 ---
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model2
 type: gemini
 `,
 		},
 		{
 			desc: "no convertion needed",
-			in: `kind: sources
+			in: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -457,7 +457,7 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -468,11 +468,11 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool`,
-			want: `kind: sources
+			want: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -482,7 +482,7 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -493,7 +493,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
@@ -601,7 +601,7 @@ func TestParseToolFile(t *testing.T) {
 		{
 			description: "basic example tools file v2",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: cloud-sql-postgres
 			project: my-project
@@ -611,19 +611,19 @@ func TestParseToolFile(t *testing.T) {
 			user: my_user
 			password: my_pass
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-auth
 			type: google
 			clientId: testing-id
 ---
-			kind: embeddingModels
+			kind: embeddingModel
 			name: gemini-model
 			type: gemini
 			model: gemini-embedding-001
 			apiKey: some-key
 			dimension: 768
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-sql
 			source: my-pg-instance
@@ -635,12 +635,12 @@ func TestParseToolFile(t *testing.T) {
 			  type: string
 			  description: some description
 ---
-			kind: toolsets
+			kind: toolset
 			name: example_toolset
 			tools:
 			- example_tool
 ---
-			kind: prompts
+			kind: prompt
 			name: code_review
 			description: ask llm to analyze code quality
 			messages:
@@ -715,7 +715,7 @@ func TestParseToolFile(t *testing.T) {
 		{
 			description: "only prompts",
 			in: `
-            kind: prompts
+            kind: prompt
             name: my-prompt
             description: A prompt template for data analysis.
             arguments:
@@ -783,7 +783,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: cloud-sql-postgres
 			project: my-project
@@ -793,17 +793,17 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			user: my_user
 			password: my_pass
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-service
 			type: google
 			clientId: my-client-id
 ---
-			kind: authServices
+			kind: authService
 			name: other-google-service
 			type: google
 			clientId: other-client-id
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-sql
 			source: my-pg-instance
@@ -829,7 +829,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 					- name: other-google-service
 						field: other_email
 ---
-			kind: toolsets
+			kind: toolset
 			name: example_toolset
 			tools:
 				- example_tool
@@ -887,7 +887,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example with authRequired",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: cloud-sql-postgres
 			project: my-project
@@ -897,17 +897,17 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			user: my_user
 			password: my_pass
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-service
 			type: google
 			clientId: my-client-id
 ---
-			kind: authServices
+			kind: authService
 			name: other-google-service
 			type: google
 			clientId: other-client-id
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-sql
 			source: my-pg-instance
@@ -935,7 +935,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 					- name: other-google-service
 						field: other_email
 ---
-			kind: toolsets
+			kind: toolset
 			name: example_toolset
 			tools:
 				- example_tool
@@ -1185,7 +1185,7 @@ func TestEnvVarReplacement(t *testing.T) {
 		{
 			description: "file with env var example toolsfile v2",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -1195,17 +1195,17 @@ func TestEnvVarReplacement(t *testing.T) {
 			queryParams:
 				api-key: ${API_KEY}
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-service
 			type: google
 			clientId: ${clientId}
 ---
-			kind: authServices
+			kind: authService
 			name: other-google-service
 			type: google
 			clientId: ${clientId2}
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: http
 			source: my-instance
@@ -1246,12 +1246,12 @@ func TestEnvVarReplacement(t *testing.T) {
 					type: string
 					description: language string
 ---
-			kind: toolsets
+			kind: toolset
 			name: ${toolset_name}
 			tools:
 				- example_tool
 ---
-			kind: prompts
+			kind: prompt
 			name: ${prompt_name}
 			description: A test prompt for {{.name}}.
 			messages:

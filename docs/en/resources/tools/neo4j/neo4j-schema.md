@@ -28,7 +28,7 @@ tool is compatible with a `neo4j` source and takes no parameters.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_movie_db_schema
 type: neo4j-schema
 source: my-neo4j-movies-instance
