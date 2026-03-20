@@ -320,7 +320,7 @@ For more info on tools, check out the
 Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ```bash
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 ## Step 5: Connect to MCP Inspector

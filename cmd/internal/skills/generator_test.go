@@ -231,12 +231,12 @@ func TestGenerateScriptContent(t *testing.T) {
 			},
 		},
 		{
-			name:       "script with tools file",
+			name:       "script with config",
 			toolName:   "complex-tool",
-			configArgs: `"--tools-file", path.join(__dirname, "..", "assets", "test")`,
+			configArgs: `"--config", path.join(__dirname, "..", "assets", "test")`,
 			wantContains: []string{
 				`const toolName = "complex-tool";`,
-				`const configArgs = ["--tools-file", path.join(__dirname, "..", "assets", "test")];`,
+				`const configArgs = ["--config", path.join(__dirname, "..", "assets", "test")];`,
 			},
 		},
 		{
