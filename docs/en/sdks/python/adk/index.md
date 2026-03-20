@@ -193,7 +193,7 @@ creds = CredentialStrategy.from_adk_credentials(auth_credential, scheme)
 ### 8. Tool-Specific Authentication
 *Resolve authentication tokens dynamically for specific tools.*
 
-Some tools may define their own authentication requirements (e.g., Salesforce OAuth, GitHub PAT) via `authSources` in their schema. You can provide a mapping of getters to resolve these tokens at runtime.
+Some tools may define their own authentication requirements (e.g., Salesforce OAuth, GitHub PAT) via `authServices` in their schema. You can provide a mapping of getters to resolve these tokens at runtime.
 
 ```python
 async def get_salesforce_token():

@@ -105,7 +105,7 @@ func ConvertToolsFile(raw []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	encoder := yaml.NewEncoder(&buf)
 
-	v1keys := []string{"sources", "authSources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	v1keys := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
 	for {
 		if err := decoder.Decode(&input); err != nil {
 			if err == io.EOF {
@@ -124,10 +124,6 @@ func ConvertToolsFile(raw []byte) ([]byte, error) {
 				// fields such as "tools" in toolsets might pass the first check but
 				// fail to convert to MapSlice
 				if slice, ok := item.Value.(yaml.MapSlice); ok {
-					// Deprecated: convert authSources to authServices
-					if key == "authSources" {
-						key = "authServices"
-					}
 					transformed, err := transformDocs(key, slice)
 					if err != nil {
 						return nil, err
