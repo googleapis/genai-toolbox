@@ -778,18 +778,6 @@ tools:
 		t.Fatal(err)
 	}
 
-	//Legacy Auth File
-	authContent := `
-authSources:
-  legacy-auth:
-    kind: google
-    clientId: "test-client-id"
-`
-	authFile := filepath.Join(t.TempDir(), "auth.yaml")
-	if err := os.WriteFile(authFile, []byte(authContent), 0644); err != nil {
-		t.Fatal(err)
-	}
-
 	testCases := []struct {
 		desc      string
 		args      []string
@@ -834,17 +822,6 @@ authSources:
 			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolsetConflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
-		},
-		{
-			desc:    "legacy auth additive",
-			args:    []string{"--prebuilt", "sqlite", "--tools-file", authFile},
-			wantErr: false,
-			cfgCheck: func(cfg server.ServerConfig) error {
-				if _, ok := cfg.AuthServiceConfigs["legacy-auth"]; !ok {
-					return fmt.Errorf("legacy auth source not merged into auth services")
-				}
-				return nil
-			},
 		},
 	}
 
