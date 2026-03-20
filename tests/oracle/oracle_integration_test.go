@@ -24,8 +24,8 @@ var (
 	OracleSourceType = "oracle"
 	OracleToolType   = "oracle-sql"
 	OracleHost       = os.Getenv("ORACLE_HOST")
-	OracleUser       = os.Getenv("ORACLE_USER")
-	OraclePass       = os.Getenv("ORACLE_PASS")
+	OracleUser       = os.Getenv("ORACLE_USERNAME")
+	OraclePass       = os.Getenv("ORACLE_PASSWORD")
 	OracleServerName = os.Getenv("ORACLE_SERVER_NAME")
 	OracleConnStr    = fmt.Sprintf(
 		"%s:%s/%s", OracleHost, "1521", OracleServerName)
@@ -36,9 +36,9 @@ func getOracleVars(t *testing.T) map[string]any {
 	case OracleHost:
 		t.Fatal("'ORACLE_HOST not set")
 	case OracleUser:
-		t.Fatal("'ORACLE_USER' not set")
+		t.Fatal("'ORACLE_USERNAME' not set")
 	case OraclePass:
-		t.Fatal("'ORACLE_PASS' not set")
+		t.Fatal("'ORACLE_PASSWORD' not set")
 	case OracleServerName:
 		t.Fatal("'ORACLE_SERVER_NAME' not set")
 	}

@@ -40,7 +40,6 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 			project: my-project
 			region: my-region
 			instance: my-instance
-			database: my_db
 			user: my_user
 			password: my_pass
 			`,
@@ -52,14 +51,13 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 					Region:   "my-region",
 					Instance: "my-instance",
 					IPType:   "public",
-					Database: "my_db",
 					User:     "my_user",
 					Password: "my_pass",
 				},
 			},
 		},
 		{
-			desc: "public ipType",
+			desc: "public ipType and database",
 			in: `
 			kind: sources
 			name: my-mysql-instance

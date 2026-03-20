@@ -1,5 +1,78 @@
 # Changelog
 
+## [0.30.0](https://github.com/googleapis/genai-toolbox/compare/v0.29.0...v0.30.0) (2026-03-20)
+
+
+### Features
+
+* **cli:** Add migrate subcommand ([#2679](https://github.com/googleapis/genai-toolbox/issues/2679)) ([12171f7](https://github.com/googleapis/genai-toolbox/commit/12171f7a02bcd34ce647db10abdb79bb2dac7ace))
+* **cli:** Add serve subcommand ([#2550](https://github.com/googleapis/genai-toolbox/issues/2550)) ([1e2c7c7](https://github.com/googleapis/genai-toolbox/commit/1e2c7c7804c67bebf5e2ee9b67c6feb6f05292fd))
+* **skill:** One skill per toolset ([#2733](https://github.com/googleapis/genai-toolbox/issues/2733)) ([5b85c65](https://github.com/googleapis/genai-toolbox/commit/5b85c65960dba9bfaf4cadca6d44532a153976e1))
+* **source/oracledb:** Add Oracle DB for MCP tools and configurations, updated tools and documentation ([#2625](https://github.com/googleapis/genai-toolbox/issues/2625)) ([e350fc7](https://github.com/googleapis/genai-toolbox/commit/e350fc7879182aaf592a70c3509ed061164b3913))
+* **tools/looker:** Support git_branch tools for looker. ([#2718](https://github.com/googleapis/genai-toolbox/issues/2718)) ([70ed8a0](https://github.com/googleapis/genai-toolbox/commit/70ed8a0dcb8e654b748a6e3e1c5ef283c26006da))
+* **tools/dataplex-search-entries:** Add `scope` support to search_entries tool ([#2740](https://github.com/googleapis/genai-toolbox/issues/2740)) ([10af468](https://github.com/googleapis/genai-toolbox/commit/10af4682ccd51070463604124293968944d05017))
+
+
+### Bug Fixes
+
+* **cloudloggingadmin:** Increase log injesting time and add auth test ([#2772](https://github.com/googleapis/genai-toolbox/issues/2772)) ([50b4457](https://github.com/googleapis/genai-toolbox/commit/50b4457095ec4ac881b3b12719da24d35141f65d))
+* **oracle:** Normalize encoded proxy usernames in go-ora DSN ([#2469](https://github.com/googleapis/genai-toolbox/issues/2469)) ([b1333cd](https://github.com/googleapis/genai-toolbox/commit/b1333cd27117655f8ab09f222721e14bea74b487))
+* **postgres:** Update execute-sql tool to avoid multi-statements parameter ([#2707](https://github.com/googleapis/genai-toolbox/issues/2707)) ([58bc772](https://github.com/googleapis/genai-toolbox/commit/58bc772f882f0d9e00f403e73fbec812dd8a03ac))
+* **skills:** Improve flag validation and silence unit test output ([#2759](https://github.com/googleapis/genai-toolbox/issues/2759)) ([f3da6aa](https://github.com/googleapis/genai-toolbox/commit/f3da6aa5e23b609a1ac9ecc098bccea02f2388ab))
+* **test:** Address flaky healthcare integration test run ([#2742](https://github.com/googleapis/genai-toolbox/issues/2742)) ([9590821](https://github.com/googleapis/genai-toolbox/commit/9590821bc7d86c5cbacd29b21d4f85b427a87db4))
+
+
+### Reverts
+
+* **ci:** Implement conditional sharding logic in integration tests ([#2763](https://github.com/googleapis/genai-toolbox/issues/2763)) ([1528d7c](https://github.com/googleapis/genai-toolbox/commit/1528d7c38dfaa30bdecbe59c79ba926fa6d18356))
+
+## [0.29.0](https://github.com/googleapis/genai-toolbox/compare/v0.28.0...v0.29.0) (2026-03-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **source/alloydb:** restructure prebuilt toolsets  ([#2639](https://github.com/googleapis/genai-toolbox/issues/2639))
+* **source/spanner:** restructure prebuilt toolsets ([#2641](https://github.com/googleapis/genai-toolbox/issues/2641))
+* **source/dataplex:** restructure prebuilt toolsets ([#2640](https://github.com/googleapis/genai-toolbox/issues/2640))
+* **source/oss-db:** restructure prebuilt toolsets ([#2638](https://github.com/googleapis/genai-toolbox/issues/2638))
+* **source/cloudsql:** restructure prebuilt toolsets ([#2635](https://github.com/googleapis/genai-toolbox/issues/2635))
+* **source/bigquery:** restructure prebuilt toolsets ([#2637](https://github.com/googleapis/genai-toolbox/issues/2637))
+* **source/firestore:** restructure prebuilt toolsets ([#2636](https://github.com/googleapis/genai-toolbox/issues/2636))
+* telemetry metrics updates as per semantic convention ([#2566](https://github.com/googleapis/genai-toolbox/issues/2566))
+
+### Features
+
+* Add user agent to embeddings generation ([#2572](https://github.com/googleapis/genai-toolbox/issues/2572)) ([287251a](https://github.com/googleapis/genai-toolbox/commit/287251a0cfed4d24617e5d0d957026a94f65d820))
+* **skill:** Attach user agent metadata for generated skill ([#2697](https://github.com/googleapis/genai-toolbox/issues/2697)) ([9598a6a](https://github.com/googleapis/genai-toolbox/commit/9598a6a32597b9c9abdb0f20c06d86a01b0d011f))
+* **skills:** Add additional-notes flag to generate skills command ([#2696](https://github.com/googleapis/genai-toolbox/issues/2696)) ([73bf962](https://github.com/googleapis/genai-toolbox/commit/73bf962459b76872f748248bb5e289be232a30b6))
+* **skill:** Update skill generation logic ([#2646](https://github.com/googleapis/genai-toolbox/issues/2646)) ([c233eee](https://github.com/googleapis/genai-toolbox/commit/c233eee98cd9621526cb286245f3874f5bd6e7da))
+* **source/alloydb:** Restructure prebuilt toolsets  ([#2639](https://github.com/googleapis/genai-toolbox/issues/2639)) ([5f3f063](https://github.com/googleapis/genai-toolbox/commit/5f3f063fc7335e47e35fa1a4f93616abbd7959d5))
+* **source/bigquery:** Restructure prebuilt toolsets ([#2637](https://github.com/googleapis/genai-toolbox/issues/2637)) ([dc984ba](https://github.com/googleapis/genai-toolbox/commit/dc984badd79f54ff423713a763648c6a6880a640))
+* **sources/bigquery:** Support custom oauth header name ([#2564](https://github.com/googleapis/genai-toolbox/issues/2564)) ([d3baf77](https://github.com/googleapis/genai-toolbox/commit/d3baf77d61ab30d97edc93587e6f0365b8523fee))
+* **source/cloudsql:** Restructure prebuilt toolsets ([#2635](https://github.com/googleapis/genai-toolbox/issues/2635)) ([99613dc](https://github.com/googleapis/genai-toolbox/commit/99613dcc7a06bd3a2324d20e1ef41404cf6fd9d5))
+* **source/dataplex:** Restructure prebuilt toolsets ([#2640](https://github.com/googleapis/genai-toolbox/issues/2640)) ([acb9a80](https://github.com/googleapis/genai-toolbox/commit/acb9a80cf2438e04c76cf10267b1c9ca9227da0b))
+* **source/firestore:** Restructure prebuilt toolsets ([#2636](https://github.com/googleapis/genai-toolbox/issues/2636)) ([22ab7b9](https://github.com/googleapis/genai-toolbox/commit/22ab7b9365eab21bfa04da64574fadbd0746f669))
+* **source/oss-db:** Restructure prebuilt toolsets ([#2638](https://github.com/googleapis/genai-toolbox/issues/2638)) ([5196c6a](https://github.com/googleapis/genai-toolbox/commit/5196c6a78eb256ec83d847385c69bfebece48c87))
+* **source/spanner:** Restructure prebuilt toolsets ([#2641](https://github.com/googleapis/genai-toolbox/issues/2641)) ([ea2b698](https://github.com/googleapis/genai-toolbox/commit/ea2b698b03517c400bbaef27f56c4d3abead8b2c))
+* Telemetry metrics updates as per semantic convention ([#2566](https://github.com/googleapis/genai-toolbox/issues/2566)) ([131d764](https://github.com/googleapis/genai-toolbox/commit/131d764f895c14908e29914b3c0c273d91a2654f))
+* **tools/mongodb:** Add tool annotations to MongoDB tools for improved LLM understanding ([#2219](https://github.com/googleapis/genai-toolbox/issues/2219)) ([b7a5f80](https://github.com/googleapis/genai-toolbox/commit/b7a5f80b42b3c1564870e2868aeab87d82a85d39))
+* **tools/serverless-spark:** Add get_session_template tool  ([#2308](https://github.com/googleapis/genai-toolbox/issues/2308)) ([a136e16](https://github.com/googleapis/genai-toolbox/commit/a136e169b3551a14b081624d7f50e1c32f0fb857))
+* **tools/serverless-spark:** Add list/get sessions tools ([#2576](https://github.com/googleapis/genai-toolbox/issues/2576)) ([a554298](https://github.com/googleapis/genai-toolbox/commit/a554298535444671228fc08f6e3139d199a8b6b4))
+
+
+### Bug Fixes
+
+* Improve list locks integration test for postgres ([#2279](https://github.com/googleapis/genai-toolbox/issues/2279)) ([d9ebe5d](https://github.com/googleapis/genai-toolbox/commit/d9ebe5d4bf1b7ca04cae47386b36c38ca5b77b8a))
+* **mcp:** Guard nil SSE session lookup and return 400 for missing session ([#2681](https://github.com/googleapis/genai-toolbox/issues/2681)) ([f66189f](https://github.com/googleapis/genai-toolbox/commit/f66189fe43cb711da3a041fa31edbacd7bbc7153))
+* **oracle:** Update oracle-execute-sql tool interface to match source signature ([#2627](https://github.com/googleapis/genai-toolbox/issues/2627)) ([81699a3](https://github.com/googleapis/genai-toolbox/commit/81699a375b7e5af37945f4124aa4c5f2a1a9f7a6))
+* Return AllParams for GetParameter() for tools with templateParameter([#2734](https://github.com/googleapis/genai-toolbox/issues/2734)) ([bfd7ba6](https://github.com/googleapis/genai-toolbox/commit/bfd7ba601a52294fa71623d88af71bd0288bf887))
+* **server/mcp:** Scope defer span.End inside loop iteration ([#2558](https://github.com/googleapis/genai-toolbox/issues/2558)) ([c88a62d](https://github.com/googleapis/genai-toolbox/commit/c88a62dcf4c16118ae706cc43d18cad827e7496d)), closes [#2549](https://github.com/googleapis/genai-toolbox/issues/2549)
+* **skill:** Fix env variable propagation ([#2645](https://github.com/googleapis/genai-toolbox/issues/2645)) ([5271368](https://github.com/googleapis/genai-toolbox/commit/52713687208994c423da64333cb0a04fb483f794))
+* **sources/looker:** Looker and looker-dev prebuilt tools should share one source definition. ([#2620](https://github.com/googleapis/genai-toolbox/issues/2620)) ([df7f2fd](https://github.com/googleapis/genai-toolbox/commit/df7f2fd7d5b75211dbbbd471c84f0ec5097ca7ad))
+* **telemetry:** Histogram buckets from OTel standard to MCP standards ([#2729](https://github.com/googleapis/genai-toolbox/issues/2729)) ([87cd4a0](https://github.com/googleapis/genai-toolbox/commit/87cd4a0bf48605225ef25ca554cc787def976d11))
+* **ui:** Remove module from script ([#2703](https://github.com/googleapis/genai-toolbox/issues/2703)) ([6943ab6](https://github.com/googleapis/genai-toolbox/commit/6943ab6839d21da7b6a4241700c7891c6f4a9b2c))
+* Update toolset attributes naming ([#2554](https://github.com/googleapis/genai-toolbox/issues/2554)) ([3d6ae4e](https://github.com/googleapis/genai-toolbox/commit/3d6ae4eeaf5acfbde83374a244573edd8fc9012b))
+
 ## [0.28.0](https://github.com/googleapis/genai-toolbox/compare/v0.27.0...v0.28.0) (2026-03-02)
 
 

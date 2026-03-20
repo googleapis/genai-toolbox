@@ -83,7 +83,7 @@ func (p *ToolsFileParser) ParseToolsFile(ctx context.Context, raw []byte) (Tools
 	}
 	raw = []byte(output)
 
-	raw, err = convertToolsFile(raw)
+	raw, err = ConvertToolsFile(raw)
 	if err != nil {
 		return toolsFile, fmt.Errorf("error converting tools file: %s", err)
 	}
@@ -96,7 +96,8 @@ func (p *ToolsFileParser) ParseToolsFile(ctx context.Context, raw []byte) (Tools
 	return toolsFile, nil
 }
 
-func convertToolsFile(raw []byte) ([]byte, error) {
+// ConvertToolsFile converts configuration file from v1 to v2 format.
+func ConvertToolsFile(raw []byte) ([]byte, error) {
 	var input yaml.MapSlice
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 
@@ -317,47 +318,46 @@ func (p *ToolsFileParser) LoadAndMergeToolsFiles(ctx context.Context, filePaths 
 
 		toolsFiles = append(toolsFiles, toolsFile)
 	}
-
-	mergedFile, err := mergeToolsFiles(toolsFiles...)
-	if err != nil {
-		return ToolsFile{}, fmt.Errorf("unable to merge tools files: %w", err)
+	if len(toolsFiles) == 0 {
+		return ToolsFile{}, fmt.Errorf("no YAML files found")
 	}
 
-	return mergedFile, nil
+	if len(toolsFiles) > 1 {
+		mergedFile, err := mergeToolsFiles(toolsFiles...)
+		if err != nil {
+			return ToolsFile{}, fmt.Errorf("unable to merge tools files: %w", err)
+		}
+		return mergedFile, nil
+	}
+	return toolsFiles[0], nil
 }
 
-// LoadAndMergeToolsFolder loads all YAML files from a directory and merges them
-func (p *ToolsFileParser) LoadAndMergeToolsFolder(ctx context.Context, folderPath string) (ToolsFile, error) {
+// GetPathsFromToolsFolder loads all YAML files from a directory and merges them
+func GetPathsFromToolsFolder(ctx context.Context, folderPath string) ([]string, error) {
 	// Check if directory exists
 	info, err := os.Stat(folderPath)
 	if err != nil {
-		return ToolsFile{}, fmt.Errorf("unable to access tools folder at %q: %w", folderPath, err)
+		return nil, fmt.Errorf("unable to access tools folder at %q: %w", folderPath, err)
 	}
 	if !info.IsDir() {
-		return ToolsFile{}, fmt.Errorf("path %q is not a directory", folderPath)
+		return nil, fmt.Errorf("path %q is not a directory", folderPath)
 	}
 
 	// Find all YAML files in the directory
 	pattern := filepath.Join(folderPath, "*.yaml")
 	yamlFiles, err := filepath.Glob(pattern)
 	if err != nil {
-		return ToolsFile{}, fmt.Errorf("error finding YAML files in %q: %w", folderPath, err)
+		return nil, fmt.Errorf("error finding YAML files in %q: %w", folderPath, err)
 	}
 
 	// Also find .yml files
 	ymlPattern := filepath.Join(folderPath, "*.yml")
 	ymlFiles, err := filepath.Glob(ymlPattern)
 	if err != nil {
-		return ToolsFile{}, fmt.Errorf("error finding YML files in %q: %w", folderPath, err)
+		return nil, fmt.Errorf("error finding YML files in %q: %w", folderPath, err)
 	}
 
 	// Combine both file lists
 	allFiles := append(yamlFiles, ymlFiles...)
-
-	if len(allFiles) == 0 {
-		return ToolsFile{}, fmt.Errorf("no YAML files found in directory %q", folderPath)
-	}
-
-	// Use existing LoadAndMergeToolsFiles function
-	return p.LoadAndMergeToolsFiles(ctx, allFiles)
+	return allFiles, nil
 }

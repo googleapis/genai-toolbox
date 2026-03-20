@@ -28,11 +28,18 @@ import (
 )
 
 func invokeCommand(args []string) (string, error) {
-	parentCmd := &cobra.Command{Use: "toolbox"}
+	parentCmd := &cobra.Command{
+		Use:           "toolbox",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+	}
 
 	buf := new(bytes.Buffer)
 	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
 	internal.PersistentFlags(parentCmd, opts)
+
+	parentCmd.SetOut(buf)
+	parentCmd.SetErr(buf)
 
 	cmd := NewCommand(opts)
 	parentCmd.AddCommand(cmd)
@@ -141,6 +148,171 @@ description: hello tool
 	}
 }
 
+func TestGenerateSkill_Toolsets(t *testing.T) {
+	// Create a temporary directory for tests
+	tmpDir := t.TempDir()
+	outputDir := filepath.Join(tmpDir, "skills")
+
+	// Create a tools.yaml file with a sqlite tool
+	toolsFileContent := `
+sources:
+  my-sqlite:
+    kind: sqlite
+    database: test.db
+tools:
+  hello-sqlite:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "hello tool"
+    statement: "SELECT 'hello' as greeting"
+  bye-sqlite:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "bye tool"
+    statement: "SELECT 'bye' as greeting"
+toolsets:
+  greeting:
+    tools:
+      - hello-sqlite
+  farewell:
+    tools:
+      - bye-sqlite
+`
+
+	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
+	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
+		t.Fatalf("failed to write tools file: %v", err)
+	}
+
+	args := []string{
+		"skills-generate",
+		"--tools-file", toolsFilePath,
+		"--output-dir", outputDir,
+		"--name", "my-skill",
+		"--description", "My toolset skills",
+	}
+
+	got, err := invokeCommand(args)
+	if err != nil {
+		t.Fatalf("command failed: %v\nOutput: %s", err, got)
+	}
+
+	// Verify generated directory structures
+	// First toolset skill
+	skillPath1 := filepath.Join(outputDir, "my-skill-greeting")
+	if _, err := os.Stat(skillPath1); os.IsNotExist(err) {
+		t.Fatalf("skill directory not created: %s", skillPath1)
+	}
+
+	skillMarkdown1 := filepath.Join(skillPath1, "SKILL.md")
+	content1, err := os.ReadFile(skillMarkdown1)
+	if err != nil {
+		t.Fatalf("failed to read SKILL.md: %v", err)
+	}
+
+	if !strings.Contains(string(content1), "### hello-sqlite") {
+		t.Errorf("SKILL.md does not contain '### hello-sqlite' tool header")
+	}
+	if strings.Contains(string(content1), "### bye-sqlite") {
+		t.Errorf("SKILL.md should not contain '### bye-sqlite' tool header")
+	}
+
+	// Second toolset skill
+	skillPath2 := filepath.Join(outputDir, "my-skill-farewell")
+	if _, err := os.Stat(skillPath2); os.IsNotExist(err) {
+		t.Fatalf("skill directory not created: %s", skillPath2)
+	}
+
+	skillMarkdown2 := filepath.Join(skillPath2, "SKILL.md")
+	content2, err := os.ReadFile(skillMarkdown2)
+	if err != nil {
+		t.Fatalf("failed to read SKILL.md: %v", err)
+	}
+
+	if !strings.Contains(string(content2), "### bye-sqlite") {
+		t.Errorf("SKILL.md does not contain '### bye-sqlite' tool header")
+	}
+	if strings.Contains(string(content2), "### hello-sqlite") {
+		t.Errorf("SKILL.md should not contain '### hello-sqlite' tool header")
+	}
+}
+
+func TestGenerateSkill_SpecificToolset(t *testing.T) {
+	// Create a temporary directory for tests
+	tmpDir := t.TempDir()
+	outputDir := filepath.Join(tmpDir, "skills")
+
+	// Create a tools.yaml file with a sqlite tool
+	toolsFileContent := `
+sources:
+  my-sqlite:
+    kind: sqlite
+    database: test.db
+tools:
+  hello-sqlite:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "hello tool"
+    statement: "SELECT 'hello' as greeting"
+  bye-sqlite:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "bye tool"
+    statement: "SELECT 'bye' as greeting"
+toolsets:
+  greeting:
+    tools:
+      - hello-sqlite
+  farewell:
+    tools:
+      - bye-sqlite
+`
+
+	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
+	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
+		t.Fatalf("failed to write tools file: %v", err)
+	}
+
+	args := []string{
+		"skills-generate",
+		"--tools-file", toolsFilePath,
+		"--output-dir", outputDir,
+		"--name", "my-specific-skill",
+		"--description", "My toolset skill",
+		"--toolset", "farewell",
+	}
+
+	got, err := invokeCommand(args)
+	if err != nil {
+		t.Fatalf("command failed: %v\nOutput: %s", err, got)
+	}
+
+	// Because we specified a toolset, it outputs directly into my-specific-skill
+	skillPath := filepath.Join(outputDir, "my-specific-skill")
+	if _, err := os.Stat(skillPath); os.IsNotExist(err) {
+		t.Fatalf("skill directory not created: %s", skillPath)
+	}
+
+	// Ensure other toolsets are not generated
+	skillPathGreeting := filepath.Join(outputDir, "my-specific-skill-greeting")
+	if _, err := os.Stat(skillPathGreeting); !os.IsNotExist(err) {
+		t.Fatalf("skill directory should not have been created: %s", skillPathGreeting)
+	}
+
+	skillMarkdown := filepath.Join(skillPath, "SKILL.md")
+	content, err := os.ReadFile(skillMarkdown)
+	if err != nil {
+		t.Fatalf("failed to read SKILL.md: %v", err)
+	}
+
+	if !strings.Contains(string(content), "### bye-sqlite") {
+		t.Errorf("SKILL.md does not contain '### bye-sqlite' tool header")
+	}
+	if strings.Contains(string(content), "### hello-sqlite") {
+		t.Errorf("SKILL.md should not contain '### hello-sqlite' tool header")
+	}
+}
+
 func TestGenerateSkill_NoConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	outputDir := filepath.Join(tmpDir, "skills")
@@ -189,6 +361,32 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 			got, err := invokeCommand(tt.args)
 			if err == nil {
 				t.Fatalf("expected command to fail due to missing arguments, but it succeeded\nOutput: %s", got)
+			}
+		})
+	}
+}
+
+func TestGenerateSkill_FlagValidation(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		wantSub string
+	}{
+		{
+			name:    "unexpected positional arg",
+			args:    []string{"skills-generate", "--name", "test", "--description", "test", "extra"},
+			wantSub: "unknown command \"extra\"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := invokeCommand(tt.args)
+			if err == nil {
+				t.Fatalf("expected error containing %q, but got nil\nOutput: %s", tt.wantSub, got)
+			}
+			if !strings.Contains(err.Error(), tt.wantSub) && !strings.Contains(got, tt.wantSub) {
+				t.Errorf("expected error or output to contain %q\nError: %v\nOutput: %s", tt.wantSub, err, got)
 			}
 		})
 	}

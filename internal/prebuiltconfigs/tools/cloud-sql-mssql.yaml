@@ -13,27 +13,82 @@
 # limitations under the License.
 
 sources:
-    cloudsql-mssql-source:
-        kind: cloud-sql-mssql
-        project: ${CLOUD_SQL_MSSQL_PROJECT}
-        region: ${CLOUD_SQL_MSSQL_REGION}
-        instance: ${CLOUD_SQL_MSSQL_INSTANCE}
-        database: ${CLOUD_SQL_MSSQL_DATABASE}
-        user: ${CLOUD_SQL_MSSQL_USER}
-        password: ${CLOUD_SQL_MSSQL_PASSWORD}
-        ipType: ${CLOUD_SQL_MSSQL_IP_TYPE:public}
+  cloudsql-mssql-source:
+    kind: cloud-sql-mssql
+    project: ${CLOUD_SQL_MSSQL_PROJECT}
+    region: ${CLOUD_SQL_MSSQL_REGION}
+    instance: ${CLOUD_SQL_MSSQL_INSTANCE}
+    database: ${CLOUD_SQL_MSSQL_DATABASE}
+    user: ${CLOUD_SQL_MSSQL_USER}
+    password: ${CLOUD_SQL_MSSQL_PASSWORD}
+    ipType: ${CLOUD_SQL_MSSQL_IP_TYPE:public}
+  cloud-sql-admin-source:
+    kind: cloud-sql-admin
+    defaultProject: ${CLOUD_SQL_MSSQL_PROJECT:}
+  cloud-monitoring-source:
+    kind: cloud-monitoring
 tools:
-    execute_sql:
-        kind: mssql-execute-sql
-        source: cloudsql-mssql-source
-        description: Use this tool to execute SQL.
-
-    list_tables:
-        kind: mssql-list-tables
-        source: cloudsql-mssql-source
-        description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
-
+  execute_sql:
+    kind: mssql-execute-sql
+    source: cloudsql-mssql-source
+    description: Use this tool to execute SQL.
+  list_tables:
+    kind: mssql-list-tables
+    source: cloudsql-mssql-source
+    description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+  get_system_metrics:
+    kind: cloud-monitoring-query-prometheus
+    source: cloud-monitoring-source
+    description: "Fetches system level cloudmonitoring data (timeseries metrics) for a SqlServer instance using a PromQL query. Take projectId and instanceId from the user for which the metrics timeseries data needs to be fetched.\nTo use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.\n\nGenerate PromQL `query` for SqlServer system metrics. Use the provided metrics and rules to construct queries, Get the labels like `instance_id` from user intent.\n\nDefaults:\n1. Interval: Use a default interval of `5m` for `_over_time` aggregation functions unless a different window is specified by the user.\n\nPromQL Query Examples:\n1. Basic Time Series: `avg_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m])`\n2. Top K: `topk(30, avg_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n3. Mean: `avg(avg_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n4. Minimum: `min(min_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n5. Maximum: `max(max_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n6. Sum: `sum(avg_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n7. Count streams: `count(avg_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n8. Percentile with groupby on database_id: `quantile by (\"database_id\")(0.99,avg_over_time({\"__name__\"=\"cloudsql.googleapis.com/database/cpu/utilization\",\"monitored_resource\"=\"cloudsql_database\",\"project_id\"=\"my-projectId\",\"database_id\"=\"my-projectId:my-instanceId\"}[5m]))`\n\nAvailable Metrics List: metricname. description. monitored resource. labels. database_id is actually the instance id and the format is `project_id:instance_id`. \n1. `cloudsql.googleapis.com/database/cpu/utilization`: Current CPU utilization as a percentage of the reserved CPU. `cloudsql_database`. `database`, `project_id`, `database_id`.\n2. `cloudsql.googleapis.com/database/memory/usage`: RAM usage in bytes, excluding buffer/cache. `cloudsql_database`. `database`, `project_id`, `database_id`.\n3. `cloudsql.googleapis.com/database/memory/total_usage`: Total RAM usage in bytes, including buffer/cache. `cloudsql_database`. `database`, `project_id`, `database_id`.\n4. `cloudsql.googleapis.com/database/disk/bytes_used`: Data utilization in bytes. `cloudsql_database`. `database`, `project_id`, `database_id`.\n5. `cloudsql.googleapis.com/database/disk/quota`: Maximum data disk size in bytes. `cloudsql_database`. `database`, `project_id`, `database_id`.\n6. `cloudsql.googleapis.com/database/disk/read_ops_count`: Delta count of data disk read IO operations. `cloudsql_database`. `database`, `project_id`, `database_id`.\n7. `cloudsql.googleapis.com/database/disk/write_ops_count`: Delta count of data disk write IO operations. `cloudsql_database`. `database`, `project_id`, `database_id`.\n8. `cloudsql.googleapis.com/database/network/received_bytes_count`: Delta count of bytes received through the network. `cloudsql_database`. `database`, `project_id`, `database_id`.\n9. `cloudsql.googleapis.com/database/network/sent_bytes_count`: Delta count of bytes sent through the network. `cloudsql_database`. `destination`, `database`, `project_id`, `database_id`.\n10. `cloudsql.googleapis.com/database/sqlserver/memory/buffer_cache_hit_ratio`: Current percentage of pages found in the buffer cache without reading from disk. `cloudsql_database`. `database`, `project_id`, `database_id`.\n11. `cloudsql.googleapis.com/database/sqlserver/memory/memory_grants_pending`: Current number of processes waiting for a workspace memory grant. `cloudsql_database`. `database`, `project_id`, `database_id`.\n12. `cloudsql.googleapis.com/database/sqlserver/memory/free_list_stall_count`: Total number of requests that waited for a free page. `cloudsql_database`. `database`, `project_id`, `database_id`.\n13. `cloudsql.googleapis.com/database/swap/pages_swapped_in_count`: Total count of pages swapped in from disk since the system was booted. `cloudsql_database`. `database`, `project_id`, `database_id`.\n14. `cloudsql.googleapis.com/database/swap/pages_swapped_out_count`: Total count of pages swapped out to disk since the system was booted. `cloudsql_database`. `database`, `project_id`, `database_id`.\n15. `cloudsql.googleapis.com/database/sqlserver/memory/checkpoint_page_count`: Total number of pages flushed to disk by a checkpoint. `cloudsql_database`. `database`, `project_id`, `database_id`.\n16. `cloudsql.googleapis.com/database/sqlserver/memory/lazy_write_count`: Total number of buffers written by the buffer manager's lazy writer. `cloudsql_database`. `database`, `project_id`, `database_id`.\n17. `cloudsql.googleapis.com/database/sqlserver/memory/page_life_expectancy`: Current number of seconds a page will stay in the buffer pool. `cloudsql_database`. `database`, `project_id`, `database_id`.\n18. `cloudsql.googleapis.com/database/sqlserver/memory/page_operation_count`: Total number of physical database page reads or writes. `cloudsql_database`. `operation`, `database`, `project_id`, `database_id`.\n19. `cloudsql.googleapis.com/database/sqlserver/transactions/page_split_count`: Total number of page splits from overflowing index pages. `cloudsql_database`. `database`, `project_id`, `database_id`.\n20. `cloudsql.googleapis.com/database/sqlserver/transactions/deadlock_count`: Total number of lock requests that resulted in a deadlock. `cloudsql_database`. `locked_resource`, `database`, `project_id`, `database_id`.\n21. `cloudsql.googleapis.com/database/sqlserver/transactions/transaction_count`: Total number of transactions started. `cloudsql_database`. `database`, `project_id`, `database_id`.\n22. `cloudsql.googleapis.com/database/sqlserver/transactions/batch_request_count`: Total number of Transact-SQL command batches received. `cloudsql_database`. `database`, `project_id`, `database_id`.\n23. `cloudsql.googleapis.com/database/sqlserver/transactions/sql_compilation_count`: Total number of SQL compilations. `cloudsql_database`. `database`, `project_id`, `database_id`.\n24. `cloudsql.googleapis.com/database/sqlserver/transactions/sql_recompilation_count`: Total number of SQL recompilations. `cloudsql_database`. `database`, `project_id`, `database_id`.\n25. `cloudsql.googleapis.com/database/sqlserver/connections/processes_blocked`: Current number of blocked processes. `cloudsql_database`. `database`, `project_id`, `database_id`.\n26. `cloudsql.googleapis.com/database/sqlserver/transactions/lock_wait_time`: Total time lock requests were waiting for locks. `cloudsql_database`. `locked_resource`, `database`, `project_id`, `database_id`.\n27. `cloudsql.googleapis.com/database/sqlserver/transactions/lock_wait_count`: Total number of lock requests that required the caller to wait. `cloudsql_database`. `locked_resource`, `database`, `project_id`, `database_id`.\n28. `cloudsql.googleapis.com/database/network/connections`: Number of connections to databases on the instance. `cloudsql_database`. `database`, `project_id`, `database_id`.\n29. `cloudsql.googleapis.com/database/sqlserver/connections/login_attempt_count`: Total number of login attempts since the last server restart. `cloudsql_database`. `database`, `project_id`, `database_id`.\n30. `cloudsql.googleapis.com/database/sqlserver/connections/logout_count`: Total number of logout operations since the last server restart. `cloudsql_database`. `database`, `project_id`, `database_id`.\n31. `cloudsql.googleapis.com/database/sqlserver/connections/connection_reset_count`: Total number of logins started from the connection pool since the last server restart. `cloudsql_database`. `database`, `project_id`, `database_id`.\n32. `cloudsql.googleapis.com/database/sqlserver/transactions/full_scan_count`: Total number of unrestricted full scans (base-table or full-index). `cloudsql_database`. `database`, `project_id`, `database_id`.\n"
+  restore_backup:
+    kind: cloud-sql-restore-backup
+    source: cloud-sql-admin-source
+  clone_instance:
+    kind: cloud-sql-clone-instance
+    source: cloud-sql-admin-source
+  get_instance:
+    kind: cloud-sql-get-instance
+    source: cloud-sql-admin-source
+  list_instances:
+    kind: cloud-sql-list-instances
+    source: cloud-sql-admin-source
+  create_database:
+    kind: cloud-sql-create-database
+    source: cloud-sql-admin-source
+  list_databases:
+    kind: cloud-sql-list-databases
+    source: cloud-sql-admin-source
+  create_user:
+    kind: cloud-sql-create-users
+    source: cloud-sql-admin-source
+  create_backup:
+    kind: cloud-sql-create-backup
+    source: cloud-sql-admin-source
+  create_instance:
+    kind: cloud-sql-mssql-create-instance
+    source: cloud-sql-admin-source
+  wait_for_operation:
+    kind: cloud-sql-wait-for-operation
+    source: cloud-sql-admin-source
+    multiplier: 4
 toolsets:
-    cloud_sql_mssql_database_tools:
-        - execute_sql
-        - list_tables
+  admin:
+    - create_instance
+    - get_instance
+    - list_instances
+    - create_database
+    - list_databases
+    - create_user
+    - wait_for_operation
+  data:
+    - execute_sql
+    - list_tables
+  monitor:
+    - get_system_metrics
+  lifecycle:
+    - create_backup
+    - restore_backup
+    - clone_instance
+    - list_instances
+    - get_instance
+    - wait_for_operation

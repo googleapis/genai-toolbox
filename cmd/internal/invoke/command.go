@@ -39,6 +39,8 @@ Example:
 			return runInvoke(c, args, opts)
 		},
 	}
+	flags := cmd.Flags()
+	internal.ConfigFileFlags(flags, opts)
 	return cmd
 }
 
