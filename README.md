@@ -39,12 +39,11 @@ This README provides a brief overview. For comprehensive details, see the [full 
 ## Table of Contents
 
 - [Features & Capabilities](#features--capabilities)
-- [Quick Start: Prebuilt Tools](#quick-start-prebuilt-tools-ide--client-integration)
-  - [Available Prebuilt Tools & Supported Databases](#available-prebuilt-tools--supported-databases)
-- [Quick Start: Custom Tools](#quick-start-custom-tools-framework)
-- [Installing & Running the Server]()
-- [Integrate with the Gemini CLI]()
-- [SDKs: Integrate with your Application]()
+- [Quick Start: Prebuilt Tools](#quick-start-prebuilt-tools)
+- [Quick Start: Custom Tools Framework](#quick-start-custom-tools-framework)
+- [Install & Run the Server](#install--run-the-server)
+- [Integrate with the Gemini CLI](#integrate-with-the-gemini-cli)
+- [SDKs: Integrate with your Application](#sdks-integrate-with-your-application)
 - [Versioning](#versioning)
 - [Contributing](#contributing)
 - [Community](#community)
@@ -186,7 +185,7 @@ For more details on configuring prompts, see the
 
 ---
 
-## Installing & Run the Server
+## Install & Run the Server
 
 You can run Toolbox directly with a [configuration file](#configuration):
 
@@ -201,7 +200,7 @@ This runs the latest version of the Toolbox server with your configuration file.
 > experimentation. For any production use-cases, please consider [Installing the
 > server](#installing-the-server) and then [running it](#running-the-server).
 
-### Installing the server
+### Installation
 
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
@@ -315,18 +314,7 @@ go install github.com/googleapis/genai-toolbox@v0.30.0
 
 </details>
 
-<details>
-<summary>Gemini CLI Extensions</summary>
-
-To install Gemini CLI Extensions for MCP Toolbox, run the following command:
-
-```sh
-gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
-```
-
-</details>
-
-### Running the server
+### Usage
 
 [Configure](#configuration) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:
