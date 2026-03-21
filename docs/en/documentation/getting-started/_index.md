@@ -52,7 +52,7 @@ In this model, your application dynamically requests the latest tools from the T
 
 ---
 
-## Connect using
+## How to connect
 
 Being built on the Model Context Protocol (MCP), MCP Toolbox is framework-agnostic. You can connect to it in three main ways:
 
