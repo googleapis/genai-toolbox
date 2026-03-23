@@ -23,8 +23,7 @@ MAINTENANCE GUIDE:
    Markdown before linting.
 
 4. SCOPE:
-   This script ignores top-level directory files and only targets 
-   integrations/{provider}/_index.md.
+   This script targets ONLY the top-level _index.md of an integration.
 """
 
 import os
@@ -56,6 +55,9 @@ has_errors = False
 
 for filepath in integration_dir.rglob("_index.md"):
     if filepath.parent == integration_dir:
+        continue
+
+    if filepath.parent.parent != integration_dir:
         continue
 
     with open(filepath, "r", encoding="utf-8") as f:
