@@ -37,6 +37,7 @@ import (
 	"github.com/googleapis/genai-toolbox/cmd/internal/serve"
 	"github.com/googleapis/genai-toolbox/cmd/internal/skills"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server"
@@ -448,6 +449,21 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	isCustomConfigured, err := opts.LoadConfig(ctx, &internal.ConfigParser{})
 	if err != nil {
 		return err
+	}
+
+	// Validate ToolboxUrl if MCP Auth is enabled
+	for _, authSvc := range opts.Cfg.AuthServiceConfigs {
+		if genCfg, ok := authSvc.(generic.Config); ok && genCfg.McpEnabled {
+			if opts.Cfg.ToolboxUrl == "" {
+				opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
+			}
+			if opts.Cfg.ToolboxUrl == "" {
+				errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
+				opts.Logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			break
+		}
 	}
 
 	// start server

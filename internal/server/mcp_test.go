@@ -27,6 +27,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
@@ -1198,5 +1200,66 @@ func TestSseManagerGetNilSessionValue(t *testing.T) {
 	}
 	if session != nil {
 		t.Error("expected nil session for nil session value")
+	}
+}
+
+func TestPRMEndpoint(t *testing.T) {
+	authSvcMap := map[string]auth.AuthService{
+		"generic1": generic.AuthService{
+			Config: generic.Config{
+				Name:                   "generic1",
+				Type:                   generic.AuthServiceType,
+				McpEnabled:             true,
+				AuthorizationServerUrl: "https://example.com/oauth",
+				ScopesRequired:         []string{"read", "write"},
+			},
+		},
+	}
+	resourceManager := resources.NewResourceManager(nil, authSvcMap, nil, nil, nil, nil, nil)
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+
+	s := &Server{
+		logger:      testLogger,
+		ResourceMgr: resourceManager,
+		toolboxUrl:  "https://my-toolbox.example.com",
+	}
+
+	r, err := mcpRouter(s)
+	if err != nil {
+		t.Fatalf("unexpected error creating router: %v", err)
+	}
+
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	resp, body, err := runRequest(ts, http.MethodGet, "/.well-known/oauth-protected-resource", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+
+	want := map[string]any{
+		"resource": "https://my-toolbox.example.com",
+		"authorization_servers": []any{
+			"https://example.com/oauth",
+		},
+		"scopes_supported":         []any{"read", "write"},
+		"bearer_methods_supported": []any{"header"},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("unexpected PRM response: got %+v, want %+v", got, want)
 	}
 }
