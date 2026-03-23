@@ -58,18 +58,10 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 		return nil, fmt.Errorf("failed to discover JWKS URL: %w", err)
 	}
 
-	if cfg.AuthorizationServerURL != "" {
-		// Discover the JWKS URL from the OIDC configuration endpoint
-		jwksURL, err := discoverJWKSURL(cfg.AuthorizationServerURL)
-		if err != nil {
-			return nil, fmt.Errorf("failed to discover JWKS URL: %w", err)
-		}
-
-		// Create the keyfunc to fetch and cache the JWKS in the background
-		kf, err = keyfunc.NewDefault([]string{jwksURL})
-		if err != nil {
-			return nil, fmt.Errorf("failed to create keyfunc from JWKS URL %s: %w", jwksURL, err)
-		}
+	// Create the keyfunc to fetch and cache the JWKS in the background
+	kf, err := keyfunc.NewDefault([]string{jwksURL})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create keyfunc from JWKS URL %s: %w", jwksURL, err)
 	}
 
 	a := &AuthService{
@@ -183,21 +175,12 @@ func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (ma
 	}
 
 	// Parse and verify the token signature
-	var token *jwt.Token
-	var err error
-
-	if a.kf != nil {
-		token, err = jwt.Parse(tokenString, a.kf.Keyfunc)
-	} else {
-		// If no keyfunc is configured (AuthURL was empty), we parse without verifying signature
-		token, _, err = new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-	}
-
+	token, err := jwt.Parse(tokenString, a.kf.Keyfunc)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse JWT token: %w", err)
+		return nil, fmt.Errorf("failed to parse and verify JWT token: %w", err)
 	}
 
-	if a.kf != nil && !token.Valid {
+	if !token.Valid {
 		return nil, fmt.Errorf("invalid JWT token")
 	}
 

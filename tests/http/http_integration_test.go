@@ -635,7 +635,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string, jwksURL st
 			"my-generic-auth": map[string]any{
 				"type":                   "generic",
 				"audience":               "test-audience",
-				"authorizationServerUrl": jwksURL,
+				"AuthorizationServerUrl": jwksURL,
 				"scopesRequired":         []string{"read:files"},
 			},
 		},
