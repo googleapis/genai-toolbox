@@ -211,7 +211,6 @@ func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (ma
 }
 
 // MCPAuthError represents an error during MCP authentication validation.
-type MCPAuthError struct {
 	Code           int
 	Message        string
 	ScopesRequired []string
