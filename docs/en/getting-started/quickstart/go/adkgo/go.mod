@@ -3,9 +3,9 @@ module adkgo-quickstart
 go 1.24.4
 
 require (
-	github.com/googleapis/mcp-toolbox-sdk-go/tbadk v0.6.0
-	google.golang.org/adk v0.3.0
-	google.golang.org/genai v1.45.0
+	github.com/googleapis/mcp-toolbox-sdk-go/tbadk v0.7.0
+	google.golang.org/adk v0.6.0
+	google.golang.org/genai v1.51.0
 )
 
 require (
@@ -23,18 +23,18 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.11 // indirect
 	github.com/googleapis/gax-go/v2 v2.16.0 // indirect
-	github.com/googleapis/mcp-toolbox-sdk-go/core v0.6.2 // indirect
+	github.com/googleapis/mcp-toolbox-sdk-go/core v0.7.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/log v0.16.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/api v0.265.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260128011058-8636f8732409 // indirect
