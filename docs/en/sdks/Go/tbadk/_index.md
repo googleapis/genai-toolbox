@@ -87,25 +87,19 @@ during initialization (e.g., `tbadk.NewToolboxClient(URL, core.WithHTTPClient(my
 
 ## Transport Protocols
 
-The SDK supports multiple transport protocols. By default, the client uses the latest supported version of the **Model Context Protocol (MCP)**.
+The SDK supports multiple transport protocols for communicating with the Toolbox server. By default, the client uses the `v2025-06-18` version of the **Model Context Protocol (MCP)**.
 
-You can explicitly select a protocol using the `core.WithProtocol` option during client initialization.
+You can explicitly select a protocol using the `core.WithProtocol` option during client initialization. This is useful if you need to pin the client to a specific legacy version of MCP.
 
 {{< notice note >}}
-* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
-* **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+* MCP Transport options use **Model Context Protocol over HTTP**.
 {{< /notice >}}
 
 ### Supported Protocols
 
-{{< notice note >}}
-The native Toolbox protocol (`core.Toolbox`) is deprecated and will be removed on March 4, 2026. Please use `core.MCP` or specific MCP versions.
-{{< /notice >}}
-
 | Constant | Description |
 | :--- | :--- |
 | `core.MCP` | **(Default)** Alias for the latest supported MCP version (currently `v2025-06-18`). |
-| `core.Toolbox` | **Deprecated** The native Toolbox HTTP protocol. |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
@@ -119,10 +113,9 @@ import (
     "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
 )
 
-// Initialize with the native Toolbox protocol
+// Initialize with the default MCP protocol (2025-06-18)
 client, err := tbadk.NewToolboxClient(
     "http://localhost:5000",
-    core.WithProtocol(core.Toolbox),
 )
 
 // Initialize with the MCP Protocol 2025-03-26
