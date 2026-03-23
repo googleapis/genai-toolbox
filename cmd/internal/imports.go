@@ -134,6 +134,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojectfiles"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojects"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergitbranch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthpulse"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"

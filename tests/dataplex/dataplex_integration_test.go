@@ -336,7 +336,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-search-entries-tool",
 			toolName:       "my-dataplex-search-entries-tool",
-			expectedParams: []string{"pageSize", "query", "orderBy"},
+			expectedParams: []string{"pageSize", "query", "orderBy", "scope"},
 		},
 		{
 			name:           "get my-dataplex-lookup-entry-tool",
@@ -424,6 +424,15 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent:%s\"}", tableName, datasetName))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "dataplex_entry",
+		},
+		{
+			name:           "Success - Entry Found with Scope",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"query\":\"displayname=%s system=bigquery parent:%s\", \"scope\":\"projects/%s\"}", tableName, datasetName, DataplexProject))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "dataplex_entry",
