@@ -32,7 +32,6 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -312,7 +311,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	generic.AllowInsecureForTest = true
+
 
 	// Set up generic auth mock server
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)

@@ -89,7 +89,6 @@ func discoverJWKSURL(AuthorizationServer string) (string, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
-			DialContext:           safeDialer().DialContext,
 			ForceAttemptHTTP2:     true,
 			MaxIdleConns:          10,
 			IdleConnTimeout:       90 * time.Second,
@@ -102,6 +101,10 @@ func discoverJWKSURL(AuthorizationServer string) (string, error) {
 		},
 	}
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 332d1387563 (remove https check)
 	resp, err := client.Get(oidcConfigURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch OIDC config: %w", err)

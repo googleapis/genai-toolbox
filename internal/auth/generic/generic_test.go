@@ -29,9 +29,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func init() {
-	AllowInsecureForTest = true
-}
+
 
 func generateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
 	t.Helper()
