@@ -53,11 +53,7 @@ In this section, we will download Toolbox and run the Toolbox server.
       "mcpServers": {
         "looker-toolbox": {
           "command": "/path/to/toolbox",
-          "args": [
-            "--stdio",
-            "--prebuilt",
-            "looker"
-          ],
+          "args": ["--stdio", "--prebuilt", "looker"],
           "env": {
             "LOOKER_BASE_URL": "https://looker.example.com",
             "LOOKER_CLIENT_ID": "",
@@ -70,6 +66,16 @@ In this section, we will download Toolbox and run the Toolbox server.
 
    In some instances you may need to append `:19999` to
    the LOOKER_BASE_URL.
+
+   If you want to access tools to develop LookML as well as query data
+   and create content, change the following line
+   ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+   ```
+   to
+   ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+   ```
 
 ## Step 3: Start Gemini-CLI
 
