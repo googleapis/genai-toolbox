@@ -360,7 +360,7 @@ You don't need to modify tool configurations to bind parameter values.
 
 ## Error Handling
 
-The SDK uses Java's `CompletableFuture` API. Errors (Network issues, 4xx/5xx responses) are propagated as exceptions wrapped in `CompletionException`.
+The SDK uses Java's `CompletableFuture` API. Errors (Network issues, `4xx`/`5xx` responses) are propagated as exceptions wrapped in `CompletionException`.
 
 ```java
 
