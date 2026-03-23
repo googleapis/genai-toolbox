@@ -86,5 +86,5 @@ client.
 
 MCP Toolbox and [Google Cloud MCP Servers](https://cloud.google.com/blog/products/databases/managed-mcp-servers-for-google-cloud-databases) serve complementary purposes.
 
-- **Google Cloud MCP Servers** provide a managed, enterprise-grade, "Zero Ops" experience that is ideal for developers who want immediate, secure integration with Google Cloud services without any setup.
-- **MCP Toolbox** is open-source and designed for developers who need to build custom applications, connect to non-Google or on-premises data sources, or create custom tools. Because it is self-hosted, it allows developers to access, prototype, and validate the newest agentic workflows and features quickly before they might be available in managed environments.
+- **Google Cloud MCP Servers** provides a managed, enterprise-grade experience with necessary stability and governance, offering a "Zero Ops" experience ideal for **Build-Time Developers ("AI-Assisted")** who need immediate, secure integration with Google Cloud services without any setup.
+- **MCP Toolbox** is open-source and self-hosted, allowing for rapid prototyping. It is designed for **Run-Time Developers ("AI-Embedded")** who need to build custom agents/applications, deploy custom tools, and connect to non-Google or on-premises data sources. MCP Toolbox is focused on delivering the most up to date and cutting-edge features quickly before they might be available in managed environments.
