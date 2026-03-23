@@ -44,6 +44,7 @@ This README provides a brief overview. For comprehensive details, see the [full 
 - [Install & Run the Server](#install--run-the-server)
 - [Integrate with the Gemini CLI](#integrate-with-the-gemini-cli)
 - [SDKs: Integrate with your Application](#sdks-integrate-with-your-application)
+- [Test tools with the Toolbox UI](#test-tools-with-the-Toolbox-UI)
 - [Generate Agent Skills](#generate-agent-skills)
 - [Versioning](#versioning)
 - [Contributing](#contributing)
@@ -958,6 +959,18 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </details>
 </blockquote>
 </details>
+
+---
+
+#### Test tools with the Toolbox UI
+
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
+tools and toolsets with features such as authorized parameters. To learn more,
+visit [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/).
+
+```sh
+./toolbox --ui
+```
 
 ---
 
