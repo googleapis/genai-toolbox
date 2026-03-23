@@ -22,7 +22,7 @@ For the purposes of this policy, the "Public API" includes:
 
 ## **What Constitutes a Breaking Change (Major Version Bump)** 
 
-A major version bump (e.g., v1.x to v2.0) is required for the following modifications:
+A major version bump (e.g., v1.x.x to v2.0.0) is required for the following modifications:
 
 * **Server:** Supporting MCP revisions and transport protocols.   
   * **CLI & Config:** Removing existing CLI flags or introducing backwards-incompatible changes to the core configuration format.  
