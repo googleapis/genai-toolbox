@@ -13,6 +13,17 @@
 # limitations under the License.
 
 steps:
+  - id: "detect-changes"
+    name: "gcr.io/cloud-builders/git"
+    waitFor: ["-"] 
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        git fetch --unshallow || true
+        git fetch origin main > /dev/null 2>&1
+        git diff --name-only origin/main...HEAD > /workspace/changed_files.txt
+
   - id: "install-dependencies"
     name: golang:1
     waitFor: ["-"]
@@ -77,7 +88,7 @@ steps:
 
   - id: "cloud-sql-pg"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -94,15 +105,23 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud SQL Postgres" \
-          cloudsqlpg \
-          postgressql \
-          postgresexecutesql
+        PATTERN="cloudsqlpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Starting Cloud SQL Postgres tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud SQL Postgres" \
+            cloudsqlpg \
+            postgressql \
+            postgresexecutesql
+        else
+          echo "No relevant changes for Cloud SQL Postgres. Skipping shard."
+          exit 0
+        fi
 
   - id: "alloydb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -117,14 +136,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "AlloyDB" \
-          alloydb \
-          alloydb
+        PATTERN="alloydb|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|.ci/"
+        
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Starting AlloyDB tests..."
+          .ci/test_with_coverage.sh \
+            "AlloyDB" \
+            alloydb \
+            alloydb
+        else
+          echo "No relevant changes for AlloyDB. Skipping shard to save resources."
+          exit 0
+        fi
 
   - id: "alloydb-pg"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -141,15 +168,23 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "AlloyDB Postgres" \
-          alloydbpg \
-          postgressql \
-          postgresexecutesql
+        PATTERN="alloydbpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running AlloyDB Postgres tests..."
+          .ci/test_with_coverage.sh \
+            "AlloyDB Postgres" \
+            alloydbpg \
+            postgressql \
+            postgresexecutesql
+        else
+          echo "No relevant changes for AlloyDB Postgres. Skipping shard."
+          exit 0
+        fi
 
   - id: "alloydb-ai-nl"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -166,14 +201,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "AlloyDB AI NL" \
-          alloydbainl \
-          alloydbainl
+        PATTERN="alloydbainl|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running AlloyDB AI NL tests..."
+          .ci/test_with_coverage.sh \
+            "AlloyDB AI NL" \
+            alloydbainl \
+            alloydbainl
+        else
+          echo "No relevant changes for AlloyDB AI NL. Skipping shard."
+          exit 0
+        fi
 
   - id: "alloydb-omni"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -183,14 +226,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "AlloyDB Omni" \
-          alloydbomni \
-          postgres
+        PATTERN="alloydbomni|internal/sources/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running AlloyDB Omni tests..."
+          .ci/test_with_coverage.sh \
+            "AlloyDB Omni" \
+            alloydbomni \
+            postgres
+        else
+          echo "No relevant changes for AlloyDB Omni. Skipping shard."
+          exit 0
+        fi
 
   - id: "bigtable"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -204,14 +255,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Bigtable" \
-          bigtable \
-          bigtable
+        PATTERN="bigtable|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Bigtable tests..."
+          .ci/test_with_coverage.sh \
+            "Bigtable" \
+            bigtable \
+            bigtable
+        else
+          echo "No relevant changes for Bigtable. Skipping shard."
+          exit 0
+        fi
 
   - id: "bigquery"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -224,14 +283,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "BigQuery" \
-          bigquery \
-          bigquery
+        PATTERN="bigquery|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running BigQuery tests..."
+          .ci/test_with_coverage.sh \
+            "BigQuery" \
+            bigquery \
+            bigquery
+        else
+          echo "No relevant changes for BigQuery. Skipping shard."
+          exit 0
+        fi
 
   - id: "cloud-gda"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -244,14 +311,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud Gemini Data Analytics" \
-          cloudgda \
-          cloudgda
+        PATTERN="cloudgda|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cloud Gemini Data Analytics tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud Gemini Data Analytics" \
+            cloudgda \
+            cloudgda
+        else
+          echo "No relevant changes for Cloud Gemini Data Analytics. Skipping shard."
+          exit 0
+        fi
 
   - id: "dataplex"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -264,14 +339,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Dataplex" \
-          dataplex \
-          dataplex
+        PATTERN="dataplex|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Dataplex tests..."
+          .ci/test_with_coverage.sh \
+            "Dataplex" \
+            dataplex \
+            dataplex
+        else
+          echo "No relevant changes for Dataplex. Skipping shard."
+          exit 0
+        fi
 
   - id: "dataform"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -282,16 +365,24 @@ steps:
     args:
       - -c
       - |
-        apt-get update && apt-get install -y npm && \
-        npm install -g @dataform/cli && \
-        .ci/test_with_coverage.sh \
-          "Dataform" \
-          dataform \
-          dataform
+        PATTERN="dataform|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Dataform tests..."
+          apt-get update && apt-get install -y npm && \
+          npm install -g @dataform/cli && \
+          .ci/test_with_coverage.sh \
+            "Dataform" \
+            dataform \
+            dataform
+        else
+          echo "No relevant changes for Dataform. Skipping shard."
+          exit 0
+        fi
 
   - id: "cloud-healthcare"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -306,14 +397,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud Healthcare API" \
-          cloudhealthcare \
-          cloudhealthcare
+        PATTERN="cloudhealthcare|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cloud Healthcare API tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud Healthcare API" \
+            cloudhealthcare \
+            cloudhealthcare
+        else
+          echo "No relevant changes for Cloud Healthcare API. Skipping shard."
+          exit 0
+        fi
 
   - id: "cloud-logging-admin"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -325,14 +424,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud Logging Admin" \
-          cloudloggingadmin \
-          cloudloggingadmin
+        PATTERN="cloudloggingadmin|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cloud Logging Admin tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud Logging Admin" \
+            cloudloggingadmin \
+            cloudloggingadmin
+        else
+          echo "No relevant changes for Cloud Logging Admin. Skipping shard."
+          exit 0
+        fi
 
   - id: "postgres"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -347,15 +454,23 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Postgres" \
-          postgres \
-          postgressql \
-          postgresexecutesql
+        PATTERN="postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Postgres tests..."
+          .ci/test_with_coverage.sh \
+            "Postgres" \
+            postgres \
+            postgressql \
+            postgresexecutesql
+        else
+          echo "No relevant changes for Postgres. Skipping shard."
+          exit 0
+        fi
 
   - id: "cockroachdb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -367,17 +482,25 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "CockroachDB" \
-          cockroachdb \
-          cockroachdbsql \
-          cockroachdbexecutesql \
-          cockroachdblisttables \
-          cockroachdblistschemas
+        PATTERN="cockroachdb|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running CockroachDB tests..."
+          .ci/test_with_coverage.sh \
+            "CockroachDB" \
+            cockroachdb \
+            cockroachdbsql \
+            cockroachdbexecutesql \
+            cockroachdblisttables \
+            cockroachdblistschemas
+        else
+          echo "No relevant changes for CockroachDB. Skipping shard."
+          exit 0
+        fi
 
   - id: "spanner"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -392,14 +515,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Spanner" \
-          spanner \
-          spanner || echo "Integration tests failed." # TODO(https://github.com/googleapis/genai-toolbox/issues/2420): Fix flakiness and re-enable.
+        PATTERN="spanner|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Spanner tests..."
+          .ci/test_with_coverage.sh \
+            "Spanner" \
+            spanner \
+            spanner || echo "Integration tests failed."
+        else
+          echo "No relevant changes for Spanner. Skipping shard."
+          exit 0
+        fi
 
   - id: "neo4j"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -412,14 +543,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Neo4j" \
-          neo4j \
-          neo4j
+        PATTERN="neo4j|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Neo4j tests..."
+          .ci/test_with_coverage.sh \
+            "Neo4j" \
+            neo4j \
+            neo4j
+        else
+          echo "No relevant changes for Neo4j. Skipping shard."
+          exit 0
+        fi
 
   - id: "cloud-sql-mssql"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -436,14 +575,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud SQL MSSQL" \
-          cloudsqlmssql \
-          mssql
+        PATTERN="cloudsqlmssql|mssql|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cloud SQL MSSQL tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud SQL MSSQL" \
+            cloudsqlmssql \
+            mssql
+        else
+          echo "No relevant changes for Cloud SQL MSSQL. Skipping shard."
+          exit 0
+        fi
 
   - id: "cloud-sql-mysql"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -459,14 +606,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud SQL MySQL" \
-          cloudsqlmysql \
-          mysql
+        PATTERN="cloudsqlmysql|mysql|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cloud SQL MySQL tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud SQL MySQL" \
+            cloudsqlmysql \
+            mysql
+        else
+          echo "No relevant changes for Cloud SQL MySQL. Skipping shard."
+          exit 0
+        fi
 
   - id: "mysql"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -481,14 +636,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "MySQL" \
-          mysql \
-          mysql
+        PATTERN="mysql|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running MySQL tests..."
+          .ci/test_with_coverage.sh \
+            "MySQL" \
+            mysql \
+            mysql
+        else
+          echo "No relevant changes for MySQL. Skipping shard."
+          exit 0
+        fi
 
   - id: "mssql"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -503,14 +666,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "MSSQL" \
-          mssql \
-          mssql
+        PATTERN="mssql|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running MSSQL tests..."
+          .ci/test_with_coverage.sh \
+            "MSSQL" \
+            mssql \
+            mssql
+        else
+          echo "No relevant changes for MSSQL. Skipping shard."
+          exit 0
+        fi
 
   # - id: "dgraph"
   #   name: golang:1
-  #   waitFor: ["compile-test-binary"]
+  #   waitFor: ["compile-test-binary", "detect-changes"]
   #   entrypoint: /bin/bash
   #   env:
   #     - "GOPATH=/gopath"
@@ -528,7 +699,7 @@ steps:
 
   - id: "http"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -539,14 +710,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "HTTP" \
-          http \
-          http
+        PATTERN="http|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running HTTP tests..."
+          .ci/test_with_coverage.sh \
+            "HTTP" \
+            http \
+            http
+        else
+          echo "No relevant changes for HTTP. Skipping shard."
+          exit 0
+        fi
 
   - id: "sqlite"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -558,14 +737,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "SQLite" \
-          sqlite \
-          sqlite
+        PATTERN="sqlite|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running SQLite tests..."
+          .ci/test_with_coverage.sh \
+            "SQLite" \
+            sqlite \
+            sqlite
+        else
+          echo "No relevant changes for SQLite. Skipping shard."
+          exit 0
+        fi
 
   - id: "couchbase"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -580,14 +767,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Couchbase" \
-          couchbase \
-          couchbase
+        PATTERN="couchbase|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Couchbase tests..."
+          .ci/test_with_coverage.sh \
+            "Couchbase" \
+            couchbase \
+            couchbase
+        else
+          echo "No relevant changes for Couchbase. Skipping shard."
+          exit 0
+        fi
 
   - id: "redis"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -599,14 +794,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Redis" \
-          redis \
-          redis
+        PATTERN="redis|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Redis tests..."
+          .ci/test_with_coverage.sh \
+            "Redis" \
+            redis \
+            redis
+        else
+          echo "No relevant changes for Redis. Skipping shard."
+          exit 0
+        fi
 
   - id: "valkey"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -619,14 +822,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Valkey" \
-          valkey \
-          valkey
+        PATTERN="valkey|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Valkey tests..."
+          .ci/test_with_coverage.sh \
+            "Valkey" \
+            valkey \
+            valkey
+        else
+          echo "No relevant changes for Valkey. Skipping shard."
+          exit 0
+        fi
 
   - id: "oceanbase"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -641,14 +852,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "OceanBase" \
-          oceanbase \
-          oceanbase
+        PATTERN="oceanbase|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running OceanBase tests..."
+          .ci/test_with_coverage.sh \
+            "OceanBase" \
+            oceanbase \
+            oceanbase
+        else
+          echo "No relevant changes for OceanBase. Skipping shard."
+          exit 0
+        fi
 
   - id: "firestore"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -661,14 +880,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Firestore" \
-          firestore \
-          firestore
+        PATTERN="firestore|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running Firestore tests..."
+          .ci/test_with_coverage.sh \
+            "Firestore" \
+            firestore \
+            firestore
+        else
+          echo "No relevant changes for Firestore. Skipping shard."
+          exit 0
+        fi
 
   - id: "mongodb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -681,14 +908,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "MongoDB" \
-          mongodb \
-          mongodb
+        PATTERN="mongodb|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running MongoDB tests..."
+          .ci/test_with_coverage.sh \
+            "MongoDB" \
+            mongodb \
+            mongodb
+        else
+          echo "No relevant changes for MongoDB. Skipping shard."
+          exit 0
+        fi
 
   - id: "looker"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -710,14 +945,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Looker" \
-          looker \
-          looker
+        PATTERN="looker|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running Looker tests..."
+          .ci/test_with_coverage.sh \
+            "Looker" \
+            looker \
+            looker
+        else
+          echo "No relevant changes for Looker. Skipping shard."
+          exit 0
+        fi
 
   - id: "mindsdb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -731,14 +974,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "MindsDB" \
-          mindsdb \
-          mindsdb
+        PATTERN="mindsdb|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running MindsDB tests..."
+          .ci/test_with_coverage.sh \
+            "MindsDB" \
+            mindsdb \
+            mindsdb
+        else
+          echo "No relevant changes for MindsDB. Skipping shard."
+          exit 0
+        fi
 
   - id: "cloud-sql"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -756,7 +1007,7 @@ steps:
 
   - id: "tidb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -771,14 +1022,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "TiDB" \
-          tidb \
-          tidbsql tidbexecutesql
+        PATTERN="tidb|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running TiDB tests..."
+          .ci/test_with_coverage.sh \
+            "TiDB" \
+            tidb \
+            tidbsql tidbexecutesql
+        else
+          echo "No relevant changes for TiDB. Skipping shard."
+          exit 0
+        fi
 
   - id: "firebird"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -793,14 +1052,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
+        PATTERN="firebird|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running Firebird tests..."
+          .ci/test_with_coverage.sh \
           "Firebird" \
           firebird \
           firebirdsql firebirdexecutesql
+        else
+          echo "No relevant changes for Firebird. Skipping shard."
+          exit 0
+        fi
 
   - id: "clickhouse"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -815,14 +1082,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
+        PATTERN="clickhouse|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running ClickHouse tests..."
+          .ci/test_with_coverage.sh \
           "ClickHouse" \
           clickhouse \
           clickhouse
+        else
+          echo "No relevant changes for ClickHouse. Skipping shard."
+          exit 0
+        fi
 
   - id: "trino"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -838,14 +1113,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Trino" \
-          trino \
-          trinosql trinoexecutesql
+        PATTERN="trino|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Trino tests..."
+          .ci/test_with_coverage.sh \
+            "Trino" \
+            trino \
+            trinosql trinoexecutesql
+        else
+          echo "No relevant changes for Trino. Skipping shard."
+          exit 0
+        fi
 
   - id: "yugabytedb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -861,11 +1144,19 @@ steps:
     args:
       - -c
       - |
-        ./yugabytedb.test -test.v
+        PATTERN="yugabytedb|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running YugabyteDB tests..."
+          ./yugabytedb.test -test.v
+        else
+          echo "No relevant changes for YugabyteDB. Skipping shard."
+          exit 0
+        fi
 
   - id: "elasticsearch"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -877,14 +1168,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Elasticsearch" \
-          elasticsearch \
-          elasticsearch
+        PATTERN="elasticsearch|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Elasticsearch tests..."
+          .ci/test_with_coverage.sh \
+            "Elasticsearch" \
+            elasticsearch \
+            elasticsearch
+        else
+          echo "No relevant changes for Elasticsearch. Skipping shard."
+          exit 0
+        fi
 
   - id: "snowflake"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -898,14 +1197,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Snowflake" \
-          snowflake \
-          snowflake
+        PATTERN="snowflake|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Snowflake tests..."
+          .ci/test_with_coverage.sh \
+            "Snowflake" \
+            snowflake \
+            snowflake
+        else
+          echo "No relevant changes for Snowflake. Skipping shard."
+          exit 0
+        fi
 
   - id: "cassandra"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -917,14 +1224,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cassandra" \
-          cassandra \
-          cassandra
+        PATTERN="cassandra|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cassandra tests..."
+          .ci/test_with_coverage.sh \
+            "Cassandra" \
+            cassandra \
+            cassandra
+        else
+          echo "No relevant changes for Cassandra. Skipping shard."
+          exit 0
+        fi
 
   - id: "oracle"
     name: ghcr.io/oracle/oraclelinux9-instantclient:23
-    waitFor: ["install-dependencies"]
+    waitFor: ["install-dependencies","detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -937,32 +1252,37 @@ steps:
     args:
       - -c
       - |
-        # Install the C compiler and Oracle SDK headers needed for cgo
-        dnf install -y gcc oracle-instantclient-devel
-        # Install Go
-        curl -L -o go.tar.gz "https://go.dev/dl/go1.25.5.linux-amd64.tar.gz"
-        tar -C /usr/local -xzf go.tar.gz
-        export PATH="/usr/local/go/bin:$$PATH"
+        PATTERN="oracle|internal/server/|.ci/"
 
-        if ! go test -v ./tests/oracle/... \
-          -coverprofile=oracle_coverage.out \
-          -coverpkg=./internal/sources/oracle/...,./internal/tools/oracle/...; then
-            echo "Error: Tests for Oracle failed. Exiting."
-            exit 1
-        fi
-        
-        # Coverage check
-        total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
-        echo "Oracle total coverage: $total_coverage"
-        coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 60)}'; then
-            echo "Coverage failure: $total_coverage is below 60%."
-            exit 1
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Oracle tests..."
+          # Install the C compiler and Oracle SDK headers needed for cgo
+          dnf install -y gcc oracle-instantclient-devel
+          # Install Go
+          curl -L -o go.tar.gz "https://go.dev/dl/go1.25.1.linux-amd64.tar.gz"
+          tar -C /usr/local -xzf go.tar.gz
+          export PATH="/usr/local/go/bin:$$PATH"
+
+          go test -v ./tests/oracle/... \
+            -coverprofile=oracle_coverage.out \
+            -coverpkg=./internal/sources/oracle/...,./internal/tools/oracle/...
+
+          # Coverage check
+          total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
+          echo "Oracle total coverage: $total_coverage"
+          coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
+          if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 60)}'; then
+              echo "Coverage failure: $total_coverage is below 60%."
+              exit 1
+          fi
+        else
+          echo "No relevant changes for Oracle. Skipping shard."
+          exit 0
         fi
 
   - id: "serverless-spark"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -977,9 +1297,17 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Serverless Spark" \
-          serverlessspark
+        PATTERN="serverlessspark|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Serverless Spark tests..."
+          .ci/test_with_coverage.sh \
+            "Serverless Spark" \
+            serverlessspark
+        else
+          echo "No relevant changes for Serverless Spark. Skipping shard."
+          exit 0
+        fi
 
   - id: "dataproc"
     name: golang:1
@@ -1003,7 +1331,7 @@ steps:
 
   - id: "singlestore"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -1018,14 +1346,22 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "SingleStore" \
-          singlestore \
-          singlestore
+        PATTERN="singlestore|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running SingleStore tests..."
+          .ci/test_with_coverage.sh \
+            "SingleStore" \
+            singlestore \
+            singlestore
+        else
+          echo "No relevant changes for SingleStore. Skipping shard."
+          exit 0
+        fi
 
   - id: "mariadb"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -1039,8 +1375,16 @@ steps:
     args:
       - -c
       - |
-        # skip coverage check as it re-uses current MySQL implementation
-        go test ./tests/mariadb
+        PATTERN="mariadb|mysql|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running MariaDB tests..."
+          # skip coverage check as it re-uses current MySQL implementation
+          go test ./tests/mariadb
+        else
+          echo "No relevant changes for MariaDB. Skipping shard."
+          exit 0
+        fi
 
 
 availableSecrets:

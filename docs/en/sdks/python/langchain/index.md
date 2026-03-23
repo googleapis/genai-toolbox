@@ -71,26 +71,18 @@ You can explicitly select a protocol using the `protocol` option during client i
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{< notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
-
 ### Example
-
-If you wish to use the native Toolbox protocol:
 
 ```py
 from toolbox_langchain import ToolboxClient
 from toolbox_core.protocol import Protocol
 
-async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as toolbox:
     # Use client
     pass
 ```
