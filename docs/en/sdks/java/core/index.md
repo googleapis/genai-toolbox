@@ -211,7 +211,9 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
 | **Cloud Run** | Uses Service Account | **None.** (Automatic) |
 | **CI/CD** | Uses Service Account Key | Set GOOGLE\_APPLICATION\_CREDENTIALS=/path/to/key.json |
 
-*Note: If you provide an `.apiKey()` in the builder, it overrides the automatic ADC mechanism.*
+{{< notice note >}}
+If you provide an `.apiKey()` in the builder, it overrides the automatic ADC mechanism.
+{{< /notice >}}
 
 ### Authenticating the Tools
 
@@ -220,7 +222,6 @@ Tools can be configured within the MCP Toolbox service to require authentication
 {{< notice info >}}
 Always use HTTPS to connect your application with the MCP Toolbox service, especially in production environments or whenever the communication involves sensitive data (including scenarios where tools require authentication tokens). Using plain HTTP lacks encryption and exposes your application and data to significant security risks, such as eavesdropping and tampering.
 {{< /notice >}}
-
 
 ### When is Authentication Needed?
 
@@ -242,7 +243,9 @@ Your application needs a way to obtain the required token for the authenticated 
 
 You must provide the SDK with an `AuthTokenGetter` (a function that returns a `CompletableFuture<String>`). This implementation depends on your application's authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
-**Important:** The **Service Name** (or Auth Source) used when adding the getter (e.g., `"salesforce_auth"`) must exactly match the name of the corresponding auth source defined in the tool's configuration.
+{{< notice info >}}
+The **Service Name** (or Auth Source) used when adding the getter (e.g., `"salesforce_auth"`) must exactly match the name of the corresponding auth source defined in the tool's configuration.
+{{< /notice >}}
 
 ```java
 import com.google.cloud.mcp.AuthTokenGetter;
