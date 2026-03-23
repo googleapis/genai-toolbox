@@ -731,3 +731,22 @@ For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [module'
 
 For more detailed instructions on using the Toolbox Go SDK, see the
 [README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
+
+## Generate Agent Skills
+
+The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill** compatible with the [Agent Skill specification](https://agentskills.io/specification). This is useful for distributing tools as portable skill packages.
+
+```bash
+toolbox --tools-file tools.yaml skills-generate \
+  --name "my-skill" \
+  --toolset "my_toolset" \
+  --description "A skill containing multiple tools"
+```
+
+Once generated, you can install the skill into the Gemini CLI:
+
+```bash
+gemini skills install ./skills/my-skill
+```
+
+For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate_skill/).

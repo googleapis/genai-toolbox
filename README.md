@@ -991,7 +991,7 @@ Once generated, you can install the skill into the Gemini CLI:
 gemini skills install ./skills/my-skill
 ```
 
-For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate-skill/).
+For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate_skill/).
 
 ---
 
