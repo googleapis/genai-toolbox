@@ -96,7 +96,7 @@ Supported databases currently include:
 
 For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
 
-*For more installation methods (like Docker or Binaries), see the [Server Execution](#TODO) section below.*
+*For more methods (like Docker or Binaries), see the [Install & Run the Server](#install--run-the-server) section below.*
 
 ---
 
@@ -198,9 +198,9 @@ npx @toolbox-sdk/server --config tools.yaml
 This runs the latest version of the Toolbox server with your configuration file.
 
 > [!NOTE]
-> This method should only be used for non-production use cases such as
-> experimentation. For any production use-cases, please consider [Installing the
-> server](#installing-the-server) and then [running it](#running-the-server).
+> This method should only be used for non-production use cases. 
+> For any production use-cases, consider using the binary or container image,
+> see the [Install & Run the Server](#install--run-the-server)
 
 ### Installation
 
@@ -340,7 +340,7 @@ To run Toolbox from binary:
 
 <summary>Container image</summary>
 
-To run the server after pulling the [container image](#installing-the-server):
+To run the server after pulling the [container image](#install):
 
 ```sh
 export VERSION=0.24.0 # Use the version you pulled

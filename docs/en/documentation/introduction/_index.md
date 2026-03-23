@@ -6,9 +6,11 @@ description: >
   An introduction to MCP Toolbox for Databases.
 ---
 
-MCP Toolbox for Databases is an open source MCP server for databases. It enables
-you to develop tools easier, faster, and more securely by handling the complexities
-such as connection pooling, authentication, and more.
+MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases.
+
+It serves a **dual purpose**:
+1. **Ready-to-use MCP Server (Build-Time):** Instantly connect Claude, Cursor, Gemini CLI, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+2. **Custom Tools Framework (Run-Time):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice note >}}
 This document has been updated to support the configuration file v2 format. To
@@ -16,47 +18,14 @@ view documentation with configuration file v1 format, please navigate to the
 top-right menu and select versions v0.26.0 or older.
 {{< /notice >}}
 
-## Why Toolbox?
+## Features & Capabilities
 
-Toolbox helps you build Gen AI tools that let your agents access data in your
-database. Toolbox provides:
-
-- **Simplified development**: Integrate tools to your agent in less than 10
-  lines of code, reuse tools between multiple agents or frameworks, and deploy
-  new versions of tools more easily.
-- **Better performance**: Best practices such as connection pooling,
-  authentication, and more.
-- **Enhanced security**: Integrated auth for more secure access to your data
-- **End-to-end observability**: Out of the box metrics and tracing with built-in
-  support for OpenTelemetry.
-
-**⚡ Supercharge Your Workflow with an AI Database Assistant ⚡**
-
-Stop context-switching and let your AI assistant become a true co-developer. By
-[connecting your IDE to your databases with MCP Toolbox][connect-ide], you can
-delegate complex and time-consuming database tasks, allowing you to build faster
-and focus on what matters. This isn't just about code completion; it's about
-giving your AI the context it needs to handle the entire development lifecycle.
-
-Here’s how it will save you time:
-
-- **Query in Plain English**: Interact with your data using natural language
-  right from your IDE. Ask complex questions like, *"How many orders were
-  delivered in 2024, and what items were in them?"* without writing any SQL.
-- **Automate Database Management**: Simply describe your data needs, and let the
-  AI assistant manage your database for you. It can handle generating queries,
-  creating tables, adding indexes, and more.
-- **Generate Context-Aware Code**: Empower your AI assistant to generate
-  application code and tests with a deep understanding of your real-time
-  database schema.  This accelerates the development cycle by ensuring the
-  generated code is directly usable.
-- **Slash Development Overhead**: Radically reduce the time spent on manual
-  setup and boilerplate. MCP Toolbox helps streamline lengthy database
-  configurations, repetitive code, and error-prone schema migrations.
-
-Learn [how to connect your AI tools (IDEs) to Toolbox using MCP][connect-ide].
-
-[connect-ide]: ../connect-to/ides/_index.md
+- **Out-of-the-Box Database Access:** Prebuilt generic tools for instant data exploration (e.g., `list_tables`, `execute_sql`) directly from your IDE or CLI.
+- **Custom Tools Framework:** Build production-ready tools with your own predefined logic, ensuring safety through Restricted Access, Structured Queries, and Semantic Search.
+- **Simplified Development:** Integrate tools into your LangChain, LlamaIndex, or custom agents in less than 10 lines of code.
+- **Better Performance:** Handles connection pooling, integrated auth (IAM), and end-to-end observability (OpenTelemetry) out of the box.
+- **Enhanced Security**: Integrated authentication for more secure access to your data.
+- **End-to-end Observability**: Out of the box metrics and tracing with built-in support for OpenTelemetry.
 
 ## General Architecture
 
@@ -73,18 +42,47 @@ redeploying your application.
 
 ### Quickstart: Running Toolbox using NPX
 
-You can run Toolbox directly with a [configuration file](../configuration/_index.md):
+#### Ready-to-use MCP tools
+
+Add the following to your client's MCP configuration file (usually `mcp.json` or `claude_desktop_config.json`):
+
+```json
+{
+	"mcpServers": {
+		"toolbox-postgres": {
+			"command": "npx",
+			"args": [
+			"-y",
+			"@toolbox-sdk/server",
+			"--prebuilt=postgres"
+			]
+		}
+	}
+}
+```
+
+Set the appropriate environement variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+
+When you run Toolbox with a `--prebuilt=<database>` flag, you instantly get access to standard tools to interact with that database. 
+
+Supported databases currently include:
+- **Google Cloud:** AlloyDB, BigQuery, Cloud SQL (PostgreSQL, MySQL, SQL Server), Spanner, Firestore, Dataplex
+- **Other Databases:** PostgreSQL, MySQL, SQL Server, Oracle, MongoDB, Redis, Elasticsearch, CockroachDB, ClickHouse, Couchbase, Neo4j, Snowflake, Trino, and more.
+
+For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+
+#### Custom Tools
+
+You can run Toolbox directly with a [configuration file](../configure.md):
 
 ```sh
 npx @toolbox-sdk/server --config tools.yaml
 ```
 
-This runs the latest version of the toolbox server with your configuration file.
-
 {{< notice note >}}
-This method should only be used for non-production use cases such as
-experimentation. For any production use-cases, please consider [Installing the
-server](#installing-the-server) and then [running it](#running-the-server).
+This method should only be used for non-production use cases. 
+For any production use-cases, consider using the binary or container image,
+see the [Install & Run the Server](#install--run-the-server).
 {{< /notice >}}
 
 ### Installing the server
@@ -241,7 +239,6 @@ tools:
 from toolbox_core import ToolboxClient
 
 # update the url to point to your server
-
 async with ToolboxClient("http://127.0.0.1:5000") as client:
 
     # these tools can be passed to your application!
@@ -249,8 +246,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
@@ -263,7 +259,6 @@ tools:
 from toolbox_langchain import ToolboxClient
 
 # update the url to point to your server
-
 async with ToolboxClient("http://127.0.0.1:5000") as client:
 
     # these tools can be passed to your application!
@@ -271,8 +266,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md).
 
 {{% /tab %}}
 {{% tab header="Llamaindex" lang="en" %}}
@@ -285,7 +279,6 @@ tools:
 from toolbox_llamaindex import ToolboxClient
 
 # update the url to point to your server
-
 async with ToolboxClient("http://127.0.0.1:5000") as client:
 
 # these tools can be passed to your application
@@ -294,8 +287,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
-[project's
-README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
+[README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -321,8 +313,7 @@ const toolboxTools = await client.loadToolset('toolsetName');
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="LangChain/Langraph" lang="en" %}}
@@ -349,8 +340,7 @@ const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="Genkit" lang="en" %}}
@@ -388,8 +378,7 @@ const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
@@ -419,8 +408,7 @@ const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="ADK TS" lang="en" %}}
@@ -438,8 +426,7 @@ const tools = await client.loadToolset();
 
 {{< /highlight >}}
 
-For detailed samples on using the Toolbox JS SDK with ADK JS, see the [project's
-README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
+For detailed samples on using the Toolbox JS SDK with ADK JS, see the [README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -743,5 +730,4 @@ For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [module'
 {{< /tabpane >}}
 
 For more detailed instructions on using the Toolbox Go SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
