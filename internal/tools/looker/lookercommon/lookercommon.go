@@ -336,7 +336,7 @@ type ProjectGeneratorColumn struct {
 }
 
 type ProjectGeneratorTable struct {
-	Schema     string                   `json:"schema"`
+	Schema     *string                  `json:"schema,omitempty"`
 	TableName  string                   `json:"table_name"`
 	PrimaryKey *string                  `json:"primary_key,omitempty"`
 	BaseView   *bool                    `json:"base_view,omitempty"`
@@ -351,6 +351,7 @@ type ProjectGeneratorQueryParams struct {
 	Connection          string `json:"connection"`
 	FileTypeForExplores string `json:"file_type_for_explores"`
 	FolderName          string `json:"folder_name,omitempty"`
+	Database            string `json:"database,omitempty"`
 }
 
 func CreateViewsFromTables(ctx context.Context, l *v4.LookerSDK, projectId string, queryParams ProjectGeneratorQueryParams, reqBody ProjectGeneratorRequestBody, options *rtl.ApiSettings) error {
@@ -361,6 +362,9 @@ func CreateViewsFromTables(ctx context.Context, l *v4.LookerSDK, projectId strin
 		"connection":             queryParams.Connection,
 		"file_type_for_explores": queryParams.FileTypeForExplores,
 		"folder_name":            queryParams.FolderName,
+	}
+	if queryParams.Database != "" {
+		query["database"] = queryParams.Database
 	}
 
 	// Pass the Tables slice directly as the body, not the wrapped struct.
