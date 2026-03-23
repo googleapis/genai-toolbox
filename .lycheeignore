@@ -21,6 +21,7 @@ https://cloud-run-url.app/
 https://xxx.cloud.dgraph.io/
 https://cloud.dgraph.io/login
 https://dgraph.io/docs
+https://play.dgraph.io/
 
 # MySQL Community downloads and main site (often protected by bot mitigation)
 ^https?://(.*\.)?mysql\.com/.*
