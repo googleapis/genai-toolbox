@@ -5,11 +5,9 @@ weight: 3
 description: How MCP Toolbox manages versions and breaking changes.
 ---
 
-# Versioning Policy
-
 MCP Toolbox for Databases follows [Semantic Versioning](https://semver.org/).
 
-## **Definition of the Public API**
+## Definition of the Public API
 
 For the purposes of this policy, the "Public API" includes:
 
@@ -20,7 +18,7 @@ For the purposes of this policy, the "Public API" includes:
   * **MCP versions**: Supporting MCP revisions and transport protocols.   
 * **Client SDKs:** Both the foundational "Base SDKs" and the orchestration-specific "Integrated SDKs".
 
-## **What Constitutes a Breaking Change (Major Version Bump)** 
+## What Constitutes a Breaking Change (Major Version Bump) 
 
 A major version bump (e.g., v1.x.x to v2.0.0) is required for the following modifications:
 
@@ -30,7 +28,7 @@ A major version bump (e.g., v1.x.x to v2.0.0) is required for the following modi
 * **Client SDKs:** Removing or renaming public methods, modifying expected input payload structures, or changing expected return types.  
 * **MCP Protocol Support:** Removing support for an existing MCP protocol version. Until official MCP protocol guidelines dictate otherwise, dropping an MCP version counts as a major breaking change. A deprecation warning will be provided prior to removal, aligning with typical new specification cycle timelines.
 
-## **What is NOT a Breaking Change (Minor/Patch Version)** 
+## What is NOT a Breaking Change (Minor/Patch Version) 
 
 The following changes will **not** trigger a major version bump:
 
