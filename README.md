@@ -1061,7 +1061,7 @@ By participating in this project you agree to abide by its terms. See
 ## Telemetry
 
 Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
-to export to any OTLP-compatible backend like Google Cloud, Agnost AI, or 
+to export to any OTLP-compatible backend like Google Cloud Monitoring, Agnost AI, or 
 others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
 
 ## Community
