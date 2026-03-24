@@ -35,7 +35,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "default setting",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			address:
@@ -54,7 +54,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			address:
@@ -107,7 +107,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			address:
@@ -115,12 +115,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my-pass
 			database: data
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-redis-instance\" as \"redis\": [3:11] cannot unmarshal string into Go struct field Config.Database of type int\n   1 | address:\n   2 | - 127.0.0.1\n>  3 | database: data\n                 ^\n   4 | name: my-redis-instance\n   5 | password: my-pass\n   6 | type: redis",
+			err: "error unmarshaling source: unable to parse source \"my-redis-instance\" as \"redis\": [3:11] cannot unmarshal string into Go struct field Config.Database of type int\n   1 | address:\n   2 | - 127.0.0.1\n>  3 | database: data\n                 ^\n   4 | name: my-redis-instance\n   5 | password: my-pass\n   6 | type: redis",
 		},
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			project: my-project
@@ -129,16 +129,16 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my-pass
 			database: 1
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-redis-instance\" as \"redis\": [6:1] unknown field \"project\"\n   3 | database: 1\n   4 | name: my-redis-instance\n   5 | password: my-pass\n>  6 | project: my-project\n       ^\n   7 | type: redis",
+			err: "error unmarshaling source: unable to parse source \"my-redis-instance\" as \"redis\": [6:1] unknown field \"project\"\n   3 | database: 1\n   4 | name: my-redis-instance\n   5 | password: my-pass\n>  6 | project: my-project\n       ^\n   7 | type: redis",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-redis-instance
 			type: redis
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-redis-instance\" as \"redis\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

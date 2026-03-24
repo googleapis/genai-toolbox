@@ -26,7 +26,7 @@ first parameter specified, `:2` will be the second parameter, and so on.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: snowflake-sql
 source: my-snowflake-instance
@@ -72,7 +72,7 @@ parameters:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: snowflake
 source: my-snowflake-instance

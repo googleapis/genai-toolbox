@@ -33,7 +33,7 @@ The tool gets the `project` and `location` from the source configuration.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_spark_batches
 type: serverless-spark-list-batches
 source: my-serverless-spark-source

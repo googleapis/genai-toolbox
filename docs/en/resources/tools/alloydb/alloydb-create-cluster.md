@@ -40,7 +40,7 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: create_cluster
 type: alloydb-create-cluster
 source: alloydb-admin-source

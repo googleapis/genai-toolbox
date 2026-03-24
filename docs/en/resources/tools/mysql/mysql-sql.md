@@ -30,7 +30,7 @@ and expects parameters in the SQL query to be in the form of placeholders `?`.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: mysql-sql
 source: my-mysql-instance
@@ -76,7 +76,7 @@ parameters:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: mysql-sql
 source: my-mysql-instance

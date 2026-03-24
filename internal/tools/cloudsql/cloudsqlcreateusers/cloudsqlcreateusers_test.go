@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: create-user
 			type: cloud-sql-create-users
 			source: my-source

@@ -29,7 +29,7 @@ form of placeholders `?`.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: oceanbase-sql
 source: my-oceanbase-instance
@@ -64,7 +64,7 @@ parameters:
 > recommended for performance and safety reasons.
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: oceanbase-sql
 source: my-oceanbase-instance
@@ -85,7 +85,7 @@ templateParameters:
 ### Example with Array Parameters
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_ids
 type: oceanbase-sql
 source: my-oceanbase-instance

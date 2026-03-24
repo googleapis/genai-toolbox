@@ -27,7 +27,7 @@ Here is an example configuration for a tool that adds a new user to a `users`
 collection.
 
 ```yaml
-kind: tools
+kind: tool
 name: create_new_user
 type: mongodb-insert-one
 source: my-mongo-source

@@ -103,25 +103,17 @@ You can explicitly select a protocol using the `protocol` option during client i
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{< notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
-
 ### Example
-
-If you wish to use the native Toolbox protocol:
 
 ```py
 from toolbox_core import ToolboxClient
 from toolbox_core.protocol import Protocol
 
-async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as toolbox:
     # Use client
     pass
 ```
@@ -401,7 +393,7 @@ necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
 {{< notice info>}}
-The name used when registering the getter function with the SDK (e.g.,`"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+The name used when registering the getter function with the SDK (e.g.,`"my_api_token"`) must exactly match the `name` of the corresponding `authService` defined in the tool's configuration within the Toolbox service.
 {{</notice>}}
 
 ```py
@@ -544,3 +536,59 @@ async def get_dynamic_value():
 # Assuming `tool` is a loaded tool instance from a ToolboxClient
 dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
+
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp). When enabled, each `tools/list` and `tools/call` operation produces a client span and records an operation-duration histogram, and W3C `traceparent`/`tracestate` headers are propagated to the Toolbox server for distributed tracing.
+
+### Installation
+
+Install the `telemetry` extra to include the OpenTelemetry dependencies:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+### Usage
+
+Pass `telemetry_enabled=True` when creating a `ToolboxClient` or `ToolboxSyncClient`:
+
+```py
+from toolbox_core import ToolboxClient
+
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = await toolbox.load_tool("my-tool")
+    result = await tool(param="value")
+```
+
+### Configuring an OpenTelemetry Provider
+
+The SDK reads the globally configured `TracerProvider` and `MeterProvider`. Set these up in your application before creating the client:
+
+```py
+from opentelemetry import trace, metrics
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+
+# Configure tracing
+tracer_provider = TracerProvider()
+tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+trace.set_tracer_provider(tracer_provider)
+
+# Configure metrics
+metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter())
+meter_provider = MeterProvider(metric_readers=[metric_reader])
+metrics.set_meter_provider(meter_provider)
+
+# Now create the client with telemetry enabled
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    ...
+```
+
+{{< notice note >}}
+If `telemetry_enabled=True` but no provider is configured, OpenTelemetry's no-op implementation is used — no data is exported and there is zero overhead. The optional `[telemetry]` extra must be installed for `telemetry_enabled=True` to have any effect; if it is not installed the flag is silently ignored.
+{{< /notice >}}

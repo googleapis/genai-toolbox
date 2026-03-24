@@ -37,7 +37,7 @@ func TestParseFromYamlWait(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: wait
 			description: some description

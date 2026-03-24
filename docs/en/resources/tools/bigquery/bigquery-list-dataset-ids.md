@@ -32,7 +32,7 @@ The tool's behavior regarding this parameter is influenced by the
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: bigquery_list_dataset_ids
 type: bigquery-list-dataset-ids
 source: my-bigquery-source

@@ -38,7 +38,7 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-gda-instance
 			type: cloud-gemini-data-analytics
 			projectId: test-project-id
@@ -55,7 +55,7 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-gda-instance
 			type: cloud-gemini-data-analytics
 			projectId: another-project
@@ -96,11 +96,11 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing projectId",
 			in: `
-			kind: sources
+			kind: source
 			name: my-gda-instance
 			type: cloud-gemini-data-analytics
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-gda-instance\" as \"cloud-gemini-data-analytics\": Key: 'Config.ProjectID' Error:Field validation for 'ProjectID' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-gda-instance\" as \"cloud-gemini-data-analytics\": Key: 'Config.ProjectID' Error:Field validation for 'ProjectID' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

@@ -38,7 +38,7 @@ Interact with your custom tools using natural language.
   "mcpServers": {
     "mcp-toolbox": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--tools-file", "your-tool-file.yaml"],
+      "args": ["-y", "@toolbox-sdk/server", "--config", "your-tool-file.yaml"],
       "env": {
         "ENV_VAR_NAME": "ENV_VAR_VALUE",
       }

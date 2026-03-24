@@ -29,7 +29,7 @@ collection where the `item` field matches a provided value. If no matching
 document is found, the `upsert: true` option will create a new one.
 
 ```yaml
-kind: tools
+kind: tool
 name: update_inventory_item
 type: mongodb-update-one
 source: my-mongo-source

@@ -23,7 +23,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "connection string and useOCI=true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-cs
 			type: oracle
 			connectionString: "my-host:1521/XEPDB1"
@@ -45,7 +45,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "host/port/serviceName and default useOCI=false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-host
 			type: oracle
 			host: my-host
@@ -70,7 +70,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "tnsAlias and TnsAdmin specified with explicit useOCI=true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-tns-oci
 			type: oracle
 			tnsAlias: FINANCE_DB
@@ -176,7 +176,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -185,35 +185,35 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			extraField: value
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": [1:1] unknown field \"extraField\"\n>  1 | extraField: value\n       ^\n   2 | host: my-host\n   3 | name: my-oracle-instance\n   4 | password: my_pass\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": [1:1] unknown field \"extraField\"\n>  1 | extraField: value\n       ^\n   2 | host: my-host\n   3 | name: my-oracle-instance\n   4 | password: my_pass\n   5 | ",
 		},
 		{
 			desc: "missing required password field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
 			serviceName: ORCL
 			user: my_user
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 		{
 			desc: "missing connection method fields (validate fails)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'",
 		},
 		{
 			desc: "multiple connection methods provided (validate fails)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -222,12 +222,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
 		},
 		{
 			desc: "fail on tnsAdmin with useOCI=false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-fail
 			type: oracle
 			tnsAlias: FINANCE_DB
@@ -236,7 +236,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			useOCI: false
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
 		},
 	}
 	for _, tc := range tcs {

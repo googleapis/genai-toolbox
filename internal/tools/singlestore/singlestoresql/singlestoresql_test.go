@@ -37,7 +37,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: singlestore-sql
 			source: my-singlestore-instance
@@ -76,7 +76,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with template params",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: singlestore-sql
 			source: my-singlestore-instance

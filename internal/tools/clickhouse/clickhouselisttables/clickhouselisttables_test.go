@@ -43,7 +43,7 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: clickhouse-list-tables
             source: my-instance
