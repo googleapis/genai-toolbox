@@ -4767,9 +4767,107 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 	}
 }
 
-// RunRequest is a helper function to send HTTP requests and return the response
+// RunRequest is a helper function to send HTTP requests and return the response.
 func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
-	// Send request
+	// TODO: Migrate all database integration test suites to natively test against `/mcp` using `ExecuteMCPToolCall` so this interceptor layer can be removed.
+	// Intercept POST /api/tool/{name}/invoke legacy tool invocations
+	if strings.Contains(url, "/api/tool/") && strings.Contains(url, "/invoke") {
+		parts := strings.Split(url, "/")
+		toolName := parts[len(parts)-2]
+
+		var args map[string]any
+		if body != nil {
+			bodyBytes, _ := io.ReadAll(body)
+			if len(bodyBytes) > 0 {
+				_ = json.Unmarshal(bodyBytes, &args)
+			}
+		}
+
+		gotStr, err := ExecuteMCPToolCall(t, toolName, args, headers)
+		if err != nil {
+			// MCP tool call failed. Tests interpret error via StatusCode 500
+			return &http.Response{StatusCode: http.StatusInternalServerError}, []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+		}
+
+		// Legacy API schema expected {"result": "<string>"}
+		b, _ := json.Marshal(gotStr)
+		respBytes := []byte(fmt.Sprintf(`{"result": %s}`, string(b)))
+
+		return &http.Response{StatusCode: http.StatusOK}, respBytes
+	}
+
+	// Intercept GET /api/tool/{name}/ legacy tool descriptions
+	if strings.Contains(url, "/api/tool/") && !strings.Contains(url, "/invoke") {
+		parts := strings.Split(strings.TrimSuffix(url, "/"), "/")
+		toolName := parts[len(parts)-1]
+
+		// Fetch tools list via MCP
+		reqBody := map[string]any{
+			"jsonrpc": "2.0",
+			"id":      "1",
+			"method":  "tools/list",
+		}
+		reqBytes, _ := json.Marshal(reqBody)
+
+		// Send raw MCP POST request bypassing ExecuteMCPToolCall for tool listing
+		req, _ := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBytes))
+		req.Header.Set("Content-type", "application/json")
+
+		mcpHeaders := NewMCPRequestHeader(t, nil)
+		for k, v := range mcpHeaders {
+			req.Header.Set(k, v)
+		}
+
+		resp, _ := http.DefaultClient.Do(req)
+		respBody, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return resp, respBody
+		}
+
+		var mcpResp struct {
+			Result struct {
+				Tools []map[string]any `json:"tools"`
+			} `json:"result"`
+		}
+		_ = json.Unmarshal(respBody, &mcpResp)
+
+		var foundTool map[string]any
+		for _, tool := range mcpResp.Result.Tools {
+			if tool["name"] == toolName {
+				foundTool = tool
+				break
+			}
+		}
+
+		if foundTool == nil {
+			return &http.Response{StatusCode: http.StatusNotFound}, []byte(`{"error": "not found"}`)
+		}
+
+		// Mock the legacy tools array assert pattern
+		authRequired := []any{}
+		if meta, ok := foundTool["_meta"].(map[string]any); ok {
+			if auth, ok := meta["toolbox/authInvoke"].([]any); ok {
+				authRequired = auth
+			}
+		}
+
+		res := map[string]any{
+			"tools": map[string]any{
+				toolName: map[string]any{
+					"description":  foundTool["description"],
+					"parameters":   []any{},
+					"authRequired": authRequired,
+				},
+			},
+		}
+
+		b, _ := json.Marshal(res)
+		return &http.Response{StatusCode: http.StatusOK}, b
+	}
+
+	// Default flow for SSE / generic routes
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		t.Fatalf("unable to create request: %s", err)
