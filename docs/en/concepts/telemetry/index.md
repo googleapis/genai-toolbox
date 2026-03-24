@@ -75,42 +75,225 @@ location information associated with the log entry, if any.
 
 ## Telemetry
 
-Toolbox is supports exporting metrics and traces to any OpenTelemetry compatible
+Toolbox supports exporting metrics and traces to any OpenTelemetry compatible
 exporter.
 
 ### Metrics
 
 A metric is a measurement of a service captured at runtime. The collected data
-can be used to provide important insights into the service. Toolbox provides the
-following custom metrics:
+can be used to provide important insights into the service. Toolbox metrics
+follow the [MCP Semantic Conventions][mcp-semconv] where applicable, and include
+additional Toolbox-specific metrics for deeper observability.
 
-| **Metric Name**                    | **Description**                                         |
-|------------------------------------|---------------------------------------------------------|
-| `toolbox.server.toolset.get.count` | Counts the number of toolset manifest requests served   |
-| `toolbox.server.tool.get.count`    | Counts the number of tool manifest requests served      |
-| `toolbox.server.tool.get.invoke`   | Counts the number of tool invocation requests served    |
-| `toolbox.server.mcp.sse.count`     | Counts the number of mcp sse connection requests served |
-| `toolbox.server.mcp.post.count`    | Counts the number of mcp post requests served           |
+[mcp-semconv]: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/
 
-All custom metrics have the following attributes/labels:
+#### Standard Metrics
 
-| **Metric Attributes**      | **Description**                                           |
-|----------------------------|-----------------------------------------------------------|
-| `toolbox.name`             | Name of the toolset or tool, if applicable.               |
-| `toolbox.operation.status` | Operation status code, for example: `success`, `failure`. |
-| `toolbox.sse.sessionId`    | Session id for sse connection, if applicable.             |
-| `toolbox.method`           | Method of JSON-RPC request, if applicable.                |
+| **Metric Name**                 | **Type**  | **Unit** | **Description**                               |
+|---------------------------------|-----------|----------|-----------------------------------------------|
+| `mcp.server.operation.duration` | Histogram | `s`      | Duration of a single MCP JSON-RPC operation.  |
+| `mcp.server.session.duration`   | Histogram | `s`      | Duration of an MCP session.                   |
+
+#### Toolbox-specific Metrics
+
+| **Metric Name**                      | **Type**      | **Unit**    | **Description**                          |
+|--------------------------------------|---------------|-------------|------------------------------------------|
+| `toolbox.server.mcp.active_sessions` | UpDownCounter | `{session}` | Current count of active MCP sessions.    |
+| `toolbox.tool.execution.duration`    | Histogram     | `s`         | Duration of backend tool execution.      |
+
+Duration histograms use the following bucket boundaries (in seconds), as
+defined by the MCP semantic conventions:
+
+```
+0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300
+```
+
+{{< notice tip >}}
+OpenTelemetry Histograms automatically record bucket counts alongside the total count (`{name}_count`) and total sum (`{name}_sum`) of your observations.
+{{< /notice >}}
+
+#### Metric Attributes
+
+The attributes recorded with each metric are listed below. Attributes marked
+optional are only included when applicable.
+
+**`mcp.server.operation.duration`**
+
+| **Attribute**              | **Description**                                                | **Optional** |
+|----------------------------|----------------------------------------------------------------|:------------:|
+| `mcp.method.name`          | MCP JSON-RPC method name (e.g. `tools/call`).                  |              |
+| `network.transport`        | Network transport (`tcp` for HTTP/SSE, `pipe` for stdio).      |              |
+| `network.protocol.name`    | Network protocol name (`http` or `stdio`).                     |              |
+| `toolset.name`             | Name of the toolset being served.                              |              |
+| `mcp.protocol.version`     | Negotiated MCP protocol version (e.g. `2024-11-05`).          | Yes          |
+| `network.protocol.version` | HTTP protocol version (e.g. `1.1`).                            | Yes          |
+| `gen_ai.operation.name`    | GenAI operation name (e.g. `execute_tool`).                    | Yes          |
+| `gen_ai.tool.name`         | Name of the tool invoked (set for `tools/call` requests).      | Yes          |
+| `gen_ai.prompt.name`       | Name of the prompt retrieved (set for `prompts/get` requests). | Yes          |
+| `error.type`               | Description of the error if the operation failed.              | Yes          |
+
+<br>
+
+**`mcp.server.session.duration`** and **`toolbox.server.mcp.active_sessions`**
+
+| **Attribute**              | **Description**                                           | **Optional** |
+|----------------------------|-----------------------------------------------------------|:------------:|
+| `network.transport`        | Network transport (`tcp` for HTTP/SSE, `pipe` for stdio). |              |
+| `network.protocol.name`    | Network protocol name (`http` or `stdio`).                |              |
+| `mcp.protocol.version`     | Negotiated MCP protocol version (e.g. `2024-11-05`).     | Yes          |
+| `network.protocol.version` | HTTP protocol version (e.g. `1.1`).                       | Yes          |
+| `toolset.name`             | Name of the toolset (HTTP/SSE sessions only).             | Yes          |
+| `error.type`               | Description of the error if the session ended with a failure. | Yes      |
+
+<br>
+
+**`toolbox.tool.execution.duration`**
+
+| **Attribute**              | **Description**                              | **Optional** |
+|----------------------------|----------------------------------------------|:------------:|
+| `gen_ai.tool.name`         | Name of the tool invoked.                    |              |
+| `network.protocol.name`    | Network protocol name.                       | Yes          |
+| `network.protocol.version` | Network protocol version.                    | Yes          |
+| `error.type`               | Description of the error if invocation failed. | Yes        |
 
 ### Traces
 
 A trace is a tree of spans that shows the path that a request makes through an
 application.
 
-Spans generated by Toolbox server is prefixed with `toolbox/server/`. For
-example, when user run Toolbox, it will generate spans for the following, with
-`toolbox/server/init` as the root span:
+#### Initialization Spans
 
-![traces](./telemetry_traces.png)
+When Toolbox starts, it generates a root span `toolbox/server/init` with child
+spans for each component initialized:
+
+```
+toolbox/server/init
+├── toolbox/server/source/init         attr: source_type, source_name
+│   └── toolbox/server/source/connect  attr: source_type, source_name
+├── toolbox/server/auth/init           attr: auth_type, auth_name
+├── toolbox/server/embeddingmodel/init attr: model_type, model_name
+├── toolbox/server/tool/init           attr: tool_type, tool_name
+├── toolbox/server/toolset/init        attr: toolset.name
+└── toolbox/server/prompt/init         attr: prompt_type, prompt_name
+```
+
+| **Span Name**                        | **Description**                                | **Attributes**                       |
+|--------------------------------------|------------------------------------------------|--------------------------------------|
+| `toolbox/server/init`                | Root span for server initialization.           |                                      |
+| `toolbox/server/source/init`         | Initialization of a data source.               | `source_type`, `source_name`         |
+| `toolbox/server/source/connect`      | Database connection pool initialization.       | `source_type`, `source_name`         |
+| `toolbox/server/auth/init`           | Initialization of an auth service.             | `auth_type`, `auth_name`             |
+| `toolbox/server/embeddingmodel/init` | Initialization of an embedding model.          | `model_type`, `model_name`           |
+| `toolbox/server/tool/init`           | Initialization of a tool.                      | `tool_type`, `tool_name`             |
+| `toolbox/server/toolset/init`        | Initialization of a toolset.                   | `toolset.name`                       |
+| `toolbox/server/prompt/init`         | Initialization of a prompt.                    | `prompt_type`, `prompt_name`         |
+
+#### Request Spans
+
+Each incoming MCP request generates a transport span, with a child span for the
+MCP method being processed.
+
+**Toolbox connection spans**
+
+| **Span Name**               | **Description**                                             | **Key Attributes**                    |
+|-----------------------------|-------------------------------------------------------------|---------------------------------------|
+| `toolbox/server/mcp/sse`    | SSE session transport span (protocol `2024-11-05`).         | `mcp.session.id`, `toolset.name`      |
+| `toolbox/server/mcp/http`   | HTTP transport span (streamable HTTP).                      | `toolset.name`                        |
+| `toolbox/server/mcp/stdio`  | stdio transport span.                                       |                                       |
+
+<br>
+
+**MCP method spans**
+
+Method-level spans follow the [MCP Semantic Conventions][mcp-server-semconv]. Each span
+represents the processing of a single MCP request or notification. 
+
+<br> 
+
+The span name follows the format `{mcp.method.name} {target}` where target is 
+`{gen_ai.tool.name}` or `{gen_ai.prompt.name}` when applicable, otherwise just 
+`{mcp.method.name}`. Span status is set to `ERROR` when an error occurs, 
+with the status description set to the JSON-RPC error message.
+
+[mcp-server-semconv]: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/#server
+
+All method spans include the following attributes:
+
+| **Attribute**              | **Description**                                           | **Optional** |
+|----------------------------|-----------------------------------------------------------|:------------:|
+| `mcp.method.name`          | MCP JSON-RPC method name.                                 |              |
+| `network.transport`        | Network transport used for the request.                   |              |
+| `network.protocol.name`    | Network protocol name.                                    |              |
+| `toolset.name`             | Name of the toolset.                                      |              |
+| `mcp.protocol.version`     | Negotiated MCP protocol version.                          | Yes          |
+| `network.protocol.version` | HTTP protocol version.                                    | Yes          |
+| `jsonrpc.request.id`       | JSON-RPC request ID.                                      | Yes          |
+| `jsonrpc.error.code`       | JSON-RPC error code, set when an error occurs.            | Yes          |
+| `error.type`               | Description of the error if the operation failed.         | Yes          |
+
+### Context Propagation
+
+Toolbox supports distributed tracing via the [W3C Trace Context][w3c-trace]
+standard. Incoming trace context is extracted in two ways:
+
+- **HTTP headers**: The `traceparent` and `tracestate` headers are read from
+  incoming HTTP requests.
+- **JSON-RPC `_meta` field**: The `params._meta.traceparent` and
+  `params._meta.tracestate` fields are read from the JSON-RPC message body.
+  This allows trace context to propagate over stdio transport.
+
+[w3c-trace]: https://www.w3.org/TR/trace-context/
+
+The examples below show how spans are connected across the client and Toolbox
+for each transport type.
+
+**STDIO Initialize**
+
+```
+initialize (CLIENT, trace=t1, span=s1)                                   # FROM MCP Client
+|
+--- toolbox/server/mcp/stdio (SERVER, trace=t1, span=s2, parent=s1)      # IN TOOLBOX
+    |
+    --- initialize (SERVER, trace=t1, span=s3, parent=s2)                # IN TOOLBOX
+```
+
+**STDIO Tool Call**
+
+```
+tools/call get-weather (CLIENT, trace=t1, span=s1)                       # FROM MCP Client
+|
+--- toolbox/server/mcp/stdio (SERVER, trace=t1, span=s2, parent=s1)      # IN TOOLBOX
+    |
+    --- tools/call get-weather (SERVER, trace=t1, span=s3, parent=s2)    # IN TOOLBOX
+```
+
+**SSE Connection**
+
+```
+connection (CLIENT, trace=t1, span=s2, parent=s1)                        # FROM MCP Client
+|
+--- toolbox/server/mcp/sse (SERVER, trace=t1, span=s3, parent=s2)        # IN TOOLBOX
+```
+
+**HTTP Initialize**
+
+```
+initialize (CLIENT, trace=t1, span=s1)                                   # FROM MCP Client
+|
+--- toolbox/server/mcp/http (SERVER, trace=t1, span=s2, parent=s1)       # IN TOOLBOX
+    |
+    --- initialize (SERVER, trace=t1, span=s3, parent=s2)                # IN TOOLBOX
+```
+
+**HTTP Tool Call**
+
+```
+tools/call get-weather (CLIENT, trace=t1, span=s1)                       # FROM MCP Client
+|
+--- toolbox/server/mcp/http (SERVER, trace=t1, span=s2, parent=s1)       # IN TOOLBOX
+    |
+    --- tools/call get-weather (SERVER, trace=t1, span=s3, parent=s2)    # IN TOOLBOX
+```
 
 ### Resource Attributes
 
