@@ -8,7 +8,7 @@
     ':prHourlyLimitNone',
     ':preserveSemverRanges',
   ],
-  minimumReleaseAge: '3',
+  minimumReleaseAge: '3 days',
   rebaseWhen: 'conflicted',
   dependencyDashboardLabels: [
     'type: process',
@@ -46,7 +46,7 @@
       matchManagers: [
         'gomod',
       ],
-      excludeFileNames: [
+      ignorePaths: [
         'docs/**',
         '.hugo/**',
       ],
