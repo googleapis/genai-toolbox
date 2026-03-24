@@ -37,7 +37,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: trino-sql
 			source: my-trino-instance
@@ -100,7 +100,7 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: trino-sql
 			source: my-trino-instance

@@ -38,7 +38,7 @@ func TestParseFromYamlOceanBaseSql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: oceanbase-sql
             source: my-instance

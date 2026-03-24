@@ -21,7 +21,7 @@ user, making it useful for schema exploration and table discovery tasks.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_clickhouse_tables
 type: clickhouse-list-tables
 source: my-clickhouse-instance

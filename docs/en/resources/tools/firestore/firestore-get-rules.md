@@ -23,7 +23,7 @@ content along with metadata such as the ruleset name, and timestamps.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_firestore_rules
 type: firestore-get-rules
 source: my-firestore-source

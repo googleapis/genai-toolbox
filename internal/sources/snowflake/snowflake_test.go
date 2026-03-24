@@ -34,7 +34,7 @@ func TestParseFromYamlSnowflake(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				kind: sources
+				kind: source
 				name: my-snowflake-instance
 				type: snowflake
 				account: my-account
@@ -81,7 +81,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-				kind: sources
+				kind: source
 				name: my-snowflake-instance
 				type: snowflake
 				account: my-account
@@ -91,12 +91,12 @@ func TestFailParseFromYaml(t *testing.T) {
 				schema: my_schema
 				foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-snowflake-instance\" as \"snowflake\": [3:1] unknown field \"foo\"\n   1 | account: my-account\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | name: my-snowflake-instance\n   5 | password: my_pass\n   6 | schema: my_schema\n   7 | ",
+			err: "error unmarshaling source: unable to parse source \"my-snowflake-instance\" as \"snowflake\": [3:1] unknown field \"foo\"\n   1 | account: my-account\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | name: my-snowflake-instance\n   5 | password: my_pass\n   6 | schema: my_schema\n   7 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-				kind: sources
+				kind: source
 				name: my-snowflake-instance
 				type: snowflake
 				account: my-account
@@ -104,7 +104,7 @@ func TestFailParseFromYaml(t *testing.T) {
 				password: my_pass
 				database: my_db
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-snowflake-instance\" as \"snowflake\": Key: 'Config.Schema' Error:Field validation for 'Schema' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-snowflake-instance\" as \"snowflake\": Key: 'Config.Schema' Error:Field validation for 'Schema' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

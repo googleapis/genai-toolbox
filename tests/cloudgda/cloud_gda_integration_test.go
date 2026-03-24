@@ -150,11 +150,11 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 			"description": "Test GDA Tool\n\n" + cloudgda.Guidance,
 			"parameters": []any{
 				map[string]any{
-					"name":        "query",
-					"type":        "string",
-					"description": "A natural language formulation of a database query.",
-					"required":    true,
-					"authSources": []any{},
+					"name":         "query",
+					"type":         "string",
+					"description":  "A natural language formulation of a database query.",
+					"required":     true,
+					"authServices": []any{},
 				},
 			},
 			"authRequired": []any{},

@@ -38,7 +38,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: http
 			source: my-instance
@@ -61,7 +61,7 @@ func TestParseFromYamlHTTP(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: http
 			source: my-instance
@@ -164,7 +164,7 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: http
 			source: my-instance

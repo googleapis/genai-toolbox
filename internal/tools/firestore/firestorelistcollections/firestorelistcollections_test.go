@@ -36,7 +36,7 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: list_collections_tool
 			type: firestore-list-collections
 			source: my-firestore-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			kind: tools
+			kind: tool
 			name: secure_list_collections
 			type: firestore-list-collections
 			source: prod-firestore
@@ -94,7 +94,7 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: list_user_collections
 	type: firestore-list-collections
 	source: users-firestore
@@ -102,13 +102,13 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	authRequired:
 		- user-auth
 ---
-	kind: tools
+	kind: tool
 	name: list_product_collections
 	type: firestore-list-collections
 	source: products-firestore
 	description: List product-related collections
 ---
-	kind: tools
+	kind: tool
 	name: list_admin_collections
 	type: firestore-list-collections
 	source: admin-firestore

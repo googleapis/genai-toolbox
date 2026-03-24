@@ -7,7 +7,7 @@ description: >
 ---
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools-file
+have multiple files, you can tell toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
@@ -31,12 +31,12 @@ A default value can be specified like `${ENV_NAME:default}`.
 
 ### Sources
 
-The `sources` section of your `tools.yaml` defines what data sources your
+`source` kind of your `tools.yaml` defines what data source your
 Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: postgres
 host: 127.0.0.1
@@ -51,12 +51,12 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of your `tools.yaml` defines the actions your agent can
+`tool` kind of your `tools.yaml` defines the actions your agent can
 take: what type of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
 ```yaml
-kind: tools
+kind: tool
 name: search-hotels-by-name
 type: postgres-sql
 source: my-pg-source
@@ -73,18 +73,18 @@ For more details on configuring different types of tools, see the
 
 ### Toolsets
 
-The `toolsets` section of your `tools.yaml` allows you to define groups of tools
+`toolset` kind of your `tools.yaml` allows you to define groups of tools
 that you want to be able to load together. This can be useful for defining
 different sets for different agents or different applications.
 
 ```yaml
-kind: toolsets
+kind: toolset
 name: my_first_toolset
 tools:
   - my_first_tool
   - my_second_tool
 ---
-kind: toolsets
+kind: toolset
 name: my_second_toolset
 tools:
   - my_second_tool
@@ -103,11 +103,11 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 ### Prompts
 
-The `prompts` section of your `tools.yaml` defines the templates containing
+`prompt` kind of your `tools.yaml` defines the templates containing
 structured messages and instructions for interacting with language models.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:

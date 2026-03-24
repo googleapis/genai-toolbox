@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: wait-for-thing
             type: alloydb-wait-for-operation
             source: some-source

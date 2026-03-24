@@ -23,7 +23,7 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: snowflake-execute-sql
 source: my-snowflake-instance

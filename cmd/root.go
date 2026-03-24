@@ -33,6 +33,8 @@ import (
 	// Importing the cmd/internal package also import packages for side effect of registration
 	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/cmd/internal/invoke"
+	"github.com/googleapis/genai-toolbox/cmd/internal/migrate"
+	"github.com/googleapis/genai-toolbox/cmd/internal/serve"
 	"github.com/googleapis/genai-toolbox/cmd/internal/skills"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -110,35 +112,24 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 
 	// setup flags that are common across all commands
 	internal.PersistentFlags(cmd, opts)
-
 	flags := cmd.Flags()
-
-	flags.StringVarP(&opts.Cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
-	flags.IntVarP(&opts.Cfg.Port, "port", "p", 5000, "Port the server will listen on.")
-
-	flags.StringVar(&opts.ToolsFile, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
-	// deprecate tools_file
-	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.BoolVar(&opts.Cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
+	internal.ConfigFileFlags(flags, opts)
+	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
-	flags.BoolVar(&opts.Cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
-	// TODO: Insecure by default. Might consider updating this for v1.0.0
-	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
-	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
 	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
-
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
 
-	// Register subcommands for tool invocation
+	// Register subcommands
 	cmd.AddCommand(invoke.NewCommand(opts))
-	// Register subcommands for skill generation
 	cmd.AddCommand(skills.NewCommand(opts))
+	cmd.AddCommand(serve.NewCommand(opts))
+	cmd.AddCommand(migrate.NewCommand(opts))
 
 	return cmd
 }
 
-func handleDynamicReload(ctx context.Context, toolsFile internal.ToolsFile, s *server.Server) error {
+func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *server.Server) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -156,9 +147,9 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.ToolsFile, s *s
 	return nil
 }
 
-// validateReloadEdits checks that the reloaded tools file configs can initialized without failing
+// validateReloadEdits checks that the reloaded config configs can initialized without failing
 func validateReloadEdits(
-	ctx context.Context, toolsFile internal.ToolsFile,
+	ctx context.Context, toolsFile internal.Config,
 ) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
@@ -171,7 +162,7 @@ func validateReloadEdits(
 		panic(err)
 	}
 
-	logger.DebugContext(ctx, "Attempting to parse and validate reloaded tools file.")
+	logger.DebugContext(ctx, "Attempting to parse and validate reloaded config.")
 
 	ctx, span := instrumentation.Tracer.Start(ctx, "toolbox/server/reload")
 	defer span.End()
@@ -212,7 +203,7 @@ func scanWatchedFiles(watchingFolder bool, folderToWatch string, watchedFiles ma
 	if watchingFolder {
 		files, err := os.ReadDir(folderToWatch)
 		if err != nil {
-			return nil, changed, fmt.Errorf("error reading tools folder %w", err)
+			return nil, changed, fmt.Errorf("error reading config folder %w", err)
 		}
 		for _, f := range files {
 			if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
@@ -238,7 +229,7 @@ func scanWatchedFiles(watchingFolder bool, folderToWatch string, watchedFiles ma
 	return currentDiskFiles, changed, nil
 }
 
-// watchChanges checks for changes in the provided yaml tools file(s) or folder.
+// watchChanges checks for changes in the provided yaml config(s) or folder.
 func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -262,7 +253,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 		// validate that watchDirs only has single element
 		if len(watchDirs) > 1 {
-			logger.WarnContext(ctx, "error setting watcher, expected single tools folder if no file(s) are defined.")
+			logger.WarnContext(ctx, "error setting watcher, expected single config folder if no file(s) are defined.")
 			return
 		}
 
@@ -347,7 +338,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 				return
 			}
 
-			// only check for events which indicate user saved a new tools file
+			// only check for events which indicate user saved a new config
 			// multiple operations checked due to various file update methods across editors
 			if !e.Has(fsnotify.Write | fsnotify.Create | fsnotify.Rename) {
 				continue
@@ -366,27 +357,28 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 		case <-debounce.C:
 			debounce.Stop()
-			var reloadedToolsFile internal.ToolsFile
-			parser := internal.ToolsFileParser{}
+			var allFiles []string
+			parser := internal.ConfigParser{}
 			if watchingFolder {
-				logger.DebugContext(ctx, "Reloading tools folder.")
-				reloadedToolsFile, err = parser.LoadAndMergeToolsFolder(ctx, folderToWatch)
+				logger.DebugContext(ctx, "Reloading config folder.")
+				allFiles, err = internal.GetPathsFromConfigFolder(ctx, folderToWatch)
 				if err != nil {
-					logger.WarnContext(ctx, fmt.Sprintf("error loading tools folder %s", err))
+					logger.WarnContext(ctx, fmt.Sprintf("error loading config folder %s", err))
 					continue
 				}
 			} else {
-				logger.DebugContext(ctx, "Reloading tools file(s).")
-				reloadedToolsFile, err = parser.LoadAndMergeToolsFiles(ctx, slices.Collect(maps.Keys(watchedFiles)))
-				if err != nil {
-					logger.WarnContext(ctx, fmt.Sprintf("error loading tools files %s", err))
-					continue
-				}
+				allFiles = slices.Collect(maps.Keys(watchedFiles))
+			}
+			logger.DebugContext(ctx, "Reloading tools file(s).")
+			reloadedConfig, err := parser.LoadAndMergeConfigs(ctx, allFiles)
+			if err != nil {
+				logger.WarnContext(ctx, fmt.Sprintf("error loading configs %s", err))
+				continue
 			}
 
-			err = handleDynamicReload(ctx, reloadedToolsFile, s)
+			err = handleDynamicReload(ctx, reloadedConfig, s)
 			if err != nil {
-				errMsg := fmt.Errorf("unable to parse reloaded tools file at %q: %w", reloadedToolsFile, err)
+				errMsg := fmt.Errorf("unable to parse reloaded config at %q: %w", reloadedConfig, err)
 				logger.WarnContext(ctx, errMsg.Error())
 				continue
 			}
@@ -453,7 +445,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	isCustomConfigured, err := opts.LoadConfig(ctx, &internal.ToolsFileParser{})
+	isCustomConfigured, err := opts.LoadConfig(ctx, &internal.ConfigParser{})
 	if err != nil {
 		return err
 	}
@@ -498,7 +490,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	if isCustomConfigured && !opts.Cfg.DisableReload {
-		watchDirs, watchedFiles := resolveWatcherInputs(opts.ToolsFile, opts.ToolsFiles, opts.ToolsFolder)
+		watchDirs, watchedFiles := resolveWatcherInputs(opts.Config, opts.Configs, opts.ConfigFolder)
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
 		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval)
 	}

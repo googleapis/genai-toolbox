@@ -38,7 +38,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -56,7 +56,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "all fields specified",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -77,7 +77,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -97,7 +97,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with custom auth header name example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -117,7 +117,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth with unquoted true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -137,7 +137,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth with unquoted false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -157,7 +157,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with allowed datasets example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -178,7 +178,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with service account impersonation example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -198,7 +198,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with custom scopes example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -220,7 +220,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with max query result rows example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -260,24 +260,24 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
 			location: us
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: us\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: us\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			location: us
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

@@ -44,7 +44,7 @@ The `looker-health-pulse` tool performs health checks on a Looker instance. The
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: health_pulse
 type: looker-health-pulse
 source: looker-source
