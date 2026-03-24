@@ -41,6 +41,7 @@ import (
 
 var (
 	DataplexSourceType                = "dataplex"
+	DataplexLookupContextToolType     = "dataplex-lookup-context"
 	DataplexSearchEntriesToolType     = "dataplex-search-entries"
 	DataplexLookupEntryToolType       = "dataplex-lookup-entry"
 	DataplexSearchAspectTypesToolType = "dataplex-search-aspect-types"
@@ -189,6 +190,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexSearchEntriesToolInvokeTest(t, tableName, datasetName)
 	runDataplexLookupEntryToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchAspectTypesToolInvokeTest(t, aspectTypeId)
+	runDataplexLookupContextToolInvokeTest(t, tableName, datasetName)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -319,6 +321,17 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"type":         DataplexSearchAspectTypesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search aspect types tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-dataplex-lookup-context-tool": map[string]any{
+				"type":        DataplexLookupContextToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex lookup context tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-lookup-context-tool": map[string]any{
+				"type":         DataplexLookupContextToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex lookup context tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 		},
@@ -810,6 +823,114 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 				if len(entries) != 0 {
 					t.Fatalf("expected 0 entries, but got %d", len(entries))
 				}
+			}
+		})
+	}
+}
+
+func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, datasetName string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
+	resourceName := fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, DataplexProject, datasetName, tableName)
+	requestBodyFmt := fmt.Sprintf(`{"name":"%s","resources":["%s"]}`, name, resourceName)
+
+	testCases := []struct {
+		name           string
+		wantStatusCode int
+		api            string
+		requestHeader  map[string]string
+		requestBody    io.Reader
+		expectResult   bool
+		wantContentKey string
+	}{
+		{
+			name:           "Success - Context Found",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-context-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBufferString(requestBodyFmt),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "context",
+		},
+		{
+			name:           "Success with Authorization - Context Found",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-context-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBufferString(requestBodyFmt),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "context",
+		},
+		{
+			name:           "Failure - Invalid Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-context-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody:    bytes.NewBufferString(requestBodyFmt),
+			wantStatusCode: 401,
+			expectResult:   false,
+			wantContentKey: "context",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-Type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("Response status code got %d, want %d\nResponse body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if !tc.expectResult {
+				return
+			}
+
+			var response map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &response); err != nil {
+				t.Fatalf("Error parsing response body: %v\nRaw body: %s", err, string(bodyBytes))
+			}
+
+			resultPayload, ok := response["result"]
+			if !ok {
+				t.Fatalf("Expected to find 'result' key in API response, got: %v", response)
+			}
+
+			resultStr, ok := resultPayload.(string)
+			if !ok {
+				t.Fatalf("Expected 'result' payload to be a JSON string, got: %T", resultPayload)
+			}
+
+			var innerResult map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &innerResult); err != nil {
+				t.Fatalf("Error parsing inner result string: %v\nRaw string: %s", err, resultStr)
+			}
+
+			contextStr, hasContext := innerResult[tc.wantContentKey].(string)
+
+			if !hasContext {
+				t.Fatalf("Expected to have key '%s' in response: %v", tc.wantContentKey, innerResult)
+			}
+
+			if contextStr == "" || contextStr == "{}" || contextStr == "null" {
+				t.Fatalf("Expected non-empty '%s', but got: %s", tc.wantContentKey, contextStr)
 			}
 		})
 	}
