@@ -32,12 +32,12 @@ If you are accessing Toolbox with multiple applications, each
 {{< /notice >}}
 
 ```yaml
-kind: authServices
+kind: authService
 name: my_auth_app_1
 type: google
 clientId: ${YOUR_CLIENT_ID_1}
 ---
-kind: authServices
+kind: authService
 name: my_auth_app_2
 type: google
 clientId: ${YOUR_CLIENT_ID_2}
@@ -58,7 +58,7 @@ configuration for each tool that should use it:
 
 ## Specifying ID Tokens from Clients
 
-After [configuring](#example) your `authServices` section, use a Toolbox SDK to
+After [configuring](#example) your `authService`, use a Toolbox SDK to
 add your ID tokens to the header of a Tool invocation request. When specifying a
 token you will provide a function (that returns an id). This function is called
 when the tool is invoked. This allows you to cache and refresh the ID token as

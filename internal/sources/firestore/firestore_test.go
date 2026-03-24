@@ -35,7 +35,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "basic example with default database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			project: my-project
@@ -52,7 +52,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 		{
 			desc: "with custom database",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			project: my-project
@@ -90,22 +90,22 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			project: my-project
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-firestore\n   3 | project: my-project\n   4 | type: firestore",
+			err: "error unmarshaling source: unable to parse source \"my-firestore\" as \"firestore\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-firestore\n   3 | project: my-project\n   4 | type: firestore",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-firestore
 			type: firestore
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-firestore\" as \"firestore\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

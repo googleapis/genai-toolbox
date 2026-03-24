@@ -26,7 +26,7 @@ not support any input parameter.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_available_extensions
 type: postgres-list-available-extensions
 source: postgres-source

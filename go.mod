@@ -40,7 +40,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/looker-open-source/sdk-codegen/go v0.26.2
+	github.com/looker-open-source/sdk-codegen/go v0.26.6
 	github.com/microsoft/go-mssqldb v1.9.8
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
@@ -68,7 +68,7 @@ require (
 	google.golang.org/api v0.269.0
 	google.golang.org/genai v1.49.0
 	google.golang.org/genproto v0.0.0-20260226221140-a57be14db171
-	google.golang.org/grpc v1.79.1
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.46.1
 )

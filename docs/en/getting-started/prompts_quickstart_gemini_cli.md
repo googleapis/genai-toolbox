@@ -157,7 +157,7 @@ Create a file named `tools.yaml`. This file defines the database connection, the
 SQL tools available, and the prompts the agents will use.
 
 ```yaml
-kind: sources
+kind: source
 name: my-foodiefind-db
 type: postgres
 host: 127.0.0.1
@@ -166,7 +166,7 @@ database: toolbox_db
 user: toolbox_user
 password: my-password
 ---
-kind: tools
+kind: tool
 name: find_user_by_email
 type: postgres-sql
 source: my-foodiefind-db
@@ -177,7 +177,7 @@ parameters:
     description: The email address of the user to find.
 statement: SELECT id FROM users WHERE email = $1;
 ---
-kind: tools
+kind: tool
 name: find_restaurant_by_name
 type: postgres-sql
 source: my-foodiefind-db
@@ -188,7 +188,7 @@ parameters:
     description: The name of the restaurant to find.
 statement: SELECT id FROM restaurants WHERE name = $1;
 ---
-kind: tools
+kind: tool
 name: find_review_by_user_and_restaurant
 type: postgres-sql
 source: my-foodiefind-db
@@ -202,7 +202,7 @@ parameters:
     description: The numerical ID of the restaurant.
 statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
 ---
-kind: prompts
+kind: prompt
 name: investigate_missing_review
 description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
 arguments:

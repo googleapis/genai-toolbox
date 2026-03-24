@@ -34,7 +34,7 @@ Identify unnused fields (*in this case, less than 1 query in the last 20 days*)
 and joins in the `order_items` explore and `thelook` model
 
 ```yaml
-kind: tools
+kind: tool
 name: health_vacuum
 type: looker-health-vacuum
 source: looker-source

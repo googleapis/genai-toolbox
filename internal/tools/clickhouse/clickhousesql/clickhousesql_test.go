@@ -46,7 +46,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: clickhouse-sql
 			source: my-instance
@@ -67,7 +67,7 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 		{
 			desc: "with parameters",
 			in: `
-			kind: tools
+			kind: tool
 			name: param_tool
 			type: clickhouse-sql
 			source: test-source

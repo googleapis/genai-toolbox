@@ -21,7 +21,7 @@ configured in the source. It takes no extra parameters.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_dataset
 type: cloud-healthcare-get-dataset
 source: my-healthcare-source

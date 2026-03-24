@@ -21,7 +21,7 @@ and other HTTP-accessible resources.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-http-source
 type: http
 baseUrl: https://api.example.com/data

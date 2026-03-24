@@ -48,7 +48,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: search_catalog
 type: bigquery-search-catalog
 source: bigquery-source

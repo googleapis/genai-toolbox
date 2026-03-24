@@ -21,7 +21,7 @@ query execution capabilities.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: my_analytics_query
 type: clickhouse-sql
 source: my-clickhouse-instance
@@ -48,7 +48,7 @@ parameters:
 ## Template Parameters Example
 
 ```yaml
-kind: tools
+kind: tool
 name: flexible_table_query
 type: clickhouse-sql
 source: my-clickhouse-instance

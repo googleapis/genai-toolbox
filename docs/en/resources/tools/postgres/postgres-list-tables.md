@@ -31,7 +31,7 @@ constraints, indexes, triggers, owner, comment) as JSON for user-created tables
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: postgres_list_tables
 type: postgres-list-tables
 source: postgres-source

@@ -29,7 +29,7 @@ live in a specific city. The results are sorted by their last name, and only
 their first name, last name, and email are returned.
 
 ```yaml
-kind: tools
+kind: tool
 name: find_local_customers
 type: mongodb-find
 source: my-mongo-source

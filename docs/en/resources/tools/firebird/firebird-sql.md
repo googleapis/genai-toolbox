@@ -32,7 +32,7 @@ prepared statement.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: firebird-sql
 source: my_firebird_db
@@ -72,7 +72,7 @@ parameters:
 ### Example with Named Parameters
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_airline
 type: firebird-sql
 source: my_firebird_db
@@ -105,7 +105,7 @@ parameters:
 > [templateParameters](../#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: firebird-sql
 source: my_firebird_db

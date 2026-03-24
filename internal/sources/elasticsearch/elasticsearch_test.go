@@ -35,7 +35,7 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-es-instance
 			type: elasticsearch
 			addresses:
@@ -74,14 +74,14 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-es-instance
 			type: elasticsearch
 			addresses:
 				- http://localhost:9200
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-es-instance\" as \"elasticsearch\": [3:1] unknown field \"foo\"\n   1 | addresses:\n   2 | - http://localhost:9200\n>  3 | foo: bar\n       ^\n   4 | name: my-es-instance\n   5 | type: elasticsearch",
+			err: "error unmarshaling source: unable to parse source \"my-es-instance\" as \"elasticsearch\": [3:1] unknown field \"foo\"\n   1 | addresses:\n   2 | - http://localhost:9200\n>  3 | foo: bar\n       ^\n   4 | name: my-es-instance\n   5 | type: elasticsearch",
 		},
 	}
 	for _, tc := range tcs {

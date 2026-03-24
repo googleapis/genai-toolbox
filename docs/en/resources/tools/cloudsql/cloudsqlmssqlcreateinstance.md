@@ -15,7 +15,7 @@ This tool uses a `source` of type `cloud-sql-admin`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: create-sql-instance
 type: cloud-sql-mssql-create-instance
 source: cloud-sql-admin-source
