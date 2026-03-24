@@ -108,6 +108,10 @@ defined by the MCP semantic conventions:
 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300
 ```
 
+{{< notice tip >}}
+OpenTelemetry Histograms automatically record bucket counts alongside the total count (`{name}_count`) and total sum (`{name}_sum`) of your observations.
+{{< /notice >}}
+
 #### Metric Attributes
 
 The attributes recorded with each metric are listed below. Attributes marked
