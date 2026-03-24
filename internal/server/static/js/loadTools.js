@@ -32,7 +32,7 @@ export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Mcp-Protocol-Version': '2025-11-25'
+                'MCP-Protocol-Version': '2025-11-25'
             },
             body: JSON.stringify({
                 jsonrpc: "2.0",

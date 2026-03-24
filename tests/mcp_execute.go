@@ -31,7 +31,7 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 		headers[k] = v
 	}
 	headers["Content-Type"] = "application/json"
-	headers["Mcp-Protocol-Version"] = v20250618.PROTOCOL_VERSION
+	headers["MCP-Protocol-Version"] = v20250618.PROTOCOL_VERSION
 	if headers["Mcp-Session-Id"] == "" {
 		headers["Mcp-Session-Id"] = RunInitialize(t, v20250618.PROTOCOL_VERSION)
 	}

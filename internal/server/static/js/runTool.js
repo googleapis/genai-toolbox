@@ -93,7 +93,7 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
         const mcpHeaders = { 
             ...headers, 
             'Content-Type': 'application/json',
-            'Mcp-Protocol-Version': '2025-11-25'
+            'MCP-Protocol-Version': '2025-11-25'
         };
 
         const response = await fetch(`/mcp`, {
