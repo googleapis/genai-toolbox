@@ -38,7 +38,7 @@ developers can use to create custom tools with specific query patterns.
 ### Basic Configuration
 
 ```yaml
-kind: tools
+kind: tool
 name: query_countries
 type: firestore-query
 source: my-firestore-source
@@ -60,7 +60,7 @@ parameters:
 ### Advanced Configuration with Complex Filters
 
 ```yaml
-kind: tools
+kind: tool
 name: advanced_query
 type: firestore-query
 source: my-firestore-source
@@ -254,7 +254,7 @@ The tool supports all Firestore native JSON value types:
 ### Example 1: Query with Dynamic Collection Path
 
 ```yaml
-kind: tools
+kind: tool
 name: user_documents
 type: firestore-query
 source: my-firestore
@@ -280,7 +280,7 @@ parameters:
 ### Example 2: Complex Geographic Query
 
 ```yaml
-kind: tools
+kind: tool
 name: location_search
 type: firestore-query
 source: my-firestore
@@ -316,7 +316,7 @@ parameters:
 ### Example 3: Time-based Query with Analysis
 
 ```yaml
-kind: tools
+kind: tool
 name: activity_log
 type: firestore-query
 source: my-firestore

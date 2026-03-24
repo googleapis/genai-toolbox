@@ -17,7 +17,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_resource_types
 type: cloud-logging-admin-list-resource-types
 source: my-cloud-logging

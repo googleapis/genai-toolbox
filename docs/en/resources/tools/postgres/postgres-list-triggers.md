@@ -31,7 +31,7 @@ tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_triggers
 type: postgres-list-triggers
 source: postgres-source

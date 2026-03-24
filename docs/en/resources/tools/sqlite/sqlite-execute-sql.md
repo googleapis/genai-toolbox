@@ -25,7 +25,7 @@ This tool is designed for direct execution of SQL statements. It takes a single
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: sqlite-execute-sql
 source: my-sqlite-db

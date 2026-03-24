@@ -22,7 +22,7 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_users
 type: alloydb-list-users
 source: alloydb-admin-source

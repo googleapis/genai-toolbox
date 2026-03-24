@@ -30,7 +30,7 @@ This tool is compatible with the following source type:
 Here is an example configuration for a tool that logs multiple events at once.
 
 ```yaml
-kind: tools
+kind: tool
 name: log_batch_events
 type: mongodb-insert-many
 source: my-mongo-source

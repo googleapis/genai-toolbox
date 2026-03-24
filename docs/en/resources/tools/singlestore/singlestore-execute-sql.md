@@ -25,7 +25,7 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: singlestore-execute-sql
 source: my-s2-instance

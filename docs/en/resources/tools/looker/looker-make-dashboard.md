@@ -27,7 +27,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: make_dashboard
 type: looker-make-dashboard
 source: looker-source

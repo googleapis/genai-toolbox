@@ -46,7 +46,7 @@ ClickHouse supports multiple protocols:
 ### Secure Connection Example
 
 ```yaml
-kind: sources
+kind: source
 name: secure-clickhouse-source
 type: clickhouse
 host: clickhouse.example.com
@@ -61,7 +61,7 @@ secure: true
 ### HTTP Protocol Example
 
 ```yaml
-kind: sources
+kind: source
 name: http-clickhouse-source
 type: clickhouse
 host: localhost

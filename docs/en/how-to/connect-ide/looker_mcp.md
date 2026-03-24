@@ -85,6 +85,15 @@ After you install Looker in the MCP Store, resources and tools from the server a
       }
     }
     ```
+   If you want to access tools to develop LookML as well as query data
+   and create content, change the following line
+   ```json
+          "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+   ```
+   to
+   ```json
+          "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker,looker-dev", "--stdio"],
+   ```
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -158,6 +167,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 1. Start Gemini-CLI with the `gemini` command and use the command `/mcp` to see
    the configured MCP tools.
@@ -187,6 +205,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 1. Restart Claude Code to apply the new configuration.
 {{% /tab %}}
@@ -213,6 +240,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
         }
       }
     }
+    ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
     ```
 
 1. Restart Claude desktop.
@@ -244,6 +280,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 1. You should see a green active status after the server is successfully
    connected.
@@ -271,6 +316,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
         }
       }
     }
+    ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
     ```
 
 1. Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
@@ -302,6 +356,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
       }
     }
     ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
+    ```
 
 {{% /tab %}}
 
@@ -328,7 +391,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/windows/amd64/toolb
         }
       }
     }
-
+    ```
+    If you want to access tools to develop LookML as well as query data
+    and create content, change the following line
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker"],
+    ```
+    to
+    ```json
+          "args": ["--stdio", "--prebuilt", "looker,looker-dev"],
     ```
 
 {{% /tab %}}
@@ -398,12 +469,20 @@ as well as get the database schema needed to write LookML effectively.
 1. **create_project_file**: Create a file in a project
 1. **update_project_file**: Update the contents of a file in a project
 1. **delete_project_file**: Delete a file in a project
+1. **get_project_directories**: Retrieves a list of project directories for a given LookML project.
+1. **create_project_directory**: Creates a new directory within a specified LookML project.
+1. **delete_project_directory**: Deletes a directory from a specified LookML project.
+1. **validate_project**: Check the syntax of a LookML project.
 1. **get_connections**: Get the list of connections
 1. **get_connection_schemas**: Get the list of schemas for a connection
 1. **get_connection_databases**: Get the list of databases for a connection
 1. **get_connection_tables**: Get the list of tables for a connection
 1. **get_connection_table_columns**: Get the list of columns for a table in a
-   connection
+  connection
+1. **get_lookml_tests**: Retrieves a list of available LookML tests for a project.
+1. **run_lookml_tests**: Executes specific LookML tests within a project.
+1. **create_view_from_table**: Generates boilerplate LookML views directly from the database schema.
+1. **project_git_branch**: Fetch and manipulate the git branch of a LookML project.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

@@ -30,7 +30,7 @@ The tool inherits the `project` and `location` from the source configuration.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: cancel_spark_batch
 type: serverless-spark-cancel-batch
 source: my-serverless-spark-source

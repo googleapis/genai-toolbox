@@ -379,20 +379,11 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)
 	}
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
 	switch paramType {
 	case TypeString:
 		a := &StringParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
-		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
 		}
 		return a, nil
 	case TypeInt:
@@ -403,11 +394,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
-		}
 		return a, nil
 	case TypeFloat:
 		a := &FloatParameter{}
@@ -416,11 +402,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		}
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
-		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
 		}
 		return a, nil
 	case TypeBool:
@@ -431,11 +412,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
-		}
 		return a, nil
 	case TypeArray:
 		a := &ArrayParameter{}
@@ -445,11 +421,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
-		}
 		return a, nil
 	case TypeMap:
 		a := &MapParameter{}
@@ -458,11 +429,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		}
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
-		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
 		}
 		return a, nil
 	}
@@ -519,7 +485,7 @@ type ParameterManifest struct {
 	Type                 string             `json:"type"`
 	Required             bool               `json:"required"`
 	Description          string             `json:"description"`
-	AuthServices         []string           `json:"authSources"`
+	AuthServices         []string           `json:"authServices"`
 	Items                *ParameterManifest `json:"items,omitempty"`
 	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
@@ -545,7 +511,6 @@ type CommonParameter struct {
 	AllowedValues  []any              `yaml:"allowedValues"`
 	ExcludedValues []any              `yaml:"excludedValues"`
 	AuthServices   []ParamAuthService `yaml:"authServices"`
-	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	EmbeddedBy     string             `yaml:"embeddedBy"`
 	ValueFromParam string             `yaml:"valueFromParam"`
 }

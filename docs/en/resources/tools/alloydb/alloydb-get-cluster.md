@@ -21,7 +21,7 @@ specified AlloyDB cluster. It is compatible with
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_specific_cluster
 type: alloydb-get-cluster
 source: my-alloydb-admin-source

@@ -36,7 +36,7 @@ func TestParseFromYamlCockroachDBExecuteSQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: execute_sql_tool
             type: cockroachdb-execute-sql
             source: my-crdb-instance

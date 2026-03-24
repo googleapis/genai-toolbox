@@ -117,11 +117,11 @@ func runAINLToolGetTest(t *testing.T) {
 					"description": "Simple tool to test end to end functionality.",
 					"parameters": []any{
 						map[string]any{
-							"name":        "question",
-							"type":        "string",
-							"required":    true,
-							"description": "The natural language question to ask.",
-							"authSources": []any{},
+							"name":         "question",
+							"type":         "string",
+							"required":     true,
+							"description":  "The natural language question to ask.",
+							"authServices": []any{},
 						},
 					},
 					"authRequired": []any{},

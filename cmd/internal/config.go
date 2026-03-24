@@ -30,7 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 )
 
-type ToolsFile struct {
+type Config struct {
 	Sources         server.SourceConfigs         `yaml:"sources"`
 	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
@@ -39,13 +39,13 @@ type ToolsFile struct {
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
 }
 
-type ToolsFileParser struct {
+type ConfigParser struct {
 	EnvVars map[string]string
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
 // also support ${ENV_NAME:default_value}.
-func (p *ToolsFileParser) parseEnv(input string) (string, error) {
+func (p *ConfigParser) parseEnv(input string) (string, error) {
 	re := regexp.MustCompile(`\$\{(\w+)(:([^}]*))?\}`)
 
 	if p.EnvVars == nil {
@@ -73,39 +73,39 @@ func (p *ToolsFileParser) parseEnv(input string) (string, error) {
 	return output, err
 }
 
-// ParseToolsFile parses the provided yaml into appropriate configs.
-func (p *ToolsFileParser) ParseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
-	var toolsFile ToolsFile
+// ParseConfig parses the provided yaml into appropriate configs.
+func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, error) {
+	var config Config
 	// Replace environment variables if found
 	output, err := p.parseEnv(string(raw))
 	if err != nil {
-		return toolsFile, fmt.Errorf("error parsing environment variables: %s", err)
+		return config, fmt.Errorf("error parsing environment variables: %s", err)
 	}
 	raw = []byte(output)
 
-	raw, err = ConvertToolsFile(raw)
+	raw, err = ConvertConfig(raw)
 	if err != nil {
-		return toolsFile, fmt.Errorf("error converting tools file: %s", err)
+		return config, fmt.Errorf("error converting config file: %s", err)
 	}
 
 	// Parse contents
-	toolsFile.Sources, toolsFile.AuthServices, toolsFile.EmbeddingModels, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
-		return toolsFile, err
+		return config, err
 	}
-	return toolsFile, nil
+	return config, nil
 }
 
-// ConvertToolsFile converts configuration file from v1 to v2 format.
-func ConvertToolsFile(raw []byte) ([]byte, error) {
+// ConvertConfig converts configuration file to flat format.
+func ConvertConfig(raw []byte) ([]byte, error) {
 	var input yaml.MapSlice
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 
-	// convert to tools file v2
+	// convert to config file v2
 	var buf bytes.Buffer
 	encoder := yaml.NewEncoder(&buf)
 
-	v1keys := []string{"sources", "authSources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	v1keys := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
 	for {
 		if err := decoder.Decode(&input); err != nil {
 			if err == io.EOF {
@@ -125,8 +125,19 @@ func ConvertToolsFile(raw []byte) ([]byte, error) {
 				// fail to convert to MapSlice
 				if slice, ok := item.Value.(yaml.MapSlice); ok {
 					// Deprecated: convert authSources to authServices
-					if key == "authSources" {
-						key = "authServices"
+					switch key {
+					case "authSources", "authServices":
+						key = "authService"
+					case "sources":
+						key = "source"
+					case "embeddingModels":
+						key = "embeddingModel"
+					case "tools":
+						key = "tool"
+					case "toolsets":
+						key = "toolset"
+					case "prompts":
+						key = "prompt"
 					}
 					transformed, err := transformDocs(key, slice)
 					if err != nil {
@@ -145,7 +156,7 @@ func ConvertToolsFile(raw []byte) ([]byte, error) {
 					// ---
 					// tools:
 					// - tool_a
-					// kind: toolsets
+					// kind: toolset
 					// ---
 					continue
 				}
@@ -170,7 +181,7 @@ func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 		if !ok {
 			return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
 		}
-		entryBody := processValue(entry.Value, kind == "toolsets")
+		entryBody := processValue(entry.Value, kind == "toolset")
 
 		currentTransformed := yaml.MapSlice{
 			{Key: "kind", Value: kind},
@@ -220,11 +231,11 @@ func processValue(v any, isToolset bool) any {
 	}
 }
 
-// mergeToolsFiles merges multiple ToolsFile structs into one.
+// mergeConfigs merges multiple Config structs into one.
 // Detects and raises errors for resource conflicts in sources, authServices, tools, and toolsets.
 // All resource names (sources, authServices, tools, toolsets) must be unique across all files.
-func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
-	merged := ToolsFile{
+func mergeConfigs(files ...Config) (Config, error) {
+	merged := Config{
 		Sources:         make(server.SourceConfigs),
 		AuthServices:    make(server.AuthServiceConfigs),
 		EmbeddingModels: make(server.EmbeddingModelConfigs),
@@ -295,49 +306,48 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	return merged, nil
 }
 
-// LoadAndMergeToolsFiles loads multiple YAML files and merges them
-func (p *ToolsFileParser) LoadAndMergeToolsFiles(ctx context.Context, filePaths []string) (ToolsFile, error) {
-	var toolsFiles []ToolsFile
+// LoadAndMergeConfigs loads multiple YAML files and merges them
+func (p *ConfigParser) LoadAndMergeConfigs(ctx context.Context, filePaths []string) (Config, error) {
+	var configs []Config
 
 	for _, filePath := range filePaths {
 		buf, err := os.ReadFile(filePath)
 		if err != nil {
-			return ToolsFile{}, fmt.Errorf("unable to read tool file at %q: %w", filePath, err)
+			return Config{}, fmt.Errorf("unable to read config file at %q: %w", filePath, err)
 		}
 
-		toolsFile, err := p.ParseToolsFile(ctx, buf)
+		config, err := p.ParseConfig(ctx, buf)
 		if err != nil {
-			return ToolsFile{}, fmt.Errorf("unable to parse tool file at %q: %w", filePath, err)
+			return Config{}, fmt.Errorf("unable to parse config file at %q: %w", filePath, err)
 		}
 
-		toolsFiles = append(toolsFiles, toolsFile)
+		configs = append(configs, config)
 	}
-	if len(toolsFiles) == 0 {
-		return ToolsFile{}, fmt.Errorf("no YAML files found")
+	if len(configs) == 0 {
+		return Config{}, fmt.Errorf("no YAML files found")
 	}
-
-	if len(toolsFiles) > 1 {
-		mergedFile, err := mergeToolsFiles(toolsFiles...)
+	if len(configs) > 1 {
+		mergedFile, err := mergeConfigs(configs...)
 		if err != nil {
-			return ToolsFile{}, fmt.Errorf("unable to merge tools files: %w", err)
+			return Config{}, fmt.Errorf("unable to merge config files: %w", err)
 		}
 		return mergedFile, nil
 	}
-	return toolsFiles[0], nil
+	return configs[0], nil
 }
 
-// GetPathsFromToolsFolder loads all YAML files from a directory and merges them
-func GetPathsFromToolsFolder(ctx context.Context, folderPath string) ([]string, error) {
+// GetPathsFromConfigFolder loads all YAML files from a directory and merges them
+func GetPathsFromConfigFolder(ctx context.Context, folderPath string) ([]string, error) {
 	// Check if directory exists
 	info, err := os.Stat(folderPath)
 	if err != nil {
-		return nil, fmt.Errorf("unable to access tools folder at %q: %w", folderPath, err)
+		return nil, fmt.Errorf("unable to access config folder at %q: %w", folderPath, err)
 	}
 	if !info.IsDir() {
 		return nil, fmt.Errorf("path %q is not a directory", folderPath)

@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: get-instances
 			type: cloud-sql-get-instance
 			description: "A tool to get cloud sql instances"
