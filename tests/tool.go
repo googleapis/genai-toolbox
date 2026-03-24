@@ -4783,10 +4783,13 @@ func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 			}
 		}
 
-		gotStr, err := ExecuteMCPToolCall(t, toolName, args, headers)
+		status, gotStr, err := ExecuteMCPToolCall(t, toolName, args, headers)
 		if err != nil {
-			// MCP tool call failed. Tests interpret error via StatusCode 500
-			return &http.Response{StatusCode: http.StatusInternalServerError}, []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+			// MCP tool call failed. Tests interpret error via StatusCode 500 or exactly what MCP returned.
+			if status == 0 || status == http.StatusOK {
+				status = http.StatusInternalServerError
+			}
+			return &http.Response{StatusCode: status}, []byte(err.Error())
 		}
 
 		// Legacy API schema expected {"result": "<string>"}

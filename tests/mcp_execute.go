@@ -37,7 +37,7 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 }
 
 // ExecuteMCPToolCall is a helper function to send HTTP requests to MCP endpoint and return the response
-func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any, requestHeader map[string]string) (string, error) {
+func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any, requestHeader map[string]string) (int, string, error) {
 	headers := NewMCPRequestHeader(t, requestHeader)
 
 	req := NewMCPCallToolRequest("1", toolName, arguments)
@@ -48,19 +48,19 @@ func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any,
 
 	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
-	}
-
 	var mcpResp MCPCallToolResponse
 	if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+		// If unmarshal fails on error HTTP code, bubble the exact string payload as error rather than crashing
+		if resp.StatusCode != http.StatusOK {
+			return resp.StatusCode, "", fmt.Errorf("%s", string(respBody))
+		}
 		t.Fatalf("error parsing mcp response body: %v\nraw body: %s", err, string(respBody))
 	}
 	if mcpResp.Error != nil {
-		return "", fmt.Errorf("MCP error %d: %s", mcpResp.Error.Code, mcpResp.Error.Message)
+		return resp.StatusCode, "", fmt.Errorf("MCP error %d: %s", mcpResp.Error.Code, mcpResp.Error.Message)
 	}
 	if len(mcpResp.Result.Content) == 0 {
-		return "null", nil
+		return resp.StatusCode, "null", nil
 	}
 
 	var contentText string
@@ -69,5 +69,5 @@ func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any,
 			contentText += c.Text
 		}
 	}
-	return strings.TrimSpace(contentText), nil
+	return resp.StatusCode, strings.TrimSpace(contentText), nil
 }
