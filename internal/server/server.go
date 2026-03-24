@@ -408,11 +408,18 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Use(hostCheck(allowedHostsMap))
 
 	// control plane
-	apiR, err := apiRouter(s)
-	if err != nil {
-		return nil, err
-	}
-	r.Mount("/api", apiR)
+	// legacy api redirect
+	r.Get("/api/*", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusGone)
+		_, _ = w.Write([]byte(`{"error": "The /api Native endpoints have been permanently moved to the standard /mcp JSON-RPC endpoint."}`))
+	})
+	r.Post("/api/*", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusGone)
+		_, _ = w.Write([]byte(`{"error": "The /api Native endpoints have been permanently moved to the standard /mcp JSON-RPC endpoint."}`))
+	})
+
 	mcpR, err := mcpRouter(s)
 	if err != nil {
 		return nil, err
