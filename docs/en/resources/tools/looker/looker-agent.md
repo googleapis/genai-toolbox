@@ -21,23 +21,23 @@ It's compatible with the following sources:
 To use the `looker-agent` tool, you must define it in your `server.yaml` file.
 
 ```yaml
-tools:
-  - name: agent_manage
-    type: looker-agent
-    source: my_looker_source
-    description: |
-      Manage Looker AI Agents. This tool allows you to perform various operations on Looker Agents, 
-      including listing all available agents, retrieving details for a specific agent, 
-      creating a new agent, and deleting an existing one.
+kind: tool
+name: agent_manage
+type: looker-agent
+source: my_looker_source
+description: |
+  Manage Looker AI Agents. This tool allows you to perform various operations on Looker Agents, 
+  including listing all available agents, retrieving details for a specific agent, 
+  creating a new agent, and deleting an existing one.
 
-      Parameters:
-      - operation (required): The action to perform.
-        - 'list': Returns a list of all existing agents. No other parameters needed.
-        - 'get': Retrieves detailed information about a specific agent. Requires 'agent_id'.
-        - 'create': Creates a new Looker AI Agent. Requires 'name'.
-        - 'delete': Removes an existing agent. Requires 'agent_id'.
-      - agent_id (optional): The unique identifier of the agent. Required for 'get' and 'delete' operations.
-      - name (optional): The display name for the new agent. Required for 'create' operation.
+  Parameters:
+  - operation (required): The action to perform.
+    - 'list': Returns a list of all existing agents. No other parameters needed.
+    - 'get': Retrieves detailed information about a specific agent. Requires 'agent_id'.
+    - 'create': Creates a new Looker AI Agent. Requires 'name'.
+    - 'delete': Removes an existing agent. Requires 'agent_id'.
+  - agent_id (optional): The unique identifier of the agent. Required for 'get' and 'delete' operations.
+  - name (optional): The display name for the new agent. Required for 'create' operation.
 ```
 
 ## Parameters
