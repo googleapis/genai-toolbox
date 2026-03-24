@@ -22,6 +22,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
+
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
 )
 
@@ -40,7 +42,7 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any, requestHeader map[string]string) (int, string, error) {
 	headers := NewMCPRequestHeader(t, requestHeader)
 
-	req := NewMCPCallToolRequest("1", toolName, arguments)
+	req := NewMCPCallToolRequest(uuid.New().String(), toolName, arguments)
 	reqBody, err := json.Marshal(req)
 	if err != nil {
 		t.Fatalf("error marshalling request body: %v", err)
