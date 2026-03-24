@@ -167,8 +167,10 @@ export function displayResults(results, responseArea, prettify) {
     try {
         let textContent = "";
         if (results.result && Array.isArray(results.result.content)) {
-            const textBlock = results.result.content.find(c => c.type === 'text');
-            textContent = textBlock ? textBlock.text : "";
+            textContent = results.result.content
+                .filter(c => c.type === 'text' && typeof c.text === 'string')
+                .map(c => c.text)
+                .join('\n');
         } else if (results.result && typeof results.result.content === 'string') {
             textContent = results.result.content;
         } else {
