@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -44,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	LookupContext(context.Context, string, []string) (any, error)
+	LookupContext(context.Context, string, []string) (*dataplexpb.LookupContextResponse, error)
 }
 
 type Config struct {

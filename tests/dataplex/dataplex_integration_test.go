@@ -903,16 +903,30 @@ func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, data
 				return
 			}
 
-			var result map[string]interface{}
-			if err := json.Unmarshal(bodyBytes, &result); err != nil {
+			var response map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &response); err != nil {
 				t.Fatalf("Error parsing response body: %v\nRaw body: %s", err, string(bodyBytes))
 			}
-			t.Logf("Response Body: %s", string(bodyBytes))
 
-			contextStr, hasContext := result[tc.wantContentKey].(string)
+			resultPayload, ok := response["result"]
+			if !ok {
+				t.Fatalf("Expected to find 'result' key in API response, got: %v", response)
+			}
+
+			resultStr, ok := resultPayload.(string)
+			if !ok {
+				t.Fatalf("Expected 'result' payload to be a JSON string, got: %T", resultPayload)
+			}
+
+			var innerResult map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &innerResult); err != nil {
+				t.Fatalf("Error parsing inner result string: %v\nRaw string: %s", err, resultStr)
+			}
+
+			contextStr, hasContext := innerResult[tc.wantContentKey].(string)
 
 			if !hasContext {
-				t.Fatalf("Expected to have key '%s' in response: %v", tc.wantContentKey, result)
+				t.Fatalf("Expected to have key '%s' in response: %v", tc.wantContentKey, innerResult)
 			}
 
 			if contextStr == "" || contextStr == "{}" || contextStr == "null" {
