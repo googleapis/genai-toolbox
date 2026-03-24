@@ -25,19 +25,26 @@ import (
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
 )
 
+func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[string]string {
+	headers := make(map[string]string)
+	for k, v := range customHeaders {
+		headers[k] = v
+	}
+	headers["Content-Type"] = "application/json"
+	headers["Mcp-Protocol-Version"] = v20250618.PROTOCOL_VERSION
+	if headers["Mcp-Session-Id"] == "" {
+		headers["Mcp-Session-Id"] = RunInitialize(t, v20250618.PROTOCOL_VERSION)
+	}
+	return headers
+}
+
 func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any, requestHeader map[string]string) (string, error) {
-	if requestHeader == nil {
-		requestHeader = make(map[string]string)
-	}
-	requestHeader["Content-Type"] = "application/json"
-	if requestHeader["Mcp-Session-Id"] == "" {
-		requestHeader["Mcp-Session-Id"] = RunInitialize(t, v20250618.PROTOCOL_VERSION)
-	}
+	headers := NewMCPRequestHeader(t, requestHeader)
 
 	req := NewMCPCallToolRequest("1", toolName, arguments)
 	reqBody, _ := json.Marshal(req)
 
-	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), requestHeader)
+	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
