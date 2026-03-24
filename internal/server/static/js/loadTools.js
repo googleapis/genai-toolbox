@@ -34,7 +34,8 @@ export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) 
             body: JSON.stringify({
                 jsonrpc: "2.0",
                 id: "1",
-                method: "tools/list"
+                method: "tools/list",
+                'Mcp-Protocol-Version': '2025-11-25'
             })
         });
         
