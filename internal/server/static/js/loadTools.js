@@ -119,6 +119,17 @@ function renderToolDetails(toolName, toolDisplayArea) {
 
     console.debug("Rendering tool object: ", toolObject);
 
+    let toolAuthRequired = [];
+    let toolAuthParams = {};
+    if (toolObject._meta) {
+        if (toolObject._meta["toolbox/authInvoke"]) {
+            toolAuthRequired = toolObject._meta["toolbox/authInvoke"];
+        }
+        if (toolObject._meta["toolbox/authParam"]) {
+            toolAuthParams = toolObject._meta["toolbox/authParam"];
+        }
+    }
+
     // Default processing if inputSchema properties are not present
     let toolParameters = [];
     if (toolObject.inputSchema && toolObject.inputSchema.properties) {
@@ -151,6 +162,7 @@ function renderToolDetails(toolName, toolDisplayArea) {
                 valueType: valueType, 
                 label: label,
                 required: requiredFields.includes(paramName),
+                authServices: toolAuthParams[paramName] || []
             };
         });
     }
@@ -159,7 +171,7 @@ function renderToolDetails(toolName, toolDisplayArea) {
         id: toolName,
         name: toolName,
         description: toolObject.description || "No description provided.",
-        authRequired: [], // Auth requirements are implicit or handled externally via config in MCP
+        authRequired: toolAuthRequired,
         parameters: toolParameters
     };
 

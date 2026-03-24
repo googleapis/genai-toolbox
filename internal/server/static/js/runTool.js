@@ -90,7 +90,11 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
             }
         };
 
-        const mcpHeaders = { ...headers, 'Content-Type': 'application/json' };
+        const mcpHeaders = { 
+            ...headers, 
+            'Content-Type': 'application/json',
+            'Mcp-Protocol-Version': '2025-11-25' // Latest MCP version, matches LATEST_PROTOCOL_VERSION in Go
+        };
 
         const response = await fetch(`/mcp`, {
             method: 'POST',
