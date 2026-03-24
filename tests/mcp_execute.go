@@ -25,6 +25,7 @@ import (
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
 )
 
+// NewMCPRequestHeader takes custom headers and append headers required for MCP
 func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[string]string {
 	headers := make(map[string]string)
 	for k, v := range customHeaders {
@@ -35,6 +36,7 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 	return headers
 }
 
+// ExecuteMCPToolCall is a helper function to send HTTP requests to MCP endpoint and return the response
 func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any, requestHeader map[string]string) (string, error) {
 	headers := NewMCPRequestHeader(t, requestHeader)
 
