@@ -40,7 +40,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-find
             source: my-instance
@@ -137,7 +137,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-find
             source: my-instance

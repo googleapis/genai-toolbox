@@ -40,7 +40,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-update-one
             source: my-instance
@@ -98,7 +98,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "false canonical",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-update-one
             source: my-instance
@@ -157,7 +157,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "true canonical",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-update-one
             source: my-instance
@@ -267,7 +267,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-update-one
             source: my-instance

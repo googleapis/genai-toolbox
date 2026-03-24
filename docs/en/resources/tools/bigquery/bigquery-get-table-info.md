@@ -35,7 +35,7 @@ The tool's behavior regarding these parameters is influenced by the
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: bigquery_get_table_info
 type: bigquery-get-table-info
 source: my-bigquery-source

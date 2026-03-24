@@ -24,7 +24,7 @@ and shouldn't be used for production agents.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: wait_for_tool
 type: wait
 description: Use this tool to pause execution for a specified duration.

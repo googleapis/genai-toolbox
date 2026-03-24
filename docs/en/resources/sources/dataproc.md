@@ -44,7 +44,7 @@ set up your ADC.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-dataproc-source
 type: dataproc
 project: my-project

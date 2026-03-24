@@ -54,7 +54,7 @@ layer of security by controlling which datasets can be accessed:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: bigquery-execute-sql
 source: my-bigquery-source

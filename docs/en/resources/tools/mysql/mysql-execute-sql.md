@@ -26,7 +26,7 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: mysql-execute-sql
 source: my-mysql-instance

@@ -18,13 +18,13 @@ with filters, ordering, and limit capabilities.
 To use this tool, you need to configure it in your YAML configuration file:
 
 ```yaml
-kind: sources
+kind: source
 name: my-firestore
 type: firestore
 project: my-gcp-project
 database: "(default)"
 ---
-kind: tools
+kind: tool
 name: query_collection
 type: firestore-query-collection
 source: my-firestore

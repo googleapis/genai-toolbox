@@ -30,7 +30,7 @@ the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_column_cardinality
 type: postgres-get-column-cardinality
 source: postgres-source

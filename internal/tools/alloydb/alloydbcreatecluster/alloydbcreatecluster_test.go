@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: create-my-cluster
             type: alloydb-create-cluster
             source: my-alloydb-admin-source
@@ -55,7 +55,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with auth required",
 			in: `
-            kind: tools
+            kind: tool
             name: create-my-cluster-auth
             type: alloydb-create-cluster
             source: my-alloydb-admin-source

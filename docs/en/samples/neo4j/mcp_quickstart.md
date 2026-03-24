@@ -61,14 +61,14 @@ Write the following into a `tools.yaml` file:
 \+
 
 ```yaml
-kind: sources
+kind: source
 name: my-neo4j-source
 type: neo4j
 uri: bolt://localhost:7687
 user: neo4j
 password: my-password # Replace with your actual password
 ---
-kind: tools
+kind: tool
 name: search-movies-by-actor
 type: neo4j-cypher
 source: my-neo4j-source
@@ -81,7 +81,7 @@ statement: |
   MATCH (p:Person {name: $actor_name}) -[:ACTED_IN]-> (m:Movie)
   RETURN m.title AS title, m.year AS year, m.genre AS genre
 ---
-kind: tools
+kind: tool
 name: get-actor-for-movie
 type: neo4j-cypher
 source: my-neo4j-source
@@ -100,7 +100,7 @@ Run the Toolbox server, pointing to the `tools.yaml` file you created earlier.
 \+
 
 ```bash
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 ## Step 3: Connect to MCP Inspector

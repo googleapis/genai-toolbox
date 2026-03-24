@@ -24,8 +24,8 @@ var (
 	OracleSourceType = "oracle"
 	OracleToolType   = "oracle-sql"
 	OracleHost       = os.Getenv("ORACLE_HOST")
-	OracleUser       = os.Getenv("ORACLE_USER")
-	OraclePass       = os.Getenv("ORACLE_PASS")
+	OracleUser       = os.Getenv("ORACLE_USERNAME")
+	OraclePass       = os.Getenv("ORACLE_PASSWORD")
 	OracleServerName = os.Getenv("ORACLE_SERVER_NAME")
 	OracleConnStr    = fmt.Sprintf(
 		"%s:%s/%s", OracleHost, "1521", OracleServerName)
@@ -36,9 +36,9 @@ func getOracleVars(t *testing.T) map[string]any {
 	case OracleHost:
 		t.Fatal("'ORACLE_HOST not set")
 	case OracleUser:
-		t.Fatal("'ORACLE_USER' not set")
+		t.Fatal("'ORACLE_USERNAME' not set")
 	case OraclePass:
-		t.Fatal("'ORACLE_PASS' not set")
+		t.Fatal("'ORACLE_PASSWORD' not set")
 	case OracleServerName:
 		t.Fatal("'ORACLE_SERVER_NAME' not set")
 	}
@@ -150,7 +150,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement\nHelp: https://docs.oracle.com/error-help/db/ora-00900/"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement\nHelp: https://docs.oracle.com/error-help/db/ora-00900/"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id NUMBER GENERATED AS IDENTITY PRIMARY KEY, name VARCHAR2(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 

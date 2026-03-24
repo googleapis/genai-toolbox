@@ -36,7 +36,7 @@ func TestParseFromYamlClickhouse(t *testing.T) {
 		{
 			desc: "all fields specified",
 			in: `
-			kind: sources
+			kind: source
 			name: test-clickhouse
 			type: clickhouse
 			host: localhost
@@ -64,7 +64,7 @@ func TestParseFromYamlClickhouse(t *testing.T) {
 		{
 			desc: "minimal configuration with defaults",
 			in: `
-			kind: sources
+			kind: source
 			name: minimal-clickhouse
 			type: clickhouse
 			host: 127.0.0.1
@@ -109,13 +109,13 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: test-clickhouse
 			type: clickhouse
 			host: localhost
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"test-clickhouse\" as \"clickhouse\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | host: localhost\n   3 | name: test-clickhouse\n   4 | type: clickhouse",
+			err: "error unmarshaling source: unable to parse source \"test-clickhouse\" as \"clickhouse\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | host: localhost\n   3 | name: test-clickhouse\n   4 | type: clickhouse",
 		},
 	}
 

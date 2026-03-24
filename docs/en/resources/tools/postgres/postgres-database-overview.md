@@ -23,7 +23,7 @@ This tool does not take any input parameters.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: database_overview
 type: postgres-database-overview
 source: cloudsql-pg-source

@@ -36,7 +36,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-installed-extensions
             source: my-pg-instance
@@ -58,7 +58,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 		{
 			desc: "basic example without authRequired",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-installed-extensions
             source: my-pg-instance
