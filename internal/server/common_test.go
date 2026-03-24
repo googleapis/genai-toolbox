@@ -162,11 +162,6 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	var r chi.Router
 	switch router {
-	case "api":
-		r, err = apiRouter(&server)
-		if err != nil {
-			t.Fatalf("unable to initialize api router: %s", err)
-		}
 	case "mcp":
 		r, err = mcpRouter(&server)
 		if err != nil {
