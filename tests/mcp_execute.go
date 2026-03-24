@@ -41,7 +41,10 @@ func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any,
 	headers := NewMCPRequestHeader(t, requestHeader)
 
 	req := NewMCPCallToolRequest("1", toolName, arguments)
-	reqBody, _ := json.Marshal(req)
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("error marshalling request body: %v", err)
+	}
 
 	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
 
