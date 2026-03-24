@@ -49,7 +49,7 @@ GROUP BY
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_locks
 type: postgres-list-locks
 source: postgres-source

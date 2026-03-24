@@ -126,7 +126,7 @@ identity used has been granted the correct IAM permissions.
 Initialize a BigQuery source that uses ADC:
 
 ```yaml
-kind: sources
+kind: source
 name: my-bigquery-source
 type: "bigquery"
 project: "my-project-id"
@@ -145,7 +145,7 @@ project: "my-project-id"
 Initialize a BigQuery source that uses the client's access token:
 
 ```yaml
-kind: sources
+kind: source
 name: my-bigquery-client-auth-source
 type: "bigquery"
 project: "my-project-id"

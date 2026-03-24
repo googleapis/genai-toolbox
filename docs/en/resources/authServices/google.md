@@ -40,7 +40,7 @@ id-token][provided-claims] can be used for the parameter.
 ## Example
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: ${YOUR_GOOGLE_CLIENT_ID}

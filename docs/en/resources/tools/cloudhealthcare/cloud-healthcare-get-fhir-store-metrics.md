@@ -20,7 +20,7 @@ compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_fhir_store_metrics
 type: cloud-healthcare-get-fhir-store-metrics
 source: my-healthcare-source

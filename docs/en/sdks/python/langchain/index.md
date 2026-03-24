@@ -1,53 +1,45 @@
 ---
-title: "LlamaIndex"
+title: "LangChain/LangGraph"
 type: docs
-weight: 4
+weight: 3
 description: >
-  MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
+  MCP Toolbox SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 ---
 
 ## Overview
 
-The `toolbox-llamaindex` package provides a Python interface to the MCP Toolbox service, enabling you to load and invoke tools from your own applications.
+The `toolbox-langchain` package provides a Python interface to the MCP Toolbox service, enabling you to load and invoke tools from your own applications.
 
 ## Installation
 
 ```bash
-pip install toolbox-llamaindex
+pip install toolbox-langchain
 ```
-
 ## Quickstart
 
 Here's a minimal example to get you started using
-[LlamaIndex](https://docs.llamaindex.ai/en/stable/#getting-started):
+[LangGraph](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent):
 
 ```py
-import asyncio
+from toolbox_langchain import ToolboxClient
+from langchain_google_vertexai import ChatVertexAI
+from langgraph.prebuilt import create_react_agent
 
-from llama_index.llms.google_genai import GoogleGenAI
-from llama_index.core.agent.workflow import AgentWorkflow
-
-from toolbox_llamaindex import ToolboxClient
-
-async def run_agent():
-  async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
     tools = toolbox.load_toolset()
 
-    vertex_model = GoogleGenAI(
-        model="gemini-3-flash-preview",
-        vertexai_config={"project": "project-id", "location": "us-central1"},
-    )
-    agent = AgentWorkflow.from_tools_or_functions(
-        tools,
-        llm=vertex_model,
-        system_prompt="You are a helpful assistant.",
-    )
-    response = await agent.run(user_msg="Get some response from the agent.")
-    print(response)
+    model = ChatVertexAI(model="gemini-3-flash-preview")
+    agent = create_react_agent(model, tools)
 
-asyncio.run(run_agent())
+    prompt = "How's the weather today?"
+
+    for s in agent.stream({"messages": [("user", prompt)]}, stream_mode="values"):
+        message = s["messages"][-1]
+        if isinstance(message, tuple):
+            print(message)
+        else:
+            message.pretty_print()
 ```
-
 {{< notice tip >}}
 For a complete, end-to-end example including setting up the service and using an SDK, see the full tutorial: [Toolbox Quickstart Tutorial](../../../getting-started/local_quickstart.md)
 {{< /notice >}}
@@ -57,7 +49,7 @@ For a complete, end-to-end example including setting up the service and using an
 Import and initialize the toolbox client.
 
 ```py
-from toolbox_llamaindex import ToolboxClient
+from toolbox_langchain import ToolboxClient
 
 # Replace with your Toolbox service's URL
 async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
@@ -79,26 +71,18 @@ You can explicitly select a protocol using the `protocol` option during client i
 | Constant | Description |
 | :--- | :--- |
 | `Protocol.MCP` | **(Default)** Alias for the default MCP version (currently `2025-06-18`). |
-| `Protocol.TOOLBOX` | **DEPRECATED**: The native Toolbox HTTP protocol. Will be removed on March 4, 2026. |
 | `Protocol.MCP_v20251125` | MCP Protocol version 2025-11-25. |
 | `Protocol.MCP_v20250618` | MCP Protocol version 2025-06-18. |
 | `Protocol.MCP_v20250326` | MCP Protocol version 2025-03-26. |
 | `Protocol.MCP_v20241105` | MCP Protocol version 2024-11-05. |
 
-{{< notice note >}}
-The **Native Toolbox Protocol** (`Protocol.TOOLBOX`) is deprecated and will be removed on **March 4, 2026**.
-Please migrate to using the **MCP Protocol** (`Protocol.MCP`), which is the default.
-{{< /notice >}}
-
 ### Example
 
-If you wish to use the native Toolbox protocol:
-
 ```py
-from toolbox_llamaindex import ToolboxClient
+from toolbox_langchain import ToolboxClient
 from toolbox_core.protocol import Protocol
 
-async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as toolbox:
+async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP) as toolbox:
     # Use client
     pass
 ```
@@ -106,7 +90,7 @@ async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.TOOLBOX) as 
 If you want to pin the MCP Version 2025-03-26:
 
 ```py
-from toolbox_llamaindex import ToolboxClient
+from toolbox_langchain import ToolboxClient
 from toolbox_core.protocol import Protocol
 
 async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP_v20250326) as toolbox:
@@ -138,63 +122,85 @@ tool = toolbox.load_tool("my-tool")
 Loading individual tools gives you finer-grained control over which tools are
 available to your LLM agent.
 
-## Use with LlamaIndex
+## Use with LangChain
 
-LlamaIndex's agents can dynamically choose and execute tools based on the user
+LangChain's agents can dynamically choose and execute tools based on the user
 input. Include tools loaded from the Toolbox SDK in the agent's toolkit:
 
 ```py
-from llama_index.llms.google_genai import GoogleGenAI
-from llama_index.core.agent.workflow import AgentWorkflow
+from langchain_google_vertexai import ChatVertexAI
 
-vertex_model = GoogleGenAI(
-    model="gemini-3-flash-preview",
-    vertexai_config={"project": "project-id", "location": "us-central1"},
-)
+model = ChatVertexAI(model="gemini-3-flash-preview")
 
 # Initialize agent with tools
-agent = AgentWorkflow.from_tools_or_functions(
-    tools,
-    llm=vertex_model,
-    system_prompt="You are a helpful assistant.",
-)
+agent = model.bind_tools(tools)
 
-# Query the agent
-response = await agent.run(user_msg="Get some response from the agent.")
-print(response)
+# Run the agent
+result = agent.invoke("Do something with the tools")
 ```
 
-### Maintain state
+## Use with LangGraph
 
-To maintain state for the agent, add context as follows:
+Integrate the Toolbox SDK with LangGraph to use Toolbox service tools within a
+graph-based workflow. Follow the [official
+guide](https://langchain-ai.github.io/langgraph/) with minimal changes.
+
+### Represent Tools as Nodes
+
+Represent each tool as a LangGraph node, encapsulating the tool's execution within the node's functionality:
 
 ```py
-from llama_index.core.agent.workflow import AgentWorkflow
-from llama_index.core.workflow import Context
-from llama_index.llms.google_genai import GoogleGenAI
+from toolbox_langchain import ToolboxClient
+from langgraph.graph import StateGraph, MessagesState
+from langgraph.prebuilt import ToolNode
 
-vertex_model = GoogleGenAI(
-    model="gemini-3-flash-preview",
-    vertexai_config={"project": "project-id", "location": "us-central1"},
-)
-agent = AgentWorkflow.from_tools_or_functions(
-    tools,
-    llm=vertex_model,
-    system_prompt="You are a helpful assistant.",
-)
+# Define the function that calls the model
+def call_model(state: MessagesState):
+    messages = state['messages']
+    response = model.invoke(messages)
+    return {"messages": [response]}  # Return a list to add to existing messages
 
-# Save memory in agent context
-ctx = Context(agent)
-response = await agent.run(user_msg="Give me some response.", ctx=ctx)
-print(response)
+model = ChatVertexAI(model="gemini-3-flash-preview")
+builder = StateGraph(MessagesState)
+tool_node = ToolNode(tools)
+
+builder.add_node("agent", call_model)
+builder.add_node("tools", tool_node)
+```
+
+### Connect Tools with LLM
+
+Connect tool nodes with LLM nodes. The LLM decides which tool to use based on
+input or context. Tool output can be fed back into the LLM:
+
+```py
+from typing import Literal
+from langgraph.graph import END, START
+from langchain_core.messages import HumanMessage
+
+# Define the function that determines whether to continue or not
+def should_continue(state: MessagesState) -> Literal["tools", END]:
+    messages = state['messages']
+    last_message = messages[-1]
+    if last_message.tool_calls:
+        return "tools"  # Route to "tools" node if LLM makes a tool call
+    return END  # Otherwise, stop
+
+builder.add_edge(START, "agent")
+builder.add_conditional_edges("agent", should_continue)
+builder.add_edge("tools", 'agent')
+
+graph = builder.compile()
+
+graph.invoke({"messages": [HumanMessage(content="Do something with the tools")]})
 ```
 
 ## Manual usage
 
-Execute a tool manually using the `call` method:
+Execute a tool manually using the `invoke` method:
 
 ```py
-result = tools[0].call(name="Alice", age=30)
+result = tools[0].invoke({"name": "Alice", "age": 30})
 ```
 
 This is useful for testing tools or when you need precise control over tool
@@ -205,7 +211,8 @@ execution outside of an agent framework.
 This section describes how to authenticate the ToolboxClient itself when
 connecting to a Toolbox server instance that requires authentication. This is
 crucial for securing your Toolbox server endpoint, especially when deployed on
-platforms like Cloud Run, GKE,  or any environment where unauthenticated access is restricted.
+platforms like Cloud Run, GKE, or any environment where unauthenticated access
+is restricted.
 
 This client-to-server authentication ensures that the Toolbox server can verify
 the identity of the client making the request before any tool is loaded or
@@ -241,11 +248,11 @@ that fresh credentials or header values can be used.
 You can configure these dynamic headers as follows:
 
 ```python
-from toolbox_llamaindex import ToolboxClient
+from toolbox_langchain import ToolboxClient
 
 async with ToolboxClient(
     "toolbox-url", 
-    client_headers={"header1": header1_getter, "header2": header2_getter},
+    client_headers={"header1": header1_getter, "header2": header2_getter, ...}
 ) as client:
 ```
 
@@ -257,7 +264,9 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 
 ### Step by Step Guide for Cloud Run
 
-1. **Configure Permissions**: [Grant](https://cloud.google.com/run/docs/securing/managing-access#service-add-principals) the `roles/run.invoker` IAM role on the Cloud
+1. **Configure Permissions**:
+   [Grant](https://cloud.google.com/run/docs/securing/managing-access#service-add-principals)
+   the `roles/run.invoker` IAM role on the Cloud
    Run service to the principal. This could be your `user account email` or a
    `service account`.
 2. **Configure Credentials**
@@ -269,18 +278,19 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 3. **Connect to the Toolbox Server**
 
     ```python
-    from toolbox_llamaindex import ToolboxClient
+    from toolbox_langchain import ToolboxClient
     from toolbox_core import auth_methods
 
-    auth_token_provider = auth_methods.aget_google_id_token(URL)
+    auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
     async with ToolboxClient(
         URL,
         client_headers={"Authorization": auth_token_provider},
     ) as client:
-        tools = await client.aload_toolset()
+        tools = client.load_toolset()
 
         # Now, you can use the client as usual.
     ```
+
 
 ## Authenticating Tools
 
@@ -336,7 +346,6 @@ auth_tool = toolbox.load_tool(auth_token_getters={"my_auth": get_auth_token})
 
 auth_tools = toolbox.load_toolset(auth_token_getters={"my_auth": get_auth_token})
 ```
-
 {{< notice note >}}
 Adding auth tokens during loading only affect the tools loaded within that call.
 {{< /notice >}}
@@ -345,7 +354,7 @@ Adding auth tokens during loading only affect the tools loaded within that call.
 
 ```py
 import asyncio
-from toolbox_llamaindex import ToolboxClient
+from toolbox_langchain import ToolboxClient
 
 async def get_auth_token():
     # ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
@@ -356,7 +365,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
     tool = toolbox.load_tool("my-tool")
 
     auth_tool = tool.add_auth_token_getter("my_auth", get_auth_token)
-    result = auth_tool.call(input="some input")
+    result = auth_tool.invoke({"input": "some input"})
     print(result)
 ```
 
@@ -391,7 +400,6 @@ bound_tool = toolbox.load_tool("my-tool", bound_params={"param": "value"})
 
 bound_tools = toolbox.load_toolset(bound_params={"param": "value"})
 ```
-
 {{< notice note >}}
 Bound values during loading only affect the tools loaded in that call.
 {{< /notice >}}
@@ -407,9 +415,8 @@ def get_dynamic_value():
 
 dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
-
 {{< notice note >}}
-You don't need to modify tool configurations to bind parameter values.
+You don’t need to modify tool configurations to bind parameter values.
 {{< /notice >}}
 
 ## Asynchronous Usage
@@ -424,7 +431,7 @@ Asynchronous interfaces like `aload_tool` and `aload_toolset` require an asynchr
 
 ```py
 import asyncio
-from toolbox_llamaindex import ToolboxClient
+from toolbox_langchain import ToolboxClient
 
 async def main():
     async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
@@ -435,3 +442,25 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics via the `toolbox-core` layer, following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp).
+
+First install the telemetry extra from `toolbox-core`:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+Then pass `telemetry_enabled=True` when creating your client:
+
+```py
+from toolbox_langchain import ToolboxClient
+
+with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = toolbox.load_tool("my-tool")
+    result = tool.invoke({"param": "value"})
+```
+
+Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/core/#opentelemetry) for a full setup example.

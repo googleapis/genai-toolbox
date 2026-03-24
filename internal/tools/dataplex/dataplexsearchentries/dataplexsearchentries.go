@@ -45,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	SearchEntries(context.Context, string, int, string) ([]*dataplexpb.SearchEntriesResult, error)
+	SearchEntries(context.Context, string, int, string, string) ([]*dataplexpb.SearchEntriesResult, error)
 }
 
 type Config struct {
@@ -65,9 +65,10 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	query := parameters.NewStringParameter("query", "The query against which entries in scope should be matched.")
+	scope := parameters.NewStringParameterWithDefault("scope", "", "A scope limits the search space to a particular project or organization. It must be in the format: organizations/<org_id> or projects/<project_id> or projects/<project_number>.")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	params := parameters.Parameters{query, pageSize, orderBy}
+	params := parameters.Parameters{query, scope, pageSize, orderBy}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
@@ -113,7 +114,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
 	}
-	resp, err := source.SearchEntries(ctx, query, pageSize, orderBy)
+	scope, ok := paramsMap["scope"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'scope' parameter: %v", paramsMap["scope"]), nil)
+	}
+	resp, err := source.SearchEntries(ctx, query, pageSize, orderBy, scope)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

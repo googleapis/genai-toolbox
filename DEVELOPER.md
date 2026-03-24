@@ -50,7 +50,7 @@ This section details the purpose and conventions for MCP Toolbox's tools naming
 properties, **tool name** and **tool type**.
 
 ```
-kind: tools
+kind: tool
 name: cancel_hotel <- tool name
 type: postgres-sql  <- tool type
 source: my_pg_source
@@ -88,6 +88,42 @@ The following guidelines apply to tool types:
 * Should use product name in name (e.g. `firestore-list-collections` over
   `list-collections`).
 * Changes to tool type are breaking changes and should be avoided.
+
+### Tool Invocation & Error Handling
+
+To align with the Model Context Protocol (MCP) and ensure robust agentic workflows, Toolbox distinguishes between errors the agent can fix and errors that require developer intervention.
+
+#### Error Categorization
+
+When implementing `Invoke()` or `ParseParams()`, you must return the appropriate error type from `internal/util/errors.go`. This allows the LLM to attempt a "self-correct" for Agent Errors while signaling a hard stop for Server Errors.
+
+| Category | Description | HTTP Status | MCP Result |
+|---|---|---|---|
+| **Agent Error** (`AgentError`) | Input/Execution logic errors (e.g., SQL syntax, missing records, invalid params). The agent can fix this. | 200 OK | `isError: true` |
+| **Server Error** (`ClientServerError`) | Infrastructure failures (e.g., DB down, auth failure, network failure). The agent cannot fix this. | 500 Internal Error | JSON-RPC Error |
+
+#### Implementation Guidelines
+
+**Use Typed Errors**: Refactor or implement the `Tool` interface methods to return `util.ToolboxError`.
+
+**In `Invoke()`:**
+*   **Agent Error**: Wrap database driver errors (syntax, constraint violations) in `AgentError`.
+*   **Server Error**: Wrap connection failures or internal logic crashes in `ClientServerError`.
+
+**In `ParseParams()`:**
+*   Return `ToolboxError` for missing required parameters or wrong types.
+*   Return `ClientServerError` for failures in resolving authenticated parameters (e.g., invalid tokens).
+
+**Example:**
+
+func (t *MyTool) Invoke(ctx context.Context, sp tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+    res, err := t.db.Exec(ctx, params.SQL)
+    if err != nil {
+        // Driver error is likely a syntax issue the LLM can fix
+        return nil, util.NewAgentError("error executing SQL query", err)
+    }
+    return res, nil
+}
 
 ## Implementation Guides
 

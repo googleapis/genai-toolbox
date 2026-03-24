@@ -87,7 +87,7 @@ Currently, this source only uses standard authentication. You will need to
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-mssql-instance
 type: cloud-sql-mssql
 project: my-project

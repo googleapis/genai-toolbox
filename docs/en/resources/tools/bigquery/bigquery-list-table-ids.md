@@ -34,7 +34,7 @@ will be used as the default value for the `dataset` parameter.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: bigquery_list_table_ids
 type: bigquery-list-table-ids
 source: my-bigquery-source

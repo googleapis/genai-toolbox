@@ -20,12 +20,12 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-gda-source
 type: cloud-gemini-data-analytics
 projectId: my-project-id
 ---
-kind: sources
+kind: source
 name: my-oauth-gda-source
 type: cloud-gemini-data-analytics
 projectId: my-project-id

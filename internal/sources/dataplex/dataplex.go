@@ -146,7 +146,7 @@ func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectT
 	return result, nil
 }
 
-func (s *Source) searchRequest(ctx context.Context, query string, pageSize int, orderBy string) (*dataplexapi.SearchEntriesResultIterator, error) {
+func (s *Source) searchRequest(ctx context.Context, query string, pageSize int, orderBy string, scope string) (*dataplexapi.SearchEntriesResultIterator, error) {
 	// Create SearchEntriesRequest with the provided parameters
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query,
@@ -154,6 +154,10 @@ func (s *Source) searchRequest(ctx context.Context, query string, pageSize int, 
 		PageSize:       int32(pageSize),
 		OrderBy:        orderBy,
 		SemanticSearch: true,
+	}
+
+	if scope != "" {
+		req.Scope = scope
 	}
 
 	// Perform the search using the CatalogClient - this will return an iterator
@@ -166,7 +170,7 @@ func (s *Source) searchRequest(ctx context.Context, query string, pageSize int, 
 
 func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize int, orderBy string) ([]*dataplexpb.AspectType, error) {
 	q := query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype"
-	it, err := s.searchRequest(ctx, q, pageSize, orderBy)
+	it, err := s.searchRequest(ctx, q, pageSize, orderBy, "")
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +220,8 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 	return results, nil
 }
 
-func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, orderBy string) ([]*dataplexpb.SearchEntriesResult, error) {
-	it, err := s.searchRequest(ctx, query, pageSize, orderBy)
+func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, orderBy string, scope string) ([]*dataplexpb.SearchEntriesResult, error) {
+	it, err := s.searchRequest(ctx, query, pageSize, orderBy, scope)
 	if err != nil {
 		return nil, err
 	}

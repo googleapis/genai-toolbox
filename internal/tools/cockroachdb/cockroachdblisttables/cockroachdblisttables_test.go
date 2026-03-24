@@ -36,7 +36,7 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: list_tables_tool
             type: cockroachdb-list-tables
             source: my-crdb-instance

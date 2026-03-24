@@ -18,11 +18,11 @@ Here is an example of how to configure the `cloud-sql-mysql-create-instance`
 tool in your `tools.yaml` file:
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-admin-source
 type: cloud-sql-admin
 ---
-kind: tools
+kind: tool
 name: create_my_mysql_instance
 type: cloud-sql-mysql-create-instance
 source: my-cloud-sql-admin-source
