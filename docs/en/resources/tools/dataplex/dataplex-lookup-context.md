@@ -3,14 +3,14 @@ title: "dataplex-lookup-context"
 type: docs
 weight: 1
 description: > 
-  A "dataplex-lookup-context" tool retrieves metadata of data assets.
+  A `dataplex-lookup-context` tool provides rich metadata of one or more data assets along with their relationships.
 aliases:
 - /resources/tools/dataplex-lookup-context
 ---
 
 ## About
 
-A `dataplex-lookup-context` tool retrieves metadata of data assets.
+A `dataplex-lookup-context` tool provides rich metadata of one or more data assets along with their relationships.
 It's compatible with the following sources:
 
 - [dataplex](../../sources/dataplex.md)
@@ -53,11 +53,11 @@ rather than an access denied error.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: lookup_context
 type: dataplex-lookup-context
 source: my-dataplex-source
-description: Use this tool to retrieve metadata of Data Assets.
+description: Use this tool to retrieve rich metadata regarding one or more data assets along with their relationships.
 ```
 
 ## Reference
