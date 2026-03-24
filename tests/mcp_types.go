@@ -19,12 +19,18 @@ import (
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
 )
 
+// CallToolParams represents the internal payload of an MCP tool call request
+type CallToolParams struct {
+	Name      string         `json:"name"`
+	Arguments map[string]any `json:"arguments,omitempty"`
+}
+
 // MCPCallToolRequest encapsulates the standard JSON-RPC request format targeting tools/call
 type MCPCallToolRequest struct {
-	Jsonrpc string                    `json:"jsonrpc"`
-	Id      jsonrpc.RequestId         `json:"id"`
-	Method  string                    `json:"method"`
-	Params  v20250618.CallToolRequest `json:"params"`
+	Jsonrpc string            `json:"jsonrpc"`
+	Id      jsonrpc.RequestId `json:"id"`
+	Method  string            `json:"method"`
+	Params  CallToolParams    `json:"params"`
 }
 
 // MCPCallToolResponse provides a strongly-typed unmarshal target for MCP tool call results,
@@ -38,12 +44,13 @@ type MCPCallToolResponse struct {
 
 // NewMCPCallToolRequest is a helper to quickly generate a standard jsonrpc request payload.
 func NewMCPCallToolRequest(id jsonrpc.RequestId, toolName string, args map[string]any) MCPCallToolRequest {
-	req := MCPCallToolRequest{
+	return MCPCallToolRequest{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
 		Method:  v20250618.TOOLS_CALL,
+		Params: CallToolParams{
+			Name:      toolName,
+			Arguments: args,
+		},
 	}
-	req.Params.Params.Name = toolName
-	req.Params.Params.Arguments = args
-	return req
 }
