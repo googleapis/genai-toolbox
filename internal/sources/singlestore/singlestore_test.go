@@ -34,7 +34,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -58,7 +58,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with query timeout",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -105,7 +105,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -115,12 +115,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-s2-instance\" as \"singlestore\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-s2-instance\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-s2-instance\" as \"singlestore\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-s2-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			port: my-port
@@ -128,7 +128,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-s2-instance\" as \"singlestore\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-s2-instance\" as \"singlestore\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

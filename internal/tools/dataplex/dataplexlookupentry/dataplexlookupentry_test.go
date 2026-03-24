@@ -37,7 +37,7 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: dataplex-lookup-entry
             source: my-instance
@@ -56,7 +56,7 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: dataplex-lookup-entry
             source: my-instance

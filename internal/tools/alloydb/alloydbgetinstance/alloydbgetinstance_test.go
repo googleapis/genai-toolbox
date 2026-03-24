@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: get-my-instance
             type: alloydb-get-instance
             source: my-alloydb-admin-source
@@ -55,7 +55,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with auth required",
 			in: `
-            kind: tools
+            kind: tool
             name: get-my-instance-auth
             type: alloydb-get-instance
             source: my-alloydb-admin-source

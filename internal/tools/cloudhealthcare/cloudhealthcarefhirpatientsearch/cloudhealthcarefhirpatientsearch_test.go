@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareFHIRPatientSearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-fhir-patient-search
             source: my-instance

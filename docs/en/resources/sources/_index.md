@@ -7,7 +7,7 @@ description: >
 ---
 
 A Source represents a data sources that a tool can interact with. You can define
-Sources as a map in the `sources` section of your `tools.yaml` file. Typically,
+Sources as a map in the `source` section of your `tools.yaml` file. Typically,
 a source configuration will contain any information needed to connect with and
 interact with the database.
 
@@ -17,7 +17,7 @@ instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-source
 type: cloud-sql-postgres
 project: my-project-id

@@ -37,7 +37,7 @@ parameter to validate a query without executing it.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: query_neo4j
 type: neo4j-execute-cypher
 source: my-neo4j-prod-db

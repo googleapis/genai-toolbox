@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareRetrieveRenderedDICOMInstance(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-retrieve-rendered-dicom-instance
             source: my-instance

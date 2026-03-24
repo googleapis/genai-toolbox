@@ -36,7 +36,7 @@ func TestParseFromYamlmssqlListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mssql-list-tables
             source: my-mssql-instance

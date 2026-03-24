@@ -42,7 +42,7 @@ to be executed after argument expansion will be `[SADD, userNames, Alice, Sid, B
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: user_data_tool
 type: redis
 source: my-redis-instance

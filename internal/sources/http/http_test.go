@@ -34,7 +34,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -52,7 +52,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -111,16 +111,16 @@ func TestFailParseFromYaml(t *testing.T) {
 				api-key: test_api_key
 			project: test-project
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | name: my-http-instance\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s\n   9 | ",
+			err: "error unmarshaling source: unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | name: my-http-instance\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s\n   9 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			baseUrl: http://test_server/
 			`,
-			err: "error unmarshaling sources: missing 'type' field or it is not a string",
+			err: "error unmarshaling source: missing 'type' field or it is not a string",
 		},
 	}
 	for _, tc := range tcs {

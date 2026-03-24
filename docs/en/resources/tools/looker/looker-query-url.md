@@ -32,7 +32,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: query_url
 type: looker-query-url
 source: looker-source

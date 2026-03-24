@@ -37,7 +37,7 @@ The tool gets the `project` and `location` from the source configuration.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_spark_sessions
 type: serverless-spark-list-sessions
 source: my-serverless-spark-source

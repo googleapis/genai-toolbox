@@ -28,7 +28,7 @@ of tables) as part of the logical replication feature. The tool takes the follow
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_indexes
 type: postgres-list-publication-tables
 source: postgres-source

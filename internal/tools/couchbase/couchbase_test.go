@@ -38,7 +38,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: couchbase-sql
 			source: my-couchbase-instance
@@ -67,7 +67,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with template",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: couchbase-sql
 			source: my-couchbase-instance

@@ -36,7 +36,7 @@ func TestParseFromYamlBigQueryListDatasetIds(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: bigquery-list-dataset-ids
             source: my-instance
