@@ -121,7 +121,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-monitoring-query-prometheus
 			source: my-instance
@@ -140,7 +140,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-monitoring-query-prometheus
 			source: my-instance
@@ -186,7 +186,7 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "Invalid type",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: invalid-type
 			source: my-instance
@@ -197,7 +197,7 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "missing source",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-monitoring-query-prometheus
 			description: some description
@@ -207,7 +207,7 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "missing description",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-monitoring-query-prometheus
 			source: my-instance

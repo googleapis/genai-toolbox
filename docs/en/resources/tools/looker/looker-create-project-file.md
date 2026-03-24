@@ -22,7 +22,7 @@ as well as the file content.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: create_project_file
 type: looker-create-project-file
 source: looker-source

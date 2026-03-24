@@ -34,7 +34,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			connectionString: localhost
@@ -58,7 +58,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "with TLS configuration",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			connectionString: couchbases://localhost
@@ -112,7 +112,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			connectionString: localhost
@@ -122,12 +122,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			scope: inventory
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | name: my-couchbase-instance\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
+			err: "error unmarshaling source: unable to parse source \"my-couchbase-instance\" as \"couchbase\": [3:1] unknown field \"foo\"\n   1 | bucket: travel-sample\n   2 | connectionString: localhost\n>  3 | foo: bar\n       ^\n   4 | name: my-couchbase-instance\n   5 | password: password\n   6 | scope: inventory\n   7 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-couchbase-instance
 			type: couchbase
 			username: Administrator
@@ -135,7 +135,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			bucket: travel-sample
 			scope: inventory
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-couchbase-instance\" as \"couchbase\": Key: 'Config.ConnectionString' Error:Field validation for 'ConnectionString' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-couchbase-instance\" as \"couchbase\": Key: 'Config.ConnectionString' Error:Field validation for 'ConnectionString' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

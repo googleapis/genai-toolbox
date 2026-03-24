@@ -16,7 +16,7 @@ This tool uses a `source` of type `cloud-sql-admin`.
 Basic backup restore
 
 ```yaml
-kind: tools
+kind: tool
 name: backup-restore-basic
 type: cloud-sql-restore-backup
 source: cloud-sql-admin-source

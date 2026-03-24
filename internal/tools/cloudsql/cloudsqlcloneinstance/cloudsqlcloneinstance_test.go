@@ -37,7 +37,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: clone-instance-tool
 			type: cloud-sql-clone-instance
 			description: a test description

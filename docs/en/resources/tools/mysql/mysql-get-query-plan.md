@@ -23,7 +23,7 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_query_plan_tool
 type: mysql-get-query-plan
 source: my-mysql-instance

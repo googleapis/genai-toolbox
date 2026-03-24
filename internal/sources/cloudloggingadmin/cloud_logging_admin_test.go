@@ -32,7 +32,7 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -48,7 +48,7 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "with client oauth",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -66,7 +66,7 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "with service account impersonation",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
@@ -104,22 +104,22 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			project: my-project
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-logging-admin\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: cloud-logging-admin",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"cloud-logging-admin\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: cloud-logging-admin",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: cloud-logging-admin
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-logging-admin\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"cloud-logging-admin\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

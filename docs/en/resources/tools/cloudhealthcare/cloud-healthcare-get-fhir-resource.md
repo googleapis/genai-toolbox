@@ -23,7 +23,7 @@ by its type and ID.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_fhir_resource
 type: cloud-healthcare-get-fhir-resource
 source: my-healthcare-source

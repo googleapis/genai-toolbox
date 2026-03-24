@@ -19,7 +19,7 @@ allowing tools to execute SQL queries against it.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-couchbase-instance
 type: couchbase
 connectionString: couchbase://localhost

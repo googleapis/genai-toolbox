@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareGetFHIRStoreMetrics(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-get-fhir-store-metrics
             source: my-instance

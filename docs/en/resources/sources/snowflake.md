@@ -31,7 +31,7 @@ Snowflake user to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-sf-source
 type: snowflake
 account: ${SNOWFLAKE_ACCOUNT}

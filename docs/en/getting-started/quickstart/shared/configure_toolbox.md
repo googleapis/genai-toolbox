@@ -33,7 +33,7 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-pg-source
     type: postgres
     host: 127.0.0.1
@@ -42,7 +42,7 @@ In this section, we will download Toolbox, configure our tools in a
     user: toolbox_user
     password: my-password
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-name
     type: postgres-sql
     source: my-pg-source
@@ -53,7 +53,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The name of the hotel.
     statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-location
     type: postgres-sql
     source: my-pg-source
@@ -64,7 +64,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The location of the hotel.
     statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
     ---
-    kind: tools
+    kind: tool
     name: book-hotel
     type: postgres-sql
     source: my-pg-source
@@ -76,7 +76,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The ID of the hotel to book.
     statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
     ---
-    kind: tools
+    kind: tool
     name: update-hotel
     type: postgres-sql
     source: my-pg-source
@@ -97,7 +97,7 @@ In this section, we will download Toolbox, configure our tools in a
       UPDATE hotels SET checkin_date = CAST($2 as date), checkout_date = CAST($3
       as date) WHERE id = $1;
     ---
-    kind: tools
+    kind: tool
     name: cancel-hotel
     type: postgres-sql
     source: my-pg-source
@@ -108,7 +108,7 @@ In this section, we will download Toolbox, configure our tools in a
         description: The ID of the hotel to cancel.
     statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
     ---
-    kind: toolsets
+    kind: toolset
     name: my-toolset
     tools:
       - search-hotels-by-name
@@ -123,7 +123,7 @@ In this section, we will download Toolbox, configure our tools in a
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
     {{< notice note >}}

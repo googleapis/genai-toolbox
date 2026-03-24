@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGetProjectDirectories(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-project-directories
             source: my-instance
@@ -82,14 +82,14 @@ func TestFailParseFromYamlLookerGetProjectDirectories(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-project-directories
             source: my-instance
             method: GOT
             description: some description
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"example_tool\" as type \"looker-get-project-directories\": [3:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n>  3 | method: GOT\n       ^\n   4 | name: example_tool\n   5 | source: my-instance\n   6 | type: looker-get-project-directories",
+			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-get-project-directories\": [3:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n>  3 | method: GOT\n       ^\n   4 | name: example_tool\n   5 | source: my-instance\n   6 | type: looker-get-project-directories",
 		},
 	}
 	for _, tc := range tcs {

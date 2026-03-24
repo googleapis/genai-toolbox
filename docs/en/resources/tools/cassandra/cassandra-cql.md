@@ -31,7 +31,7 @@ the form of placeholders `?`.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_users_by_email
 type: cassandra-cql
 source: my-cassandra-cluster
@@ -63,7 +63,7 @@ parameters:
 > [templateParameters](../#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_keyspace_table
 type: cassandra-cql
 source: my-cassandra-cluster
