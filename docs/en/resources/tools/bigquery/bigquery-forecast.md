@@ -58,7 +58,7 @@ the `bigquery` source:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: forecast_tool
 type: bigquery-forecast
 source: my-bigquery-source

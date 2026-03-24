@@ -154,7 +154,7 @@ async function fetchToolDetails(toolName, toolDisplayArea) {
                     type: inputType,    
                     valueType: valueType, 
                     label: label,
-                    authServices: param.authSources,
+                    authServices: param.authServices, // TODO: to be updated when the native endpoint is no longer supported.
                     required: param.required || false,
                     // defaultValue: param.default, can't do this yet bc tool manifest doesn't have default
                 };

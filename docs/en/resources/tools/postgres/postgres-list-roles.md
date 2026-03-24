@@ -26,7 +26,7 @@ takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_indexes
 type: postgres-list-roles
 source: postgres-source

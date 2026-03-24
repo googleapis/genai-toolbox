@@ -32,7 +32,7 @@ Here is an example that calculates the average price and total count of products
 for each category, but only for products with an "active" status.
 
 ```yaml
-kind: tools
+kind: tool
 name: get_category_stats
 type: mongodb-aggregate
 source: my-mongo-source

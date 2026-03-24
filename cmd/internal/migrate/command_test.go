@@ -52,7 +52,7 @@ sources:
     user: my_user
     password: my_pass`
 
-	toolsFileContentNew := `kind: sources
+	toolsFileContentNew := `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -74,7 +74,7 @@ tools:
         type: string
         description: some description`
 
-	toolsFileContent2New := `kind: tools
+	toolsFileContent2New := `kind: tool
 name: example_tool2
 type: postgres-sql
 source: my-pg-instance
@@ -268,7 +268,7 @@ sources:
     password: my_pass
 `
 
-	toolsFileContentNew := `kind: sources
+	toolsFileContentNew := `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -290,7 +290,7 @@ tools:
         type: string
         description: some description`
 
-	toolsFileContent2New := `kind: tools
+	toolsFileContent2New := `kind: tool
 name: example_tool2
 type: postgres-sql
 source: my-pg-instance

@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic precheck example",
 			in: `
-			kind: tools
+			kind: tool
 			name: precheck-upgrade-tool
 			type: postgres-upgrade-precheck
 			description: a precheck test description
@@ -57,7 +57,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "precheck example with no auth",
 			in: `
-			kind: tools
+			kind: tool
 			name: precheck-upgrade-tool-no-auth
 			type: postgres-upgrade-precheck
 			description: a precheck test description no auth

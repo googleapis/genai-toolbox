@@ -34,7 +34,7 @@ connections must authenticate in order to connect.
 Specify your AUTH string in the password field:
 
 ```yaml
-kind: sources
+kind: source
 name: my-redis-instance
 type: redis
 address:
@@ -62,7 +62,7 @@ string.
 Here is an example tools.yaml config with [AUTH][auth] enabled:
 
 ```yaml
-kind: sources
+kind: source
 name: my-redis-cluster-instance
 type: redis
 address:
@@ -79,7 +79,7 @@ Here is an example tools.yaml config for Memorystore Redis Cluster instances
 using IAM authentication:
 
 ```yaml
-kind: sources
+kind: source
 name: my-redis-cluster-instance
 type: redis
 address:

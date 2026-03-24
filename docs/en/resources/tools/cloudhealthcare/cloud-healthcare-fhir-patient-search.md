@@ -21,7 +21,7 @@ given criteria.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: fhir_patient_search
 type: cloud-healthcare-fhir-patient-search
 source: my-healthcare-source

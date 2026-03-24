@@ -8,11 +8,11 @@ description: >
 ---
 
 A tool represents an action your agent can take, such as running a SQL
-statement. You can define Tools as a map in the `tools` section of your
+statement. You can define Tools as a map with the `tool` kind in your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: postgres-sql
 source: my-pg-instance
@@ -204,7 +204,7 @@ the required [authServices](../authServices/) to specific claims within the
 user's ID token.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_flights_by_user_id
 type: postgres-sql
 source: my-pg-instance
@@ -215,7 +215,7 @@ parameters:
     type: string
     description: Auto-populated from Google login
     authServices:
-      # Refer to one of the `authServices` defined
+      # Refer to one of the `authService` defined
       - name: my-google-auth
         # `sub` is the OIDC claim field for user ID
         field: sub
@@ -255,7 +255,7 @@ can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
-kind: tools
+kind: tool
 name: select_columns_from_table
 type: postgres-sql
 source: my-pg-instance
@@ -300,13 +300,13 @@ specifying an `authRequired` field. Specify a list of
 [authServices](../authServices/) defined in the previous section.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_all_flight
 type: postgres-sql
 source: my-pg-instance
 statement: |
   SELECT * FROM flights
-# A list of `authServices` defined previously
+# A list of `authService` defined previously
 authRequired:
   - my-google-auth
   - other-auth-service
@@ -332,16 +332,16 @@ and provide appropriate user experiences.
 Annotations can be specified in YAML tool configuration:
 
 ```yaml
-tools:
-  my_query_tool:
-    kind: mongodb-find-one
-    source: my-mongodb
-    description: Find a single document
-    database: mydb
-    collection: users
-    annotations:
-      readOnlyHint: true
-      idempotentHint: true
+kind: tool
+name: my_query_tool
+type: mongodb-find-one
+source: my-mongodb
+description: Find a single document
+database: mydb
+collection: users
+annotations:
+  readOnlyHint: true
+  idempotentHint: true
 ```
 
 ### Default Annotations

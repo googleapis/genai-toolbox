@@ -50,7 +50,7 @@ information.
 ## Example
 
 ```yaml
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001

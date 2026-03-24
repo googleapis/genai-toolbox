@@ -68,7 +68,7 @@ setup_toolbox() {
   echo "${TOOLS_YAML_CONTENT}" > "$TOOLBOX_YAML"
   wget -q "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -O "/toolbox"
   chmod +x "/toolbox"
-  /toolbox --tools-file "$TOOLBOX_YAML" > "$TOOLBOX_LOG" 2>&1 &
+  /toolbox --config "$TOOLBOX_YAML" > "$TOOLBOX_LOG" 2>&1 &
   TOOLBOX_PID=$!
   
   # Health Check

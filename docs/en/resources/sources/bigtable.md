@@ -59,7 +59,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-bigtable-source
 type: "bigtable"
 project: "my-project-id"

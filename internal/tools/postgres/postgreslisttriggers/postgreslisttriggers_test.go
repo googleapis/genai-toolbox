@@ -36,7 +36,7 @@ func TestParseFromYamlPostgreslistTriggers(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-triggers
             source: my-postgres-instance
@@ -58,7 +58,7 @@ func TestParseFromYamlPostgreslistTriggers(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-triggers
             source: my-postgres-instance

@@ -29,7 +29,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: ask_data_insights
 type: looker-conversational-analytics
 source: looker-source

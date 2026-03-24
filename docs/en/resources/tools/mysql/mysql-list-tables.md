@@ -33,7 +33,7 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: mysql_list_tables
 type: mysql-list-tables
 source: mysql-source

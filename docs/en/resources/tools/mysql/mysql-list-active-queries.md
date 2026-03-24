@@ -27,7 +27,7 @@ This tool takes 2 optional input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_active_queries
 type: mysql-list-active-queries
 source: my-mysql-instance

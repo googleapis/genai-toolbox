@@ -103,7 +103,7 @@ CREATE EXTENSION IF NOT EXISTS parameterized_views;
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: ask_questions
 type: alloydb-ai-nl
 source: my-alloydb-source

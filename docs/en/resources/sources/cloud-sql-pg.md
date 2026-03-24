@@ -178,7 +178,7 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-pg-source
 type: cloud-sql-postgres
 project: my-project-id

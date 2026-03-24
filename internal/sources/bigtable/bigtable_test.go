@@ -34,7 +34,7 @@ func TestParseFromYamlBigtableDb(t *testing.T) {
 		{
 			desc: "can configure with a bigtable table",
 			in: `
-			kind: sources
+			kind: source
 			name: my-bigtable-instance
 			type: bigtable
 			project: my-project
@@ -73,24 +73,24 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-bigtable-instance
 			type: bigtable
 			project: my-project
 			instance: my-instance
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-bigtable-instance\" as \"bigtable\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | instance: my-instance\n   3 | name: my-bigtable-instance\n   4 | project: my-project\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-bigtable-instance\" as \"bigtable\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | instance: my-instance\n   3 | name: my-bigtable-instance\n   4 | project: my-project\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-bigtable-instance
 			type: bigtable
 			project: my-project
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-bigtable-instance\" as \"bigtable\": Key: 'Config.Instance' Error:Field validation for 'Instance' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-bigtable-instance\" as \"bigtable\": Key: 'Config.Instance' Error:Field validation for 'Instance' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

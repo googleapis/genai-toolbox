@@ -27,7 +27,7 @@ parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_tables_missing_unique_indexes
 type: mysql-list-tables-missing-unique-indexes
 source: my-mysql-instance

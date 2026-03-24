@@ -23,7 +23,7 @@ such as existence status, creation time, update time, and read time.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_user_documents
 type: firestore-get-documents
 source: my-firestore-source

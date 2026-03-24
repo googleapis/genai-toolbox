@@ -39,7 +39,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: add_dashboard_filter
 type: looker-add-dashboard-filter
 source: looker-source

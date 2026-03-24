@@ -30,9 +30,14 @@ tools:
     kind: dataplex-search-aspect-types
     source: dataplex-source
     description: Use this tool to find aspect types relevant to the query.
+  lookup_context:
+    kind: dataplex-lookup-context
+    source: dataplex-source
+    description: Use this tool to retrieve rich metadata regarding one or more data assets along with their relationships.
 
 toolsets:
   discovery:
     - search_entries
     - lookup_entry
     - search_aspect_types
+    - lookup_context

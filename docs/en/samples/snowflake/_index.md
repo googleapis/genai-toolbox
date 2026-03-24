@@ -79,7 +79,7 @@ You have two options:
 Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual Snowflake configuration.
 
 ```yaml
-kind: sources
+kind: source
 name: snowflake-source
 type: snowflake
 account: ${SNOWFLAKE_ACCOUNT}
@@ -90,13 +90,13 @@ schema: ${SNOWFLAKE_SCHEMA}
 warehouse: ${SNOWFLAKE_WAREHOUSE}
 role: ${SNOWFLAKE_ROLE}
 ---
-kind: tools
+kind: tool
 name: execute_sql
 type: snowflake-execute-sql
 source: snowflake-source
 description: Use this tool to execute SQL.
 ---
-kind: tools
+kind: tool
 name: list_tables
 type: snowflake-sql
 source: snowflake-source
@@ -116,7 +116,7 @@ For more info on tools, check out the
 Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 ```bash
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 ## Step 5: Connect to MCP Inspector

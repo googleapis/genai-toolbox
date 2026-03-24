@@ -87,16 +87,13 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 
 ### Available Protocols
 
-{{ <notice note > }}
-The native Toolbox protocol (Protocol.TOOLBOX) is deprecated and will be removed on March 4, 2026. Please use Protocol.MCP or specific MCP versions.
-{{ < /notice >}}
+We currently support different versions of the MCP protocol.
 
 - `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20250618`).
 - `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
 - `Protocol.MCP_v20250326`: March 2025 version.
 - `Protocol.MCP_v20250618`: June 2025 version.
 - `Protocol.MCP_v20251125`: November 2025 version.
-- `Protocol.TOOLBOX`: **Deprecated** Legacy Toolbox protocol.
 
 ### Specifying a Protocol
 
@@ -272,7 +269,7 @@ necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
 {{< notice note>}}
-The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authService` defined in the tool's configuration within the Toolbox service.
 {{< /notice >}}
 
 ```javascript

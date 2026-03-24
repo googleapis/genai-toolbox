@@ -27,7 +27,7 @@ the [official Valkey website](https://valkey.io/topics/quickstart/).
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-valkey-instance
 type: valkey
 address:
@@ -51,7 +51,7 @@ authentication. Grant your account the required [IAM role][iam] and set
 `useGCPIAM` to `true`:
 
 ```yaml
-kind: sources
+kind: source
 name: my-valkey-instance
 type: valkey
 address:

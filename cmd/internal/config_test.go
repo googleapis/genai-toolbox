@@ -85,7 +85,7 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			parser := &ToolsFileParser{}
+			parser := &ConfigParser{}
 			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {
@@ -102,7 +102,7 @@ func TestParseEnv(t *testing.T) {
 	}
 }
 
-func TestConvertToolsFile(t *testing.T) {
+func TestConvertConfig(t *testing.T) {
 	tcs := []struct {
 		desc   string
 		in     string
@@ -153,7 +153,7 @@ func TestConvertToolsFile(t *testing.T) {
                     model: gemini-embedding-001
                     apiKey: some-key
                     dimension: 768`,
-			want: `kind: sources
+			want: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -163,12 +163,12 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -179,12 +179,12 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
 ---
-kind: prompts
+kind: prompt
 name: code_review
 description: ask llm to analyze code quality
 messages:
@@ -193,7 +193,7 @@ arguments:
 - name: code
   description: the code to review
 ---
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001
@@ -229,12 +229,8 @@ dimension: 768
                     clientId: testing-id
             toolsets:
                 example_toolset:
-                    - example_tool
-            authSources:
-                my-google-auth2:
-                    kind: google
-                    clientId: testing-id`,
-			want: `kind: tools
+                    - example_tool`,
+			want: `kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -245,7 +241,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: sources
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -255,20 +251,15 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
----
-kind: authServices
-name: my-google-auth2
-type: google
-clientId: testing-id
 `,
 		},
 		{
@@ -315,19 +306,19 @@ clientId: testing-id
                     apiKey: some-key
                     dimension: 768
 ---
-            kind: sources
+            kind: source
             name: my-pg-instance2
             type: cloud-sql-postgres
             project: my-project
             region: my-region
             instance: my-instance
 ---
-            kind: authServices
+            kind: authService
             name: my-google-auth2
             type: google
             clientId: testing-id
 ---
-            kind: tools
+            kind: tool
             name: example_tool2
             type: postgres-sql
             source: my-pg-instance
@@ -338,17 +329,17 @@ clientId: testing-id
               type: string
               description: some description
 ---
-            kind: toolsets
+            kind: toolset
             name: example_toolset2
             tools:
             - example_tool
 ---
             tools:
             - example_tool
-            kind: toolsets
+            kind: toolset
             name: example_toolset3
 ---
-            kind: prompts
+            kind: prompt
             name: code_review2
             description: ask llm to analyze code quality
             messages:
@@ -357,10 +348,10 @@ clientId: testing-id
             - name: code
               description: the code to review
 ---
-            kind: embeddingModels
+            kind: embeddingModel
             name: gemini-model2
             type: gemini`,
-			want: `kind: sources
+			want: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -370,12 +361,12 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -386,12 +377,12 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
 ---
-kind: prompts
+kind: prompt
 name: code_review
 description: ask llm to analyze code quality
 messages:
@@ -400,26 +391,26 @@ arguments:
 - name: code
   description: the code to review
 ---
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001
 apiKey: some-key
 dimension: 768
 ---
-kind: sources
+kind: source
 name: my-pg-instance2
 type: cloud-sql-postgres
 project: my-project
 region: my-region
 instance: my-instance
 ---
-kind: authServices
+kind: authService
 name: my-google-auth2
 type: google
 clientId: testing-id
 ---
-kind: tools
+kind: tool
 name: example_tool2
 type: postgres-sql
 source: my-pg-instance
@@ -430,17 +421,17 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset2
 tools:
 - example_tool
 ---
 tools:
 - example_tool
-kind: toolsets
+kind: toolset
 name: example_toolset3
 ---
-kind: prompts
+kind: prompt
 name: code_review2
 description: ask llm to analyze code quality
 messages:
@@ -449,14 +440,14 @@ arguments:
 - name: code
   description: the code to review
 ---
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model2
 type: gemini
 `,
 		},
 		{
 			desc: "no convertion needed",
-			in: `kind: sources
+			in: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -466,7 +457,7 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -477,11 +468,11 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool`,
-			want: `kind: sources
+			want: `kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -491,7 +482,7 @@ database: my_db
 user: my_user
 password: my_pass
 ---
-kind: tools
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -502,7 +493,7 @@ parameters:
   type: string
   description: some description
 ---
-kind: toolsets
+kind: toolset
 name: example_toolset
 tools:
 - example_tool
@@ -521,7 +512,7 @@ tools:
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := ConvertToolsFile([]byte(tc.in))
+			output, err := ConvertConfig([]byte(tc.in))
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
@@ -533,18 +524,18 @@ tools:
 	}
 }
 
-func TestParseToolFile(t *testing.T) {
+func TestParseConfig(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
+		description string
+		in          string
+		wantConfig  Config
 	}{
 		{
-			description: "basic example tools file v1",
+			description: "basic example config file v1",
 			in: `
 			sources:
 				my-pg-instance:
@@ -570,7 +561,7 @@ func TestParseToolFile(t *testing.T) {
 				example_toolset:
 					- example_tool
 			`,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
@@ -608,9 +599,9 @@ func TestParseToolFile(t *testing.T) {
 			},
 		},
 		{
-			description: "basic example tools file v2",
+			description: "basic example config file v2",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: cloud-sql-postgres
 			project: my-project
@@ -620,19 +611,19 @@ func TestParseToolFile(t *testing.T) {
 			user: my_user
 			password: my_pass
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-auth
 			type: google
 			clientId: testing-id
 ---
-			kind: embeddingModels
+			kind: embeddingModel
 			name: gemini-model
 			type: gemini
 			model: gemini-embedding-001
 			apiKey: some-key
 			dimension: 768
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-sql
 			source: my-pg-instance
@@ -644,12 +635,12 @@ func TestParseToolFile(t *testing.T) {
 			  type: string
 			  description: some description
 ---
-			kind: toolsets
+			kind: toolset
 			name: example_toolset
 			tools:
 			- example_tool
 ---
-			kind: prompts
+			kind: prompt
 			name: code_review
 			description: ask llm to analyze code quality
 			messages:
@@ -658,7 +649,7 @@ func TestParseToolFile(t *testing.T) {
 			- name: code
 			  description: the code to review
 			`,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
@@ -724,7 +715,7 @@ func TestParseToolFile(t *testing.T) {
 		{
 			description: "only prompts",
 			in: `
-            kind: prompts
+            kind: prompt
             name: my-prompt
             description: A prompt template for data analysis.
             arguments:
@@ -733,7 +724,7 @@ func TestParseToolFile(t *testing.T) {
             messages:
                 - content: Analyze the data for {{.country}}.
             `,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources:      nil,
 				AuthServices: nil,
 				Tools:        nil,
@@ -755,44 +746,44 @@ func TestParseToolFile(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			parser := ToolsFileParser{}
-			toolsFile, err := parser.ParseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			parser := ConfigParser{}
+			configFile, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Sources, configFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.AuthServices, configFile.AuthServices); diff != "" {
 				t.Fatalf("incorrect authServices parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Tools, configFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Toolsets, configFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
 }
 
-func TestParseToolFileWithAuth(t *testing.T) {
+func TestParseConfigWithAuth(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
+		description string
+		in          string
+		wantConfig  Config
 	}{
 		{
 			description: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: cloud-sql-postgres
 			project: my-project
@@ -802,17 +793,17 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			user: my_user
 			password: my_pass
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-service
 			type: google
 			clientId: my-client-id
 ---
-			kind: authServices
+			kind: authService
 			name: other-google-service
 			type: google
 			clientId: other-client-id
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-sql
 			source: my-pg-instance
@@ -838,112 +829,12 @@ func TestParseToolFileWithAuth(t *testing.T) {
 					- name: other-google-service
 						field: other_email
 ---
-			kind: toolsets
+			kind: toolset
 			name: example_toolset
 			tools:
 				- example_tool
 			`,
-			wantToolsFile: ToolsFile{
-				Sources: server.SourceConfigs{
-					"my-pg-instance": cloudsqlpgsrc.Config{
-						Name:     "my-pg-instance",
-						Type:     cloudsqlpgsrc.SourceType,
-						Project:  "my-project",
-						Region:   "my-region",
-						Instance: "my-instance",
-						IPType:   "public",
-						Database: "my_db",
-						User:     "my_user",
-						Password: "my_pass",
-					},
-				},
-				AuthServices: server.AuthServiceConfigs{
-					"my-google-service": google.Config{
-						Name:     "my-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "my-client-id",
-					},
-					"other-google-service": google.Config{
-						Name:     "other-google-service",
-						Type:     google.AuthServiceType,
-						ClientID: "other-client-id",
-					},
-				},
-				Tools: server.ToolConfigs{
-					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{},
-						Parameters: []parameters.Parameter{
-							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
-						},
-					},
-				},
-				Toolsets: server.ToolsetConfigs{
-					"example_toolset": tools.ToolsetConfig{
-						Name:      "example_toolset",
-						ToolNames: []string{"example_tool"},
-					},
-				},
-				Prompts: nil,
-			},
-		},
-		{
-			description: "basic example with authSources",
-			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			authSources:
-				my-google-service:
-					kind: google
-					clientId: my-client-id
-				other-google-service:
-					kind: google
-					clientId: other-client-id
-
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						- name: id
-						  type: integer
-						  description: user id
-						  authSources:
-							- name: my-google-service
-								field: user_id
-						- name: email
-							type: string
-							description: user email
-							authSources:
-							- name: my-google-service
-							  field: email
-							- name: other-google-service
-							  field: other_email
-
-			toolsets:
-				example_toolset:
-					- example_tool
-			`,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
@@ -996,7 +887,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example with authRequired",
 			in: `
-			kind: sources
+			kind: source
 			name: my-pg-instance
 			type: cloud-sql-postgres
 			project: my-project
@@ -1006,17 +897,17 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			user: my_user
 			password: my_pass
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-service
 			type: google
 			clientId: my-client-id
 ---
-			kind: authServices
+			kind: authService
 			name: other-google-service
 			type: google
 			clientId: other-client-id
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-sql
 			source: my-pg-instance
@@ -1044,12 +935,12 @@ func TestParseToolFileWithAuth(t *testing.T) {
 					- name: other-google-service
 						field: other_email
 ---
-			kind: toolsets
+			kind: toolset
 			name: example_toolset
 			tools:
 				- example_tool
 			`,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
@@ -1102,24 +993,24 @@ func TestParseToolFileWithAuth(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			parser := ToolsFileParser{}
-			toolsFile, err := parser.ParseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			parser := ConfigParser{}
+			configFile, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Sources, configFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.AuthServices, configFile.AuthServices); diff != "" {
 				t.Fatalf("incorrect authServices parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Tools, configFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Toolsets, configFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
@@ -1144,9 +1035,9 @@ func TestEnvVarReplacement(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
+		description string
+		in          string
+		wantConfig  Config
 	}{
 		{
 			description: "file with env var example",
@@ -1221,7 +1112,7 @@ func TestEnvVarReplacement(t *testing.T) {
 						- role: user
 						  content: ${prompt_content}
 			`,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources: server.SourceConfigs{
 					"my-http-instance": httpsrc.Config{
 						Name:           "my-http-instance",
@@ -1292,9 +1183,9 @@ func TestEnvVarReplacement(t *testing.T) {
 			},
 		},
 		{
-			description: "file with env var example toolsfile v2",
+			description: "file with env var example configFile v2",
 			in: `
-			kind: sources
+			kind: source
 			name: my-http-instance
 			type: http
 			baseUrl: http://test_server/
@@ -1304,17 +1195,17 @@ func TestEnvVarReplacement(t *testing.T) {
 			queryParams:
 				api-key: ${API_KEY}
 ---
-			kind: authServices
+			kind: authService
 			name: my-google-service
 			type: google
 			clientId: ${clientId}
 ---
-			kind: authServices
+			kind: authService
 			name: other-google-service
 			type: google
 			clientId: ${clientId2}
 ---
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: http
 			source: my-instance
@@ -1355,19 +1246,19 @@ func TestEnvVarReplacement(t *testing.T) {
 					type: string
 					description: language string
 ---
-			kind: toolsets
+			kind: toolset
 			name: ${toolset_name}
 			tools:
 				- example_tool
 ---
-			kind: prompts
+			kind: prompt
 			name: ${prompt_name}
 			description: A test prompt for {{.name}}.
 			messages:
 				- role: user
 					content: ${prompt_content}
 			`,
-			wantToolsFile: ToolsFile{
+			wantConfig: Config{
 				Sources: server.SourceConfigs{
 					"my-http-instance": httpsrc.Config{
 						Name:           "my-http-instance",
@@ -1440,24 +1331,24 @@ func TestEnvVarReplacement(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
-			parser := ToolsFileParser{}
-			toolsFile, err := parser.ParseToolsFile(ctx, testutils.FormatYaml(tc.in))
+			parser := ConfigParser{}
+			configFile, err := parser.ParseConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Sources, toolsFile.Sources); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Sources, configFile.Sources); diff != "" {
 				t.Fatalf("incorrect sources parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.AuthServices, toolsFile.AuthServices); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.AuthServices, configFile.AuthServices); diff != "" {
 				t.Fatalf("incorrect authServices parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Tools, toolsFile.Tools); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Tools, configFile.Tools); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Toolsets, configFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+			if diff := cmp.Diff(tc.wantConfig.Prompts, configFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
@@ -1848,7 +1739,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"discovery": tools.ToolsetConfig{
 					Name:      "discovery",
-					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types"},
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context"},
 				},
 			},
 		},
@@ -2098,21 +1989,21 @@ func TestPrebuiltTools(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			parser := ToolsFileParser{}
-			toolsFile, err := parser.ParseToolsFile(ctx, tc.in)
+			parser := ConfigParser{}
+			configFile, err := parser.ParseConfig(ctx, tc.in)
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
+			if diff := cmp.Diff(tc.wantToolset, configFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			// Prebuilt configs do not have prompts, so assert empty maps.
-			if len(toolsFile.Prompts) != 0 {
-				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
+			if len(configFile.Prompts) != 0 {
+				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", configFile.Prompts)
 			}
 
 			t.Run("check toolset sizes", func(t *testing.T) {
-				for tsName, ts := range toolsFile.Toolsets {
+				for tsName, ts := range configFile.Toolsets {
 					if len(ts.ToolNames) > 10 {
 						t.Logf("WARNING: Toolset %q in config %q has %d tools, which is larger than the recommended maximum of 10.", tsName, tc.name, len(ts.ToolNames))
 					}
@@ -2122,33 +2013,33 @@ func TestPrebuiltTools(t *testing.T) {
 	}
 }
 
-func TestMergeToolsFiles(t *testing.T) {
-	file1 := ToolsFile{
+func TestMergeConfigs(t *testing.T) {
+	file1 := Config{
 		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
 		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
 		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
-	file2 := ToolsFile{
+	file2 := Config{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 		Tools:        server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
 		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
 	}
-	fileWithConflicts := ToolsFile{
+	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
 	}
 
 	testCases := []struct {
 		name    string
-		files   []ToolsFile
-		want    ToolsFile
+		files   []Config
+		want    Config
 		wantErr bool
 	}{
 		{
 			name:  "merge two distinct files",
-			files: []ToolsFile{file1, file2},
-			want: ToolsFile{
+			files: []Config{file1, file2},
+			want: Config{
 				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
@@ -2160,13 +2051,13 @@ func TestMergeToolsFiles(t *testing.T) {
 		},
 		{
 			name:    "merge with conflicts",
-			files:   []ToolsFile{file1, file2, fileWithConflicts},
+			files:   []Config{file1, file2, fileWithConflicts},
 			wantErr: true,
 		},
 		{
 			name:  "merge single file",
-			files: []ToolsFile{file1},
-			want: ToolsFile{
+			files: []Config{file1},
+			want: Config{
 				Sources:         file1.Sources,
 				AuthServices:    make(server.AuthServiceConfigs),
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
@@ -2177,8 +2068,8 @@ func TestMergeToolsFiles(t *testing.T) {
 		},
 		{
 			name:  "merge empty list",
-			files: []ToolsFile{},
-			want: ToolsFile{
+			files: []Config{},
+			want: Config{
 				Sources:         make(server.SourceConfigs),
 				AuthServices:    make(server.AuthServiceConfigs),
 				EmbeddingModels: make(server.EmbeddingModelConfigs),
@@ -2191,13 +2082,13 @@ func TestMergeToolsFiles(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := mergeToolsFiles(tc.files...)
+			got, err := mergeConfigs(tc.files...)
 			if (err != nil) != tc.wantErr {
-				t.Fatalf("mergeToolsFiles() error = %v, wantErr %v", err, tc.wantErr)
+				t.Fatalf("mergeConfigs() error = %v, wantErr %v", err, tc.wantErr)
 			}
 			if !tc.wantErr {
 				if diff := cmp.Diff(tc.want, got); diff != "" {
-					t.Errorf("mergeToolsFiles() mismatch (-want +got):\n%s", diff)
+					t.Errorf("mergeConfigs() mismatch (-want +got):\n%s", diff)
 				}
 			} else {
 				if err == nil {
@@ -2304,8 +2195,8 @@ tools:
 		t.Run(tc.desc, func(t *testing.T) {
 			// Indent parameters to match YAML structure
 			yamlContent := fmt.Sprintf(baseYaml, tc.params)
-			parser := ToolsFileParser{}
-			_, err := parser.ParseToolsFile(ctx, []byte(yamlContent))
+			parser := ConfigParser{}
+			_, err := parser.ParseConfig(ctx, []byte(yamlContent))
 
 			if tc.wantErr {
 				if err == nil {

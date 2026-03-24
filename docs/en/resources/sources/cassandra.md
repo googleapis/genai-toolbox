@@ -23,7 +23,7 @@ distributed architectures, and a flexible approach to schema definition.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cassandra-source
 type: cassandra
 hosts:
