@@ -18,10 +18,6 @@ sources:
     project: ${DATAPLEX_PROJECT}
 
 tools:
-  lookup_context:
-    kind: dataplex-lookup-context
-    source: dataplex-source
-    description: Use this tool to retrieve the context of a Dataplex entry, including its metadata and relationships.
   search_entries:
     kind: dataplex-search-entries
     source: dataplex-source
@@ -34,10 +30,14 @@ tools:
     kind: dataplex-search-aspect-types
     source: dataplex-source
     description: Use this tool to find aspect types relevant to the query.
+  lookup_context:
+    kind: dataplex-lookup-context
+    source: dataplex-source
+    description: Use this tool to retrieve the context of a Dataplex entry, including its metadata and relationships.
 
 toolsets:
   discovery:
-    - lookup_context
     - search_entries
     - lookup_entry
     - search_aspect_types
+    - lookup_context
