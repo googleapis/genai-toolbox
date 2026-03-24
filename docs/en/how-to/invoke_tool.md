@@ -28,7 +28,7 @@ The basic syntax for the command is:
 toolbox <tool-source> invoke <tool-name> [params]
 ```
 
-- `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
+- `<tool-source>`: Can be `--config`, `--configs`, `--config-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
 - `<tool-name>`: The name of the tool you want to call. This must match the name defined in your `tools.yaml`.
 - `[params]`: (Optional) A JSON string representing the arguments for the tool.
 
@@ -39,7 +39,7 @@ toolbox <tool-source> invoke <tool-name> [params]
 If your tool takes no parameters, simply provide the tool name:
 
 ```bash
-toolbox  --tools-file tools.yaml invoke my-simple-tool
+toolbox  --config tools.yaml invoke my-simple-tool
 ```
 
 ### 2. Calling a Tool with Parameters
@@ -51,13 +51,13 @@ For tools that require arguments, pass them as a JSON string. Ensure you escape 
 Assuming a tool named `mytool` taking `a` and `b`:
 
 ```bash
-toolbox --tools-file tools.yaml invoke mytool '{"a": 10, "b": 20}' 
+toolbox --config tools.yaml invoke mytool '{"a": 10, "b": 20}' 
 ```
 
 **Example: A tool that queries a database**
 
 ```bash
-toolbox  --tools-file tools.yaml invoke db-query '{"sql": "SELECT * FROM users LIMIT 5"}'
+toolbox  --config tools.yaml invoke db-query '{"sql": "SELECT * FROM users LIMIT 5"}'
 ```
 
 ### 3. Using Prebuilt Configurations
@@ -70,6 +70,6 @@ toolbox --prebuilt cloudsql-postgres invoke cloudsql-postgres-list-instances
 
 ## Troubleshooting
 
-- **Tool not found:** Ensure the `<tool-name>` matches exactly what is in your YAML file and that the file is correctly loaded via `--tools-file`.
+- **Tool not found:** Ensure the `<tool-name>` matches exactly what is in your YAML file and that the file is correctly loaded via `--config`.
 - **Invalid parameters:** Double-check your JSON syntax. The error message will usually indicate if the JSON parsing failed or if the parameters didn't match the tool's schema.
 - **Auth errors:** The `invoke` command currently does not support flows requiring client-side authorization (like OAuth flow initiation via the CLI). It works best for tools using service-side authentication (e.g., Application Default Credentials).

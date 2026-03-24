@@ -36,7 +36,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: neo4j-cypher
             source: my-neo4j-instance

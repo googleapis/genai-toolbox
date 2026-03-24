@@ -36,7 +36,7 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: add_docs_tool
 			type: firestore-add-documents
 			source: my-firestore-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			kind: tools
+			kind: tool
 			name: secure_add_docs
 			type: firestore-add-documents
 			source: prod-firestore
@@ -94,7 +94,7 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: add_user_docs
 	type: firestore-add-documents
 	source: users-firestore
@@ -102,13 +102,13 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	authRequired:
 		- user-auth
 ---
-	kind: tools
+	kind: tool
 	name: add_product_docs
 	type: firestore-add-documents
 	source: products-firestore
 	description: Add product documents
 ---
-	kind: tools
+	kind: tool
 	name: add_order_docs
 	type: firestore-add-documents
 	source: orders-firestore

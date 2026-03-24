@@ -40,7 +40,7 @@ inserted according to their name: e.g. `@name`.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_user_by_id_or_name
 type: bigtable-sql
 source: my-bigtable-instance
@@ -80,7 +80,7 @@ parameters:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: bigtable-sql
 source: my-bigtable-instance

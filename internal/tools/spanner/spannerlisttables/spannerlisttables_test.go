@@ -36,7 +36,7 @@ func TestParseFromYamlListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-list-tables
             source: my-spanner-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlListTables(t *testing.T) {
 		{
 			desc: "with auth required",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-list-tables
             source: my-spanner-instance
@@ -77,7 +77,7 @@ func TestParseFromYamlListTables(t *testing.T) {
 		{
 			desc: "minimal config",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-list-tables
             source: my-spanner-instance

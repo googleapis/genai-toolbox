@@ -34,7 +34,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			dgraphUrl: https://localhost:8080
@@ -58,7 +58,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic example minimal field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			dgraphUrl: https://localhost:8080
@@ -97,22 +97,22 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			dgraphUrl: https://localhost:8080
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-dgraph-instance\" as \"dgraph\": [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | name: my-dgraph-instance\n   4 | type: dgraph",
+			err: "error unmarshaling source: unable to parse source \"my-dgraph-instance\" as \"dgraph\": [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | name: my-dgraph-instance\n   4 | type: dgraph",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-dgraph-instance
 			type: dgraph
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-dgraph-instance\" as \"dgraph\": Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-dgraph-instance\" as \"dgraph\": Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

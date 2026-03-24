@@ -45,7 +45,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: my-gda-query-tool
 			type: cloud-gemini-data-analytics-query
 			source: gda-api-source

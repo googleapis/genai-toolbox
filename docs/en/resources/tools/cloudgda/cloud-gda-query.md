@@ -18,7 +18,7 @@ The `cloud-gemini-data-analytics-query` tool allows you to send natural language
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: my-gda-query-tool
 type: cloud-gemini-data-analytics-query
 source: my-gda-source

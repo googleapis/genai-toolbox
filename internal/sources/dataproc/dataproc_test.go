@@ -33,7 +33,7 @@ func TestParseFromYamlDataproc(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				project: my-project
@@ -72,34 +72,34 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				project: my-project
 				region: my-region
 				foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"dataproc\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | region: my-region\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"dataproc\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | region: my-region\n   5 | ",
 		},
 		{
 			desc: "missing required field project",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				region: my-region
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"dataproc\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"dataproc\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 		{
 			desc: "missing required field region",
 			in: `
-				kind: sources
+				kind: source
 				name: my-instance
 				type: dataproc
 				project: my-project
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"dataproc\": Key: 'Config.Region' Error:Field validation for 'Region' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"dataproc\": Key: 'Config.Region' Error:Field validation for 'Region' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

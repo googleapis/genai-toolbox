@@ -29,7 +29,7 @@ total execution time in descending order. The tool takes the following input par
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_query_stats
 type: postgres-list-query-stats
 source: postgres-source

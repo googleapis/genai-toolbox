@@ -31,7 +31,7 @@ supplied to this tool.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: generate_embed_url
 type: looker-generate-embed-url
 source: looker-source

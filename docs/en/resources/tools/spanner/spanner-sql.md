@@ -50,7 +50,7 @@ the second parameter, and so on.
 {{< tabpane persist="header" >}}
 {{< tab header="GoogleSQL" lang="yaml" >}}
 
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: spanner-sql
 source: my-spanner-instance
@@ -89,7 +89,7 @@ parameters:
 {{< /tab >}}
 {{< tab header="PostgreSQL" lang="yaml" >}}
 
-kind: tools
+kind: tool
 name: search_flights_by_number
 type: spanner
 source: my-spanner-instance
@@ -137,7 +137,7 @@ parameters:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: spanner
 source: my-spanner-instance

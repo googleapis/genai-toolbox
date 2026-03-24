@@ -154,7 +154,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-trino-instance
 			type: trino
 			host: localhost
@@ -178,7 +178,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "example with optional fields",
 			in: `
-			kind: sources
+			kind: source
 			name: my-trino-instance
 			type: trino
 			host: localhost
@@ -212,7 +212,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "anonymous access without user",
 			in: `
-			kind: sources
+			kind: source
 			name: my-trino-anonymous
 			type: trino
 			host: localhost
@@ -234,7 +234,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "example with SSL cert path and cert",
 			in: `
-			kind: sources
+			kind: source
 			name: my-trino-ssl-cert
 			type: trino
 			host: localhost

@@ -43,8 +43,6 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Toolsets](#toolsets)
   - [Prompts](#prompts)
 - [Versioning](#versioning)
-  - [Pre-1.0.0 Versioning](#pre-100-versioning)
-  - [Post-1.0.0 Versioning](#post-100-versioning)
 - [Contributing](#contributing)
 - [Community](#community)
 
@@ -112,7 +110,7 @@ redeploying your application.
 You can run Toolbox directly with a [configuration file](#configuration):
 
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
 ```
 
 This runs the latest version of the toolbox server with your configuration file.
@@ -258,7 +256,7 @@ execute `toolbox` to start the server:
 To run Toolbox from binary:
 
 ```sh
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 > ⓘ Note  
@@ -278,7 +276,7 @@ export VERSION=0.24.0 # Use the version you pulled
 docker run -p 5000:5000 \
 -v $(pwd)/tools.yaml:/app/tools.yaml \
 us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
---tools-file "/app/tools.yaml"
+--config "/app/tools.yaml"
 ```
 
 > ⓘ Note  
@@ -315,7 +313,7 @@ binary is available in your system path. You can start the server with the same
 command:
 
 ```sh
-toolbox --tools-file "tools.yaml"
+toolbox --config "tools.yaml"
 ```
 
 </details>
@@ -325,7 +323,7 @@ toolbox --tools-file "tools.yaml"
 
 To run Toolbox directly without manually downloading the binary (requires Node.js):
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
 ```
 
 </details>
@@ -927,7 +925,7 @@ To use [prebuilt tools][prebuilt] with Gemini CLI:
 ## Configuration
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools-file
+have multiple files, you can tell toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
@@ -935,12 +933,12 @@ You can find more detailed reference documentation to all resource types in the
 
 ### Sources
 
-The `sources` section of your `tools.yaml` defines what data sources your
+`source` kind of your `tools.yaml` defines what data source your
 Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: postgres
 host: 127.0.0.1
@@ -955,11 +953,11 @@ For more details on configuring different types of sources, see the
 
 ### Tools
 
-The `tools` section of a `tools.yaml` define the actions an agent can take: what
+`tool` kind of a `tools.yaml` define the actions an agent can take: what
 type of tool it is, which source(s) it affects, what parameters it uses, etc.
 
 ```yaml
-kind: tools
+kind: tool
 name: search-hotels-by-name
 type: postgres-sql
 source: my-pg-source
@@ -976,7 +974,7 @@ For more details on configuring different types of tools, see the
 
 ### Toolsets
 
-The `toolsets` section of your `tools.yaml` allows you to define groups of tools
+`toolset` kind of your `tools.yaml` allows you to define groups of tools
 that you want to be able to load together. This can be useful for defining
 different groups based on agent or application.
 
@@ -1002,7 +1000,7 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 ### Prompts
 
-The `prompts` section of a `tools.yaml` defines prompts that can be used for
+`prompt` kind of a `tools.yaml` defines prompts that can be used for
 interactions with LLMs.
 
 ```yaml
@@ -1021,31 +1019,15 @@ For more details on configuring prompts, see the
 
 ## Versioning
 
-This project uses [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
-Since the project is in a pre-release stage (version `0.x.y`), we follow the
-standard conventions for initial  development:
+MCP Toolbox for Databases follows [Semantic Versioning](https://semver.org/).
 
-### Pre-1.0.0 Versioning
+The Public API includes the Toolbox Server (CLI, configuration manifests, and pre-built toolsets) and the Client SDKs.
 
-While the major version is `0`, the public API should be considered unstable.
-The version will be incremented  as follows:
+- **Major versions** are incremented for breaking changes, such as incompatible CLI or manifest changes.
+- **Minor versions** are incremented for new features, including modifications to pre-built toolsets or beta features.
+- **Patch versions** are incremented for backward-compatible bug fixes.
 
-- **`0.MINOR.PATCH`**: The **MINOR** version is incremented when we add
-  new functionality or make breaking, incompatible API changes.
-- **`0.MINOR.PATCH`**: The **PATCH** version is incremented for
-  backward-compatible bug fixes.
-
-### Post-1.0.0 Versioning
-
-Once the project reaches a stable `1.0.0` release, the version number
-**`MAJOR.MINOR.PATCH`** will follow the more common convention:
-
-- **`MAJOR`**: Incremented for incompatible API changes.
-- **`MINOR`**: Incremented for new, backward-compatible functionality.
-- **`PATCH`**: Incremented for backward-compatible bug fixes.
-
-The public API that this applies to is the CLI associated with Toolbox, the
-interactions with official SDKs, and the definitions in the `tools.yaml` file.
+For more details, see our [Full Versioning Policy](https://googleapis.github.io/genai-toolbox/about/versioning/).
 
 ## Contributing
 

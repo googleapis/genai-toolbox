@@ -22,7 +22,7 @@ types, or only resources that have been updated after a given time.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: fhir_patient_everything
 type: cloud-healthcare-fhir-patient-everything
 source: my-healthcare-source

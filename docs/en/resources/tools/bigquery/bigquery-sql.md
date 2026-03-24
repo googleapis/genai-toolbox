@@ -47,7 +47,7 @@ same query.
 
 ```yaml
 # Example: Querying a user table in BigQuery
-kind: tools
+kind: tool
 name: search_users_bq
 type: bigquery-sql
 source: my-bigquery-source
@@ -87,7 +87,7 @@ parameters:
 > [templateParameters](../#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: bigquery-sql
 source: my-bigquery-source

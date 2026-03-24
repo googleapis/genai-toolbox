@@ -18,11 +18,11 @@ Here is an example of how to configure the `cloud-sql-list-databases` tool in yo
 `tools.yaml` file:
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-admin-source
 type: cloud-sql-admin
 ---
-kind: tools
+kind: tool
 name: list_my_databases
 type: cloud-sql-list-databases
 source: my-cloud-sql-admin-source

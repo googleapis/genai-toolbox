@@ -30,7 +30,7 @@ DDL statements.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search-users
 type: sqlite-sql
 source: my-sqlite-db
@@ -54,7 +54,7 @@ statement: SELECT * FROM users WHERE name LIKE ? AND age >= ?
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: sqlite-sql
 source: my-sqlite-db

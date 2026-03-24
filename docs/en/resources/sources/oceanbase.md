@@ -33,7 +33,7 @@ with SSL).
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-oceanbase-source
 type: oceanbase
 host: 127.0.0.1

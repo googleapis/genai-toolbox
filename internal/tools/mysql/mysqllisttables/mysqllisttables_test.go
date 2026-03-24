@@ -36,7 +36,7 @@ func TestParseFromYamlMySQLListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mysql-list-tables
             source: my-mysql-instance

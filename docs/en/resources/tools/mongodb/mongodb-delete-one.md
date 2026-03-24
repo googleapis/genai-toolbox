@@ -33,7 +33,7 @@ Here is an example that deletes a specific user account from the `users`
 collection by matching their unique email address. This is a permanent action.
 
 ```yaml
-kind: tools
+kind: tool
 name: delete_user_account
 type: mongodb-delete-one
 source: my-mongo-source

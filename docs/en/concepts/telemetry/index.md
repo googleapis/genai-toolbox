@@ -29,7 +29,7 @@ The following flags can be used to customize Toolbox logging:
 **Example:**
 
 ```bash
-./toolbox --tools-file "tools.yaml" --log-level warn --logging-format json
+./toolbox --config "tools.yaml" --log-level warn --logging-format json
 ```
 
 ### Level
@@ -64,7 +64,7 @@ The structured logging outputs log as JSON:
   "timestamp":"2024-11-04T16:45:11.987299-08:00",
   "severity":"ERROR",
   "logging.googleapis.com/sourceLocation":{...},
-  "message":"unable to parse tool file at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid type of data source"
+  "message":"unable to parse config at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid type of data source"
 }
 ```
 

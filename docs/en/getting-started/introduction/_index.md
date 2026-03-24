@@ -82,7 +82,7 @@ redeploying your application.
 You can run Toolbox directly with a [configuration file](../configure.md):
 
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
 ```
 
 This runs the latest version of the toolbox server with your configuration file.
@@ -196,7 +196,7 @@ go install github.com/googleapis/genai-toolbox@v0.30.0
 execute `toolbox` to start the server:
 
 ```sh
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 {{< notice note >}}
@@ -220,7 +220,7 @@ If you installed Toolbox using Homebrew, the `toolbox` binary is available in
 your system path. You can start the server with the same command:
 
 ```sh
-toolbox --tools-file "tools.yaml"
+toolbox --config "tools.yaml"
 ```
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a

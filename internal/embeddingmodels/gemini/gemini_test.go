@@ -34,7 +34,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: embeddingModels
+			kind: embeddingModel
 			name: my-gemini-model
 			type: gemini
 			model: text-embedding-004
@@ -50,7 +50,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "full example with optional fields",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: complex-gemini
             type: gemini
             model: text-embedding-004
@@ -90,24 +90,24 @@ func TestFailParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "missing required model field",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: bad-model
             type: gemini
             `,
 			// Removed the specific model name from the prefix to match your output
-			err: "error unmarshaling embeddingModels: unable to parse as \"bad-model\": Key: 'Config.Model' Error:Field validation for 'Model' failed on the 'required' tag",
+			err: "error unmarshaling embeddingModel: unable to parse as \"bad-model\": Key: 'Config.Model' Error:Field validation for 'Model' failed on the 'required' tag",
 		},
 		{
 			desc: "unknown field",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: bad-field
             type: gemini
             model: text-embedding-004
             invalid_param: true
             `,
 			// Updated to match the specific line-starting format of your error output
-			err: "error unmarshaling embeddingModels: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: text-embedding-004\n   3 | name: bad-field\n   4 | type: gemini",
+			err: "error unmarshaling embeddingModel: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: text-embedding-004\n   3 | name: bad-field\n   4 | type: gemini",
 		},
 	}
 	for _, tc := range tcs {

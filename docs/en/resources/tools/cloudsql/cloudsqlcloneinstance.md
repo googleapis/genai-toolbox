@@ -16,7 +16,7 @@ This tool uses a `source` of type `cloud-sql-admin`.
 Basic clone (current state)
 
 ```yaml
-kind: tools
+kind: tool
 name: clone-instance-basic
 type: cloud-sql-clone-instance
 source: cloud-sql-admin-source
@@ -26,7 +26,7 @@ description: "Creates an exact copy of a Cloud SQL instance. Supports configurin
 Point-in-time recovery (PITR) clone
 
 ```yaml
-kind: tools
+kind: tool
 name: clone-instance-pitr
 type: cloud-sql-clone-instance
 source: cloud-sql-admin-source

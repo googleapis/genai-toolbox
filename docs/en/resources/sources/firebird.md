@@ -36,7 +36,7 @@ user][fb-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my_firebird_db
 type: firebird
 host: "localhost"

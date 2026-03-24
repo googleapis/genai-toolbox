@@ -36,7 +36,7 @@ func TestParseFromYamlTrinoExecuteSQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: trino-execute-sql
 			source: my-trino-instance

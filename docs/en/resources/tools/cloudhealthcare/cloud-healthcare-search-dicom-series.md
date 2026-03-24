@@ -20,7 +20,7 @@ set of criteria. It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: search_dicom_series
 type: cloud-healthcare-search-dicom-series
 source: my-healthcare-source
