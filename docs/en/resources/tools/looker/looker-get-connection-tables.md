@@ -22,7 +22,7 @@ and an optional `db` parameter.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_connection_tables
 type: looker-get-connection-tables
 source: looker-source

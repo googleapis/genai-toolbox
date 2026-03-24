@@ -25,11 +25,11 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-monitoring
 type: cloud-monitoring
 ---
-kind: sources
+kind: source
 name: my-oauth-cloud-monitoring
 type: cloud-monitoring
 useClientOAuth: true

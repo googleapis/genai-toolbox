@@ -18,7 +18,7 @@ This tool uses a `source` of type `cloud-sql-admin`.
 ### Example
 
 ```yaml
-kind: tools
+kind: tool
 name: postgres-upgrade-precheck
 type: postgres-upgrade-precheck
 source: cloud-sql-admin-source

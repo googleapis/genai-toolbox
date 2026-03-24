@@ -22,7 +22,7 @@ criteria.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: search_dicom_instances
 type: cloud-healthcare-search-dicom-instances
 source: my-healthcare-source

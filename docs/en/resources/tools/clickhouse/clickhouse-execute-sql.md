@@ -25,7 +25,7 @@ capabilities for monitoring and debugging purposes.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: clickhouse-execute-sql
 source: my-clickhouse-instance

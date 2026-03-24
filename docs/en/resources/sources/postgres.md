@@ -107,7 +107,7 @@ PostgreSQL user][pg-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: postgres
 host: 127.0.0.1

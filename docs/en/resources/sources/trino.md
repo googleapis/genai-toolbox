@@ -32,7 +32,7 @@ the catalogs and schemas you want to query.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-trino-source
 type: trino
 host: trino.example.com

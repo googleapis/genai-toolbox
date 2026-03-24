@@ -17,7 +17,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: query_logs
 type: cloud-logging-admin-query-logs
 source: my-cloud-logging

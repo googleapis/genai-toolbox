@@ -36,7 +36,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic query example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: dgraph-dql
 			source: my-dgraph-instance
@@ -62,7 +62,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic mutation example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: dgraph-dql
 			source: my-dgraph-instance

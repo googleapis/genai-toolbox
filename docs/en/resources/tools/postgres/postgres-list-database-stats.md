@@ -30,7 +30,7 @@ takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_database_stats
 type: postgres-list-database-stats
 source: postgres-source

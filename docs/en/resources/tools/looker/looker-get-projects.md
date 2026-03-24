@@ -21,7 +21,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_projects
 type: looker-get-projects
 source: looker-source

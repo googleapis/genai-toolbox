@@ -36,7 +36,7 @@ func TestParseFromYamlPostgresReplicationStats(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-replication-stats
             source: my-postgres-instance
@@ -58,7 +58,7 @@ func TestParseFromYamlPostgresReplicationStats(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-replication-stats
             source: my-postgres-instance

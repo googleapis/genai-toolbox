@@ -21,7 +21,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_connection_table_columns
 type: looker-get-connection-table-columns
 source: looker-source

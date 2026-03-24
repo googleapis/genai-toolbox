@@ -24,11 +24,11 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-admin
 type: cloud-sql-admin
 ---
-kind: sources
+kind: source
 name: my-oauth-cloud-sql-admin
 type: cloud-sql-admin
 useClientOAuth: true

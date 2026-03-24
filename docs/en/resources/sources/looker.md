@@ -56,7 +56,7 @@ To initialize the application default credential run `gcloud auth login
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-looker-source
 type: looker
 base_url: http://looker.example.com

@@ -53,7 +53,7 @@ dataset specified in the `table_references` parameter.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: ask_data_insights
 type: bigquery-conversational-analytics
 source: my-bigquery-source

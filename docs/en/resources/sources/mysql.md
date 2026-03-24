@@ -49,7 +49,7 @@ MySQL user][mysql-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-mysql-source
 type: mysql
 host: 127.0.0.1

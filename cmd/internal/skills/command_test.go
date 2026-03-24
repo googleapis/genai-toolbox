@@ -70,12 +70,12 @@ tools:
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	args := []string{
 		"skills-generate",
-		"--tools-file", toolsFilePath,
+		"--config", toolsFilePath,
 		"--output-dir", outputDir,
 		"--name", "hello-sqlite",
 		"--description", "hello tool",
@@ -339,7 +339,7 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	tmpDir := t.TempDir()
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte("tools: {}"), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	tests := []struct {
@@ -348,11 +348,11 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	}{
 		{
 			name: "missing name",
-			args: []string{"skills-generate", "--tools-file", toolsFilePath, "--description", "test"},
+			args: []string{"skills-generate", "--config", toolsFilePath, "--description", "test"},
 		},
 		{
 			name: "missing description",
-			args: []string{"skills-generate", "--tools-file", toolsFilePath, "--name", "test"},
+			args: []string{"skills-generate", "--config", toolsFilePath, "--name", "test"},
 		},
 	}
 

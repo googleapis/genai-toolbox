@@ -64,7 +64,7 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-spanner-source
 type: "spanner"
 project: "my-project-id"

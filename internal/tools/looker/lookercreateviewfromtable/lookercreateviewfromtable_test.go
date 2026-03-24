@@ -37,7 +37,7 @@ func TestParseFromYamlLookerCreateViewFromTable(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-create-view-from-table
             source: my-instance
@@ -82,14 +82,14 @@ func TestFailParseFromYamlLookerCreateViewFromTable(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-create-view-from-table
             source: my-instance
             method: GOT
             description: some description
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"example_tool\" as type \"looker-create-view-from-table\": [3:1] unknown field \"method\"",
+			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-create-view-from-table\": [3:1] unknown field \"method\"",
 		},
 	}
 	for _, tc := range tcs {

@@ -28,7 +28,7 @@ default to 100 and 0.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_dashboards
 type: looker-get-dashboards
 source: looker-source

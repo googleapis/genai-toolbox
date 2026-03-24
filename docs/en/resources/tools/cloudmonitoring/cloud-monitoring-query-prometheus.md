@@ -55,7 +55,7 @@ Here are some examples of how to use the `cloud-monitoring-query-prometheus`
 tool.
 
 ```yaml
-kind: tools
+kind: tool
 name: get_wait_time_metrics
 type: cloud-monitoring-query-prometheus
 source: cloud-monitoring-source

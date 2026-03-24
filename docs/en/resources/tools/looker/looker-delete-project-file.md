@@ -21,7 +21,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: delete_project_file
 type: looker-delete-project-file
 source: looker-source

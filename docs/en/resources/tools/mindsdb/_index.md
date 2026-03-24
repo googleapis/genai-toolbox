@@ -117,7 +117,7 @@ federated database capabilities.
 Here's a complete working configuration that has been tested:
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: mindsdb
 host: 127.0.0.1
@@ -125,7 +125,7 @@ port: 47335
 database: files
 user: mindsdb
 ---
-kind: tools
+kind: tool
 name: mindsdb-execute-sql
 type: mindsdb-execute-sql
 source: my-pg-source

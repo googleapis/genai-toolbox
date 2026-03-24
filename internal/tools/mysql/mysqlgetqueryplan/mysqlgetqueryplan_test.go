@@ -36,7 +36,7 @@ func TestParseFromYamlGetQueryPlan(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mysql-get-query-plan
             source: my-instance

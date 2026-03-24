@@ -22,7 +22,7 @@ string of the image in JPEG format.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: retrieve_rendered_dicom_instance
 type: cloud-healthcare-retrieve-rendered-dicom-instance
 source: my-healthcare-source

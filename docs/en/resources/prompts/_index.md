@@ -16,7 +16,7 @@ can be sent to a Large Language Model (LLM). The Toolbox server implements the
 specification, allowing clients to discover and retrieve these prompts.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:

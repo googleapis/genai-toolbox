@@ -37,7 +37,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: redis_tool
 			type: redis
 			source: my-redis-instance

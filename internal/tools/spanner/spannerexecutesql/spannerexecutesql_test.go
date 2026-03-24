@@ -36,7 +36,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-execute-sql
             source: my-spanner-instance
@@ -56,7 +56,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 		{
 			desc: "read only set to true",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-execute-sql
             source: my-spanner-instance

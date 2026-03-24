@@ -36,7 +36,7 @@ func TestParseFromYamlPostgresListQueryStats(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-list-query-stats
 			source: my-postgres-instance
@@ -58,7 +58,7 @@ func TestParseFromYamlPostgresListQueryStats(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: postgres-list-query-stats
 			source: my-postgres-instance

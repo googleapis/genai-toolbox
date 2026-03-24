@@ -27,7 +27,7 @@ The tool gets the `project` and `region` from the source configuration.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_cluster
 type: dataproc-get-cluster
 source: my-dataproc-source

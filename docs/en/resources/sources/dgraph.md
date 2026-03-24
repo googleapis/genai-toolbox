@@ -51,7 +51,7 @@ and user credentials for that namespace.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-dgraph-source
 type: dgraph
 dgraphUrl: https://xxxx.cloud.dgraph.io

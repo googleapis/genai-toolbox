@@ -36,7 +36,7 @@ syntax.
 ### Basic Usage - List All Tables
 
 ```yaml
-kind: sources
+kind: source
 name: my-spanner-db
 type: spanner
 project: ${SPANNER_PROJECT}
@@ -44,7 +44,7 @@ instance: ${SPANNER_INSTANCE}
 database: ${SPANNER_DATABASE}
 dialect: googlesql  # or postgresql
 ---
-kind: tools
+kind: tool
 name: list_all_tables
 type: spanner-list-tables
 source: my-spanner-db
@@ -54,7 +54,7 @@ description: Lists all tables with their complete schema information
 ### List Specific Tables
 
 ```yaml
-kind: tools
+kind: tool
 name: list_specific_tables
 type: spanner-list-tables
 source: my-spanner-db
@@ -177,7 +177,7 @@ comprehensive schema information:
 ## Example with Agent Integration
 
 ```yaml
-kind: sources
+kind: source
 name: spanner-db
 type: spanner
 project: my-project
@@ -185,7 +185,7 @@ instance: my-instance
 database: my-database
 dialect: googlesql
 ---
-kind: tools
+kind: tool
 name: schema_inspector
 type: spanner-list-tables
 source: spanner-db

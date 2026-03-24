@@ -22,7 +22,7 @@ specified AlloyDB user. It is compatible with
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_specific_user
 type: alloydb-get-user
 source: my-alloydb-admin-source

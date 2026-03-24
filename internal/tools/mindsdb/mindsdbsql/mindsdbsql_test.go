@@ -37,7 +37,7 @@ func TestParseFromYamlmindsdbsql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mindsdb-sql
             source: my-mindsdbsql-instance
@@ -101,7 +101,7 @@ func TestParseFromYamlWithTemplateParamsmindsdbsql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mindsdb-sql
             source: my-mindsdbsql-instance

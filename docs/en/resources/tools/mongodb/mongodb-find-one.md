@@ -31,7 +31,7 @@ and returning their profile information, while excluding sensitive fields like
 the password hash.
 
 ```yaml
-kind: tools
+kind: tool
 name: get_user_profile
 type: mongodb-find-one
 source: my-mongo-source

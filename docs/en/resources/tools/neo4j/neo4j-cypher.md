@@ -31,7 +31,7 @@ their name: e.g. `$id`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: search_movies_by_actor
 type: neo4j-cypher
 source: my-neo4j-movies-instance

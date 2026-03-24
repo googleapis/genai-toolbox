@@ -25,11 +25,11 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-alloydb-admin
 type: alloydb-admin
 ---
-kind: sources
+kind: source
 name: my-oauth-alloydb-admin
 type: alloydb-admin
 useClientOAuth: true

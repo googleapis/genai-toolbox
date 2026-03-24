@@ -45,7 +45,7 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: create_instance
 type: alloydb-create-instance
 source: alloydb-admin-source

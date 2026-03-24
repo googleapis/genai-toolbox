@@ -55,7 +55,7 @@ set up your ADC.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-serverless-spark-source
 type: serverless-spark
 project: my-project-id

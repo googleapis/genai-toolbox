@@ -27,7 +27,7 @@ parameters will be used according to their name: e.g. `$id`.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
+kind: tool
 name: search_products_by_category
 type: couchbase-sql
 source: my-couchbase-instance
@@ -69,7 +69,7 @@ parameters:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
+kind: tool
 name: list_table
 type: couchbase-sql
 source: my-couchbase-instance
