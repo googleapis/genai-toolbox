@@ -365,7 +365,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
 	runGenericAuthInvokeTest(t, privateKey)
-	tests.RunMcpAuthTest(t, "5001")
+	tests.RunMcpAuthTest(t)
 }
 
 func runGenericAuthInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {

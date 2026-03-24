@@ -4825,7 +4825,7 @@ func RunStatementToolsTest(t *testing.T, tools map[string]string) {
 }
 
 // RunMcpAuthTest test for MCP Authorization
-func RunMcpAuthTest(t *testing.T, port string) {
+func RunMcpAuthTest(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -4873,7 +4873,7 @@ func RunMcpAuthTest(t *testing.T, port string) {
 		},
 		"tools": map[string]any{},
 	}
-	cmd, cleanup, err := StartCmd(ctx, toolsFile, "--port", port)
+	cmd, cleanup, err := StartCmd(ctx, toolsFile)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -4887,7 +4887,7 @@ func RunMcpAuthTest(t *testing.T, port string) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	api := "http://127.0.0.1:" + port + "/mcp/sse"
+	api := "http://127.0.0.1:5000/mcp/sse"
 
 	t.Run("401 Unauthorized without token", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, api, nil)
