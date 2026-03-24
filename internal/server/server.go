@@ -412,7 +412,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Handle("/api/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusGone)
-		_, _ = w.Write([]byte(`{"error": "The /api Native endpoints have been permanently moved to the standard /mcp JSON-RPC endpoint."}`))
+		_, _ = w.Write([]byte(`{"error": "The /api Native endpoints have been permanently removed. Please use the standard /mcp JSON-RPC endpoint."}`))
 	}))
 
 	mcpR, err := mcpRouter(s)
