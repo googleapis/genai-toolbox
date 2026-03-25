@@ -15,7 +15,6 @@
 package http
 
 import (
-
 	"context"
 	"encoding/json"
 	"fmt"
@@ -332,18 +331,18 @@ func TestHttpToolEndpoints(t *testing.T) {
 	if statusCodeList != http.StatusOK {
 		t.Fatalf("expected status 200 for tools/list, got %d", statusCodeList)
 	}
-	
+
 	// Ensure tools/list returned valid tools mapping
 	resultMap, ok := toolsResp.Result.(map[string]interface{})
 	if !ok {
 		t.Fatalf("tools/list result is not a map: %v", toolsResp.Result)
 	}
-	
+
 	toolsList, ok := resultMap["tools"].([]interface{})
 	if !ok || len(toolsList) == 0 {
 		t.Fatalf("tools/list did not contain tools array: %v", resultMap)
 	}
-	
+
 	// Verify "my-simple-tool" is explicitly registered natively
 	foundTool := false
 	for _, toolItem := range toolsList {
@@ -509,7 +508,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 				}
 				return
 			}
-			
+
 			if mcpResp.Result.IsError {
 				t.Fatalf("unexpected application error: %v", mcpResp.Result)
 			}
