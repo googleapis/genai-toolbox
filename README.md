@@ -45,6 +45,7 @@ This README provides a brief overview. For comprehensive details, see the [full 
 - [Integrate with the Gemini CLI](#integrate-with-the-gemini-cli)
 - [SDKs: Integrate with your Application](#sdks-integrate-with-your-application)
 - [Test tools with the Toolbox UI](#test-tools-with-the-Toolbox-UI)
+- [Telemetry](#telemetry)
 - [Generate Agent Skills](#generate-agent-skills)
 - [Versioning](#versioning)
 - [Contributing](#contributing)
@@ -103,7 +104,7 @@ For a full list of available tools and their capabilities across all supported d
 ## Quick Start: Custom Tools Framework
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell Toolbox which to load with the `--tools-file
+have multiple files, you can tell Toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
@@ -116,7 +117,7 @@ Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-kind: sources
+kind: source
 name: my-pg-source
 type: postgres
 host: 127.0.0.1
@@ -135,7 +136,7 @@ The `tools` section of a `tools.yaml` define the actions an agent can take: what
 type of tool it is, which source(s) it affects, what parameters it uses, etc.
 
 ```yaml
-kind: tools
+kind: tool
 name: search-hotels-by-name
 type: postgres-sql
 source: my-pg-source
@@ -157,13 +158,17 @@ that you want to be able to load together. This can be useful for defining
 different groups based on agent or application.
 
 ```yaml
-toolsets:
-    my_first_toolset:
-        - my_first_tool
-        - my_second_tool
-    my_second_toolset:
-        - my_second_tool
-        - my_third_tool
+kind: Toolset
+name: my_first_toolset
+tools:
+    - my_first_tool
+    - my_second_tool
+---
+kind: Toolset
+name: my_second_toolset
+tools:
+    - my_second_tool
+    - my_third_tool
 ```
 
 ### Prompts
@@ -172,14 +177,14 @@ The `prompts` section of a `tools.yaml` defines prompts that can be used for
 interactions with LLMs.
 
 ```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
+kind: prompts
+name: code_review
+description: "Asks the LLM to analyze code quality and suggest improvements."
+messages:
+  - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+arguments:
+  - name: "code"
+    description: "The code to review"
 ```
 
 For more details on configuring prompts, see the
@@ -962,7 +967,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
 ---
 
-#### Test tools with the Toolbox UI
+## Test tools with the Toolbox UI
 
 To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
 tools and toolsets with features such as authorized parameters. To learn more,
@@ -974,12 +979,20 @@ visit [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/
 
 ---
 
+## Telemetry
+
+Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
+to export to any OTLP-compatible backend like Google Cloud Monitoring, Agnost AI, or 
+others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
+
+---
+
 ## Generate Agent Skills
 
 The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill** compatible with the [Agent Skill specification](https://agentskills.io/specification). This is useful for distributing tools as portable skill packages.
 
 ```bash
-toolbox --tools-file tools.yaml skills-generate \
+toolbox --config tools.yaml skills-generate \
   --name "my-skill" \
   --toolset "my_toolset" \
   --description "A skill containing multiple tools"
