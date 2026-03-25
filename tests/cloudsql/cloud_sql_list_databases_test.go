@@ -156,14 +156,14 @@ func TestListDatabasesToolEndpoints(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
-			
+
 			var mockPayload []byte
 			if statusCode != http.StatusOK {
 				mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
 			} else {
 				mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))
 			}
-			
+
 			resp := &http.Response{
 				StatusCode: statusCode,
 				Body:       io.NopCloser(bytes.NewReader(mockPayload)),
