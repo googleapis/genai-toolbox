@@ -14,20 +14,20 @@ This guide details the specific configuration steps required to deploy Toolbox w
 
 ## Step 1: Configure the `generic` Auth Service
 
-Update your `tools.yaml` file to use a `generic` authentication service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authUrl`).
+Update your `tools.yaml` file to use a `generic` authentication service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authorizationServer`).
 
 ```yaml
 authServices:
   - name: my-mcp-auth
     type: generic
     mcpEnabled: true
-    authUrl: "https://your-auth-server.example.com"
+    authorizationServer: "https://your-auth-server.example.com"
     audience: "your-mcp-audience" # Matches the `aud` claim in the JWT
     scopesRequired:
       - "mcp:tools"
 ```
 
-When `mcpEnabled` is true, Toolbox also provisions the `/.well-known/oauth-protected-resource` Protected Resource Metadata (PRM) endpoint automatically using the `authUrl`.
+When `mcpEnabled` is true, Toolbox also provisions the `/.well-known/oauth-protected-resource` Protected Resource Metadata (PRM) endpoint automatically using the `authorizationServer`.
 
 ## Step 2: Deployment
 
@@ -98,7 +98,7 @@ If you strictly need to define your own Protected Resource Metadata instead of a
 
 ## Step 3: Connecting to the Secure MCP Endpoint
 
-Once the Cloud Run instance is deployed, your MCP client must obtain a valid JWT token from your authentication server (the `authUrl` in `tools.yaml`).
+Once the Cloud Run instance is deployed, your MCP client must obtain a valid JWT token from your authentication server (the `authorizationServer` in `tools.yaml`).
 
 The client should provide this JWT via the standard HTTP `Authorization` header when connecting to the `Streamable HTTP` SSE endpoint (`/mcp`):
 
@@ -116,4 +116,4 @@ The client should provide this JWT via the standard HTTP `Authorization` header 
 }
 ```
 
-Toolbox will intercept incoming connections, fetch the latest JWKS from your `authUrl`, and validate that the `aud` (audience), signature, and `scopes` on the JWT match the requirements defined by your `mcpEnabled` auth service.
+Toolbox will intercept incoming connections, fetch the latest JWKS from your `authorizationServer`, and validate that the `aud` (audience), signature, and `scopes` on the JWT match the requirements defined by your `mcpEnabled` auth service.
