@@ -251,7 +251,7 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Set("Content-Type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -263,8 +263,8 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 			if resp.StatusCode != tc.wantStatus {
 				t.Fatalf("unexpected status: %d, body: %s", resp.StatusCode, string(bodyBytes))
 			}
-			if tc.wantBody != "" && !strings.Contains(string(bodyBytes), tc.wantBody) {
-				t.Fatalf("expected body to contain %q, got: %s", tc.wantBody, string(bodyBytes))
+			if !strings.Contains(string(bodyBytes), tc.wantBody) {
+				t.Fatalf("unexpected value: got %q, want it to contain %q", string(bodyBytes), tc.wantBody)
 			}
 		})
 	}

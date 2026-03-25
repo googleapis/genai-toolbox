@@ -208,12 +208,11 @@ func TestRestoreBackupToolEndpoints(t *testing.T) {
 				t.Fatalf("failed to parse tc.body: %v", err)
 			}
 			statusCode, resultString, err := tests.ExecuteMCPToolCall(t, tc.toolName, args, nil)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
 
 			var mockPayload []byte
-			if statusCode != http.StatusOK {
+			if err != nil {
+				mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+			} else if statusCode != http.StatusOK {
 				mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
 			} else {
 				mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))

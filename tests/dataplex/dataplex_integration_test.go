@@ -485,7 +485,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -639,7 +639,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -768,7 +768,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}

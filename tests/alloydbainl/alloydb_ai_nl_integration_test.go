@@ -244,7 +244,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -414,7 +414,7 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 			for k, v := range header {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}

@@ -265,7 +265,7 @@ func runFirestoreValidateRulesTest(t *testing.T) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -328,7 +328,7 @@ func runFirestoreGetRulesTest(t *testing.T) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -499,7 +499,7 @@ func runFirestoreMCPToolCallMethod(t *testing.T, docPath1, docPath2 string) {
 				req.Header.Add(k, v)
 			}
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -819,7 +819,7 @@ func runFirestoreUpdateDocumentTest(t *testing.T, collectionName string, docID s
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1029,7 +1029,7 @@ func runFirestoreAddDocumentsTest(t *testing.T, collectionName string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1230,7 +1230,7 @@ func runFirestoreGetDocumentsTest(t *testing.T, docPath1, docPath2 string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1307,7 +1307,7 @@ func runFirestoreListCollectionsTest(t *testing.T, collectionName, subCollection
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1383,7 +1383,7 @@ func runFirestoreDeleteDocumentsTest(t *testing.T, docPath string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1483,7 +1483,7 @@ func runFirestoreQueryTest(t *testing.T, collectionName string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1578,7 +1578,7 @@ func runFirestoreQuerySelectArrayTest(t *testing.T, collectionName string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1765,7 +1765,7 @@ func runFirestoreQueryCollectionTest(t *testing.T, collectionName string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}

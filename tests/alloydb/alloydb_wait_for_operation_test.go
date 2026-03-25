@@ -181,7 +181,7 @@ func TestWaitToolEndpoints(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}

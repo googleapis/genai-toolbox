@@ -1081,7 +1081,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1126,7 +1126,7 @@ func runInvokeRequest(t *testing.T, api, body string, headers map[string]string)
 		req.Header.Add(k, v)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := tests.InterceptLegacyDo(t, req)
 	if err != nil {
 		t.Fatalf("failed to send request: %v", err)
 	}
@@ -1397,7 +1397,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1535,7 +1535,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1656,7 +1656,7 @@ func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1735,7 +1735,7 @@ func runBigQueryDataTypeTests(t *testing.T) {
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1857,7 +1857,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2007,7 +2007,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2157,7 +2157,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2307,7 +2307,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2458,7 +2458,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 				}
 				reqWithCtx := req.WithContext(ctx)
 
-				resp, err = http.DefaultClient.Do(reqWithCtx)
+				resp, err = tests.InterceptLegacyDo(t, reqWithCtx)
 				if err != nil {
 					// Retry on time out.
 					if os.IsTimeout(err) {
@@ -2595,7 +2595,7 @@ func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowed
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2669,7 +2669,7 @@ func runGetDatasetInfoWithRestriction(t *testing.T, allowedDatasetName, disallow
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2720,7 +2720,7 @@ func runGetTableInfoWithRestriction(t *testing.T, allowedDatasetName, disallowed
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2808,7 +2808,7 @@ func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowed
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -2871,7 +2871,7 @@ func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName,
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -3008,7 +3008,7 @@ func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, ta
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -3133,7 +3133,7 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}

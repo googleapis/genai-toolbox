@@ -332,12 +332,11 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 
 func invokeTool(t *testing.T, toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
 	status, resultString, err := tests.ExecuteMCPToolCall(t, toolName, request, headers)
-	if err != nil {
-		return nil, err
-	}
 
 	var mockPayload []byte
-	if status != http.StatusOK {
+	if err != nil {
+		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+	} else if status != http.StatusOK {
 		// Mock error payload matching api schema exactly for assertions
 		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
 	} else {

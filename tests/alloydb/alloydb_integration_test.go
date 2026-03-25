@@ -334,7 +334,7 @@ func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -435,7 +435,7 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -536,7 +536,7 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -665,7 +665,7 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -754,7 +754,7 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -849,7 +849,7 @@ func runAlloyDBGetInstanceTest(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -944,7 +944,7 @@ func runAlloyDBGetUserTest(t *testing.T, vars map[string]string) {
 			}
 			req.Header.Add("Content-type", "application/json")
 
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1161,7 +1161,7 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1283,7 +1283,7 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
@@ -1427,7 +1427,7 @@ func TestAlloyDBCreateUser(t *testing.T) {
 				t.Fatalf("unable to create request: %s", err)
 			}
 			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+			resp, err := tests.InterceptLegacyDo(t, req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}

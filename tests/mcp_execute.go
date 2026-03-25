@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -59,17 +60,94 @@ func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any,
 		t.Fatalf("error parsing mcp response body: %v\nraw body: %s", err, string(respBody))
 	}
 	if mcpResp.Error != nil {
-		return resp.StatusCode, "", fmt.Errorf("MCP error %d: %s", mcpResp.Error.Code, mcpResp.Error.Message)
+		return resp.StatusCode, "", fmt.Errorf("%s", mcpResp.Error.Message)
+	}
+
+	if mcpResp.Result.IsError {
+		// If it's an application-level MCP tool failure, map it as an error text
+		var errText string
+		for _, c := range mcpResp.Result.Content {
+			if c.Type == "text" {
+				errText += c.Text
+			}
+		}
+		return resp.StatusCode, strings.TrimSpace(errText), nil
 	}
 	if len(mcpResp.Result.Content) == 0 {
 		return resp.StatusCode, "null", nil
 	}
 
-	var contentText string
+	var textBlocks []string
 	for _, c := range mcpResp.Result.Content {
 		if c.Type == "text" {
-			contentText += c.Text
+			textBlocks = append(textBlocks, strings.TrimSpace(c.Text))
 		}
 	}
-	return resp.StatusCode, strings.TrimSpace(contentText), nil
+
+	if len(textBlocks) == 0 {
+		return resp.StatusCode, "null", nil
+	}
+	if len(textBlocks) == 1 {
+		return resp.StatusCode, textBlocks[0], nil
+	}
+
+	// For legacy assertions: if multiple blocks are returned and they look like JSON, wrap them into a JSON array
+	first := textBlocks[0]
+	if strings.HasPrefix(first, "{") || strings.HasPrefix(first, "[") || strings.HasPrefix(first, "\"") {
+		return resp.StatusCode, "[" + strings.Join(textBlocks, ",") + "]", nil
+	}
+
+	return resp.StatusCode, strings.Join(textBlocks, "\n"), nil
+}
+
+// InterceptLegacyDo intercepts a hardcoded HTTP request destined for /api/tool/.../invoke,
+// dynamically converts it into a local ExecuteMCPToolCall, and wraps the
+// MCP string (or JSON-RPC logic error) inside a standard Go *http.Response.
+func InterceptLegacyDo(t *testing.T, req *http.Request) (*http.Response, error) {
+	pathParts := strings.Split(req.URL.Path, "/")
+	// e.g., /api/tool/cloud-gda-query/invoke -> length 5, tool is pathParts[3]
+	if len(pathParts) < 4 || pathParts[2] != "tool" {
+		t.Fatalf("InterceptLegacyDo: invalid or unsupported legacy URL path %s", req.URL.Path)
+	}
+	toolName := pathParts[3]
+
+	var reqBodyBytes []byte
+	var err error
+	if req.Body != nil {
+		reqBodyBytes, err = io.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("InterceptLegacyDo: failed to read body: %v", err)
+		}
+		req.Body = io.NopCloser(bytes.NewReader(reqBodyBytes))
+	}
+
+	var args map[string]any
+	if len(reqBodyBytes) > 0 {
+		if err := json.Unmarshal(reqBodyBytes, &args); err != nil {
+			t.Fatalf("InterceptLegacyDo: failed to unmarshal body to map[string]any: %v", err)
+		}
+	}
+
+	headers := map[string]string{}
+	for k, v := range req.Header {
+		if len(v) > 0 {
+			headers[k] = v[0]
+		}
+	}
+
+	statusCode, resultStr, err := ExecuteMCPToolCall(t, toolName, args, headers)
+
+	var mockPayload []byte
+	if err != nil {
+		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+	} else if statusCode != http.StatusOK {
+		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultStr))
+	} else {
+		mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultStr))
+	}
+
+	return &http.Response{
+		StatusCode: statusCode,
+		Body:       io.NopCloser(bytes.NewReader(mockPayload)),
+	}, nil
 }
