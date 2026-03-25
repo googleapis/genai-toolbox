@@ -87,15 +87,14 @@ func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any,
 	if len(textBlocks) == 0 {
 		return resp.StatusCode, "null", nil
 	}
+	if len(textBlocks) == 1 {
+		return resp.StatusCode, textBlocks[0], nil
+	}
 
 	// For legacy assertions: if multiple blocks are returned and they look like JSON, wrap them into a JSON array
 	first := textBlocks[0]
 	if strings.HasPrefix(first, "{") || strings.HasPrefix(first, "[") || strings.HasPrefix(first, "\"") {
 		return resp.StatusCode, "[" + strings.Join(textBlocks, ",") + "]", nil
-	}
-
-	if len(textBlocks) == 1 {
-		return resp.StatusCode, textBlocks[0], nil
 	}
 
 	return resp.StatusCode, strings.Join(textBlocks, "\n"), nil

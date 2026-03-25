@@ -146,23 +146,20 @@ func TestDgraphToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			req, _ := http.NewRequest("POST", tc.api, tc.requestBody)
-			req.Header.Set("Content-Type", "application/json")
-			resp, err := tests.InterceptLegacyDo(t, req)
+			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
-			// defer resp.Body.Close()
+			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusOK {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
 			var body map[string]interface{}
-			bodyBytes, _ := io.ReadAll(resp.Body)
-			err = json.Unmarshal(bodyBytes, &body)
+			err = json.NewDecoder(resp.Body).Decode(&body)
 			if err != nil {
-				t.Fatalf("error parsing response body: %s", string(bodyBytes))
+				t.Fatalf("error parsing response body")
 			}
 			got, ok := body["result"].(string)
 

@@ -436,22 +436,22 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 
 	// Test error handling - these are expected to fail but exercise error paths
 	t.Run("mindsdb_error_handling", func(t *testing.T) {
-		req1, _ := http.NewRequest("POST", "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke", bytes.NewBuffer([]byte(`{"sql": "INVALID SQL QUERY"}`)))
-		req1.Header.Set("Content-Type", "application/json")
-		resp, err := tests.InterceptLegacyDo(t, req1)
+		// Test invalid SQL - expect this to fail with 400
+		resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke", "application/json", bytes.NewBuffer([]byte(`{"sql": "INVALID SQL QUERY"}`)))
 		if err != nil {
 			t.Fatalf("error when sending request: %s", err)
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Logf("Expected 400 for invalid SQL, got %d (this exercises error handling)", resp.StatusCode)
 		}
 
-		req2, _ := http.NewRequest("POST", "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke", bytes.NewBuffer([]byte(`{"sql": ""}`)))
-		req2.Header.Set("Content-Type", "application/json")
-		resp2, err := tests.InterceptLegacyDo(t, req2)
+		// Test empty SQL - expect this to fail with 400
+		resp2, err := http.Post("http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke", "application/json", bytes.NewBuffer([]byte(`{"sql": ""}`)))
 		if err != nil {
 			t.Fatalf("error when sending request: %s", err)
 		}
+		defer resp2.Body.Close()
 		if resp2.StatusCode != http.StatusBadRequest {
 			t.Logf("Expected 400 for empty SQL, got %d (this exercises error handling)", resp2.StatusCode)
 		}
@@ -459,12 +459,12 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 
 	// Test authentication - these are expected to fail but exercise auth code paths
 	t.Run("mindsdb_auth_tests", func(t *testing.T) {
-		req3, _ := http.NewRequest("POST", "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke", bytes.NewBuffer([]byte(`{"sql": "SELECT 1"}`)))
-		req3.Header.Set("Content-Type", "application/json")
-		resp, err := tests.InterceptLegacyDo(t, req3)
+		// Test auth-required tool without auth - expect this to fail with 401
+		resp, err := http.Post("http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke", "application/json", bytes.NewBuffer([]byte(`{"sql": "SELECT 1"}`)))
 		if err != nil {
 			t.Fatalf("error when sending request: %s", err)
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusUnauthorized {
 			t.Logf("Expected 401 for missing auth, got %d (this exercises auth handling)", resp.StatusCode)
 		}

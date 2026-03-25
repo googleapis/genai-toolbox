@@ -198,22 +198,19 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := tests.InterceptLegacyDo(t, http.NewRequest(http.MethodGet, tc.api, nil))
+			resp, err := http.Get(tc.api)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
-			// defer resp.Body.Close() not needed anymore locally
+			defer resp.Body.Close()
 			if resp.StatusCode != 200 {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200\nresponse code:%d\n %s", resp.StatusCode, string(bodyBytes))
+				t.Fatalf("response status code is not 200")
 			}
 
 			var body map[string]interface{}
-			//err = json.NewDecoder(resp.Body).Decode(&body)
-			bodyBytes, _ := io.ReadAll(resp.Body)
-			err = json.Unmarshal(bodyBytes, &body)
+			err = json.NewDecoder(resp.Body).Decode(&body)
 			if err != nil {
-				t.Fatalf("error parsing response body: %s", err)
+				t.Fatalf("error parsing response body")
 			}
 
 			got, ok := body["tools"]
@@ -541,13 +538,11 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				tc.prepareData(t)
 			}
 
-			req, _ := http.NewRequest("POST", tc.api, tc.requestBody)
-			req.Header.Set("Content-Type", "application/json")
-			resp, err := tests.InterceptLegacyDo(t, req)
+			resp, err := http.Post(tc.api, "application/json", tc.requestBody)
 			if err != nil {
 				t.Fatalf("error when sending a request: %s", err)
 			}
-			// defer resp.Body.Close()
+			defer resp.Body.Close()
 			if resp.StatusCode != tc.wantStatus {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code: got %d, want %d: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))
@@ -555,21 +550,13 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 
 			if tc.wantStatus == http.StatusOK {
 				var body map[string]interface{}
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				err = json.Unmarshal(bodyBytes, &body)
+				err = json.NewDecoder(resp.Body).Decode(&body)
 				if err != nil {
-					t.Fatalf("error parsing response body: %s", string(bodyBytes))
+					t.Fatalf("error parsing response body")
 				}
-				
-				// Handle both raw 'result' and JSON 'error' natively
 				got, ok := body["result"].(string)
 				if !ok {
-					gotErr, errOk := body["error"].(string)
-					if errOk {
-						got = gotErr
-					} else {
-						t.Fatalf("unable to find result in response body")
-					}
+					t.Fatalf("unable to find result in response body")
 				}
 
 				if tc.validateFunc != nil {

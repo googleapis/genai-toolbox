@@ -61,15 +61,19 @@ func RunToolGetTest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, respBytes := RunRequest(t, http.MethodGet, tc.api, nil, nil)
+			resp, err := http.Get(tc.api)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
 			if resp.StatusCode != 200 {
-				t.Fatalf("response status code is not 200: %d", resp.StatusCode)
+				t.Fatalf("response status code is not 200")
 			}
 
 			var body map[string]interface{}
-			err := json.Unmarshal(respBytes, &body)
+			err = json.NewDecoder(resp.Body).Decode(&body)
 			if err != nil {
-				t.Fatalf("error parsing response body: %v\nraw body: %s", err, string(respBytes))
+				t.Fatalf("error parsing response body")
 			}
 
 			got, ok := body["tools"]
@@ -438,12 +442,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 			got, ok := body["result"].(string)
 			if !ok {
-				gotErr, errOk := body["error"].(string)
-				if errOk {
-					got = gotErr
-				} else {
-					t.Fatalf("unable to find result or error in response body")
-				}
+				t.Fatalf("unable to find result in response body")
 			}
 
 			if got != tc.wantBody {
