@@ -422,15 +422,22 @@ func runQueryParamInvokeTest(t *testing.T) {
 			}
 
 			if tc.wantErrMsg != "" {
-				if !mcpResp.Result.IsError {
-					t.Fatalf("expected application error containing %q, but got success result: %v", tc.wantErrMsg, mcpResp.Result)
-				}
+				// The error could be an application-level failure (mcpResp.Result.IsError == true) 
+				// or a JSON-RPC level failure (mcpResp.Error != nil) like parameter validation.
 				var errText string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						errText += content.Text
+				
+				if mcpResp.Error != nil {
+					errText = mcpResp.Error.Message
+				} else if mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							errText += content.Text
+						}
 					}
+				} else {
+					t.Fatalf("expected error containing %q, but got success result: %v", tc.wantErrMsg, mcpResp.Result)
 				}
+				
 				if !strings.Contains(errText, tc.wantErrMsg) {
 					t.Fatalf("expected error text containing %q, got %q", tc.wantErrMsg, errText)
 				}
@@ -494,15 +501,20 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			}
 
 			if tc.wantErrMsg != "" {
-				if !mcpResp.Result.IsError {
-					t.Fatalf("expected application error containing %q, but got success result: %v", tc.wantErrMsg, mcpResp.Result)
-				}
 				var errText string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						errText += content.Text
+				
+				if mcpResp.Error != nil {
+					errText = mcpResp.Error.Message
+				} else if mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							errText += content.Text
+						}
 					}
+				} else {
+					t.Fatalf("expected error containing %q, but got success result: %v", tc.wantErrMsg, mcpResp.Result)
 				}
+				
 				if !strings.Contains(errText, tc.wantErrMsg) {
 					t.Fatalf("unexpected error message: got %q, want it to contain %q", errText, tc.wantErrMsg)
 				}

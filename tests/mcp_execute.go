@@ -72,7 +72,10 @@ func GetMCPToolsList(t *testing.T, requestHeader map[string]string) (int, *jsonr
 		Id:      uuid.New().String(),
 		Method:  v20250618.TOOLS_LIST,
 	}
-	reqBody, _ := json.Marshal(req)
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("error marshalling tools/list request body: %v", err)
+	}
 
 	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
 
