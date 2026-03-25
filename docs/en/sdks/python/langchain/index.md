@@ -442,3 +442,25 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+## OpenTelemetry
+
+The SDK supports OpenTelemetry tracing and metrics via the `toolbox-core` layer, following the [MCP Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp).
+
+First install the telemetry extra from `toolbox-core`:
+
+```bash
+pip install toolbox-core[telemetry]
+```
+
+Then pass `telemetry_enabled=True` when creating your client:
+
+```py
+from toolbox_langchain import ToolboxClient
+
+with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = toolbox.load_tool("my-tool")
+    result = tool.invoke({"param": "value"})
+```
+
+Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/core/#opentelemetry) for a full setup example.

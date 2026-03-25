@@ -123,7 +123,7 @@ identity used has been granted the correct IAM permissions.
 Initialize a Cloud Healthcare API source that uses ADC:
 
 ```yaml
-kind: sources
+kind: source
 name: my-healthcare-source
 type: "cloud-healthcare"
 project: "my-project-id"
@@ -139,7 +139,7 @@ dataset: "my-healthcare-dataset-id"
 Initialize a Cloud Healthcare API source that uses the client's access token:
 
 ```yaml
-kind: sources
+kind: source
 name: my-healthcare-client-auth-source
 type: "cloud-healthcare"
 project: "my-project-id"

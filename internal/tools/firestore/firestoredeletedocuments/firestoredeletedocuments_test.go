@@ -36,7 +36,7 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: delete_docs_tool
 			type: firestore-delete-documents
 			source: my-firestore-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			kind: tools
+			kind: tool
 			name: secure_delete_docs
 			type: firestore-delete-documents
 			source: prod-firestore
@@ -94,7 +94,7 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: delete_user_docs
 	type: firestore-delete-documents
 	source: users-firestore
@@ -102,13 +102,13 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	authRequired:
 		- user-auth
 ---
-	kind: tools
+	kind: tool
 	name: delete_product_docs
 	type: firestore-delete-documents
 	source: products-firestore
 	description: Delete product documents
 ---
-	kind: tools
+	kind: tool
 	name: delete_order_docs
 	type: firestore-delete-documents
 	source: orders-firestore

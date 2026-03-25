@@ -31,7 +31,7 @@ The tool returns a JSON array where each element represents a stored procedure w
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_stored_procedure
 type: postgres-list-stored-procedure
 source: postgres-source

@@ -36,7 +36,7 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 		{
 			desc: "basic search example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: elasticsearch-esql
             source: my-elasticsearch-instance
@@ -59,7 +59,7 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 		{
 			desc: "search with customizable limit parameter",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: elasticsearch-esql
             source: my-elasticsearch-instance

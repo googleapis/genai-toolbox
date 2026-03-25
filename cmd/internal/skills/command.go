@@ -79,7 +79,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	parser := internal.ToolsFileParser{}
+	parser := internal.ConfigParser{}
 	_, err = opts.LoadConfig(ctx, &parser)
 	if err != nil {
 		return err
@@ -151,29 +151,29 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 			}
 		}
 
-		if opts.ToolsFolder != "" {
-			folderName := filepath.Base(opts.ToolsFolder)
+		if opts.ConfigFolder != "" {
+			folderName := filepath.Base(opts.ConfigFolder)
 			destFolder := filepath.Join(assetsPath, folderName)
-			if err := copyDir(opts.ToolsFolder, destFolder); err != nil {
+			if err := copyDir(opts.ConfigFolder, destFolder); err != nil {
 				return err
 			}
-			jsConfigArgs = append(jsConfigArgs, `"--tools-folder"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, folderName))
-		} else if len(opts.ToolsFiles) > 0 {
-			for _, f := range opts.ToolsFiles {
+			jsConfigArgs = append(jsConfigArgs, `"--config-folder"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, folderName))
+		} else if len(opts.Configs) > 0 {
+			for _, f := range opts.Configs {
 				baseName := filepath.Base(f)
 				destPath := filepath.Join(assetsPath, baseName)
 				if err := copyFile(f, destPath); err != nil {
 					return err
 				}
-				jsConfigArgs = append(jsConfigArgs, `"--tools-files"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
+				jsConfigArgs = append(jsConfigArgs, `"--configs"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
 			}
-		} else if opts.ToolsFile != "" {
-			baseName := filepath.Base(opts.ToolsFile)
+		} else if opts.Config != "" {
+			baseName := filepath.Base(opts.Config)
 			destPath := filepath.Join(assetsPath, baseName)
-			if err := copyFile(opts.ToolsFile, destPath); err != nil {
+			if err := copyFile(opts.Config, destPath); err != nil {
 				return err
 			}
-			jsConfigArgs = append(jsConfigArgs, `"--tools-file"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
+			jsConfigArgs = append(jsConfigArgs, `"--config"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
 		}
 
 		configArgsStr := strings.Join(jsConfigArgs, ", ")

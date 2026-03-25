@@ -36,7 +36,7 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: list_schemas_tool
             type: cockroachdb-list-schemas
             source: my-crdb-instance

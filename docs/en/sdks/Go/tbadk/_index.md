@@ -321,7 +321,7 @@ authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 {{< notice info >}}
 The name used when registering the getter function with the SDK (e.g.,
 `"my_api_token"`) must exactly match the `name` of the corresponding
-`authServices` defined in the tool's configuration within the Toolbox service.
+`authService` defined in the tool's configuration within the Toolbox service.
 {{< /notice >}}
 
 ```go

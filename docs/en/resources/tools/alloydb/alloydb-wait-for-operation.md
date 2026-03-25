@@ -25,7 +25,7 @@ and shouldn't be used for production agents.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: wait_for_operation
 type: alloydb-wait-for-operation
 source: my-alloydb-admin-source

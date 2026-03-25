@@ -22,7 +22,7 @@ to exit dev mode.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: dev_mode
 type: looker-dev-mode
 source: looker-source

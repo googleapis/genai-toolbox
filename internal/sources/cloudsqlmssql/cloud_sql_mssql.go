@@ -50,16 +50,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// Cloud SQL MSSQL configs
-	Name      string         `yaml:"name" validate:"required"`
-	Type      string         `yaml:"type" validate:"required"`
-	Project   string         `yaml:"project" validate:"required"`
-	Region    string         `yaml:"region" validate:"required"`
-	Instance  string         `yaml:"instance" validate:"required"`
-	IPAddress string         `yaml:"ipAddress"` // Deprecated: kept for backwards compatibility
-	IPType    sources.IPType `yaml:"ipType" validate:"required"`
-	User      string         `yaml:"user" validate:"required"`
-	Password  string         `yaml:"password" validate:"required"`
-	Database  string         `yaml:"database" validate:"required"`
+	Name     string         `yaml:"name" validate:"required"`
+	Type     string         `yaml:"type" validate:"required"`
+	Project  string         `yaml:"project" validate:"required"`
+	Region   string         `yaml:"region" validate:"required"`
+	Instance string         `yaml:"instance" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	User     string         `yaml:"user" validate:"required"`
+	Password string         `yaml:"password" validate:"required"`
+	Database string         `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigType() string {

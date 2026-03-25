@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-kind: sources
+kind: source
 name: my-snowflake-db
 type: snowflake
 account: ${SNOWFLAKE_ACCOUNT}
@@ -23,13 +23,13 @@ schema: ${SNOWFLAKE_SCHEMA}
 warehouse: ${SNOWFLAKE_WAREHOUSE}  # Optional, defaults to COMPUTE_WH if not set
 role: ${SNOWFLAKE_ROLE}           # Optional, defaults to ACCOUNTADMIN if not set
 ---
-kind: tools
+kind: tool
 name: execute_sql
 type: snowflake-execute-sql
 source: my-snowflake-db
 description: Execute arbitrary SQL statements on Snowflake
 ---
-kind: tools
+kind: tool
 name: get_customer_orders
 type: snowflake-sql
 source: my-snowflake-db
@@ -44,7 +44,7 @@ parameters:
     type: string
     description: The customer ID to look up orders for
 ---
-kind: tools
+kind: tool
 name: daily_sales_report
 type: snowflake-sql
 source: my-snowflake-db
@@ -63,7 +63,7 @@ parameters:
     type: string
     description: The date to generate report for (YYYY-MM-DD format)
 ---
-kind: toolsets
+kind: toolset
 name: snowflake-analytics
 tools:
   - execute_sql

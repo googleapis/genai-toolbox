@@ -23,7 +23,7 @@ efficient batch deletion and returns the success status for each document.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: delete_user_documents
 type: firestore-delete-documents
 source: my-firestore-source

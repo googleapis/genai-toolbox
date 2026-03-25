@@ -23,7 +23,7 @@ response bundle.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: get_fhir_store
 type: cloud-healthcare-fhir-fetch-page
 source: my-healthcare-source

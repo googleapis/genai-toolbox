@@ -19,7 +19,7 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: looker-get-project-directories
 type: looker-get-project-directories
 source: looker-source

@@ -37,7 +37,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             type: cassandra-cql
             name: example_tool
             source: my-cassandra-instance
@@ -76,7 +76,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "with template parameters",
 			in: `
-            kind: tools
+            kind: tool
             type: cassandra-cql
             name: example_tool
             source: my-cassandra-instance
@@ -130,7 +130,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "without optional fields",
 			in: `
-            kind: tools
+            kind: tool
             type: cassandra-cql
             name: example_tool
             source: my-cassandra-instance

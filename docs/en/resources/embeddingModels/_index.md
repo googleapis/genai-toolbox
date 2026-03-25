@@ -51,10 +51,10 @@ ${ENV_NAME} instead of hardcoding your API keys into the configuration file.
 
 ### Step 1 - Define an Embedding Model
 
-Define an embedding model in the `embeddingModels` section:
+Define an embedding model with the `embeddingModel` kind:
 
 ```yaml
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model # Name of the embedding model
 type: gemini
 model: gemini-embedding-001
@@ -69,7 +69,7 @@ Use the defined embedding model, embed your query parameters using the
 
 ```yaml
 # Vector ingestion tool
-kind: tools
+kind: tool
 name: insert_embedding
 type: postgres-sql
 source: my-pg-instance
@@ -88,7 +88,7 @@ parameters:
     embeddedBy: gemini-model
 ---
 # Semantic search tool
-kind: tools
+kind: tool
 name: search_embedding
 type: postgres-sql
 source: my-pg-instance

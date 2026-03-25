@@ -20,7 +20,7 @@ for more information.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: query_my_index
 type: elasticsearch-esql
 source: elasticsearch-source

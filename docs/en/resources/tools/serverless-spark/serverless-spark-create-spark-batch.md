@@ -48,7 +48,7 @@ prebuilt config.
 ### Example `tools.yaml`
 
 ```yaml
-kind: tools
+kind: tool
 name: "serverless-spark-create-spark-batch"
 type: "serverless-spark-create-spark-batch"
 source: "my-serverless-spark-source"

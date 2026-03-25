@@ -17,7 +17,7 @@ compatibility.
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-yb-source
 type: yugabytedb
 host: 127.0.0.1

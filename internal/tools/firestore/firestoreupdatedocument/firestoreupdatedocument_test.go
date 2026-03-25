@@ -38,7 +38,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "valid config",
 			yaml: `
-			kind: tools
+			kind: tool
 			name: test-update-document
 			type: firestore-update-document
 			source: test-firestore
@@ -60,7 +60,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "minimal config",
 			yaml: `
-			kind: tools
+			kind: tool
 			name: test-update-document
 			type: firestore-update-document
 			source: test-firestore
@@ -80,7 +80,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "invalid yaml",
 			yaml: `
-			kind: tools
+			kind: tool
 			name: test-update-document
 			type: [invalid
 			`,

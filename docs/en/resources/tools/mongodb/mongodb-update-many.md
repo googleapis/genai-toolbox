@@ -29,7 +29,7 @@ Here's an example configuration. This tool applies a discount to all items
 within a specific category and also marks them as being on sale.
 
 ```yaml
-kind: tools
+kind: tool
 name: apply_category_discount
 type: mongodb-update-many
 source: my-mongo-source

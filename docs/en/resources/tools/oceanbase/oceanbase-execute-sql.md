@@ -24,7 +24,7 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: execute_sql_tool
 type: oceanbase-execute-sql
 source: my-oceanbase-instance

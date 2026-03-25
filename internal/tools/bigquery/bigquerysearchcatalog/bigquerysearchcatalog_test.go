@@ -36,7 +36,7 @@ func TestParseFromYamlBigQuerySearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: bigquery-search-catalog
             source: my-instance

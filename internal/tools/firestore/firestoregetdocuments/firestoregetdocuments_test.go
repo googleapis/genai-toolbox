@@ -36,7 +36,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: get_docs_tool
 			type: firestore-get-documents
 			source: my-firestore-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			kind: tools
+			kind: tool
 			name: secure_get_docs
 			type: firestore-get-documents
 			source: prod-firestore
@@ -94,7 +94,7 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: get_user_docs
 	type: firestore-get-documents
 	source: users-firestore
@@ -102,13 +102,13 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	authRequired:
 		- user-auth
 ---
-	kind: tools
+	kind: tool
 	name: get_product_docs
 	type: firestore-get-documents
 	source: products-firestore
 	description: Get product documents
 ---
-	kind: tools
+	kind: tool
 	name: get_order_docs
 	type: firestore-get-documents
 	source: orders-firestore

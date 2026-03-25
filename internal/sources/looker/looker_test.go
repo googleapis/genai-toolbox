@@ -34,7 +34,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			base_url: http://example.looker.com/
@@ -82,7 +82,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			base_url: http://example.looker.com/
@@ -90,17 +90,17 @@ func TestFailParseFromYaml(t *testing.T) {
 			client_secret: sdakl;jgflkasdfkfg
 			schema: test-schema
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"schema\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | name: my-looker-instance\n>  5 | schema: test-schema\n       ^\n   6 | type: looker",
+			err: "error unmarshaling source: unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"schema\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | name: my-looker-instance\n>  5 | schema: test-schema\n       ^\n   6 | type: looker",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-looker-instance
 			type: looker
 			client_id: jasdl;k;tjl
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

@@ -8,7 +8,7 @@
     ':prHourlyLimitNone',
     ':preserveSemverRanges',
   ],
-  minimumReleaseAge: '3',
+  minimumReleaseAge: '3 days',
   rebaseWhen: 'conflicted',
   dependencyDashboardLabels: [
     'type: process',
@@ -45,6 +45,20 @@
       groupName: 'Go',
       matchManagers: [
         'gomod',
+      ],
+      ignorePaths: [
+        'docs/**',
+        '.hugo/**',
+      ],
+    },
+    {
+      groupName: 'Go Samples',
+      matchManagers: [
+        'gomod',
+      ],
+      matchFileNames: [
+        'docs/**',
+        '.hugo/**',
       ],
     },
     {

@@ -128,7 +128,7 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-kind: sources
+kind: source
 name: my-cloud-sql-mysql-source
 type: cloud-sql-mysql
 project: my-project-id

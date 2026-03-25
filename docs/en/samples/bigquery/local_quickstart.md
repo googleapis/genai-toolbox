@@ -201,13 +201,13 @@ to use BigQuery, and then run the Toolbox server.
     {{< /notice >}}
 
     ```yaml
-    kind: sources
+    kind: source
     name: my-bigquery-source
     type: bigquery
     project: YOUR_PROJECT_ID
     location: us
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-name
     type: bigquery-sql
     source: my-bigquery-source
@@ -218,7 +218,7 @@ to use BigQuery, and then run the Toolbox server.
         description: The name of the hotel.
     statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
     ---
-    kind: tools
+    kind: tool
     name: search-hotels-by-location
     type: bigquery-sql
     source: my-bigquery-source
@@ -229,7 +229,7 @@ to use BigQuery, and then run the Toolbox server.
         description: The location of the hotel.
     statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
     ---
-    kind: tools
+    kind: tool
     name: book-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -241,7 +241,7 @@ to use BigQuery, and then run the Toolbox server.
         description: The ID of the hotel to book.
     statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
     ---
-    kind: tools
+    kind: tool
     name: update-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -260,7 +260,7 @@ to use BigQuery, and then run the Toolbox server.
     statement: >-
         UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
     ---
-    kind: tools
+    kind: tool
     name: cancel-hotel
     type: bigquery-sql
     source: my-bigquery-source
@@ -272,16 +272,15 @@ to use BigQuery, and then run the Toolbox server.
     statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
     ```
 
-    **Important Note on `toolsets`**: The `tools.yaml` content above does not
-    include a `toolsets` section. The Python agent examples in Step 3 (e.g.,
+    **Important Note on `toolset`**: The `tools.yaml` content above does not
+    include a `toolset` kind. The Python agent examples in Step 3 (e.g.,
     `await toolbox_client.load_toolset("my-toolset")`) rely on a toolset named
-    `my-toolset`. To make those examples work, you will need to add a `toolsets`
-    section to your `tools.yaml` file, for example:
+    `my-toolset`. To make those examples work, you will need to add a `toolset`
+    to your `tools.yaml` file, for example:
 
     ```yaml
     # Add this to your tools.yaml if using load_toolset("my-toolset")
-    # Ensure it's at the same indentation level as 'sources:' and 'tools:'
-    kind: toolsets
+    kind: toolset
     name: my-toolset
     tools:
         - search-hotels-by-name
@@ -300,7 +299,7 @@ to use BigQuery, and then run the Toolbox server.
 1. Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
     ```bash
-    ./toolbox --tools-file "tools.yaml"
+    ./toolbox --config "tools.yaml"
     ```
 
     {{< notice note >}}

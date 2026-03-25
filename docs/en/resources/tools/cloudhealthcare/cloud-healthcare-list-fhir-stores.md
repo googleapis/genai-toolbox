@@ -22,7 +22,7 @@ stores in the dataset of the healthcare source. It takes no extra parameters.
 ## Example
 
 ```yaml
-kind: tools
+kind: tool
 name: list_fhir_stores
 type: cloud-healthcare-list-fhir-stores
 source: my-healthcare-source

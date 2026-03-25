@@ -41,7 +41,7 @@ query.
 {{< tabpane persist="header" >}}
 {{< tab header="Query" lang="yaml" >}}
 
-kind: tools
+kind: tool
 name: search_user
 type: dgraph-dql
 source: my-dgraph-source
@@ -82,7 +82,7 @@ parameters:
 {{< /tab >}}
 {{< tab header="Mutation" lang="yaml" >}}
 
-kind: tools
+kind: tool
 name: dgraph-manage-user-instance
 type: dgraph-dql
 source: my-dgraph-source

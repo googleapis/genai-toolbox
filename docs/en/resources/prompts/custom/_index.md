@@ -17,7 +17,7 @@ Here is an example of a simple prompt that takes a single argument, code, and
 asks an LLM to review it.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:
@@ -33,7 +33,7 @@ You can define prompts with multiple messages to set up more complex
 conversational contexts, like a role-playing scenario.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: roleplay_scenario
 description: "Sets up a roleplaying scenario with initial messages."
 arguments:
