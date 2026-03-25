@@ -10,7 +10,7 @@ is_sample: true
 
 ## Prerequisites
 
-This tutorial assumes that you have set up MCP Toolbox with a basic agent as described in the [local quickstart](../../../../getting-started/local_quickstart_js.md).
+This tutorial assumes that you have set up MCP Toolbox with a basic agent as described in the [local quickstart](../../../getting-started/local_quickstart_js.md).
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
