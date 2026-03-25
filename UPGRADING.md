@@ -16,12 +16,17 @@ This guide outlines what has changed and the steps you need to take to upgrade.
 
 ## 🚨 Breaking Changes (Action Required)
 
-### 1. Endpoint Standardization: `/api` removed
-The legacy `/api` endpoint for the native Toolbox protocol has been completely removed. All official SDKs have been updated to use the `/mcp` endpoint, which now aligns with the standard Model Context Protocol (MCP) specification.
+### 1. Endpoint Transition: `/api` disabled by default
+The legacy `/api` endpoint for the native Toolbox protocol is now disabled by default. All official SDKs have been updated to use the `/mcp` endpoint, which aligns with the standard Model Context Protocol (MCP) specification. 
+
+If you still require the legacy `/api` endpoint, you must explicitly activate it using a new command-line flag.
+
+* **Usage:** `./toolbox --enable-api`
 * **Migration:** You must update all custom implementations to use the `/mcp`
-  endpoint exclusively. We want to ensure no functionality is lost in this transition. If your workflow  
+  endpoint exclusively, as the `/api` endpoint is now deprecated. If your workflow  
   relied on a non-standard feature that is missing from the new implementation, please submit a
   feature request on our [GitHub Issues page](https://github.com/googleapis/genai-toolbox/issues).
+* **UI Dependency:** Until the UI is officially migrated, it still requires the API to function. You must run the toolbox with both flags: `./toolbox --ui --enable-api`.
 
 ### 2. Strict Tool Naming Validation (SEP986)
 Tool names are now strictly validated against [ModelContextProtocol SEP986 guidelines](https://github.com/alexhancock/modelcontextprotocol/blob/main/docs/specification/draft/server/tools.mdx#tool-names) prior to MCP initialization.
@@ -32,10 +37,12 @@ The legacy snake_case flag `--tools_file` has been completely removed.
 * **Migration:** Update your deployment scripts to use `--config` instead.
 
 ### 4. Singular `kind` Values in Configuration
+_(This step applies only if you are currently using the new flat format.)_
+
 All primitive kind fields in configuration files have been updated to use singular nouns instead of plural. For example, `kind: sources` is now `kind: source`, and `kind: tools` is now `kind: tool`.
 
 * **Migration:** Update your configuration files to use the singular form for all `kind`
-values. _(Note: If you are using the ./toolbox migrate command to transition to the new flat format, this conversion is handled automatically)._
+values. _(Note: If you transitioned to the flat format using the `./toolbox migrate` command, this step was handled automatically.)_
 
 
 ### 5. Configuration Schema: `authSources` renamed
