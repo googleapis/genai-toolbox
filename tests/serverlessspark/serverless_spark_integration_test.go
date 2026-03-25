@@ -829,7 +829,7 @@ func runCancelBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	}
 
 	request := map[string]any{"operation": shortName(batch.Operation)}
-	resp, err := invokeTool("cancel-batch", request, nil)
+	resp, err := invokeTool(t, "cancel-batch", request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}
@@ -893,7 +893,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 					request["pageSize"] = tc.pageSize
 				}
 
-				resp, err := invokeTool("list-batches", request, nil)
+				resp, err := invokeTool(t, "list-batches", request, nil)
 				if err != nil {
 					t.Fatalf("invokeTool failed: %v", err)
 				}
@@ -1002,7 +1002,7 @@ func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStat
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			resp, err := invokeTool(toolName, request, tc.headers)
+			resp, err := invokeTool(t, toolName, request, tc.headers)
 			if err != nil {
 				t.Fatalf("invokeTool failed: %v", err)
 			}
@@ -1052,7 +1052,7 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			request := map[string]any{"name": tc.batchName}
-			resp, err := invokeTool("get-batch", request, nil)
+			resp, err := invokeTool(t, "get-batch", request, nil)
 			if err != nil {
 				t.Fatalf("invokeTool failed: %v", err)
 			}
@@ -1119,7 +1119,7 @@ func runCreateSparkBatchTest(
 	waitForSuccess bool,
 	validate func(t *testing.T, b *dataprocpb.Batch),
 ) {
-	resp, err := invokeTool(toolName, request, nil)
+	resp, err := invokeTool(t, toolName, request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}
@@ -1179,7 +1179,7 @@ func runCreateSparkBatchTest(
 }
 
 func testError(t *testing.T, toolName string, request map[string]any, wantCode int, wantMsg string) {
-	resp, err := invokeTool(toolName, request, nil)
+	resp, err := invokeTool(t, toolName, request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}
@@ -1214,23 +1214,25 @@ func testError(t *testing.T, toolName string, request map[string]any, wantCode i
 	}
 }
 
-func invokeTool(toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
-	requestBytes, err := json.Marshal(request)
+func invokeTool(t *testing.T, toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
+	status, resultString, err := tests.ExecuteMCPToolCall(t, toolName, request, headers)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return nil, err
 	}
 
-	url := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", toolName)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBytes))
-	if err != nil {
-		return nil, fmt.Errorf("unable to create request: %w", err)
-	}
-	req.Header.Add("Content-type", "application/json")
-	for k, v := range headers {
-		req.Header.Add(k, v)
+	var mockPayload []byte
+	if status != http.StatusOK {
+		// Mock error payload matching api schema exactly for assertions
+		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
+	} else {
+		// Mock success payload matching api schema
+		mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))
 	}
 
-	return http.DefaultClient.Do(req)
+	return &http.Response{
+		StatusCode: status,
+		Body:       io.NopCloser(bytes.NewReader(mockPayload)),
+	}, nil
 }
 
 func shortName(fullName string) string {
@@ -1244,7 +1246,7 @@ func runListSessionsTest(t *testing.T, client *dataproc.SessionControllerClient,
 	request := map[string]any{
 		"pageSize": 20,
 	}
-	resp, err := invokeTool("list-sessions", request, nil)
+	resp, err := invokeTool(t, "list-sessions", request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}
@@ -1341,7 +1343,7 @@ func runGetSessionTest(t *testing.T, client *dataproc.SessionControllerClient, c
 	}
 
 	request := map[string]any{"name": shortName(fullName)}
-	resp, err := invokeTool("get-session", request, nil)
+	resp, err := invokeTool(t, "get-session", request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}
@@ -1429,7 +1431,7 @@ func runGetSessionTemplateTest(t *testing.T, client *dataproc.SessionTemplateCon
 	}
 
 	request := map[string]any{"name": shortName(fullName)}
-	resp, err := invokeTool("get-session-template", request, nil)
+	resp, err := invokeTool(t, "get-session-template", request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}

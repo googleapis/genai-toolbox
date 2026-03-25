@@ -330,23 +330,25 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 
 }
 
-func invokeTool(toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
-	requestBytes, err := json.Marshal(request)
+func invokeTool(t *testing.T, toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
+	status, resultString, err := tests.ExecuteMCPToolCall(t, toolName, request, headers)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request: %w", err)
+		return nil, err
 	}
 
-	url := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", toolName)
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(requestBytes))
-	if err != nil {
-		return nil, fmt.Errorf("unable to create request: %w", err)
-	}
-	req.Header.Add("Content-type", "application/json")
-	for k, v := range headers {
-		req.Header.Add(k, v)
+	var mockPayload []byte
+	if status != http.StatusOK {
+		// Mock error payload matching api schema exactly for assertions
+		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
+	} else {
+		// Mock success payload matching api schema
+		mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))
 	}
 
-	return http.DefaultClient.Do(req)
+	return &http.Response{
+		StatusCode: status,
+		Body:       io.NopCloser(bytes.NewReader(mockPayload)),
+	}, nil
 }
 
 func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient, ctx context.Context) {
@@ -398,7 +400,7 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 					request["pageSize"] = tc.pageSize
 				}
 
-				resp, err := invokeTool("list-clusters", request, nil)
+				resp, err := invokeTool(t, "list-clusters", request, nil)
 				if err != nil {
 					t.Fatalf("invokeTool failed: %v", err)
 				}
@@ -485,7 +487,7 @@ func runGetClusterTest(t *testing.T, client *dataproc.ClusterControllerClient, c
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
 				request := map[string]any{"clusterName": tc.clusterName}
-				resp, err := invokeTool("get-cluster", request, nil)
+				resp, err := invokeTool(t, "get-cluster", request, nil)
 				if err != nil {
 					t.Fatalf("invokeTool failed: %v", err)
 				}
@@ -620,7 +622,7 @@ func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStat
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := invokeTool(toolName, request, tc.headers)
+			resp, err := invokeTool(t, toolName, request, tc.headers)
 			if err != nil {
 				t.Fatalf("invokeTool failed: %s", err)
 			}
@@ -634,7 +636,7 @@ func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStat
 }
 
 func testError(t *testing.T, toolName string, request map[string]any, wantCode int, wantMsg string) {
-	resp, err := invokeTool(toolName, request, nil)
+	resp, err := invokeTool(t, toolName, request, nil)
 	if err != nil {
 		t.Fatalf("invokeTool failed: %v", err)
 	}
@@ -708,7 +710,7 @@ func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx con
 					request["pageSize"] = tc.pageSize
 				}
 
-				resp, err := invokeTool("list-jobs", request, nil)
+				resp, err := invokeTool(t, "list-jobs", request, nil)
 				if err != nil {
 					t.Fatalf("invokeTool failed: %v", err)
 				}
@@ -793,7 +795,7 @@ func runGetJobTest(t *testing.T, client *dataproc.JobControllerClient, ctx conte
 		for _, tc := range tcs {
 			t.Run(tc.name, func(t *testing.T) {
 				request := map[string]any{"jobId": tc.jobId}
-				resp, err := invokeTool("get-job", request, nil)
+				resp, err := invokeTool(t, "get-job", request, nil)
 				if err != nil {
 					t.Fatalf("invokeTool failed: %v", err)
 				}

@@ -304,17 +304,25 @@ func TestPreCheckToolEndpoints(t *testing.T) {
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequestWithContext(ctx, http.MethodPost, api, bytes.NewBufferString(tc.body))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
+			var args map[string]any
+			if err := json.Unmarshal([]byte(tc.body), &args); err != nil {
+				t.Fatalf("failed to parse tc.body: %v", err)
 			}
-			req.Header.Add("Content-type", "application/json")
-			req.Header.Add("Authorization", "Bearer FAKE_TOKEN")
-
-			resp, err := http.DefaultClient.Do(req)
+			statusCode, resultString, err := tests.ExecuteMCPToolCall(t, tc.toolName, args, nil)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
+			}
+			
+			var mockPayload []byte
+			if statusCode != http.StatusOK {
+				mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
+			} else {
+				mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))
+			}
+			
+			resp := &http.Response{
+				StatusCode: statusCode,
+				Body:       io.NopCloser(bytes.NewReader(mockPayload)),
 			}
 			defer resp.Body.Close()
 
