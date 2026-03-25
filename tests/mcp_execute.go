@@ -104,6 +104,11 @@ func ExecuteMCPToolCall(t *testing.T, toolName string, arguments map[string]any,
 // dynamically converts it into a local ExecuteMCPToolCall, and wraps the
 // MCP string (or JSON-RPC logic error) inside a standard Go *http.Response.
 func InterceptLegacyDo(t *testing.T, req *http.Request) (*http.Response, error) {
+	// If the request is natively meant for the modern /mcp endpoint, pass it through directly!
+	if strings.HasPrefix(req.URL.Path, "/mcp") {
+		return http.DefaultClient.Do(req)
+	}
+
 	pathParts := strings.Split(req.URL.Path, "/")
 	// e.g., /api/tool/cloud-gda-query/invoke -> length 5, tool is pathParts[3]
 	if len(pathParts) < 4 || pathParts[2] != "tool" {
@@ -139,11 +144,11 @@ func InterceptLegacyDo(t *testing.T, req *http.Request) (*http.Response, error) 
 
 	var mockPayload []byte
 	if err != nil {
-		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+		mockPayload = []byte(fmt.Sprintf(`{"error":%q}`, err.Error()))
 	} else if statusCode != http.StatusOK {
-		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultStr))
+		mockPayload = []byte(fmt.Sprintf(`{"error":%q}`, resultStr))
 	} else {
-		mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultStr))
+		mockPayload = []byte(fmt.Sprintf(`{"result":%q}`, resultStr))
 	}
 
 	return &http.Response{

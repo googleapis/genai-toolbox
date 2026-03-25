@@ -335,13 +335,13 @@ func invokeTool(t *testing.T, toolName string, request map[string]any, headers m
 
 	var mockPayload []byte
 	if err != nil {
-		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+		mockPayload = []byte(fmt.Sprintf(`{"error":%q}`, err.Error()))
 	} else if status != http.StatusOK {
 		// Mock error payload matching api schema exactly for assertions
-		mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
+		mockPayload = []byte(fmt.Sprintf(`{"error":%q}`, resultString))
 	} else {
 		// Mock success payload matching api schema
-		mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))
+		mockPayload = []byte(fmt.Sprintf(`{"result":%q}`, resultString))
 	}
 
 	return &http.Response{

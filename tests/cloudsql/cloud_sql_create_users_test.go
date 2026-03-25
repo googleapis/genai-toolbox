@@ -185,11 +185,11 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 
 			var mockPayload []byte
 			if err != nil {
-				mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, err.Error()))
+				mockPayload = []byte(fmt.Sprintf(`{"error":%q}`, err.Error()))
 			} else if statusCode != http.StatusOK {
-				mockPayload = []byte(fmt.Sprintf(`{"error": %q}`, resultString))
+				mockPayload = []byte(fmt.Sprintf(`{"error":%q}`, resultString))
 			} else {
-				mockPayload = []byte(fmt.Sprintf(`{"result": %q}`, resultString))
+				mockPayload = []byte(fmt.Sprintf(`{"result":%q}`, resultString))
 			}
 
 			resp := &http.Response{

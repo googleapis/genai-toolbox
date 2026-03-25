@@ -362,7 +362,7 @@ func runQueryParamInvokeTest(t *testing.T) {
 			name:        "invoke query-param-tool (required param nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
-			want:        `{"error":"parameter \"reqId\" is required"}`,
+			want:        `{"error":"provided parameters were invalid: parameter \"reqId\" is required"}`,
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -391,10 +391,21 @@ func runQueryParamInvokeTest(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
-			got, ok := body["result"].(string)
-			if !ok {
-				bodyBytes, _ := json.Marshal(body)
-				t.Fatalf("unable to find result in response body, got: %s", string(bodyBytes))
+			var got string
+			if strings.Contains(tc.want, "error") {
+				gotErr, ok := body["error"].(string)
+				if !ok {
+					bodyBytes, _ := json.Marshal(body)
+					t.Fatalf("unable to find error in response body, got: %s", string(bodyBytes))
+				}
+				got = fmt.Sprintf(`{"error":%q}`, gotErr)
+			} else {
+				resStr, ok := body["result"].(string)
+				if !ok {
+					bodyBytes, _ := json.Marshal(body)
+					t.Fatalf("unable to find result in response body, got: %s", string(bodyBytes))
+				}
+				got = resStr
 			}
 
 			if got != tc.want {
