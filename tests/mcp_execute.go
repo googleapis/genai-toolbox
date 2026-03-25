@@ -25,6 +25,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
 )
 
@@ -37,6 +38,53 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 	headers["Content-Type"] = "application/json"
 	headers["MCP-Protocol-Version"] = v20250618.PROTOCOL_VERSION
 	return headers
+}
+
+// InvokeMCPTool is a transparent, native JSON-RPC execution harness for tests.
+func InvokeMCPTool(t *testing.T, toolName string, arguments map[string]any, requestHeader map[string]string) (int, *MCPCallToolResponse, error) {
+	headers := NewMCPRequestHeader(t, requestHeader)
+
+	req := NewMCPCallToolRequest(uuid.New().String(), toolName, arguments)
+	reqBody, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("error marshalling request body: %v", err)
+	}
+
+	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
+
+	var mcpResp MCPCallToolResponse
+	if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return resp.StatusCode, nil, fmt.Errorf("%s", string(respBody))
+		}
+		t.Fatalf("error parsing mcp response body: %v\nraw body: %s", err, string(respBody))
+	}
+
+	return resp.StatusCode, &mcpResp, nil
+}
+
+// GetMCPToolsList is a JSON-RPC harness that fetches the tools/list registry.
+func GetMCPToolsList(t *testing.T, requestHeader map[string]string) (int, *jsonrpc.JSONRPCResponse, error) {
+	headers := NewMCPRequestHeader(t, requestHeader)
+
+	req := MCPListToolsRequest{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      uuid.New().String(),
+		Method:  v20250618.TOOLS_LIST,
+	}
+	reqBody, _ := json.Marshal(req)
+
+	resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
+
+	var mcpResp jsonrpc.JSONRPCResponse
+	if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+		if resp.StatusCode != http.StatusOK {
+			return resp.StatusCode, nil, fmt.Errorf("%s", string(respBody))
+		}
+		t.Fatalf("error parsing tools/list response: %v\nraw body: %s", err, string(respBody))
+	}
+
+	return resp.StatusCode, &mcpResp, nil
 }
 
 // ExecuteMCPToolCall is a helper function to send HTTP requests to MCP endpoint and return the response

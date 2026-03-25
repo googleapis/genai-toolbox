@@ -25,6 +25,13 @@ type CallToolParams struct {
 	Arguments map[string]any `json:"arguments,omitempty"`
 }
 
+// MCPListToolsRequest encapsulates the standard JSON-RPC request format targeting tools/list
+type MCPListToolsRequest struct {
+	Jsonrpc string            `json:"jsonrpc"`
+	Id      jsonrpc.RequestId `json:"id"`
+	Method  string            `json:"method"`
+}
+
 // MCPCallToolRequest encapsulates the standard JSON-RPC request format targeting tools/call
 type MCPCallToolRequest struct {
 	Jsonrpc string            `json:"jsonrpc"`

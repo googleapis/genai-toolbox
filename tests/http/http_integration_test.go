@@ -15,7 +15,7 @@
 package http
 
 import (
-	"bytes"
+
 	"context"
 	"encoding/json"
 	"fmt"
@@ -324,89 +324,129 @@ func TestHttpToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
+	// Native tools/list invocation test
+	statusCodeList, toolsResp, errList := tests.GetMCPToolsList(t, nil)
+	if errList != nil {
+		t.Fatalf("native error executing tools/list: %s", errList)
+	}
+	if statusCodeList != http.StatusOK {
+		t.Fatalf("expected status 200 for tools/list, got %d", statusCodeList)
+	}
+	
+	// Ensure tools/list returned valid tools mapping
+	resultMap, ok := toolsResp.Result.(map[string]interface{})
+	if !ok {
+		t.Fatalf("tools/list result is not a map: %v", toolsResp.Result)
+	}
+	
+	toolsList, ok := resultMap["tools"].([]interface{})
+	if !ok || len(toolsList) == 0 {
+		t.Fatalf("tools/list did not contain tools array: %v", resultMap)
+	}
+	
+	// Verify "my-simple-tool" is explicitly registered natively
+	foundTool := false
+	for _, toolItem := range toolsList {
+		if toolMap, ok := toolItem.(map[string]interface{}); ok {
+			if toolMap["name"] == "my-simple-tool" {
+				foundTool = true
+				break
+			}
+		}
+	}
+	if !foundTool {
+		t.Fatalf("my-simple-tool was not found in the tools/list native registry")
+	}
+	statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-simple-tool", map[string]any{}, nil)
+	if err != nil {
+		t.Fatalf("native error executing my-simple-tool: %s", err)
+	}
+	if statusCode != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", statusCode)
+	}
+	if mcpResp.Result.IsError {
+		t.Fatalf("my-simple-tool returned error result: %v", mcpResp.Result)
+	}
+	if len(mcpResp.Result.Content) == 0 {
+		t.Fatalf("my-simple-tool returned empty content field")
+	}
+	if got := mcpResp.Result.Content[0].Text; got != `"hello world"` {
+		t.Fatalf(`expected '"hello world"', got %q`, got)
+	}
+
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
 }
 
-// runQueryParamInvokeTest runs the tool invoke endpoint for the query param test tool
 func runQueryParamInvokeTest(t *testing.T) {
 	invokeTcs := []struct {
-		name        string
-		api         string
-		requestBody io.Reader
-		want        string
-		isErr       bool
+		name       string
+		toolName   string
+		arguments  map[string]any
+		want       string
+		wantErrMsg string
 	}{
 		{
-			name:        "invoke query-param-tool (optional omitted)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test1"}`)),
-			want:        `"reqId=test1"`,
+			name:      "invoke query-param-tool (optional omitted)",
+			toolName:  "my-query-param-tool",
+			arguments: map[string]any{"reqId": "test1"},
+			want:      `"reqId=test1"`,
 		},
 		{
-			name:        "invoke query-param-tool (some optional nil)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5", "filter": null}`)),
-			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
+			name:      "invoke query-param-tool (some optional nil)",
+			toolName:  "my-query-param-tool",
+			arguments: map[string]any{"reqId": "test2", "page": "5", "filter": nil},
+			want:      `"page=5\u0026reqId=test2"`,
 		},
 		{
-			name:        "invoke query-param-tool (some optional absent)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5"}`)),
-			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
+			name:      "invoke query-param-tool (some optional absent)",
+			toolName:  "my-query-param-tool",
+			arguments: map[string]any{"reqId": "test2", "page": "5"},
+			want:      `"page=5\u0026reqId=test2"`,
 		},
 		{
-			name:        "invoke query-param-tool (required param nil)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
-			want:        `{"error":"provided parameters were invalid: parameter \"reqId\" is required"}`,
+			name:       "invoke query-param-tool (required param nil)",
+			toolName:   "my-query-param-tool",
+			arguments:  map[string]any{"reqId": nil, "page": "1"},
+			wantErrMsg: `parameter "reqId" is required`,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, tc.toolName, tc.arguments, nil)
 			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-
-			resp, err := tests.InterceptLegacyDo(t, req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+				t.Fatalf("error calling MCP tool: %v", err)
 			}
 
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body: %v", err)
+			if statusCode != http.StatusOK {
+				t.Fatalf("response status code is not 200, got %d", statusCode)
 			}
-			var got string
-			if strings.Contains(tc.want, "error") {
-				gotErr, ok := body["error"].(string)
-				if !ok {
-					bodyBytes, _ := json.Marshal(body)
-					t.Fatalf("unable to find error in response body, got: %s", string(bodyBytes))
+
+			if tc.wantErrMsg != "" {
+				if !mcpResp.Result.IsError {
+					t.Fatalf("expected application error containing %q, but got success result: %v", tc.wantErrMsg, mcpResp.Result)
 				}
-				got = fmt.Sprintf(`{"error":%q}`, gotErr)
-			} else {
-				resStr, ok := body["result"].(string)
-				if !ok {
-					bodyBytes, _ := json.Marshal(body)
-					t.Fatalf("unable to find result in response body, got: %s", string(bodyBytes))
+				var errText string
+				for _, content := range mcpResp.Result.Content {
+					if content.Type == "text" {
+						errText += content.Text
+					}
 				}
-				got = resStr
+				if !strings.Contains(errText, tc.wantErrMsg) {
+					t.Fatalf("expected error text containing %q, got %q", tc.wantErrMsg, errText)
+				}
+				return
 			}
+
+			if mcpResp.Result.IsError {
+				t.Fatalf("unexpected application error: %v", mcpResp.Result)
+			}
+			if len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("expected result content but got none")
+			}
+
+			// Extract the raw text and assert
+			got := mcpResp.Result.Content[0].Text
 
 			if got != tc.want {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
@@ -419,92 +459,67 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 	// Test HTTP tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
-		api           string
+		toolName      string
+		arguments     map[string]any
 		requestHeader map[string]string
-		requestBody   func() io.Reader
 		want          string
-		isAgentErr    bool
+		wantErrMsg    string
 	}{
 		{
 			name:          "invoke my-advanced-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
+			toolName:      "my-advanced-tool",
 			requestHeader: map[string]string{},
-			requestBody: func() io.Reader {
-				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
-			},
-			want:       `"hello world"`,
-			isAgentErr: false,
+			arguments:     map[string]any{"animalArray": []string{"rabbit", "ostrich", "whale"}, "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"},
+			want:          `"hello world"`,
+			wantErrMsg:    "",
 		},
 		{
 			name:          "invoke my-advanced-tool with wrong params",
-			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
+			toolName:      "my-advanced-tool",
 			requestHeader: map[string]string{},
-			requestBody: func() io.Reader {
-				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
-			},
-			want:       "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
-			isAgentErr: true,
+			arguments:     map[string]any{"animalArray": []string{"rabbit", "ostrich", "whale"}, "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"},
+			want:          "",
+			wantErrMsg:    "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
 		},
 	}
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody())
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, tc.toolName, tc.arguments, tc.requestHeader)
 			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			for k, v := range tc.requestHeader {
-				req.Header.Add(k, v)
+				t.Fatalf("error calling MCP tool: %v", err)
 			}
 
-			resp, err := tests.InterceptLegacyDo(t, req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			// As you noted, the toolbox wraps errors in a 200 OK
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("expected status 200 from toolbox, got %d: %s", resp.StatusCode, string(bodyBytes))
+			if statusCode != http.StatusOK {
+				t.Fatalf("expected status 200 from toolbox, got %d", statusCode)
 			}
 
-			// Decode the response body into a map
-			var body map[string]any
-			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
+			if tc.wantErrMsg != "" {
+				if !mcpResp.Result.IsError {
+					t.Fatalf("expected application error containing %q, but got success result: %v", tc.wantErrMsg, mcpResp.Result)
+				}
+				var errText string
+				for _, content := range mcpResp.Result.Content {
+					if content.Type == "text" {
+						errText += content.Text
+					}
+				}
+				if !strings.Contains(errText, tc.wantErrMsg) {
+					t.Fatalf("unexpected error message: got %q, want it to contain %q", errText, tc.wantErrMsg)
+				}
+				return
+			}
+			
+			if mcpResp.Result.IsError {
+				t.Fatalf("unexpected application error: %v", mcpResp.Result)
+			}
+			if len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("expected result content but got none")
 			}
 
-			if tc.isAgentErr {
-				resStr, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("expected 'result' field as string in response body, got: %v", body)
-				}
-
-				var resMap map[string]any
-				if err := json.Unmarshal([]byte(resStr), &resMap); err != nil {
-					t.Fatalf("failed to unmarshal result string: %v", err)
-				}
-
-				gotErr, ok := resMap["error"].(string)
-				if !ok {
-					t.Fatalf("expected 'error' field inside result, got: %v", resMap)
-				}
-
-				if !strings.Contains(gotErr, tc.want) {
-					t.Fatalf("unexpected error message: got %q, want it to contain %q", gotErr, tc.want)
-				}
-			} else {
-				got, ok := body["result"].(string)
-				if !ok {
-					resBytes, _ := json.Marshal(body["result"])
-					got = string(resBytes)
-				}
-
-				if got != tc.want {
-					t.Fatalf("unexpected result: got %q, want %q", got, tc.want)
-				}
+			got := mcpResp.Result.Content[0].Text
+			if got != tc.want {
+				t.Fatalf("unexpected result: got %q, want %q", got, tc.want)
 			}
 		})
 	}
