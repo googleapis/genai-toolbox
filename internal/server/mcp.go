@@ -339,17 +339,6 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) { httpHandler(s, w, r) })
 	r.Delete("/", func(w http.ResponseWriter, r *http.Request) {})
-	mcpAuthEnabled := false
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-		if genCfg, ok := authSvc.ToConfig().(generic.Config); ok && genCfg.McpEnabled {
-			mcpAuthEnabled = true
-			break
-		}
-	}
-
-	if mcpAuthEnabled {
-		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, r *http.Request) { prmHandler(s, w, r) })
-	}
 
 	r.Route("/{toolsetName}", func(r chi.Router) {
 		r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
@@ -788,7 +777,7 @@ func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		cfg := authSvc.ToConfig()
 		if genCfg, ok := cfg.(generic.Config); ok {
 			if genCfg.McpEnabled {
-				servers = append(servers, genCfg.AuthorizationServerUrl)
+				servers = append(servers, genCfg.AuthorizationServer)
 				if genCfg.ScopesRequired != nil {
 					scopes = genCfg.ScopesRequired
 				}
