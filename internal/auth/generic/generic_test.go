@@ -29,8 +29,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-
-
 func generateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
 	t.Helper()
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
