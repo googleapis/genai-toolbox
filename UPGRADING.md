@@ -17,9 +17,11 @@ This guide outlines what has changed and the steps you need to take to upgrade.
 ## 🚨 Breaking Changes (Action Required)
 
 ### 1. Endpoint Standardization: `/api` removed
-The legacy `/api` endpoint has been completely removed. All official SDKs have been updated to use the `/mcp` endpoint instead.
-* **Migration:** You must update all your implementation to use the `/mcp`
-  endpoint exclusively.
+The legacy `/api` endpoint for the native Toolbox protocol has been completely removed. All official SDKs have been updated to use the `/mcp` endpoint, which now aligns with the standard Model Context Protocol (MCP) specification.
+* **Migration:** You must update all custom implementations to use the `/mcp`
+  endpoint exclusively. We want to ensure no functionality is lost in this transition. If your workflow  
+  relied on a non-standard feature that is missing from the new implementation, please submit a
+  feature request on our [GitHub Issues page](https://github.com/googleapis/genai-toolbox/issues).
 
 ### 2. Strict Tool Naming Validation (SEP986)
 Tool names are now strictly validated against [ModelContextProtocol SEP986 guidelines](https://github.com/alexhancock/modelcontextprotocol/blob/main/docs/specification/draft/server/tools.mdx#tool-names) prior to MCP initialization.
@@ -30,7 +32,7 @@ The legacy snake_case flag `--tools_file` has been completely removed.
 * **Migration:** Update your deployment scripts to use `--config` instead.
 
 ### 4. Singular `kind` Values in Configuration
-All primitive kind fields in configuration files have been updated to use singular nouns instead of plural. For example, kind: sources is now kind: source, and kind: tools is now kind: tool.
+All primitive kind fields in configuration files have been updated to use singular nouns instead of plural. For example, `kind: sources` is now `kind: source`, and `kind: tools` is now `kind: tool`.
 
 * **Migration:** Update your configuration files to use the singular form for all `kind`
 values. _(Note: If you are using the ./toolbox migrate command to transition to the new flat format, this conversion is handled automatically)._
@@ -93,15 +95,12 @@ The following CLI flags are deprecated and will be removed in a future release. 
 ## 💡 Other Notable Updates
 * **Enhanced Error Handling:** Errors are now strictly categorized between Agent Errors (allowing the LLM to self-correct) and Client/Server Errors (which signal a hard stop).
 
-* **Telemetry Updates:** The /mcp endpoint telemetry has been revised to fully comply with the OpenTelemetry semantic conventions for MCP.
+* **Telemetry Updates:** The /mcp endpoint telemetry has been revised to fully comply with the [OpenTelemetry semantic conventions for MCP](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/).
 
-* **MCP Auth Support:** The ModelContextProtocol's auth specification is now fully supported.
+* **MCP Authorization Support:** The Model Context Protocol's [authorization specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) is now fully supported.
 
 * **Database Name Validation:** Removed the "required field" validation for the database name in CloudSQL for MySQL and generic MySQL sources.
 
-* **Prebuilt Tools:** Toolsets have been resized for better performance, and tool names are now aligned with OneMCP.
-
-* **Security Tooling:** Release binaries now include an attached signature to support modern security tooling.
-
+* **Prebuilt Tools:** Toolsets have been resized for better performance.
 ## 📚 Documentation Moved
 Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](http://mcp-toolbox.dev).
