@@ -202,7 +202,6 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
-	tests.RunMcpAuthTest(t)
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {

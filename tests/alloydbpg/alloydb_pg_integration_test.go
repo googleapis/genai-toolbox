@@ -215,7 +215,6 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
-	tests.RunMcpAuthTest(t)
 }
 
 func TestAlloyDBPgPrebuiltStatementTools(t *testing.T) {

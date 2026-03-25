@@ -112,8 +112,8 @@ func TestConvertConfig(t *testing.T) {
 		errStr string
 	}{
 		{
-      desc: "basic convert",
-      in: `
+			desc: "basic convert",
+			in: `
             sources:
                 my-pg-instance:
                     kind: cloud-sql-postgres
