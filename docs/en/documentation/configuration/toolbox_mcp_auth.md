@@ -53,17 +53,15 @@ If you prefer to use the `--toolbox-url` flag explicitly:
 ### Cloud Run Deployment
 
 ```bash
-# Set your target Cloud Run URL
-export TOOLBOX_URL="https://toolbox-service-123456789-uc.a.run.app"
 export IMAGE="us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest"
 
+# Pass your target Cloud Run URL to the `--toolbox-url` flag
 gcloud run deploy toolbox \
     --image $IMAGE \
     --service-account toolbox-identity \
     --region us-central1 \
     --set-secrets "/app/tools.yaml=tools:latest" \
-    --set-env-vars "TOOLBOX_URL=${TOOLBOX_URL}" \
-    --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080"
+    --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--toolbox-url=${CLOUD_RUN_TOOLBOX_URL}"
 ```
 
 ### Alternative: Manual PRM File Override
@@ -94,7 +92,6 @@ If you strictly need to define your own Protected Resource Metadata instead of a
       --set-secrets "/app/tools.yaml=tools:latest,/app/prm.json=prm_file:latest" \
       --args="--tools-file=/app/tools.yaml","--mcp-prm-file=/app/prm.json","--port=8080"
     ```
-    
 
 ## Step 3: Connecting to the Secure MCP Endpoint
 
@@ -109,11 +106,16 @@ The client should provide this JWT via the standard HTTP `Authorization` header 
       "type": "http",
       "url": "https://toolbox-service-123456789-uc.a.run.app/mcp",
       "headers": {
-        "Authorization": "Bearer eyJhbGc..."
+        "Authorization": "Bearer <your-jwt-access-token>"
       }
     }
   }
 }
 ```
+Important: The token provided in the Authorization header must be your Toolbox authentication token (issued by the auth server you configured previously), not a Google Cloud Run access token.
 
-Toolbox will intercept incoming connections, fetch the latest JWKS from your `authorizationServer`, and validate that the `aud` (audience), signature, and `scopes` on the JWT match the requirements defined by your `mcpEnabled` auth service.
+Toolbox will intercept incoming connections, fetch the latest JWKS from your authorizationServer, and validate that the aud (audience), signature, and scopes on the JWT match the requirements defined by your mcpEnabled auth service.
+
+If your Cloud Run service also requires IAM authentication, you must pass the Cloud Run identity token using [Cloud Run's alternate auth header][cloud-run-alternate-auth-header] to avoid conflicting with Toolbox's internal authentication.
+
+[cloud-run-alternate-auth-header]: https://docs.cloud.google.com/run/docs/authenticating/service-to-service#acquire-token

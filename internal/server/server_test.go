@@ -317,11 +317,11 @@ func TestPRMEndpoint(t *testing.T) {
 		AllowedHosts: []string{"*"},
 		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
 			"generic1": generic.Config{
-				Name:                   "generic1",
-				Type:                   generic.AuthServiceType,
-				McpEnabled:             true,
+				Name:                "generic1",
+				Type:                generic.AuthServiceType,
+				McpEnabled:          true,
 				AuthorizationServer: mockOIDC.URL, // Injecting the mock server URL here
-				ScopesRequired:         []string{"read", "write"},
+				ScopesRequired:      []string{"read", "write"},
 			},
 		},
 	}
@@ -343,7 +343,11 @@ func TestPRMEndpoint(t *testing.T) {
 			errCh <- err
 		}
 	}()
-	defer s.Shutdown(ctx)
+	defer func() {
+		if err := s.Shutdown(ctx); err != nil {
+			t.Errorf("failed to cleanly shutdown server: %v", err)
+		}
+	}()
 
 	// Test the PRM endpoint
 	url := fmt.Sprintf("http://%s:%d/.well-known/oauth-protected-resource", addr, port)
@@ -370,7 +374,7 @@ func TestPRMEndpoint(t *testing.T) {
 	want := map[string]any{
 		"resource": "https://my-toolbox.example.com",
 		"authorization_servers": []any{
-			mockOIDC.URL, 
+			mockOIDC.URL,
 		},
 		"scopes_supported":         []any{"read", "write"},
 		"bearer_methods_supported": []any{"header"},
