@@ -26,6 +26,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/hfinference"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/hfinferenceoai"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -272,18 +274,32 @@ func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[s
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
-	if resourceType != gemini.EmbeddingModelType {
-		return nil, fmt.Errorf("%s is not a valid type of embedding model", resourceType)
-	}
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}
-	actual := gemini.Config{Name: name}
-	if err := dec.DecodeContext(ctx, &actual); err != nil {
-		return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
+	switch resourceType {
+	case gemini.EmbeddingModelType:
+		actual := gemini.Config{Name: name}
+		if err := dec.DecodeContext(ctx, &actual); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
+		}
+		return actual, nil
+case hfinferenceoai.EmbeddingModelType:
+		actual := hfinferenceoai.Config{Name: name}
+		if err := dec.DecodeContext(ctx, &actual); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
+		}
+		return actual, nil
+	case hfinference.EmbeddingModelType:
+		actual := hfinference.Config{Name: name}
+		if err := dec.DecodeContext(ctx, &actual); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
+		}
+		return actual, nil
+	default:
+		return nil, fmt.Errorf("%s is not a valid type of embedding model", resourceType)
 	}
-	return actual, nil
 }
 
 func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any) (tools.ToolConfig, error) {

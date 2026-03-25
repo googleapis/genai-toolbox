@@ -104,3 +104,7 @@ parameters:
 ```
 
 ## Kinds of Embedding Models
+
+- [Gemini Embedding](gemini.md)
+- [HF Inference OAI](hf-inference-oai.md)
+- [HF Inference](hf-inference.md)
