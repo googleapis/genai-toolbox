@@ -771,30 +771,24 @@ type prmResponse struct {
 
 // prmHandler generates the Protected Resource Metadata (PRM) file for MCP Authorization.
 func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
-	var servers []string
-	var scopes []string
+	var server string
+	scopes := []string{}
 	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
 		cfg := authSvc.ToConfig()
 		if genCfg, ok := cfg.(generic.Config); ok {
 			if genCfg.McpEnabled {
-				servers = append(servers, genCfg.AuthorizationServer)
+				server = genCfg.AuthorizationServer
 				if genCfg.ScopesRequired != nil {
 					scopes = genCfg.ScopesRequired
 				}
+				break
 			}
 		}
 	}
 
-	if servers == nil {
-		servers = []string{}
-	}
-	if scopes == nil {
-		scopes = []string{}
-	}
-
 	res := prmResponse{
 		Resource:               s.toolboxUrl,
-		AuthorizationServers:   servers,
+		AuthorizationServers:   []string{server},
 		ScopesSupported:        scopes,
 		BearerMethodsSupported: []string{"header"},
 	}
