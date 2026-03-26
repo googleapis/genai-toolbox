@@ -72,6 +72,8 @@ type ServerConfig struct {
 	UI bool
 	// EnableAPI indicates if the /api endpoint is enabled.
 	EnableAPI bool
+	// ToolboxUrl specifies the URL to advertise in the MCP PRM file as the resource field.
+	ToolboxUrl string
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
 	// Specifies a list of hosts permitted to access this server.
@@ -80,8 +82,6 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
-	// ToolboxUrl specifies the Toolbox URL. Used as the resource field in the MCP PRM file when MCP Auth is enabled.
-	ToolboxUrl string
 }
 
 type logFormat string
@@ -258,7 +258,6 @@ func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[stri
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
-
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
