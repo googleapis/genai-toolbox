@@ -37,7 +37,7 @@ jobs:
       run:
         working-directory: .hugo
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ env.HEAD_SHA }}
           fetch-depth: 0
@@ -49,7 +49,7 @@ jobs:
           extended: true
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: "22"
           cache: 'npm'
@@ -72,7 +72,7 @@ jobs:
           echo ${{ env.PR_NUMBER }} > ../artifact-payload/pr_number.txt
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
         with:
           name: cf-preview-data
           path: artifact-payload/
