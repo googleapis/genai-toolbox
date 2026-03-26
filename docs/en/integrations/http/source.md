@@ -34,6 +34,7 @@ headers:
 queryParams:
   param1: value1
   param2: value2
+# returnFullError: false
 # disableSslVerification: false
 ```
 
@@ -51,6 +52,7 @@ instead of hardcoding your secrets into the configuration file.
 | timeout                |      string       |    false     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples). Defaults to 30s. |
 | headers                | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                   |
 | queryParams            | map[string]string |    false     | Default query parameters to include in the HTTP requests.                                                                          |
+| returnFullError        |       bool        |    false     | Include raw upstream response bodies in error messages for non-2xx responses. Defaults to `false`.                                 |
 | disableSslVerification |       bool        |    false     | Disable SSL certificate verification. This should only be used for local development. Defaults to `false`.                         |
 
 [parse-duration-doc]: https://pkg.go.dev/time#ParseDuration

@@ -68,6 +68,15 @@ tools:
       - name: message
         type: string
         description: message to echo
+  int-tool:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "int tool"
+    statement: "SELECT ? as val"
+    parameters:
+      - name: value
+        type: integer
+        description: int value
 `
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
@@ -91,6 +100,11 @@ tools:
 			desc: "success - tool call with parameters",
 			args: []string{"invoke", "echo-tool", `{"message": "world"}`, "--config", toolsFilePath},
 			want: `"msg": "world"`,
+		},
+		{
+			desc: "success - tool call with integer parameters",
+			args: []string{"invoke", "int-tool", `{"value": 42}`, "--tools-file", toolsFilePath},
+			want: `"val": 42`,
 		},
 		{
 			desc:    "error - tool not found",

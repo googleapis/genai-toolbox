@@ -30,6 +30,7 @@ import (
 )
 
 const SourceType string = "http"
+const maxErrorBodyLogBytes = 1024
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -55,6 +56,7 @@ type Config struct {
 	Timeout                string            `yaml:"timeout"`
 	DefaultHeaders         map[string]string `yaml:"headers"`
 	QueryParams            map[string]string `yaml:"queryParams"`
+	ReturnFullError        bool              `yaml:"returnFullError"`
 	DisableSslVerification bool              `yaml:"disableSslVerification"`
 }
 
@@ -146,7 +148,7 @@ func (s *Source) Client() *http.Client {
 	return s.client
 }
 
-func (s *Source) RunRequest(req *http.Request) (any, error) {
+func (s *Source) RunRequest(ctx context.Context, req *http.Request) (any, error) {
 	// Make request and fetch response
 	resp, err := s.Client().Do(req)
 	if err != nil {
@@ -160,7 +162,21 @@ func (s *Source) RunRequest(req *http.Request) (any, error) {
 		return nil, err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+		if s.ReturnFullError {
+			return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+		}
+
+		logger, err := util.LoggerFromContext(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		}
+		logger.DebugContext(ctx, "http source upstream error", "status", resp.StatusCode, "body", truncateForLog(body, maxErrorBodyLogBytes))
+
+		statusText := http.StatusText(resp.StatusCode)
+		if statusText != "" {
+			return nil, fmt.Errorf("unexpected status code: %d (%s)", resp.StatusCode, statusText)
+		}
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	var data any
@@ -169,4 +185,14 @@ func (s *Source) RunRequest(req *http.Request) (any, error) {
 		return string(body), nil
 	}
 	return data, nil
+}
+
+func truncateForLog(body []byte, limit int) string {
+	if limit <= 0 || len(body) == 0 {
+		return ""
+	}
+	if len(body) <= limit {
+		return string(body)
+	}
+	return fmt.Sprintf("%s...(%d bytes truncated)", string(body[:limit]), len(body)-limit)
 }

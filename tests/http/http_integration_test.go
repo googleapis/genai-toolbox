@@ -431,7 +431,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
 			},
-			want:       "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
+			want:       "error processing request: unexpected status code: 400 (Bad Request)",
 			isAgentErr: true,
 		},
 	}
@@ -509,6 +509,11 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
 	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
 
+	clientID := tests.ClientId
+	if clientID == "" {
+		clientID = "test-client-id"
+	}
+
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance":    sourceConfig,
@@ -517,7 +522,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"type":     "google",
-				"clientId": tests.ClientId,
+				"clientId": clientID,
 			},
 		},
 		"tools": map[string]any{

@@ -69,6 +69,8 @@ type ServerConfig struct {
 	DisableReload bool
 	// UI indicates if Toolbox UI endpoints (/ui) are available.
 	UI bool
+	// EnableAPI indicates if the /api endpoint is enabled.
+	EnableAPI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
 	// Specifies a list of hosts permitted to access this server.
