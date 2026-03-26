@@ -229,69 +229,69 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary:
 
 <!-- {x-release-please-start-version} -->
- <details>
- <summary>Linux (AMD64)</summary>
-
- To install Toolbox as a binary on Linux (AMD64):
-
- ```sh
- # see releases page for other versions
- export VERSION=0.30.0
- curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
- chmod +x toolbox
- ```
-
- </details>
- <details>
- <summary>macOS (Apple Silicon)</summary>
-
- To install Toolbox as a binary on macOS (Apple Silicon):
-
- ```sh
- # see releases page for other versions
- export VERSION=0.30.0
- curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
- chmod +x toolbox
- ```
-
- </details>
- <details>
- <summary>macOS (Intel)</summary>
-
- To install Toolbox as a binary on macOS (Intel):
-
- ```sh
- # see releases page for other versions
- export VERSION=0.30.0
- curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
- chmod +x toolbox
- ```
-
- </details>
- <details>
- <summary>Windows (Command Prompt)</summary>
-
- To install Toolbox as a binary on Windows (Command Prompt):
-
- ```cmd
- :: see releases page for other versions
- set VERSION=0.30.0
- curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
- ```
-
- </details>
- <details>
- <summary>Windows (PowerShell)</summary>
-
- To install Toolbox as a binary on Windows (PowerShell):
-
- ```powershell
- # see releases page for other versions
- $VERSION = "0.30.0"
- curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
- ```
-
- </details>
+> <details>
+> <summary>Linux (AMD64)</summary>
+>
+> To install Toolbox as a binary on Linux (AMD64):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.30.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>macOS (Apple Silicon)</summary>
+>
+> To install Toolbox as a binary on macOS (Apple Silicon):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.30.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>macOS (Intel)</summary>
+>
+> To install Toolbox as a binary on macOS (Intel):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.30.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (Command Prompt)</summary>
+>
+> To install Toolbox as a binary on Windows (Command Prompt):
+>
+> ```cmd
+> :: see releases page for other versions
+> set VERSION=0.30.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (PowerShell)</summary>
+>
+> To install Toolbox as a binary on Windows (PowerShell):
+>
+> ```powershell
+> # see releases page for other versions
+> $VERSION = "0.30.0"
+> curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
+> ```
+>
+> </details>
 </details>
 
 <details>
