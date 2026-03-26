@@ -1,14 +1,14 @@
 ---
-title: "Toolbox with MCP Auth"
+title: "Toolbox with MCP Authorization"
 type: docs
 weight: 4
 description: >
-  How to set up and configure Toolbox with MCP Authentication.
+  How to set up and configure Toolbox with [MCP Authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization).
 ---
 
 ## Overview
 
-Toolbox supports integrating with Model Context Protocol (MCP) clients by enabling OAuth/JWT-based Server-Wide Authentication. This allows an MCP client natively sending Bearer tokens to be verified by Toolbox before executing any queries.
+Toolbox supports integration with Model Context Protocol (MCP) clients by acting as a Resource Server that implements OAuth 2.1 authorization. This enables Toolbox to validate JWT-based Bearer tokens before processing requests for resources or tool executions.
 
 This guide details the specific configuration steps required to deploy Toolbox with MCP Auth enabled.
 
@@ -17,14 +17,14 @@ This guide details the specific configuration steps required to deploy Toolbox w
 Update your `tools.yaml` file to use a `generic` authentication service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authorizationServer`).
 
 ```yaml
-authServices:
-  - name: my-mcp-auth
-    type: generic
-    mcpEnabled: true
-    authorizationServer: "https://your-auth-server.example.com"
-    audience: "your-mcp-audience" # Matches the `aud` claim in the JWT
-    scopesRequired:
-      - "mcp:tools"
+kind: authServices
+name: my-mcp-auth
+type: generic
+mcpEnabled: true
+authorizationServer: "https://your-auth-server.example.com"
+audience: "your-mcp-audience" # Matches the `aud` claim in the JWT
+scopesRequired:
+    - "mcp:tools"
 ```
 
 When `mcpEnabled` is true, Toolbox also provisions the `/.well-known/oauth-protected-resource` Protected Resource Metadata (PRM) endpoint automatically using the `authorizationServer`.
@@ -97,7 +97,7 @@ If you strictly need to define your own Protected Resource Metadata instead of a
 
 Once the Cloud Run instance is deployed, your MCP client must obtain a valid JWT token from your authentication server (the `authorizationServer` in `tools.yaml`).
 
-The client should provide this JWT via the standard HTTP `Authorization` header when connecting to the `Streamable HTTP` SSE endpoint (`/mcp`):
+The client should provide this JWT via the standard HTTP `Authorization` header when connecting to the Streamable HTTP or SSE endpoint (`/mcp`):
 
 ```bash
 {
