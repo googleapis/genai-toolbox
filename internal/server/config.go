@@ -74,6 +74,8 @@ type ServerConfig struct {
 	EnableAPI bool
 	// ToolboxUrl specifies the URL to advertise in the MCP PRM file as the resource field.
 	ToolboxUrl string
+	// McpPrmFile specifies the path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation.
+	McpPrmFile string
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
 	// Specifies a list of hosts permitted to access this server.
