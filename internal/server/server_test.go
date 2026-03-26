@@ -443,7 +443,11 @@ func TestPRMOverride(t *testing.T) {
 			fmt.Printf("Server serve error: %v\n", err)
 		}
 	}()
-	defer s.Shutdown(ctx)
+	defer func() {
+		if err := s.Shutdown(ctx); err != nil {
+			t.Errorf("failed to cleanly shutdown server: %v", err)
+		}
+	}()
 
 	// Perform the request to the well-known endpoint
 	url := fmt.Sprintf("http://%s:%d/.well-known/oauth-protected-resource", addr, port)
