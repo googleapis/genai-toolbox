@@ -5,22 +5,19 @@
 
 ### ⚠ BREAKING CHANGES
 
-* v1 docsite ([#2831](https://github.com/googleapis/genai-toolbox/issues/2831))
+* release upgraded docsite ([#2831](https://github.com/googleapis/genai-toolbox/issues/2831))
 * **http:** sanitize non-2xx error output ([#2654](https://github.com/googleapis/genai-toolbox/issues/2654))
 * add a new `enable-api` flag ([#2846](https://github.com/googleapis/genai-toolbox/issues/2846))
-* removing deprecations and update tools-file flag ([#2806](https://github.com/googleapis/genai-toolbox/issues/2806))
+* remove deprecations and update tools-file flag ([#2806](https://github.com/googleapis/genai-toolbox/issues/2806))
 
 ### Features
 
 * Add a new `enable-api` flag ([#2846](https://github.com/googleapis/genai-toolbox/issues/2846)) ([7a070da](https://github.com/googleapis/genai-toolbox/commit/7a070dae4f1833671649ea605f36659675d402a9))
-* Added java SDK docs ([#2675](https://github.com/googleapis/genai-toolbox/issues/2675)) ([8cf1c52](https://github.com/googleapis/genai-toolbox/commit/8cf1c52d67ac1a445c2943ba998780633a4a1ada))
 * **auth:** Add generic `authService` type for MCP ([#2619](https://github.com/googleapis/genai-toolbox/issues/2619)) ([f6678f8](https://github.com/googleapis/genai-toolbox/commit/f6678f8e29aa3346f4f73ce33cec37b4753d6947))
 * **auth:** Add Protected Resource Metadata endpoint ([#2698](https://github.com/googleapis/genai-toolbox/issues/2698)) ([b53dcf2](https://github.com/googleapis/genai-toolbox/commit/b53dcf20694599f8b961c501a532bd122630b6f4))
 * **auth:** Support manual PRM override ([#2717](https://github.com/googleapis/genai-toolbox/issues/2717)) ([283e4e3](https://github.com/googleapis/genai-toolbox/commit/283e4e33172571e4b20fa6a3ea0cfc632a565e6a))
 * **dataplex:** Add support for lookup context tool. ([#2744](https://github.com/googleapis/genai-toolbox/issues/2744)) ([facb69d](https://github.com/googleapis/genai-toolbox/commit/facb69d01fe0c7ff9e2e1c40804dd00762e508a6))
-* **dataplex:** Improve dataplex params ([#2855](https://github.com/googleapis/genai-toolbox/issues/2855)) ([409a354](https://github.com/googleapis/genai-toolbox/commit/409a354d453eef52be947beb9c2548f50af1fa20))
-* **dataplex:** Refine dataplex tools for better agent usability ([409a354](https://github.com/googleapis/genai-toolbox/commit/409a354d453eef52be947beb9c2548f50af1fa20))
-* Removing deprecations and update tools-file flag ([#2806](https://github.com/googleapis/genai-toolbox/issues/2806)) ([ab64c95](https://github.com/googleapis/genai-toolbox/commit/ab64c9514a467d92a4547eda5a4ecdd08f86b0c9))
+* Remove deprecations and update tools-file flag ([#2806](https://github.com/googleapis/genai-toolbox/issues/2806)) ([ab64c95](https://github.com/googleapis/genai-toolbox/commit/ab64c9514a467d92a4547eda5a4ecdd08f86b0c9))
 
 
 ### Bug Fixes
@@ -33,12 +30,8 @@
 
 ### Documentation
 
-* V1 docsite ([#2831](https://github.com/googleapis/genai-toolbox/issues/2831)) ([5b25ce0](https://github.com/googleapis/genai-toolbox/commit/5b25ce081235b21c884e27057cd4a2fa4d0d7c0e))
+* Release upgraded docsite ([#2831](https://github.com/googleapis/genai-toolbox/issues/2831)) ([5b25ce0](https://github.com/googleapis/genai-toolbox/commit/5b25ce081235b21c884e27057cd4a2fa4d0d7c0e))
 
-
-### Miscellaneous Chores
-
-* Release 0.31.0 ([#2865](https://github.com/googleapis/genai-toolbox/issues/2865)) ([e694fc1](https://github.com/googleapis/genai-toolbox/commit/e694fc11226a29bfd38cb3aecd5e1542cb61e72f))
 
 ## [0.30.0](https://github.com/googleapis/genai-toolbox/compare/v0.29.0...v0.30.0) (2026-03-20)
 
