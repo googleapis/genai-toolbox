@@ -103,4 +103,4 @@ parameters:
     embeddedBy: gemini-model # refers to the name of a defined embedding model
 ```
 
-## Kinds of Embedding Models
+## Types of Embedding Models
