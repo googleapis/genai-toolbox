@@ -73,7 +73,7 @@ Vertex AI uses Application Default Credentials (ADC) for authentication. Learn
 how to set up ADC [here][adc].
 
 ```yaml
-kind: embeddingModels
+kind: embeddingModel
 name: gemini-model
 type: gemini
 model: gemini-embedding-001

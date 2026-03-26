@@ -37,7 +37,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 			kind: embeddingModel
 			name: my-gemini-model
 			type: gemini
-			model: text-embedding-004
+			model: gemini-embedding-001
             `,
 			want: map[string]embeddingmodels.EmbeddingModelConfig{
 				"my-gemini-model": gemini.Config{
@@ -70,7 +70,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 		{
 			desc: "Vertex AI configuration",
 			in: `
-            kind: embeddingModels
+            kind: embeddingModel
             name: vertex-gemini
             type: gemini
             model: gemini-embedding-001
@@ -130,7 +130,7 @@ func TestFailParseFromYamlGemini(t *testing.T) {
             model: gemini-embedding-001
             invalid_param: true
             `,
-			err: "error unmarshaling embeddingModel: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: text-embedding-004\n   3 | name: bad-field\n   4 | type: gemini",
+			err: "error unmarshaling embeddingModel: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: gemini-embedding-001\n   3 | name: bad-field\n   4 | type: gemini",
 		},
 	}
 	for _, tc := range tcs {
