@@ -31,14 +31,13 @@ const EmbeddingModelType string = "gemini"
 var _ embeddingmodels.EmbeddingModelConfig = Config{}
 
 type Config struct {
-	Name        string `yaml:"name" validate:"required"`
-	Type        string `yaml:"type" validate:"required"`
-	Model       string `yaml:"model" validate:"required"`
-	UseVertexAI bool   `yaml:"useVertexAI"`
-	ApiKey      string `yaml:"apiKey"`
-	Project     string `yaml:"project"`
-	Location    string `yaml:"location"`
-	Dimension   int32  `yaml:"dimension"`
+	Name      string `yaml:"name" validate:"required"`
+	Type      string `yaml:"type" validate:"required"`
+	Model     string `yaml:"model" validate:"required"`
+	ApiKey    string `yaml:"apiKey"`
+	Project   string `yaml:"project"`
+	Location  string `yaml:"location"`
+	Dimension int32  `yaml:"dimension"`
 }
 
 // Returns the embedding model type
