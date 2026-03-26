@@ -14,25 +14,28 @@
     'type: process',
   ],
   postUpdateOptions: [
-    "gomodTidy"
+    'gomodTidy',
   ],
   customManagers: [
     {
-      // Regex Manager to update Hugo Version in the GHA Workflows
       customType: 'regex',
-      fileMatch: ['^\\.github/workflows/.*\\.ya?ml$'],
+      managerFilePatterns: [
+        '/^\\.github/workflows/.*\\.ya?ml$/',
+      ],
       matchStrings: [
-        'hugo-version:\\s*["\']?(?<currentValue>\\d+\\.\\d+\\.\\d+)["\']?'
+        'hugo-version:\\s*["\']?(?<currentValue>\\d+\\.\\d+\\.\\d+)["\']?',
       ],
       depNameTemplate: 'gohugoio/hugo',
       datasourceTemplate: 'github-releases',
-      extractVersionTemplate: '^v?(?<version>.*)$'
+      extractVersionTemplate: '^v?(?<version>.*)$',
     },
   ],
   packageRules: [
     {
       groupName: 'Hugo',
-      matchPackageNames: ['gohugoio/hugo'],
+      matchPackageNames: [
+        'gohugoio/hugo',
+      ],
     },
     {
       groupName: 'GitHub Actions',
