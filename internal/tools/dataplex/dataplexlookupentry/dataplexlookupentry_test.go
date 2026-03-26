@@ -21,7 +21,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
@@ -50,49 +49,6 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "advanced example",
-			in: `
-            kind: tool
-            name: example_tool
-            type: dataplex-lookup-entry
-            source: my-instance
-            description: some description
-            parameters:
-                - name: name
-                  type: string
-                  description: some name description
-                - name: view
-                  type: string
-                  description: some view description
-                - name: aspectTypes
-                  type: array
-                  description: some aspect types description
-                  default: []
-                  items: 
-                    name: aspectType
-                    type: string
-                    description: some aspect type description
-                - name: entry
-                  type: string
-                  description: some entry description
-            `,
-			want: server.ToolConfigs{
-				"example_tool": dataplexlookupentry.Config{
-					Name:         "example_tool",
-					Type:         "dataplex-lookup-entry",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Parameters: []parameters.Parameter{
-						parameters.NewStringParameter("name", "some name description"),
-						parameters.NewStringParameter("view", "some view description"),
-						parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "some aspect types description", parameters.NewStringParameter("aspectType", "some aspect type description")),
-						parameters.NewStringParameter("entry", "some entry description"),
-					},
 				},
 			},
 		},

@@ -78,7 +78,7 @@ jobs:
         with:
           hugo-version: "0.145.0"
           extended: true
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: "22"
 
@@ -101,7 +101,7 @@ jobs:
         working-directory: .hugo
 
       - name: Deploy to cloudflare-pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .hugo/public

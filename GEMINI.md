@@ -161,10 +161,24 @@ When generating or editing documentation for this repository, you must strictly 
 5.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
 
 ##### Samples Architecture Constraints
-Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope. When adding samples, use the correct location and apply proper frontmatter tags (`sample_filters`, `is_sample`) are added so the UI Gallery filters can index them.for the gallery filtering:
+Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope.
 1.  **Quickstarts:** `docs/en/documentation/getting-started/`
 2.  **Integration-Specific Samples:** `docs/en/integrations/<source_name>/samples/`. (The `samples/_index.md` wrapper must contain **strictly only frontmatter**).
 3.  **General/Cross-Category Samples:** `docs/en/samples/`
+
+##### Samples Maintenance Rules
+
+1. **Filtering:** Always include `sample_filters` in the frontmatter. Use specific tags for:
+   * Data Source (e.g., `bigquery`, `alloydb`)
+   * Language (e.g., `python`, `js`, `go`)
+   * Tool Type (e.g., `mcp`, `sdk`)
+2. **Metadata:** Ensure `is_sample: true` is present to prevent the sample from being excluded from the Samples Gallery.
+
+##### Prebuilt Config Constraints (`integrations/**/prebuilt-configs/*.md`)
+
+1. **Naming & Path:** All prebuilt config docs must reside in `prebuilt-configs/`.
+2. **Shortcode Requirement:** The main `documentation/configuration/prebuilt-configs/_index.md` page uses the `{{< list-prebuilt-configs >}}` shortcode, which only detects directories named exactly `prebuilt-configs`.
+3. **YAML Mapping:** Always verify the `kind` of the data source in `internal/prebuiltconfigs/tools/` before choosing the integration folder.
 
 
 ##### Asset Constraints (`docs/`)

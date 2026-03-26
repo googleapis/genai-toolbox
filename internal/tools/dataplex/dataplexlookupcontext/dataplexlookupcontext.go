@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
@@ -65,9 +66,13 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	name := parameters.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
-	resources := parameters.NewArrayParameter("resources", "A list of up to 10 resources names for which metadata is needed.", parameters.NewStringParameter("resource", "Name of a resource in the following format: projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}."))
-	params := parameters.Parameters{name, resources}
+	resources := parameters.NewArrayParameter("resources",
+		"Required. A list of up to 10 resource names from same project and location.",
+		parameters.NewStringParameter("resource",
+			"Name of a resource in the following format: projects/{project_id_or_number}/locations/{location}/entryGroups/{group}/entries/{entry}."+
+				" Example for a BigQuery table: 'projects/{project_id_or_number}/locations/{location}/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}'."+
+				" This is the same value which is returned by the search_entries tool's response in the dataplexEntry.name field."))
+	params := parameters.Parameters{resources}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
@@ -102,12 +107,33 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	name, _ := paramsMap["name"].(string)
 	resourcesSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["resources"].([]any), "string")
 	if err != nil {
 		return nil, util.NewAgentError(fmt.Sprintf("can't convert resources to array of strings: %s", err), err)
 	}
 	resources := resourcesSlice.([]string)
+
+	if len(resources) == 0 {
+		err := fmt.Errorf("resources cannot be empty")
+		return nil, util.NewAgentError(err.Error(), err)
+	}
+	var name string
+	for i, resource := range resources {
+		parts := strings.Split(resource, "/")
+		if len(parts) < 4 || parts[0] != "projects" || parts[2] != "locations" {
+			err := fmt.Errorf("invalid resource format at index %d, must be in the format of projects/{project_id_or_number}/locations/{location}/entryGroups/{group}/entries/{entry}", i)
+			return nil, util.NewAgentError(err.Error(), err)
+		}
+
+		currentName := strings.Join(parts[:4], "/")
+		if i == 0 {
+			name = currentName
+		} else if name != currentName {
+			err := fmt.Errorf("all resources must belong to the same project and location. Please make separate calls for each distinct project and location combination")
+			return nil, util.NewAgentError(err.Error(), err)
+		}
+	}
+
 	resp, err := source.LookupContext(ctx, name, resources)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
