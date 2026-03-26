@@ -22,4 +22,6 @@ You can also combine multiple prebuilt configs.
 See [Usage Examples](../../../reference/cli.md#usage-examples).
 {{< /notice >}}
 
+## Available Prebuilt Configs
+
 {{< list-prebuilt-configs >}}
