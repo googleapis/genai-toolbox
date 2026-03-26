@@ -50,6 +50,12 @@ func (cfg Config) EmbeddingModelConfigType() string {
 func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingModel, error) {
 	configs := &genai.ClientConfig{}
 
+	// Retrieve logger from context
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve logger: %w", err)
+	}
+
 	// Get API Key
 	apiKey := cfg.ApiKey
 	if apiKey == "" {
@@ -78,10 +84,14 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 		configs.Project = project
 		configs.Location = location
 
+		l.InfoContext(ctx, "Using Vertex AI backend for Gemini embedding", "project", project, "location", location)
+
 	} else if apiKey != "" {
 		// Using Gemini API, which uses API Key for authentication.
 		configs.Backend = genai.BackendGeminiAPI
 		configs.APIKey = apiKey
+
+		l.InfoContext(ctx, "Using Google AI (Gemini API) backend for Gemini embedding")
 
 	} else {
 		// Missing credentials
