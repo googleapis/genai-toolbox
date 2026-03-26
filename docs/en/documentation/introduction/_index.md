@@ -13,12 +13,6 @@ It serves a **dual purpose**:
 2. **Custom Tools Framework (aka 'Run-Time'):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice note >}}
-This solution was originally named “Gen AI Toolbox for
-Databases” as its initial development predated MCP, but was renamed to align
-with the added MCP compatibility.
-{{< /notice >}}
-
-{{< notice note >}}
 This document has been updated to support the flat configuration file format. To
 view documentation with original configuration file format, please navigate to the
 top-right menu and select versions v0.26.0 or older.
@@ -32,6 +26,12 @@ top-right menu and select versions v0.26.0 or older.
 - **Better Performance:** Handles connection pooling, integrated auth (IAM), and end-to-end observability (OpenTelemetry) out of the box.
 - **Enhanced Security**: Integrated authentication for more secure access to your data.
 - **End-to-end Observability**: Out of the box metrics and tracing with built-in support for OpenTelemetry.
+
+{{< notice note >}}
+This solution was originally named “Gen AI Toolbox for
+Databases” as its initial development predated MCP, but was renamed to align
+with the added MCP compatibility.
+{{< /notice >}}
 
 ## General Architecture
 
