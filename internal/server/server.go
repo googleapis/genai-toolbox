@@ -381,6 +381,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+		toolboxUrl:      cfg.ToolboxUrl,
 	}
 
 	// cors
@@ -409,6 +410,20 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		allowedHostsMap[hostname] = struct{}{}
 	}
 	r.Use(hostCheck(allowedHostsMap))
+
+	// Host OAuth Protected Resource Metadata endpoint
+	mcpAuthEnabled := false
+	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+		if genCfg, ok := authSvc.ToConfig().(generic.Config); ok && genCfg.McpEnabled {
+			mcpAuthEnabled = true
+			break
+		}
+	}
+	if mcpAuthEnabled {
+		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, req *http.Request) {
+			prmHandler(s, w, req)
+		})
+	}
 
 	// control plane
 	mcpR, err := mcpRouter(s)
