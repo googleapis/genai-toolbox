@@ -48,7 +48,7 @@ timeout: 1200s
 substitutions:
   _TARGET_LANG: "python"
   _IMAGE: "gcr.io/google.com/cloudsdktool/cloud-sdk:537.0.0"
-  _TARGET_ROOT: "docs/en/samples/pre_post_processing/python"
+  _TARGET_ROOT: "docs/en/documentation/configuration/pre-post-processing/python"
   _TABLE_NAME: "hotels_py_pre_post_processing"
   _SQL_FILE: ".ci/sample_tests/setup_hotels.sql"
   _AGENT_FILE_PATTERN: "agent.py"

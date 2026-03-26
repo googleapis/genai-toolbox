@@ -26,26 +26,28 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 > added MCP compatibility.
 
 <!-- TOC ignore:true -->
-## Table of Contents
+## Table of Contents <!-- omit in toc -->
 
 <!-- TOC -->
 
-- [Why Toolbox?](#why-toolbox)
-- [General Architecture](#general-architecture)
-- [Getting Started](#getting-started)
-  - [Installing the server](#installing-the-server)
-  - [Running the server](#running-the-server)
-  - [Integrating your application](#integrating-your-application)
-  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
-- [Configuration](#configuration)
-  - [Sources](#sources)
-  - [Tools](#tools)
-  - [Toolsets](#toolsets)
-  - [Prompts](#prompts)
-- [Versioning](#versioning)
-- [Contributing](#contributing)
-- [Telemetry](#telemetry)
-- [Community](#community)
+- [MCP Toolbox for Databases](#mcp-toolbox-for-databases)
+  - [Why Toolbox?](#why-toolbox)
+  - [General Architecture](#general-architecture)
+  - [Getting Started](#getting-started)
+    - [Quickstart: Running Toolbox using NPX](#quickstart-running-toolbox-using-npx)
+    - [Installing the server](#installing-the-server)
+    - [Running the server](#running-the-server)
+    - [Integrating your application](#integrating-your-application)
+    - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
+  - [Configuration](#configuration)
+    - [Sources](#sources)
+    - [Tools](#tools)
+    - [Toolsets](#toolsets)
+    - [Prompts](#prompts)
+  - [Versioning](#versioning)
+  - [Contributing](#contributing)
+  - [Telemetry](#telemetry)
+  - [Community](#community)
 
 <!-- /TOC -->
 
@@ -101,7 +103,7 @@ between agents and applications and update those tools without necessarily
 redeploying your application.
 
 <p align="center">
-<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
+<img src="docs/en/documentation/introduction/architecture.png" alt="architecture" width="50%"/>
 </p>
 
 ## Getting Started

@@ -30,7 +30,7 @@ steps:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
-      - 'TARGET_ROOT=docs/en/getting-started/quickstart/js'
+      - 'TARGET_ROOT=docs/en/documentation/getting-started/quickstart/js'
       - 'TARGET_LANG=js'
       - 'TABLE_NAME=hotels_js'
       - 'SQL_FILE=.ci/sample_tests/setup_hotels.sql'

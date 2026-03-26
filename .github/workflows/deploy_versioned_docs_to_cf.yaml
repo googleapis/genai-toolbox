@@ -1,0 +1,105 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "CF: Deploy Versioned Docs"
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    # This shared concurrency group ensures only one docs deployment runs at a time.
+    concurrency:
+      group: cf-docs-update
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Code at Tag
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Get Version from Release Tag
+        id: get_version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: echo "VERSION=${RELEASE_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+        with:
+          hugo-version: "0.145.0"
+          extended: true
+
+      - name: Setup Node
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: .hugo
+
+      - name: Build Hugo Site
+        run: |
+          hugo --minify --config hugo.cloudflare.toml
+          rm -f public/releases.releases
+        working-directory: .hugo
+        env:
+          HUGO_BASEURL: https://mcp-toolbox.dev/${{ steps.get_version.outputs.VERSION }}/
+          HUGO_RELATIVEURLS: false
+          HUGO_PARAMS_VERSION: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build Pagefind Index (Versioned)
+        run: npx pagefind --site public
+        working-directory: .hugo
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .hugo/public
+          publish_branch: cloudflare-pages
+          destination_dir: ./${{ steps.get_version.outputs.VERSION }}
+          keep_files: true
+          commit_message: "deploy: docs for ${{ steps.get_version.outputs.VERSION }}"
+
+      - name: Clean Build Directory
+        run: rm -rf .hugo/public
+
+      - name: Build Hugo Site
+        run: hugo --minify --config hugo.cloudflare.toml
+        working-directory: .hugo
+        env:
+          HUGO_BASEURL: https://mcp-toolbox.dev/
+          HUGO_RELATIVEURLS: false
+          HUGO_PARAMS_VERSION: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Build Pagefind Index (Root)
+        run: npx pagefind --site public
+        working-directory: .hugo
+
+      - name: Deploy to root
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .hugo/public
+          publish_branch: cloudflare-pages
+          keep_files: true
+          allow_empty_commit: true
+          commit_message: "deploy: docs to root for ${{ steps.get_version.outputs.VERSION }}"

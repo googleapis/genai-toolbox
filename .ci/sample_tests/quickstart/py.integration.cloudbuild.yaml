@@ -30,7 +30,7 @@ steps:
       - 'GCP_PROJECT=${_GCP_PROJECT}'
       - 'DATABASE_NAME=${_DATABASE_NAME}'
       - 'DB_USER=${_DB_USER}'
-      - 'TARGET_ROOT=docs/en/getting-started/quickstart/python'
+      - 'TARGET_ROOT=docs/en/documentation/getting-started/quickstart/python'
       - 'TARGET_LANG=python'
       - 'TABLE_NAME=hotels_python'
       - 'SQL_FILE=.ci/sample_tests/setup_hotels.sql'

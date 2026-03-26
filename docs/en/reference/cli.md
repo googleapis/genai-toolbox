@@ -11,12 +11,12 @@ description: >
 | Flag (Short) | Flag (Long)                | Description                                                                                                                                                                      | Default     |
 |--------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
 | `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                              | `127.0.0.1` |
-|              | `--disable-reload`         | Disables dynamic reloading of config.                                                                                                                                        |             |
+|              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                                 |             |
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                  | `5000`      |
-|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                |             |
+|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values.                                                |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                 |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
@@ -49,7 +49,7 @@ toolbox invoke <tool-name> [params]
 - `tool-name`: The name of the tool to execute (as defined in your configuration).
 - `params`: (Optional) A JSON string containing the parameters for the tool.
 
-For more detailed instructions, see [Invoke Tools via CLI](../how-to/invoke_tool.md).
+For more detailed instructions, see [Invoke Tools via CLI](../documentation/configuration/tools/invoke_tool.md).
 
 </details>
 
@@ -73,7 +73,7 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
 - `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
 
-For more detailed instructions, see [Generate Agent Skills](../how-to/generate_skill.md).
+For more detailed instructions, see [Generate Agent Skills](../documentation/configuration/skills/_index.md).
 
 </details>
 
@@ -124,8 +124,8 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 **Prebuilt Configurations:**
 
 - `--prebuilt`: Use one or more predefined configurations for specific database types (e.g.,
-  'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools
-  Reference](prebuilt-tools.md) for allowed values.
+  'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools 
+  Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values.
 
 {{< notice tip >}}
 The CLI enforces mutual exclusivity between configuration source flags,
@@ -153,4 +153,4 @@ reloading, use the `--disable-reload` flag.
 
 To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
 tools and toolsets with features such as authorized parameters. To learn more,
-visit [Toolbox UI](../how-to/toolbox-ui/index.md).
+visit [Toolbox UI](../documentation/configuration/toolbox-ui/index.md).

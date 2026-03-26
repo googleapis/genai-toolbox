@@ -1,1 +1,4 @@
-<script src='{{ .Site.BaseURL }}js/w3.js' type="application/x-javascript"></script>
+<script src='{{ "js/w3.js" | relURL }}'></script>
+{{ if not .Site.Params.disableMigrationBanner }}
+  <script src="{{ "js/custom-layout.js" | relURL }}"></script>
+{{ end }}
