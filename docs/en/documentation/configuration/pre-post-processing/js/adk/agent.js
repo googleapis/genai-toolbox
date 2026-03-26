@@ -13,7 +13,7 @@ update checkin or checkout dates if mentioned by the user.
 Don't ask for confirmations from the user.
 `;
 
-// Pre-Processing
+// Pre-Processin
 function enforeBusinessRules({tool, args}) {
   const name = tool.name;
   console.log(`POLICY CHECK: Intercepting '${name}'`);

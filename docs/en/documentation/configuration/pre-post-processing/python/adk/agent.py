@@ -18,7 +18,7 @@ SYSTEM_PROMPT = """
   searches. This is very important for any operations. For any bookings or
   cancellations, please provide the appropriate confirmation. Be sure to
   update checkin or checkout dates if mentioned by the user.
-  Don't ask for confirmations from the user.
+  Don't ask for confirmations from user.
 """
 
 

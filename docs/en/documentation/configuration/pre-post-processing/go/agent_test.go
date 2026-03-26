@@ -29,7 +29,7 @@ func TestQuickstartSample(t *testing.T) {
 		t.Skip("Skipping test: ORCH_NAME environment variable is not set.")
 	}
 
-	t.Logf("--- Testing: %s ---", framework)
+	t.Logf("--- Testing: %s --", framework)
 
 	if os.Getenv("GOOGLE_API_KEY") == "" {
 		t.Skipf("Skipping test for %s: GOOGLE_API_KEY environment variable is not set.", framework)
