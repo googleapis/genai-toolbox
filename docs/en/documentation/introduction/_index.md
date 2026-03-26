@@ -9,20 +9,26 @@ description: >
 MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases.
 
 It serves a **dual purpose**:
-1. **Ready-to-use MCP Server (aka 'Build-Time'):** Instantly connect Claude, Cursor, Gemini CLI, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+1. **Ready-to-use MCP Server (aka 'Build-Time'):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
 2. **Custom Tools Framework (aka 'Run-Time'):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice note >}}
-This document has been updated to support the configuration file v2 format. To
-view documentation with configuration file v1 format, please navigate to the
+This solution was originally named “Gen AI Toolbox for
+Databases” as its initial development predated MCP, but was renamed to align
+with the added MCP compatibility.
+{{< /notice >}}
+
+{{< notice note >}}
+This document has been updated to support the flat configuration file format. To
+view documentation with original configuration file format, please navigate to the
 top-right menu and select versions v0.26.0 or older.
 {{< /notice >}}
 
-## Features & Capabilities
+## Why MCP Toolbox?
 
 - **Out-of-the-Box Database Access:** Prebuilt generic tools for instant data exploration (e.g., `list_tables`, `execute_sql`) directly from your IDE or CLI.
 - **Custom Tools Framework:** Build production-ready tools with your own predefined logic, ensuring safety through Restricted Access, Structured Queries, and Semantic Search.
-- **Simplified Development:** Integrate tools into your LangChain, LlamaIndex, or custom agents in less than 10 lines of code.
+- **Simplified Development:** Integrate tools into your Agent Development Kit (ADK), LangChain, LlamaIndex, or custom agents in less than 10 lines of code.
 - **Better Performance:** Handles connection pooling, integrated auth (IAM), and end-to-end observability (OpenTelemetry) out of the box.
 - **Enhanced Security**: Integrated authentication for more secure access to your data.
 - **End-to-end Observability**: Out of the box metrics and tracing with built-in support for OpenTelemetry.
@@ -52,16 +58,16 @@ Add the following to your client's MCP configuration file (usually `mcp.json` or
 		"toolbox-postgres": {
 			"command": "npx",
 			"args": [
-			"-y",
-			"@toolbox-sdk/server",
-			"--prebuilt=postgres"
+				"-y",
+				"@toolbox-sdk/server",
+				"--prebuilt=postgres"
 			]
 		}
 	}
 }
 ```
 
-Set the appropriate environement variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
 
 When you run Toolbox with a `--prebuilt=<database>` flag, you instantly get access to standard tools to interact with that database. 
 
@@ -80,12 +86,10 @@ npx @toolbox-sdk/server --config tools.yaml
 ```
 
 {{< notice note >}}
-This method should only be used for non-production use cases. 
-For any production use-cases, consider using the binary or container image,
-see the [Install & Run the Server](#install--run-the-server).
+This method is optimized for convenience rather than performance. For a more standard and reliable installation, please use the binary or container image as described in [Install Toolbox](#install-toolbox).
 {{< /notice >}}
 
-### Installing the server
+### Install Toolbox
 
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
@@ -182,7 +186,7 @@ go install github.com/googleapis/genai-toolbox@v0.30.0
 {{< /tabpane >}}
 <!-- {x-release-please-end} -->
 
-### Running the server
+### Run Toolbox
 
 [Configure](../configuration/_index.md) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:

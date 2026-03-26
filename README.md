@@ -26,38 +26,37 @@ MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server 
 </p>
 
 It serves a **dual purpose**:
-1. **Ready-to-use MCP Server (Build-Time):** Instantly connect Claude, Cursor, Gemini CLI, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+1. **Ready-to-use MCP Server (Build-Time):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
 2. **Custom Tools Framework (Run-Time):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 
 This README provides a brief overview. For comprehensive details, see the [full documentation](https://googleapis.github.io/genai-toolbox/).
 
 > [!NOTE]
-> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/genai-toolbox) as its initial development predated MCP, but was renamed to align with recently added MCP compatibility.
+> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/genai-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
 
 <!-- TOC ignore:true -->
 ## Table of Contents
 
-- [Features & Capabilities](#features--capabilities)
+- [Why MCP Toolbox?](#why-mcp-toolbox)
 - [Quick Start: Prebuilt Tools](#quick-start-prebuilt-tools)
-- [Quick Start: Custom Tools Framework](#quick-start-custom-tools-framework)
-- [Install & Run the Server](#install--run-the-server)
-- [Integrate with Gemini CLI](#integrate-with-the-gemini-cli)
-- [SDKs: Integrate with your Application](#sdks-integrate-with-your-application)
-- [Test tools with the Toolbox UI](#test-tools-with-the-Toolbox-UI)
-- [Telemetry](#telemetry)
-- [Generate Agent Skills](#generate-agent-skills)
+- [Quick Start: Custom Tools](#quick-start-custom-tools)
+- [Install & Run the Toolbox server](#install--run-the-toolbox-server)
+- [Connect to Toolbox](#connect-to-toolbox)
+  - [MCP Client](#mcp-client)
+  - [Toolbox SDKs: Integrate with your Application](#toolbox-sdks-integrate-with-your-application)
+- [Additional Features](#additional-features)
 - [Versioning](#versioning)
 - [Contributing](#contributing)
 - [Community](#community)
 
 ---
 
-## Features & Capabilities
+## Why MCP Toolbox?
 
 - **Out-of-the-Box Database Access:** Prebuilt generic tools for instant data exploration (e.g., `list_tables`, `execute_sql`) directly from your IDE or CLI.
 - **Custom Tools Framework:** Build production-ready tools with your own predefined logic, ensuring safety through Restricted Access, Structured Queries, and Semantic Search.
-- **Simplified Development:** Integrate tools into your LangChain, LlamaIndex, or custom agents in less than 10 lines of code.
+- **Simplified Development:** Integrate tools into your Agent Development Kit (ADK), LangChain, LlamaIndex, or custom agents in less than 10 lines of code.
 - **Better Performance:** Handles connection pooling, integrated auth (IAM), and end-to-end observability (OpenTelemetry) out of the box.
 - **Enhanced Security**: Integrated authentication for more secure access to your data.
 - **End-to-end Observability**: Out of the box metrics and tracing with built-in support for OpenTelemetry.
@@ -68,7 +67,9 @@ This README provides a brief overview. For comprehensive details, see the [full 
 
 Stop context-switching and let your AI assistant become a true co-developer. By connecting your IDE to your databases with MCP Toolbox, you can query your data in plain English, automate schema discovery and management, and generate database-aware code.
 
-You can use the Toolbox in any MCP-compatible IDE or client (e.g., Cursor, Claude Desktop, Windsurf, Gemini CLI) by configuring the MCP server.
+You can use the Toolbox in any MCP-compatible IDE or client (e.g., Gemini CLI, Google Antigravity, Claude Code, Codex, etc.) by configuring the MCP server.
+
+**Prebuilt tools are also conveniently available via the [Google Antigravity MCP Store](https://antigravity.google/docs/mcp) with a simple click-to-install experience.**
 
 1. Add the following to your client's MCP configuration file (usually `mcp.json` or `claude_desktop_config.json`):
 
@@ -87,7 +88,7 @@ You can use the Toolbox in any MCP-compatible IDE or client (e.g., Cursor, Claud
     }
     ```
 
-2. Set the appropriate environement variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+2. Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
 
 When you run Toolbox with a `--prebuilt=<database>` flag, you instantly get access to standard tools to interact with that database. 
 
@@ -97,12 +98,18 @@ Supported databases currently include:
 
 For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
 
-*For more methods (like Docker or Binaries), see the [Install & Run the Server](#install--run-the-server) section below.*
+*See the [Install & Run the Toolbox server](#install--run-the-toolbox-server) section for different execution methods like Docker or binaries.*
+
+
+> [!TIP]
+> For users looking for a managed solution, [Google Cloud MCP Servers](https://cloud.google.com/blog/products/databases/managed-mcp-servers-for-google-cloud-databases) 
+> provide a managed MCP experience with prebuilt tools; you can [learn more about the differences here](https://mcp-toolbox.dev/dev/reference/faq/).
 
 ---
 
-## Quick Start: Custom Tools Framework
+## Quick Start: Custom Tools
 
+Toolbox can also be used as a framework for customized tools.
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
 have multiple files, you can tell Toolbox which to load with the `--config
 tools.yaml` flag.
@@ -194,25 +201,22 @@ For more details on configuring prompts, see the
 
 ---
 
-## Install & Run the Server
+## Install & Run the Toolbox server
 
-You can run Toolbox directly with a [configuration file](#configuration):
+You can run Toolbox directly with a [configuration file](#quick-start-custom-tools):
 
 ```sh
 npx @toolbox-sdk/server --config tools.yaml
-You can run Toolbox directly with a [prebuilt-config]:
-
-Or a [configuration file](#configuration):
-
+```
 
 This runs the latest version of the Toolbox server with your configuration file.
 
 > [!NOTE]
-> This method should only be used for non-production use cases. 
-> For any production use-cases, consider using the binary or container image,
-> see the [Install & Run the Server](#install--run-the-server)
+> This method is optimized for convenience rather than performance. 
+> For a more standard and reliable installation, please use the binary
+> or container image as described in [Install & Run the Toolbox server](#install--run-the-toolbox-server).
 
-### Installation
+### Install Toolbox
 
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
@@ -225,69 +229,69 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary:
 
 <!-- {x-release-please-start-version} -->
-> <details>
-> <summary>Linux (AMD64)</summary>
->
-> To install Toolbox as a binary on Linux (AMD64):
->
-> ```sh
-> # see releases page for other versions
-> export VERSION=0.30.0
-> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
-> chmod +x toolbox
-> ```
->
-> </details>
-> <details>
-> <summary>macOS (Apple Silicon)</summary>
->
-> To install Toolbox as a binary on macOS (Apple Silicon):
->
-> ```sh
-> # see releases page for other versions
-> export VERSION=0.30.0
-> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
-> chmod +x toolbox
-> ```
->
-> </details>
-> <details>
-> <summary>macOS (Intel)</summary>
->
-> To install Toolbox as a binary on macOS (Intel):
->
-> ```sh
-> # see releases page for other versions
-> export VERSION=0.30.0
-> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
-> chmod +x toolbox
-> ```
->
-> </details>
-> <details>
-> <summary>Windows (Command Prompt)</summary>
->
-> To install Toolbox as a binary on Windows (Command Prompt):
->
-> ```cmd
-> :: see releases page for other versions
-> set VERSION=0.30.0
-> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
-> ```
->
-> </details>
-> <details>
-> <summary>Windows (PowerShell)</summary>
->
-> To install Toolbox as a binary on Windows (PowerShell):
->
-> ```powershell
-> # see releases page for other versions
-> $VERSION = "0.30.0"
-> curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
-> ```
->
-> </details>
+ <details>
+ <summary>Linux (AMD64)</summary>
+
+ To install Toolbox as a binary on Linux (AMD64):
+
+ ```sh
+ # see releases page for other versions
+ export VERSION=0.30.0
+ curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
+ chmod +x toolbox
+ ```
+
+ </details>
+ <details>
+ <summary>macOS (Apple Silicon)</summary>
+
+ To install Toolbox as a binary on macOS (Apple Silicon):
+
+ ```sh
+ # see releases page for other versions
+ export VERSION=0.30.0
+ curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
+ chmod +x toolbox
+ ```
+
+ </details>
+ <details>
+ <summary>macOS (Intel)</summary>
+
+ To install Toolbox as a binary on macOS (Intel):
+
+ ```sh
+ # see releases page for other versions
+ export VERSION=0.30.0
+ curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
+ chmod +x toolbox
+ ```
+
+ </details>
+ <details>
+ <summary>Windows (Command Prompt)</summary>
+
+ To install Toolbox as a binary on Windows (Command Prompt):
+
+ ```cmd
+ :: see releases page for other versions
+ set VERSION=0.30.0
+ curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+ ```
+
+ </details>
+ <details>
+ <summary>Windows (PowerShell)</summary>
+
+ To install Toolbox as a binary on Windows (PowerShell):
+
+ ```powershell
+ # see releases page for other versions
+ $VERSION = "0.30.0"
+ curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
+ ```
+
+ </details>
 </details>
 
 <details>
@@ -325,10 +329,31 @@ go install github.com/googleapis/genai-toolbox@v0.30.0
 <!-- {x-release-please-end} -->
 
 </details>
+<details>
+<summary>Gemini CLI</summary>
+Check out the [Gemini CLI extensions](https://geminicli.com/extensions/) to install prebuilt tools for specific databases like AlloyDB, BigQuery, and Cloud SQL directly into Gemini CLI.
 
-### Usage
+```sh
+# Install Gemini CLI
+npm install -g @google/gemini-cli
+# Install the extension
+gemini extensions install https://github.com/gemini-cli-extensions/cloud-sql-postgres
+# Run Gemini CLI
+gemini
+```
 
-[Configure](#configuration) a `tools.yaml` to define your tools, and then
+Interact with your custom tools using natural language through the Gemini CLI.
+
+```sh
+# Install the extension
+gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
+```
+</details>
+
+
+### Run Toolbox
+
+[Configure](#quick-start-custom-tools) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:
 
 <details open>
@@ -350,7 +375,7 @@ To run Toolbox from binary:
 
 <summary>Container image</summary>
 
-To run the server after pulling the [container image](#installation):
+To run the server after pulling the [container image](#install-toolbox):
 
 ```sh
 export VERSION=0.24.0 # Use the version you pulled
@@ -408,6 +433,22 @@ npx @toolbox-sdk/server --config tools.yaml
 ```
 
 </details>
+<details>
+<summary>Gemini CLI</summary>
+After installing a [Gemini CLI extensions](https://geminicli.com/extensions/), the prebuilt tools will be available during use.
+
+```sh
+# Run Gemini CLI
+gemini
+
+# List extensions
+/exttensions list
+# List MCP servers
+/mcp list
+```
+
+</details>
+
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -416,35 +457,34 @@ For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
 section](https://googleapis.github.io/genai-toolbox/how-to/)
 
-
 ---
 
-## Integrate with the Gemini CLI
+## Connect to Toolbox
 
-Check out the [Gemini CLI extensions](https://geminicli.com/extensions/) to install prebuilt tools for specific databases like AlloyDB, BigQuery, and Cloud SQL directly into Gemini CLI.
+Once your Toolbox server is up and running, you can load tools into your MCP-compatible client or
+application. 
 
-```sh
-# Install Gemini CLI
-npm install -g @google/gemini-cli
-# Install the extension
-gemini extensions install https://github.com/gemini-cli-extensions/cloud-sql-postgres
-# Run Gemini CLI
-gemini
+### MCP Client
+
+Add the following configuration to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "toolbox": {
+      "type": "http",
+      "url": "http://127.0.0.1:5000/mcp",
+    }
+  }
+}
 ```
 
-Interact with your custom tools using natural language through the Gemini CLI.
+If you would like to connect to a specific toolset, replace url with "http://127.0.0.1:5000/mcp/{toolset_name}".
 
-```sh
-# Install the extension
-gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
-```
 
----
+### Toolbox SDKs: Integrate with your Application
 
-## SDKs: Integrate with your Application
-
-Once your server is up and running, you can load the tools into your
-application. See below the list of Client SDKs for using various frameworks:
+Toolbox Client SDKs provide the easy-to-use building blocks and advanced features for connecting your custom applications to the MCP Toolbox server. See below the list of Client SDKs for using various frameworks:
 
 <details open>
   <summary>Python (<a href="https://github.com/googleapis/mcp-toolbox-sdk-python">Github</a>)</summary>
@@ -975,7 +1015,9 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
 ---
 
-## Test tools with the Toolbox UI
+## Additional Features
+
+### Test tools with the Toolbox UI
 
 To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
 tools and toolsets with features such as authorized parameters. To learn more,
@@ -985,17 +1027,13 @@ visit [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/
 ./toolbox --ui
 ```
 
----
-
-## Telemetry
+### Telemetry
 
 Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
 to export to any OTLP-compatible backend like Google Cloud Monitoring, Agnost AI, or 
 others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
 
----
-
-## Generate Agent Skills
+### Generate Agent Skills
 
 The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill** compatible with the [Agent Skill specification](https://agentskills.io/specification). This is useful for distributing tools as portable skill packages.
 
@@ -1039,12 +1077,6 @@ For technical details on setting up a environment for developing on Toolbox itse
 Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
 
 ---
-
-## Telemetry
-
-Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
-to export to any OTLP-compatible backend like Google Cloud Monitoring, Agnost AI, or 
-others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
 
 ## Community
 
