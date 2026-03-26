@@ -267,11 +267,13 @@ When updating documentation, you must adhere to the structural constraints enfor
   * If a new database inherits tools from a base integration (like Cloud SQL inheriting Postgres tools), create the `tools/` directory with an `_index.md` file.
   * Map the inherited tools dynamically by adding the `shared_tools` YAML array to the frontmatter of this `tools/_index.md` file. **This file must strictly contain only frontmatter.**
 * **Adding Samples:**
-  * Samples are distributed across the site and aggregated visually via the "Samples Hub". Place your sample based on its scope:
-    1. **Quickstarts:** Place in `docs/en/documentation/getting-started/quickstart/`.
-    2. **Database-Specific samples:** Place in `docs/en/integrations/<newdb>/samples/`. Make sure to include a `samples/_index.md` wrapper that contains **only frontmatter**.
-    3. **General/Cross- samples:** Place directly in `docs/en/samples/`.
-  * Ensure appropriate **frontmatter tags (`sample_filters`, `is_sample`)** are added so the UI Gallery filters can index them.
+  * **Physical Location:**
+    1. **Quickstarts:** `docs/en/documentation/getting-started/quickstart/`.
+    2. **Integration-Specific:** `docs/en/integrations/<db>/samples/`. Must include an `_index.md` with strictly only frontmatter.
+    3. **General:** `docs/en/samples/`.
+  * **Frontmatter Requirements (Maintenance):** To ensure samples appear correctly in the Samples Section, you must provide the following tags:
+    * `is_sample: true` - Required for indexing.
+    * `sample_filters:` - A YAML array used for UI filtering (e.g., `[postgres, go, sql]`).
 * **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `documentation`), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, update the "Diátaxis Narrative Framework" preamble so AI models understand the purpose of your new section.
 
 #### Adding Prebuilt Tools
@@ -497,6 +499,14 @@ When adding or updating a Tool page, your markdown file must strictly adhere to 
       * **Required Headings:** `About`, `Example`
       * **Allowed Optional Headings:** `Compatible Sources`, `Requirements`, `Parameters`, `Output Format`, `Reference`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
   * **Compatible Sources Shortcode:** If you include the `## Compatible Sources` heading, you must place the compatible-sources shortcode (e.g., `{{< compatible-sources >}}`) directly beneath it.
+
+#### Prebuilt Configuration Structure (`integrations/**/prebuilt-configs/*.md`)
+
+To ensure new prebuilt configurations are automatically indexed by the `{{< list-prebuilt-configs >}}` shortcode on the main Prebuilt Configs page, follow these rules:
+
+* **Location:** Always place documentation for prebuilt configurations in a nested directory named `prebuilt-configs/` inside the database folder (e.g., `docs/en/integrations/alloydb/prebuilt-configs/`).
+* **Index Wrapper:** Every `prebuilt-configs/` directory must contain an `_index.md` file. This file acts as the anchor for the directory and must contain the `title` and `description` used in the automated lists.
+* **Architecture-Based Mapping:** Map configurations to database folders based on the `kind` defined in the tool's YAML file (in `internal/prebuiltconfigs/tools/`). For example, any tool using the `postgres` kind should live in the `postgres/` integration directory.
 
 #### Frontend Assets & Layouts
 
