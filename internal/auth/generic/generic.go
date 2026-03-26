@@ -101,10 +101,6 @@ func discoverJWKSURL(AuthorizationServer string) (string, error) {
 		},
 	}
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 332d1387563 (remove https check)
 	resp, err := client.Get(oidcConfigURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch OIDC config: %w", err)
@@ -214,6 +210,7 @@ func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (ma
 }
 
 // MCPAuthError represents an error during MCP authentication validation.
+type MCPAuthError struct {
 	Code           int
 	Message        string
 	ScopesRequired []string
