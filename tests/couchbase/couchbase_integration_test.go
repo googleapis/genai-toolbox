@@ -50,6 +50,7 @@ func getCouchbaseVars(connectionString string) map[string]any {
 	}
 }
 
+// initCouchbaseCluster initializes a connection to the Couchbase cluster
 func initCouchbaseCluster(connectionString, username, password string) (*gocb.Cluster, error) {
 	opts := gocb.ClusterOptions{
 		Authenticator: gocb.PasswordAuthenticator{
@@ -87,7 +88,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 		t.Fatalf("failed to get connection string: %s", err)
 	}
 
-	// 2. Initialize SDK Client for Setup
+	// Set up Clouchbase cluster
 	cluster, err := initCouchbaseCluster(connectionString, defaultUser, defaultPass)
 	if err != nil {
 		t.Fatalf("unable to create Couchbase connection: %s", err)
@@ -114,7 +115,7 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	teardown3 := setupCouchbaseCollection(t, ctx, cluster, defaultBucketName, scopeName, collectionNameTemplateParam, params3)
 	defer teardown3(t)
 
-	// 4. Configure Toolbox
+	// Configure Toolbox
 	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolType, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
