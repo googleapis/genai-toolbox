@@ -1,12 +1,10 @@
-{{/* 1. Grab the 'integrations' section */}}
 {{ $integrations := site.GetPage "section" "integrations" }}
 
 <div class="db-index-list">
-  {{/* 2. Loop through all database folders alphabetically */}}
+  {{/*Loop through all database folders alphabetically */}}
   {{ range $integrations.Pages.ByTitle }}
     {{ $db := . }}
-    
-    {{/* 3. ONLY render a row if this database has a 'prebuilt-configs' folder */}}
+    {{/* Only render a row if this database has a 'prebuilt-configs' folder */}}
     {{ with $db.GetPage "prebuilt-configs" }}
       {{ $displayTitle := $db.Title }}
       {{ $targetLink := .RelPermalink }}
