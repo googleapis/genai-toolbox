@@ -64,7 +64,12 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	query := parameters.NewStringParameter("query", "The query against which entries in scope should be matched.")
+	query := parameters.NewStringParameter("query",
+		"A query string for searching entries, following Dataplex search syntax. "+
+			"Supports logical operators (AND, OR, NOT) and grouping. "+
+			"For example, to find a table that might have been renamed, you could use 'type:table (name:books OR fiction)'. "+
+			"This can be more efficient than multiple separate calls."+
+			"Warning: Performing broad searches without specific filters (e.g., type:table) can be slow and consume significant resources. When performing exploratory searches, always use the pageSize parameter to limit the number of results returned.")
 	scope := parameters.NewStringParameterWithDefault("scope", "", "A scope limits the search space to a particular project or organization. It must be in the format: organizations/<org_id> or projects/<project_id> or projects/<project_number>.")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")

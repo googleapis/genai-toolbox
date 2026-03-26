@@ -23,6 +23,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
@@ -79,6 +80,8 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
+	// ToolboxUrl specifies the Toolbox URL. Used as the resource field in the MCP PRM file when MCP Auth is enabled.
+	ToolboxUrl string
 }
 
 type logFormat string
@@ -255,18 +258,28 @@ func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[stri
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
-	if resourceType != google.AuthServiceType {
-		return nil, fmt.Errorf("%s is not a valid type of auth service", resourceType)
-	}
+
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}
-	actual := google.Config{Name: name}
-	if err := dec.DecodeContext(ctx, &actual); err != nil {
-		return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+
+	switch resourceType {
+	case google.AuthServiceType:
+		actual := google.Config{Name: name}
+		if err := dec.DecodeContext(ctx, &actual); err != nil {
+			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+		}
+		return actual, nil
+	case generic.AuthServiceType:
+		actual := generic.Config{Name: name}
+		if err := dec.DecodeContext(ctx, &actual); err != nil {
+			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+		}
+		return actual, nil
+	default:
+		return nil, fmt.Errorf("%s is not a valid type of auth service", resourceType)
 	}
-	return actual, nil
 }
 
 func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[string]any) (embeddingmodels.EmbeddingModelConfig, error) {
