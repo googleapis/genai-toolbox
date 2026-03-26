@@ -35,8 +35,8 @@ When a request is received, the service will:
 5. Return the validated claims to be used for [Authenticated
    Parameters][auth-params] or [Authorized Invocations][auth-invoke].
 
-[auth-invoke]: ../tools/#authorized-invocations
-[auth-params]: ../tools/#authenticated-parameters
+[auth-invoke]: ../tools/_index.md#authorized-invocations
+[auth-params]: ../tools/_index.md#authenticated-parameters
 
 ## Example
 
