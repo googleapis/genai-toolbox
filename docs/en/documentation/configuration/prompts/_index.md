@@ -78,4 +78,4 @@ The workflow is as follows:
 5. **Response:** This completed prompt is then sent to the Gemini model, and the
    model's response is displayed back to you in the CLI.
 
-## Kinds of prompts
+## Types of prompts

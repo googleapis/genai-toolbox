@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
@@ -616,38 +617,48 @@ func TestParseConfig(t *testing.T) {
 			type: google
 			clientId: testing-id
 ---
-			kind: embeddingModel
-			name: gemini-model
-			type: gemini
-			model: gemini-embedding-001
-			apiKey: some-key
-			dimension: 768
+      kind: authService
+      name: my-generic-auth
+      type: generic
+      audience: testings
+      authorizationServer: https://testings
+      mcpEnabled: true
+      scopesRequired:
+        - read:files
+        - write:files
 ---
-			kind: tool
-			name: example_tool
-			type: postgres-sql
-			source: my-pg-instance
-			description: some description
-			statement: |
-				SELECT * FROM SQL_STATEMENT;
-			parameters:
-			- name: country
-			  type: string
-			  description: some description
+      kind: embeddingModel
+      name: gemini-model
+      type: gemini
+      model: gemini-embedding-001
+      apiKey: some-key
+      dimension: 768
 ---
-			kind: toolset
-			name: example_toolset
-			tools:
-			- example_tool
+      kind: tool
+      name: example_tool
+      type: postgres-sql
+      source: my-pg-instance
+      description: some description
+      statement: |
+        SELECT * FROM SQL_STATEMENT;
+      parameters:
+      - name: country
+        type: string
+        description: some description
 ---
-			kind: prompt
-			name: code_review
-			description: ask llm to analyze code quality
-			messages:
-			- content: "please review the following code for quality: {{.code}}"
-			arguments:
-			- name: code
-			  description: the code to review
+      kind: toolset
+      name: example_toolset
+      tools:
+      - example_tool
+---
+      kind: prompt
+      name: code_review
+      description: ask llm to analyze code quality
+      messages:
+      - content: "please review the following code for quality: {{.code}}"
+      arguments:
+      - name: code
+        description: the code to review
 			`,
 			wantConfig: Config{
 				Sources: server.SourceConfigs{
@@ -668,6 +679,14 @@ func TestParseConfig(t *testing.T) {
 						Name:     "my-google-auth",
 						Type:     google.AuthServiceType,
 						ClientID: "testing-id",
+					},
+					"my-generic-auth": generic.Config{
+						Name:                "my-generic-auth",
+						Type:                generic.AuthServiceType,
+						Audience:            "testings",
+						McpEnabled:          true,
+						AuthorizationServer: "https://testings",
+						ScopesRequired:      []string{"read:files", "write:files"},
 					},
 				},
 				EmbeddingModels: server.EmbeddingModelConfigs{
@@ -2029,12 +2048,19 @@ func TestMergeConfigs(t *testing.T) {
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
 	}
+	fileMcp1 := Config{
+		AuthServices: server.AuthServiceConfigs{"generic1": generic.Config{Name: "generic1", McpEnabled: true}},
+	}
+	fileMcp2 := Config{
+		AuthServices: server.AuthServiceConfigs{"generic2": generic.Config{Name: "generic2", McpEnabled: true}},
+	}
 
 	testCases := []struct {
-		name    string
-		files   []Config
-		want    Config
-		wantErr bool
+		name      string
+		files     []Config
+		want      Config
+		wantErr   bool
+		errString string
 	}{
 		{
 			name:  "merge two distinct files",
@@ -2053,6 +2079,12 @@ func TestMergeConfigs(t *testing.T) {
 			name:    "merge with conflicts",
 			files:   []Config{file1, file2, fileWithConflicts},
 			wantErr: true,
+		},
+		{
+			name:      "merge multiple mcp enabled generic",
+			files:     []Config{fileMcp1, fileMcp2},
+			wantErr:   true,
+			errString: "multiple authServices with mcpEnabled=true detected",
 		},
 		{
 			name:  "merge single file",
@@ -2094,7 +2126,9 @@ func TestMergeConfigs(t *testing.T) {
 				if err == nil {
 					t.Fatal("expected an error for conflicting files but got none")
 				}
-				if !strings.Contains(err.Error(), "resource conflicts detected") {
+				if tc.errString != "" && !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error %q, but got: %v", tc.errString, err)
+				} else if tc.errString == "" && !strings.Contains(err.Error(), "resource conflicts detected") {
 					t.Errorf("expected conflict error, but got: %v", err)
 				}
 			}

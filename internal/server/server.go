@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -30,6 +31,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog/v3"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
@@ -45,6 +47,7 @@ import (
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
 	version         string
+	toolboxUrl      string
 	srv             *http.Server
 	listener        net.Listener
 	root            chi.Router
@@ -412,6 +415,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	r.Mount("/mcp", mcpR)
 	if cfg.EnableAPI {
 		apiR, err := apiRouter(s)
@@ -433,6 +437,49 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	})
 
 	return s, nil
+}
+
+func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Find McpEnabled auth service
+			var mcpSvc *generic.AuthService
+			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+				if genSvc, ok := authSvc.(*generic.AuthService); ok && genSvc.McpEnabled {
+					mcpSvc = genSvc
+					break
+				}
+			}
+
+			// MCP Auth not enabled
+			if mcpSvc == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			if err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header); err != nil {
+				var mcpErr *generic.MCPAuthError
+				if errors.As(err, &mcpErr) {
+					switch mcpErr.Code {
+					case http.StatusUnauthorized:
+						scopesArg := ""
+						if len(mcpErr.ScopesRequired) > 0 {
+							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
+						}
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+						http.Error(w, mcpErr.Message, http.StatusUnauthorized)
+						return
+					case http.StatusForbidden:
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+						http.Error(w, mcpErr.Message, http.StatusForbidden)
+						return
+					}
+				}
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // Listen starts a listener for the given Server instance.
