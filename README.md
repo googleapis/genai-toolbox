@@ -42,7 +42,7 @@ This README provides a brief overview. For comprehensive details, see the [full 
 - [Quick Start: Prebuilt Tools](#quick-start-prebuilt-tools)
 - [Quick Start: Custom Tools Framework](#quick-start-custom-tools-framework)
 - [Install & Run the Server](#install--run-the-server)
-- [Integrate with the Gemini CLI](#integrate-with-the-gemini-cli)
+- [Integrate with Gemini CLI](#integrate-with-the-gemini-cli)
 - [SDKs: Integrate with your Application](#sdks-integrate-with-your-application)
 - [Test tools with the Toolbox UI](#test-tools-with-the-Toolbox-UI)
 - [Telemetry](#telemetry)
@@ -66,7 +66,7 @@ This README provides a brief overview. For comprehensive details, see the [full 
 
 ## Quick Start: Prebuilt Tools
 
-Stop context-switching and let your AI assistant become a true co-developer. By connecting your IDE to your databases with MCP Toolbox, you can query your data in plain English, automate schema management, and generate context-aware code.
+Stop context-switching and let your AI assistant become a true co-developer. By connecting your IDE to your databases with MCP Toolbox, you can query your data in plain English, automate schema discovery and management, and generate database-aware code.
 
 You can use the Toolbox in any MCP-compatible IDE or client (e.g., Cursor, Claude Desktop, Windsurf, Gemini CLI) by configuring the MCP server.
 
@@ -158,13 +158,13 @@ that you want to be able to load together. This can be useful for defining
 different groups based on agent or application.
 
 ```yaml
-kind: Toolset
+kind: toolset
 name: my_first_toolset
 tools:
     - my_first_tool
     - my_second_tool
 ---
-kind: Toolset
+kind: toolset
 name: my_second_toolset
 tools:
     - my_second_tool
@@ -177,11 +177,13 @@ The `prompts` section of a `tools.yaml` defines prompts that can be used for
 interactions with LLMs.
 
 ```yaml
-kind: prompts
+kind: prompt
 name: code_review
 description: "Asks the LLM to analyze code quality and suggest improvements."
 messages:
-  - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+  - content: >
+         Please review the following code for quality, correctness,
+         and potential improvements: \n\n{{.code}}
 arguments:
   - name: "code"
     description: "The code to review"
@@ -198,7 +200,10 @@ You can run Toolbox directly with a [configuration file](#configuration):
 
 ```sh
 npx @toolbox-sdk/server --config tools.yaml
-```
+You can run Toolbox directly with a [prebuilt-config]:
+
+Or a [configuration file](#configuration):
+
 
 This runs the latest version of the Toolbox server with your configuration file.
 
@@ -345,7 +350,7 @@ To run Toolbox from binary:
 
 <summary>Container image</summary>
 
-To run the server after pulling the [container image](#install):
+To run the server after pulling the [container image](#installation):
 
 ```sh
 export VERSION=0.24.0 # Use the version you pulled
@@ -410,6 +415,9 @@ terminate signal (`ctrl+c` on most platforms).
 For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
 section](https://googleapis.github.io/genai-toolbox/how-to/)
+
+
+---
 
 ## Integrate with the Gemini CLI
 
@@ -1024,7 +1032,9 @@ For more details, see our [Full Versioning Policy](https://googleapis.github.io/
 
 ## Contributing
 
-Contributions are welcome. Please, see the [CONTRIBUTING](CONTRIBUTING.md) guide to get started. For technical details on setting up your development environment, see the [DEVELOPER](DEVELOPER.md) guide.
+Contributions are welcome. Please, see the [CONTRIBUTING](CONTRIBUTING.md) guide to get started. 
+
+For technical details on setting up a environment for developing on Toolbox itself, see the [DEVELOPER](DEVELOPER.md) guide.
 
 Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
 

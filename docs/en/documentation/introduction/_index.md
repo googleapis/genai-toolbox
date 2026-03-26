@@ -10,7 +10,7 @@ MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server 
 
 It serves a **dual purpose**:
 1. **Ready-to-use MCP Server (aka 'Build-Time'):** Instantly connect Claude, Cursor, Gemini CLI, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
-2. **Custom Tools Framework (Run-Time):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
+2. **Custom Tools Framework (aka 'Run-Time'):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice note >}}
 This document has been updated to support the configuration file v2 format. To
@@ -737,7 +737,7 @@ For more detailed instructions on using the Toolbox Go SDK, see the
 The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill** compatible with the [Agent Skill specification](https://agentskills.io/specification). This is useful for distributing tools as portable skill packages.
 
 ```bash
-toolbox --tools-file tools.yaml skills-generate \
+toolbox --config tools.yaml skills-generate \
   --name "my-skill" \
   --toolset "my_toolset" \
   --description "A skill containing multiple tools"
