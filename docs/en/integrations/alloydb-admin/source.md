@@ -1,5 +1,5 @@
 ---
-title: "AlloyDB Admin"
+title: "AlloyDB Admin Source"
 linkTitle: "Source"
 type: docs
 weight: 1

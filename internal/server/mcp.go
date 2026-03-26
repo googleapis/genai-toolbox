@@ -332,6 +332,7 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.AllowContentType("application/json", "application/json-rpc", "application/jsonrequest"))
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
+	r.Use(mcpAuthMiddleware(s))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })

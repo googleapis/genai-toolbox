@@ -304,4 +304,4 @@ func main() {
 }
 ```
 
-## Kinds of Auth Services
+## Types of Auth Services

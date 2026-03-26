@@ -2,7 +2,9 @@
 {{ $next := "" }}
 {{ $prev := "" }}
 
-{{/* 1. Calculate PREVIOUS */}}
+{{ $max_skip_attempts := 5 }}
+
+{{/* 1. Calculate Previous Page */}}
 {{ if .Parent }}
   {{ $siblings := .Parent.Pages.ByWeight }}
   {{ $currIndex := -1 }}
@@ -14,23 +16,18 @@
   {{ end }}
 
   {{ if gt $currIndex 0 }}
-    {{/* Preceding sibling (if it's a folder, this naturally points to its _index.md!) */}}
     {{ $prev = index $siblings (sub $currIndex 1) }}
   {{ else }}
-    {{/* First child, so Previous points up to the Parent folder */}}
     {{ if ne .Parent.Type "home" }}
       {{ $prev = .Parent }}
     {{ end }}
   {{ end }}
 {{ end }}
 
-
-{{/* 2. Calculate NEXT */}}
+{{/* 2. Calculate Next Page */}}
 {{ if and .IsNode (gt (len .Pages) 0) }}
-  {{/* If it's a folder with children, Next dives into the first child */}}
   {{ $next = index .Pages.ByWeight 0 }}
 {{ else }}
-  {{/* Leaf page, or empty folder */}}
   {{ if .Parent }}
     {{ $siblings := .Parent.Pages.ByWeight }}
     {{ $currIndex := -1 }}
@@ -42,19 +39,17 @@
     {{ end }}
 
     {{ if lt $currIndex (sub (len $siblings) 1) }}
-      {{/* Next sibling in the same folder */}}
       {{ $next = index $siblings (add $currIndex 1) }}
     {{ else }}
-      {{/* Last item in folder, step out and find the Parent's next sibling */}}
       {{ $p := .Parent }}
       {{ $foundNext := false }}
 
-      {{/* Check up to 3 directory levels up to find the next section */}}
       {{ range seq 3 }}
         {{ if and (not $foundNext) $p }}
           {{ if $p.Parent }}
             {{ $pSiblings := $p.Parent.Pages.ByWeight }}
             {{ $pIndex := -1 }}
+
             {{ range $index, $page := $pSiblings }}
               {{ if eq $page.RelPermalink $p.RelPermalink }}
                 {{ $pIndex = $index }}
@@ -72,15 +67,105 @@
           {{ end }}
         {{ end }}
       {{ end }}
-
     {{ end }}
   {{ end }}
 {{ end }}
 
-<!-- 3. Render the Buttons -->
+{{/* 3. Apply Integration Directory Filters */}}
+{{ range seq $max_skip_attempts }}
+  {{ if $prev }}
+    {{ $isLockedPrev := false }}
+    {{ if and $prev.IsNode (in $prev.RelPermalink "/integrations/") }}
+      {{ if or (strings.HasSuffix $prev.RelPermalink "/tools/") (strings.HasSuffix $prev.RelPermalink "/samples/") (and $prev.Parent (strings.HasSuffix $prev.Parent.RelPermalink "/integrations/")) }}
+        {{ $isLockedPrev = true }}
+      {{ end }}
+    {{ end }}
+
+    {{ if $isLockedPrev }}
+      {{ $steppingOut := strings.HasPrefix $curr.RelPermalink $prev.RelPermalink }}
+
+      {{ if and (not $steppingOut) (gt (len $prev.Pages) 0) }}
+        {{ $prev = index $prev.Pages.ByWeight (sub (len $prev.Pages) 1) }}
+      {{ else }}
+        {{ if $prev.Parent }}
+          {{ if eq $prev.Parent.RelPermalink "/integrations/" }}
+            {{ $prev = $prev.Parent }}
+          {{ else }}
+            {{ $sibs := $prev.Parent.Pages.ByWeight }}
+            {{ $idx := -1 }}
+            {{ range $i, $p := $sibs }}{{ if eq $p.RelPermalink $prev.RelPermalink }}{{ $idx = $i }}{{ end }}{{ end }}
+
+            {{ if gt $idx 0 }}
+              {{ $prev = index $sibs (sub $idx 1) }}
+            {{ else }}
+              {{ $prev = $prev.Parent }}
+            {{ end }}
+          {{ end }}
+        {{ else }}
+          {{ $prev = "" }}
+        {{ end }}
+      {{ end }}
+    {{ else }}
+      {{ break }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ range seq $max_skip_attempts }}
+  {{ if $next }}
+    {{ $isLockedNext := false }}
+    {{ if and $next.IsNode (in $next.RelPermalink "/integrations/") }}
+      {{ if or (strings.HasSuffix $next.RelPermalink "/tools/") (strings.HasSuffix $next.RelPermalink "/samples/") (and $next.Parent (strings.HasSuffix $next.Parent.RelPermalink "/integrations/")) }}
+        {{ $isLockedNext = true }}
+      {{ end }}
+    {{ end }}
+
+    {{ if $isLockedNext }}
+      {{ if gt (len $next.Pages) 0 }}
+        {{ $next = index $next.Pages.ByWeight 0 }}
+      {{ else }}
+        {{ $sibs := $next.Parent.Pages.ByWeight }}
+        {{ $idx := -1 }}
+        {{ range $i, $p := $sibs }}{{ if eq $p.RelPermalink $next.RelPermalink }}{{ $idx = $i }}{{ end }}{{ end }}
+
+        {{ if lt $idx (sub (len $sibs) 1) }}
+          {{ $next = index $sibs (add $idx 1) }}
+        {{ else }}
+          {{ $p := $next.Parent }}
+          {{ $foundNextSibling := false }}
+
+          {{ range seq 3 }}
+            {{ if and (not $foundNextSibling) $p }}
+              {{ if $p.Parent }}
+                {{ $pSibs := $p.Parent.Pages.ByWeight }}
+                {{ $pIdx := -1 }}
+
+                {{ range $index, $page := $pSibs }}{{ if eq $page.RelPermalink $p.RelPermalink }}{{ $pIdx = $index }}{{ end }}{{ end }}
+
+                {{ if and (ge $pIdx 0) (lt $pIdx (sub (len $pSibs) 1)) }}
+                  {{ $next = index $pSibs (add $pIdx 1) }}
+                  {{ $foundNextSibling = true }}
+                {{ else }}
+                  {{ $p = $p.Parent }}
+                {{ end }}
+              {{ else }}
+                {{ $p = false }}
+              {{ end }}
+            {{ end }}
+          {{ end }}
+
+          {{ if not $foundNextSibling }}{{ $next = "" }}{{ end }}
+        {{ end }}
+      {{ end }}
+    {{ else }}
+      {{ break }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{/* 4. Render Navigation */}}
 {{ if or $prev $next }}
 <nav class="mt-5 pt-4 border-top d-flex justify-content-between" aria-label="Page navigation">
-
   <div>
     {{ with $prev }}
     <a href="{{ .RelPermalink }}" class="text-decoration-none">
@@ -98,6 +183,5 @@
     </a>
     {{ end }}
   </div>
-
 </nav>
 {{ end }}
