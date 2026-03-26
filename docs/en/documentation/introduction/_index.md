@@ -9,8 +9,8 @@ description: >
 MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases.
 
 It serves a **dual purpose**:
-1. **Ready-to-use MCP Server (aka 'Build-Time'):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
-2. **Custom Tools Framework (aka 'Run-Time'):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
+1. **Ready-to-use MCP Server (aka ['Build-Time'](/getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+2. **Custom Tools Framework (aka ['Run-Time'](/getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice note >}}
 This document has been updated to support the flat configuration file format. To
@@ -54,16 +54,16 @@ Add the following to your client's MCP configuration file (usually `mcp.json` or
 
 ```json
 {
-	"mcpServers": {
-		"toolbox-postgres": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"@toolbox-sdk/server",
-				"--prebuilt=postgres"
-			]
-		}
-	}
+  "mcpServers": {
+    "toolbox-postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@toolbox-sdk/server",
+        "--prebuilt=postgres"
+      ]
+    }
+  }
 }
 ```
 
@@ -735,22 +735,5 @@ For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [module'
 
 For more detailed instructions on using the Toolbox Go SDK, see the
 [README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
-
-## Generate Agent Skills
-
-The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill** compatible with the [Agent Skill specification](https://agentskills.io/specification). This is useful for distributing tools as portable skill packages.
-
-```bash
-toolbox --config tools.yaml skills-generate \
-  --name "my-skill" \
-  --toolset "my_toolset" \
-  --description "A skill containing multiple tools"
-```
-
-Once generated, you can install the skill into the Gemini CLI:
-
-```bash
-gemini skills install ./skills/my-skill
-```
 
 For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate_skill/).
