@@ -14,14 +14,14 @@ This guide details the specific configuration steps required to deploy Toolbox w
 
 ## Step 1: Configure the `generic` Auth Service
 
-Update your `tools.yaml` file to use a `generic` authentication service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authorizationServer`).
+Update your `tools.yaml` file to use a `generic` authorization service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authorizationServer`).
 
 ```yaml
 kind: authServices
 name: my-mcp-auth
 type: generic
 mcpEnabled: true
-authorizationServer: "https://your-auth-server.example.com"
+authorizationServer: "https://accounts.google.com" # Your authorization server URL
 audience: "your-mcp-audience" # Matches the `aud` claim in the JWT
 scopesRequired:
     - "mcp:tools"
@@ -95,7 +95,7 @@ If you strictly need to define your own Protected Resource Metadata instead of a
 
 ## Step 3: Connecting to the Secure MCP Endpoint
 
-Once the Cloud Run instance is deployed, your MCP client must obtain a valid JWT token from your authentication server (the `authorizationServer` in `tools.yaml`).
+Once the Cloud Run instance is deployed, your MCP client must obtain a valid JWT token from your authorization server (the `authorizationServer` in `tools.yaml`).
 
 The client should provide this JWT via the standard HTTP `Authorization` header when connecting to the Streamable HTTP or SSE endpoint (`/mcp`):
 
@@ -112,7 +112,7 @@ The client should provide this JWT via the standard HTTP `Authorization` header 
   }
 }
 ```
-Important: The token provided in the Authorization header must be your Toolbox authentication token (issued by the auth server you configured previously), not a Google Cloud Run access token.
+Important: The token provided in the Authorization header must be a JWT token (issued by the auth server you configured previously), not a Google Cloud Run access token.
 
 Toolbox will intercept incoming connections, fetch the latest JWKS from your authorizationServer, and validate that the aud (audience), signature, and scopes on the JWT match the requirements defined by your mcpEnabled auth service.
 
