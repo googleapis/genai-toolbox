@@ -71,8 +71,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 
 	// Start Couchbase Container
 	cbContainer, err := tccouchbase.Run(ctx, "couchbase/server:7.2.0",
-		tccouchbase.WithBucket(tccouchbase.NewBucket(defaultBucketName)),
-		tccouchbase.WithCredentials(defaultUser, defaultPass),
+		tccouchbase.WithAdminCredentials(defaultUser, defaultPass),
+		tccouchbase.WithBuckets(tccouchbase.NewBucket(defaultBucketName)),
 	)
 	if err != nil {
 		t.Fatalf("failed to start couchbase container: %s", err)
