@@ -151,7 +151,6 @@ func TestGetClaimsFromHeader(t *testing.T) {
 				}
 			},
 		},
-
 		{
 			name: "wrong audience",
 			setupHeader: func() http.Header {
@@ -167,7 +166,6 @@ func TestGetClaimsFromHeader(t *testing.T) {
 			wantError:   true,
 			errContains: "audience validation failed",
 		},
-
 		{
 			name: "expired token",
 			setupHeader: func() http.Header {

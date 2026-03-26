@@ -16,11 +16,13 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -55,6 +57,7 @@ type Server struct {
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
 	ResourceMgr     *resources.ResourceManager
+	mcpPrmFile      string
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -381,6 +384,8 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+		toolboxUrl:      cfg.ToolboxUrl,
+		mcpPrmFile:      cfg.McpPrmFile,
 	}
 
 	// cors
@@ -409,6 +414,47 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		allowedHostsMap[hostname] = struct{}{}
 	}
 	r.Use(hostCheck(allowedHostsMap))
+
+	// Host OAuth Protected Resource Metadata endpoint
+	mcpAuthEnabled := false
+	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+		if genCfg, ok := authSvc.ToConfig().(generic.Config); ok && genCfg.McpEnabled {
+			mcpAuthEnabled = true
+			break
+		}
+	}
+
+	// Manual PRM override
+	var cachedPrmBytes []byte
+	var prmConfig ProtectedResourceMetadata
+	if s.mcpPrmFile != "" {
+		var err error
+		cachedPrmBytes, err = os.ReadFile(s.mcpPrmFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read manual PRM file at startup: %w", err)
+		}
+		// Unmarshal into the struct to strictly validate the schema
+		if err := json.Unmarshal(cachedPrmBytes, &prmConfig); err != nil {
+			return nil, fmt.Errorf("manual PRM file does not match expected schema: %w", err)
+		}
+	}
+
+	// Register route if auth is enabled or a manual file is provided
+	if mcpAuthEnabled || s.mcpPrmFile != "" {
+		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, req *http.Request) {
+			// Serve from memory if file was loaded
+			if s.mcpPrmFile != "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				if _, err := w.Write(cachedPrmBytes); err != nil {
+					s.logger.ErrorContext(req.Context(), "failed to write manual PRM file response", "error", err)
+				}
+				return
+			}
+
+			prmHandler(s, w, req)
+		})
+	}
 
 	// control plane
 	mcpR, err := mcpRouter(s)
