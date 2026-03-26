@@ -96,3 +96,47 @@ How many accounts who have region in Prague are eligible for loans? A3 contains 
 | location          |  string  |     true     | The Google Cloud location of the target database resource (e.g., "us-central1"). This is used to construct the parent resource name in the API call.                                                                                                         |
 | context           |  object  |     true     | The context for the query, including datasource references. See [QueryDataContext](https://github.com/googleapis/googleapis/blob/b32495a713a68dd0dff90cf0b24021debfca048a/google/cloud/geminidataanalytics/v1beta/data_chat_service.proto#L156) for details. |
 | generationOptions |  object  |    false     | Options for generating the response. See [GenerationOptions](https://github.com/googleapis/googleapis/blob/b32495a713a68dd0dff90cf0b24021debfca048a/google/cloud/geminidataanalytics/v1beta/data_chat_service.proto#L135) for details.                       |
+
+## Advanced Usage
+
+### Parameterized Secure Views (PSV)
+
+Parameterized Secure Views (PSV) provide a robust mechanism for Row-Level Access Control (RLAC). A PSV is a view defined on a base table that requires mandatory parameters at query time, users cannot read from the view without supplying the defined parameters, and direct access to the underlying base tables is revoked.
+
+This is useful in agentic applications where each end-user should only see their own data, without the application having broad access to the base tables.
+
+**How it works:**
+
+1. The database administrator creates a parameterized secure view  and grants the API caller access **only** to that view, not the base table.
+2. At query time, the caller supplies `parameterizedSecureViewParameters` in the tool `context`. These key/value pairs are injected into the view's filter, ensuring the query returns only the rows matching the provided parameters.
+3. The base tables are invisible to the caller; any attempt to query them directly will fail with a permissions error.
+
+**CloudSQL PostgreSQL example:**
+
+```yaml
+kind: tool
+name: my-gda-psv-pg-tool
+type: cloud-gemini-data-analytics-query
+source: my-gda-source
+description: "Query user-specific data via a parameterized secure view on CloudSQL Postgres."
+location: ${your_database_location}
+context:
+  datasourceReferences:
+    cloudSqlReference:
+      databaseReference:
+        projectId: "${your_project_id}"
+        region: "${your_database_instance_region}"
+        instanceId: "${your_database_instance_id}"
+        databaseId: "${your_database_name}"
+        engine: "POSTGRESQL"
+      agentContextReference:
+        contextSetId: "${your_context_set_id}" # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
+  parameterizedSecureViewParameters:
+    parameters:
+      - key: "app_end_userid"  # The parameter name defined in your secure view
+        value: "303"           # The value to filter rows by (e.g., the end-user's ID)
+generationOptions:
+  generateQueryResult: true
+  generateNaturalLanguageAnswer: true
+  generateExplanation: true
+```
