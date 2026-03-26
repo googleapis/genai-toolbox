@@ -133,8 +133,8 @@ context:
         contextSetId: "${your_context_set_id}" # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
   parameterizedSecureViewParameters:
     parameters:
-      - key: "${parameter_name}"
-        value: "${parameter_value}"
+      - key: "app_end_userid"  # The parameter name defined in your secure view
+        value: "303"           # The value to filter rows by (e.g., the end-user's ID)
 generationOptions:
   generateQueryResult: true
   generateNaturalLanguageAnswer: true
