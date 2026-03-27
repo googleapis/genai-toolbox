@@ -1,0 +1,41 @@
+{{/* Automatically identify the "Native" source (Grandparent _index.md, since this is strictly used inside tools/) */}}
+{{ $nativeSource := .Page.Parent.Parent }}
+
+<div class="compatibility-section">
+  <p>This tool can be used with the following database sources:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Source Name</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{/* Display the Native Source automatically */}}
+      {{ if $nativeSource }}
+      <tr>
+        <td><a href="{{ $nativeSource.RelPermalink }}">{{ $nativeSource.Title }}</a></td>
+      </tr>
+      {{ end }}
+
+      {{/* Process additional sources passed via the "others" parameter */}}
+      {{ $others := .Get "others" }}
+      {{ if $others }}
+        {{ range split $others "," }}
+          {{ $path := trim . " " }}
+          {{ $remotePage := site.GetPage $path }}
+
+          {{ if $remotePage }}
+          <tr>
+            <td><a href="{{ $remotePage.RelPermalink }}">{{ $remotePage.Title }}</a></td>
+          </tr>
+          {{ else }}
+          <tr>
+            <td style="color: red;">⚠️ Source not found at path: {{ $path }}</td>
+          </tr>
+          {{ end }}
+        {{ end }}
+      {{ end }}
+    </tbody>
+  </table>
+</div>

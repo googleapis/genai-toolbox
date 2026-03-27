@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
@@ -70,7 +71,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 				**Type:** Integer
 
-				**Description:** Specifies the parts of the entry and its aspects to return.
+				**Description:** Optional. Specifies the parts of the entry and its aspects to return.
 
 				**Possible Values:**
 
@@ -80,11 +81,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 				*   4 (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
 				`
 
-	name := parameters.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
 	view := parameters.NewIntParameterWithDefault("view", 2, viewDesc)
-	aspectTypes := parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", parameters.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
-	entry := parameters.NewStringParameter("entry", "The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
-	params := parameters.Parameters{name, view, aspectTypes, entry}
+	aspectTypes := parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "Optional. Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", parameters.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
+	entry := parameters.NewStringParameter("entry", "Required. The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
+	params := parameters.Parameters{entry, view, aspectTypes}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
@@ -119,13 +119,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	name, _ := paramsMap["name"].(string)
 	entry, _ := paramsMap["entry"].(string)
 	view, _ := paramsMap["view"].(int)
 	aspectTypeSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["aspectTypes"].([]any), "string")
 	if err != nil {
 		return nil, util.NewAgentError(fmt.Sprintf("can't convert aspectTypes to array of strings: %s", err), err)
 	}
+	parts := strings.Split(entry, "/")
+	if len(parts) < 4 || parts[0] != "projects" || parts[2] != "locations" {
+		err = fmt.Errorf("invalid entry format: must be in the form projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}")
+		return nil, util.NewAgentError(err.Error(), err)
+	}
+	name := strings.Join(parts[:4], "/")
 	aspectTypes := aspectTypeSlice.([]string)
 	resp, err := source.LookupEntry(ctx, name, view, aspectTypes, entry)
 	if err != nil {

@@ -1,3 +1,16 @@
+/* ==========================================================================
+   PROJECT SCSS HUB
+   Custom theme overrides and UI components.
+   ========================================================================== */
+
+@import 'components/typography';
+@import 'components/layout';
+@import 'components/header';
+@import 'components/sidebar';
+@import 'components/callouts';
+@import 'components/secondary_nav';
+@import 'components/search';
+
 @import 'td/code-dark';
 
 // Make tabs scrollable horizontally instead of wrapping

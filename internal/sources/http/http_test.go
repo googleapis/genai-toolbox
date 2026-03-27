@@ -15,14 +15,20 @@
 package http_test
 
 import (
+	"bytes"
 	"context"
+	nethttp "net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlHttp(t *testing.T) {
@@ -63,6 +69,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 			queryParams:
 				api-key: test_api_key
 				param: param-value
+			returnFullError: true
 			disableSslVerification: true
 			`,
 			want: map[string]sources.SourceConfig{
@@ -73,6 +80,7 @@ func TestParseFromYamlHttp(t *testing.T) {
 					Timeout:                "10s",
 					DefaultHeaders:         map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
 					QueryParams:            map[string]string{"api-key": "test_api_key", "param": "param-value"},
+					ReturnFullError:        true,
 					DisableSslVerification: true,
 				},
 			},
@@ -134,5 +142,87 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
+	}
+}
+
+func TestRunRequestSanitizesErrorBodyByDefault(t *testing.T) {
+	server := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		w.WriteHeader(nethttp.StatusBadRequest)
+		_, _ = w.Write([]byte("sensitive details"))
+	}))
+	defer server.Close()
+
+	logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	ctx := util.WithLogger(context.Background(), logger)
+
+	sourceConfig := http.Config{
+		Name:    "test-http",
+		Type:    http.SourceType,
+		BaseURL: server.URL,
+		Timeout: "30s",
+	}
+	initialized, err := sourceConfig.Initialize(ctx, nil)
+	if err != nil {
+		t.Fatalf("failed to initialize source: %v", err)
+	}
+	source := initialized.(*http.Source)
+
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("failed to build request: %v", err)
+	}
+
+	_, err = source.RunRequest(ctx, req)
+	if err == nil {
+		t.Fatalf("expected error for non-2xx response")
+	}
+	if strings.Contains(err.Error(), "sensitive details") {
+		t.Fatalf("expected sanitized error message, got %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "unexpected status code: 400") {
+		t.Fatalf("expected status code in error message, got %q", err.Error())
+	}
+}
+
+func TestRunRequestIncludesErrorBodyWhenEnabled(t *testing.T) {
+	server := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		w.WriteHeader(nethttp.StatusInternalServerError)
+		_, _ = w.Write([]byte("sensitive details"))
+	}))
+	defer server.Close()
+
+	logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	ctx := util.WithLogger(context.Background(), logger)
+
+	sourceConfig := http.Config{
+		Name:            "test-http",
+		Type:            http.SourceType,
+		BaseURL:         server.URL,
+		Timeout:         "30s",
+		ReturnFullError: true,
+	}
+	initialized, err := sourceConfig.Initialize(ctx, nil)
+	if err != nil {
+		t.Fatalf("failed to initialize source: %v", err)
+	}
+	source := initialized.(*http.Source)
+
+	req, err := nethttp.NewRequestWithContext(ctx, nethttp.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("failed to build request: %v", err)
+	}
+
+	_, err = source.RunRequest(ctx, req)
+	if err == nil {
+		t.Fatalf("expected error for non-2xx response")
+	}
+	if !strings.Contains(err.Error(), "response body: sensitive details") {
+		t.Fatalf("expected response body in error message, got %q", err.Error())
 	}
 }

@@ -21,7 +21,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupcontext"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlDataplexLookupContext(t *testing.T) {
@@ -50,40 +49,6 @@ func TestParseFromYamlDataplexLookupContext(t *testing.T) {
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
-				},
-			},
-		},
-		{
-			desc: "advanced example",
-			in: `
-            kind: tool
-            name: example_tool
-            type: dataplex-lookup-context
-            source: my-instance
-            description: some description
-            parameters:
-                - name: name
-                  type: string
-                  description: some name description
-                - name: resources
-                  type: array
-                  description: some resources description
-                  items: 
-                    name: resource
-                    type: string
-                    description: some resource description
-            `,
-			want: server.ToolConfigs{
-				"example_tool": dataplexlookupcontext.Config{
-					Name:         "example_tool",
-					Type:         "dataplex-lookup-context",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Parameters: []parameters.Parameter{
-						parameters.NewStringParameter("name", "some name description"),
-						parameters.NewArrayParameter("resources", "some resources description", parameters.NewStringParameter("resource", "some resource description")),
-					},
 				},
 			},
 		},

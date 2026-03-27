@@ -69,6 +69,9 @@ jobs:
           HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/dev
           HUGO_RELATIVEURLS: false
 
+      - name: Build Pagefind Search Index
+        run: npx pagefind --site public
+
       - name: Create Staging Directory
         run: |
           mkdir staging

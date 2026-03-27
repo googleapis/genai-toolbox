@@ -354,7 +354,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-lookup-entry-tool",
 			toolName:       "my-dataplex-lookup-entry-tool",
-			expectedParams: []string{"name", "view", "aspectTypes", "entry"},
+			expectedParams: []string{"entry", "view", "aspectTypes"},
 		},
 		{
 			name:           "get my-dataplex-search-aspect-types-tool",
@@ -581,7 +581,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			name:           "Success - Entry Found with Authorization",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, datasetName))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "name",
@@ -590,7 +590,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, datasetName))),
 			wantStatusCode: 401,
 			expectResult:   false,
 			wantContentKey: "name",
@@ -599,16 +599,24 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, datasetName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, datasetName))),
 			wantStatusCode: 401,
 			expectResult:   false,
 			wantContentKey: "name",
 		},
 		{
+			name:           "Failure - Invalid Entry Format",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(`{"entry":"invalid/entry/format"}`)),
+			wantStatusCode: 200,
+			expectResult:   false,
+		},
+		{
 			name:           "Failure - Entry Not Found or Permission Denied",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, "non-existent-dataset"))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, "non-existent-dataset"))),
 			wantStatusCode: 200,
 			expectResult:   false,
 		},
@@ -616,7 +624,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			name:               "Success - Entry Found with Basic View",
 			api:                "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:      map[string]string{},
-			requestBody:        bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 1))),
+			requestBody:        bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, datasetName, tableName, 1))),
 			wantStatusCode:     200,
 			expectResult:       true,
 			wantContentKey:     "name",
@@ -626,7 +634,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			name:           "Failure - Entry with Custom View without Aspect Types",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, datasetName, tableName, 3))),
 			wantStatusCode: 200,
 			expectResult:   false,
 		},
@@ -634,7 +642,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			name:           "Success - Entry Found with only Schema Aspect",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"aspectTypes\":[\"projects/dataplex-types/locations/global/aspectTypes/schema\"], \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"aspectTypes\":[\"projects/dataplex-types/locations/global/aspectTypes/schema\"], \"view\": %d}", DataplexProject, DataplexProject, datasetName, tableName, 3))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "aspects",
@@ -834,9 +842,8 @@ func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, data
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	name := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
 	resourceName := fmt.Sprintf("projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, DataplexProject, datasetName, tableName)
-	requestBodyFmt := fmt.Sprintf(`{"name":"%s","resources":["%s"]}`, name, resourceName)
+	requestBodyFmt := fmt.Sprintf(`{"resources":["%s"]}`, resourceName)
 
 	testCases := []struct {
 		name           string
@@ -871,6 +878,24 @@ func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, data
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
 			requestBody:    bytes.NewBufferString(requestBodyFmt),
 			wantStatusCode: 401,
+			expectResult:   false,
+			wantContentKey: "context",
+		},
+		{
+			name:           "Failure - Invalid Resource Format",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-context-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBufferString(`{"resources":["projects/test-project/invalid-format"]}`),
+			wantStatusCode: 200,
+			expectResult:   false,
+			wantContentKey: "context",
+		},
+		{
+			name:           "Failure - Resources with different locations",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-context-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBufferString(`{"resources":["projects/test-project/locations/us/entryGroups/g1/entries/e1", "projects/test-project/locations/europe-west1/entryGroups/g2/entries/e2"]}`),
+			wantStatusCode: 200,
 			expectResult:   false,
 			wantContentKey: "context",
 		},

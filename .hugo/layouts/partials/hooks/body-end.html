@@ -1,0 +1,245 @@
+{{- $navLinks := slice -}}
+{{- $targetSections := slice -}}
+
+{{- /* Resolve root navigation section */ -}}
+{{- $docsRoot := site.GetPage "/docs" -}}
+{{- if $docsRoot -}}
+  {{- $targetSections = $docsRoot.Sections.ByWeight -}}
+{{- else -}}
+  {{- $targetSections = site.Home.Sections.ByWeight -}}
+{{- end -}}
+
+{{- /* Determine active top-level directory */ -}}
+{{- if .FirstSection -}}
+  {{- $topLevelFolder := .FirstSection.Section -}}
+  {{- if or (findRE `^v[0-9]+` $topLevelFolder) (eq $topLevelFolder "dev") -}}
+    {{- $targetSections = .FirstSection.Sections.ByWeight -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Construct navigation link dataset */ -}}
+{{- range $targetSections -}}
+  {{- if .Title -}}
+    {{- $manualLink := .Params.manualLink | default "" -}}
+    {{- $icon := .Params.icon | default "" -}}
+    {{- $isRightSide := ne $manualLink "" -}}
+    {{- $navLinks = $navLinks | append (dict "name" .Title "url" .RelPermalink "redirect" $manualLink "icon" $icon "isRight" $isRightSide) -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* Compile shared tools data for sidebar injection */ -}}
+{{- $dynamicLinks := dict -}}
+{{- range .Site.Pages -}}
+  {{- if .Params.shared_tools -}}
+    {{- $targetURL := .RelPermalink -}}
+    {{- $targetData := slice -}}
+    {{- range .Params.shared_tools -}}
+      {{- $sourceSection := site.GetPage .source -}}
+      {{- if $sourceSection -}}
+        {{- $links := slice -}}
+        {{- range $sourceSection.Pages -}}
+          {{- $links = $links | append (dict "title" .Title "url" .RelPermalink) -}}
+        {{- end -}}
+        {{- $targetData = $targetData | append (dict "header" .header "links" $links) -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if gt (len $targetData) 0 -}}
+      {{- $dynamicLinks = merge $dynamicLinks (dict $targetURL $targetData) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+<div id="nav-data-container" data-nav="{{ $navLinks | jsonify }}" style="display: none;"></div>
+<script>
+  window.dynamicSidebarLinks = {{ $dynamicLinks | jsonify | safeJS }};
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Add links to GitHub issues for documentation feedback and feature requests
+  const docIssueLink = document.querySelector('.td-page-meta__issue');
+    if (docIssueLink) {
+      const url = new URL(docIssueLink.href);
+      url.searchParams.set('template', 'feature_request.yml');
+      docIssueLink.href = url.toString();
+    }
+
+    const projIssueLink = document.querySelector('.td-page-meta__project-issue');
+    if (projIssueLink) {
+      const url = new URL(projIssueLink.href);
+      url.searchParams.set('template', 'bug_report.yml');
+      projIssueLink.href = url.toString();
+    }
+
+  const container = document.getElementById('nav-data-container');
+  const currentPath = window.location.pathname;
+  const header = document.querySelector('header');
+
+  if (!container || !header || document.getElementById('secondary-nav')) return;
+
+  let links = [];
+  try {
+    links = JSON.parse(container.dataset.nav);
+  } catch (e) {
+    console.error("Failed to parse nav data", e);
+    return;
+  }
+
+  // Configure brand logo routing
+  const logoLink = document.querySelector('.navbar-brand');
+  if (logoLink) {
+    logoLink.href = "{{ site.Params.global_logo_url | default `/` }}";
+  }
+
+  // Sidebar link centering logic
+  const sidebar = document.querySelector('#td-section-nav') || document.querySelector('.td-sidebar-nav') || document.querySelector('.td-sidebar');
+  if (sidebar) {
+    const activeLink = sidebar.querySelector('.active');
+    if (activeLink) {
+      const sidebarRect = sidebar.getBoundingClientRect();
+      const activeRect = activeLink.getBoundingClientRect();
+      sidebar.scrollTop = activeRect.top - sidebarRect.top + sidebar.scrollTop - (sidebar.clientHeight / 2) + (activeRect.height / 2);
+    }
+  }
+
+  // Build secondary navigation UI
+  let leftNavItems = '';
+  let rightNavItems = '';
+  const versionMatch = currentPath.match(/^\/(v\d+\.\d+\.\d+|dev)\//);
+  const activePrefix = versionMatch ? versionMatch[0] : '/';
+
+  links.forEach(link => {
+    if (!link.name || !link.url) return;
+
+    let rawUrl = link.isRight ? link.redirect : link.url;
+    // Only strip double slashes if it is an internal relative link
+    let finalUrl = rawUrl.startsWith('http') ? rawUrl : rawUrl.replace(/\/+/g, '/');
+
+    // Apply active version prefix mapping
+    if (!link.isRight && activePrefix !== '/' && !finalUrl.startsWith(activePrefix)) {
+      finalUrl = activePrefix + finalUrl.replace(/^\//, '');
+    }
+
+    const iconHtml = link.icon ? `<i class="${link.icon}${link.isRight ? ' pop-icon' : ''}" ${!link.isRight ? 'style="font-size: 1.05rem;"' : ''}></i> ` : '';
+
+    if (link.isRight) {
+      rightNavItems += `
+        <li>
+          <a href="${finalUrl}" target="_blank" rel="noopener noreferrer" class="sec-nav-item-right">
+            ${iconHtml}<span class="sec-nav-text">${link.name}</span>
+          </a>
+        </li>`;
+    } else {
+      const isActive = currentPath.startsWith(finalUrl) ? ' active' : '';
+      leftNavItems += `
+        <li>
+          <a class="sec-nav-item-left${isActive}" href="${finalUrl}">
+            ${iconHtml}<span>${link.name}</span>
+          </a>
+        </li>`;
+    }
+  });
+
+  header.insertAdjacentHTML('beforeend', `
+    <div id="secondary-nav">
+      <div class="container-fluid sec-nav-container">
+        <ul class="sec-nav-list">${leftNavItems}</ul>
+        <ul class="sec-nav-icons">${rightNavItems}</ul>
+      </div>
+    </div>
+  `);
+
+  // ======================================================================
+  // Configure release version button labeling & Active Highlight
+  // ======================================================================
+  try {
+    const relBtn = Array.from(document.querySelectorAll('.td-navbar a.dropdown-toggle'))
+                        .find(el => el.textContent.includes('Releases') || el.textContent.match(/v\d+\./) || el.textContent.includes('dev'));
+
+    if (relBtn) {
+      let label = currentPath.includes('/dev/') ? "dev" : (versionMatch ? versionMatch[1].replace(/\//g, '') : "Releases");
+
+      // Update the text on the dropdown button itself
+      for (let n of relBtn.childNodes) {
+        if (n.nodeType === 3 && n.textContent.trim().length > 1) {
+          n.textContent = ' ' + label; 
+          break;
+        }
+      }
+
+      if (label !== "Releases") {
+        const waitForLinks = setInterval(() => {
+          const dropdownItems = document.querySelectorAll('.dropdown-menu .dropdown-item');
+          if (dropdownItems.length > 0) {
+            clearInterval(waitForLinks);
+
+            dropdownItems.forEach(item => {
+              const href = item.getAttribute('href');
+              if (href && (href.includes(`/${label}/`) || href.endsWith(`/${label}`))) {
+                item.classList.add('active-version');
+              }
+            });
+          }
+        }, 50); // Check every 50 milliseconds
+
+        // Safety fallback: Stop checking after 3 seconds so it doesn't run forever
+        setTimeout(() => clearInterval(waitForLinks), 3000);
+      }
+    }
+  } catch (e) { console.warn("Releases Labeler skipped.", e); }
+
+  // Inject shared tools into sidebar DOM
+  const sidebarData = window.dynamicSidebarLinks;
+  if (sidebarData && Object.keys(sidebarData).length > 0) {
+    Object.keys(sidebarData).forEach(targetUrl => {
+      const targetLink = document.querySelector(`.td-sidebar-nav a[href="${targetUrl}"]`) || 
+                         document.querySelector(`.td-sidebar-nav a[href="${targetUrl.replace(/\/$/, '')}"]`);
+      if (!targetLink) return;
+
+      const parentLi = targetLink.closest('li');
+      if (!parentLi) return;
+
+      let innerUl = parentLi.querySelector('ul');
+      if (!innerUl) {
+        innerUl = document.createElement('ul');
+        innerUl.className = "ul-2 list-unstyled pb-2 pl-3"; 
+        innerUl.style.marginLeft = "1rem";
+        parentLi.appendChild(innerUl);
+        parentLi.classList.add('with-child');
+      }
+
+      sidebarData[targetUrl].forEach(group => {
+        const groupLi = document.createElement('li');
+        groupLi.className = "with-child"; 
+        const isGroupActive = group.links.some(link => currentPath === link.url);
+
+        const subUl = document.createElement('ul');
+        subUl.className = "ul-3 list-unstyled pb-2 pl-3"; 
+        subUl.style.marginLeft = "1rem";
+        subUl.style.display = isGroupActive ? "block" : "none"; 
+
+        if (group.header) {
+          const headerLabel = document.createElement('label');
+          headerLabel.style.cursor = "pointer";
+          headerLabel.innerHTML = `<span style="font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;">${group.header}</span>`;
+
+          headerLabel.addEventListener('click', function(e) {
+            e.preventDefault();
+            subUl.style.display = subUl.style.display === "none" ? "block" : "none";
+          });
+          groupLi.appendChild(headerLabel);
+        }
+
+        group.links.forEach(link => {
+          const linkLi = document.createElement('li');
+          linkLi.innerHTML = `<a href="${link.url}" class="td-sidebar-link${currentPath === link.url ? ' active' : ''}" title="${link.title}">${link.title}</a>`;
+          subUl.appendChild(linkLi);
+        });
+
+        groupLi.appendChild(subUl);
+        innerUl.appendChild(groupLi);
+      });
+    });
+  }
+});
+</script>

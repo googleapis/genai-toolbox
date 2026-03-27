@@ -1,0 +1,42 @@
+---
+title: "firebird-execute-sql"
+type: docs
+weight: 1
+description: >
+  A "firebird-execute-sql" tool executes a SQL statement against a Firebird
+  database.
+---
+
+## About
+
+A `firebird-execute-sql` tool executes a SQL statement against a Firebird
+database.
+
+`firebird-execute-sql` takes one input parameter `sql` and runs the sql
+statement against the `source`.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: execute_sql_tool
+type: firebird-execute-sql
+source: my_firebird_db
+description: Use this tool to execute a SQL statement against the Firebird database.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "firebird-execute-sql".                    |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

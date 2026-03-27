@@ -1,0 +1,137 @@
+{{ .Scratch.Set "docsy-search" 0 }}
+
+{{ if .Site.Params.pagefind }}
+  {{ .Scratch.Add "docsy-search" 1 }}
+
+  <div class="td-search custom-pagefind-wrapper">
+    <div class="pagefind-search-container"></div>
+  </div>
+
+  <link href="{{ relURL "pagefind/pagefind-ui.css" }}" rel="stylesheet">
+  <script src="{{ relURL "pagefind/pagefind-ui.js" }}"></script>
+
+  <script>
+    if (!window.pagefindScriptLoaded) {
+      window.pagefindScriptLoaded = true;
+
+      window.addEventListener('DOMContentLoaded', () => {
+
+        /* Initialize Pagefind UI */
+        document.querySelectorAll('.pagefind-search-container').forEach(el => {
+          new PagefindUI({
+            element: el,
+            showSubResults: true,
+            showImages: false,
+            resetStyles: false,
+            debounceTimeoutMs: 300,
+            bundlePath: "{{ relURL "pagefind/" }}",
+            processResult: function (result) {
+              const ignoredSegments = ["en", "docs", "dev", "genai-toolbox"];
+              let path = result.url.replace(/^https?:\/\/[^\/]+/, "").split('#')[0].replace(/\/$/, "");
+              let parts = path.split("/").filter(p => p && !ignoredSegments.includes(p));
+              parts.pop();
+
+              if (parts.length > 0) {
+                let breadcrumb = parts.map(part => part.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())).join(' › ');
+                if (!result.rawTitle) result.rawTitle = result.meta.title;
+                result.meta.title = breadcrumb + ' › ' + result.rawTitle;
+              }
+              return result;
+            }
+          });
+        });
+
+        /* Modal Behavior Logic */
+        setTimeout(() => {
+          let backdrop = document.getElementById('global-search-backdrop');
+          if (!backdrop) {
+            backdrop = document.createElement('div');
+            backdrop.id = 'global-search-backdrop';
+            document.body.appendChild(backdrop);
+          }
+
+          let isClosing = false;
+          let activeWrapper = null;
+          let placeholder = document.createElement('div');
+          placeholder.style.display = 'none';
+
+          function openModal(input) {
+            if (activeWrapper || isClosing) return;
+            const wrapper = input.closest('.custom-pagefind-wrapper');
+            if (!wrapper) return;
+
+            activeWrapper = wrapper;
+            wrapper.parentNode.insertBefore(placeholder, wrapper);
+            document.body.appendChild(wrapper);
+
+            backdrop.classList.add('active');
+            document.body.classList.add('global-search-active');
+            wrapper.classList.add('active-modal');
+
+            setTimeout(() => {
+              input.focus();
+              const len = input.value.length;
+              input.setSelectionRange(len, len);
+            }, 10);
+          }
+
+          function closeModal(keepFocus = false) {
+            if (!activeWrapper) return;
+            isClosing = true;
+
+            backdrop.classList.remove('active');
+            document.body.classList.remove('global-search-active');
+            activeWrapper.classList.remove('active-modal');
+
+            if (placeholder.parentNode) {
+              placeholder.parentNode.insertBefore(activeWrapper, placeholder);
+            }
+
+            const input = activeWrapper.querySelector('.pagefind-ui__search-input');
+
+            if (!keepFocus) {
+              const clearBtn = activeWrapper.querySelector('.pagefind-ui__search-clear');
+              if (clearBtn) clearBtn.click();
+              if (input) input.blur();
+            } else {
+              if (input) setTimeout(() => input.focus(), 10);
+            }
+
+            activeWrapper = null;
+            setTimeout(() => { isClosing = false; }, 50);
+          }
+
+          /* Event Listeners */
+          document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('pagefind-ui__search-input')) {
+              e.target.value.trim() !== '' ? openModal(e.target) : closeModal(true);
+            }
+          });
+
+          backdrop.addEventListener('click', () => closeModal(false));
+
+          document.addEventListener('mousedown', (e) => {
+            if (!activeWrapper) return;
+            const clickedX = e.target.closest('.pagefind-ui__search-clear');
+            const clickedResult = e.target.closest('.pagefind-ui__result-link');
+            const isClickInside = activeWrapper.contains(e.target);
+
+            if (clickedResult) return;
+            if (clickedX || (!isClickInside && e.target !== backdrop)) closeModal(false);
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal(false);
+          });
+
+        }, 500);
+      });
+    }
+  </script>
+
+{{ else if .Site.Params.offlineSearch }}
+  {{ .Scratch.Set "docsy-search" 1 }}
+  <div class="td-search custom-pagefind-wrapper flex-grow-1 order-last order-lg-1 w-100 mt-3 mt-lg-0">
+    <div class="pagefind-search-container w-100"></div>
+  </div>
+{{ end }}

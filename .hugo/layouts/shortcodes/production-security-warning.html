@@ -1,0 +1,19 @@
+<div class="td-sidebar-link td-sidebar-link__page alert alert-warning shadow-sm" role="alert">
+    <h4 class="alert-heading">⚠️ Production Security Warning</h4>
+    <p><strong>Secure your deployment:</strong> By default, Toolbox allows all hosts (<code>--allowed-hosts</code>) and all origins (<code>--allowed-origins</code>). While convenient for local development, this is <strong>insecure for production</strong>.</p>
+
+    <hr>
+
+    <ul class="mb-0">
+        <li class="mb-2">
+            <strong>Prevent DNS Rebinding:</strong> Use the <code>--allowed-hosts</code> flag to specify a list of hosts for validation.
+            <div class="mt-1"><small><em>Example:</em></small> <code>command: ["--config", "/config/tools.yaml", "--address", "0.0.0.0", "--allowed-hosts", "localhost:5000"]</code></div>
+        </li>
+        <li>
+            <strong>Implement CORS:</strong> Use the <code>--allowed-origins</code> flag to specify a list of origins permitted to access the server.
+            <div class="mt-1"><small><em>Example:</em></small> <code>command: ["--config", "/config/tools.yaml", "--address", "0.0.0.0", "--allowed-origins", "https://foo.bar"]</code></div>
+        </li>
+    </ul>
+
+    <p class="mt-3 mb-0 small opacity-75">Note: The server issues a warning in the logs if these are set to the wildcard <code>*</code>.</p>
+</div>
