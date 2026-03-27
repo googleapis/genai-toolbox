@@ -39,7 +39,7 @@ steps:
 
 availableSecrets:
   secretManager:
-  - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/6
+  - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/9
     env: 'TOOLS_YAML_CONTENT'
   - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
     env: 'GOOGLE_API_KEY'
