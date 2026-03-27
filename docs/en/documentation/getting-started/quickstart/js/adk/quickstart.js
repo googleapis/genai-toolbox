@@ -30,7 +30,7 @@ export async function main() {
     model: 'gemini-2.5-flash',
     description: 'Agent for hotel bookings and administration.',
     instruction: prompt,
-    tools: tools,
+    tools: tools
   });
 
   const appName = rootAgent.name;
