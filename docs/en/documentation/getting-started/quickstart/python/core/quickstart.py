@@ -75,6 +75,8 @@ async def main():
             if response.function_calls:
                 for function_call in response.function_calls:
                     fn_name = function_call.name
+                    print('!!!!!!!!!!!CALLL!!!!!!!!!', function_call.name, function_call.args)
+
                     # The tools are sorted alphabetically
                     if fn_name == "search-hotels-by-name":
                         function_result = await toolbox_tools[3](**function_call.args)
