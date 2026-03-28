@@ -29,8 +29,8 @@ queries = [
 
 async def main():
     # TODO(developer): replace this with another model if needed
-    model = ChatVertexAI(model_name="gemini-2.0-flash-001")
-    # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
+    model = ChatVertexAI(model_name="gemini-2.5-flash")
+    # model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
     # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 
     # Load the tools from the Toolbox server
