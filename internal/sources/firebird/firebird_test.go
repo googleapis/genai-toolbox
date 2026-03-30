@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/firebird"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlFirebird(t *testing.T) {
@@ -50,8 +51,8 @@ func TestParseFromYamlFirebird(t *testing.T) {
 					Host:     "my-host",
 					Port:     "my-port",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},

@@ -45,18 +45,18 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name             string `yaml:"name" validate:"required"`
-	Type             string `yaml:"type" validate:"required"`
-	ConnectionString string `yaml:"connectionString,omitempty"`
-	TnsAlias         string `yaml:"tnsAlias,omitempty"`
-	TnsAdmin         string `yaml:"tnsAdmin,omitempty"`
-	Host             string `yaml:"host,omitempty"`
-	Port             int    `yaml:"port,omitempty"`
-	ServiceName      string `yaml:"serviceName,omitempty"`
-	User             string `yaml:"user" validate:"required"`
-	Password         string `yaml:"password" validate:"required"`
-	UseOCI           bool   `yaml:"useOCI,omitempty"`
-	WalletLocation   string `yaml:"walletLocation,omitempty"`
+	Name             string      `yaml:"name" validate:"required"`
+	Type             string      `yaml:"type" validate:"required"`
+	ConnectionString string      `yaml:"connectionString,omitempty"`
+	TnsAlias         string      `yaml:"tnsAlias,omitempty"`
+	TnsAdmin         string      `yaml:"tnsAdmin,omitempty"`
+	Host             string      `yaml:"host,omitempty"`
+	Port             int         `yaml:"port,omitempty"`
+	ServiceName      string      `yaml:"serviceName,omitempty"`
+	User             util.Secret `yaml:"user" validate:"required"`
+	Password         util.Secret `yaml:"password" validate:"required"`
+	UseOCI           bool        `yaml:"useOCI,omitempty"`
+	WalletLocation   string      `yaml:"walletLocation,omitempty"`
 }
 
 func (c Config) validate() error {
@@ -341,7 +341,7 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		// Use go-ora driver (pure Go)
 		driverName = "oracle"
 
-		finalConnStr = buildGoOraConnString(config.User, config.Password, connectStringBase, config.WalletLocation)
+		finalConnStr = buildGoOraConnString(config.User.String(), config.Password.String(), connectStringBase, config.WalletLocation)
 
 		if hasWallet {
 			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with wallet and serverString: %s\n", connectStringBase))

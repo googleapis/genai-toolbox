@@ -20,6 +20,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/valkey-io/valkey-go"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -44,14 +45,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Address      []string `yaml:"address" validate:"required"`
-	Username     string   `yaml:"username"`
-	Password     string   `yaml:"password"`
-	Database     int      `yaml:"database"`
-	UseGCPIAM    bool     `yaml:"useGCPIAM"`
-	DisableCache bool     `yaml:"disableCache"`
+	Name         string      `yaml:"name" validate:"required"`
+	Type         string      `yaml:"type" validate:"required"`
+	Address      []string    `yaml:"address" validate:"required"`
+	Username     util.Secret `yaml:"username"`
+	Password     util.Secret `yaml:"password"`
+	Database     int         `yaml:"database"`
+	UseGCPIAM    bool        `yaml:"useGCPIAM"`
+	DisableCache bool        `yaml:"disableCache"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -88,8 +89,8 @@ func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	client, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress:       r.Address,
 		SelectDB:          r.Database,
-		Username:          r.Username,
-		Password:          r.Password,
+		Username:          r.Username.String(),
+		Password:          r.Password.String(),
 		AuthCredentialsFn: authFn,
 		DisableCache:      r.DisableCache,
 	})

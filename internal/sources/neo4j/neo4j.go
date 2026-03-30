@@ -51,12 +51,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"type" validate:"required"`
-	Uri      string `yaml:"uri" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
+	Name     string      `yaml:"name" validate:"required"`
+	Type     string      `yaml:"type" validate:"required"`
+	Uri      string      `yaml:"uri" validate:"required"`
+	User     util.Secret `yaml:"user" validate:"required"`
+	Password util.Secret `yaml:"password" validate:"required"`
+	Database string      `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -64,7 +64,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	driver, err := initNeo4jDriver(ctx, tracer, r.Uri, r.User, r.Password, r.Name)
+	driver, err := initNeo4jDriver(ctx, tracer, r.Uri, r.User.String(), r.Password.String(), r.Name)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create driver: %w", err)
 	}

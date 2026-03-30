@@ -217,8 +217,9 @@ func (p MockPrompt) ToConfig() prompts.PromptConfig {
 }
 
 type MockSourceConfig struct {
-	Foo  string `yaml:"foo"`
-	Type string `yaml:"type"`
+	Foo      string      `yaml:"foo"`
+	Password util.Secret `yaml:"password"`
+	Type     string      `yaml:"type"`
 }
 
 func (m *MockSourceConfig) SourceConfigType() string {

@@ -17,8 +17,10 @@ package server
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/goccy/go-yaml"
@@ -221,6 +223,120 @@ func TestAdminDeleteEndpoint(t *testing.T) {
 			}
 			if resp.StatusCode != tt.expectedStatusCode {
 				t.Fatalf("response status code is not %d, got %d, %s", tt.expectedStatusCode, resp.StatusCode, string(body))
+			}
+		})
+	}
+}
+
+func TestAdminGetEndpoint(t *testing.T) {
+	mockSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Foo: "foo", Password: "password"}}
+	mockSourceConfigMasked := testutils.MockSourceConfig{Foo: "foo", Password: "***"}
+	mockAuthService := testutils.MockAuthService{MockAuthServiceConfig: testutils.MockAuthServiceConfig{Foo: "foo"}}
+	mockEmbeddingModel := testutils.MockEmbeddingModel{MockEmbeddingModelConfig: testutils.MockEmbeddingModelConfig{Foo: "foo"}}
+	mockTool := testutils.MockTool{MockToolConfig: testutils.MockToolConfig{Foo: "foo"}}
+	mockToolset := tools.Toolset{ToolsetConfig: tools.ToolsetConfig{ToolNames: []string{"test-tool"}}}
+	mockPrompt := testutils.MockPrompt{MockPromptConfig: testutils.MockPromptConfig{Foo: "foo"}}
+
+	mockSources := map[string]sources.Source{"test-source": mockSource}
+	mockAuthServices := map[string]auth.AuthService{"test-auth-service": mockAuthService}
+	mockEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"test-embedding-model": mockEmbeddingModel}
+	mockTools := map[string]tools.Tool{"test-tool": mockTool}
+	mockToolsets := map[string]tools.Toolset{"test-toolset": mockToolset}
+	mockPrompts := map[string]prompts.Prompt{"test-prompt": mockPrompt}
+
+	r, shutdown := setUpServer(t, "admin", mockSources, mockAuthServices, mockEmbeddingModels, mockTools, mockToolsets, mockPrompts, map[string]prompts.Promptset{})
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	tests := []struct {
+		name               string
+		kind               string
+		resourceName       string
+		want               any
+		expectedStatusCode int
+	}{
+		{
+			name:               "Get Source - Success",
+			kind:               "source",
+			resourceName:       "test-source",
+			want:               mockSourceConfigMasked,
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Auth Service - Success",
+			kind:               "authService",
+			resourceName:       "test-auth-service",
+			want:               mockAuthService.ToConfig(),
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Embedding Model - Success",
+			kind:               "embeddingModel",
+			resourceName:       "test-embedding-model",
+			want:               mockEmbeddingModel.ToConfig(),
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Tool - Success",
+			kind:               "tool",
+			resourceName:       "test-tool",
+			want:               mockTool.ToConfig(),
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Toolset - Success",
+			kind:               "toolset",
+			resourceName:       "test-toolset",
+			want:               mockToolset.ToConfig(),
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Prompt - Success",
+			kind:               "prompt",
+			resourceName:       "test-prompt",
+			want:               mockPrompt.ToConfig(),
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Non-existent Primitive - Not Found",
+			kind:               "source",
+			resourceName:       "non-existent-source",
+			expectedStatusCode: http.StatusNotFound,
+		},
+		{
+			name:               "Get with Invalid Kind - Bad Request",
+			kind:               "invalidKind",
+			resourceName:       "some-name",
+			expectedStatusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, body, err := runRequest(ts, http.MethodGet, fmt.Sprintf("/%s/%s", tt.kind, tt.resourceName), nil, nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			if resp.StatusCode != tt.expectedStatusCode {
+				t.Fatalf("response status code is not %d, got %d, %s", tt.expectedStatusCode, resp.StatusCode, string(body))
+			}
+			if tt.expectedStatusCode == http.StatusOK {
+				var got any
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatalf("error unmarshaling response body")
+				}
+				var want any
+				wantBytes, err := json.Marshal(tt.want)
+				if err != nil {
+					t.Fatalf("error marshaling want struct")
+				}
+				if err = json.Unmarshal(wantBytes, &want); err != nil {
+					t.Fatalf("error unmarshaling want bytes")
+				}
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("unexpected output: got %+v, want %+v", got, want)
+				}
 			}
 		})
 	}

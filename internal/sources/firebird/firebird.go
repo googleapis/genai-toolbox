@@ -25,6 +25,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const SourceType string = "firebird"
@@ -46,13 +47,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"type" validate:"required"`
-	Host     string `yaml:"host" validate:"required"`
-	Port     string `yaml:"port" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
+	Name     string      `yaml:"name" validate:"required"`
+	Type     string      `yaml:"type" validate:"required"`
+	Host     string      `yaml:"host" validate:"required"`
+	Port     string      `yaml:"port" validate:"required"`
+	User     util.Secret `yaml:"user" validate:"required"`
+	Password util.Secret `yaml:"password" validate:"required"`
+	Database string      `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -60,7 +61,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initFirebirdConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
+	pool, err := initFirebirdConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

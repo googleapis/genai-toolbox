@@ -27,6 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
@@ -73,8 +74,8 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 					Host:         "0.0.0.0",
 					Port:         "my-port",
 					Database:     "my_db",
-					User:         "my_user",
-					Password:     "my_pass",
+					User:         util.Secret("my_user"),
+					Password:     util.Secret("my_pass"),
 					QueryTimeout: "45s",
 				},
 			},
@@ -101,8 +102,8 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 					QueryParams: map[string]string{
 						"tls":     "preferred",
 						"charset": "utf8mb4",

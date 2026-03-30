@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -53,8 +54,8 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					Host:     "my-host",
 					Port:     "my-port",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},
@@ -80,8 +81,8 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					Host:     "my-host",
 					Port:     "my-port",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 					QueryParams: map[string]string{
 						"sslmode":     "verify-full",
 						"sslrootcert": "/tmp/ca.crt",
@@ -109,8 +110,8 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					Host:          "my-host",
 					Port:          "my-port",
 					Database:      "my_db",
-					User:          "my_user",
-					Password:      "my_pass",
+					User:          util.Secret("my_user"),
+					Password:      util.Secret("my_pass"),
 					QueryExecMode: "simple_protocol",
 				},
 			},

@@ -20,6 +20,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/yugabyte/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -44,18 +45,18 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name                            string `yaml:"name" validate:"required"`
-	Type                            string `yaml:"type" validate:"required"`
-	Host                            string `yaml:"host" validate:"required"`
-	Port                            string `yaml:"port" validate:"required"`
-	User                            string `yaml:"user" validate:"required"`
-	Password                        string `yaml:"password" validate:"required"`
-	Database                        string `yaml:"database" validate:"required"`
-	LoadBalance                     string `yaml:"loadBalance"`
-	TopologyKeys                    string `yaml:"topologyKeys"`
-	YBServersRefreshInterval        string `yaml:"ybServersRefreshInterval"`
-	FallBackToTopologyKeysOnly      string `yaml:"fallbackToTopologyKeysOnly"`
-	FailedHostReconnectDelaySeconds string `yaml:"failedHostReconnectDelaySecs"`
+	Name                            string      `yaml:"name" validate:"required"`
+	Type                            string      `yaml:"type" validate:"required"`
+	Host                            string      `yaml:"host" validate:"required"`
+	Port                            string      `yaml:"port" validate:"required"`
+	User                            util.Secret `yaml:"user" validate:"required"`
+	Password                        util.Secret `yaml:"password" validate:"required"`
+	Database                        string      `yaml:"database" validate:"required"`
+	LoadBalance                     string      `yaml:"loadBalance"`
+	TopologyKeys                    string      `yaml:"topologyKeys"`
+	YBServersRefreshInterval        string      `yaml:"ybServersRefreshInterval"`
+	FallBackToTopologyKeysOnly      string      `yaml:"fallbackToTopologyKeysOnly"`
+	FailedHostReconnectDelaySeconds string      `yaml:"failedHostReconnectDelaySecs"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -63,7 +64,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initYugabyteDBConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.LoadBalance, r.TopologyKeys, r.YBServersRefreshInterval, r.FallBackToTopologyKeysOnly, r.FailedHostReconnectDelaySeconds)
+	pool, err := initYugabyteDBConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database, r.LoadBalance, r.TopologyKeys, r.YBServersRefreshInterval, r.FallBackToTopologyKeysOnly, r.FailedHostReconnectDelaySeconds)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

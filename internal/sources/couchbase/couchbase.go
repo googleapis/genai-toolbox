@@ -25,6 +25,7 @@ import (
 	tlsutil "github.com/couchbase/tools-common/http/tls"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -49,21 +50,21 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name                 string `yaml:"name" validate:"required"`
-	Type                 string `yaml:"type" validate:"required"`
-	ConnectionString     string `yaml:"connectionString" validate:"required"`
-	Bucket               string `yaml:"bucket" validate:"required"`
-	Scope                string `yaml:"scope" validate:"required"`
-	Username             string `yaml:"username"`
-	Password             string `yaml:"password"`
-	ClientCert           string `yaml:"clientCert"`
-	ClientCertPassword   string `yaml:"clientCertPassword"`
-	ClientKey            string `yaml:"clientKey"`
-	ClientKeyPassword    string `yaml:"clientKeyPassword"`
-	CACert               string `yaml:"caCert"`
-	NoSSLVerify          bool   `yaml:"noSslVerify"`
-	Profile              string `yaml:"profile"`
-	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
+	Name                 string      `yaml:"name" validate:"required"`
+	Type                 string      `yaml:"type" validate:"required"`
+	ConnectionString     string      `yaml:"connectionString" validate:"required"`
+	Bucket               string      `yaml:"bucket" validate:"required"`
+	Scope                string      `yaml:"scope" validate:"required"`
+	Username             util.Secret `yaml:"username"`
+	Password             util.Secret `yaml:"password"`
+	ClientCert           string      `yaml:"clientCert"`
+	ClientCertPassword   util.Secret `yaml:"clientCertPassword"`
+	ClientKey            string      `yaml:"clientKey"`
+	ClientKeyPassword    util.Secret `yaml:"clientKeyPassword"`
+	CACert               string      `yaml:"caCert"`
+	NoSSLVerify          bool        `yaml:"noSslVerify"`
+	Profile              string      `yaml:"profile"`
+	QueryScanConsistency uint        `yaml:"queryScanConsistency"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -138,8 +139,8 @@ func (r Config) createCouchbaseOptions() (gocb.ClusterOptions, error) {
 
 	if r.Username != "" {
 		auth := gocb.PasswordAuthenticator{
-			Username: r.Username,
-			Password: r.Password,
+			Username: r.Username.String(),
+			Password: r.Password.String(),
 		}
 		cbOpts.Authenticator = auth
 	}
@@ -170,7 +171,7 @@ func (r Config) createCouchbaseOptions() (gocb.ClusterOptions, error) {
 		tlsConfig, err := tlsutil.NewConfig(tlsutil.ConfigOptions{
 			ClientCert:     clientCert,
 			ClientKey:      clientKey,
-			Password:       []byte(getCertKeyPassword(r.ClientCertPassword, r.ClientKeyPassword)),
+			Password:       []byte(getCertKeyPassword(r.ClientCertPassword.String(), r.ClientKeyPassword.String())),
 			ClientAuthType: tls.VerifyClientCertIfGiven,
 			RootCAs:        caCert,
 			NoSSLVerify:    r.NoSSLVerify,

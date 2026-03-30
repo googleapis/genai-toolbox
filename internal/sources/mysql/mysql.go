@@ -53,8 +53,8 @@ type Config struct {
 	Type         string            `yaml:"type" validate:"required"`
 	Host         string            `yaml:"host" validate:"required"`
 	Port         string            `yaml:"port" validate:"required"`
-	User         string            `yaml:"user"`
-	Password     string            `yaml:"password"`
+	User         util.Secret       `yaml:"user"`
+	Password     util.Secret       `yaml:"password"`
 	Database     string            `yaml:"database"`
 	QueryTimeout string            `yaml:"queryTimeout"`
 	QueryParams  map[string]string `yaml:"queryParams"`
@@ -65,7 +65,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryTimeout, r.QueryParams)
+	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database, r.QueryTimeout, r.QueryParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

@@ -24,6 +24,7 @@ import (
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -48,15 +49,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"type" validate:"required"`
-	Host     string `yaml:"host" validate:"required"`
-	Port     string `yaml:"port" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password"`
-	Protocol string `yaml:"protocol"`
-	Secure   bool   `yaml:"secure"`
+	Name     string      `yaml:"name" validate:"required"`
+	Type     string      `yaml:"type" validate:"required"`
+	Host     string      `yaml:"host" validate:"required"`
+	Port     string      `yaml:"port" validate:"required"`
+	Database string      `yaml:"database" validate:"required"`
+	User     util.Secret `yaml:"user" validate:"required"`
+	Password util.Secret `yaml:"password"`
+	Protocol string      `yaml:"protocol"`
+	Secure   bool        `yaml:"secure"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -64,7 +65,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initClickHouseConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.Protocol, r.Secure)
+	pool, err := initClickHouseConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database, r.Protocol, r.Secure)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

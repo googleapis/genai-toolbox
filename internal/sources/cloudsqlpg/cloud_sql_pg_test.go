@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlCloudSQLPg(t *testing.T) {
@@ -53,8 +54,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "public",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},
@@ -81,8 +82,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "public",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},
@@ -109,8 +110,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "private",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},
@@ -137,8 +138,8 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					Instance: "my-instance",
 					IPType:   "psc",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},

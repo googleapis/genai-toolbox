@@ -74,8 +74,8 @@ type Config struct {
 	Type           string            `yaml:"type" validate:"required"`
 	Host           string            `yaml:"host" validate:"required"`
 	Port           string            `yaml:"port" validate:"required"`
-	User           string            `yaml:"user" validate:"required"`
-	Password       string            `yaml:"password"`
+	User           util.Secret       `yaml:"user" validate:"required"`
+	Password       util.Secret       `yaml:"password"`
 	Database       string            `yaml:"database" validate:"required"`
 	QueryParams    map[string]string `yaml:"queryParams"`
 	MaxRetries     int               `yaml:"maxRetries"`
@@ -103,7 +103,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("invalid retryBaseDelay: %w", err)
 	}
 
-	pool, err := initCockroachDBConnectionPoolWithRetry(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.MaxRetries, retryBaseDelay)
+	pool, err := initCockroachDBConnectionPoolWithRetry(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database, r.QueryParams, r.MaxRetries, retryBaseDelay)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -350,7 +350,7 @@ func (s *Source) EmitTelemetry(ctx context.Context, event TelemetryEvent) {
 		event.Database = s.Database
 	}
 	if event.User == "" {
-		event.User = s.User
+		event.User = s.User.String()
 	}
 
 	// Log as structured JSON

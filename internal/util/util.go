@@ -214,3 +214,19 @@ func GenAIMetricAttrsFromContext(ctx context.Context) *GenAIMetricAttrs {
 	}
 	return nil
 }
+
+type Secret string
+
+// MarshalJSON masks the value when converting to JSON
+func (s Secret) MarshalJSON() ([]byte, error) {
+	return []byte("\"***\""), nil
+}
+
+// MarshalYAML masks the value when converting to YAML
+func (s Secret) MarshalYAML() (interface{}, error) {
+	return "***", nil
+}
+
+func (s Secret) String() string {
+	return string(s)
+}

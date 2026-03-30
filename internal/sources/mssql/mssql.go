@@ -49,14 +49,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// Cloud SQL MSSQL configs
-	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"type" validate:"required"`
-	Host     string `yaml:"host" validate:"required"`
-	Port     string `yaml:"port" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
-	Encrypt  string `yaml:"encrypt"`
+	Name     string      `yaml:"name" validate:"required"`
+	Type     string      `yaml:"type" validate:"required"`
+	Host     string      `yaml:"host" validate:"required"`
+	Port     string      `yaml:"port" validate:"required"`
+	User     util.Secret `yaml:"user" validate:"required"`
+	Password util.Secret `yaml:"password" validate:"required"`
+	Database string      `yaml:"database" validate:"required"`
+	Encrypt  string      `yaml:"encrypt"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -66,7 +66,7 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a MSSQL source
-	db, err := initMssqlConnection(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.Encrypt)
+	db, err := initMssqlConnection(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database, r.Encrypt)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
 	}

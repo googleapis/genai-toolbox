@@ -12,6 +12,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlOracle(t *testing.T) {
@@ -36,8 +37,8 @@ func TestParseFromYamlOracle(t *testing.T) {
 					Name:             "my-oracle-cs",
 					Type:             SourceType,
 					ConnectionString: "my-host:1521/XEPDB1",
-					User:             "my_user",
-					Password:         "my_pass",
+					User:             util.Secret("my_user"),
+					Password:         util.Secret("my_pass"),
 					UseOCI:           true,
 				},
 			},
@@ -61,8 +62,8 @@ func TestParseFromYamlOracle(t *testing.T) {
 					Host:        "my-host",
 					Port:        1521,
 					ServiceName: "ORCLPDB",
-					User:        "my_user",
-					Password:    "my_pass",
+					User:        util.Secret("my_user"),
+					Password:    util.Secret("my_pass"),
 					UseOCI:      false,
 				},
 			},
@@ -85,8 +86,8 @@ func TestParseFromYamlOracle(t *testing.T) {
 					Type:     SourceType,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 					UseOCI:   true,
 				},
 			},

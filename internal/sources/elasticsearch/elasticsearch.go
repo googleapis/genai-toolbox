@@ -50,12 +50,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name      string   `yaml:"name" validate:"required"`
-	Type      string   `yaml:"type" validate:"required"`
-	Addresses []string `yaml:"addresses" validate:"required"`
-	Username  string   `yaml:"username"`
-	Password  string   `yaml:"password"`
-	APIKey    string   `yaml:"apikey"`
+	Name      string      `yaml:"name" validate:"required"`
+	Type      string      `yaml:"type" validate:"required"`
+	Addresses []string    `yaml:"addresses" validate:"required"`
+	Username  util.Secret `yaml:"username"`
+	Password  util.Secret `yaml:"password"`
+	APIKey    string      `yaml:"apikey"`
 }
 
 func (c Config) SourceConfigType() string {
@@ -103,8 +103,8 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	// Client need either username and password or an API key
 	if c.Username != "" && c.Password != "" {
-		cfg.Username = c.Username
-		cfg.Password = c.Password
+		cfg.Username = c.Username.String()
+		cfg.Password = c.Password.String()
 	} else if c.APIKey != "" {
 		// API key will be set below
 		cfg.APIKey = c.APIKey

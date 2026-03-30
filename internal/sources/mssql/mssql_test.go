@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlMssql(t *testing.T) {
@@ -50,8 +51,8 @@ func TestParseFromYamlMssql(t *testing.T) {
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},
@@ -75,8 +76,8 @@ func TestParseFromYamlMssql(t *testing.T) {
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 					Encrypt:  "strict",
 				},
 			},

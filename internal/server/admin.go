@@ -37,6 +37,7 @@ func adminRouter(s *Server) (chi.Router, error) {
 
 	r.Put("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { createOrUpdatePrimitives(s, w, r) })
 	r.Delete("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { deletePrimitives(s, w, r) })
+	r.Get("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { getPrimitiveByName(s, w, r) })
 
 	return r, nil
 }
@@ -162,6 +163,80 @@ func createOrUpdatePrimitives(s *Server, w http.ResponseWriter, r *http.Request)
 	if updateErr != nil {
 		s.logger.DebugContext(ctx, updateErr.Error())
 		_ = render.Render(w, r, newErrResponse(updateErr, http.StatusInternalServerError))
+		return
+	}
+}
+
+func getPrimitiveByName(s *Server, w http.ResponseWriter, r *http.Request) {
+	kind := chi.URLParam(r, "kind")
+	name := chi.URLParam(r, "name")
+	ctx := r.Context()
+
+	switch strings.ToLower(kind) {
+	case "source":
+		source, ok := s.ResourceMgr.GetSource(name)
+		if !ok {
+			err := fmt.Errorf("%s with name %q does not exist", kind, name)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+		m := source.ToConfig()
+		render.JSON(w, r, m)
+	case "authservice":
+		as, ok := s.ResourceMgr.GetAuthService(name)
+		if !ok {
+			err := fmt.Errorf("%s with name %q does not exist", kind, name)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+		m := as.ToConfig()
+		render.JSON(w, r, m)
+	case "embeddingmodel":
+		em, ok := s.ResourceMgr.GetEmbeddingModel(name)
+		if !ok {
+			err := fmt.Errorf("%s with name %q does not exist", kind, name)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+		m := em.ToConfig()
+		render.JSON(w, r, m)
+	case "tool":
+		tool, ok := s.ResourceMgr.GetTool(name)
+		if !ok {
+			err := fmt.Errorf("%s with name %q does not exist", kind, name)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+		m := tool.ToConfig()
+		render.JSON(w, r, m)
+	case "toolset":
+		ts, ok := s.ResourceMgr.GetToolset(name)
+		if !ok {
+			err := fmt.Errorf("%s with name %q does not exist", kind, name)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+		m := ts.ToConfig()
+		render.JSON(w, r, m)
+	case "prompt":
+		prompt, ok := s.ResourceMgr.GetPrompt(name)
+		if !ok {
+			err := fmt.Errorf("%s with name %q does not exist", kind, name)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+			return
+		}
+		m := prompt.ToConfig()
+		render.JSON(w, r, m)
+	default:
+		err := fmt.Errorf("invalid primitive kind provided")
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
 }

@@ -21,6 +21,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -45,15 +46,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name           string    `yaml:"name" validate:"required"`
-	Type           string    `yaml:"type" validate:"required"`
-	Address        []string  `yaml:"address" validate:"required"`
-	Username       string    `yaml:"username"`
-	Password       string    `yaml:"password"`
-	Database       int       `yaml:"database"`
-	UseGCPIAM      bool      `yaml:"useGCPIAM"`
-	ClusterEnabled bool      `yaml:"clusterEnabled"`
-	TLS            TLSConfig `yaml:"tls"`
+	Name           string      `yaml:"name" validate:"required"`
+	Type           string      `yaml:"type" validate:"required"`
+	Address        []string    `yaml:"address" validate:"required"`
+	Username       util.Secret `yaml:"username"`
+	Password       util.Secret `yaml:"password"`
+	Database       int         `yaml:"database"`
+	UseGCPIAM      bool        `yaml:"useGCPIAM"`
+	ClusterEnabled bool        `yaml:"clusterEnabled"`
+	TLS            TLSConfig   `yaml:"tls"`
 }
 
 type TLSConfig struct {
@@ -116,8 +117,8 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 			ConnMaxIdleTime:            60 * time.Second,
 			MinIdleConns:               1,
 			CredentialsProviderContext: authFn,
-			Username:                   r.Username,
-			Password:                   r.Password,
+			Username:                   r.Username.String(),
+			Password:                   r.Password.String(),
 			TLSConfig:                  tlsConfig,
 		})
 		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
@@ -138,8 +139,8 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		MinIdleConns:               1,
 		DB:                         r.Database,
 		CredentialsProviderContext: authFn,
-		Username:                   r.Username,
-		Password:                   r.Password,
+		Username:                   r.Username.String(),
+		Password:                   r.Password.String(),
 		TLSConfig:                  tlsConfig,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()

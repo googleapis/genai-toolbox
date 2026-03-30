@@ -55,8 +55,8 @@ type Config struct {
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType" validate:"required"`
 	Database string         `yaml:"database" validate:"required"`
-	User     string         `yaml:"user"`
-	Password string         `yaml:"password"`
+	User     util.Secret    `yaml:"user"`
+	Password util.Secret    `yaml:"password"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -64,7 +64,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initCloudSQLPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+	pool, err := initCloudSQLPgConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User.String(), r.Password.String(), r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

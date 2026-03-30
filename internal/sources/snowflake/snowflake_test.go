@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/snowflake"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlSnowflake(t *testing.T) {
@@ -48,8 +49,8 @@ func TestParseFromYamlSnowflake(t *testing.T) {
 					Name:      "my-snowflake-instance",
 					Type:      snowflake.SourceType,
 					Account:   "my-account",
-					User:      "my_user",
-					Password:  "my_pass",
+					User:      util.Secret("my_user"),
+					Password:  util.Secret("my_pass"),
 					Database:  "my_db",
 					Schema:    "my_schema",
 					Warehouse: "",

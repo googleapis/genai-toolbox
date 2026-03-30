@@ -20,6 +20,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/snowflakedb/gosnowflake"
 	"go.opentelemetry.io/otel/trace"
@@ -45,15 +46,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name      string `yaml:"name" validate:"required"`
-	Type      string `yaml:"type" validate:"required"`
-	Account   string `yaml:"account" validate:"required"`
-	User      string `yaml:"user" validate:"required"`
-	Password  string `yaml:"password" validate:"required"`
-	Database  string `yaml:"database" validate:"required"`
-	Schema    string `yaml:"schema" validate:"required"`
-	Warehouse string `yaml:"warehouse"`
-	Role      string `yaml:"role"`
+	Name      string      `yaml:"name" validate:"required"`
+	Type      string      `yaml:"type" validate:"required"`
+	Account   string      `yaml:"account" validate:"required"`
+	User      util.Secret `yaml:"user" validate:"required"`
+	Password  util.Secret `yaml:"password" validate:"required"`
+	Database  string      `yaml:"database" validate:"required"`
+	Schema    string      `yaml:"schema" validate:"required"`
+	Warehouse string      `yaml:"warehouse"`
+	Role      string      `yaml:"role"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -61,7 +62,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	db, err := initSnowflakeConnection(ctx, tracer, r.Name, r.Account, r.User, r.Password, r.Database, r.Schema, r.Warehouse, r.Role)
+	db, err := initSnowflakeConnection(ctx, tracer, r.Name, r.Account, r.User.String(), r.Password.String(), r.Database, r.Schema, r.Warehouse, r.Role)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection: %w", err)
 	}

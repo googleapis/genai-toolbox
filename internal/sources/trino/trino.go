@@ -50,21 +50,21 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name                   string `yaml:"name" validate:"required"`
-	Type                   string `yaml:"type" validate:"required"`
-	Host                   string `yaml:"host" validate:"required"`
-	Port                   string `yaml:"port" validate:"required"`
-	User                   string `yaml:"user"`
-	Password               string `yaml:"password"`
-	Catalog                string `yaml:"catalog" validate:"required"`
-	Schema                 string `yaml:"schema" validate:"required"`
-	QueryTimeout           string `yaml:"queryTimeout"`
-	AccessToken            string `yaml:"accessToken"`
-	KerberosEnabled        bool   `yaml:"kerberosEnabled"`
-	SSLEnabled             bool   `yaml:"sslEnabled"`
-	SSLCertPath            string `yaml:"sslCertPath"`
-	SSLCert                string `yaml:"sslCert"`
-	DisableSslVerification bool   `yaml:"disableSslVerification"`
+	Name                   string      `yaml:"name" validate:"required"`
+	Type                   string      `yaml:"type" validate:"required"`
+	Host                   string      `yaml:"host" validate:"required"`
+	Port                   string      `yaml:"port" validate:"required"`
+	User                   util.Secret `yaml:"user"`
+	Password               util.Secret `yaml:"password"`
+	Catalog                string      `yaml:"catalog" validate:"required"`
+	Schema                 string      `yaml:"schema" validate:"required"`
+	QueryTimeout           string      `yaml:"queryTimeout"`
+	AccessToken            string      `yaml:"accessToken"`
+	KerberosEnabled        bool        `yaml:"kerberosEnabled"`
+	SSLEnabled             bool        `yaml:"sslEnabled"`
+	SSLCertPath            string      `yaml:"sslCertPath"`
+	SSLCert                string      `yaml:"sslCert"`
+	DisableSslVerification bool        `yaml:"disableSslVerification"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -72,7 +72,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initTrinoConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Catalog, r.Schema, r.QueryTimeout, r.AccessToken, r.KerberosEnabled, r.SSLEnabled, r.SSLCertPath, r.SSLCert, r.DisableSslVerification)
+	pool, err := initTrinoConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Catalog, r.Schema, r.QueryTimeout, r.AccessToken, r.KerberosEnabled, r.SSLEnabled, r.SSLCertPath, r.SSLCert, r.DisableSslVerification)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}

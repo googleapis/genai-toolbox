@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -48,8 +49,8 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 					Type:     neo4j.SourceType,
 					Uri:      "neo4j+s://my-host:7687",
 					Database: "my_db",
-					User:     "my_user",
-					Password: "my_pass",
+					User:     util.Secret("my_user"),
+					Password: util.Secret("my_pass"),
 				},
 			},
 		},

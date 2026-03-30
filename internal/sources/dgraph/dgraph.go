@@ -26,6 +26,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -66,13 +67,13 @@ type DgraphClient struct {
 }
 
 type Config struct {
-	Name      string `yaml:"name" validate:"required"`
-	Type      string `yaml:"type" validate:"required"`
-	DgraphUrl string `yaml:"dgraphUrl" validate:"required"`
-	User      string `yaml:"user"`
-	Password  string `yaml:"password"`
-	Namespace uint64 `yaml:"namespace"`
-	ApiKey    string `yaml:"apiKey"`
+	Name      string      `yaml:"name" validate:"required"`
+	Type      string      `yaml:"type" validate:"required"`
+	DgraphUrl string      `yaml:"dgraphUrl" validate:"required"`
+	User      util.Secret `yaml:"user"`
+	Password  util.Secret `yaml:"password"`
+	Namespace uint64      `yaml:"namespace"`
+	ApiKey    string      `yaml:"apiKey"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -150,9 +151,9 @@ func initDgraphHttpClient(ctx context.Context, tracer trace.Tracer, r Config) (*
 		httpClient: &http.Client{},
 		baseUrl:    r.DgraphUrl,
 		HttpToken: &HttpToken{
-			UserId:    r.User,
+			UserId:    r.User.String(),
 			Namespace: r.Namespace,
-			Password:  r.Password,
+			Password:  r.Password.String(),
 		},
 		apiKey: r.ApiKey,
 	}

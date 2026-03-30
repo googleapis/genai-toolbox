@@ -53,8 +53,8 @@ type Config struct {
 	Type          string            `yaml:"type" validate:"required"`
 	Host          string            `yaml:"host" validate:"required"`
 	Port          string            `yaml:"port" validate:"required"`
-	User          string            `yaml:"user" validate:"required"`
-	Password      string            `yaml:"password" validate:"required"`
+	User          util.Secret       `yaml:"user" validate:"required"`
+	Password      util.Secret       `yaml:"password" validate:"required"`
 	Database      string            `yaml:"database" validate:"required"`
 	QueryParams   map[string]string `yaml:"queryParams"`
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
@@ -65,7 +65,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User.String(), r.Password.String(), r.Database, r.QueryParams, r.QueryExecMode)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
