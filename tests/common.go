@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/bigtable"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
@@ -1099,6 +1100,27 @@ func CleanupBigQueryDatasets(t *testing.T, ctx context.Context, client *bigquery
 			t.Errorf("INTEGRATION CLEANUP: Failed to delete dataset %s: %v", id, err)
 		} else {
 			t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped dataset %s", id)
+		}
+	}
+}
+
+// finds and deletes all tables in a Bigtable instance that match the uniqueID.
+func CleanupBigtableTables(t *testing.T, ctx context.Context, adminClient *bigtable.AdminClient, uniqueID string) {
+	tables, err := adminClient.Tables(ctx)
+	if err != nil {
+		t.Errorf("INTEGRATION CLEANUP: Failed to list tables: %v", err)
+		return
+	}
+
+	for _, table := range tables {
+		// Delete tables containing our uniqueID
+		if strings.Contains(table, uniqueID) {
+			t.Logf("INTEGRATION CLEANUP: Deleting table %s", table)
+			if err := adminClient.DeleteTable(ctx, table); err != nil {
+				t.Errorf("INTEGRATION CLEANUP: Failed to delete table %s: %v", table, err)
+			} else {
+				t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped table %s", table)
+			}
 		}
 	}
 }
