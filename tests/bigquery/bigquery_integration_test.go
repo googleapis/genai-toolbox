@@ -3289,7 +3289,7 @@ func setupBigQueryVectorTable(t *testing.T, ctx context.Context, client *bigquer
 
 // getBigQueryVectorSearchStmts returns statements for bigquery semantic search
 func getBigQueryVectorSearchStmts(vectorTableName string) (string, string) {
-	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, @content, (SELECT ARRAY_AGG(CAST(x AS FLOAT64)) FROM UNNEST(JSON_VALUE_ARRAY(PARSE_JSON(@text_to_embed))) AS x))", vectorTableName)
-	searchStmt := fmt.Sprintf("SELECT id, content, ML.DISTANCE(embedding, (SELECT ARRAY_AGG(CAST(x AS FLOAT64)) FROM UNNEST(JSON_VALUE_ARRAY(PARSE_JSON(@query))) AS x), 'COSINE') AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, @content, @text_to_embed)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, ML.DISTANCE(embedding, @query, 'COSINE') AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
 	return insertStmt, searchStmt
 }
