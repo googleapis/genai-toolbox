@@ -145,6 +145,8 @@ A concise description of the changes (bug or feature), its impact, and a summary
 - [ ] Appropriate docs were updated (if necessary)
 - [ ] Make sure to add `!` if this involves a breaking change
 
+**3. Issue Reference**
+Use the format: `Fixes #<issue_number> 🦕`
 
 ## Adding New Features
 
@@ -238,6 +240,4 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 ##### Asset Constraints (`docs/`)
 
 1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.
-**3. Issue Reference**
-Use the format: `Fixes #<issue_number> 🦕`
 
