@@ -164,7 +164,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		rv := reflect.ValueOf(value)
 		if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() != reflect.Uint8 {
 			lowLevelParam.ParameterType.Type = "ARRAY"
-			
+
 			// Default item type to FLOAT64 for embeddings, or use config if available.
 			itemType := "FLOAT64"
 			if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
