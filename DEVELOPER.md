@@ -382,6 +382,7 @@ go test -race -v ./cmd/... ./internal/...
   workflows on your PR.
   * Maintainers can comment `/gcbrun` to execute the integration tests.
   * Maintainers can add the label `tests:run` to execute the unit tests.
+  * Maintainers can add the label `docs: deploy-preview` to run the PR Preview workflow.
 
 #### Test Resources
 
