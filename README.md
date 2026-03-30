@@ -63,6 +63,10 @@ This README provides a brief overview. For comprehensive details, see the [full 
 
 ---
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/googleapis-genai-toolbox).
+
 ## Quick Start: Prebuilt Tools
 
 Stop context-switching and let your AI assistant become a true co-developer. By connecting your IDE to your databases with MCP Toolbox, you can query your data in plain English, automate schema discovery and management, and generate database-aware code.
