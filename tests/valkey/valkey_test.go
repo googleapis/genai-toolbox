@@ -72,7 +72,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initValkeyClient(ctx, []string{ValkeyAddress})
 	if err != nil {

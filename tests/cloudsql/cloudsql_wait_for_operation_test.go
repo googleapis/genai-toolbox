@@ -173,7 +173,7 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getCloudSQLWaitToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)

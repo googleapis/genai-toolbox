@@ -76,7 +76,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	db, err := initOracleConnection(ctx, OracleUser, OraclePass, OracleConnStr)
 	if err != nil {

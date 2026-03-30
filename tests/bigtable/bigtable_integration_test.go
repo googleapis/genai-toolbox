@@ -68,7 +68,7 @@ func TestBigtableToolEndpoints(t *testing.T) {
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	t.Logf("Starting Bigtable test with uniqueID: %s", uniqueID)
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Initialize AdminClient to create or delete tables
 	adminClient, err := bigtable.NewAdminClient(context.Background(), sourceConfig["project"].(string), sourceConfig["instance"].(string))

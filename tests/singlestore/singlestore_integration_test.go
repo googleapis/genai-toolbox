@@ -184,7 +184,7 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initSingleStoreConnectionPool(SingleStoreHost, SingleStorePort, SingleStoreUser, SingleStorePass, SingleStoreDatabase)
 	if err != nil {

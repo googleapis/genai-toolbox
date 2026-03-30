@@ -82,7 +82,7 @@ func TestOceanBaseToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initOceanBaseConnectionPool(OceanBaseHost, OceanBasePort, OceanBaseUser, OceanBasePass, OceanBaseDatabase)
 	if err != nil {

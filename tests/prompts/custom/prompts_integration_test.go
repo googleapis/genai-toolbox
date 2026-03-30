@@ -79,7 +79,8 @@ func TestMCPPromptsIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd, cleanup, err := tests.StartCmd(ctx, getPromptsConfig())
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, getPromptsConfig(), args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %v", err)
 	}
