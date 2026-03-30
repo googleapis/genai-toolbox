@@ -92,7 +92,7 @@ There are 6 workflows in total, handling parallel deployments to both GitHub Pag
 -   **Commit Messages:** [Conventional Commits](https://www.conventionalcommits.org/) format.
     -   Format: `<type>(<scope>): <description>`
     -   Example: `feat(source/postgres): add new connection option`
-    -   Types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `revert`, `style`
+    -   Types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `revert`, `style`.
 
  ### PR Title Format
 
