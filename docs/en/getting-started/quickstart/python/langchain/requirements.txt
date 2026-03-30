@@ -1,5 +1,0 @@
-langchain==1.2.12
-langchain-google-vertexai==3.2.2
-langgraph==1.1.2
-toolbox-langchain==0.6.0
-pytest==9.0.2

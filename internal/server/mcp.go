@@ -30,6 +30,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
@@ -332,6 +333,7 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.AllowContentType("application/json", "application/json-rpc", "application/jsonrequest"))
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
+	r.Use(mcpAuthMiddleware(s))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
@@ -757,5 +759,43 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			}
 		}
 		return "", result, err
+	}
+}
+
+type prmResponse struct {
+	Resource               string   `json:"resource"`
+	AuthorizationServers   []string `json:"authorization_servers"`
+	ScopesSupported        []string `json:"scopes_supported,omitempty"`
+	BearerMethodsSupported []string `json:"bearer_methods_supported"`
+}
+
+// prmHandler generates the Protected Resource Metadata (PRM) file for MCP Authorization.
+func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	var server string
+	scopes := []string{}
+	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+		cfg := authSvc.ToConfig()
+		if genCfg, ok := cfg.(generic.Config); ok {
+			if genCfg.McpEnabled {
+				server = genCfg.AuthorizationServer
+				if genCfg.ScopesRequired != nil {
+					scopes = genCfg.ScopesRequired
+				}
+				break
+			}
+		}
+	}
+
+	res := prmResponse{
+		Resource:               s.toolboxUrl,
+		AuthorizationServers:   []string{server},
+		ScopesSupported:        scopes,
+		BearerMethodsSupported: []string{"header"},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		s.logger.ErrorContext(r.Context(), fmt.Sprintf("Failed to encode PRM response: %v", err))
+		http.Error(w, "Failed to encode PRM response", http.StatusInternalServerError)
 	}
 }

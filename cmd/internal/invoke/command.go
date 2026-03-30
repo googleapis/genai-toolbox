@@ -18,10 +18,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/googleapis/genai-toolbox/cmd/internal"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
 )
@@ -87,7 +89,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 
 	params := make(map[string]any)
 	if paramsInput != "" {
-		if err := json.Unmarshal([]byte(paramsInput), &params); err != nil {
+		if err := util.DecodeJSON(strings.NewReader(paramsInput), &params); err != nil {
 			errMsg := fmt.Errorf("params must be a valid JSON string: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg

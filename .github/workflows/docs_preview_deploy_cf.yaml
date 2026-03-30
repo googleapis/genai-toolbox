@@ -1,0 +1,110 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "CF: Deploy Docs Preview"
+
+on:
+  workflow_run:
+    workflows: ["CF: Build Docs Preview"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR Number to deploy (Manual override)'
+        required: true
+        type: string
+      build_run_id:
+        description: 'The Run ID from the successful "CF: Build Docs Preview" workflow'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy-preview:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: "cf-deploy-${{ github.event.inputs.pr_number || github.event.workflow_run.pull_requests[0].number }}"
+      cancel-in-progress: true
+    steps:
+      - name: Checkout base repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Download Artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: cf-preview-data
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.inputs.build_run_id || github.event.workflow_run.id }}
+          path: downloaded-artifact
+
+      - name: Read PR Number
+        id: get_pr
+        run: |
+          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          else
+            PR_NUMBER=$(cat downloaded-artifact/pr_number.txt)
+          fi
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Error: PR number [$PR_NUMBER] is invalid."
+            exit 1
+          fi
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Cloudflare Pages
+        id: cf_deploy
+        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy downloaded-artifact/public --project-name toolbox-docs --branch pr-${{ steps.get_pr.outputs.pr_number }}
+
+      - name: Post Preview URL Comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.get_pr.outputs.pr_number }}', 10);
+            const deployUrl = '${{ steps.cf_deploy.outputs.pages-deployment-alias-url }}';
+            const marker = '<!-- cf-preview-comment-marker -->';
+
+            // Fetch all comments on the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            // Look for the invisible HTML marker
+            const existingComment = comments.find(c => c.body.includes(marker));
+
+            // Exit early if we've already posted a comment for this PR to avoid duplicates
+            if (existingComment) {
+              console.log("Preview link already posted on this PR. Skipping.");
+              return;
+            }
+
+            // Create the comment since it's the first deployment for this PR
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `${marker}\n🚀 **Cloudflare Preview Ready!**\n\n🔎 View Preview: ${deployUrl}\n\n*(Note: Subsequent pushes to this PR will automatically update the preview at this same URL)*`
+            });

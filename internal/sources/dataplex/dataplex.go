@@ -244,3 +244,15 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 	}
 	return results, nil
 }
+
+func (s *Source) LookupContext(ctx context.Context, name string, resources []string) (*dataplexpb.LookupContextResponse, error) {
+	req := &dataplexpb.LookupContextRequest{
+		Name:      name,
+		Resources: resources,
+	}
+	result, err := s.CatalogClient().LookupContext(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

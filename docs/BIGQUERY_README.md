@@ -76,6 +76,7 @@ export BIGQUERY_PROJECT="<your-gcp-project-id>"
 export BIGQUERY_LOCATION="<your-dataset-location>"  # Optional
 export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional: true, false, or a custom header name
 export BIGQUERY_SCOPES="<comma-separated-scopes>"  # Optional
+export BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT="<service-account-email>"  # Optional: Service account to impersonate
 ```
 
 Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):
