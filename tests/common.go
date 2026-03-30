@@ -26,6 +26,9 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/bigtable"
+	"cloud.google.com/go/spanner"
+	database "cloud.google.com/go/spanner/admin/database/apiv1"
+	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlmysql"
@@ -1127,5 +1130,63 @@ func CleanupBigtableTables(t *testing.T, ctx context.Context, adminClient *bigta
 				t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped table %s", table)
 			}
 		}
+	}
+}
+
+func CleanupSpannerResources(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, dbString string, uniqueID string) {
+	t.Logf("DEBUG: Starting Spanner cleanup for uniqueID: %s", uniqueID)
+
+	var ddlStatements []string
+	pattern := "%" + uniqueID + "%"
+
+	//Identify Property Graphs
+	graphQuery := `SELECT property_graph_name FROM INFORMATION_SCHEMA.PROPERTY_GRAPHS WHERE property_graph_name LIKE @pattern`
+	gIter := dataClient.Single().Query(ctx, spanner.Statement{
+		SQL:    graphQuery,
+		Params: map[string]any{"pattern": pattern},
+	})
+	if err := gIter.Do(func(row *spanner.Row) error {
+		var name string
+		if err := row.Column(0, &name); err == nil {
+			ddlStatements = append(ddlStatements, fmt.Sprintf("DROP PROPERTY GRAPH `%s` ", name))
+		}
+		return nil
+	}); err != nil {
+		t.Errorf("Cleanup: failed to iterate graphs: %v", err)
+	}
+
+	//Identify Tables
+	tableQuery := `SELECT table_name FROM INFORMATION_SCHEMA.TABLES WHERE table_schema = '' AND table_name LIKE @pattern`
+	tIter := dataClient.Single().Query(ctx, spanner.Statement{
+		SQL:    tableQuery,
+		Params: map[string]any{"pattern": pattern},
+	})
+	if err := tIter.Do(func(row *spanner.Row) error {
+		var name string
+		if err := row.Column(0, &name); err == nil {
+			ddlStatements = append(ddlStatements, fmt.Sprintf("DROP TABLE `%s` ", name))
+		}
+		return nil
+	}); err != nil {
+		t.Errorf("Cleanup: failed to iterate tables: %v", err)
+	}
+
+	if len(ddlStatements) > 0 {
+		t.Logf("DEBUG: SPANNER CLEANUP: Dropping %d stale resources: %v", len(ddlStatements), ddlStatements)
+		op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   dbString,
+			Statements: ddlStatements,
+		})
+		if err != nil {
+			t.Errorf("DEBUG: Failed to start cleanup operation: %v", err)
+			return
+		}
+		if err := op.Wait(ctx); err != nil {
+			t.Errorf("DEBUG: Cleanup operation failed to complete: %v", err)
+		} else {
+			t.Logf("DEBUG: SPANNER CLEANUP SUCCESS for ID: %s", uniqueID)
+		}
+	} else {
+		t.Logf("DEBUG: SPANNER CLEANUP: No resources found for ID: %s", uniqueID)
 	}
 }

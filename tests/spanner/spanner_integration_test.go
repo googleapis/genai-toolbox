@@ -95,39 +95,43 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create Spanner client: %s", err)
 	}
 
-	// create table name with UUID
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-
-	// set up data for param tool
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getSpannerParamToolInfo(tableNameParam)
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	dbString := fmt.Sprintf(
 		"projects/%s/instances/%s/databases/%s",
 		SpannerProject,
 		SpannerInstance,
 		SpannerDatabase,
 	)
-	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, createParamTableStmt, insertParamTableStmt, tableNameParam, dbString, paramTestParams)
-	defer teardownTable1(t)
+
+	t.Cleanup(func() {
+		tests.CleanupSpannerResources(t, context.Background(), adminClient, dataClient, dbString, uniqueID)
+	})
+
+	t.Logf("DEBUG: Starting test run with isolated ID: %s", uniqueID)
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + uniqueID
+	tableNameAuth := "auth_table_" + uniqueID
+	tableNameTemplateParam := "template_param_table_" + uniqueID
+
+	// set up data for param tool
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getSpannerParamToolInfo(tableNameParam)
+	setupSpannerTable(t, ctx, adminClient, dataClient, createParamTableStmt, insertParamTableStmt, tableNameParam, dbString, paramTestParams)
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getSpannerAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, dbString, authTestParams)
-	defer teardownTable2(t)
+	setupSpannerTable(t, ctx, adminClient, dataClient, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, dbString, authTestParams)
 
 	// set up data for template param tool
 	createStatementTmpl := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), age INT64) PRIMARY KEY (id)", tableNameTemplateParam)
-	teardownTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createStatementTmpl, "", tableNameTemplateParam, dbString, nil)
-	defer teardownTableTmpl(t)
+	setupSpannerTable(t, ctx, adminClient, dataClient, createStatementTmpl, "", tableNameTemplateParam, dbString, nil)
 
 	// set up for graph tool
-	nodeTableName := "node_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	nodeTableName := "node_table_" + uniqueID
 	createNodeStatementTmpl := fmt.Sprintf("CREATE TABLE %s (id INT64 NOT NULL) PRIMARY KEY (id)", nodeTableName)
-	teardownNodeTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createNodeStatementTmpl, "", nodeTableName, dbString, nil)
-	defer teardownNodeTableTmpl(t)
+	setupSpannerTable(t, ctx, adminClient, dataClient, createNodeStatementTmpl, "", nodeTableName, dbString, nil)
 
-	edgeTableName := "edge_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	edgeTableName := "edge_table_" + uniqueID
 	createEdgeStatementTmpl := fmt.Sprintf(`
 	CREATE TABLE %[1]s (
 		id INT64 NOT NULL,
@@ -136,10 +140,9 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	) PRIMARY KEY (id, target_id),
 	 INTERLEAVE IN PARENT %[2]s ON DELETE CASCADE
 	`, edgeTableName, nodeTableName)
-	teardownEdgeTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createEdgeStatementTmpl, "", edgeTableName, dbString, nil)
-	defer teardownEdgeTableTmpl(t)
+	setupSpannerTable(t, ctx, adminClient, dataClient, createEdgeStatementTmpl, "", edgeTableName, dbString, nil)
 
-	graphName := "graph_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	graphName := "graph_" + uniqueID
 	createGraphStmt := fmt.Sprintf(`
 	CREATE PROPERTY GRAPH %[3]s
 		NODE TABLES (
@@ -152,8 +155,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 				LABEL EDGE
 		)
 	`, nodeTableName, edgeTableName, graphName)
-	teardownGraph := setupSpannerGraph(t, ctx, adminClient, createGraphStmt, graphName, dbString)
-	defer teardownGraph(t)
+	setupSpannerGraph(t, ctx, adminClient, createGraphStmt, graphName, dbString)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
@@ -191,7 +193,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	invokeParamWant := "[{\"id\":\"1\",\"name\":\"Alice\"},{\"id\":\"3\",\"name\":\"Sid\"}]"
 	accessSchemaWant := "[{\"schema_name\":\"INFORMATION_SCHEMA\"}]"
 	toolInvokeMyToolById4Want := `[{"id":"4","name":null}]`
-	mcpMyFailToolWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute client: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
+	mcpMyFailToolWant := `"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing GCP request: unable to parse row: spanner: code = \"InvalidArgument\", desc = \"Syntax error: Unexpected identifier \\\\\\\"SELEC\\\\\\\" [at 1:1]\\\\nSELEC 1;\\\\n^\"`
 	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":\"1\",\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":\"3\",\"name\":\"Sid\"}"}]}}`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"\":\"1\"}"}]}}`
 	tmplSelectAllWwant := "[{\"age\":\"21\",\"id\":\"1\",\"name\":\"Alex\"},{\"age\":\"100\",\"id\":\"2\",\"name\":\"Alice\"}]"
@@ -255,7 +257,7 @@ func getSpannerAuthToolInfo(tableName string) (string, string, string, map[strin
 
 // setupSpannerTable creates and inserts data into a table of tool
 // compatible with spanner-sql tool
-func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, createStatement, insertStatement, tableName, dbString string, params map[string]any) func(*testing.T) {
+func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, createStatement, insertStatement, tableName, dbString string, params map[string]any) {
 
 	// Create table
 	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
@@ -284,27 +286,10 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 			t.Fatalf("unable to insert test data: %s", err)
 		}
 	}
-
-	return func(t *testing.T) {
-		// tear down test
-		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
-			Database:   dbString,
-			Statements: []string{fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)},
-		})
-		if err != nil {
-			t.Errorf("unable to start drop %s operation: %s", tableName, err)
-			return
-		}
-
-		opErr := op.Wait(ctx)
-		if opErr != nil {
-			t.Errorf("Teardown failed: %s", opErr)
-		}
-	}
 }
 
 // setupSpannerGraph creates a graph and inserts data into it.
-func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, createStatement, graphName, dbString string) func(*testing.T) {
+func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, createStatement, graphName, dbString string) {
 	// Create graph
 	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
 		Database:   dbString,
@@ -316,23 +301,6 @@ func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.
 	err = op.Wait(ctx)
 	if err != nil {
 		t.Fatalf("unable to create test graph %s: %s", graphName, err)
-	}
-
-	return func(t *testing.T) {
-		// tear down test
-		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
-			Database:   dbString,
-			Statements: []string{fmt.Sprintf("DROP PROPERTY GRAPH IF EXISTS %s", graphName)},
-		})
-		if err != nil {
-			t.Errorf("unable to start drop %s operation: %s", graphName, err)
-			return
-		}
-
-		opErr := op.Wait(ctx)
-		if opErr != nil {
-			t.Errorf("Teardown failed: %s", opErr)
-		}
 	}
 }
 
@@ -382,6 +350,7 @@ func addSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]an
 		"source":      "my-instance",
 		"description": "Tool to access information schema.",
 		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
+		"readOnly":    true,
 	}
 	config["tools"] = tools
 	return config
