@@ -182,3 +182,106 @@ func RunMCPCustomToolCallMethod(t *testing.T, toolName string, arguments map[str
 		t.Fatalf(`expected %q to contain %q`, got, want)
 	}
 }
+
+// RunMCPToolInvokeTest runs the tool invoke test cases over MCP protocol.
+func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
+	t.Helper()
+	// Resolve options using existing InvokeTestOption and InvokeTestConfig from option.go
+	configs := &InvokeTestConfig{
+		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
+		nullWant:                 "null",
+		supportOptionalNullParam: true,
+		supportArrayParam:        true,
+		supportClientAuth:        false,
+		supportSelect1Want:       true,
+		supportSelect1Auth:       true,
+	}
+
+	for _, option := range options {
+		option(configs)
+	}
+
+	invokeTcs := []struct {
+		name       string
+		toolName   string
+		args       map[string]any
+		headers    map[string]string
+		enabled    bool
+		wantResult string // for success cases
+		wantError  string // for failure cases
+	}{
+		{
+			name:       "invoke my-simple-tool",
+			toolName:   "my-simple-tool",
+			args:       map[string]any{},
+			enabled:    configs.supportSelect1Want,
+			wantResult: select1Want,
+		},
+		{
+			name:       "invoke my-tool",
+			toolName:   "my-tool",
+			args:       map[string]any{"id": 3, "name": "Alice"},
+			enabled:    true,
+			wantResult: configs.myToolId3NameAliceWant,
+		},
+		{
+			name:       "invoke my-tool-by-id with nil response",
+			toolName:   "my-tool-by-id",
+			args:       map[string]any{"id": 4},
+			enabled:    true,
+			wantResult: configs.myToolById4Want,
+		},
+		{
+			name:       "invoke my-tool-by-name with nil response",
+			toolName:   "my-tool-by-name",
+			args:       map[string]any{},
+			enabled:    configs.supportOptionalNullParam,
+			wantResult: configs.nullWant,
+		},
+		{
+			name:      "Invoke my-tool without parameters",
+			toolName:  "my-tool",
+			args:      map[string]any{},
+			enabled:   true,
+			wantError: `parameter "id" is required`,
+		},
+		{
+			name:      "Invoke my-tool with insufficient parameters",
+			toolName:  "my-tool",
+			args:      map[string]any{"id": 1},
+			enabled:   true,
+			wantError: `parameter "name" is required`,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				t.Skip("skipping disabled test case")
+			}
+			statusCode, mcpResp, err := InvokeMCPTool(t, tc.toolName, tc.args, tc.headers)
+			if err != nil {
+				t.Fatalf("native error executing %s: %s", tc.toolName, err)
+			}
+			if statusCode != http.StatusOK {
+				t.Fatalf("expected status 200, got %d", statusCode)
+			}
+			if tc.wantError != "" {
+				AssertMCPError(t, mcpResp, tc.wantError)
+				return
+			}
+			if mcpResp.Result.IsError {
+				t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
+			}
+			if len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("%s returned empty content field", tc.toolName)
+			}
+			got := mcpResp.Result.Content[0].Text
+			if !strings.Contains(got, tc.wantResult) {
+				t.Fatalf(`expected %q to contain %q`, got, tc.wantResult)
+			}
+		})
+	}
+}
