@@ -151,19 +151,19 @@ func TestFailParseFromYamlGemini(t *testing.T) {
 
 			_, embeddingConfigs, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
-					if err.Error() != tc.err {
-							t.Fatalf("unexpected unmarshal error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
-					}
-					return 
+				if err.Error() != tc.err {
+					t.Fatalf("unexpected unmarshal error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
+				}
+				return
 			}
 
 			for _, cfg := range embeddingConfigs {
 				_, err = cfg.Initialize()
 				if err == nil {
-						t.Fatalf("expect initialization to fail for case: %s", tc.desc)
+					t.Fatalf("expect initialization to fail for case: %s", tc.desc)
 				}
 				if !strings.Contains(err.Error(), tc.err) {
-						t.Fatalf("unexpected init error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
+					t.Fatalf("unexpected init error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
 				}
 			}
 		})
