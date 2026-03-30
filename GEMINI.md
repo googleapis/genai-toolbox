@@ -6,6 +6,7 @@ This file (symlinked as `CLAUDE.md`, `AGENTS.md`, and `.gemini/styleguide.md`) p
 
 **MCP Toolbox for Databases** is a Go-based project designed to provide Model Context Protocol (MCP) tools for various data sources and services. It allows Large Language Models (LLMs) to interact with databases and other tools safely and efficiently.
 
+
 ## Tech Stack
 
 -   **Language:** Go (1.23+)
@@ -50,6 +51,7 @@ This file (symlinked as `CLAUDE.md`, `AGENTS.md`, and `.gemini/styleguide.md`) p
     -   Add new sources to `.ci/integration.cloudbuild.yaml`
 -   **Linting:** `golangci-lint run --fix`
 
+
 ## Developing Documentation
 
 ### Prerequisites
@@ -74,6 +76,75 @@ There are 6 workflows in total, handling parallel deployments to both GitHub Pag
 1.  **Deploy In-development docs**: Commits merged to `main` deploy to the `/dev/` path. Automatically defaults to version `Dev`.
 2.  **Deploy Versioned Docs**: New GitHub releases deploy to `/<version>/` and the root path. The release tag is automatically injected into the build as the documentation version. *(Note: Developers must manually add the new version to the `[[params.versions]]` dropdown array in `hugo.toml` prior to merging a release PR).*
 3.  **Deploy Previous Version Docs**: A manual workflow to rebuild older versions by explicitly passing the target tag via the GitHub Actions UI.
+
+## Coding Conventions
+
+### Tool Naming
+
+-   **Tool Name:** `snake_case` (e.g., `list_collections`, `run_query`).
+    -   Do *not* include the product name (e.g., avoid `firestore_list_collections`).
+-   **Tool Type:** `kebab-case` (e.g., `firestore-list-collections`).
+    -   *Must* include the product name.
+
+### Branching and Commits
+
+-   **Branch Naming:** `feat/`, `fix/`, `docs/`, `chore/` (e.g., `feat/add-gemini-md`).
+-   **Commit Messages:** [Conventional Commits](https://www.conventionalcommits.org/) format.
+    -   Format: `<type>(<scope>): <description>`
+    -   Example: `feat(source/postgres): add new connection option`
+    -   Types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `revert`, `style`
+
+ ### PR Title Format
+
+Format: `<type>[optional scope]: <description>`
+
+- **Example:** `feat(source/postgres): add support for "new-field" field`
+- **Example (Breaking Change):** `fix(tool/sql)!: change default parameter value`
+
+#### Types
+
+| Type | Description | Version change affected |
+| :--- | :--- | :--- |
+| **BREAKING CHANGE** | Anything with this type or a `!` after the type/scope introduces a breaking API change. E.g. `fix!: description` or `feat!: description`. | major |
+| **feat** | Adding a new feature to the codebase. | minor |
+| **fix** | Fixing a bug or typo in the codebase. | patch |
+| **ci** | Changes made to the continuous integration configuration files or scripts (usually the yml and other configuration files). | n/a |
+| **docs** | Documentations-related PRs, including fixes on docs. | n/a |
+| **chore** | Other small tasks or updates that don't fall into any of the types above. | n/a |
+| **perf** | changed src code, with improvement of performance metrics. | n/a |
+| **refactor** | Change src code but unlike feat, there are no tests broken and no lines lost coverage. | n/a |
+| **revert** | Revert changes made in another commit. | n/a |
+| **style** | updated src code, with only formatting and whitespace updates. In other words, this includes anything a code formatter or linter changes. | n/a |
+| **test** | Changes made to test files. | n/a |
+| **build** | Changes related to build of the projects and dependency. | n/a |
+
+#### Scopes
+
+PRs addressing a specific source or tool should **always** add the source or tool name as scope.
+
+The scope is formatted as `<type>/<kind>`. Common scopes include:
+- `source/postgres`, `source/cloudsql-mysql`
+- `tool/mssql-sql`, `tool/list-tables`
+- `auth/google`
+
+**Multiple Scopes:**
+- If the PR covers multiple scopes of the same kind, separate them with a comma: `feat(source/postgres,source/alloydbpg): ...`.
+- If the PR covers multiple scope types (e.g., adding a new database source and tool), disregard the scope type prefix: `feat(new-db): adding support for new-db source and tool`.
+
+#### PR Description
+
+Every PR must include a description that follows the repository's template:
+
+**1. Description**
+A concise description of the changes (bug or feature), its impact, and a summary of the solution.
+
+**2. PR Checklist**
+- [ ] Make sure to open an issue as a bug/issue before writing your code!
+- [ ] Ensure the tests and linter pass
+- [ ] Code coverage does not decrease (if any source code was changed)
+- [ ] Appropriate docs were updated (if necessary)
+- [ ] Make sure to add `!` if this involves a breaking change
+
 
 ## Adding New Features
 
@@ -167,58 +238,6 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 ##### Asset Constraints (`docs/`)
 
 1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.
-
-## PR Title Format
-
-Format: `<type>[optional scope]: <description>`
-
-- **Example:** `feat(source/postgres): add support for "new-field" field`
-- **Example (Breaking Change):** `fix(tool/sql)!: change default parameter value`
-
-### Types
-
-| Type | Description | Version change affected |
-| :--- | :--- | :--- |
-| **BREAKING CHANGE** | Anything with this type or a `!` after the type/scope introduces a breaking API change. E.g. `fix!: description` or `feat!: description`. | major |
-| **feat** | Adding a new feature to the codebase. | minor |
-| **fix** | Fixing a bug or typo in the codebase. | patch |
-| **ci** | Changes made to the continuous integration configuration files or scripts (usually the yml and other configuration files). | n/a |
-| **docs** | Documentations-related PRs, including fixes on docs. | n/a |
-| **chore** | Other small tasks or updates that don't fall into any of the types above. | n/a |
-| **perf** | changed src code, with improvement of performance metrics. | n/a |
-| **refactor** | Change src code but unlike feat, there are no tests broken and no lines lost coverage. | n/a |
-| **revert** | Revert changes made in another commit. | n/a |
-| **style** | updated src code, with only formatting and whitespace updates. In other words, this includes anything a code formatter or linter changes. | n/a |
-| **test** | Changes made to test files. | n/a |
-| **build** | Changes related to build of the projects and dependency. | n/a |
-
-### Scopes
-
-PRs addressing a specific source or tool should **always** add the source or tool name as scope.
-
-The scope is formatted as `<type>/<kind>`. Common scopes include:
-- `source/postgres`, `source/cloudsql-mysql`
-- `tool/mssql-sql`, `tool/list-tables`
-- `auth/google`
-
-**Multiple Scopes:**
-- If the PR covers multiple scopes of the same kind, separate them with a comma: `feat(source/postgres,source/alloydbpg): ...`.
-- If the PR covers multiple scope types (e.g., adding a new database source and tool), disregard the scope type prefix: `feat(new-db): adding support for new-db source and tool`.
-
-### PR Description
-
-Every PR must include a description that follows the repository's template:
-
-**1. Description**
-A concise description of the changes (bug or feature), its impact, and a summary of the solution.
-
-**2. PR Checklist**
-- [ ] Make sure to open an issue as a bug/issue before writing your code!
-- [ ] Ensure the tests and linter pass
-- [ ] Code coverage does not decrease (if any source code was changed)
-- [ ] Appropriate docs were updated (if necessary)
-- [ ] Make sure to add `!` if this involves a breaking change
-
 **3. Issue Reference**
 Use the format: `Fixes #<issue_number> 🦕`
 
