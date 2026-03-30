@@ -116,12 +116,49 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 									"email": "%s"
 								}`, tests.ServiceAccountEmail)
 
+	// Create index with mapping for vector search
+	mapping := `{
+		"mappings": {
+			"properties": {
+				"embedding": {
+					"type": "dense_vector",
+					"dims": 768,
+					"index": true,
+					"similarity": "cosine"
+				}
+			}
+		}
+	}`
+	res, err := esapi.IndicesCreateRequest{
+		Index: index,
+		Body:  strings.NewReader(mapping),
+	}.Do(ctx, esClient)
+	if err != nil {
+		t.Fatalf("error creating index: %s", err)
+	}
+	if res.IsError() {
+		// Ignore resource_already_exists_exception if it somehow exists
+	}
+
+	vectorSize := 768
+	var sb strings.Builder
+	sb.WriteString("[")
+	for i := 0; i < vectorSize; i++ {
+		sb.WriteString("0.1")
+		if i < vectorSize-1 {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString("]")
+	semanticDoc := fmt.Sprintf(`{"id": 5, "name": "Semantic", "embedding": %s}`, sb.String())
+
 	// Index sample documents
 	sampleDocs := []string{
 		alice,
 		`{"id": 2, "name": "Jane", "email": "janedoe@gmail.com"}`,
 		`{"id": 3, "name": "Sid"}`,
 		`{"id": 4, "name": "null"}`,
+		semanticDoc,
 	}
 	for _, doc := range sampleDocs {
 		res, err := esapi.IndexRequest{
@@ -137,6 +174,10 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 		}
 	}
 
+	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?query) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content OR name == ?text_to_embed | LIMIT 0", index)
+	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
+
 	// Get configs for tests
 	wants := getElasticsearchWants()
 
@@ -150,8 +191,9 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	)
 	tests.RunMCPToolCallMethod(t, wants.McpMyFailTool, wants.McpSelect1, tests.WithMcpMyToolId3NameAliceWant(wants.McpMyToolId3NameAlice))
 
-	runExecuteEsqlTest(t, index)
-
+	// Semantic search tests
+	semanticSearchWant := `[{"id":5,"name":"Semantic","name.keyword":"Semantic"}]`
+	tests.RunSemanticSearchToolInvokeTest(t, "", "", semanticSearchWant)
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {

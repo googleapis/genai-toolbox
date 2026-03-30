@@ -1175,6 +1175,7 @@ steps:
         "ELASTICSEARCH_USER",
         "ELASTICSEARCH_PASS",
         "ELASTICSEARCH_HOST",
+        "API_KEY",
       ]
     volumes:
       - name: "go"
@@ -1189,7 +1190,9 @@ steps:
           .ci/test_with_coverage.sh \
             "Elasticsearch" \
             elasticsearch \
-            elasticsearch
+            elasticsearch \
+            "" \
+            "API_KEY"
         else
           echo "No relevant changes for Elasticsearch. Skipping shard."
           exit 0
