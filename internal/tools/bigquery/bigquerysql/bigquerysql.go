@@ -177,8 +177,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			// Build the array values.
 			arrayValues := make([]*bigqueryrestapi.QueryParameterValue, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
+				val := rv.Index(i).Interface()
+
+				// Use %f for floats to prevent scientific notation issues in BigQuery,
+				// but use %v for everything else (ints, bools, etc.)
+				format := "%v"
+				switch val.(type) {
+				case float32, float64:
+					format = "%f"
+				}
+
 				arrayValues[i] = &bigqueryrestapi.QueryParameterValue{
-					Value: fmt.Sprintf("%f", rv.Index(i).Interface()),
+					Value: fmt.Sprintf(format, val),
 				}
 			}
 			lowLevelParam.ParameterValue.ArrayValues = arrayValues
