@@ -557,7 +557,7 @@ The documentation uses a dynamic versioning system that outputs standard HTML si
 
 **Search Indexing:** All deployment workflows automatically execute `npx pagefind --site public` to generate a version-scoped search index specific to that deployment's base URL.
 
-There are 6 GHA workflows we use to achieve document versioning (each deployment scenario has one workflow for GitHub Pages and one for Cloudflare Pages):
+There are 3 GHA workflows we use to achieve document versioning:
 
 1.  **Deploy In-development docs:**
     This workflow is run on every commit merged into the main branch. It deploys
@@ -567,7 +567,7 @@ There are 6 GHA workflows we use to achieve document versioning (each deployment
 1. **Deploy Versioned Docs:**
     When a new GitHub Release is published, it performs two deployments based on
     the new release tag. One to the new version subdirectory and one to the root
-    directory of the versioned-gh-pages branch.
+    directory of the cloudflare-pages branch.
 
     **Note:** Before the release PR from release-please is merged, add the
     newest version into the hugo.toml file.
@@ -578,7 +578,7 @@ There are 6 GHA workflows we use to achieve document versioning (each deployment
     were released before this new system was in place. This workflow can be
     started on the UI by providing the git version tag which you want to create
     the documentation for. The specific versioned subdirectory and the root docs
-    are updated on the versioned-gh-pages branch.
+    are updated on the cloudflare-pages branch.
 
 #### Contributors
 
