@@ -108,6 +108,7 @@ type Tool struct {
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
+
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
@@ -153,28 +154,31 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			Value: value,
 		})
 
-		// 2. Create the low-level parameter for the dry run, using the defined type from `p`.
+		// 2. Create the low-level parameter for the dry run.
 		lowLevelParam := &bigqueryrestapi.QueryParameter{
 			Name:           paramNameForHighLevel,
 			ParameterType:  &bigqueryrestapi.QueryParameterType{},
 			ParameterValue: &bigqueryrestapi.QueryParameterValue{},
 		}
 
-		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
-			// Handle array types based on their defined item type.
+		rv := reflect.ValueOf(value)
+		if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() != reflect.Uint8 {
 			lowLevelParam.ParameterType.Type = "ARRAY"
-			itemType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType())
-			if err != nil {
-				return nil, util.NewAgentError("unable to get BigQuery type from tool parameter type", err)
+			
+			// Default item type to FLOAT64 for embeddings, or use config if available.
+			itemType := "FLOAT64"
+			if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
+				if bqType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType()); err == nil {
+					itemType = bqType
+				}
 			}
 			lowLevelParam.ParameterType.ArrayType = &bigqueryrestapi.QueryParameterType{Type: itemType}
 
 			// Build the array values.
-			sliceVal := reflect.ValueOf(value)
-			arrayValues := make([]*bigqueryrestapi.QueryParameterValue, sliceVal.Len())
-			for i := 0; i < sliceVal.Len(); i++ {
+			arrayValues := make([]*bigqueryrestapi.QueryParameterValue, rv.Len())
+			for i := 0; i < rv.Len(); i++ {
 				arrayValues[i] = &bigqueryrestapi.QueryParameterValue{
-					Value: fmt.Sprintf("%v", sliceVal.Index(i).Interface()),
+					Value: fmt.Sprintf("%f", rv.Index(i).Interface()),
 				}
 			}
 			lowLevelParam.ParameterValue.ArrayValues = arrayValues
