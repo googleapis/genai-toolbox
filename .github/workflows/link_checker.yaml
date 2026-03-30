@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-name: test-link-check
+name: Link Checker
 
 on:
   pull_request:
@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 jobs:
-  test-link-check:
+  link-check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
