@@ -230,7 +230,7 @@ tools:
         default: "detailed"
 
 toolsets:
-  spanner_postgres_database_tools:
+  data:
     - execute_sql
     - execute_sql_dql
     - list_tables

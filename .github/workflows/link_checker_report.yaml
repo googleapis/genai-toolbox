@@ -60,7 +60,9 @@ jobs:
         with:
           title: Link Checker Report
           content-filepath: full-report.md
-          labels: report, automated issue, link checker
+          labels: |
+            priority: p2
+            type: process
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed

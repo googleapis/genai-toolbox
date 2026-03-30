@@ -37,7 +37,7 @@ func TestParseFromYamlMySQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mysql-sql
             source: my-mysql-instance
@@ -101,7 +101,7 @@ func TestParseFromYamlWithTemplateParamsMySQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mysql-sql
             source: my-mysql-instance

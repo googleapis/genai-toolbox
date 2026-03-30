@@ -17,6 +17,8 @@ package http
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -28,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MicahParks/jwkset"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -307,9 +311,40 @@ func TestHttpToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
+	// Set up generic auth mock server
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to create RSA private key: %v", err)
+	}
+	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"issuer":   "https://example.com",
+				"jwks_uri": "http://" + r.Host + "/jwks",
+			})
+			return
+		}
+		if r.URL.Path == "/jwks" {
+			options := jwkset.JWKOptions{
+				Metadata: jwkset.JWKMetadataOptions{
+					KID: "test-key-id",
+				},
+			}
+			jwk, _ := jwkset.NewJWKFromKey(privateKey.Public(), options)
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"keys": []jwkset.JWKMarshal{jwk.Marshal()},
+			})
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer jwksServer.Close()
+
 	var args []string
 
-	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolType)
+	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolType, jwksServer.URL)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -329,6 +364,70 @@ func TestHttpToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
+	runGenericAuthInvokeTest(t, privateKey)
+}
+
+func runGenericAuthInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {
+	// Generate valid token
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"aud":   "test-audience",
+		"scope": "read:files",
+		"sub":   "test-user",
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
+	token.Header["kid"] = "test-key-id"
+	signedString, err := token.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("failed to sign token: %v", err)
+	}
+
+	api := "http://127.0.0.1:5000/api/tool/my-auth-required-generic-tool/invoke"
+
+	// Test without auth header (should fail)
+	t.Run("invoke generic auth tool without token", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)))
+		req.Header.Add("Content-type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("unable to send request: %s", err)
+		}
+		defer resp.Body.Close()
+
+		var body map[string]interface{}
+		_ = json.NewDecoder(resp.Body).Decode(&body)
+		errorStr, _ := body["error"].(string)
+		statusStr, _ := body["status"].(string)
+		if !strings.Contains(strings.ToLower(errorStr), "not authorized") && !strings.Contains(strings.ToLower(statusStr), "unauthorized") {
+			bodyBytes, _ := json.Marshal(body)
+			t.Fatalf("expected unauthorized error, got: %s", string(bodyBytes))
+		}
+	})
+
+	// Test with valid token
+	t.Run("invoke generic auth tool with valid token", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)))
+		req.Header.Add("Content-type", "application/json")
+		req.Header.Add("my-generic-auth_token", signedString)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("unable to send request: %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected status 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		var body map[string]interface{}
+		_ = json.NewDecoder(resp.Body).Decode(&body)
+		got, ok := body["result"].(string)
+		if !ok || got != `"hello world"` {
+			bodyBytes, _ := json.Marshal(body)
+			t.Fatalf("unexpected result: %s", string(bodyBytes))
+		}
+	})
 }
 
 // runQueryParamInvokeTest runs the tool invoke endpoint for the query param test tool
@@ -431,7 +530,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
 			},
-			want:       "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
+			want:       "error processing request: unexpected status code: 400 (Bad Request)",
 			isAgentErr: true,
 		},
 	}
@@ -500,7 +599,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 }
 
 // getHTTPToolsConfig returns a mock HTTP tool's config file
-func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string]any {
+func getHTTPToolsConfig(sourceConfig map[string]any, toolType string, jwksURL string) map[string]any {
 	// Write config into a file and pass it to command
 	otherSourceConfig := make(map[string]any)
 	for k, v := range sourceConfig {
@@ -508,6 +607,11 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 	}
 	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
 	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
+
+	clientID := tests.ClientId
+	if clientID == "" {
+		clientID = "test-client-id"
+	}
 
 	toolsFile := map[string]any{
 		"sources": map[string]any{
@@ -517,7 +621,13 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
 				"type":     "google",
-				"clientId": tests.ClientId,
+				"clientId": clientID,
+			},
+			"my-generic-auth": map[string]any{
+				"type":                "generic",
+				"audience":            "test-audience",
+				"authorizationServer": jwksURL,
+				"scopesRequired":      []string{"read:files"},
 			},
 		},
 		"tools": map[string]any{
@@ -597,6 +707,15 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"description":  "some description",
 				"requestBody":  "{}",
 				"authRequired": []string{"my-google-auth"},
+			},
+			"my-auth-required-generic-tool": map[string]any{
+				"type":         toolType,
+				"source":       "my-instance",
+				"method":       "POST",
+				"path":         "/tool0",
+				"description":  "some description",
+				"requestBody":  "{}",
+				"authRequired": []string{"my-generic-auth"},
 			},
 			"my-advanced-tool": map[string]any{
 				"type":        toolType,

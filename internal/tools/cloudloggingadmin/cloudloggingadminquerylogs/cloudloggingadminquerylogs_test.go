@@ -33,7 +33,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-logging-admin-query-logs
 			source: my-logging-admin-source
@@ -78,7 +78,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "Invalid type",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: invalid-type
 			source: my-instance
@@ -89,7 +89,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing source",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-logging-admin-query-logs
 			description: some description
@@ -99,7 +99,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing description",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: cloud-logging-admin-query-logs
 			source: my-instance

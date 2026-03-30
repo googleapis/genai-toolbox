@@ -35,21 +35,43 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   github_repo = "https://github.com/googleapis/genai-toolbox"
   github_project_repo = "https://github.com/googleapis/genai-toolbox"
   github_subdir = "docs"
-  offlineSearch = true
+  offlineSearch = false
   version_menu = "Releases"
+  releases_url = "/genai-toolbox/releases.releases"
+  global_logo_url = "/genai-toolbox/"
+  version = "dev"
+  pagefind = true
   [params.ui]
     ul_show = 100
     showLightDarkModeMenu = true
-    breadcrumb_disable = true
+    breadcrumb_disable = false
     sidebar_menu_foldable = true
     sidebar_menu_compact = false
+  [params.ui.feedback]
+    enable = true
+    yes = 'Glad to hear it! Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
+    no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
+  [params.ui.readingtime]
+      enable = true
 
 [[params.versions]]
-  version = "Dev"
+  version = "dev"
   url = "https://googleapis.github.io/genai-toolbox/dev/"
 
 # Add a new version block here before every release
 # The order of versions in this file is mirrored into the dropdown
+
+[[params.versions]]
+  version = "v0.31.0"
+  url = "https://googleapis.github.io/genai-toolbox/v0.31.0/"
+
+[[params.versions]]
+  version = "v0.30.0"
+  url = "https://googleapis.github.io/genai-toolbox/v0.30.0/"
+
+[[params.versions]]
+  version = "v0.29.0"
+  url = "https://googleapis.github.io/genai-toolbox/v0.29.0/"
 
 [[params.versions]]
   version = "v0.28.0"
@@ -170,3 +192,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 
 [outputs]
   home = ["HTML", "RSS", "LLMS", "LLMS-FULL", "releases"]
+
+# Google Analytics ID
+[services]
+  [services.googleAnalytics]
+    id = "G-GLSV9KD8BF"

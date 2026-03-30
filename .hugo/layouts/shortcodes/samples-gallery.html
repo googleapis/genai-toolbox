@@ -1,0 +1,274 @@
+{{- /* Fetch and sort samples */ -}}
+{{- $samples := (where .Site.Pages "Params.is_sample" true).ByTitle -}}
+
+{{- /* Extract unique filters */ -}}
+{{- $allFilters := slice -}}
+{{- range $samples -}}
+  {{- if .Params.sample_filters -}}
+    {{- range .Params.sample_filters -}}
+      {{- $allFilters = $allFilters | append . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $uniqueFilters := $allFilters | uniq | sort -}}
+
+{{- /* Render UI */ -}}
+<div class="samples-wrapper">
+
+  <!-- Search -->
+  <div class="samples-search-wrapper">
+    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <input type="text" id="sampleSearchInput" placeholder="Search tutorials, integrations, or keywords...">
+  </div>
+
+  <!-- Filters -->
+  <div class="samples-sample-filters-wrapper" id="sampleTagFilters">
+    <button class="sample-tag-btn active" data-tag="all">All</button>
+    {{- range $uniqueFilters }}
+      <button class="sample-tag-btn" data-tag="{{ . | lower }}">{{ . }}</button>
+    {{- end }}
+  </div>
+
+  <!-- Grid -->
+  <div class="samples-grid" id="samplesGrid">
+    {{- range $samples }}
+    {{- $pageFilters := default slice .Params.sample_filters }}
+    <div class="sample-card visible" 
+         data-title="{{ .Title | lower }}" 
+         data-desc="{{ .Description | default "" | plainify | lower }}" 
+         data-sample-filters="{{ delimit $pageFilters `,` | lower }}">
+
+      <div class="card-accent"></div>
+
+      <div class="card-content">
+        <h4><a href="{{ .RelPermalink }}" class="card-title-link">{{ .Title }}</a></h4>
+        <div class="card-desc">{{ .Description | default "Learn how to build this integration." | markdownify }}</div>
+      </div>
+
+      <div class="sample-card-sample-filters">
+        {{- range $pageFilters }}
+          <span class="badge">{{ . }}</span>
+        {{- end }}
+      </div>
+    </div>
+    {{- end }}
+  </div>
+
+  <!-- Empty State -->
+  <div id="samplesEmptyState" class="samples-empty-state" style="display: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="empty-icon">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+    <h3>No samples found</h3>
+    <p>Try adjusting your search or filters.</p>
+  </div>
+</div>
+
+<style>
+  /* Scoped Variables */
+  .samples-wrapper {
+    --sh-primary: #4484f4; 
+    --sh-primary-hover: #3367d6;
+    --sh-bg: #ffffff;
+    --sh-card-bg: #ffffff;
+    --sh-border: rgba(0, 0, 0, 0.08);
+    --sh-border-hover: rgba(68, 132, 244, 0.3);
+    --sh-text-main: #202124;
+    --sh-text-muted: #5f6368;
+    --sh-tag-bg: #f1f3f4;
+    --sh-tag-text: #3c4043;
+    --sh-shadow-sm: 0 2px 6px rgba(0,0,0,0.04);
+    --sh-shadow-lg: 0 12px 24px rgba(0,0,0,0.08);
+
+    margin-top: 2rem; 
+    margin-bottom: 5rem;
+    font-family: inherit; 
+  }
+
+  /* Dark Mode */
+  html[data-bs-theme="dark"] .samples-wrapper, 
+  body.dark .samples-wrapper {
+    --sh-bg: #121212;
+    --sh-card-bg: #1e1e1e;
+    --sh-border: rgba(255, 255, 255, 0.1);
+    --sh-border-hover: rgba(138, 180, 248, 0.5);
+    --sh-text-main: #e8eaed;
+    --sh-text-muted: #9aa0a6;
+    --sh-tag-bg: rgba(255, 255, 255, 0.05);
+    --sh-tag-text: #e8eaed;
+    --sh-primary: #8ab4f8; 
+    --sh-shadow-sm: 0 4px 12px rgba(0,0,0,0.2);
+    --sh-shadow-lg: 0 12px 30px rgba(0,0,0,0.4);
+  }
+
+  /* Search */
+  .samples-search-wrapper { position: relative; margin: 0 auto 2rem auto; max-width: 600px; }
+  
+  .search-icon {
+    position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; color: var(--sh-text-muted); transition: color 0.3s ease;
+  }
+
+  .samples-search-wrapper input {
+    width: 100%; padding: 1rem 1rem 1rem 3.25rem; border: 1px solid var(--sh-border);
+    border-radius: 16px; font-size: 1.05rem; background: var(--sh-card-bg);
+    color: var(--sh-text-main); box-shadow: var(--sh-shadow-sm);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); outline: none;
+  }
+
+  .samples-search-wrapper input:focus { border-color: var(--sh-primary); box-shadow: 0 0 0 4px rgba(68, 132, 244, 0.15); }
+
+  .samples-search-wrapper input:focus + .search-icon,
+  .samples-search-wrapper input:not(:placeholder-shown) ~ .search-icon {
+    color: var(--sh-primary);
+  }
+
+  /* Filters */
+  .samples-sample-filters-wrapper { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2.5rem; }
+
+  .sample-tag-btn {
+    padding: 0.5rem 1.2rem; border: 1px solid var(--sh-border); background: var(--sh-card-bg);
+    color: var(--sh-text-muted); border-radius: 30px; cursor: pointer; font-size: 0.9rem;
+    font-weight: 500; transition: all 0.25s ease; box-shadow: var(--sh-shadow-sm);
+  }
+
+  .sample-tag-btn:hover { border-color: var(--sh-primary); color: var(--sh-primary); transform: translateY(-1px); }
+
+  .sample-tag-btn.active {
+    background: var(--sh-primary); border-color: var(--sh-primary); color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(68, 132, 244, 0.3);
+  }
+
+  /* Grid */
+  .samples-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.75rem; }
+
+  .sample-card {
+    position: absolute;
+    display: flex; flex-direction: column; background: var(--sh-card-bg);
+    border: 1px solid var(--sh-border); border-radius: 16px; padding: 1.75rem;
+    overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: var(--sh-shadow-sm); opacity: 0; transform: scale(0.95);
+    pointer-events: none; visibility: hidden;
+  }
+
+  /* Visibility Toggle */
+  .sample-card.visible { opacity: 1; transform: scale(1); pointer-events: auto; position: relative; visibility: visible; }
+  .sample-card:hover { transform: translateY(-6px); box-shadow: var(--sh-shadow-lg); border-color: var(--sh-border-hover); }
+
+  /* Card Accent */
+  .card-accent {
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, #4484f4, #80a7e9); opacity: 0.7; transition: opacity 0.3s ease;
+  }
+  .sample-card:hover .card-accent { opacity: 1; }
+
+  /* Card Content */
+  .card-content { flex-grow: 1; display: flex; flex-direction: column; }
+  .sample-card h4 { margin-top: 0.5rem; margin-bottom: 0.75rem; font-size: 1.25rem; font-weight: 600; line-height: 1.4; color: var(--sh-text-main); }
+
+  /* Card Click Overlay */
+  .card-title-link { text-decoration: none; color: inherit; }
+  .card-title-link::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+
+  .card-desc { font-size: 0.95rem; color: var(--sh-text-muted); margin-bottom: 1.5rem; line-height: 1.6; position: relative; z-index: 2; }
+  .card-desc a { color: var(--sh-primary); text-decoration: none; font-weight: 500; }
+  .card-desc a:hover { text-decoration: underline; }
+  .card-desc p { margin-bottom: 0; }
+
+  /* Card Tags */
+  .sample-card-sample-filters { display: flex; flex-wrap: wrap; gap: 0.5rem; position: relative; z-index: 2; margin-top: auto; }
+
+  .sample-card-sample-filters .badge {
+    background: var(--sh-tag-bg); color: var(--sh-tag-text); padding: 0.35rem 0.75rem;
+    border-radius: 6px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.3px;
+    border: 1px solid var(--sh-border);
+  }
+
+  /* Empty State */
+  .samples-empty-state { text-align: center; padding: 4rem 1rem; color: var(--sh-text-muted); animation: fadeIn 0.4s ease forwards; }
+  .empty-icon { color: var(--sh-border); margin-bottom: 1rem; width: 64px; height: 64px; }
+  .samples-empty-state h3 { color: var(--sh-text-main); margin-bottom: 0.5rem; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById('sampleSearchInput');
+  const tagButtons = document.querySelectorAll('.sample-tag-btn');
+  const cards = document.querySelectorAll('.sample-card');
+  const emptyState = document.getElementById('samplesEmptyState');
+  const btnAll = document.querySelector('.sample-tag-btn[data-tag="all"]');
+
+  const activeTags = new Set();
+
+  const filterSamples = () => {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const title = card.getAttribute('data-title') || "";
+      const desc = card.getAttribute('data-desc') || "";
+      const sampleFilters = card.getAttribute('data-sample-filters') || "";
+      const cardTagsArray = sampleFilters ? sampleFilters.split(',') : [];
+
+      const matchesSearch = title.includes(query) || desc.includes(query) || sampleFilters.includes(query);
+
+      // Match all selected tags (AND logic)
+      const matchesTag = activeTags.size === 0 || Array.from(activeTags).every(tag => cardTagsArray.includes(tag));
+
+      if (matchesSearch && matchesTag) {
+        card.classList.add('visible');
+        visibleCount++;
+      } else {
+        card.classList.remove('visible');
+      }
+    });
+
+    emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+  };
+
+  // Bind search
+  if (searchInput) {
+    searchInput.addEventListener('input', filterSamples);
+  }
+
+  // Bind tag toggles
+  tagButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const selectedTag = e.currentTarget.getAttribute('data-tag');
+
+      if (selectedTag === 'all') {
+        // Reset filters
+        activeTags.clear();
+        tagButtons.forEach(b => b.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+      } else {
+        // Toggle individual tag
+        if (activeTags.has(selectedTag)) {
+          activeTags.delete(selectedTag);
+          e.currentTarget.classList.remove('active');
+        } else {
+          activeTags.add(selectedTag);
+          e.currentTarget.classList.add('active');
+        }
+
+        // Update 'All' button state
+        if (btnAll) {
+          if (activeTags.size === 0) {
+            btnAll.classList.add('active');
+          } else {
+            btnAll.classList.remove('active');
+          }
+        }
+      }
+
+      filterSamples();
+    });
+  });
+});
+</script>

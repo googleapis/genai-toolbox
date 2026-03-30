@@ -21,6 +21,7 @@ https://cloud-run-url.app/
 https://xxx.cloud.dgraph.io/
 https://cloud.dgraph.io/login
 https://dgraph.io/docs
+https://play.dgraph.io/
 
 # MySQL Community downloads and main site (often protected by bot mitigation)
 ^https?://(.*\.)?mysql\.com/.*
@@ -29,7 +30,8 @@ https://dgraph.io/docs
 https://claude.ai/download
 
 # Google Cloud Run product page
-https://cloud.google.com/run
+https://cloud.google.com/run/*
+https://console.cloud.google.com/*
 
 # These specific deep links are known to cause redirect loops or 403s in automated scrapers
 https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html

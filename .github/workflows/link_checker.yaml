@@ -17,8 +17,6 @@ on:
   pull_request:
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
 
 jobs:
   link-check:
@@ -27,6 +25,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Identify Changed Files
@@ -55,7 +54,7 @@ jobs:
 
       - name: Restore lychee cache
         if: steps.changed-files.outputs.HAS_CHANGES == 'true'
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: .lycheecache
           key: cache-lychee-${{ github.sha }}
@@ -73,6 +72,7 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
+            --max-retries 10
             ${{ steps.changed-files.outputs.CHECK_FILES }}
           output: lychee-report.md
           format: markdown
@@ -81,25 +81,6 @@ jobs:
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Find comment
-        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4
-        id: find-comment
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: "## Link Resolution Note"
-
-      - name: Delete comment on success
-        if: steps.lychee-check.outcome == 'success' && steps.find-comment.outputs.comment-id != ''
-        run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/issues/comments/${STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STEPS_FIND_COMMENT_OUTPUTS_COMMENT_ID: ${{ steps.find-comment.outputs.comment-id }}
 
       - name: Prepare Report 
         if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
@@ -110,14 +91,6 @@ jobs:
           echo "" >> full-report.md 
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 
-      - name: Create PR Comment
-        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5
-        with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-path: full-report.md
-          edit-mode: replace
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
@@ -128,3 +101,4 @@ jobs:
           
           # Fail the job
           exit 1
+          

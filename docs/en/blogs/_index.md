@@ -1,6 +1,8 @@
 ---
 title: "Featured Articles"
-weight: 3
+icon: "fab fa-medium"
+type: docs
+weight: 1
 description: Toolbox Medium Blogs
 manualLink: "https://medium.com/@mcp_toolbox"
 manualLinkTarget: _blank

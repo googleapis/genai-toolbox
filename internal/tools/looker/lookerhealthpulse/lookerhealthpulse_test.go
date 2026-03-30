@@ -37,7 +37,7 @@ func TestParseFromYamlLookerHealthPulse(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-health-pulse
 			source: my-instance
@@ -80,7 +80,7 @@ func TestFailParseFromYamlLookerHealthPulse(t *testing.T) {
 		{
 			desc: "Invalid field",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-health-pulse
 			source: my-instance

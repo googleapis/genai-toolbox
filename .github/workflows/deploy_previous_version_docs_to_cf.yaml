@@ -1,0 +1,137 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "CF: Deploy Previous Version Docs"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'The old version tag to build docs for (e.g., v0.15.0)'
+        required: true
+        type: string
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Tag (Code + Content)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.inputs.version_tag }}
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Apply Backports and Fixes
+        run: |
+          # 1. Fetch main to get the compressed GIF
+          git fetch origin main
+          
+          git show origin/main:docs/en/documentation/configuration/toolbox-ui/edit-headers.gif > docs/en/how-to/toolbox-ui/edit-headers.gif
+          
+          sed -i 's|/genai-toolbox/|/|g' .hugo/layouts/partials/navbar-version-selector.html
+
+          sed -i 's|https://googleapis.github.io/genai-toolbox|https://mcp-toolbox.dev|g' .hugo/hugo.toml
+
+          git show origin/main:.hugo/hugo.cloudflare.toml > modern_config.toml
+          
+          # Graft the future version list into the old config using Node.js!
+          node -e "
+          const fs = require('fs');
+          const modern = fs.readFileSync('modern_config.toml', 'utf8');
+          let old = fs.readFileSync('.hugo/hugo.toml', 'utf8');
+          
+          // Convert any old GitHub URLs to Cloudflare in the rest of the config
+          old = old.replace(/https:\/\/googleapis\.github\.io\/genai-toolbox/g, 'https://mcp-toolbox.dev');
+          
+          // Erase the outdated version list from the old config
+          old = old.replace(/\[\[params\.versions\]\][\s\S]*?(?=\n\[\[|\n\[|$)/g, '');
+          
+          // Extract the fully updated version list from the modern config
+          const modernVersions = modern.match(/\[\[params\.versions\]\][\s\S]*?(?=\n\[\[|\n\[|$)/g);
+          
+          // Inject the modern versions into the old config
+          if (modernVersions) {
+            fs.writeFileSync('.hugo/hugo.toml', old + '\n\n' + modernVersions.join('\n'));
+          } else {
+            fs.writeFileSync('.hugo/hugo.toml', old);
+          }
+          "
+
+
+      - name: Setup Hugo and Node
+        uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
+        with:
+          hugo-version: "0.145.0"
+          extended: true
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: .hugo
+
+      - name: Build Hugo Site for Archived Version
+        run: |
+          hugo --minify 
+          rm -f public/releases.releases
+        working-directory: .hugo
+        env:
+          HUGO_BASEURL: https://mcp-toolbox.dev/${{ github.event.inputs.version_tag }}/
+          HUGO_RELATIVEURLS: false
+          HUGO_PARAMS_VERSION: ${{ github.event.inputs.version_tag }}
+
+      - name: Build Pagefind Index (Archived Version)
+        run: npx pagefind --site public
+        working-directory: .hugo
+
+      - name: Deploy to cloudflare-pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .hugo/public
+          publish_branch: cloudflare-pages
+          destination_dir: ./${{ github.event.inputs.version_tag }}
+          keep_files: true
+          allow_empty_commit: true
+          commit_message: "docs(backport): deploy docs for ${{ github.event.inputs.version_tag }}"
+
+      - name: Clean Build Directory
+        run: rm -rf .hugo/public
+
+      - name: Build Hugo Site
+        run: hugo --minify 
+        working-directory: .hugo
+        env:
+          HUGO_BASEURL: https://mcp-toolbox.dev/
+          HUGO_RELATIVEURLS: false
+          HUGO_PARAMS_VERSION: ${{ github.event.inputs.version_tag }}
+
+      - name: Build Pagefind Index (Root)
+        run: npx pagefind --site public
+        working-directory: .hugo
+
+      - name: Deploy to root
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .hugo/public
+          publish_branch: cloudflare-pages
+          keep_files: true
+          allow_empty_commit: true
+          commit_message: "deploy: docs to root for ${{ github.event.inputs.version_tag }}"

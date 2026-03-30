@@ -1,0 +1,164 @@
+/* ==========================================================================
+   SIDEBARS (LEFT NAVIGATION & RIGHT TOC)
+   Handles positioning, tree navigation, and page metadata.
+   ========================================================================== */
+
+/* =================================================================
+   LAYOUT & SCROLLING
+   ================================================================= */
+@media (min-width: 768px) {
+  .td-sidebar, .td-sidebar-toc {
+    position: sticky !important;
+    top: calc(4rem + 52px) !important; 
+    height: calc(100vh - 4rem - 52px) !important;
+    overflow-y: auto !important; 
+    padding-bottom: 2rem !important;
+    scrollbar-width: none; -ms-overflow-style: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  .td-sidebar-toc .td-toc, .td-sidebar-toc .td-page-meta {
+    position: static !important; top: auto !important; 
+    height: auto !important; overflow-y: visible !important;
+  }
+}
+
+/* =================================================================
+   LEFT SIDEBAR NAVIGATION
+   ================================================================= */
+.td-sidebar__search { 
+  display: none !important; padding: 0 !important; margin: 0 !important; 
+  height: 0 !important; border: none !important; 
+}
+.td-sidebar-nav, #td-section-nav { margin-top: 1.5rem !important; padding-top: 0 !important; }
+
+#td-section-nav {
+  .ul-1 > li:not(.active-path), > .ul-0 > li > a.tree-root { display: none !important; }
+  > .ul-0 > li > ul.ul-1 { margin-top: 0 !important; padding-top: 0 !important; padding-left: 0 !important; margin-left: -1rem !important; }
+
+  .ul-1 > li.active-path {
+    > a, > label, > input { display: none !important; }
+    > ul { padding-left: 0 !important; margin-top: 0 !important; margin-left: -1rem !important; }
+    > ul > li > a, > ul > li > label > a { padding-left: 0 !important; }
+  }
+}
+
+.td-sidebar .form-control {
+  font-family: var(--bs-font-sans-serif) !important; border: 1px solid transparent; 
+  background-color: #f1f3f4; border-radius: 8px; padding: 0.5rem 1rem; 
+  transition: all 0.2s ease; font-size: 0.9rem;
+  &:focus { background-color: #ffffff; border-color: #4484f4; box-shadow: 0 0 0 3px rgba(68, 132, 244, 0.2); }
+}
+
+.td-sidebar-nav {
+  li > label, li > a {
+    font-family: var(--bs-font-sans-serif) !important; font-size: 0.95rem !important; font-weight: 400 !important;  
+    display: flex !important; align-items: center; justify-content: space-between; width: 100%;
+    padding: 0.45rem 0.75rem !important; margin-bottom: 2px; border-radius: 6px; color: #5f6368 !important;
+    transition: all 0.15s ease-in-out; cursor: pointer;
+
+    &:hover { background-color: #f1f3f4; color: #202124 !important; text-decoration: none; }
+    &.active { color: #4484f4 !important; background-color: transparent !important; font-weight: 600 !important; }
+  }
+
+  li.active-path > label, li.active-path > a:not(.active) {
+    color: #4484f4 !important; background-color: transparent !important; font-weight: 600 !important;
+  }
+
+  li > label > a { padding: 0 !important; margin: 0 !important; color: inherit !important; flex-grow: 1; }
+  .with-child > label::after { margin-left: 0.5rem; }
+}
+
+/* Left Sidebar Dark Mode */
+html[data-bs-theme="dark"], body.dark {
+  .td-sidebar-nav li > label, .td-sidebar-nav li > a { 
+    color: #9aa0a6 !important; 
+    &:hover { background-color: rgba(255, 255, 255, 0.05); color: #e8eaed !important; }
+    &.active { color: #8ab4f8 !important; }
+  }
+  .td-sidebar-nav li.active-path > label, .td-sidebar-nav li.active-path > a:not(.active) { color: #8ab4f8 !important; }
+
+  .td-sidebar .form-control {
+    background-color: #303134; color: #e8eaed;
+    &:focus { background-color: #202124; border-color: #8ab4f8; box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.2); }
+  }
+}
+
+/* =================================================================
+   INTEGRATIONS SIDEBAR LOCKS (Tools & Samples Roots Only)
+   ================================================================= */
+
+/*  LOCK ALL sections inside the integrations directory */
+a.td-sidebar-link__section[href*="/integrations/"] {
+    pointer-events: none !important;
+    cursor: default !important;
+}
+
+/*  UNLOCK the top-level "/integrations/" root folder itself so it can be toggled */
+a.td-sidebar-link__section[href$="/integrations/"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/*  UNLOCK any nested sub-folders inside tools or samples (if they exist) */
+a.td-sidebar-link__section[href*="/integrations/"][href*="/tools/"],
+a.td-sidebar-link__section[href*="/integrations/"][href*="/samples/"] {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/*  RE-LOCK exactly the "tools/" and "samples/" parent folders */
+a.td-sidebar-link__section[href*="/integrations/"][href$="/tools/"],
+a.td-sidebar-link__section[href*="/integrations/"][href$="/samples/"] {
+    pointer-events: none !important;
+    cursor: default !important;
+}
+
+/* =================================================================
+   RIGHT SIDEBAR (TABLE OF CONTENTS)
+   ================================================================= */
+.td-sidebar-toc, .td-page-meta {
+  &, a, li, span, #TableOfContents {
+    font-family: var(--bs-font-sans-serif) !important; font-weight: 400 !important; letter-spacing: -0.01em; 
+  }
+
+  a {
+    font-size: 0.95rem !important; color: #5f6368 !important; text-decoration: none !important;
+    display: flex !important; align-items: center; padding: 0.45rem 0.75rem !important; 
+    margin-bottom: 2px; border-radius: 6px; transition: all 0.15s ease-in-out;
+
+    i, svg { color: inherit !important; fill: currentColor !important; margin-right: 8px; }
+    &:hover { background-color: #f1f3f4; color: #202124 !important; }
+    &.active { color: #4484f4 !important; background-color: transparent !important; font-weight: 600 !important; }
+  }
+}
+
+.td-sidebar-toc #TableOfContents {
+  li a.active { font-weight: 600 !important; }
+  ul { padding-left: 0; list-style: none; margin: 0; }
+  ul ul { padding-left: 1rem; margin-left: 0.75rem; border-left: 1px solid rgba(0,0,0,0.05); }
+}
+
+.td-page-meta {
+  margin-bottom: 1.5rem !important; padding-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Right Sidebar Dark Mode */
+html[data-bs-theme="dark"], body.dark {
+  .td-sidebar-toc a, .td-page-meta a {
+    color: #9aa0a6 !important;
+    &:hover { background-color: rgba(255, 255, 255, 0.05); color: #e8eaed !important; }
+    &.active { color: #8ab4f8 !important; }
+  }
+  .td-page-meta { border-bottom-color: rgba(255,255,255,0.1); }
+  .td-sidebar-toc #TableOfContents ul ul { border-left-color: rgba(255,255,255,0.1); }
+}
+
+/* =================================================================
+   HIDe ELEMENTS (Tags & Meta)
+   ================================================================= */
+.td-toc, .td-page-meta {
+  .taxonomy, .td-tags, [class*="taxonomy"], h5.taxonomy-tree-header, ul.taxonomy-terms {
+    display: none !important;
+  }
+}

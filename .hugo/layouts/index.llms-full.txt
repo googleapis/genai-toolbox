@@ -1,14 +1,22 @@
-{{ .Site.Params.description }}
+{{- define "print_full_node" }}
 
-{{ range .Site.Sections }}
-# {{ .Title }}
-{{ .Description }}
-{{ range .Pages }}
-# {{ .Title }}
-{{ .Description }}
-{{ .RawContent }}
-{{ range .Pages }}
-# {{ .Title }}
-{{ .Description }}
-{{ .RawContent }}
-{{end }}{{ end }}{{ end }}
+========================================================================
+## {{ .page.Title }}
+========================================================================
+**Hierarchy:** {{ if .page.Parent }}{{ range .page.Ancestors.Reverse }}{{ .Title }} > {{ end }}{{ end }}{{ .page.Title }}
+**URL:** {{ .page.Permalink }}
+**Description:** {{ .page.Description | default "None" }}
+
+{{ .page.RawContent }}
+{{ if .page.Pages }}
+{{- range .page.Pages.ByWeight }}
+{{ template "print_full_node" (dict "page" .) }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{ partial "llms-header.html" (dict "Site" .Site "TitleSuffix" "Complete Documentation") }}
+
+{{- range .Site.Sections.ByWeight }}
+{{ template "print_full_node" (dict "page" .) }}
+{{- end }}

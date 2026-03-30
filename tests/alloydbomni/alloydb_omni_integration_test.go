@@ -162,4 +162,16 @@ func TestAlloyDBOmni(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
+
+	toolsToTest := map[string]string{
+		"list_autovacuum_configurations":    `{}`,
+		"list_memory_configurations":        `{}`,
+		"list_top_bloated_tables":           `{"limit": 10}`,
+		"list_replication_slots":            `{}`,
+		"list_invalid_indexes":              `{}`,
+		"get_query_plan":                    `{"query": "SELECT 1"}`,
+		"list_columnar_configurations":      `{}`,
+		"list_columnar_recommended_columns": `{}`,
+	}
+	tests.RunStatementToolsTest(t, toolsToTest)
 }

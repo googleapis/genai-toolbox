@@ -37,7 +37,7 @@ func TestParseFromYamlLookerRunLookmlTests(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-run-lookml-tests
             source: my-instance
@@ -82,14 +82,14 @@ func TestFailParseFromYamlLookerRunLookmlTests(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-run-lookml-tests
             source: my-instance
             method: GOT
             description: some description
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"example_tool\" as type \"looker-run-lookml-tests\": [3:1] unknown field \"method\"",
+			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-run-lookml-tests\": [3:1] unknown field \"method\"",
 		},
 	}
 	for _, tc := range tcs {

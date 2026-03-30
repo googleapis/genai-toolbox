@@ -37,7 +37,7 @@ func TestParseFromYamlFirebird(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: firebird-sql
             source: my-fdb-instance
@@ -102,7 +102,7 @@ func TestParseFromYamlWithTemplateParamsFirebird(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: firebird-sql
             source: my-fdb-instance

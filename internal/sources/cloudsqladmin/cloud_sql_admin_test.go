@@ -35,7 +35,7 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			type: cloud-sql-admin
 			`,
@@ -50,7 +50,7 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			type: cloud-sql-admin
 			useClientOAuth: true
@@ -89,21 +89,21 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			type: cloud-sql-admin
 			project: test-project
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-cloud-sql-admin-instance\" as \"cloud-sql-admin\": [2:1] unknown field \"project\"\n   1 | name: my-cloud-sql-admin-instance\n>  2 | project: test-project\n       ^\n   3 | type: cloud-sql-admin",
+			err: "error unmarshaling source: unable to parse source \"my-cloud-sql-admin-instance\" as \"cloud-sql-admin\": [2:1] unknown field \"project\"\n   1 | name: my-cloud-sql-admin-instance\n>  2 | project: test-project\n       ^\n   3 | type: cloud-sql-admin",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cloud-sql-admin-instance
 			useClientOAuth: true
 			`,
-			err: "error unmarshaling sources: missing 'type' field or it is not a string",
+			err: "error unmarshaling source: missing 'type' field or it is not a string",
 		},
 	}
 	for _, tc := range tcs {

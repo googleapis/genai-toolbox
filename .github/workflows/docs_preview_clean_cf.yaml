@@ -1,0 +1,73 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "CF: Cleanup PR Preview"
+
+permissions:
+  pull-requests: write
+
+# This Workflow depends on 'github.event.number',
+# not compatible with branch or manual triggers.
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  clean:
+    # Only run for PRs from the same repository to ensure secret access
+    if: "${{ github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name }}"
+    runs-on: ubuntu-24.04
+    concurrency:
+      # Shared concurrency group with preview staging.
+      group: "cf-preview-${{ github.event.number }}"
+      cancel-in-progress: true
+    steps:
+      - name: Delete Cloudflare Pages Deployments via API
+        env:
+          ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PROJECT_NAME: toolbox-docs
+          BRANCH_NAME: pr-${{ github.event.number }}
+        run: |
+          echo "Fetching deployments for preview branch: $BRANCH_NAME"
+
+          # Fetch the most recent deployments from your Cloudflare project
+          RESPONSE=$(curl -s -X GET "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT_NAME/deployments" \
+            -H "Authorization: Bearer $API_TOKEN")
+
+          # Use 'jq' to extract all deployment IDs that match this specific PR branch alias
+          IDS=$(echo "$RESPONSE" | jq -r --arg branch "$BRANCH_NAME" '.result[] | select(.deployment_trigger.metadata.branch? == $branch) | .id')
+
+          if [ -z "$IDS" ]; then
+            echo "No preview deployments found to clean up."
+          else
+            for id in $IDS; do
+              echo "Deleting Cloudflare deployment ID: $id"
+              curl -s -X DELETE "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/pages/projects/$PROJECT_NAME/deployments/$id?force=true" \
+                -H "Authorization: Bearer $API_TOKEN"
+            done
+            echo "Successfully removed preview environment."
+          fi
+
+      - name: Comment
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.payload.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "🧨 **Preview deployments removed.**\n\nCloudflare Pages environments for `pr-${{ github.event.number }}` have been deleted."
+            })

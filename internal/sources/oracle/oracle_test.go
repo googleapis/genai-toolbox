@@ -1,6 +1,6 @@
 // Copyright © 2025, Oracle and/or its affiliates.
 
-package oracle_test
+package oracle
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
@@ -24,7 +23,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "connection string and useOCI=true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-cs
 			type: oracle
 			connectionString: "my-host:1521/XEPDB1"
@@ -33,9 +32,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			useOCI: true
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-cs": oracle.Config{
+				"my-oracle-cs": Config{
 					Name:             "my-oracle-cs",
-					Type:             oracle.SourceType,
+					Type:             SourceType,
 					ConnectionString: "my-host:1521/XEPDB1",
 					User:             "my_user",
 					Password:         "my_pass",
@@ -46,7 +45,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "host/port/serviceName and default useOCI=false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-host
 			type: oracle
 			host: my-host
@@ -56,9 +55,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			password: my_pass
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-host": oracle.Config{
+				"my-oracle-host": Config{
 					Name:        "my-oracle-host",
-					Type:        oracle.SourceType,
+					Type:        SourceType,
 					Host:        "my-host",
 					Port:        1521,
 					ServiceName: "ORCLPDB",
@@ -71,7 +70,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 		{
 			desc: "tnsAlias and TnsAdmin specified with explicit useOCI=true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-tns-oci
 			type: oracle
 			tnsAlias: FINANCE_DB
@@ -81,9 +80,9 @@ func TestParseFromYamlOracle(t *testing.T) {
 			useOCI: true 
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-oracle-tns-oci": oracle.Config{
+				"my-oracle-tns-oci": Config{
 					Name:     "my-oracle-tns-oci",
-					Type:     oracle.SourceType,
+					Type:     SourceType,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
 					User:     "my_user",
@@ -106,6 +105,68 @@ func TestParseFromYamlOracle(t *testing.T) {
 	}
 }
 
+func TestBuildGoOraConnString(t *testing.T) {
+	t.Parallel()
+
+	tcs := []struct {
+		name           string
+		user           string
+		password       string
+		connectBase    string
+		walletLocation string
+		want           string
+	}{
+		{
+			name:           "encodes_credentials_and_wallet",
+			user:           "user[client]",
+			password:       "pa:ss@word",
+			connectBase:    "dbhost:1521/XEPDB1",
+			walletLocation: "/tmp/my wallet",
+			want:           "oracle://user%5Bclient%5D:pa%3Ass%40word@dbhost:1521/XEPDB1?ssl=true&wallet=%2Ftmp%2Fmy+wallet",
+		},
+		{
+			name:        "no_wallet",
+			user:        "scott",
+			password:    "tiger",
+			connectBase: "dbhost:1521/ORCL",
+			want:        "oracle://scott:tiger@dbhost:1521/ORCL",
+		},
+		{
+			name:        "does_not_double_encode_percent_encoded_user",
+			user:        "app_user%5BCLIENT_A%5D",
+			password:    "secret",
+			connectBase: "dbhost:1521/ORCL",
+			want:        "oracle://app_user%5BCLIENT_A%5D:secret@dbhost:1521/ORCL",
+		},
+		{
+			name:           "uses_trimmed_wallet_location",
+			user:           "scott",
+			password:       "tiger",
+			connectBase:    "dbhost:1521/ORCL",
+			walletLocation: "  /tmp/wallet  ",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+		{
+			name:           "appends_wallet_query_to_existing_query",
+			user:           "scott",
+			password:       "tiger",
+			connectBase:    "dbhost:1521/ORCL?custom_opt=true",
+			walletLocation: " /tmp/wallet ",
+			want:           "oracle://scott:tiger@dbhost:1521/ORCL?custom_opt=true&ssl=true&wallet=%2Ftmp%2Fwallet",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := buildGoOraConnString(tc.user, tc.password, tc.connectBase, tc.walletLocation)
+			if got != tc.want {
+				t.Fatalf("buildGoOraConnString() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
@@ -115,7 +176,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -124,35 +185,35 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			extraField: value
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": [1:1] unknown field \"extraField\"\n>  1 | extraField: value\n       ^\n   2 | host: my-host\n   3 | name: my-oracle-instance\n   4 | password: my_pass\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": [1:1] unknown field \"extraField\"\n>  1 | extraField: value\n       ^\n   2 | host: my-host\n   3 | name: my-oracle-instance\n   4 | password: my_pass\n   5 | ",
 		},
 		{
 			desc: "missing required password field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
 			serviceName: ORCL
 			user: my_user
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 		{
 			desc: "missing connection method fields (validate fails)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'",
 		},
 		{
 			desc: "multiple connection methods provided (validate fails)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-instance
 			type: oracle
 			host: my-host
@@ -161,12 +222,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
 		},
 		{
 			desc: "fail on tnsAdmin with useOCI=false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-oracle-fail
 			type: oracle
 			tnsAlias: FINANCE_DB
@@ -175,7 +236,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			useOCI: false
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
 		},
 	}
 	for _, tc := range tcs {
@@ -205,10 +266,10 @@ func TestRunSQLExecutesDML(t *testing.T) {
 	}
 	defer db.Close()
 
-	src := &oracle.Source{
-		Config: oracle.Config{
+	src := &Source{
+		Config: Config{
 			Name: "test-dml-source",
-			Type: oracle.SourceType,
+			Type: SourceType,
 			User: "test-user",
 		},
 		DB: db,

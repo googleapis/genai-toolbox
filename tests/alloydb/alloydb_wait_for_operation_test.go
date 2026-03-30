@@ -75,7 +75,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
 		h.t.Errorf("User-Agent header not found")
 	}
-
 	// The format is projects/{project}/locations/{location}/operations/{operation}
 	// The tool will call something like /v1/projects/p1/locations/l1/operations/op1
 	if match, _ := regexp.MatchString("/v1/projects/.*/locations/.*/operations/.*", r.URL.Path); match {

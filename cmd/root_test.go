@@ -247,7 +247,7 @@ func TestServerConfigFlags(t *testing.T) {
 	}
 }
 
-func TestToolFileFlag(t *testing.T) {
+func TestConfigFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
@@ -260,17 +260,17 @@ func TestToolFileFlag(t *testing.T) {
 		},
 		{
 			desc: "foo file",
-			args: []string{"--tools-file", "foo.yaml"},
+			args: []string{"--config", "foo.yaml"},
 			want: "foo.yaml",
 		},
 		{
 			desc: "address long",
-			args: []string{"--tools-file", "bar.yaml"},
+			args: []string{"--config", "bar.yaml"},
 			want: "bar.yaml",
 		},
 		{
 			desc: "deprecated flag",
-			args: []string{"--tools_file", "foo.yaml"},
+			args: []string{"--tools-file", "foo.yaml"},
 			want: "foo.yaml",
 		},
 	}
@@ -280,14 +280,14 @@ func TestToolFileFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if opts.ToolsFile != tc.want {
+			if opts.Config != tc.want {
 				t.Fatalf("got %v, want %v", opts.Cfg, tc.want)
 			}
 		})
 	}
 }
 
-func TestToolsFilesFlag(t *testing.T) {
+func TestConfigsFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
@@ -300,11 +300,16 @@ func TestToolsFilesFlag(t *testing.T) {
 		},
 		{
 			desc: "single file",
-			args: []string{"--tools-files", "foo.yaml"},
+			args: []string{"--configs", "foo.yaml"},
 			want: []string{"foo.yaml"},
 		},
 		{
 			desc: "multiple files",
+			args: []string{"--configs", "foo.yaml,bar.yaml"},
+			want: []string{"foo.yaml", "bar.yaml"},
+		},
+		{
+			desc: "deprecated flag",
 			args: []string{"--tools-files", "foo.yaml,bar.yaml"},
 			want: []string{"foo.yaml", "bar.yaml"},
 		},
@@ -315,14 +320,14 @@ func TestToolsFilesFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if diff := cmp.Diff(opts.ToolsFiles, tc.want); diff != "" {
-				t.Fatalf("got %v, want %v", opts.ToolsFiles, tc.want)
+			if diff := cmp.Diff(opts.Configs, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v", opts.Configs, tc.want)
 			}
 		})
 	}
 }
 
-func TestToolsFolderFlag(t *testing.T) {
+func TestConfigFolderFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
@@ -335,6 +340,11 @@ func TestToolsFolderFlag(t *testing.T) {
 		},
 		{
 			desc: "folder set",
+			args: []string{"--config-folder", "test-folder"},
+			want: "test-folder",
+		},
+		{
+			desc: "deprecated flag",
 			args: []string{"--tools-folder", "test-folder"},
 			want: "test-folder",
 		},
@@ -345,8 +355,8 @@ func TestToolsFolderFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if opts.ToolsFolder != tc.want {
-				t.Fatalf("got %v, want %v", opts.ToolsFolder, tc.want)
+			if opts.ConfigFolder != tc.want {
+				t.Fatalf("got %v, want %v", opts.ConfigFolder, tc.want)
 			}
 		})
 	}
@@ -460,7 +470,7 @@ func TestResolveWatcherInputs(t *testing.T) {
 		wantWatchedFiles map[string]bool
 	}{
 		{
-			description:      "single tools file",
+			description:      "single config",
 			toolsFile:        "tools_folder/example_tools.yaml",
 			toolsFiles:       []string{},
 			toolsFolder:      "",
@@ -468,7 +478,7 @@ func TestResolveWatcherInputs(t *testing.T) {
 			wantWatchedFiles: map[string]bool{"tools_folder/example_tools.yaml": true},
 		},
 		{
-			description:      "default tools file (root dir)",
+			description:      "default config (root dir)",
 			toolsFile:        "tools.yaml",
 			toolsFiles:       []string{},
 			toolsFolder:      "",
@@ -566,7 +576,7 @@ func TestSingleEdit(t *testing.T) {
 
 	fileToWatch, cleanup, err := tmpFileWithCleanup([]byte("initial content"))
 	if err != nil {
-		t.Fatalf("error editing tools file %s", err)
+		t.Fatalf("error editing config %s", err)
 	}
 	defer cleanup()
 
@@ -625,14 +635,14 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		errString string
 	}{
 		{
-			desc:      "--tools-file and --tools-files",
-			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
-			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
+			desc:      "--config and --configs",
+			args:      []string{"--config", "my.yaml", "--configs", "a.yaml,b.yaml"},
+			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
 		},
 		{
-			desc:      "--tools-folder and --tools-files",
-			args:      []string{"--tools-folder", "./", "--tools-files", "a.yaml,b.yaml"},
-			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
+			desc:      "--config-folder and --configs",
+			args:      []string{"--config-folder", "./", "--configs", "a.yaml,b.yaml"},
+			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
 		},
 	}
 
@@ -654,35 +664,35 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 }
 
 func TestFileLoadingErrors(t *testing.T) {
-	t.Run("non-existent tools-file", func(t *testing.T) {
+	t.Run("non-existent config", func(t *testing.T) {
 		buf := new(bytes.Buffer)
 		opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
 		cmd := NewCommand(opts)
 		// Use a file that is guaranteed not to exist
 		nonExistentFile := filepath.Join(t.TempDir(), "non-existent-tools.yaml")
-		cmd.SetArgs([]string{"--tools-file", nonExistentFile})
+		cmd.SetArgs([]string{"--config", nonExistentFile})
 
 		err := cmd.Execute()
 		if err == nil {
 			t.Fatal("expected an error for non-existent file but got none")
 		}
-		if !strings.Contains(err.Error(), "unable to read tool file") {
+		if !strings.Contains(err.Error(), "unable to read config") {
 			t.Errorf("expected error about reading file, but got: %v", err)
 		}
 	})
 
-	t.Run("non-existent tools-folder", func(t *testing.T) {
+	t.Run("non-existent config-folder", func(t *testing.T) {
 		buf := new(bytes.Buffer)
 		opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
 		cmd := NewCommand(opts)
 		nonExistentFolder := filepath.Join(t.TempDir(), "non-existent-folder")
-		cmd.SetArgs([]string{"--tools-folder", nonExistentFolder})
+		cmd.SetArgs([]string{"--config-folder", nonExistentFolder})
 
 		err := cmd.Execute()
 		if err == nil {
 			t.Fatal("expected an error for non-existent folder but got none")
 		}
-		if !strings.Contains(err.Error(), "unable to access tools folder") {
+		if !strings.Contains(err.Error(), "unable to access config folder") {
 			t.Errorf("expected error about accessing folder, but got: %v", err)
 		}
 	})
@@ -690,9 +700,9 @@ func TestFileLoadingErrors(t *testing.T) {
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
-	// Setup custom tools file
+	// Setup custom config
 	customContent := `
-kind: tools
+kind: tool
 name: custom_tool
 type: http
 source: my-http
@@ -700,7 +710,7 @@ method: GET
 path: /
 description: "A custom tool for testing"
 ---
-kind: sources
+kind: source
 name: my-http
 type: http
 baseUrl: http://example.com
@@ -713,7 +723,7 @@ baseUrl: http://example.com
 	// Tool Conflict File
 	// SQLite prebuilt has a tool named 'list_tables'
 	toolConflictContent := `
-kind: tools
+kind: tool
 name: list_tables
 type: http
 source: my-http
@@ -721,7 +731,7 @@ method: GET
 path: /
 description: "Conflicting tool"
 ---
-kind: sources
+kind: source
 name: my-http
 type: http
 baseUrl: http://example.com
@@ -734,12 +744,12 @@ baseUrl: http://example.com
 	// Source Conflict File
 	// SQLite prebuilt has a source named 'sqlite-source'
 	sourceConflictContent := `
-kind: sources
+kind: source
 name: sqlite-source
 type: http
 baseUrl: http://example.com
 ---
-kind: tools
+kind: tool
 name: dummy_tool
 type: http
 source: sqlite-source
@@ -755,12 +765,12 @@ description: "Dummy"
 	// Toolset Conflict File
 	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
 	toolsetConflictContent := `
-kind: sources
+kind: source
 name: dummy-src
 type: http
 baseUrl: http://example.com
 ---
-kind: tools
+kind: tool
 name: dummy_tool
 type: http
 source: dummy-src
@@ -768,25 +778,13 @@ method: GET
 path: /
 description: "Dummy"
 ---
-kind: toolsets
+kind: toolset
 name: sqlite_database_tools
 tools:
 - dummy_tool
 `
 	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
 	if err := os.WriteFile(toolsetConflictFile, []byte(toolsetConflictContent), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	//Legacy Auth File
-	authContent := `
-authSources:
-  legacy-auth:
-    kind: google
-    clientId: "test-client-id"
-`
-	authFile := filepath.Join(t.TempDir(), "auth.yaml")
-	if err := os.WriteFile(authFile, []byte(authContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -799,7 +797,7 @@ authSources:
 	}{
 		{
 			desc:    "success mixed",
-			args:    []string{"--prebuilt", "sqlite", "--tools-file", customFile},
+			args:    []string{"--prebuilt", "sqlite", "--config", customFile},
 			wantErr: false,
 			cfgCheck: func(cfg server.ServerConfig) error {
 				if _, ok := cfg.ToolConfigs["custom_tool"]; !ok {
@@ -819,32 +817,21 @@ authSources:
 		},
 		{
 			desc:      "tool conflict error",
-			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolConflictFile},
+			args:      []string{"--prebuilt", "sqlite", "--config", toolConflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
 		},
 		{
 			desc:      "source conflict error",
-			args:      []string{"--prebuilt", "sqlite", "--tools-file", sourceConflictFile},
+			args:      []string{"--prebuilt", "sqlite", "--config", sourceConflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
 		},
 		{
 			desc:      "toolset conflict error",
-			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolsetConflictFile},
+			args:      []string{"--prebuilt", "sqlite", "--config", toolsetConflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
-		},
-		{
-			desc:    "legacy auth additive",
-			args:    []string{"--prebuilt", "sqlite", "--tools-file", authFile},
-			wantErr: false,
-			cfgCheck: func(cfg server.ServerConfig) error {
-				if _, ok := cfg.AuthServiceConfigs["legacy-auth"]; !ok {
-					return fmt.Errorf("legacy auth source not merged into auth services")
-				}
-				return nil
-			},
 		},
 	}
 
@@ -879,7 +866,7 @@ authSources:
 	}
 }
 
-func TestDefaultToolsFileBehavior(t *testing.T) {
+func TestDefaultConfigBehavior(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
 	testCases := []struct {
 		desc      string
@@ -937,6 +924,7 @@ func TestSubcommandWiring(t *testing.T) {
 	}{
 		{[]string{"invoke"}, "invoke"},
 		{[]string{"skills-generate"}, "skills-generate"},
+		{[]string{"serve"}, "serve"},
 	}
 
 	for _, tc := range tests {

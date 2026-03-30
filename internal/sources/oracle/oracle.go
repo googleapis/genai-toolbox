@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -253,6 +254,41 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 	return out, nil
 }
 
+func buildGoOraConnString(user, password, connectStringBase, walletLocation string) string {
+	userInfo := url.UserPassword(
+		decodePercentEncodedUserInfo(user),
+		decodePercentEncodedUserInfo(password),
+	).String()
+
+	base := fmt.Sprintf("oracle://%s@%s", userInfo, connectStringBase)
+	trimmedWalletLocation := strings.TrimSpace(walletLocation)
+	if trimmedWalletLocation == "" {
+		return base
+	}
+
+	q := url.Values{}
+	q.Set("ssl", "true")
+	q.Set("wallet", trimmedWalletLocation)
+
+	separator := "?"
+	if strings.Contains(connectStringBase, "?") {
+		separator = "&"
+		if strings.HasSuffix(base, "?") || strings.HasSuffix(base, "&") {
+			separator = ""
+		}
+	}
+
+	return fmt.Sprintf("%s%s%s", base, separator, q.Encode())
+}
+
+func decodePercentEncodedUserInfo(value string) string {
+	decoded, err := url.PathUnescape(value)
+	if err != nil {
+		return value
+	}
+	return decoded
+}
+
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, config.Name)
@@ -305,16 +341,11 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		// Use go-ora driver (pure Go)
 		driverName = "oracle"
 
-		user := config.User
-		password := config.Password
+		finalConnStr = buildGoOraConnString(config.User, config.Password, connectStringBase, config.WalletLocation)
 
 		if hasWallet {
-			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s?ssl=true&wallet=%s",
-				user, password, connectStringBase, config.WalletLocation)
+			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with wallet and serverString: %s\n", connectStringBase))
 		} else {
-			// Standard go-ora connection
-			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s",
-				config.User, config.Password, connectStringBase)
 			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with serverString: %s\n", connectStringBase))
 		}
 	}

@@ -16,15 +16,19 @@ package server_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
@@ -257,5 +261,218 @@ func TestNameValidation(t *testing.T) {
 				t.Fatalf("expect error: %s", tc.errStr)
 			}
 		})
+	}
+}
+
+func TestPRMEndpoint(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Setup telemetry and logging
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	defer func() {
+		if err := otelShutdown(ctx); err != nil {
+			t.Fatalf("unexpected error shutting down otel: %s", err)
+		}
+	}()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	// Create a mock OIDC server to bypass JWKS discovery during init
+	mockOIDC := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{"issuer": "http://%s", "jwks_uri": "http://%s/jwks"}`, r.Host, r.Host)
+			return
+		}
+		if r.URL.Path == "/jwks" {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `{"keys": []}`)
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer mockOIDC.Close()
+
+	// Configure the server
+	addr, port := "127.0.0.1", 5001
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		ToolboxUrl:   "https://my-toolbox.example.com",
+		AllowedHosts: []string{"*"},
+		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
+			"generic1": generic.Config{
+				Name:                "generic1",
+				Type:                generic.AuthServiceType,
+				McpEnabled:          true,
+				AuthorizationServer: mockOIDC.URL, // Injecting the mock server URL here
+				ScopesRequired:      []string{"read", "write"},
+			},
+		},
+	}
+
+	// Initialize and start the server
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	if err := s.Listen(ctx); err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			errCh <- err
+		}
+	}()
+	defer func() {
+		if err := s.Shutdown(ctx); err != nil {
+			t.Errorf("failed to cleanly shutdown server: %v", err)
+		}
+	}()
+
+	// Test the PRM endpoint
+	url := fmt.Sprintf("http://%s:%d/.well-known/oauth-protected-resource", addr, port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending a request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("unexpected error reading body: %s", err)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+
+	want := map[string]any{
+		"resource": "https://my-toolbox.example.com",
+		"authorization_servers": []any{
+			mockOIDC.URL,
+		},
+		"scopes_supported":         []any{"read", "write"},
+		"bearer_methods_supported": []any{"header"},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("unexpected PRM response:\ngot  %+v\nwant %+v", got, want)
+	}
+}
+
+func TestPRMOverride(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Setup a temporary PRM file
+	prmContent := `{
+		"resource": "https://override.example.com",
+		"authorization_servers": ["https://auth.example.com"],
+		"scopes_supported": ["read", "write"],
+		"bearer_methods_supported": ["header"]
+	}`
+	tmpFile, err := os.CreateTemp("", "prm-*.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+	if err := os.WriteFile(tmpFile.Name(), []byte(prmContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Setup Logging and Instrumentation (Using Discard to act as Noop)
+	testLogger, err := log.NewStdLogger(io.Discard, io.Discard, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	// Configure the server with the Override Flag
+	addr, port := "127.0.0.1", 5002
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		McpPrmFile:   tmpFile.Name(),
+		AllowedHosts: []string{"*"},
+	}
+
+	// Initialize and Start the Server
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	if err := s.Listen(ctx); err != nil {
+		t.Fatalf("unable to start listener: %v", err)
+	}
+
+	go func() {
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("Server serve error: %v\n", err)
+		}
+	}()
+	defer func() {
+		if err := s.Shutdown(ctx); err != nil {
+			t.Errorf("failed to cleanly shutdown server: %v", err)
+		}
+	}()
+
+	// Perform the request to the well-known endpoint
+	url := fmt.Sprintf("http://%s:%d/.well-known/oauth-protected-resource", addr, port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("error reading body: %s", err)
+	}
+
+	// Verification
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("invalid json response: %s", err)
+	}
+
+	if got["resource"] != "https://override.example.com" {
+		t.Errorf("expected resource 'https://override.example.com', got '%v'", got["resource"])
 	}
 }
