@@ -18,10 +18,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	driver "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
@@ -54,9 +53,9 @@ type Config struct {
 	Type         string            `yaml:"type" validate:"required"`
 	Host         string            `yaml:"host" validate:"required"`
 	Port         string            `yaml:"port" validate:"required"`
-	User         string            `yaml:"user" validate:"required"`
-	Password     string            `yaml:"password" validate:"required"`
-	Database     string            `yaml:"database" validate:"required"`
+	User         string            `yaml:"user"`
+	Password     string            `yaml:"password"`
+	Database     string            `yaml:"database"`
 	QueryTimeout string            `yaml:"queryTimeout"`
 	QueryParams  map[string]string `yaml:"queryParams"`
 }
@@ -161,34 +160,43 @@ func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
-	// Build query parameters via url.Values for deterministic order and proper escaping.
-	values := url.Values{}
-
-	// Derive readTimeout from queryTimeout when provided.
+	config := driver.NewConfig()
+	config.Addr = fmt.Sprintf("%s:%s", host, port)
+	config.Net = "tcp"
+	if user != "" {
+		config.User = user
+		// password will require user
+		if pass != "" {
+			config.Passwd = pass
+		}
+	}
+	if dbname != "" {
+		config.DBName = dbname
+	}
 	if queryTimeout != "" {
 		timeout, err := time.ParseDuration(queryTimeout)
 		if err != nil {
 			return nil, fmt.Errorf("invalid queryTimeout %q: %w", queryTimeout, err)
 		}
-		values.Set("readTimeout", timeout.String())
+		config.ReadTimeout = timeout
 	}
 
 	// Custom user parameters
+	params := map[string]string{"parseTime": "true"}
 	for k, v := range queryParams {
 		if v == "" {
 			continue // skip empty values
 		}
-		values.Set(k, v)
+		params[k] = v
 	}
+	config.Params = params
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&connectionAttributes=program_name:%s", user, pass, host, port, dbname, url.QueryEscape(userAgent))
-	if enc := values.Encode(); enc != "" {
-		dsn += "&" + enc
-	}
+	config.ConnectionAttributes = fmt.Sprintf("program_name:%s", userAgent)
+	dsn := config.FormatDSN()
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)

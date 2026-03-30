@@ -52,7 +52,7 @@ type compatibleSource interface {
 	HttpDefaultHeaders() map[string]string
 	HttpBaseURL() string
 	HttpQueryParams() map[string]string
-	RunRequest(*http.Request) (any, error)
+	RunRequest(context.Context, *http.Request) (any, error)
 }
 
 type Config struct {
@@ -275,7 +275,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		req.Header.Set(k, v)
 	}
 
-	resp, err := source.RunRequest(req)
+	resp, err := source.RunRequest(ctx, req)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

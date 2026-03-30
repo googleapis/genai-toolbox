@@ -45,7 +45,7 @@ func invokeCommand(args []string) (string, error) {
 }
 
 func TestInvokeTool(t *testing.T) {
-	// Create a temporary tools file
+	// Create a temporary config
 	tmpDir := t.TempDir()
 
 	toolsFileContent := `
@@ -68,11 +68,20 @@ tools:
       - name: message
         type: string
         description: message to echo
+  int-tool:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "int tool"
+    statement: "SELECT ? as val"
+    parameters:
+      - name: value
+        type: integer
+        description: int value
 `
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	tcs := []struct {
@@ -84,23 +93,28 @@ tools:
 	}{
 		{
 			desc: "success - basic tool call",
-			args: []string{"invoke", "hello-sqlite", "--tools-file", toolsFilePath},
+			args: []string{"invoke", "hello-sqlite", "--config", toolsFilePath},
 			want: `"greeting": "hello"`,
 		},
 		{
 			desc: "success - tool call with parameters",
-			args: []string{"invoke", "echo-tool", `{"message": "world"}`, "--tools-file", toolsFilePath},
+			args: []string{"invoke", "echo-tool", `{"message": "world"}`, "--config", toolsFilePath},
 			want: `"msg": "world"`,
 		},
 		{
+			desc: "success - tool call with integer parameters",
+			args: []string{"invoke", "int-tool", `{"value": 42}`, "--tools-file", toolsFilePath},
+			want: `"val": 42`,
+		},
+		{
 			desc:    "error - tool not found",
-			args:    []string{"invoke", "non-existent", "--tools-file", toolsFilePath},
+			args:    []string{"invoke", "non-existent", "--config", toolsFilePath},
 			wantErr: true,
 			errStr:  `tool "non-existent" not found`,
 		},
 		{
 			desc:    "error - invalid JSON params",
-			args:    []string{"invoke", "echo-tool", `invalid-json`, "--tools-file", toolsFilePath},
+			args:    []string{"invoke", "echo-tool", `invalid-json`, "--config", toolsFilePath},
 			wantErr: true,
 			errStr:  `params must be a valid JSON string`,
 		},
@@ -139,10 +153,10 @@ tools:
 `
 	toolsFilePath := filepath.Join(tmpDir, "auth_tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
-	args := []string{"invoke", "bq-tool", "--tools-file", toolsFilePath}
+	args := []string{"invoke", "bq-tool", "--config", toolsFilePath}
 	_, err := invokeCommand(args)
 	if err == nil {
 		t.Fatal("expected error for tool requiring client auth, but got nil")

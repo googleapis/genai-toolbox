@@ -1,0 +1,26 @@
+{{ define "main" }}
+<div class="td-content">
+    <h1>{{ .Title }}</h1>
+    {{ with .Params.description }}<div class="lead">{{ . | markdownify }}</div>{{ end }}
+    <header class="article-meta">
+        {{ partial "taxonomy_terms_article_wrapper.html" . }}
+        {{ if (and (not .Params.hide_readingtime) (.Site.Params.ui.readingtime.enable)) }}
+            {{ partial "reading-time.html" . }}
+        {{ end }}
+    </header>
+    {{ .Content }}
+    {{ partial "section-index.html" . }}
+    {{ partial "pager.html" . }}
+    {{ if (and (not .Params.hide_feedback) (.Site.Params.ui.feedback.enable) (.Site.Config.Services.GoogleAnalytics.ID)) }}
+        <hr class="mt-5 mb-4">
+        <div class="mt-4">
+        {{ partial "feedback.html" . }}
+        <br />
+    {{ end }}
+    {{ if (.Site.Params.DisqusShortname) }}
+        <br />
+        {{ partial "disqus-comment.html" . }}
+    {{ end }}
+    {{ partial "page-meta-lastmod.html" . }}
+</div>
+{{ end }}

@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.31.0](https://github.com/googleapis/genai-toolbox/compare/v0.30.0...v0.31.0) (2026-03-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* release upgraded docsite ([#2831](https://github.com/googleapis/genai-toolbox/issues/2831))
+* **http:** sanitize non-2xx error output ([#2654](https://github.com/googleapis/genai-toolbox/issues/2654))
+* add a new `enable-api` flag ([#2846](https://github.com/googleapis/genai-toolbox/issues/2846))
+* remove deprecations and update tools-file flag ([#2806](https://github.com/googleapis/genai-toolbox/issues/2806))
+
+### Features
+
+* Add a new `enable-api` flag ([#2846](https://github.com/googleapis/genai-toolbox/issues/2846)) ([7a070da](https://github.com/googleapis/genai-toolbox/commit/7a070dae4f1833671649ea605f36659675d402a9))
+* **auth:** Add generic `authService` type for MCP ([#2619](https://github.com/googleapis/genai-toolbox/issues/2619)) ([f6678f8](https://github.com/googleapis/genai-toolbox/commit/f6678f8e29aa3346f4f73ce33cec37b4753d6947))
+* **auth:** Add Protected Resource Metadata endpoint ([#2698](https://github.com/googleapis/genai-toolbox/issues/2698)) ([b53dcf2](https://github.com/googleapis/genai-toolbox/commit/b53dcf20694599f8b961c501a532bd122630b6f4))
+* **auth:** Support manual PRM override ([#2717](https://github.com/googleapis/genai-toolbox/issues/2717)) ([283e4e3](https://github.com/googleapis/genai-toolbox/commit/283e4e33172571e4b20fa6a3ea0cfc632a565e6a))
+* **dataplex:** Add support for lookup context tool. ([#2744](https://github.com/googleapis/genai-toolbox/issues/2744)) ([facb69d](https://github.com/googleapis/genai-toolbox/commit/facb69d01fe0c7ff9e2e1c40804dd00762e508a6))
+* Remove deprecations and update tools-file flag ([#2806](https://github.com/googleapis/genai-toolbox/issues/2806)) ([ab64c95](https://github.com/googleapis/genai-toolbox/commit/ab64c9514a467d92a4547eda5a4ecdd08f86b0c9))
+
+
+### Bug Fixes
+
+* **ci:** Remove search index generation from preview deployment workflow ([#2859](https://github.com/googleapis/genai-toolbox/issues/2859)) ([f8891b8](https://github.com/googleapis/genai-toolbox/commit/f8891b82fcaaef240e1031cd9f784749d91d4210))
+* **docs:** Skip empty folders in pagination & reduce PR comment noise ([#2853](https://github.com/googleapis/genai-toolbox/issues/2853)) ([9ebd93a](https://github.com/googleapis/genai-toolbox/commit/9ebd93a8ecb9bae673aa77a859803629fc7a4e1d))
+* **http:** Sanitize non-2xx error output ([#2654](https://github.com/googleapis/genai-toolbox/issues/2654)) ([5bef954](https://github.com/googleapis/genai-toolbox/commit/5bef954507c8e23b6c9b0eb2551265e4be32b452))
+* **skills:** Fix integer parameter parsing through agent skills ([#2847](https://github.com/googleapis/genai-toolbox/issues/2847)) ([4564efe](https://github.com/googleapis/genai-toolbox/commit/4564efe75436b4081d9f3d1f7c912bc64c13f850))
+
+
+### Documentation
+
+* Release upgraded docsite ([#2831](https://github.com/googleapis/genai-toolbox/issues/2831)) ([5b25ce0](https://github.com/googleapis/genai-toolbox/commit/5b25ce081235b21c884e27057cd4a2fa4d0d7c0e))
+
+
+## [0.30.0](https://github.com/googleapis/genai-toolbox/compare/v0.29.0...v0.30.0) (2026-03-20)
+
+
+### Features
+
+* **cli:** Add migrate subcommand ([#2679](https://github.com/googleapis/genai-toolbox/issues/2679)) ([12171f7](https://github.com/googleapis/genai-toolbox/commit/12171f7a02bcd34ce647db10abdb79bb2dac7ace))
+* **cli:** Add serve subcommand ([#2550](https://github.com/googleapis/genai-toolbox/issues/2550)) ([1e2c7c7](https://github.com/googleapis/genai-toolbox/commit/1e2c7c7804c67bebf5e2ee9b67c6feb6f05292fd))
+* **skill:** One skill per toolset ([#2733](https://github.com/googleapis/genai-toolbox/issues/2733)) ([5b85c65](https://github.com/googleapis/genai-toolbox/commit/5b85c65960dba9bfaf4cadca6d44532a153976e1))
+* **source/oracledb:** Add Oracle DB for MCP tools and configurations, updated tools and documentation ([#2625](https://github.com/googleapis/genai-toolbox/issues/2625)) ([e350fc7](https://github.com/googleapis/genai-toolbox/commit/e350fc7879182aaf592a70c3509ed061164b3913))
+* **tools/looker:** Support git_branch tools for looker. ([#2718](https://github.com/googleapis/genai-toolbox/issues/2718)) ([70ed8a0](https://github.com/googleapis/genai-toolbox/commit/70ed8a0dcb8e654b748a6e3e1c5ef283c26006da))
+* **tools/dataplex-search-entries:** Add `scope` support to search_entries tool ([#2740](https://github.com/googleapis/genai-toolbox/issues/2740)) ([10af468](https://github.com/googleapis/genai-toolbox/commit/10af4682ccd51070463604124293968944d05017))
+
+
+### Bug Fixes
+
+* **cloudloggingadmin:** Increase log injesting time and add auth test ([#2772](https://github.com/googleapis/genai-toolbox/issues/2772)) ([50b4457](https://github.com/googleapis/genai-toolbox/commit/50b4457095ec4ac881b3b12719da24d35141f65d))
+* **oracle:** Normalize encoded proxy usernames in go-ora DSN ([#2469](https://github.com/googleapis/genai-toolbox/issues/2469)) ([b1333cd](https://github.com/googleapis/genai-toolbox/commit/b1333cd27117655f8ab09f222721e14bea74b487))
+* **postgres:** Update execute-sql tool to avoid multi-statements parameter ([#2707](https://github.com/googleapis/genai-toolbox/issues/2707)) ([58bc772](https://github.com/googleapis/genai-toolbox/commit/58bc772f882f0d9e00f403e73fbec812dd8a03ac))
+* **skills:** Improve flag validation and silence unit test output ([#2759](https://github.com/googleapis/genai-toolbox/issues/2759)) ([f3da6aa](https://github.com/googleapis/genai-toolbox/commit/f3da6aa5e23b609a1ac9ecc098bccea02f2388ab))
+* **test:** Address flaky healthcare integration test run ([#2742](https://github.com/googleapis/genai-toolbox/issues/2742)) ([9590821](https://github.com/googleapis/genai-toolbox/commit/9590821bc7d86c5cbacd29b21d4f85b427a87db4))
+
+
+### Reverts
+
+* **ci:** Implement conditional sharding logic in integration tests ([#2763](https://github.com/googleapis/genai-toolbox/issues/2763)) ([1528d7c](https://github.com/googleapis/genai-toolbox/commit/1528d7c38dfaa30bdecbe59c79ba926fa6d18356))
+
 ## [0.29.0](https://github.com/googleapis/genai-toolbox/compare/v0.28.0...v0.29.0) (2026-03-13)
 
 

@@ -36,7 +36,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mssql-execute-sql
             source: my-instance

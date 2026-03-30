@@ -17,7 +17,6 @@ package couchbase
 import (
 	"context"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -27,43 +26,26 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+	tccouchbase "github.com/testcontainers/testcontainers-go/modules/couchbase"
 )
 
 const (
 	couchbaseSourceType = "couchbase"
 	couchbaseToolType   = "couchbase-sql"
+	defaultBucketName   = "test-bucket"
+	defaultUser         = "Administrator"
+	defaultPass         = "password"
 )
 
-var (
-	couchbaseConnection = os.Getenv("COUCHBASE_CONNECTION")
-	couchbaseBucket     = os.Getenv("COUCHBASE_BUCKET")
-	couchbaseScope      = os.Getenv("COUCHBASE_SCOPE")
-	couchbaseUser       = os.Getenv("COUCHBASE_USER")
-	couchbasePass       = os.Getenv("COUCHBASE_PASS")
-)
-
-// getCouchbaseVars validates and returns Couchbase configuration variables
-func getCouchbaseVars(t *testing.T) map[string]any {
-	switch "" {
-	case couchbaseConnection:
-		t.Fatal("'COUCHBASE_CONNECTION' not set")
-	case couchbaseBucket:
-		t.Fatal("'COUCHBASE_BUCKET' not set")
-	case couchbaseScope:
-		t.Fatal("'COUCHBASE_SCOPE' not set")
-	case couchbaseUser:
-		t.Fatal("'COUCHBASE_USER' not set")
-	case couchbasePass:
-		t.Fatal("'COUCHBASE_PASS' not set")
-	}
-
+// getCouchbaseVars generates config using dynamic container info
+func getCouchbaseVars(connectionString string) map[string]any {
 	return map[string]any{
 		"type":                 couchbaseSourceType,
-		"connectionString":     couchbaseConnection,
-		"bucket":               couchbaseBucket,
-		"scope":                couchbaseScope,
-		"username":             couchbaseUser,
-		"password":             couchbasePass,
+		"connectionString":     connectionString,
+		"bucket":               defaultBucketName,
+		"scope":                "_default", // Testcontainers default
+		"username":             defaultUser,
+		"password":             defaultPass,
 		"queryScanConsistency": 2,
 	}
 }
@@ -76,7 +58,6 @@ func initCouchbaseCluster(connectionString, username, password string) (*gocb.Cl
 			Password: password,
 		},
 	}
-
 	cluster, err := gocb.Connect(connectionString, opts)
 	if err != nil {
 		return nil, fmt.Errorf("gocb.Connect: %w", err)
@@ -85,73 +66,93 @@ func initCouchbaseCluster(connectionString, username, password string) (*gocb.Cl
 }
 
 func TestCouchbaseToolEndpoints(t *testing.T) {
-	sourceConfig := getCouchbaseVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	var args []string
+	// Start Couchbase Container
+	cbContainer, err := tccouchbase.Run(ctx, "couchbase/server:7.2.0",
+		tccouchbase.WithAdminCredentials(defaultUser, defaultPass),
+		tccouchbase.WithBuckets(tccouchbase.NewBucket(defaultBucketName)),
+	)
+	if err != nil {
+		t.Fatalf("failed to start couchbase container: %s", err)
+	}
+	t.Cleanup(func() {
+		if err := cbContainer.Terminate(context.Background()); err != nil {
+			t.Logf("failed to terminate container: %s", err)
+		}
+	})
 
-	cluster, err := initCouchbaseCluster(couchbaseConnection, couchbaseUser, couchbasePass)
+	connectionString, err := cbContainer.ConnectionString(ctx)
+	if err != nil {
+		t.Fatalf("failed to get connection string: %s", err)
+	}
+
+	// Set up Clouchbase cluster
+	cluster, err := initCouchbaseCluster(connectionString, defaultUser, defaultPass)
 	if err != nil {
 		t.Fatalf("unable to create Couchbase connection: %s", err)
 	}
 	defer cluster.Close(nil)
 
-	// Create collection names with UUID
+	sourceConfig := getCouchbaseVars(connectionString)
+	scopeName := "_default"
+
+	// Prepare Data
 	collectionNameParam := "param_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	collectionNameAuth := "auth_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	collectionNameTemplateParam := "template_param_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	// Set up data for param tool
-	paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, paramTestParams := getCouchbaseParamToolInfo(collectionNameParam)
-	teardownCollection1 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameParam, paramTestParams)
-	defer teardownCollection1(t)
+	paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getCouchbaseParamToolInfo(collectionNameParam)
+	teardown1 := setupCouchbaseCollection(t, ctx, cluster, defaultBucketName, scopeName, collectionNameParam, paramTestParams)
+	defer teardown1(t)
 
-	// Set up data for auth tool
-	authToolStatement, authTestParams := getCouchbaseAuthToolInfo(collectionNameAuth)
-	teardownCollection2 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameAuth, authTestParams)
-	defer teardownCollection2(t)
+	authToolStmt, authTestParams := getCouchbaseAuthToolInfo(collectionNameAuth)
+	teardown2 := setupCouchbaseCollection(t, ctx, cluster, defaultBucketName, scopeName, collectionNameAuth, authTestParams)
+	defer teardown2(t)
 
-	// Setup up table for template param tool
 	tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll, params3 := getCouchbaseTemplateParamToolInfo()
-	teardownCollection3 := setupCouchbaseCollection(t, ctx, cluster, couchbaseBucket, couchbaseScope, collectionNameTemplateParam, params3)
-	defer teardownCollection3(t)
+	teardown3 := setupCouchbaseCollection(t, ctx, cluster, defaultBucketName, scopeName, collectionNameTemplateParam, params3)
+	defer teardown3(t)
 
-	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+	// Configure Toolbox
+	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolType, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
 	if err != nil {
-		t.Fatalf("command initialization returned an error: %s", err)
+		t.Fatalf("command initialization failed: %s", err)
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
-	if err != nil {
-		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %s", err)
+	// Wait for server
+	waitCtx, waitCancel := context.WithTimeout(ctx, 20*time.Second)
+	defer waitCancel()
+	if _, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out); err != nil {
+		t.Fatalf("toolbox didn't start: %s", err)
 	}
 
-	// Get configs for tests
+	// Assertions
 	select1Want := "[{\"$1\":1}]"
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: parsing failure | {\"statement\":\"SELEC 1;\"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"$1\":1}"}]}}`
 	tmplSelectId1Want := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"
 	selectAllWant := "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"
 
-	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, collectionNameTemplateParam,
-		tests.WithTmplSelectId1Want(tmplSelectId1Want),
-		tests.WithSelectAllWant(selectAllWant),
-		tests.DisableDdlTest(),
-		tests.DisableInsertTest(),
-	)
+	t.Run("GeneralTests", func(t *testing.T) {
+		tests.RunToolGetTest(t)
+		tests.RunToolInvokeTest(t, select1Want)
+		tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	})
+
+	t.Run("TemplateTests", func(t *testing.T) {
+		tests.RunToolInvokeWithTemplateParameters(t, collectionNameTemplateParam,
+			tests.WithTmplSelectId1Want(tmplSelectId1Want),
+			tests.WithSelectAllWant(selectAllWant),
+			tests.DisableDdlTest(),
+			tests.DisableInsertTest(),
+		)
+	})
 }
 
 // setupCouchbaseCollection creates a scope and collection and inserts test data

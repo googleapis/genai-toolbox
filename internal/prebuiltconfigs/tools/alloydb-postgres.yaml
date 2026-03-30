@@ -32,7 +32,7 @@ tools:
   execute_sql:
     kind: postgres-execute-sql
     source: alloydb-pg-source
-    description: Use this tool to execute sql.
+    description: Use this tool to execute a single SQL statement.
   list_tables:
     kind: postgres-list-tables
     source: alloydb-pg-source

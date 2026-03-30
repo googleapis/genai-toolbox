@@ -45,7 +45,7 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 		{
 			desc: "basic example",
 			in: fmt.Sprintf(`
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: %s
 			source: my-instance
@@ -64,7 +64,7 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 		{
 			desc: "detailed config",
 			in: fmt.Sprintf(`
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: %s
 			source: my-instance
@@ -97,7 +97,7 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 		{
 			desc: "invalid runtime config",
 			in: fmt.Sprintf(`
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: %s
 			source: my-instance
@@ -110,7 +110,7 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 		{
 			desc: "invalid environment config",
 			in: fmt.Sprintf(`
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: %s
 			source: my-instance

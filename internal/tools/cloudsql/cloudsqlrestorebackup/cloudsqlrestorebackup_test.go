@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: restore-backup-tool
 			type: cloud-sql-restore-backup
 			description: a test description

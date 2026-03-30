@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: create-instance-tool
 			type: cloud-sql-postgres-create-instance
 			description: a test description

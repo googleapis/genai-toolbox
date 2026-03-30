@@ -1,0 +1,48 @@
+---
+title: "looker-get-connection-tables"
+type: docs
+weight: 1
+description: >
+  A "looker-get-connection-tables" tool returns all the tables in a connection.
+
+---
+
+## About
+
+A `looker-get-connection-tables` tool returns all the tables in a connection.
+
+`looker-get-connection-tables` accepts a `conn` parameter, a `schema` parameter,
+and an optional `db` parameter.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: get_connection_tables
+type: looker-get-connection-tables
+source: looker-source
+description: |
+  This tool retrieves a list of tables available within a specified database schema
+  through a Looker connection.
+
+  Parameters:
+  - connection_name (required): The name of the database connection, obtained from `get_connections`.
+  - schema (required): The name of the schema to list tables from, obtained from `get_connection_schemas`.
+  - database (optional): The name of the database to filter by. Only applicable for connections
+    that support multiple databases (check with `get_connections`).
+
+  Output:
+  A JSON array of strings, where each string is the name of an available table.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "looker-get-connection-tables".            |
+| source      |  string  |     true     | Name of the source Looker instance.                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

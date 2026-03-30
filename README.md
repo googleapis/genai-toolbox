@@ -1,128 +1,222 @@
+<div align="center">
+
 ![logo](./logo.png)
 
 # MCP Toolbox for Databases
 
 <a href="https://trendshift.io/repositories/13019" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13019" alt="googleapis%2Fgenai-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-[![Docs](https://img.shields.io/badge/docs-MCP_Toolbox-blue)](https://googleapis.github.io/genai-toolbox/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
+[![License: Apache
+2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://googleapis.github.io/genai-toolbox/)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
 [![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@mcp_toolbox)
-[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
+
+[![Python SDK](https://img.shields.io/pypi/v/toolbox-core?logo=python&logoColor=white&label=Python%20SDK)](https://pypi.org/project/toolbox-core/)
+[![JS/TS SDK](https://img.shields.io/npm/v/@toolbox-sdk/core?logo=javascript&logoColor=white&label=JS%20SDK)](https://www.npmjs.com/package/@toolbox-sdk/core)
+[![Go SDK](https://img.shields.io/github/v/release/googleapis/mcp-toolbox-sdk-go?logo=go&logoColor=white&label=Go%20SDK)](https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go)
+[![Java SDK](https://img.shields.io/maven-central/v/com.google.cloud.mcp/mcp-toolbox-sdk-java?logo=apache-maven&logoColor=white&label=Java%20SDK)](https://mvnrepository.com/artifact/com.google.cloud.mcp/mcp-toolbox-sdk-java)
+</div>
+
+MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases. 
+
+<p align="center">
+<img src="docs/en/documentation/introduction/architecture.png" alt="architecture" width="50%"/>
+</p>
+
+It serves a **dual purpose**:
+1. **Ready-to-use MCP Server (Build-Time):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+2. **Custom Tools Framework (Run-Time):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
+
+
+This README provides a brief overview. For comprehensive details, see the [full documentation](https://googleapis.github.io/genai-toolbox/).
 
 > [!NOTE]
-> MCP Toolbox for Databases is currently in beta, and may see breaking
-> changes until the first stable release (v1.0).
-
-MCP Toolbox for Databases is an open source MCP server for databases. It enables
-you to develop tools easier, faster, and more securely by handling the complexities
-such as connection pooling, authentication, and more.
-
-This README provides a brief overview. For comprehensive details, see the [full
-documentation](https://googleapis.github.io/genai-toolbox/).
-
-> [!NOTE]
-> This solution was originally named “Gen AI Toolbox for Databases” as
-> its initial development predated MCP, but was renamed to align with recently
-> added MCP compatibility.
+> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/genai-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
 
 <!-- TOC ignore:true -->
 ## Table of Contents
 
-<!-- TOC -->
-
-- [Why Toolbox?](#why-toolbox)
-- [General Architecture](#general-architecture)
-- [Getting Started](#getting-started)
-  - [Installing the server](#installing-the-server)
-  - [Running the server](#running-the-server)
-  - [Integrating your application](#integrating-your-application)
-  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
-- [Configuration](#configuration)
-  - [Sources](#sources)
-  - [Tools](#tools)
-  - [Toolsets](#toolsets)
-  - [Prompts](#prompts)
+- [Why MCP Toolbox?](#why-mcp-toolbox)
+- [Quick Start: Prebuilt Tools](#quick-start-prebuilt-tools)
+- [Quick Start: Custom Tools](#quick-start-custom-tools)
+- [Install & Run the Toolbox server](#install--run-the-toolbox-server)
+- [Connect to Toolbox](#connect-to-toolbox)
+  - [MCP Client](#mcp-client)
+  - [Toolbox SDKs: Integrate with your Application](#toolbox-sdks-integrate-with-your-application)
+- [Additional Features](#additional-features)
 - [Versioning](#versioning)
-  - [Pre-1.0.0 Versioning](#pre-100-versioning)
-  - [Post-1.0.0 Versioning](#post-100-versioning)
 - [Contributing](#contributing)
 - [Community](#community)
 
-<!-- /TOC -->
+---
 
-## Why Toolbox?
+## Why MCP Toolbox?
 
-Toolbox helps you build Gen AI tools that let your agents access data in your
-database. Toolbox provides:
+- **Out-of-the-Box Database Access:** Prebuilt generic tools for instant data exploration (e.g., `list_tables`, `execute_sql`) directly from your IDE or CLI.
+- **Custom Tools Framework:** Build production-ready tools with your own predefined logic, ensuring safety through Restricted Access, Structured Queries, and Semantic Search.
+- **Simplified Development:** Integrate tools into your Agent Development Kit (ADK), LangChain, LlamaIndex, or custom agents in less than 10 lines of code.
+- **Better Performance:** Handles connection pooling, integrated auth (IAM), and end-to-end observability (OpenTelemetry) out of the box.
+- **Enhanced Security**: Integrated authentication for more secure access to your data.
+- **End-to-end Observability**: Out of the box metrics and tracing with built-in support for OpenTelemetry.
 
-- **Simplified development**: Integrate tools to your agent in less than 10
-  lines of code, reuse tools between multiple agents or frameworks, and deploy
-  new versions of tools more easily.
-- **Better performance**: Best practices such as connection pooling,
-  authentication, and more.
-- **Enhanced security**: Integrated auth for more secure access to your data
-- **End-to-end observability**: Out of the box metrics and tracing with built-in
-  support for OpenTelemetry.
+---
 
-**⚡ Supercharge Your Workflow with an AI Database Assistant ⚡**
+## Quick Start: Prebuilt Tools
 
-Stop context-switching and let your AI assistant become a true co-developer. By
-[connecting your IDE to your databases with MCP Toolbox][connect-ide], you can
-delegate complex and time-consuming database tasks, allowing you to build faster
-and focus on what matters. This isn't just about code completion; it's about
-giving your AI the context it needs to handle the entire development lifecycle.
+Stop context-switching and let your AI assistant become a true co-developer. By connecting your IDE to your databases with MCP Toolbox, you can query your data in plain English, automate schema discovery and management, and generate database-aware code.
 
-Here’s how it will save you time:
+You can use the Toolbox in any MCP-compatible IDE or client (e.g., Gemini CLI, Google Antigravity, Claude Code, Codex, etc.) by configuring the MCP server.
 
-- **Query in Plain English**: Interact with your data using natural language
-  right from your IDE. Ask complex questions like, *"How many orders were
-  delivered in 2024, and what items were in them?"* without writing any SQL.
-- **Automate Database Management**: Simply describe your data needs, and let the
-  AI assistant manage your database for you. It can handle generating queries,
-  creating tables, adding indexes, and more.
-- **Generate Context-Aware Code**: Empower your AI assistant to generate
-  application code and tests with a deep understanding of your real-time
-  database schema.  This accelerates the development cycle by ensuring the
-  generated code is directly usable.
-- **Slash Development Overhead**: Radically reduce the time spent on manual
-  setup and boilerplate. MCP Toolbox helps streamline lengthy database
-  configurations, repetitive code, and error-prone schema migrations.
+**Prebuilt tools are also conveniently available via the [Google Antigravity MCP Store](https://antigravity.google/docs/mcp) with a simple click-to-install experience.**
 
-Learn [how to connect your AI tools (IDEs) to Toolbox using MCP][connect-ide].
+1. Add the following to your client's MCP configuration file (usually `mcp.json` or `claude_desktop_config.json`):
 
-[connect-ide]: https://googleapis.github.io/genai-toolbox/how-to/connect-ide/
+    ```json
+    {
+      "mcpServers": {
+        "toolbox-postgres": {
+          "command": "npx",
+          "args": [
+            "-y",
+            "@toolbox-sdk/server",
+            "--prebuilt=postgres"
+          ]
+        }
+      }
+    }
+    ```
 
-## General Architecture
+2. Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
 
-Toolbox sits between your application's orchestration framework and your
-database, providing a control plane that is used to modify, distribute, or
-invoke tools. It simplifies the management of your tools by providing you with a
-centralized location to store and update tools, allowing you to share tools
-between agents and applications and update those tools without necessarily
-redeploying your application.
+When you run Toolbox with a `--prebuilt=<database>` flag, you instantly get access to standard tools to interact with that database. 
 
-<p align="center">
-<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
-</p>
+Supported databases currently include:
+- **Google Cloud:** AlloyDB, BigQuery, Cloud SQL (PostgreSQL, MySQL, SQL Server), Spanner, Firestore, Dataplex
+- **Other Databases:** PostgreSQL, MySQL, SQL Server, Oracle, MongoDB, Redis, Elasticsearch, CockroachDB, ClickHouse, Couchbase, Neo4j, Snowflake, Trino, and more.
 
-## Getting Started
+For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
 
-### Quickstart: Running Toolbox using NPX
+*See the [Install & Run the Toolbox server](#install--run-the-toolbox-server) section for different execution methods like Docker or binaries.*
 
-You can run Toolbox directly with a [configuration file](#configuration):
 
-```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+> [!TIP]
+> For users looking for a managed solution, [Google Cloud MCP Servers](https://cloud.google.com/blog/products/databases/managed-mcp-servers-for-google-cloud-databases) 
+> provide a managed MCP experience with prebuilt tools; you can [learn more about the differences here](https://mcp-toolbox.dev/dev/reference/faq/).
+
+---
+
+## Quick Start: Custom Tools
+
+Toolbox can also be used as a framework for customized tools.
+The primary way to configure Toolbox is through the `tools.yaml` file. If you
+have multiple files, you can tell Toolbox which to load with the `--config
+tools.yaml` flag.
+
+You can find more detailed reference documentation to all resource types in the
+[Resources](https://googleapis.github.io/genai-toolbox/resources/).
+
+### Sources
+
+The `sources` section of your `tools.yaml` defines what data sources your
+Toolbox should have access to. Most tools will have at least one source to
+execute against.
+
+```yaml
+kind: source
+name: my-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: toolbox_user
+password: my-password
 ```
 
-This runs the latest version of the toolbox server with your configuration file.
+For more details on configuring different types of sources, see the
+[Sources](https://googleapis.github.io/genai-toolbox/resources/sources).
+
+### Tools
+
+The `tools` section of a `tools.yaml` define the actions an agent can take: what
+type of tool it is, which source(s) it affects, what parameters it uses, etc.
+
+```yaml
+kind: tool
+name: search-hotels-by-name
+type: postgres-sql
+source: my-pg-source
+description: Search for hotels based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the hotel.
+statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+```
+
+For more details on configuring different types of tools, see the
+[Tools](https://googleapis.github.io/genai-toolbox/resources/tools).
+
+### Toolsets
+
+The `toolsets` section of your `tools.yaml` allows you to define groups of tools
+that you want to be able to load together. This can be useful for defining
+different groups based on agent or application.
+
+```yaml
+kind: toolset
+name: my_first_toolset
+tools:
+    - my_first_tool
+    - my_second_tool
+---
+kind: toolset
+name: my_second_toolset
+tools:
+    - my_second_tool
+    - my_third_tool
+```
+
+### Prompts
+
+The `prompts` section of a `tools.yaml` defines prompts that can be used for
+interactions with LLMs.
+
+```yaml
+kind: prompt
+name: code_review
+description: "Asks the LLM to analyze code quality and suggest improvements."
+messages:
+  - content: >
+         Please review the following code for quality, correctness,
+         and potential improvements: \n\n{{.code}}
+arguments:
+  - name: "code"
+    description: "The code to review"
+```
+
+For more details on configuring prompts, see the
+[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
+
+---
+
+## Install & Run the Toolbox server
+
+You can run Toolbox directly with a [configuration file](#quick-start-custom-tools):
+
+```sh
+npx @toolbox-sdk/server --config tools.yaml
+```
+
+This runs the latest version of the Toolbox server with your configuration file.
 
 > [!NOTE]
-> This method should only be used for non-production use cases such as
-> experimentation. For any production use-cases, please consider [Installing the
-> server](#installing-the-server) and then [running it](#running-the-server).
+> This method is optimized for convenience rather than performance. 
+> For a more standard and reliable installation, please use the binary
+> or container image as described in [Install & Run the Toolbox server](#install--run-the-toolbox-server).
 
-### Installing the server
+### Install Toolbox
 
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
@@ -142,7 +236,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.29.0
+> export VERSION=0.31.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -155,7 +249,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.29.0
+> export VERSION=0.31.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -168,7 +262,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.29.0
+> export VERSION=0.31.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -181,7 +275,7 @@ To install Toolbox as a binary:
 >
 > ```cmd
 > :: see releases page for other versions
-> set VERSION=0.29.0
+> set VERSION=0.31.0
 > curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
@@ -193,7 +287,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "0.29.0"
+> $VERSION = "0.31.0"
 > curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
@@ -206,7 +300,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.29.0
+export VERSION=0.31.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -230,26 +324,36 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.29.0
+go install github.com/googleapis/genai-toolbox@v0.31.0
 ```
 <!-- {x-release-please-end} -->
 
 </details>
-
 <details>
-<summary>Gemini CLI Extensions</summary>
-
-To install Gemini CLI Extensions for MCP Toolbox, run the following command:
+<summary>Gemini CLI</summary>
+Check out the [Gemini CLI extensions](https://geminicli.com/extensions/) to install prebuilt tools for specific databases like AlloyDB, BigQuery, and Cloud SQL directly into Gemini CLI.
 
 ```sh
-gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
+# Install Gemini CLI
+npm install -g @google/gemini-cli
+# Install the extension
+gemini extensions install https://github.com/gemini-cli-extensions/cloud-sql-postgres
+# Run Gemini CLI
+gemini
 ```
 
+Interact with your custom tools using natural language through the Gemini CLI.
+
+```sh
+# Install the extension
+gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
+```
 </details>
 
-### Running the server
 
-[Configure](#configuration) a `tools.yaml` to define your tools, and then
+### Run Toolbox
+
+[Configure](#quick-start-custom-tools) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:
 
 <details open>
@@ -258,7 +362,7 @@ execute `toolbox` to start the server:
 To run Toolbox from binary:
 
 ```sh
-./toolbox --tools-file "tools.yaml"
+./toolbox --config "tools.yaml"
 ```
 
 > ⓘ Note  
@@ -271,14 +375,14 @@ To run Toolbox from binary:
 
 <summary>Container image</summary>
 
-To run the server after pulling the [container image](#installing-the-server):
+To run the server after pulling the [container image](#install-toolbox):
 
 ```sh
 export VERSION=0.24.0 # Use the version you pulled
 docker run -p 5000:5000 \
 -v $(pwd)/tools.yaml:/app/tools.yaml \
 us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
---tools-file "/app/tools.yaml"
+--config "/app/tools.yaml"
 ```
 
 > ⓘ Note  
@@ -315,7 +419,7 @@ binary is available in your system path. You can start the server with the same
 command:
 
 ```sh
-toolbox --tools-file "tools.yaml"
+toolbox --config "tools.yaml"
 ```
 
 </details>
@@ -325,20 +429,26 @@ toolbox --tools-file "tools.yaml"
 
 To run Toolbox directly without manually downloading the binary (requires Node.js):
 ```sh
-npx @toolbox-sdk/server --tools-file tools.yaml
+npx @toolbox-sdk/server --config tools.yaml
+```
+
+</details>
+<details>
+<summary>Gemini CLI</summary>
+After installing a [Gemini CLI extensions](https://geminicli.com/extensions/), the prebuilt tools will be available during use.
+
+```sh
+# Run Gemini CLI
+gemini
+
+# List extensions
+/exttensions list
+# List MCP servers
+/mcp list
 ```
 
 </details>
 
-<details>
-
-<summary>Gemini CLI</summary>
-
-Interact with your custom tools using natural language. Check
-[gemini-cli-extensions/mcp-toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
-for more information.
-
-</details>
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -347,10 +457,34 @@ For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
 section](https://googleapis.github.io/genai-toolbox/how-to/)
 
-### Integrating your application
+---
 
-Once your server is up and running, you can load the tools into your
-application. See below the list of Client SDKs for using various frameworks:
+## Connect to Toolbox
+
+Once your Toolbox server is up and running, you can load tools into your MCP-compatible client or
+application. 
+
+### MCP Client
+
+Add the following configuration to your MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "toolbox": {
+      "type": "http",
+      "url": "http://127.0.0.1:5000/mcp",
+    }
+  }
+}
+```
+
+If you would like to connect to a specific toolset, replace url with "http://127.0.0.1:5000/mcp/{toolset_name}".
+
+
+### Toolbox SDKs: Integrate with your Application
+
+Toolbox Client SDKs provide the easy-to-use building blocks and advanced features for connecting your custom applications to the MCP Toolbox server. See below the list of Client SDKs for using various frameworks:
 
 <details open>
   <summary>Python (<a href="https://github.com/googleapis/mcp-toolbox-sdk-python">Github</a>)</summary>
@@ -879,184 +1013,71 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </blockquote>
 </details>
 
-### Using Toolbox with Gemini CLI Extensions
+---
 
-[Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
-directly with your data sources from command line. Below is a list of Gemini CLI
-extensions that are built on top of **Toolbox**. They allow you to interact with
-your data sources through pre-defined or custom tools with natural language.
-Click into the link to see detailed instructions on their usage.
+## Additional Features
 
-To use **custom** tools with Gemini CLI:
+### Test tools with the Toolbox UI
 
-- [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
+tools and toolsets with features such as authorized parameters. To learn more,
+visit [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/).
 
-To use [prebuilt tools][prebuilt] with Gemini CLI:
-
-- [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
-- [AlloyDB for PostgreSQL
-  Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
-- [BigQuery Data
-  Analytics](https://github.com/gemini-cli-extensions/bigquery-data-analytics)
-- [BigQuery Conversational
-  Analytics](https://github.com/gemini-cli-extensions/bigquery-conversational-analytics)
-- [Cloud SQL for
-  MySQL](https://github.com/gemini-cli-extensions/cloud-sql-mysql)
-- [Cloud SQL for MySQL
-  Observability](https://github.com/gemini-cli-extensions/cloud-sql-mysql-observability)
-- [Cloud SQL for
-  PostgreSQL](https://github.com/gemini-cli-extensions/cloud-sql-postgresql)
-- [Cloud SQL for PostgreSQL
-  Observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
-- [Cloud SQL for SQL
-  Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
-- [Cloud SQL for SQL Server
-  Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
-- [Looker](https://github.com/gemini-cli-extensions/looker)
-- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
-- [MySQL](https://github.com/gemini-cli-extensions/mysql)
-- [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
-- [Spanner](https://github.com/gemini-cli-extensions/spanner)
-- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
-- [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
-
-[prebuilt]: https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/
-[gemini-cli-extensions]:
-    https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
-
-## Configuration
-
-The primary way to configure Toolbox is through the `tools.yaml` file. If you
-have multiple files, you can tell toolbox which to load with the `--tools-file
-tools.yaml` flag.
-
-You can find more detailed reference documentation to all resource types in the
-[Resources](https://googleapis.github.io/genai-toolbox/resources/).
-
-### Sources
-
-The `sources` section of your `tools.yaml` defines what data sources your
-Toolbox should have access to. Most tools will have at least one source to
-execute against.
-
-```yaml
-kind: sources
-name: my-pg-source
-type: postgres
-host: 127.0.0.1
-port: 5432
-database: toolbox_db
-user: toolbox_user
-password: my-password
+```sh
+./toolbox --ui
 ```
 
-For more details on configuring different types of sources, see the
-[Sources](https://googleapis.github.io/genai-toolbox/resources/sources).
+### Telemetry
 
-### Tools
+Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
+to export to any OTLP-compatible backend like Google Cloud Monitoring, Agnost AI, or 
+others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
 
-The `tools` section of a `tools.yaml` define the actions an agent can take: what
-type of tool it is, which source(s) it affects, what parameters it uses, etc.
+### Generate Agent Skills
 
-```yaml
-kind: tools
-name: search-hotels-by-name
-type: postgres-sql
-source: my-pg-source
-description: Search for hotels based on name.
-parameters:
-  - name: name
-    type: string
-    description: The name of the hotel.
-statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+The `skills-generate` command allows you to convert a **toolset** into an **Agent Skill** compatible with the [Agent Skill specification](https://agentskills.io/specification). This is useful for distributing tools as portable skill packages.
+
+```bash
+toolbox --config tools.yaml skills-generate \
+  --name "my-skill" \
+  --toolset "my_toolset" \
+  --description "A skill containing multiple tools"
 ```
 
-For more details on configuring different types of tools, see the
-[Tools](https://googleapis.github.io/genai-toolbox/resources/tools).
+Once generated, you can install the skill into the Gemini CLI:
 
-### Toolsets
-
-The `toolsets` section of your `tools.yaml` allows you to define groups of tools
-that you want to be able to load together. This can be useful for defining
-different groups based on agent or application.
-
-```yaml
-toolsets:
-    my_first_toolset:
-        - my_first_tool
-        - my_second_tool
-    my_second_toolset:
-        - my_second_tool
-        - my_third_tool
+```bash
+gemini skills install ./skills/my-skill
 ```
 
-You can load toolsets by name:
+For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate_skill/).
 
-```python
-# This will load all tools
-all_tools = client.load_toolset()
-
-# This will only load the tools listed in 'my_second_toolset'
-my_second_toolset = client.load_toolset("my_second_toolset")
-```
-
-### Prompts
-
-The `prompts` section of a `tools.yaml` defines prompts that can be used for
-interactions with LLMs.
-
-```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
-```
-
-For more details on configuring prompts, see the
-[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
+---
 
 ## Versioning
 
-This project uses [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
-Since the project is in a pre-release stage (version `0.x.y`), we follow the
-standard conventions for initial  development:
+MCP Toolbox for Databases follows [Semantic Versioning](https://semver.org/).
 
-### Pre-1.0.0 Versioning
+The Public API includes the Toolbox Server (CLI, configuration manifests, and pre-built toolsets) and the Client SDKs.
 
-While the major version is `0`, the public API should be considered unstable.
-The version will be incremented  as follows:
+- **Major versions** are incremented for breaking changes, such as incompatible CLI or manifest changes.
+- **Minor versions** are incremented for new features, including modifications to pre-built toolsets or beta features.
+- **Patch versions** are incremented for backward-compatible bug fixes.
 
-- **`0.MINOR.PATCH`**: The **MINOR** version is incremented when we add
-  new functionality or make breaking, incompatible API changes.
-- **`0.MINOR.PATCH`**: The **PATCH** version is incremented for
-  backward-compatible bug fixes.
+For more details, see our [Full Versioning Policy](https://googleapis.github.io/genai-toolbox/about/versioning/).
 
-### Post-1.0.0 Versioning
-
-Once the project reaches a stable `1.0.0` release, the version number
-**`MAJOR.MINOR.PATCH`** will follow the more common convention:
-
-- **`MAJOR`**: Incremented for incompatible API changes.
-- **`MINOR`**: Incremented for new, backward-compatible functionality.
-- **`PATCH`**: Incremented for backward-compatible bug fixes.
-
-The public API that this applies to is the CLI associated with Toolbox, the
-interactions with official SDKs, and the definitions in the `tools.yaml` file.
+---
 
 ## Contributing
 
-Contributions are welcome. Please, see the [CONTRIBUTING](CONTRIBUTING.md)
-to get started. For technical details on setting up your development
-environment, see the [DEVELOPER](DEVELOPER.md) guide.
+Contributions are welcome. Please, see the [CONTRIBUTING](CONTRIBUTING.md) guide to get started. 
 
-Please note that this project is released with a Contributor Code of Conduct.
-By participating in this project you agree to abide by its terms. See
-[Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
+For technical details on setting up a environment for developing on Toolbox itself, see the [DEVELOPER](DEVELOPER.md) guide.
+
+Please note that this project is released with a Contributor Code of Conduct. By participating in this project you agree to abide by its terms. See [Contributor Code of Conduct](CODE_OF_CONDUCT.md) for more information.
+
+---
 
 ## Community
 
-Join our [discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers!
+Join our [Discord community](https://discord.gg/GQrFB3Ec3W) to connect with our developers!

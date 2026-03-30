@@ -50,7 +50,7 @@ This section details the purpose and conventions for MCP Toolbox's tools naming
 properties, **tool name** and **tool type**.
 
 ```
-kind: tools
+kind: tool
 name: cancel_hotel <- tool name
 type: postgres-sql  <- tool type
 source: my_pg_source
@@ -88,6 +88,42 @@ The following guidelines apply to tool types:
 * Should use product name in name (e.g. `firestore-list-collections` over
   `list-collections`).
 * Changes to tool type are breaking changes and should be avoided.
+
+### Tool Invocation & Error Handling
+
+To align with the Model Context Protocol (MCP) and ensure robust agentic workflows, Toolbox distinguishes between errors the agent can fix and errors that require developer intervention.
+
+#### Error Categorization
+
+When implementing `Invoke()` or `ParseParams()`, you must return the appropriate error type from `internal/util/errors.go`. This allows the LLM to attempt a "self-correct" for Agent Errors while signaling a hard stop for Server Errors.
+
+| Category | Description | HTTP Status | MCP Result |
+|---|---|---|---|
+| **Agent Error** (`AgentError`) | Input/Execution logic errors (e.g., SQL syntax, missing records, invalid params). The agent can fix this. | 200 OK | `isError: true` |
+| **Server Error** (`ClientServerError`) | Infrastructure failures (e.g., DB down, auth failure, network failure). The agent cannot fix this. | 500 Internal Error | JSON-RPC Error |
+
+#### Implementation Guidelines
+
+**Use Typed Errors**: Refactor or implement the `Tool` interface methods to return `util.ToolboxError`.
+
+**In `Invoke()`:**
+*   **Agent Error**: Wrap database driver errors (syntax, constraint violations) in `AgentError`.
+*   **Server Error**: Wrap connection failures or internal logic crashes in `ClientServerError`.
+
+**In `ParseParams()`:**
+*   Return `ToolboxError` for missing required parameters or wrong types.
+*   Return `ClientServerError` for failures in resolving authenticated parameters (e.g., invalid tokens).
+
+**Example:**
+
+func (t *MyTool) Invoke(ctx context.Context, sp tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+    res, err := t.db.Exec(ctx, params.SQL)
+    if err != nil {
+        // Driver error is likely a syntax issue the LLM can fix
+        return nil, util.NewAgentError("error executing SQL query", err)
+    }
+    return res, nil
+}
 
 ## Implementation Guides
 
@@ -217,13 +253,28 @@ tools.
 
 #### Adding Documentation
 
-* **Update the documentation** to include information about your new data source
-  and tool. This includes:
-  * Adding a new page to the `docs/en/resources/sources` directory for your data
-    source.
-  * Adding a new page to the `docs/en/resources/tools` directory for your tool.
+When updating documentation, you must adhere to the structural constraints enforced by our Diátaxis-based layout and internal linters:
 
-* **(Optional) Add samples** to the `docs/en/samples/<newdb>` directory.
+* **Adding a New Data Source:**
+  * Create a new folder for your integration in the `docs/en/integrations/` directory (e.g., `docs/en/integrations/newdb/`).
+  * Create an empty `_index.md` file. This acts purely as a structural folder wrapper for Hugo. Do not add body content here.
+  * Create a `source.md` file. **This is the definitive guide.** Add all connection details, authentication, and YAML configurations here. Ensure you include the `{{< list-tools >}}` shortcode to dynamically display tools.
+* **Adding a New Native Tool:**
+  * Create a nested `tools/` directory inside your source (e.g., `docs/en/integrations/newdb/tools/`).
+  * Create an empty `_index.md` file inside the `tools/` directory. **It must contain only frontmatter** and absolutely no markdown body text.
+  * Add the tool details in a `<tool_name>.md` file in this new `tools/` folder. Ensure you include the `{{< compatible-sources >}}` shortcode.
+* **Adding Inherited/Shared Tools (e.g., Managed Databases):**
+  * If a new database inherits tools from a base integration (like Cloud SQL inheriting Postgres tools), create the `tools/` directory with an `_index.md` file.
+  * Map the inherited tools dynamically by adding the `shared_tools` YAML array to the frontmatter of this `tools/_index.md` file. **This file must strictly contain only frontmatter.**
+* **Adding Samples:**
+  * **Physical Location:**
+    1. **Quickstarts:** `docs/en/documentation/getting-started/quickstart/`.
+    2. **Integration-Specific:** `docs/en/integrations/<db>/samples/`. Must include an `_index.md` with strictly only frontmatter.
+    3. **General:** `docs/en/samples/`.
+  * **Frontmatter Requirements (Maintenance):** To ensure samples appear correctly in the Samples Section, you must provide the following tags:
+    * `is_sample: true` - Required for indexing.
+    * `sample_filters:` - A YAML array used for UI filtering (e.g., `[postgres, go, sql]`).
+* **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `documentation`), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, update the "Diátaxis Narrative Framework" preamble so AI models understand the purpose of your new section.
 
 #### Adding Prebuilt Tools
 
@@ -249,10 +300,32 @@ project "toolbox-testing-438616".
 
 ### Linting
 
+### Code Linting
+
 Run the lint check to ensure code quality:
 
 ```bash
 golangci-lint run --fix
+```
+
+### Documentation Structure Linting
+
+To ensure consistency, we enforce a standardized structure for integration `Source` and `Tool` pages.
+
+Before pushing changes to integration pages:
+
+Run the **source page** linter to validate:
+
+```bash
+# From the repository root
+./.ci/lint-docs-source-page.sh
+```
+
+Run the **tool page** linter to validate:
+
+```bash
+# From the repository root
+./.ci/lint-docs-tool-page.sh
 ```
 
 ### Unit Tests
@@ -398,6 +471,51 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
 
 ## Developing Documentation
 
+### Documentation Standards & CI Checks
+
+To maintain consistency and prevent repository bloat, all pull requests must pass the automated documentation linters.
+
+#### Source Page Structure (`integrations/**/source.md`)
+
+When adding or updating a Source page, your markdown file must strictly adhere to the following architectural rules:
+
+  * **File Name:** The configuration guide must be named `source.md`. *(Note: `_index.md` files are purely structural folder wrappers. Do not add body content to them).*
+  * **LinkTitle:** The linkTitle has to be set to the string `Source` always.
+  * **Frontmatter:** The `title` field must end with the word "Source" (e.g., `title: "Firestore Source"`).
+  * **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
+  * **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
+      * **Required Headings:** `About`, `Example`, `Reference`
+      * **Allowed Optional Headings:** `Available Tools`, `Requirements`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
+  * **Available Tools Shortcode:** If you include the `## Available Tools` heading, you must place the list-tools shortcode (e.g., `{{< list-tools >}}`) directly beneath it.
+
+#### Tool Page Structure (`integrations/**/tools/*.md`)
+
+When adding or updating a Tool page, your markdown file must strictly adhere to the following architectural rules:
+
+  * **Location:** Native tools must be placed inside a nested `tools/` directory.
+  * **Frontmatter:** The `title` field must end with the word "Tool" (e.g., `title: "execute-sql Tool"`).
+  * **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
+  * **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
+      * **Required Headings:** `About`, `Example`
+      * **Allowed Optional Headings:** `Compatible Sources`, `Requirements`, `Parameters`, `Output Format`, `Reference`, `Advanced Usage`, `Troubleshooting`, `Additional Resources`
+  * **Compatible Sources Shortcode:** If you include the `## Compatible Sources` heading, you must place the compatible-sources shortcode (e.g., `{{< compatible-sources >}}`) directly beneath it.
+
+#### Prebuilt Configuration Structure (`integrations/**/prebuilt-configs/*.md`)
+
+To ensure new prebuilt configurations are automatically indexed by the `{{< list-prebuilt-configs >}}` shortcode on the main Prebuilt Configs page, follow these rules:
+
+* **Location:** Always place documentation for prebuilt configurations in a nested directory named `prebuilt-configs/` inside the database folder (e.g., `docs/en/integrations/alloydb/prebuilt-configs/`).
+* **Index Wrapper:** Every `prebuilt-configs/` directory must contain an `_index.md` file. This file acts as the anchor for the directory and must contain the `title` and `description` used in the automated lists.
+* **Architecture-Based Mapping:** Map configurations to database folders based on the `kind` defined in the tool's YAML file (in `internal/prebuiltconfigs/tools/`). For example, any tool using the `postgres` kind should live in the `postgres/` integration directory.
+
+#### Frontend Assets & Layouts
+
+If you need to modify the visual appearance, navigation, or behavior of the documentation website itself, all frontend assets are isolated within the `.hugo/` directory.
+
+#### Repository Asset Limits
+
+*   **Max File Size:** No individual file within the `docs/` directory may exceed 24MB. This prevents repository bloat and ensures fast clone times. If you need to include large assets (like high-resolution videos or massive PDFs), host them externally and link to them in the markdown.
+
 ### Running a Local Hugo Server
 
 Follow these steps to preview documentation changes locally using a Hugo server:
@@ -417,19 +535,31 @@ Follow these steps to preview documentation changes locally using a Hugo server:
     npm ci
     ```
 
-1. **Start the Server:**
+1. **Generate Search Index & Start the Server:** Because the Pagefind search engine requires physical files to build its index, `hugo server` (which runs purely in memory) will not display search results by default. To test the search bar locally, build the physical site once (using the development environment to avoid triggering production analytics), generate the index into the static folder, and then start the server:
 
     ```bash
+    hugo --environment development
+    npx pagefind --site public --output-path static/pagefind
     hugo server
     ```
+    *(Note: The `static/pagefind/` directory is git-ignored to prevent committing local search indexes).*
 
 ### Previewing Documentation on Pull Requests
 
+Documentation preview links are automatically generated and commented on your pull request when working from a branch within the main repository.
+
+**For external contributors (forks):**
+For security reasons, automated deployment previews are disabled for pull requests originating from external forks for the cloudflare deployments. To review your documentation changes, please follow the [Running a Local Hugo Server](#running-a-local-hugo-server) instructions to build and view the site on your local machine before requesting a review.
+
 ### Document Versioning Setup
 
-There are 3 GHA workflows we use to achieve document versioning:
+The documentation uses a dynamic versioning system that outputs standard HTML sites alongside AI-optimized plain text files (`llms.txt` and `llms-full.txt`).
 
-1. **Deploy In-development docs:**
+**Search Indexing:** All deployment workflows automatically execute `npx pagefind --site public` to generate a version-scoped search index specific to that deployment's base URL.
+
+There are 6 GHA workflows we use to achieve document versioning (each deployment scenario has one workflow for GitHub Pages and one for Cloudflare Pages):
+
+1.  **Deploy In-development docs:**
     This workflow is run on every commit merged into the main branch. It deploys
     the built site to the `/dev/` subdirectory for the in-development
     documentation.

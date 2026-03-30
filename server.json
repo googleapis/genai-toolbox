@@ -14,11 +14,11 @@
         "url": "https://github.com/googleapis/genai-toolbox",
         "source": "github"
     },
-    "version": "0.29.0",
+    "version": "0.31.0",
     "packages": [
         {
             "registryType": "oci",
-            "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.29.0",
+            "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.31.0",
             "transport": {
                 "type": "streamable-http",
                 "url": "http://{host}:{port}/mcp"
@@ -26,21 +26,21 @@
             "runtimeArguments": [
                 {
                     "type": "named",
-                    "name": "--tools-file",
+                    "name": "--config",
                     "description": "File path specifying the tool configuration.",
                     "default": "tools.yaml",
                     "isRequired": false
                 },
                 {
                     "type": "named",
-                    "name": "--tools-files",
-                    "description": "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with –-tools-file or –-tools-folder.",
+                    "name": "--configs",
+                    "description": "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with –-config or –-config-folder.",
                     "isRequired": false
                 },
                 {
                     "type": "named",
-                    "name": "--tools-folder",
-                    "description": "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with –-tools-file or –-tools-files.",
+                    "name": "--config-folder",
+                    "description": "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with –-config or –-configs.",
                     "isRequired": false
                 },
                 {
@@ -96,7 +96,7 @@
                 {
                     "type": "named",
                     "name": "--disable-reload",
-                    "description": "Disables dynamic reloading of tools file.",
+                    "description": "Disables dynamic reloading of config.",
                     "format": "boolean",
                     "isRequired": false
                 },

@@ -58,7 +58,7 @@ type Config struct {
 	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user"`
 	Password string         `yaml:"password"`
-	Database string         `yaml:"database" validate:"required"`
+	Database string         `yaml:"database"`
 }
 
 func (r Config) SourceConfigType() string {
