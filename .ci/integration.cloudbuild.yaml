@@ -15,7 +15,7 @@
 steps:
   - id: "detect-changes"
     name: "gcr.io/cloud-builders/git"
-    waitFor: ["-"]
+    waitFor: ["-"] 
     entrypoint: "bash"
     args:
       - -c
@@ -98,12 +98,7 @@ steps:
       - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv:
-      [
-        "CLOUD_SQL_POSTGRES_USER",
-        "CLOUD_SQL_POSTGRES_PASS",
-        "CLIENT_ID",
-        "API_KEY",
-      ]
+      ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -111,7 +106,7 @@ steps:
       - -c
       - |
         PATTERN="cloudsqlpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
-
+        
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting Cloud SQL Postgres tests..."
           .ci/test_with_coverage.sh \
@@ -142,7 +137,7 @@ steps:
       - -c
       - |
         PATTERN="alloydb|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|.ci/"
-
+        
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting AlloyDB tests..."
           .ci/test_with_coverage.sh \
@@ -166,13 +161,7 @@ steps:
       - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "ALLOYDB_POSTGRES_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      [
-        "ALLOYDB_POSTGRES_USER",
-        "ALLOYDB_POSTGRES_PASSWORD",
-        "CLIENT_ID",
-        "API_KEY",
-      ]
+    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASSWORD", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -768,7 +757,8 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
+    secretEnv:
+      ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1169,13 +1159,7 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      [
-        "CLIENT_ID",
-        "ELASTICSEARCH_USER",
-        "ELASTICSEARCH_PASS",
-        "ELASTICSEARCH_HOST",
-      ]
+    secretEnv: ["CLIENT_ID", "ELASTICSEARCH_USER", "ELASTICSEARCH_PASS", "ELASTICSEARCH_HOST"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1204,8 +1188,7 @@ steps:
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "SNOWFLAKE_DATABASE=$_SNOWFLAKE_DATABASE"
       - "SNOWFLAKE_SCHEMA=$_SNOWFLAKE_SCHEMA"
-    secretEnv:
-      ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS", "SNOWFLAKE_ACCOUNT"]
+    secretEnv: ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS", "SNOWFLAKE_ACCOUNT"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1232,8 +1215,7 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1255,14 +1237,13 @@ steps:
 
   - id: "oracle"
     name: ghcr.io/oracle/oraclelinux9-instantclient:23
-    waitFor: ["install-dependencies", "detect-changes"]
+    waitFor: ["install-dependencies","detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "ORACLE_SERVER_NAME=$_ORACLE_SERVER_NAME"
-    secretEnv:
-      ["CLIENT_ID", "ORACLE_USERNAME", "ORACLE_PASSWORD", "ORACLE_HOST"]
+    secretEnv: ["CLIENT_ID", "ORACLE_USERNAME", "ORACLE_PASSWORD", "ORACLE_HOST"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1402,6 +1383,7 @@ steps:
           echo "No relevant changes for MariaDB. Skipping shard."
           exit 0
         fi
+
 
 availableSecrets:
   secretManager:
