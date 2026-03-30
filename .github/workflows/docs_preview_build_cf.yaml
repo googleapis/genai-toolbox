@@ -17,6 +17,7 @@ name: "CF: Build Docs Preview"
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
     paths:
       - 'docs/**'
       - '.github/workflows/docs*_cf.yaml'
@@ -26,6 +27,7 @@ permissions: read-all
 
 jobs:
   build-preview:
+    if: "contains(github.event.pull_request.labels.*.name, 'docs: deploy-preview')"
     runs-on: ubuntu-24.04
     env:
       PR_NUMBER: ${{ github.event.number }}
@@ -87,3 +89,26 @@ jobs:
           echo "The Cloudflare deployment workflow is now starting." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "#### [Track Deployment Progress]($DEPLOY_URL)" >> $GITHUB_STEP_SUMMARY
+
+  remove-label:
+    needs: build-preview
+    if: "always() && contains(github.event.pull_request.labels.*.name, 'docs: deploy-preview')"
+    runs-on: ubuntu-24.04
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Remove deploy-preview label
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'docs: deploy-preview'
+              });
+              console.log("Label 'docs: deploy-preview' removed successfully.");
+            } catch (error) {
+              console.log(`Error removing label: ${error}`);
+            }
