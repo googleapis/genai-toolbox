@@ -220,8 +220,21 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func formatVectorForBigQuery(vectorFloats []float32) any {
+	if len(vectorFloats) == 0 {
+		return []float64{}
+	}
+
+	res := make([]float64, len(vectorFloats))
+	for i, f := range vectorFloats {
+		// Convert to float64
+		res[i] = float64(f)
+	}
+	return res
+}
+
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForPgvector)
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, formatVectorForBigQuery)
 }
 
 func (t Tool) Manifest() tools.Manifest {
