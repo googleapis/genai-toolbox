@@ -168,6 +168,7 @@ func createOrUpdatePrimitives(s *Server, w http.ResponseWriter, r *http.Request)
 		_ = render.Render(w, r, newErrResponse(updateErr, http.StatusInternalServerError))
 		return
 	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func getPrimitive(s *Server, w http.ResponseWriter, r *http.Request) {
