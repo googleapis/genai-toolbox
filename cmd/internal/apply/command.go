@@ -27,7 +27,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +34,8 @@ type applyCmd struct {
 	*cobra.Command
 	port    int
 	address string
+	dryRun  bool
+	prune   bool
 }
 
 func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
@@ -48,6 +49,8 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	internal.ConfigFileFlags(flags, opts)
 	flags.StringVarP(&cmd.address, "address", "a", "127.0.0.1", "Address of the server that is running on.")
 	flags.IntVarP(&cmd.port, "port", "p", 5000, "Port of the server that is listening on.")
+	flags.BoolVar(&cmd.dryRun, "dry-run", false, "Simulate the apply process and report intended updates.")
+	flags.BoolVar(&cmd.prune, "prune", false, "Remove resources from the server that are not defined in the provided YAML files.")
 	cmd.RunE = func(*cobra.Command, []string) error { return runApply(cmd, opts) }
 	return cmd.Command
 }
@@ -90,6 +93,16 @@ func (p primitives) Remove(kind, name string) {
 	if names, ok := p[strings.ToLower(kind)]; ok {
 		delete(names, name)
 	}
+}
+
+func (p primitives) GetRemaining() []struct{ kind, name string } {
+	var remaining []struct{ kind, name string }
+	for kind, names := range p {
+		for name := range names {
+			remaining = append(remaining, struct{ kind, name string }{kind, name})
+		}
+	}
+	return remaining
 }
 
 // adminRequest is a generic helper for admin api requests.
@@ -171,6 +184,17 @@ func applyPrimitive(ctx context.Context, address string, port int, kind, name st
 	return nil
 }
 
+func deletePrimitive(ctx context.Context, address string, port int, kind, name string) error {
+	url := fmt.Sprintf("http://%s:%d/admin/%s/%s", address, port, kind, name)
+
+	_, err := adminRequest(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func runApply(cmd *applyCmd, opts *internal.ToolboxOptions) error {
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
@@ -196,18 +220,36 @@ func runApply(cmd *applyCmd, opts *internal.ToolboxOptions) error {
 		return err
 	}
 
+	if cmd.dryRun {
+		opts.Logger.InfoContext(ctx, "simulating dry run")
+	}
 	opts.Logger.InfoContext(ctx, "starting apply sequence", "count", len(filePaths))
 	for _, filePath := range filePaths {
-		if err := processFile(ctx, opts.Logger, filePath, p, cmd.address, cmd.port); err != nil {
+		if err := processFile(ctx, opts, filePath, p, cmd); err != nil {
 			opts.Logger.ErrorContext(ctx, err.Error())
 			return err
+		}
+	}
+	if cmd.prune {
+		remaining := p.GetRemaining()
+		opts.Logger.InfoContext(ctx, "starting prune sequence", "count", len(remaining))
+		for _, resource := range remaining {
+			if cmd.dryRun {
+				fmt.Fprintf(opts.IOStreams.Out, "[dry-run] would delete %s: %s\n", resource.kind, resource.name)
+				continue
+			}
+
+			// Perform the actual deletion
+			if err := deletePrimitive(ctx, cmd.address, cmd.port, resource.kind, resource.name); err != nil {
+				return fmt.Errorf("failed to prune %s/%s: %w", resource.kind, resource.name, err)
+			}
 		}
 	}
 	opts.Logger.InfoContext(ctx, "Done applying")
 	return nil
 }
 
-func processFile(ctx context.Context, logger log.Logger, path string, p primitives, address string, port int) error {
+func processFile(ctx context.Context, opts *internal.ToolboxOptions, path string, p primitives, cmd *applyCmd) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("unable to open file at %q: %w", path, err)
@@ -231,7 +273,7 @@ func processFile(ctx context.Context, logger log.Logger, path string, p primitiv
 		kind, kOk := doc["kind"].(string)
 		name, nOk := doc["name"].(string)
 		if !kOk || !nOk || kind == "" || name == "" {
-			logger.WarnContext(ctx, fmt.Sprintf("invalid primitive schema: missing metadata in %s: kind and name are required", path))
+			opts.Logger.WarnContext(ctx, fmt.Sprintf("invalid primitive schema: missing metadata in %s: kind and name are required", path))
 			continue
 		}
 
@@ -239,7 +281,7 @@ func processFile(ctx context.Context, logger log.Logger, path string, p primitiv
 
 		if p.Exists(kind, name) {
 			p.Remove(kind, name)
-			remoteBody, err := getPrimitiveByName(ctx, address, port, kind, name)
+			remoteBody, err := getPrimitiveByName(ctx, cmd.address, cmd.port, kind, name)
 			if err != nil {
 				return err
 			}
@@ -253,17 +295,17 @@ func processFile(ctx context.Context, logger log.Logger, path string, p primitiv
 			}
 
 			if bytes.Equal(localJSON, remoteJSON) {
-				logger.DebugContext(ctx, "skipping: no changes detected", "kind", kind, "name", name)
+				opts.Logger.DebugContext(ctx, "skipping: no changes detected", "kind", kind, "name", name)
 				continue
 			}
-			logger.DebugContext(ctx, "change detected, updating resource", "kind", kind, "name", name)
+			opts.Logger.DebugContext(ctx, "change detected, updating resource", "kind", kind, "name", name)
 		}
 
-		// TODO: check --prune flag: if prune, delete primitives that are left
-		// in the primitive list
-		// TODO: check for --dry-run flag.
-
-		if err := applyPrimitive(ctx, address, port, kind, name, doc); err != nil {
+		if cmd.dryRun {
+			fmt.Fprintf(opts.IOStreams.Out, "[dry-run] would update %s: %s\n", kind, name)
+			continue
+		}
+		if err := applyPrimitive(ctx, cmd.address, cmd.port, kind, name, doc); err != nil {
 			return err
 		}
 	}

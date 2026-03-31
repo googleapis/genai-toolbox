@@ -51,64 +51,197 @@ func applyCommand(ctx context.Context, args []string) (string, error) {
 }
 
 func TestApply(t *testing.T) {
+	deleteCount := 0
+	applyCount := 0
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Return 200 OK for the initial GET list requests
-		if r.Method == http.MethodGet && !strings.Contains(r.URL.Path, "my-source") {
+		switch r.Method {
+		case http.MethodGet:
+			if strings.Contains(r.URL.Path, "/source/my-source") {
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(map[string]any{"url": "old-url"})
+				return
+			}
+			if strings.Contains(r.URL.Path, "/source/my-source2") {
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(map[string]any{"foo": "bar"})
+				return
+			}
+			if strings.Contains(r.URL.Path, "/source") {
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode([]string{"my-source", "my-source2"}) // existing primitive
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]string{"my-source"}) // existing primitive
+			_ = json.NewEncoder(w).Encode([]string{})
 			return
-		}
-		// Return 200 OK for the GET specific primitive (for DeepEqual check)
-		if r.Method == http.MethodGet && strings.Contains(r.URL.Path, "my-source") {
-			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]any{"url": "old-url"})
+		case http.MethodPut:
+			applyCount++
+			w.WriteHeader(http.StatusNoContent)
 			return
-		}
-		// Return 204 No Content for the PUT/Apply request
-		if r.Method == http.MethodPut {
+		case http.MethodDelete:
+			deleteCount++
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 	}))
 	defer mockServer.Close()
 
-	tempDir := t.TempDir()
-	configPath := filepath.Join(tempDir, "config.yaml")
+	u, _ := url.Parse(mockServer.URL)
+
+	t.Run("Run Apply", func(t *testing.T) {
+		deleteCount = 0
+		applyCount = 0
+		args := []string{
+			"apply",
+			"--address", u.Hostname(),
+			"--port", u.Port(),
+			"--config", createConfigYaml(t),
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		output, err := applyCommand(ctx, args)
+		if err != nil {
+			t.Fatalf("apply command failed: %v", err)
+		}
+
+		if !strings.Contains(output, "starting apply sequence") {
+			t.Errorf("expected logs to show start of sequence, got: %s", output)
+		}
+
+		if !strings.Contains(output, "Done applying") {
+			t.Errorf("expected logs to show completion, got: %s", output)
+		}
+
+		if applyCount != 1 {
+			t.Errorf("expected 1 PUT requests, but sent %d", applyCount)
+		}
+		if deleteCount != 0 {
+			t.Errorf("expected 0 DELETE requests, but sent %d", deleteCount)
+		}
+	})
+
+	t.Run("Run Apply with Dry Run", func(t *testing.T) {
+		deleteCount = 0
+		applyCount = 0
+		args := []string{
+			"apply",
+			"--address", u.Hostname(),
+			"--port", u.Port(),
+			"--dry-run",
+			"--config", createConfigYaml(t),
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		output, err := applyCommand(ctx, args)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !strings.Contains(output, "[dry-run] would update source: my-source") {
+			t.Errorf("expected dry run to show updates")
+		}
+
+		if strings.Contains(output, "[dry-run] would delete source: my-source2") {
+			t.Errorf("expected dry run not to show delete")
+		}
+
+		if applyCount != 0 {
+			t.Errorf("expected 0 PUT requests, but sent %d", applyCount)
+		}
+		if deleteCount != 0 {
+			t.Errorf("expected 0 DELETE requests, but sent %d", deleteCount)
+		}
+	})
+
+	t.Run("Run Apply with Prune", func(t *testing.T) {
+		deleteCount = 0
+		applyCount = 0
+		args := []string{
+			"apply",
+			"--address", u.Hostname(),
+			"--port", u.Port(),
+			"--prune",
+			"--config", createConfigYaml(t),
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		output, err := applyCommand(ctx, args)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !strings.Contains(output, "starting apply sequence") {
+			t.Errorf("expected logs to show start of sequence, got: %s", output)
+		}
+
+		if !strings.Contains(output, "Done applying") {
+			t.Errorf("expected logs to show completion, got: %s", output)
+		}
+
+		if applyCount != 1 {
+			t.Errorf("expected 1 PUT requests, but sent %d", applyCount)
+		}
+		if deleteCount != 1 {
+			t.Errorf("expected 1 DELETE request with prune, got %d", deleteCount)
+		}
+	})
+
+	t.Run("Run Apply with Prune and Dry Run", func(t *testing.T) {
+		deleteCount = 0
+		applyCount = 0
+		args := []string{
+			"apply",
+			"--address", u.Hostname(),
+			"--port", u.Port(),
+			"--prune",
+			"--dry-run",
+			"--config", createConfigYaml(t),
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		output, err := applyCommand(ctx, args)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !strings.Contains(output, "[dry-run] would update source: my-source") {
+			t.Errorf("expected dry run to show updates")
+		}
+
+		if !strings.Contains(output, "[dry-run] would delete source: my-source2") {
+			t.Errorf("expected dry run to show delete")
+		}
+
+		if applyCount != 0 {
+			t.Errorf("expected 0 PUT requests, but sent %d", applyCount)
+		}
+		if deleteCount != 0 {
+			t.Errorf("Dry-run should have sent 0 DELETE requests, but sent %d", deleteCount)
+		}
+	})
+}
+
+// createConfigYaml is a helper function to create config yaml file for the test
+func createConfigYaml(t *testing.T) string {
+	tmp := filepath.Join(t.TempDir(), "config.yaml")
 	yamlContent := `
 kind: source
 name: my-source
 url: new-url
 `
 
-	if err := os.WriteFile(configPath, []byte(yamlContent), 0644); err != nil {
+	if err := os.WriteFile(tmp, []byte(yamlContent), 0644); err != nil {
 		t.Fatal(err)
 	}
-
-	// 3. Prepare Command Arguments
-	u, _ := url.Parse(mockServer.URL)
-	args := []string{
-		"apply",
-		"--address", u.Hostname(),
-		"--port", u.Port(),
-		"--config", configPath, // Assuming your flags support pointing to the file/dir
-	}
-
-	// context will automatically shutdown in 1 second.
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	output, err := applyCommand(ctx, args)
-	if err != nil {
-		t.Fatalf("apply command failed: %v", err)
-	}
-
-	if !strings.Contains(output, "starting apply sequence") {
-		t.Errorf("expected logs to show start of sequence, got: %s", output)
-	}
-
-	if !strings.Contains(output, "Done applying") {
-		t.Errorf("expected logs to show completion, got: %s", output)
-	}
+	return tmp
 }
 
 func TestPrimitivesLoadAndManage(t *testing.T) {
@@ -225,5 +358,31 @@ func TestPrimitivesLoadError(t *testing.T) {
 
 	if err == nil {
 		t.Error("Expected an error when server returns 500, but got nil")
+	}
+}
+
+func TestPrimitivesGetRemaining(t *testing.T) {
+	p := primitives{
+		"source": {
+			"staying": struct{}{},
+			"leaving": struct{}{},
+		},
+		"tool": {
+			"old-tool": struct{}{},
+		},
+	}
+
+	// Simulate "staying" being found in a YAML file
+	p.Remove("source", "staying")
+
+	remaining := p.GetRemaining()
+	expected := map[string]string{"leaving": "source", "old-tool": "tool"}
+	if len(remaining) != len(expected) {
+		t.Fatalf("expected %d items, got %d", len(expected), len(remaining))
+	}
+	for _, r := range remaining {
+		if expected[r.name] != r.kind {
+			t.Errorf("unexpected item: %+v", r)
+		}
 	}
 }
