@@ -17,7 +17,9 @@ package resources
 import (
 	"context"
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
 	"sync"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
@@ -74,6 +76,42 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 	r.toolsets = toolsetsMap
 	r.prompts = promptsMap
 	r.promptsets = promptsetsMap
+}
+
+func (r *ResourceManager) GetSources() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Sorted(maps.Keys(r.sources))
+}
+
+func (r *ResourceManager) GetAuthServices() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Sorted(maps.Keys(r.authServices))
+}
+
+func (r *ResourceManager) GetEmbeddingModels() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Sorted(maps.Keys(r.embeddingModels))
+}
+
+func (r *ResourceManager) GetTools() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Sorted(maps.Keys(r.tools))
+}
+
+func (r *ResourceManager) GetToolsets() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Sorted(maps.Keys(r.toolsets))
+}
+
+func (r *ResourceManager) GetPrompts() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Sorted(maps.Keys(r.prompts))
 }
 
 func (r *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {

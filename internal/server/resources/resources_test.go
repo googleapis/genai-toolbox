@@ -346,3 +346,46 @@ func TestDeletePrimitives(t *testing.T) {
 		t.Fatalf("expected delete to be successful")
 	}
 }
+
+func TestGetPrimitives(t *testing.T) {
+	resMgr := resources.NewResourceManager(
+		map[string]sources.Source{"foo": testutils.MockSource{}},
+		map[string]auth.AuthService{"foo": testutils.MockAuthService{}},
+		map[string]embeddingmodels.EmbeddingModel{"foo": testutils.MockEmbeddingModel{}},
+		map[string]tools.Tool{"foo": testutils.MockTool{}},
+		map[string]tools.Toolset{"foo": tools.Toolset{}},
+		map[string]prompts.Prompt{"foo": testutils.MockPrompt{}},
+		map[string]prompts.Promptset{},
+	)
+	want := []string{"foo"}
+
+	got := resMgr.GetSources()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected sources list: got %v, want %v", got, want)
+	}
+
+	got = resMgr.GetAuthServices()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected auth services list: got %v, want %v", got, want)
+	}
+
+	got = resMgr.GetEmbeddingModels()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected embedding models list: got %v, want %v", got, want)
+	}
+
+	got = resMgr.GetTools()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected tools list: got %v, want %v", got, want)
+	}
+
+	got = resMgr.GetToolsets()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected toolsets list: got %v, want %v", got, want)
+	}
+
+	got = resMgr.GetPrompts()
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected prompts list: got %v, want %v", got, want)
+	}
+}

@@ -37,7 +37,10 @@ func adminRouter(s *Server) (chi.Router, error) {
 
 	r.Put("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { createOrUpdatePrimitives(s, w, r) })
 	r.Delete("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { deletePrimitives(s, w, r) })
-	r.Get("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { getPrimitiveByName(s, w, r) })
+	r.Route("/{kind}", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) { getPrimitive(s, w, r) })
+		r.Get("/{name}", func(w http.ResponseWriter, r *http.Request) { getPrimitiveByName(s, w, r) })
+	})
 
 	return r, nil
 }
@@ -165,6 +168,34 @@ func createOrUpdatePrimitives(s *Server, w http.ResponseWriter, r *http.Request)
 		_ = render.Render(w, r, newErrResponse(updateErr, http.StatusInternalServerError))
 		return
 	}
+}
+
+func getPrimitive(s *Server, w http.ResponseWriter, r *http.Request) {
+	kind := chi.URLParam(r, "kind")
+	ctx := r.Context()
+	ctx = util.WithInstrumentation(ctx, s.instrumentation)
+
+	var names []string
+	switch strings.ToLower(kind) {
+	case "source":
+		names = s.ResourceMgr.GetSources()
+	case "authservice":
+		names = s.ResourceMgr.GetAuthServices()
+	case "embeddingmodel":
+		names = s.ResourceMgr.GetEmbeddingModels()
+	case "tool":
+		names = s.ResourceMgr.GetTools()
+	case "toolset":
+		names = s.ResourceMgr.GetToolsets()
+	case "prompt":
+		names = s.ResourceMgr.GetPrompts()
+	default:
+		err := fmt.Errorf("invalid primitive kind %q provided", kind)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		return
+	}
+	render.JSON(w, r, names)
 }
 
 func getPrimitiveByName(s *Server, w http.ResponseWriter, r *http.Request) {

@@ -230,6 +230,97 @@ func TestAdminDeleteEndpoint(t *testing.T) {
 
 func TestAdminGetEndpoint(t *testing.T) {
 	mockSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Foo: "foo", Password: "password"}}
+	mockAuthService := testutils.MockAuthService{MockAuthServiceConfig: testutils.MockAuthServiceConfig{Foo: "foo"}}
+	mockEmbeddingModel := testutils.MockEmbeddingModel{MockEmbeddingModelConfig: testutils.MockEmbeddingModelConfig{Foo: "foo"}}
+	mockTool := testutils.MockTool{MockToolConfig: testutils.MockToolConfig{Foo: "foo"}}
+	mockToolset := tools.Toolset{ToolsetConfig: tools.ToolsetConfig{ToolNames: []string{"test-tool"}}}
+	mockPrompt := testutils.MockPrompt{MockPromptConfig: testutils.MockPromptConfig{Foo: "foo"}}
+
+	mockSources := map[string]sources.Source{"test-source": mockSource}
+	mockAuthServices := map[string]auth.AuthService{"test-auth-service": mockAuthService}
+	mockEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"test-embedding-model": mockEmbeddingModel}
+	mockTools := map[string]tools.Tool{"test-tool": mockTool}
+	mockToolsets := map[string]tools.Toolset{"test-toolset": mockToolset}
+	mockPrompts := map[string]prompts.Prompt{"test-prompt": mockPrompt}
+
+	r, shutdown := setUpServer(t, "admin", mockSources, mockAuthServices, mockEmbeddingModels, mockTools, mockToolsets, mockPrompts, map[string]prompts.Promptset{})
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	tests := []struct {
+		name               string
+		kind               string
+		want               []string
+		expectedStatusCode int
+	}{
+		{
+			name:               "Get Source - Success",
+			kind:               "source",
+			want:               []string{"test-source"},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Auth Service - Success",
+			kind:               "authService",
+			want:               []string{"test-auth-service"},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Embedding Model - Success",
+			kind:               "embeddingModel",
+			want:               []string{"test-embedding-model"},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Tool - Success",
+			kind:               "tool",
+			want:               []string{"test-tool"},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Toolset - Success",
+			kind:               "toolset",
+			want:               []string{"test-toolset"},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get Prompt - Success",
+			kind:               "prompt",
+			want:               []string{"test-prompt"},
+			expectedStatusCode: http.StatusOK,
+		},
+		{
+			name:               "Get with Invalid Kind - Bad Request",
+			kind:               "invalidKind",
+			expectedStatusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, body, err := runRequest(ts, http.MethodGet, fmt.Sprintf("/%s", tt.kind), nil, nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			if resp.StatusCode != tt.expectedStatusCode {
+				t.Fatalf("response status code is not %d, got %d, %s", tt.expectedStatusCode, resp.StatusCode, string(body))
+			}
+			if tt.expectedStatusCode == http.StatusOK {
+				var got []string
+				if err := json.Unmarshal(body, &got); err != nil {
+					t.Fatalf("error unmarshaling response body")
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Fatalf("unexpected output: got %+v, want %+v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestAdminGetByNameEndpoint(t *testing.T) {
+	mockSource := testutils.MockSource{MockSourceConfig: testutils.MockSourceConfig{Foo: "foo", Password: "password"}}
 	mockSourceConfigMasked := testutils.MockSourceConfig{Foo: "foo", Password: "***"}
 	mockAuthService := testutils.MockAuthService{MockAuthServiceConfig: testutils.MockAuthServiceConfig{Foo: "foo"}}
 	mockEmbeddingModel := testutils.MockEmbeddingModel{MockEmbeddingModelConfig: testutils.MockEmbeddingModelConfig{Foo: "foo"}}
