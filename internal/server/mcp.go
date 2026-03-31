@@ -57,6 +57,7 @@ type sseSession struct {
 type sseManager struct {
 	mu          sync.Mutex
 	sseSessions map[string]*sseSession
+	onRemove    func(id string)
 }
 
 func (m *sseManager) get(id string) (*sseSession, bool) {
@@ -67,6 +68,9 @@ func (m *sseManager) get(id string) (*sseSession, bool) {
 		// Be defensive: a nil session entry should be treated as unavailable.
 		if ok && session == nil {
 			delete(m.sseSessions, id)
+			if m.onRemove != nil {
+				m.onRemove(id)
+			}
 		}
 		return nil, false
 	}
@@ -74,10 +78,11 @@ func (m *sseManager) get(id string) (*sseSession, bool) {
 	return session, true
 }
 
-func newSseManager(ctx context.Context) *sseManager {
+func newSseManager(ctx context.Context, onRemove func(id string)) *sseManager {
 	sseM := &sseManager{
 		mu:          sync.Mutex{},
 		sseSessions: make(map[string]*sseSession),
+		onRemove:    onRemove,
 	}
 	go sseM.cleanupRoutine(ctx)
 	return sseM
@@ -94,6 +99,9 @@ func (m *sseManager) remove(id string) {
 	m.mu.Lock()
 	delete(m.sseSessions, id)
 	m.mu.Unlock()
+	if m.onRemove != nil {
+		m.onRemove(id)
+	}
 }
 
 func (m *sseManager) cleanupRoutine(ctx context.Context) {
@@ -113,6 +121,9 @@ func (m *sseManager) cleanupRoutine(ctx context.Context) {
 				for id, sess := range m.sseSessions {
 					if now.Sub(sess.lastActive) > timeout {
 						delete(m.sseSessions, id)
+						if m.onRemove != nil {
+							m.onRemove(id)
+						}
 					}
 				}
 			}()

@@ -379,8 +379,6 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	addr := net.JoinHostPort(cfg.Address, strconv.Itoa(cfg.Port))
 	srv := &http.Server{Addr: addr, Handler: r}
 
-	sseManager := newSseManager(ctx)
-
 	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
@@ -389,11 +387,15 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		root:            r,
 		logger:          l,
 		instrumentation: instrumentation,
-		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
 		toolboxUrl:      cfg.ToolboxUrl,
 		mcpPrmFile:      cfg.McpPrmFile,
 	}
+
+	sseManager := newSseManager(ctx, func(id string) {
+		s.mcpClientNames.Delete(id)
+	})
+	s.sseManager = sseManager
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {

@@ -1122,7 +1122,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
 
-	sseManager := newSseManager(ctx)
+	sseManager := newSseManager(ctx, nil)
 
 	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
@@ -1173,7 +1173,7 @@ func TestSseManagerGetNonExistentSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := newSseManager(ctx)
+	m := newSseManager(ctx, nil)
 
 	// Must not panic when session ID doesn't exist in the map.
 	session, ok := m.get("non-existent-id")
@@ -1189,7 +1189,7 @@ func TestSseManagerGetNilSessionValue(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := newSseManager(ctx)
+	m := newSseManager(ctx, nil)
 	m.sseSessions["nil-session-id"] = nil
 
 	session, ok := m.get("nil-session-id")
