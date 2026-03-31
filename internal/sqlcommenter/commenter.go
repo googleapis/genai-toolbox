@@ -82,7 +82,7 @@ func agentName() string {
 
 // encode percent-encodes a value according to the SQLCommenter spec (RFC 3986).
 func encode(v string) string {
-	return url.QueryEscape(v)
+	return strings.ReplaceAll(url.QueryEscape(v), "+", "%20")
 }
 
 // AppendComment appends a SQLCommenter comment to sql.  The comment carries the
