@@ -68,9 +68,9 @@ var tool4 = MockTool{
 }
 
 var tool5 = MockTool{
-	Name:                         "require_client_auth_tool",
-	Params:                       []parameters.Parameter{},
-	requiresClientAuthrorization: true,
+	Name:                        "require_client_auth_tool",
+	Params:                      []parameters.Parameter{},
+	requiresClientAuthorization: true,
 }
 
 var prompt1 = MockPrompt{

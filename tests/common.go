@@ -24,12 +24,15 @@ import (
 	"strings"
 	"testing"
 
+	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/bigtable"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/api/iterator"
 )
 
 // GetToolsConfig returns a mock tools config file
@@ -1070,4 +1073,54 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 		t.Fatalf("Failed to drop all MSSQL tables: %v", err)
 	}
 
+}
+
+func CleanupBigQueryDatasets(t *testing.T, ctx context.Context, client *bigquery.Client, datasetIDs []string) {
+	for _, id := range datasetIDs {
+		t.Logf("INTEGRATION CLEANUP: Purging dataset %s", id)
+		ds := client.Dataset(id)
+
+		//Delete tables first since Dataset.Delete fails if not empty
+		tableIt := ds.Tables(ctx)
+		for {
+			table, err := tableIt.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				t.Errorf("INTEGRATION CLEANUP: Failed to iterate tables in %s: %v", id, err)
+				break
+			}
+			if err := table.Delete(ctx); err != nil {
+				t.Errorf("INTEGRATION CLEANUP: Failed to delete table %s: %v", table.TableID, err)
+			}
+		}
+		//delete empty dataset
+		if err := ds.Delete(ctx); err != nil {
+			t.Errorf("INTEGRATION CLEANUP: Failed to delete dataset %s: %v", id, err)
+		} else {
+			t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped dataset %s", id)
+		}
+	}
+}
+
+// finds and deletes all tables in a Bigtable instance that match the uniqueID.
+func CleanupBigtableTables(t *testing.T, ctx context.Context, adminClient *bigtable.AdminClient, uniqueID string) {
+	tables, err := adminClient.Tables(ctx)
+	if err != nil {
+		t.Errorf("INTEGRATION CLEANUP: Failed to list tables: %v", err)
+		return
+	}
+
+	for _, table := range tables {
+		// Delete tables containing our uniqueID
+		if strings.Contains(table, uniqueID) {
+			t.Logf("INTEGRATION CLEANUP: Deleting table %s", table)
+			if err := adminClient.DeleteTable(ctx, table); err != nil {
+				t.Errorf("INTEGRATION CLEANUP: Failed to delete table %s: %v", table, err)
+			} else {
+				t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped table %s", table)
+			}
+		}
+	}
 }

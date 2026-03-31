@@ -64,14 +64,33 @@ type TestRow struct {
 
 func TestBigtableToolEndpoints(t *testing.T) {
 	sourceConfig := getBigtableVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	t.Logf("Starting Bigtable test with uniqueID: %s", uniqueID)
+
+	args := []string{"--enable-api"}
+
+	// Initialize AdminClient to create or delete tables
+	adminClient, err := bigtable.NewAdminClient(context.Background(), sourceConfig["project"].(string), sourceConfig["instance"].(string))
+	if err != nil {
+		t.Fatalf("Failed to create AdminClient: %v", err)
+	}
+
+	t.Cleanup(func() {
+		adminClient.Close()
+	})
+
+	t.Cleanup(func() {
+		t.Logf("Running global cleanup for uniqueID: %s", uniqueID)
+		tests.CleanupBigtableTables(t, context.Background(), adminClient, uniqueID)
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Minute)
 	defer cancel()
 
-	var args []string
-
-	tableName := "param_table" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "tmpl_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableName := "param_table_" + uniqueID
+	tableNameAuth := "auth_table_" + uniqueID
+	tableNameTemplateParam := "tmpl_param_table_" + uniqueID
 
 	columnFamilyName := "cf"
 	muts, rowKeys := getTestData(columnFamilyName)
@@ -85,18 +104,15 @@ func TestBigtableToolEndpoints(t *testing.T) {
 		"SELECT TO_INT64(cf['id']) AS id, CAST(cf['name'] AS string) AS name FROM %s WHERE TO_INT64(cf['id']) IN UNNEST(@idArray) AND CAST(cf['name'] AS string) IN UNNEST(@nameArray);",
 		tableName,
 	)
-	teardownTable1 := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
-	defer teardownTable1(t)
+	setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableName, columnFamilyName, muts, rowKeys)
 
 	// Do not change the shape of statement without checking tests/common_test.go.
 	// The structure and value of seed data has to match https://github.com/googleapis/genai-toolbox/blob/4dba0df12dc438eca3cb476ef52aa17cdf232c12/tests/common_test.go#L200-L251
 	authToolStatement := fmt.Sprintf("SELECT CAST(cf['name'] AS string) as name FROM %s WHERE CAST(cf['email'] AS string) = @email;", tableNameAuth)
-	teardownTable2 := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
-	defer teardownTable2(t)
+	setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameAuth, columnFamilyName, muts, rowKeys)
 
 	mutsTmpl, rowKeysTmpl := getTestDataTemplateParam(columnFamilyName)
-	teardownTableTmpl := setupBtTable(t, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameTemplateParam, columnFamilyName, mutsTmpl, rowKeysTmpl)
-	defer teardownTableTmpl(t)
+	setupBtTable(t, adminClient, ctx, sourceConfig["project"].(string), sourceConfig["instance"].(string), tableNameTemplateParam, columnFamilyName, mutsTmpl, rowKeysTmpl)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigtableToolType, paramTestStatement, idParamTestStatement, nameParamTestStatement, arrayTestStatement, authToolStatement)
@@ -225,63 +241,49 @@ func getTestDataTemplateParam(columnFamilyName string) ([]*bigtable.Mutation, []
 	return muts, rowKeys
 }
 
-func setupBtTable(t *testing.T, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) func(*testing.T) {
-	// Creating clients
-	adminClient, err := bigtable.NewAdminClient(ctx, projectId, instance)
-	if err != nil {
-		t.Fatalf("NewAdminClient: %v", err)
-	}
+func setupBtTable(t *testing.T, adminClient *bigtable.AdminClient, ctx context.Context, projectId string, instance string, tableName string, columnFamilyName string, muts []*bigtable.Mutation, rowKeys []string) {
 
 	client, err := bigtable.NewClient(ctx, projectId, instance)
 	if err != nil {
-		log.Fatalf("Could not create data operations client: %v", err)
+		t.Fatalf("Could not create data operations client: %v", err)
 	}
 	defer client.Close()
 
 	// Creating tables
 	tables, err := adminClient.Tables(ctx)
 	if err != nil {
-		log.Fatalf("Could not fetch table list: %v", err)
+		t.Fatalf("Could not fetch table list: %v", err)
 	}
 
 	if !slices.Contains(tables, tableName) {
-		log.Printf("Creating table %s", tableName)
+		t.Logf("Creating table %s", tableName)
 		if err := adminClient.CreateTable(ctx, tableName); err != nil {
-			log.Fatalf("Could not create table %s: %v", tableName, err)
+			t.Fatalf("Could not create table %s: %v", tableName, err)
 		}
 	}
 
 	tblInfo, err := adminClient.TableInfo(ctx, tableName)
 	if err != nil {
-		log.Fatalf("Could not read info for table %s: %v", tableName, err)
+		t.Fatalf("Could not read info for table %s: %v", tableName, err)
 	}
 
 	// Creating column family
 	if !slices.Contains(tblInfo.Families, columnFamilyName) {
 		if err := adminClient.CreateColumnFamily(ctx, tableName, columnFamilyName); err != nil {
-			log.Fatalf("Could not create column family %s: %v", columnFamilyName, err)
+			t.Fatalf("Could not create column family %s: %v", columnFamilyName, err)
 		}
 	}
 
 	tbl := client.Open(tableName)
 	rowErrs, err := tbl.ApplyBulk(ctx, rowKeys, muts)
 	if err != nil {
-		log.Fatalf("Could not apply bulk row mutation: %v", err)
+		t.Fatalf("Could not apply bulk row mutation: %v", err)
 	}
 	if rowErrs != nil {
 		for _, rowErr := range rowErrs {
-			log.Printf("Error writing row: %v", rowErr)
+			t.Logf("Error writing row: %v", rowErr)
 		}
-		log.Fatalf("Could not write some rows")
-	}
-
-	// Writing data
-	return func(t *testing.T) {
-		// tear down test
-		if err = adminClient.DeleteTable(ctx, tableName); err != nil {
-			log.Fatalf("Teardown failed. Could not delete table %s: %v", tableName, err)
-		}
-		defer adminClient.Close()
+		t.Fatalf("Could not write some rows")
 	}
 }
 

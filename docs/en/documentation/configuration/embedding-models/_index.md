@@ -73,6 +73,7 @@ kind: tool
 name: insert_embedding
 type: postgres-sql
 source: my-pg-instance
+description: Insert a new document into the database.
 statement: |
   INSERT INTO documents (content, embedding)
   VALUES ($1, $2);
@@ -92,6 +93,7 @@ kind: tool
 name: search_embedding
 type: postgres-sql
 source: my-pg-instance
+description: Search for documents in the database.
 statement: |
   SELECT id, content, embedding <-> $1 AS distance
   FROM documents

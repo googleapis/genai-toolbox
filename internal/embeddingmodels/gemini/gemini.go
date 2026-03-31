@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -34,6 +35,8 @@ type Config struct {
 	Type      string `yaml:"type" validate:"required"`
 	Model     string `yaml:"model" validate:"required"`
 	ApiKey    string `yaml:"apiKey"`
+	Project   string `yaml:"project"`
+	Location  string `yaml:"location"`
 	Dimension int32  `yaml:"dimension"`
 }
 
@@ -44,12 +47,60 @@ func (cfg Config) EmbeddingModelConfigType() string {
 
 // Initialize a Gemini embedding model
 func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingModel, error) {
-	// Get client configs
 	configs := &genai.ClientConfig{}
-	if cfg.ApiKey != "" {
-		configs.APIKey = cfg.ApiKey
+
+	// Retrieve logger from context
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve logger: %w", err)
 	}
 
+	// Get API Key
+	apiKey := cfg.ApiKey
+	if apiKey == "" {
+		apiKey = os.Getenv("GOOGLE_API_KEY")
+	}
+	if apiKey == "" {
+		apiKey = os.Getenv("GEMINI_API_KEY")
+	}
+
+	// Try to resolve Project and Location
+	project := cfg.Project
+	if project == "" {
+		project = os.Getenv("GOOGLE_CLOUD_PROJECT")
+	}
+
+	location := cfg.Location
+	if location == "" {
+		location = os.Getenv("GOOGLE_CLOUD_LOCATION")
+	}
+
+	// Determine the Backend
+	if project != "" && location != "" {
+		// VertexAI API uses ADC for authentication.
+		// ADC requires `Project` and `Location` to be set.
+		configs.Backend = genai.BackendVertexAI
+		configs.Project = project
+		configs.Location = location
+
+		l.InfoContext(ctx, "Using Vertex AI backend for Gemini embedding", "project", project, "location", location)
+
+	} else if apiKey != "" {
+		// Using Gemini API, which uses API Key for authentication.
+		configs.Backend = genai.BackendGeminiAPI
+		configs.APIKey = apiKey
+
+		l.InfoContext(ctx, "Using Google AI (Gemini API) backend for Gemini embedding")
+
+	} else {
+		// Missing credentials
+		return nil, fmt.Errorf("missing credentials for Gemini embedding: " +
+			"For Google AI: Provide 'apiKey' in YAML or set GOOGLE_API_KEY/GEMINI_API_KEY env vars. " +
+			"For Vertex AI: Provide 'project'/'location' in YAML or via GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION env vars. " +
+			"See documentation for details: https://googleapis.github.io/genai-toolbox/resources/embeddingmodels/gemini/")
+	}
+
+	// Set user agent
 	ua, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user agent from context: %w", err)
@@ -63,14 +114,13 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 	// Create new Gemini API client
 	client, err := genai.NewClient(ctx, configs)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create Gemini API client")
+		return nil, fmt.Errorf("unable to create Gemini API client: %w", err)
 	}
 
-	m := &EmbeddingModel{
+	return &EmbeddingModel{
 		Config: cfg,
 		Client: client,
-	}
-	return m, nil
+	}, nil
 }
 
 var _ embeddingmodels.EmbeddingModel = EmbeddingModel{}

@@ -78,7 +78,8 @@ func TestDataformCompileTool(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}

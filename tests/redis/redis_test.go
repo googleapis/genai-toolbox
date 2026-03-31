@@ -69,7 +69,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initRedisClient(ctx, RedisAddress, RedisPass)
 	if err != nil {

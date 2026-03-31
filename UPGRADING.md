@@ -26,7 +26,6 @@ If you still require the legacy `/api` endpoint, you must explicitly activate it
   endpoint exclusively, as the `/api` endpoint is now deprecated. If your workflow  
   relied on a non-standard feature that is missing from the new implementation, please submit a
   feature request on our [GitHub Issues page](https://github.com/googleapis/genai-toolbox/issues).
-* **UI Dependency:** Until the UI is officially migrated, it still requires the API to function. You must run the toolbox with both flags: `./toolbox --ui --enable-api`.
 
 ### 2. Strict Tool Naming Validation (SEP986)
 Tool names are now strictly validated against [ModelContextProtocol SEP986 guidelines](https://github.com/alexhancock/modelcontextprotocol/blob/main/docs/specification/draft/server/tools.mdx#tool-names) prior to MCP initialization.

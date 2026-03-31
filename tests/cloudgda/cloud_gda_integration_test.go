@@ -126,7 +126,7 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 		return origFunc(ctx, opts...)
 	}
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getCloudGdaToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
