@@ -25,6 +25,7 @@ import (
 	tlsutil "github.com/couchbase/tools-common/http/tls"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -112,7 +113,12 @@ func (s *Source) CouchbaseQueryScanConsistency() uint {
 	return s.QueryScanConsistency
 }
 
-func (s *Source) RunSQL(statement string, params parameters.ParamValues) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, statement string, params parameters.ParamValues) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "couchbase")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	results, err := s.CouchbaseScope().Query(statement, &gocb.QueryOptions{
 		ScanConsistency: gocb.QueryScanConsistency(s.CouchbaseQueryScanConsistency()),
 		NamedParameters: params.AsMap(),

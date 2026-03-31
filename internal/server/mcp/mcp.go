@@ -47,12 +47,18 @@ var SUPPORTED_PROTOCOL_VERSIONS = []string{
 // InitializeResponse runs capability negotiation and protocol version agreement.
 // This is the Initialization phase of the lifecycle for MCP client-server connections.
 // Always start with the latest protocol version supported.
-func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, toolboxVersion string) (any, string, error) {
+// Returns (response, protocolVersion, clientName, error).
+// clientName is taken from clientInfo.name in the initialize request and
+// identifies the MCP agent (e.g. "sales-agent"). It is empty when the client
+// does not send clientInfo.
+func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, toolboxVersion string) (any, string, string, error) {
 	var req mcputil.InitializeRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp initialize request: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), "", err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), "", "", err
 	}
+
+	clientName := req.Params.ClientInfo.Name
 
 	var protocolVersion string
 	v := req.Params.ProtocolVersion
@@ -87,7 +93,7 @@ func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, 
 		Result:  result,
 	}
 
-	return res, protocolVersion, nil
+	return res, protocolVersion, clientName, nil
 }
 
 // NotificationHandler process notifications request. It MUST NOT send a response.

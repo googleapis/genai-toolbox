@@ -26,6 +26,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -59,6 +60,11 @@ type Server struct {
 	sseManager      *sseManager
 	ResourceMgr     *resources.ResourceManager
 	mcpPrmFile      string
+	// mcpClientNames maps MCP session ID → clientInfo.name captured during the
+	// initialize handshake. It allows tools/call requests (which arrive as
+	// separate HTTP requests) to inject the originating agent name as the
+	// SQLCommenter "controller" tag without requiring a static env var.
+	mcpClientNames sync.Map
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -464,7 +470,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 
 	r.Mount("/mcp", mcpR)
-	if cfg.EnableAPI {
+	if cfg.EnableAPI || cfg.UI {
 		apiR, err := apiRouter(s)
 		if err != nil {
 			return nil, err

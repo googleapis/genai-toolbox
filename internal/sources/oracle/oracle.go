@@ -15,6 +15,7 @@ import (
 	_ "github.com/sijms/go-ora/v2" // Pure Go driver
 
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -138,6 +139,11 @@ func (s *Source) OracleDB() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any, readOnly bool) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "oracle")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	if !readOnly {
 		result, err := s.OracleDB().ExecContext(ctx, statement, params...)
 		if err != nil {

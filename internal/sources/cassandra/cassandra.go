@@ -21,6 +21,7 @@ import (
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -95,6 +96,11 @@ func (s *Source) SourceType() string {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params parameters.ParamValues) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "cassandra")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	sliceParams := params.AsSlice()
 	iter := s.CassandraSession().Query(statement, sliceParams...).IterContext(ctx)
 

@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -223,6 +224,8 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 
 	// run tool invocation and generate response.
 	executionStart := time.Now()
+	// Inject tool name into context for SQLCommenter
+	ctx = sqlcommenter.WithToolName(ctx, toolName)
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	executionDuration := time.Since(executionStart).Seconds()
 

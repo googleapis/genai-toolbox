@@ -36,6 +36,7 @@ import (
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -248,7 +249,8 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 
 			var v string
 			var res any
-			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
+			// stdio is a single persistent connection; use "stdio" as the session ID.
+			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "stdio", "", "", nil, "")
 			if err != nil {
 				// errors during the processing of message will generate a valid MCP Error response.
 				// server can continue to run.
@@ -536,7 +538,22 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
 
-	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header, networkProtocolVersion)
+	// Determine the effective session ID for clientName correlation.
+	// - SSE (v20241105): URL param ?sessionId=<uuid> present on every request.
+	// - v20250326+: Mcp-Session-Id header sent by the client after initialize.
+	// - New sessions (initialize): neither is set yet, so we pre-generate the
+	//   UUID here so it can be stored during initialize AND returned in the
+	//   response header in the same call — avoiding a one-request lag.
+	mcpSessionID := headerSessionId
+	if mcpSessionID == "" {
+		mcpSessionID = paramSessionId
+	}
+	if mcpSessionID == "" {
+		// New session: pre-generate so initialize can store clientName by it.
+		mcpSessionID = uuid.New().String()
+	}
+
+	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, mcpSessionID, toolsetName, promptsetName, r.Header, networkProtocolVersion)
 	if err != nil {
 		s.logger.DebugContext(ctx, fmt.Errorf("error processing message: %w", err).Error())
 	}
@@ -549,9 +566,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// for v20250326, add the `Mcp-Session-Id` header
+	// for v20250326, add the `Mcp-Session-Id` header using the pre-generated ID
+	// so the client can echo it back on subsequent requests for correlation.
 	if v == v20250326.PROTOCOL_VERSION {
-		sessionId = uuid.New().String()
+		sessionId = mcpSessionID
 		w.Header().Set("Mcp-Session-Id", sessionId)
 	}
 
@@ -585,8 +603,13 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, res)
 }
 
-// processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
+// processMcpMessage process the messages received from clients.
+// sessionID is an opaque string that uniquely identifies the MCP session
+// (SSE session UUID, Mcp-Session-Id header value, or "stdio"). It is used
+// to correlate the clientInfo.name from the initialize handshake with
+// subsequent tools/call requests so that each agent's queries are
+// automatically tagged with the correct controller name.
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, sessionID string, toolsetName string, promptsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
 	operationStart := time.Now()
 
 	logger, err := util.LoggerFromContext(ctx)
@@ -718,7 +741,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	// Process the method
 	switch baseMessage.Method {
 	case mcputil.INITIALIZE:
-		result, version, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+		result, version, clientName, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
@@ -727,9 +750,21 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			}
 			return "", result, err
 		}
+		// Persist the agent name so tools/call requests on the same session
+		// can inject it automatically as the SQLCommenter "controller" tag.
+		if clientName != "" && sessionID != "" {
+			s.mcpClientNames.Store(sessionID, clientName)
+		}
 		span.SetAttributes(attribute.String("mcp.protocol.version", version))
 		return version, result, err
 	default:
+		// Inject the agent name captured during initialize into the context so
+		// AppendComment / JobLabels can tag queries with the correct controller.
+		if sessionID != "" {
+			if v, ok := s.mcpClientNames.Load(sessionID); ok {
+				ctx = sqlcommenter.WithAgentName(ctx, v.(string))
+			}
+		}
 		toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
 		if !ok {
 			err := fmt.Errorf("toolset does not exist")

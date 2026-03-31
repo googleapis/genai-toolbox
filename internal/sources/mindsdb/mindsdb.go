@@ -23,6 +23,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlcommon"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -103,6 +104,11 @@ func (s *Source) MySQLPool() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "mysql")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	// MindsDB now supports MySQL prepared statements natively
 	results, err := s.MindsDBPool().QueryContext(ctx, statement, params...)
 	if err != nil {

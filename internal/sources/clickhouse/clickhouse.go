@@ -24,6 +24,7 @@ import (
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -101,6 +102,11 @@ func (s *Source) ClickHousePool() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params parameters.ParamValues) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "clickhouse")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	var sliceParams []any
 	if params != nil {
 		sliceParams = params.AsSlice()

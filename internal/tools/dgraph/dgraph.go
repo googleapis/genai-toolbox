@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	DgraphClient() *dgraph.DgraphClient
-	RunSQL(string, parameters.ParamValues, bool, string) (any, error)
+	RunSQL(context.Context, string, parameters.ParamValues, bool, string) (any, error)
 }
 
 type Config struct {
@@ -100,7 +100,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
-	resp, err := source.RunSQL(t.Statement, params, t.IsQuery, t.Timeout)
+	resp, err := source.RunSQL(ctx, t.Statement, params, t.IsQuery, t.Timeout)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

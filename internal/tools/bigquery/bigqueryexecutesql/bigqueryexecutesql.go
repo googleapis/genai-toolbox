@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	bqutil "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -282,6 +283,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
+
+	// Embed the tool name in the context so RunSQL can attach it as a BigQuery
+	// Job Label for Cloud SQL Insights / BigQuery observability.
+	ctx = sqlcommenter.WithToolName(ctx, t.Name)
+
 	resp, err := source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps)
 	if err != nil {
 		return nil, util.NewClientServerError("error running sql", http.StatusInternalServerError, err)

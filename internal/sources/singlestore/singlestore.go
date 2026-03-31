@@ -24,6 +24,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlcommon"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -108,6 +109,11 @@ func (s *Source) SingleStorePool() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "mysql")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	results, err := s.SingleStorePool().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

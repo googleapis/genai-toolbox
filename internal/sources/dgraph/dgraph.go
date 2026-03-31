@@ -115,7 +115,9 @@ func (s *Source) DgraphClient() *DgraphClient {
 	return s.Client
 }
 
-func (s *Source) RunSQL(statement string, params parameters.ParamValues, isQuery bool, timeout string) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, statement string, params parameters.ParamValues, isQuery bool, timeout string) (any, error) {
+	// Dgraph does not support SQL block comments, so we explicitly skip injecting SQLCommenter metadata here.
+
 	paramsMap := params.AsMapWithDollarPrefix()
 	resp, err := s.DgraphClient().ExecuteQuery(statement, paramsMap, isQuery, timeout)
 	if err != nil {

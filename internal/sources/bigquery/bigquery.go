@@ -28,6 +28,7 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -571,6 +572,12 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	}
 	if connProps != nil {
 		query.ConnectionProperties = connProps
+	}
+
+	// Attach SQLCommenter-derived labels so queries are visible in BigQuery
+	// job history grouped by tool name, application, and framework.
+	if labels := sqlcommenter.JobLabels(ctx); len(labels) > 0 {
+		query.Labels = labels
 	}
 
 	// This block handles SELECT statements, which return a row set.

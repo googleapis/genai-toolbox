@@ -22,9 +22,9 @@ import (
 
 	"github.com/goccy/go-yaml"
 	_ "github.com/nakagami/firebirdsql"
-	"go.opentelemetry.io/otel/trace"
-
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceType string = "firebird"
@@ -97,6 +97,11 @@ func (s *Source) FirebirdDB() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "firebird")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	rows, err := s.FirebirdDB().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

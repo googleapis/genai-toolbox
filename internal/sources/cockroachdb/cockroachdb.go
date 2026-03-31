@@ -25,10 +25,12 @@ import (
 	"strings"
 	"time"
 
-	crdbpgx "github.com/cockroachdb/cockroach-go/v2/crdb/crdbpgxv5"
+	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbpgxv5"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
@@ -142,6 +144,37 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 // using the official CockroachDB retry mechanism from cockroach-go/v2
 func (s *Source) ExecuteTxWithRetry(ctx context.Context, fn func(pgx.Tx) error) error {
 	return crdbpgx.ExecuteTx(ctx, s.Pool, pgx.TxOptions{}, fn)
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "pgx")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
+	rows, err := s.Query(ctx, statement, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	fields := rows.FieldDescriptions()
+	var out []any
+	for rows.Next() {
+		v, err := rows.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		row := orderedmap.Row{}
+		for i, f := range fields {
+			row.Add(f.Name, v[i])
+		}
+		out = append(out, row)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	return out, nil
 }
 
 // Query executes a query using the connection pool with MCP security enforcement.

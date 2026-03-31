@@ -110,6 +110,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sqlStr))
+
 	resp, err := source.RunSQL(ctx, sqlStr, nil)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)

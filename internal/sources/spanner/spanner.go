@@ -22,6 +22,7 @@ import (
 	"cloud.google.com/go/spanner"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
@@ -138,6 +139,11 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 }
 
 func (s *Source) RunSQL(ctx context.Context, readOnly bool, statement string, params map[string]any) (any, error) {
+	// Inject the database driver into the context for SQLCommenter
+	ctx = sqlcommenter.WithDBDriver(ctx, "spanner")
+	// Decorate the statement with SQLCommenter metadata from the context
+	statement = sqlcommenter.AppendComment(ctx, statement)
+
 	var results []any
 	var err error
 	var opErr error

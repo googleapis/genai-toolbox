@@ -23,6 +23,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -233,6 +234,9 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
+
+	// Inject tool name into context for SQLCommenter
+	ctx = sqlcommenter.WithToolName(ctx, toolName)
 
 	res, err := tool.Invoke(ctx, s.ResourceMgr, params, accessToken)
 
