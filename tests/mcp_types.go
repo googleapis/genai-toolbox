@@ -16,7 +16,7 @@ package tests
 
 import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
+	v20251125 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20251125"
 )
 
 // CallToolParams represents the internal payload of an MCP tool call request
@@ -45,7 +45,7 @@ type MCPCallToolRequest struct {
 type MCPCallToolResponse struct {
 	Jsonrpc string                   `json:"jsonrpc"`
 	Id      jsonrpc.RequestId        `json:"id"`
-	Result  v20250618.CallToolResult `json:"result,omitempty"`
+	Result  v20251125.CallToolResult `json:"result,omitempty"`
 	Error   *jsonrpc.Error           `json:"error,omitempty"`
 }
 
@@ -54,7 +54,7 @@ func NewMCPCallToolRequest(id jsonrpc.RequestId, toolName string, args map[strin
 	return MCPCallToolRequest{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Method:  v20250618.TOOLS_CALL,
+		Method:  v20251125.TOOLS_CALL,
 		Params: CallToolParams{
 			Name:      toolName,
 			Arguments: args,

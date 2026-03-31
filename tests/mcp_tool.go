@@ -26,7 +26,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
+	v20251125 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20251125"
 )
 
 // NewMCPRequestHeader takes custom headers and appends headers required for MCP.
@@ -36,7 +36,7 @@ func NewMCPRequestHeader(t *testing.T, customHeaders map[string]string) map[stri
 		headers[k] = v
 	}
 	headers["Content-Type"] = "application/json"
-	headers["MCP-Protocol-Version"] = v20250618.PROTOCOL_VERSION
+	headers["MCP-Protocol-Version"] = v20251125.PROTOCOL_VERSION
 	return headers
 }
 
@@ -70,7 +70,7 @@ func GetMCPToolsList(t *testing.T, requestHeader map[string]string) (int, []any,
 	req := MCPListToolsRequest{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      uuid.New().String(),
-		Method:  v20250618.TOOLS_LIST,
+		Method:  v20251125.TOOLS_LIST,
 	}
 	reqBody, err := json.Marshal(req)
 	if err != nil {
