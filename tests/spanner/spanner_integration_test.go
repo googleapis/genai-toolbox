@@ -103,8 +103,13 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		SpannerDatabase,
 	)
 
+	t.Log("Wiping stale test resources from database...")
+	tests.CleanupSpannerResources(t, ctx, adminClient, dataClient, dbString, "")
+
 	t.Cleanup(func() {
-		tests.CleanupSpannerResources(t, context.Background(), adminClient, dataClient, dbString, uniqueID)
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+		tests.CleanupSpannerResources(t, cleanupCtx, adminClient, dataClient, dbString, uniqueID)
 	})
 
 	t.Logf("DEBUG: Starting test run with isolated ID: %s", uniqueID)
