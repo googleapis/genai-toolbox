@@ -103,9 +103,6 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		SpannerDatabase,
 	)
 
-	t.Log("Wiping stale test resources from database...")
-	tests.CleanupSpannerResources(t, ctx, adminClient, dataClient, dbString, "")
-
 	t.Cleanup(func() {
 		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
