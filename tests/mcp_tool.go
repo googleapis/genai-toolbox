@@ -175,6 +175,9 @@ func RunMCPCustomToolCallMethod(t *testing.T, toolName string, arguments map[str
 		t.Fatalf("%s returned error result: %v", toolName, mcpResp.Result)
 	}
 	if len(mcpResp.Result.Content) == 0 {
+		if want == "" || want == "null" {
+			return
+		}
 		t.Fatalf("%s returned empty content field", toolName)
 	}
 	got := mcpResp.Result.Content[0].Text
