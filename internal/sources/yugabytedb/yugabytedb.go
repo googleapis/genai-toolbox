@@ -126,7 +126,6 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		out = append(out, vMap)
 	}
 
-	// this will catch actual query execution errors
 	if err := results.Err(); err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
