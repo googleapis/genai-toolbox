@@ -28,7 +28,8 @@
       {{ if $others }}
         {{ range split $others "," }}
           {{ $path := trim . " " }}
-          {{ $remotePage := site.GetPage $path }}
+          {{ $cleanPath := trim $path "/" }}
+          {{ $remotePage := site.GetPage (printf "%s/source.md" $cleanPath) }}
 
           {{ if $remotePage }}
           <tr>
