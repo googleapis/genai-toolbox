@@ -1,9 +1,8 @@
 {{/* Automatically identify the "Native" source (Grandparent source.md, since this is strictly used inside tools/) */}}
-{{ $grandparentPath := .Page.Parent.Parent.Path }}
-{{ $nativeSource := site.GetPage (printf "%s/source.md" $grandparentPath) }}
+{{ $nativeSource := .Page.Parent.Parent.GetPage "source.md" }}
 
 {{ if not $nativeSource }}
-  {{ $nativeSource = site.GetPage (printf "%s/source" $grandparentPath) }}
+  {{ $nativeSource = .Page.Parent.Parent.GetPage "source" }}
 {{ end }}
 
 <div class="compatibility-section">
