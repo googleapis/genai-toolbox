@@ -16,11 +16,14 @@
       </tr>
     </thead>
     <tbody>
+      {{/* Display the Native Source automatically */}}
       {{ if $nativeSource }}
       <tr>
         <td><a href="{{ $nativeSource.RelPermalink }}">{{ $nativeSource.Title }}</a></td>
       </tr>
       {{ end }}
+
+      {{/* Process additional sources passed via the "others" parameter */}}
 
       {{ $others := .Get "others" }}
       {{ if $others }}
