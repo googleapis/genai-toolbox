@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -78,7 +78,26 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 		expectedTools = append(expectedTools, tests.GetExecuteSQLMCPExpectedTools()...)
 		expectedTools = append(expectedTools, tests.GetTemplateParamMCPExpectedTools()...)
 		expectedTools = append(expectedTools, []tests.MCPToolManifest{
-			{Name: "list_tables", Description: "Lists tables in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return. If 0 or negative, returns all tables. (Default: 0)", "type": "integer"}, "output_format": map[string]any{"default": "detailed", "description": "Optional: Output format for the tables: 'detailed' (includes columns, indexes, etc.) or 'simple' (only table names). Defaults to 'detailed'.", "enum": []any{"detailed", "simple"}, "type": "string"}, "table_names": map[string]any{"default": "", "description": "Optional: Comma-separated list of table names to retrieve details for (e.g., 'users, orders'). If empty, lists all tables.", "type": "string"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name or schema to filter tables (e.g., 'public', 'my_db'). Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
+			{
+				Name:        "list_tables",
+				Description: "Lists tables in the database.",
+				InputSchema: map[string]any{
+					"type": "object",
+					"properties": map[string]any{
+						"output_format": map[string]any{
+							"default":     "detailed",
+							"description": "Optional: Use 'simple' for names only or 'detailed' for full info.",
+							"type":        "string",
+						},
+						"table_names": map[string]any{
+							"default":     "",
+							"description": "Optional: A comma-separated list of table names. If empty, details for all tables will be listed.",
+							"type":        "string",
+						},
+					},
+					"required": []any{},
+				},
+			},
 			{Name: "list_active_queries", Description: "Lists active queries in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"min_duration_secs": map[string]any{"default": float64(0), "description": "Optional: Minimum duration in seconds a query must be running to be included in the results. If 0, returns all active queries.", "type": "integer"}}, "required": []any{}}},
 			{Name: "list_tables_missing_unique_indexes", Description: "Lists tables that do not have primary or unique indexes in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter tables missing unique indexes. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
 			{Name: "list_table_fragmentation", Description: "Lists table fragmentation in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"data_free_threshold_bytes": map[string]any{"default": float64(10485760), "description": "Optional: Minimum fragmented space in bytes required for a table to be included in the result. Defaults to 10MB (10485760 bytes).", "type": "integer"}, "limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return, ordered by highest fragmentation percentage first. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_name": map[string]any{"default": "", "description": "Optional: Specific table name to retrieve fragmentation details for. If empty, retrieves for all tables in the specified schema.", "type": "string"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter table fragmentation. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
@@ -98,7 +117,7 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 
 		tests.InvokeMCPTool(t, "create-table-templateParams-tool", map[string]any{"tableName": tableNameTemplateParam, "columns": []any{"id INT", "name VARCHAR(20)", "age INT"}}, nil)
 		tests.InvokeMCPTool(t, "insert-table-templateParams-tool", map[string]any{"tableName": tableNameTemplateParam, "columns": []any{"id", "name", "age"}, "values": "1, 'Alex', 21"}, nil)
-		tests.RunMCPCustomToolCallMethod(t, "select-filter-templateParams-combined-tool", map[string]any{"name": "Alex", "tableName": tableNameTemplateParam, "columnFilter": "name"}, `[{"age":21,"id":1,"name":"Alex"}]`)
+		tests.RunMCPCustomToolCallMethod(t, "select-filter-templateParams-combined-tool", map[string]any{"name": "Alex", "tableName": tableNameTemplateParam, "columnFilter": "name"}, `[{"id":1,"name":"Alex","age":21}]`)
 	})
 
 	t.Run("verify prebuilt MySQL tools execution", func(t *testing.T) {
@@ -252,6 +271,10 @@ func TestCloudSQLMySQLMCPIAMConnection(t *testing.T) {
 			out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 			if err != nil {
 				if tc.isErr {
+					outLower := strings.ToLower(out)
+					if !strings.Contains(outLower, "error") && !strings.Contains(outLower, "fail") {
+						t.Fatalf("Expected an authentication/connection error, but server failed for another reason. Output: %s", out)
+					}
 					return
 				}
 				t.Logf("toolbox command logs: \n%s", out)
