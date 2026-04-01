@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -31,47 +30,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
-
-var (
-	AlloyDBAINLSourceType = "alloydb-postgres"
-	AlloyDBAINLToolType   = "alloydb-ai-nl"
-	AlloyDBAINLProject    = os.Getenv("ALLOYDB_AI_NL_PROJECT")
-	AlloyDBAINLRegion     = os.Getenv("ALLOYDB_AI_NL_REGION")
-	AlloyDBAINLCluster    = os.Getenv("ALLOYDB_AI_NL_CLUSTER")
-	AlloyDBAINLInstance   = os.Getenv("ALLOYDB_AI_NL_INSTANCE")
-	AlloyDBAINLDatabase   = os.Getenv("ALLOYDB_AI_NL_DATABASE")
-	AlloyDBAINLUser       = os.Getenv("ALLOYDB_AI_NL_USER")
-	AlloyDBAINLPass       = os.Getenv("ALLOYDB_AI_NL_PASS")
-)
-
-func getAlloyDBAINLVars(t *testing.T) map[string]any {
-	switch "" {
-	case AlloyDBAINLProject:
-		t.Fatal("'ALLOYDB_AI_NL_PROJECT' not set")
-	case AlloyDBAINLRegion:
-		t.Fatal("'ALLOYDB_AI_NL_REGION' not set")
-	case AlloyDBAINLCluster:
-		t.Fatal("'ALLOYDB_AI_NL_CLUSTER' not set")
-	case AlloyDBAINLInstance:
-		t.Fatal("'ALLOYDB_AI_NL_INSTANCE' not set")
-	case AlloyDBAINLDatabase:
-		t.Fatal("'ALLOYDB_AI_NL_DATABASE' not set")
-	case AlloyDBAINLUser:
-		t.Fatal("'ALLOYDB_AI_NL_USER' not set")
-	case AlloyDBAINLPass:
-		t.Fatal("'ALLOYDB_AI_NL_PASS' not set")
-	}
-	return map[string]any{
-		"type":     AlloyDBAINLSourceType,
-		"project":  AlloyDBAINLProject,
-		"cluster":  AlloyDBAINLCluster,
-		"instance": AlloyDBAINLInstance,
-		"region":   AlloyDBAINLRegion,
-		"database": AlloyDBAINLDatabase,
-		"user":     AlloyDBAINLUser,
-		"password": AlloyDBAINLPass,
-	}
-}
 
 func TestAlloyDBAINLToolEndpoints(t *testing.T) {
 	sourceConfig := getAlloyDBAINLVars(t)
@@ -275,59 +233,6 @@ func runAINLToolInvokeTest(t *testing.T) {
 		})
 	}
 
-}
-
-func getAINLToolsConfig(sourceConfig map[string]any) map[string]any {
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"authServices": map[string]any{
-			"my-google-auth": map[string]any{
-				"type":     "google",
-				"clientId": tests.ClientId,
-			},
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"type":        AlloyDBAINLToolType,
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"nlConfig":    "my_nl_config",
-			},
-			"my-auth-tool": map[string]any{
-				"type":        AlloyDBAINLToolType,
-				"source":      "my-instance",
-				"description": "Tool to test authenticated parameters.",
-				"nlConfig":    "my_nl_config",
-				"nlConfigParameters": []map[string]any{
-					{
-						"name":        "email",
-						"type":        "string",
-						"description": "user email",
-						"authServices": []map[string]string{
-							{
-								"name":  "my-google-auth",
-								"field": "email",
-							},
-						},
-					},
-				},
-			},
-			"my-auth-required-tool": map[string]any{
-				"type":        AlloyDBAINLToolType,
-				"source":      "my-instance",
-				"description": "Tool to test auth required invocation.",
-				"nlConfig":    "my_nl_config",
-				"authRequired": []string{
-					"my-google-auth",
-				},
-			},
-		},
-	}
-
-	return toolsFile
 }
 
 func runAINLMCPToolCallMethod(t *testing.T) {
