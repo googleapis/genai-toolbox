@@ -29,12 +29,37 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
+// ConnectionTestConfig holds configuration for source connection tests
+type ConnectionTestConfig struct {
+	UseMCP bool
+}
+
+// ConnectionTestOption configures how the source connection test runs
+type ConnectionTestOption func(*ConnectionTestConfig)
+
+// WithMCP configures the connection test to verify via the MCP protocol instead of the legacy API
+func WithMCP() ConnectionTestOption {
+	return func(c *ConnectionTestConfig) {
+		c.UseMCP = true
+	}
+}
+
 // RunSourceConnection test for source connection
-func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType string) error {
+func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType string, options ...ConnectionTestOption) error {
+	configs := &ConnectionTestConfig{
+		UseMCP: false,
+	}
+	for _, opt := range options {
+		opt(configs)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	args := []string{"--enable-api"}
+	args := []string{}
+	if !configs.UseMCP {
+		args = append(args, "--enable-api")
+	}
 
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{

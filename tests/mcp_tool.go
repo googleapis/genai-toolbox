@@ -362,3 +362,189 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTes
 		})
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Modular Native MCP Expected Manifests
+// ---------------------------------------------------------------------------
+
+// GetBaseMCPExpectedTools returns the MCP manifests for the base dummy tools loaded by GetToolsConfig.
+func GetBaseMCPExpectedTools() []MCPToolManifest {
+	return []MCPToolManifest{
+		{
+			Name:        "my-simple-tool",
+			Description: "Simple tool to test end to end functionality.",
+			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
+		},
+		{
+			Name:        "my-tool",
+			Description: "Tool to test invocation with params.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id":   map[string]any{"type": "integer", "description": "user ID"},
+					"name": map[string]any{"type": "string", "description": "user name"},
+				},
+				"required": []any{"id", "name"},
+			},
+		},
+		{
+			Name:        "my-tool-by-id",
+			Description: "Tool to test invocation with params.",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"id": map[string]any{"type": "integer", "description": "user ID"}},
+				"required":   []any{"id"},
+			},
+		},
+		{
+			Name:        "my-tool-by-name",
+			Description: "Tool to test invocation with params.",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"name": map[string]any{"type": "string", "description": "user name"}},
+				"required":   []any{},
+			},
+		},
+		{
+			Name:        "my-array-tool",
+			Description: "Tool to test invocation with array params.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"idArray":   map[string]any{"type": "array", "description": "ID array", "items": map[string]any{"type": "integer", "description": "ID"}},
+					"nameArray": map[string]any{"type": "array", "description": "user name array", "items": map[string]any{"type": "string", "description": "user name"}},
+				},
+				"required": []any{"idArray", "nameArray"},
+			},
+		},
+		{
+			Name:        "my-auth-tool",
+			Description: "Tool to test authenticated parameters.",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"email": map[string]any{"type": "string", "description": "user email"}},
+				"required":   []any{"email"},
+			},
+		},
+		{
+			Name:        "my-auth-required-tool",
+			Description: "Tool to test auth required invocation.",
+			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
+		},
+		{
+			Name:        "my-fail-tool",
+			Description: "Tool to test statement with incorrect syntax.",
+			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
+		},
+	}
+}
+
+// GetExecuteSQLMCPExpectedTools returns the MCP manifests for the tools loaded by AddExecuteSqlConfig.
+func GetExecuteSQLMCPExpectedTools() []MCPToolManifest {
+	return []MCPToolManifest{
+		{
+			Name:        "my-exec-sql-tool",
+			Description: "Tool to execute sql",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "A valid SQL statement to execute."}},
+				"required":   []any{"sql"},
+			},
+		},
+		{
+			Name:        "my-auth-exec-sql-tool",
+			Description: "Tool to execute sql",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "A valid SQL statement to execute."}},
+				"required":   []any{"sql"},
+			},
+		},
+	}
+}
+
+// GetTemplateParamMCPExpectedTools returns the MCP manifests for the tools loaded by AddTemplateParamConfig.
+func GetTemplateParamMCPExpectedTools() []MCPToolManifest {
+	return []MCPToolManifest{
+		{
+			Name:        "create-table-templateParams-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+					"columns":   map[string]any{"type": "array", "description": "The columns to create", "items": map[string]any{"type": "string", "description": "A column name that will be created"}},
+				},
+				"required": []any{"tableName", "columns"},
+			},
+		},
+		{
+			Name:        "insert-table-templateParams-tool",
+			Description: "Insert tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+					"columns":   map[string]any{"type": "array", "description": "The columns to insert into", "items": map[string]any{"type": "string", "description": "A column name that will be returned from the query."}},
+					"values":    map[string]any{"type": "string", "description": "The values to insert as a comma separated string"},
+				},
+				"required": []any{"tableName", "columns", "values"},
+			},
+		},
+		{
+			Name:        "select-templateParams-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"tableName": map[string]any{"type": "string", "description": "some description"}},
+				"required":   []any{"tableName"},
+			},
+		},
+		{
+			Name:        "select-templateParams-combined-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id":        map[string]any{"type": "integer", "description": "the id of the user"},
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+				},
+				"required": []any{"id", "tableName"},
+			},
+		},
+		{
+			Name:        "select-fields-templateParams-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+					"fields":    map[string]any{"type": "array", "description": "The fields to select from", "items": map[string]any{"type": "string", "description": "A field that will be returned from the query."}},
+				},
+				"required": []any{"tableName", "fields"},
+			},
+		},
+		{
+			Name:        "select-filter-templateParams-combined-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"name":         map[string]any{"type": "string", "description": "the name of the user"},
+					"tableName":    map[string]any{"type": "string", "description": "some description"},
+					"columnFilter": map[string]any{"type": "string", "description": "some description"},
+				},
+				"required": []any{"name", "tableName", "columnFilter"},
+			},
+		},
+		{
+			Name:        "drop-table-templateParams-tool",
+			Description: "Drop table tool with template parameters",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"tableName": map[string]any{"type": "string", "description": "some description"}},
+				"required":   []any{"tableName"},
+			},
+		},
+	}
+}
