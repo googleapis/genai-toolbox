@@ -64,7 +64,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	sourceConfig := getElasticsearchVars(t)
 

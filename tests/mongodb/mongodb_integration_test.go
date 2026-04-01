@@ -71,7 +71,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	database, err := initMongoDbDatabase(ctx, MongoDbUri, MongoDbDatabase)
 	if err != nil {

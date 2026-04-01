@@ -80,7 +80,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initFirestoreConnection(FirestoreProject, FirestoreDatabase)
 	if err != nil {

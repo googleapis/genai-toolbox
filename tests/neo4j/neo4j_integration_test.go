@@ -71,7 +71,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to the command.
 	// This configuration defines the data source and the tools to be tested.

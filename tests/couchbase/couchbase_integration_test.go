@@ -119,7 +119,8 @@ func TestCouchbaseToolEndpoints(t *testing.T) {
 	toolsFile := tests.GetToolsConfig(sourceConfig, couchbaseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, couchbaseToolType, tmplSelectCombined, tmplSelectFilterCombined, tmplSelectAll)
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization failed: %s", err)
 	}

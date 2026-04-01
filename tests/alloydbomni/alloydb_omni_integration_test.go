@@ -118,7 +118,7 @@ func TestAlloyDBOmni(t *testing.T) {
 	// Generate a unique ID
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	args := []string{"--prebuilt", "alloydb-omni"}
+	args := []string{"--prebuilt", "alloydb-omni", "--enable-api"}
 
 	pool, err := initPostgresConnectionPool(AlloyDBHost, AlloyDBPort, AlloyDBUser, AlloyDBPass, AlloyDBDatabase)
 	if err != nil {

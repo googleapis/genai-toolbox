@@ -145,7 +145,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 	bigqueryClient, err := initBigQueryConnection(ctx, DataplexProject)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
