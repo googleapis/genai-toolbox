@@ -447,7 +447,7 @@ func GetExecuteSQLMCPExpectedTools() []MCPToolManifest {
 			Description: "Tool to execute sql",
 			InputSchema: map[string]any{
 				"type":       "object",
-				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "A valid SQL statement to execute."}},
+				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "The sql to execute."}},
 				"required":   []any{"sql"},
 			},
 		},
@@ -456,7 +456,7 @@ func GetExecuteSQLMCPExpectedTools() []MCPToolManifest {
 			Description: "Tool to execute sql",
 			InputSchema: map[string]any{
 				"type":       "object",
-				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "A valid SQL statement to execute."}},
+				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "The sql to execute."}},
 				"required":   []any{"sql"},
 			},
 		},

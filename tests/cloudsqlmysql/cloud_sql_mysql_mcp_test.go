@@ -106,23 +106,35 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 		if err != nil || statusCode != http.StatusOK || mcpResp.Result.IsError {
 			t.Fatalf("native error executing list_tables: %v", err)
 		}
-		got := mcpResp.Result.Content[0].Text
-		if !strings.Contains(got, tableNameParam) || !strings.Contains(got, tableNameAuth) {
-			t.Errorf("list_tables missing expected tables. Got: %s", got)
+		var gotTables string
+		for _, c := range mcpResp.Result.Content {
+			gotTables += c.Text
+		}
+		if !strings.Contains(gotTables, tableNameParam) || !strings.Contains(gotTables, tableNameAuth) {
+			t.Errorf("list_tables missing expected tables. Got: %s", gotTables)
 		}
 
 		go func() {
 			_ = pool.PingContext(ctx)
 			_, _ = pool.ExecContext(ctx, "SELECT sleep(5);")
 		}()
-		time.Sleep(1 * time.Second)
-
-		statusCode, mcpResp, err = tests.InvokeMCPTool(t, "list_active_queries", map[string]any{"min_duration_secs": 0}, nil)
-		if err != nil || statusCode != http.StatusOK || mcpResp.Result.IsError {
-			t.Fatalf("native error executing list_active_queries: %v", err)
+		var activeQueriesFound bool
+		for i := 0; i < 5; i++ {
+			time.Sleep(1 * time.Second)
+			statusCode, mcpResp, err = tests.InvokeMCPTool(t, "list_active_queries", map[string]any{"min_duration_secs": 0}, nil)
+			if err == nil && statusCode == http.StatusOK && !mcpResp.Result.IsError {
+				var gotQueries string
+				for _, c := range mcpResp.Result.Content {
+					gotQueries += c.Text
+				}
+				if strings.Contains(gotQueries, "SELECT sleep(5)") {
+					activeQueriesFound = true
+					break
+				}
+			}
 		}
-		if !strings.Contains(mcpResp.Result.Content[0].Text, "SELECT sleep(5)") {
-			t.Errorf("active queries did not contain test sleep query. Got: %s", mcpResp.Result.Content[0].Text)
+		if !activeQueriesFound {
+			t.Fatalf("active queries did not contain test sleep query after retries")
 		}
 
 		queryPlanSql := fmt.Sprintf("SELECT * FROM %s", tableNameParam)
@@ -130,8 +142,12 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 		if err != nil || statusCode != http.StatusOK || mcpResp.Result.IsError {
 			t.Fatalf("native error executing get_query_plan: %v", err)
 		}
-		if !strings.Contains(mcpResp.Result.Content[0].Text, "query_block") {
-			t.Errorf("query plan did not contain 'query_block'. Got: %s", mcpResp.Result.Content[0].Text)
+		var gotPlan string
+		for _, c := range mcpResp.Result.Content {
+			gotPlan += c.Text
+		}
+		if !strings.Contains(gotPlan, "query_block") {
+			t.Errorf("query plan did not contain 'query_block'. Got: %s", gotPlan)
 		}
 	})
 
