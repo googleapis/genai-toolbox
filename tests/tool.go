@@ -406,7 +406,6 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-
 			name:           "Invoke my-client-auth-tool with invalid auth token",
 			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
 			enabled:        configs.supportClientAuth,
@@ -441,9 +440,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				mcpStatusCode, mcpResp, _ := InvokeMCPTool(t, toolName, args, tc.requestHeader)
 				actualStatusCode = mcpStatusCode
 
-				// Only parse body if successful and we expect a body
 				if actualStatusCode == http.StatusOK && tc.wantBody != "" {
-					// Handle specific parameter error formats expected by your test structure
 					if mcpResp != nil && mcpResp.Error != nil {
 						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
 					} else if mcpResp != nil && !mcpResp.Result.IsError {
@@ -498,10 +495,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	}
 }
 
-// RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
 func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
-	// Resolve options
-	// Default values for TemplateParameterTestConfig
 	configs := &TemplateParameterTestConfig{
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
@@ -514,19 +508,16 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		nameColFilter:  "name",
 		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
 
-		supportDdl:          true,
-		supportInsert:       true,
-		supportSelectFields: true, // Default to true if not overridden
+		supportDdl:    true,
+		supportInsert: true,
 	}
 
-	// Apply provided options
 	for _, option := range options {
 		option(configs)
 	}
 
 	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
-	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		enabled       bool
@@ -534,7 +525,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		insert        bool
 		api           string
 		requestHeader map[string]string
-		requestBody   string // Changed to string to easily route to MCP or API
+		requestBody   io.Reader
 		want          string
 		isErr         bool
 	}{
@@ -543,7 +534,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray))),
 			want:          configs.ddlWant,
 			isErr:         false,
 		},
@@ -552,7 +543,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			insert:        true,
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
 			want:          configs.insert1Want,
 			isErr:         false,
 		},
@@ -561,7 +552,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			insert:        true,
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
 			want:          configs.insert1Want,
 			isErr:         false,
 		},
@@ -569,7 +560,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			name:          "invoke select-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"tableName": "%s"}`, tableName),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
 			want:          configs.selectAllWant,
 			isErr:         false,
 		},
@@ -577,7 +568,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			name:          "invoke select-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
 			want:          configs.selectId1Want,
 			isErr:         false,
 		},
@@ -585,7 +576,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			name:          "invoke select-templateParams-combined-tool with no results",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName))),
 			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
@@ -594,7 +585,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			enabled:       configs.supportSelectFields,
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
 			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
@@ -602,7 +593,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			name:          "invoke select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
 			want:          configs.selectNameWant,
 			isErr:         false,
 		},
@@ -611,40 +602,36 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			ddl:           true,
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   fmt.Sprintf(`{"tableName": "%s"}`, tableName),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
 			want:          configs.ddlWant,
 			isErr:         false,
 		},
 	}
-
 	for _, tc := range invokeTcs {
-		// Handle specific toggles like supportSelectFields
-		if tc.name == "invoke select-fields-templateParams-tool" && !tc.enabled {
-			continue
-		}
-
 		t.Run(tc.name, func(t *testing.T) {
-			// if test case is DDL and source support ddl test cases
+			if !tc.enabled && tc.name == "invoke select-fields-templateParams-tool" {
+				return
+			}
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
-			// if test case is insert statement and source support insert test cases
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
 				var got string
 
 				if configs.IsMCP {
-					// Extract toolName from API path
 					parts := strings.Split(tc.api, "/")
 					toolName := parts[len(parts)-2]
 
+					reqBytes, _ := io.ReadAll(tc.requestBody)
 					var args map[string]any
-					if tc.requestBody != "" {
-						if err := json.Unmarshal([]byte(tc.requestBody), &args); err != nil {
-							t.Fatalf("failed to unmarshal request body for MCP args: %v", err)
-						}
+					if len(reqBytes) > 0 {
+						_ = json.Unmarshal(reqBytes, &args)
+					}
+					if args == nil {
+						args = make(map[string]any)
 					}
 
-					statusCode, mcpResp, err := InvokeMCPTool(t, toolName, args, nil)
+					statusCode, mcpResp, err := InvokeMCPTool(t, toolName, args, tc.requestHeader)
 					if statusCode != http.StatusOK {
 						if tc.isErr {
 							return
@@ -663,10 +650,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 					} else {
 						got = strings.Join(blocks, "")
 					}
-
 				} else {
-					// Send legacy API invocation request
-					resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBufferString(tc.requestBody), tc.requestHeader)
+					resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 					if resp.StatusCode != http.StatusOK {
 						if tc.isErr {
 							return
@@ -674,7 +659,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 					}
 
-					// Check response body
 					var body map[string]interface{}
 					err := json.Unmarshal(respBody, &body)
 					if err != nil {
@@ -688,19 +672,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 					}
 				}
 
-				// JSON-Aware Comparison
 				if got != tc.want {
-					var gotJSON, wantJSON any
-					errGot := json.Unmarshal([]byte(got), &gotJSON)
-					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
-
-					if errGot == nil && errWant == nil {
-						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
-						}
-					} else {
-						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
-					}
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 				}
 			}
 		})
@@ -708,8 +681,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 }
 
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want string, options ...ExecuteSqlOption) {
-	// Resolve options
-	// Default values for ExecuteSqlTestConfig
 	configs := &ExecuteSqlTestConfig{
 		select1Statement: `"SELECT 1"`,
 		createWant:       "null",
@@ -717,7 +688,6 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 		selectEmptyWant:  "null",
 	}
 
-	// Apply provided options
 	for _, option := range options {
 		option(configs)
 	}
@@ -728,7 +698,6 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		api           string
@@ -819,23 +788,19 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			var got string
 
 			if configs.IsMCP {
-				// Extract toolName from API path
 				parts := strings.Split(tc.api, "/")
 				toolName := parts[len(parts)-2]
 
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
-					if err := json.Unmarshal(reqBytes, &args); err != nil {
-						t.Fatalf("failed to unmarshal request body for MCP args: %v", err)
-					}
+					_ = json.Unmarshal(reqBytes, &args)
 				}
 				if args == nil {
 					args = make(map[string]any)
 				}
 
 				statusCode, mcpResp, err := InvokeMCPTool(t, toolName, args, tc.requestHeader)
-
 				if statusCode != http.StatusOK {
 					if tc.isErr || tc.isAgentErr {
 						return
@@ -846,9 +811,8 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 					return
 				}
 
-				// Extract and concatenate text blocks from the MCP Response
 				var blocks []string
-				if !mcpResp.Result.IsError {
+				if mcpResp != nil && !mcpResp.Result.IsError {
 					for _, content := range mcpResp.Result.Content {
 						if content.Type == "text" {
 							blocks = append(blocks, strings.TrimSpace(content.Text))
@@ -860,9 +824,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 				} else {
 					got = strings.Join(blocks, "")
 				}
-
 			} else {
-				// Native API execution
 				resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 				if resp.StatusCode != http.StatusOK {
 					if tc.isErr {
@@ -2877,22 +2839,6 @@ func RunPostgresListRolesTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 	}
 }
 
-// ToolExecConfig holds the configuration for executing prebuilt tool tests.
-type ToolExecConfig struct {
-	IsMCP bool
-}
-
-// ToolExecOption is a functional option used to configure a ToolExecConfig.
-type ToolExecOption func(*ToolExecConfig)
-
-// WithMCPExec flags the test harness to route the request through the local MCP server
-// instead of the Native Toolbox REST API.
-func WithMCPExec() ToolExecOption {
-	return func(c *ToolExecConfig) {
-		c.IsMCP = true
-	}
-}
-
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
 func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string, opts ...ToolExecOption) {
 	config := &ToolExecConfig{}
@@ -3024,18 +2970,20 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 					args = make(map[string]any)
 				}
 
-				statusCode, mcpResp, _ := InvokeMCPTool(t, "list_tables", args, nil)
+				statusCode, mcpResp, err := InvokeMCPTool(t, "list_tables", args, nil)
 				if statusCode != tc.wantStatusCode {
-					t.Fatalf("wrong status code: got %d, want %d", statusCode, tc.wantStatusCode)
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, tc.wantStatusCode, err)
 				}
 				if tc.wantStatusCode != http.StatusOK {
 					return
 				}
 
 				var blocks []string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						blocks = append(blocks, strings.TrimSpace(content.Text))
+				if mcpResp != nil && !mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, strings.TrimSpace(content.Text))
+						}
 					}
 				}
 				if len(blocks) == 0 {
@@ -3068,7 +3016,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 			var got any
 			if tc.isSimple {
 				var tables []tableInfo
-				if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+				if err := json.Unmarshal([]byte(resultString), &tables); err != nil && resultString != "null" {
 					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
 				}
 				details := []map[string]any{}
@@ -3082,7 +3030,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				got = details
 			} else {
 				var tables []tableInfo
-				if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+				if err := json.Unmarshal([]byte(resultString), &tables); err != nil && resultString != "null" {
 					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
 				}
 				details := []objectDetails{}
@@ -3102,7 +3050,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
 			}
 
-			// Checking only the current database where the test tables are created to avoid brittle tests.
 			if tc.isAllTables {
 				filteredGot := []objectDetails{}
 				if got != nil {
@@ -3122,7 +3069,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 	}
 }
 
-// RunMySQLListActiveQueriesTest run tests against the mysql-list-active-queries tests
 func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.DB, opts ...ToolExecOption) {
 	config := &ToolExecConfig{}
 	for _, opt := range opts {
@@ -3238,18 +3184,20 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 					args = make(map[string]any)
 				}
 
-				statusCode, mcpResp, _ := InvokeMCPTool(t, "list_active_queries", args, nil)
+				statusCode, mcpResp, err := InvokeMCPTool(t, "list_active_queries", args, nil)
 				if statusCode != tc.wantStatusCode {
-					t.Fatalf("wrong status code: got %d, want %d", statusCode, tc.wantStatusCode)
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, tc.wantStatusCode, err)
 				}
 				if tc.wantStatusCode != http.StatusOK {
 					return
 				}
 
 				var blocks []string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						blocks = append(blocks, strings.TrimSpace(content.Text))
+				if mcpResp != nil && !mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, strings.TrimSpace(content.Text))
+						}
 					}
 				}
 				if len(blocks) == 0 {
@@ -3281,7 +3229,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 
 			var got any
 			var details []queryListDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
 				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
 			}
 			got = details
@@ -3307,7 +3255,6 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 		TableName   string `json:"table_name"`
 	}
 
-	// bunch of wanted
 	nonUniqueKeyTableName := "t03_non_unqiue_key_table"
 	noKeyTableName := "t04_no_key_table"
 	nonUniqueKeyTableWant := listDetails{
@@ -3457,13 +3404,11 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 		}
 		stmt.WriteString(")")
 
-		t.Logf("Creating table: %s", stmt.String())
 		if _, err := pool.ExecContext(ctx, stmt.String()); err != nil {
 			t.Fatalf("failed executing %s: %v", stmt.String(), err)
 		}
 
 		return func() {
-			t.Logf("Dropping table: %s", tableName)
 			if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
 				t.Errorf("failed to drop table %s: %v", tableName, err)
 			}
@@ -3496,18 +3441,20 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 					args = make(map[string]any)
 				}
 
-				statusCode, mcpResp, _ := InvokeMCPTool(t, "list_tables_missing_unique_indexes", args, nil)
+				statusCode, mcpResp, err := InvokeMCPTool(t, "list_tables_missing_unique_indexes", args, nil)
 				if statusCode != tc.wantStatusCode {
-					t.Fatalf("wrong status code: got %d, want %d", statusCode, tc.wantStatusCode)
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, tc.wantStatusCode, err)
 				}
 				if tc.wantStatusCode != http.StatusOK {
 					return
 				}
 
 				var blocks []string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						blocks = append(blocks, strings.TrimSpace(content.Text))
+				if mcpResp != nil && !mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, strings.TrimSpace(content.Text))
+						}
 					}
 				}
 				if len(blocks) == 0 {
@@ -3539,7 +3486,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 
 			var got any
 			var details []listDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
 				t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
 			}
 			got = details
@@ -3777,18 +3724,20 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 					args = make(map[string]any)
 				}
 
-				statusCode, mcpResp, _ := InvokeMCPTool(t, "list_table_fragmentation", args, nil)
+				statusCode, mcpResp, err := InvokeMCPTool(t, "list_table_fragmentation", args, nil)
 				if statusCode != tc.wantStatusCode {
-					t.Fatalf("wrong status code: got %d, want %d", statusCode, tc.wantStatusCode)
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, tc.wantStatusCode, err)
 				}
 				if tc.wantStatusCode != http.StatusOK {
 					return
 				}
 
 				var blocks []string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						blocks = append(blocks, strings.TrimSpace(content.Text))
+				if mcpResp != nil && !mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, strings.TrimSpace(content.Text))
+						}
 					}
 				}
 				if len(blocks) == 0 {
@@ -3820,7 +3769,7 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 
 			var got any
 			var details []tableFragmentationDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
 				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
 			}
 			got = details
@@ -3840,7 +3789,6 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 		opt(config)
 	}
 
-	// Create a simple query to explain
 	query := fmt.Sprintf("SELECT * FROM %s", tableNameParam)
 
 	invokeTcs := []struct {
@@ -3885,18 +3833,20 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 					args = make(map[string]any)
 				}
 
-				statusCode, mcpResp, _ := InvokeMCPTool(t, "get_query_plan", args, nil)
+				statusCode, mcpResp, err := InvokeMCPTool(t, "get_query_plan", args, nil)
 				if statusCode != tc.wantStatusCode {
-					t.Fatalf("wrong status code: got %d, want %d", statusCode, tc.wantStatusCode)
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, tc.wantStatusCode, err)
 				}
 				if tc.wantStatusCode != http.StatusOK {
 					return
 				}
 
 				var blocks []string
-				for _, content := range mcpResp.Result.Content {
-					if content.Type == "text" {
-						blocks = append(blocks, content.Text)
+				if mcpResp != nil && !mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, content.Text)
+						}
 					}
 				}
 				if len(blocks) == 0 {

@@ -356,3 +356,21 @@ func DisableSelectFilterTest() TemplateParamOption {
 		c.supportSelectFields = false
 	}
 }
+
+/* Configurations for RunMySQL...Test()  */
+
+// ToolExecConfig holds the configuration for executing prebuilt tool tests.
+type ToolExecConfig struct {
+	IsMCP bool
+}
+
+// ToolExecOption is a functional option used to configure a ToolExecConfig.
+type ToolExecOption func(*ToolExecConfig)
+
+// WithMCPExec flags the test harness to route the request through the local MCP server
+// instead of the Native Toolbox REST API.
+func WithMCPExec() ToolExecOption {
+	return func(c *ToolExecConfig) {
+		c.IsMCP = true
+	}
+}
