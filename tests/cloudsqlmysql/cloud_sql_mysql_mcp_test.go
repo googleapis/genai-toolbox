@@ -28,30 +28,35 @@ import (
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
-func TestCloudSQLMySQLMCP(t *testing.T) {
+func TestCloudSQLMySQLToolEndpointsMCP(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	pool, err := initCloudSQLMySQLConnectionPool(CloudSQLMySQLProject, CloudSQLMySQLRegion, CloudSQLMySQLInstance, "public", CloudSQLMySQLUser, CloudSQLMySQLPass, CloudSQLMySQLDatabase)
 	if err != nil {
-		t.Fatalf("unable to create Cloud SQL connection pool: %v", err)
+		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
 
+	// cleanup test environment
 	tests.CleanupMySQLTables(t, ctx, pool)
 
+	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
+	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetMySQLParamToolInfo(tableNameParam)
 	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	defer teardownTable1(t)
 
+	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetMySQLAuthToolInfo(tableNameAuth)
 	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLMySQLToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
@@ -60,55 +65,84 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
 	if err != nil {
-		t.Fatalf("command initialization returned an error: %v", err)
+		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
 
-	waitCtx, cancelWait := context.WithTimeout(ctx, 10*time.Second)
-	defer cancelWait()
-	if out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out); err != nil {
+	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer waitCancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %v", err)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
+	// Get configs for tests
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetMySQLWants()
 
-	t.Run("verify tools/list registry returns complete manifest", func(t *testing.T) {
-		expectedTools := tests.GetBaseMCPExpectedTools()
-		expectedTools = append(expectedTools, tests.GetExecuteSQLMCPExpectedTools()...)
-		expectedTools = append(expectedTools, tests.GetTemplateParamMCPExpectedTools()...)
-		expectedTools = append(expectedTools, []tests.MCPToolManifest{
-			{
-				Name:        "list_tables",
-				Description: "Lists tables in the database.",
-				InputSchema: map[string]any{
-					"type": "object",
-					"properties": map[string]any{
-						"output_format": map[string]any{
-							"default":     "detailed",
-							"description": "Optional: Use 'simple' for names only or 'detailed' for full info.",
-							"type":        "string",
-						},
-						"table_names": map[string]any{
-							"default":     "",
-							"description": "Optional: A comma-separated list of table names. If empty, details for all tables will be listed.",
-							"type":        "string",
-						},
+	// Expected Manifest
+	expectedTools := tests.GetBaseMCPExpectedTools()
+	expectedTools = append(expectedTools, tests.GetExecuteSQLMCPExpectedTools()...)
+	expectedTools = append(expectedTools, tests.GetTemplateParamMCPExpectedTools()...)
+	expectedTools = append(expectedTools, []tests.MCPToolManifest{
+		{
+			Name:        "list_tables",
+			Description: "Lists tables in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"output_format": map[string]any{
+						"default":     "detailed",
+						"description": "Optional: Use 'simple' for names only or 'detailed' for full info.",
+						"type":        "string",
 					},
-					"required": []any{},
+					"table_names": map[string]any{
+						"default":     "",
+						"description": "Optional: A comma-separated list of table names. If empty, details for all tables will be listed.",
+						"type":        "string",
+					},
 				},
+				"required": []any{},
 			},
-			{Name: "list_active_queries", Description: "Lists active queries in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"min_duration_secs": map[string]any{"default": float64(0), "description": "Optional: Minimum duration in seconds a query must be running to be included in the results. If 0, returns all active queries.", "type": "integer"}}, "required": []any{}}},
-			{Name: "list_tables_missing_unique_indexes", Description: "Lists tables that do not have primary or unique indexes in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter tables missing unique indexes. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
-			{Name: "list_table_fragmentation", Description: "Lists table fragmentation in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"data_free_threshold_bytes": map[string]any{"default": float64(10485760), "description": "Optional: Minimum fragmented space in bytes required for a table to be included in the result. Defaults to 10MB (10485760 bytes).", "type": "integer"}, "limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return, ordered by highest fragmentation percentage first. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_name": map[string]any{"default": "", "description": "Optional: Specific table name to retrieve fragmentation details for. If empty, retrieves for all tables in the specified schema.", "type": "string"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter table fragmentation. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
-			{Name: "get_query_plan", Description: "Gets the query plan for a SQL statement.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"sql_statement": map[string]any{"type": "string", "description": "The SQL query statement to analyze."}}, "required": []any{"sql_statement"}}},
-		}...)
+		},
+		{
+			Name:        "list_active_queries",
+			Description: "Lists active queries in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit": map[string]any{
+						"default":     float64(100),
+						"description": "Optional: The maximum number of rows to return.",
+						"type":        "integer",
+					},
+					"min_duration_secs": map[string]any{
+						"default":     float64(0),
+						"description": "Optional: Only show queries running for at least this long in seconds",
+						"type":        "integer",
+					},
+				},
+				"required": []any{},
+			},
+		},
+		{Name: "list_tables_missing_unique_indexes", Description: "Lists tables that do not have primary or unique indexes in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter tables missing unique indexes. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
+		{Name: "list_table_fragmentation", Description: "Lists table fragmentation in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"data_free_threshold_bytes": map[string]any{"default": float64(10485760), "description": "Optional: Minimum fragmented space in bytes required for a table to be included in the result. Defaults to 10MB (10485760 bytes).", "type": "integer"}, "limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return, ordered by highest fragmentation percentage first. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_name": map[string]any{"default": "", "description": "Optional: Specific table name to retrieve fragmentation details for. If empty, retrieves for all tables in the specified schema.", "type": "string"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter table fragmentation. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
+		{Name: "get_query_plan", Description: "Gets the query plan for a SQL statement.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"sql_statement": map[string]any{"type": "string", "description": "The SQL query statement to analyze."}}, "required": []any{"sql_statement"}}},
+	}...)
+
+	t.Run("verify tools/list registry returns complete manifest", func(t *testing.T) {
 		tests.RunMCPToolsListMethod(t, expectedTools)
 	})
 
+	// Run Shared Tool Executions
 	t.Run("verify standard shared tool executions", func(t *testing.T) {
 		tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
 		tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+
+		statusCode, failResp, err := tests.InvokeMCPTool(t, "my-fail-tool", map[string]any{}, nil)
+		if err == nil && statusCode == http.StatusOK {
+			tests.AssertMCPError(t, failResp, "You have an error in your SQL syntax")
+		}
 
 		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-exec-sql-tool", map[string]any{"sql": createTableStatement}, nil)
 		if err == nil && statusCode == http.StatusOK && !mcpResp.Result.IsError {
@@ -120,59 +154,18 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 		tests.RunMCPCustomToolCallMethod(t, "select-filter-templateParams-combined-tool", map[string]any{"name": "Alex", "tableName": tableNameTemplateParam, "columnFilter": "name"}, `[{"id":1,"name":"Alex","age":21}]`)
 	})
 
-	t.Run("verify prebuilt MySQL tools execution", func(t *testing.T) {
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "list_tables", map[string]any{}, nil)
-		if err != nil || statusCode != http.StatusOK || mcpResp.Result.IsError {
-			t.Fatalf("native error executing list_tables: %v", err)
-		}
-		var gotTables string
-		for _, c := range mcpResp.Result.Content {
-			gotTables += c.Text
-		}
-		if !strings.Contains(gotTables, tableNameParam) || !strings.Contains(gotTables, tableNameAuth) {
-			t.Errorf("list_tables missing expected tables. Got: %s", gotTables)
-		}
+	// Run specific MySQL prebuilt tool tests via MCP
+	const expectedOwner = "'toolbox-identity'@'%'"
+	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, expectedOwner, tests.WithMCPExec())
+	tests.RunMySQLListActiveQueriesTest(t, ctx, pool, tests.WithMCPExec())
+	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, CloudSQLMySQLDatabase, tableNameParam, tests.WithMCPExec())
+	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, CloudSQLMySQLDatabase, tests.WithMCPExec())
+	tests.RunMySQLListTableFragmentationTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, tests.WithMCPExec())
 
-		go func() {
-			_ = pool.PingContext(ctx)
-			_, _ = pool.ExecContext(ctx, "SELECT sleep(5);")
-		}()
-		var activeQueriesFound bool
-		for i := 0; i < 5; i++ {
-			time.Sleep(1 * time.Second)
-			statusCode, mcpResp, err = tests.InvokeMCPTool(t, "list_active_queries", map[string]any{"min_duration_secs": 0}, nil)
-			if err == nil && statusCode == http.StatusOK && !mcpResp.Result.IsError {
-				var gotQueries string
-				for _, c := range mcpResp.Result.Content {
-					gotQueries += c.Text
-				}
-				if strings.Contains(gotQueries, "SELECT sleep(5)") {
-					activeQueriesFound = true
-					break
-				}
-			}
-		}
-		if !activeQueriesFound {
-			t.Fatalf("active queries did not contain test sleep query after retries")
-		}
-
-		queryPlanSql := fmt.Sprintf("SELECT * FROM %s", tableNameParam)
-		statusCode, mcpResp, err = tests.InvokeMCPTool(t, "get_query_plan", map[string]any{"sql_statement": queryPlanSql}, nil)
-		if err != nil || statusCode != http.StatusOK || mcpResp.Result.IsError {
-			t.Fatalf("native error executing get_query_plan: %v", err)
-		}
-		var gotPlan string
-		for _, c := range mcpResp.Result.Content {
-			gotPlan += c.Text
-		}
-		if !strings.Contains(gotPlan, "query_block") {
-			t.Errorf("query plan did not contain 'query_block'. Got: %s", gotPlan)
-		}
-	})
-
+	// Verify parameter validation for prebuilt tools (MCP Specific)
 	t.Run("verify parameter validation for prebuilt tools", func(t *testing.T) {
 		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "get_query_plan", map[string]any{}, nil)
-		if err != nil {
+		if err != nil && statusCode == http.StatusOK {
 			t.Fatalf("native error executing get_query_plan: %v", err)
 		}
 		if statusCode != http.StatusOK {
@@ -182,6 +175,7 @@ func TestCloudSQLMySQLMCP(t *testing.T) {
 	})
 }
 
+// Test connection with different IP type over MCP
 func TestCloudSQLMySQLMCPIpConnection(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 	tcs := []struct {
@@ -196,7 +190,7 @@ func TestCloudSQLMySQLMCPIpConnection(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
 			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMySQLToolType, tests.WithMCP())
 			if err != nil {
-				t.Fatalf("Connection test failure via MCP: %v", err)
+				t.Fatalf("Connection test failure via MCP: %s", err)
 			}
 		})
 	}
@@ -261,7 +255,7 @@ func TestCloudSQLMySQLMCPIAMConnection(t *testing.T) {
 
 			cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
 			if err != nil {
-				t.Fatalf("command initialization returned an error: %v", err)
+				t.Fatalf("command initialization returned an error: %s", err)
 			}
 			defer cleanup()
 
@@ -278,7 +272,7 @@ func TestCloudSQLMySQLMCPIAMConnection(t *testing.T) {
 					return
 				}
 				t.Logf("toolbox command logs: \n%s", out)
-				t.Fatalf("Connection test failure: toolbox didn't start successfully: %v", err)
+				t.Fatalf("Connection test failure: toolbox didn't start successfully: %s", err)
 			}
 
 			if tc.isErr {
