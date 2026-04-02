@@ -651,7 +651,19 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 				}
 
 				if got != tc.want {
-					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+					// JSON Aware comparision
+					var gotJSON, wantJSON any
+					errGot := json.Unmarshal([]byte(got), &gotJSON)
+					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
+
+					if errGot == nil && errWant == nil {
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+						}
+					} else {
+						// Fallback to strict string error if they weren't valid JSON arrays/objects
+						t.Fatalf("unexpected string value: got %q, want %q", got, tc.want)
+					}
 				}
 			}
 		})
