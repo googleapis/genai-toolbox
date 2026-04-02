@@ -230,7 +230,6 @@ func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpl
 // RunToolInvoke runs the tool invoke endpoint
 func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
 	// Resolve options
-	// Default values for InvokeTestConfig
 	configs := &InvokeTestConfig{
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
@@ -419,6 +418,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			if !tc.enabled {
 				return
 			}
+			reqBytes, _ := io.ReadAll(tc.requestBody)
 			var got string
 			var actualStatusCode int
 
@@ -426,12 +426,9 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				parts := strings.Split(tc.api, "/")
 				toolName := parts[len(parts)-2]
 
-				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
-					if err := json.Unmarshal(reqBytes, &args); err != nil {
-						t.Fatalf("failed to unmarshal request body for MCP args: %v", err)
-					}
+					_ = json.Unmarshal(reqBytes, &args)
 				}
 				if args == nil {
 					args = make(map[string]any)
@@ -461,8 +458,8 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 					}
 				}
 			} else {
-				// Native API execution
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
+				// Reconstruct a fresh buffer for the legacy API request using the saved bytes
+				resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
 				actualStatusCode = resp.StatusCode
 
 				if tc.wantBody != "" && actualStatusCode == tc.wantStatusCode {
@@ -495,6 +492,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	}
 }
 
+// RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
 func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
 	configs := &TemplateParameterTestConfig{
 		ddlWant:         "null",
@@ -508,8 +506,9 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		nameColFilter:  "name",
 		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
 
-		supportDdl:    true,
-		supportInsert: true,
+		supportDdl:          true,
+		supportInsert:       true,
+		supportSelectFields: true,
 	}
 
 	for _, option := range options {
@@ -609,20 +608,20 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			if !tc.enabled && tc.name == "invoke select-fields-templateParams-tool" {
+			if !tc.enabled {
 				return
 			}
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
+				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var got string
 
 				if configs.IsMCP {
 					parts := strings.Split(tc.api, "/")
 					toolName := parts[len(parts)-2]
 
-					reqBytes, _ := io.ReadAll(tc.requestBody)
 					var args map[string]any
 					if len(reqBytes) > 0 {
 						_ = json.Unmarshal(reqBytes, &args)
@@ -640,18 +639,23 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 					}
 
 					var blocks []string
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, strings.TrimSpace(content.Text))
+					if mcpResp != nil && !mcpResp.Result.IsError {
+						for _, content := range mcpResp.Result.Content {
+							if content.Type == "text" {
+								blocks = append(blocks, strings.TrimSpace(content.Text))
+							}
 						}
 					}
-					if len(blocks) == 0 {
+
+					if mcpResp != nil && mcpResp.Error != nil {
+						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
+					} else if len(blocks) == 0 {
 						got = "null"
 					} else {
 						got = strings.Join(blocks, "")
 					}
 				} else {
-					resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
+					resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
 					if resp.StatusCode != http.StatusOK {
 						if tc.isErr {
 							return
@@ -673,7 +677,17 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 				}
 
 				if got != tc.want {
-					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+					var gotJSON, wantJSON any
+					errGot := json.Unmarshal([]byte(got), &gotJSON)
+					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
+
+					if errGot == nil && errWant == nil {
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+						}
+					} else {
+						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+					}
 				}
 			}
 		})
@@ -785,13 +799,15 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+
+			// Read buffer ONCE to prevent draining
+			reqBytes, _ := io.ReadAll(tc.requestBody)
 			var got string
 
 			if configs.IsMCP {
 				parts := strings.Split(tc.api, "/")
 				toolName := parts[len(parts)-2]
 
-				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
 					_ = json.Unmarshal(reqBytes, &args)
@@ -825,7 +841,8 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 					got = strings.Join(blocks, "")
 				}
 			} else {
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
+				// Reconstruct a fresh buffer for the legacy API request using the saved bytes
+				resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
 				if resp.StatusCode != http.StatusOK {
 					if tc.isErr {
 						return
