@@ -486,17 +486,15 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		enabled       bool
 		ddl           bool
 		insert        bool
-		toolName      string // Added for MCP routing
 		api           string
 		requestHeader map[string]string
-		requestBody   string // Changed to string to support dual-routing
+		requestBody   string // Changed to string to easily route to MCP or API
 		want          string
 		isErr         bool
 	}{
 		{
 			name:          "invoke create-table-templateParams-tool",
 			ddl:           true,
-			toolName:      "create-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray),
@@ -506,7 +504,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		{
 			name:          "invoke insert-table-templateParams-tool",
 			insert:        true,
-			toolName:      "insert-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName),
@@ -516,7 +513,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		{
 			name:          "invoke insert-table-templateParams-tool",
 			insert:        true,
-			toolName:      "insert-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName),
@@ -525,7 +521,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		},
 		{
 			name:          "invoke select-templateParams-tool",
-			toolName:      "select-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"tableName": "%s"}`, tableName),
@@ -534,7 +529,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool",
-			toolName:      "select-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName),
@@ -543,7 +537,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool with no results",
-			toolName:      "select-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName),
@@ -553,7 +546,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			enabled:       configs.supportSelectFields,
-			toolName:      "select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray),
@@ -562,7 +554,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		},
 		{
 			name:          "invoke select-filter-templateParams-combined-tool",
-			toolName:      "select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter),
@@ -572,7 +563,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		{
 			name:          "invoke drop-table-templateParams-tool",
 			ddl:           true,
-			toolName:      "drop-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   fmt.Sprintf(`{"tableName": "%s"}`, tableName),
@@ -597,6 +587,10 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 				var got string
 
 				if configs.IsMCP {
+					// Extract toolName from API path
+					parts := strings.Split(tc.api, "/")
+					toolName := parts[len(parts)-2]
+
 					var args map[string]any
 					if tc.requestBody != "" {
 						if err := json.Unmarshal([]byte(tc.requestBody), &args); err != nil {
@@ -604,7 +598,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						}
 					}
 
-					statusCode, mcpResp, err := InvokeMCPTool(t, tc.toolName, args, nil)
+					statusCode, mcpResp, err := InvokeMCPTool(t, toolName, args, nil)
 					if statusCode != http.StatusOK {
 						if tc.isErr {
 							return
@@ -618,8 +612,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 							blocks = append(blocks, strings.TrimSpace(content.Text))
 						}
 					}
-
-					// Safely map MCP empty responses back to legacy API's "null"
 					if len(blocks) == 0 {
 						got = "null"
 					} else {
@@ -650,8 +642,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 					}
 				}
 
+				// JSON-Aware Comparison
 				if got != tc.want {
-					// JSON Aware comparision
 					var gotJSON, wantJSON any
 					errGot := json.Unmarshal([]byte(got), &gotJSON)
 					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
@@ -661,8 +653,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
 						}
 					} else {
-						// Fallback to strict string error if they weren't valid JSON arrays/objects
-						t.Fatalf("unexpected string value: got %q, want %q", got, tc.want)
+						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 					}
 				}
 			}
