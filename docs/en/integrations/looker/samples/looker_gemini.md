@@ -30,7 +30,7 @@ In this section, we will download Toolbox and run the Toolbox server.
 
     {{< notice tip >}}
    Select the
-   [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+   [correct binary](https://github.com/googleapis/mcp-toolbox/releases)
    corresponding to your OS and CPU architecture.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->

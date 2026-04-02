@@ -19,7 +19,7 @@ expose your developer assistant tools to a MySQL instance:
 * [Gemini CLI][geminicli]
 * [Gemini Code Assist][geminicodeassist]
 
-[toolbox]: https://github.com/googleapis/genai-toolbox
+[toolbox]: https://github.com/googleapis/mcp-toolbox
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
 [vscode]: #configure-your-mcp-client
@@ -36,7 +36,7 @@ expose your developer assistant tools to a MySQL instance:
 ## Install MCP Toolbox
 
 1. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   binary](https://github.com/googleapis/mcp-toolbox/releases) corresponding
    to your OS and CPU architecture. You are required to use Toolbox version
    V0.10.0+:
 

@@ -20,7 +20,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Claude code][claudecode]
 * [Antigravity][antigravity]
 
-[toolbox]: https://github.com/googleapis/genai-toolbox
+[toolbox]: https://github.com/googleapis/mcp-toolbox
 [gemini-cli]: #configure-your-mcp-client
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
@@ -101,7 +101,7 @@ After you install Looker in the MCP Store, resources and tools from the server a
 ## Install MCP Toolbox
 
 1. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   binary](https://github.com/googleapis/mcp-toolbox/releases) corresponding
    to your OS and CPU architecture. You are required to use Toolbox version
    v0.10.0+:
 
