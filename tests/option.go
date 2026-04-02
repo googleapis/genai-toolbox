@@ -14,6 +14,23 @@
 
 package tests
 
+/* Configurations for RunSourceConnectionTest()  */
+
+// ConnectionTestConfig holds configuration for source connection tests
+type ConnectionTestConfig struct {
+	UseMCP bool
+}
+
+// ConnectionTestOption configures how the source connection test runs
+type ConnectionTestOption func(*ConnectionTestConfig)
+
+// WithMCP configures the connection test to verify via the MCP protocol instead of the legacy API
+func WithMCP() ConnectionTestOption {
+	return func(c *ConnectionTestConfig) {
+		c.UseMCP = true
+	}
+}
+
 /* Configurations for RunToolInvokeTest()  */
 
 // InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
@@ -28,9 +45,17 @@ type InvokeTestConfig struct {
 	supportArrayParam        bool
 	supportClientAuth        bool
 	supportSelect1Auth       bool
+	IsMCP                    bool
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
+
+// WithMCPInvoke enables the MCP routing for standard Tool Invoke tests
+func WithMCPInvoke(isMCP bool) InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.IsMCP = isMCP
+	}
+}
 
 // WithMyAuthToolWant represents the response value for my-auth-tool.
 // e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
@@ -164,6 +189,7 @@ type ExecuteSqlTestConfig struct {
 	createWant       string
 	dropWant         string
 	selectEmptyWant  string
+	IsMCP            bool
 }
 
 type ExecuteSqlOption func(*ExecuteSqlTestConfig)
@@ -173,6 +199,13 @@ type ExecuteSqlOption func(*ExecuteSqlTestConfig)
 func WithSelect1Statement(s string) ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
 		c.select1Statement = s
+	}
+}
+
+// WithMCPExecuteSql enables the MCP routing for ExecuteSql tests
+func WithMCPExecuteSql(isMCP bool) ExecuteSqlOption {
+	return func(c *ExecuteSqlTestConfig) {
+		c.IsMCP = isMCP
 	}
 }
 

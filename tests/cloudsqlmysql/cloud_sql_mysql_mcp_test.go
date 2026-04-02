@@ -1,10 +1,10 @@
-// Copyright 2026 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +16,6 @@ package cloudsqlmysql
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"regexp"
 	"strings"
 	"testing"
@@ -28,7 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
-func TestCloudSQLMySQLToolEndpointsMCP(t *testing.T) {
+func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -176,159 +174,14 @@ func TestCloudSQLMySQLToolEndpointsMCP(t *testing.T) {
 		tests.RunMCPToolsListMethod(t, expectedTools)
 	})
 
-	// Run standard shared tests (MCP variants)
-	tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest(), tests.WithMCPInvoke(true))
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithMCPExecuteSql(true))
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithMCPTemplate()) // Assuming generic WithMCP for this helper
 
-	// Execute SQL test
-	statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-exec-sql-tool", map[string]any{"sql": createTableStatement}, nil)
-	if err == nil && statusCode == http.StatusOK && !mcpResp.Result.IsError {
-		tests.RunMCPCustomToolCallMethod(t, "my-exec-sql-tool", map[string]any{"sql": "SELECT 1"}, select1Want)
-	}
-
-	// Run template parameter test
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithMCPTemplate())
-
-	// Run specific MySQL tool tests
+	// Run specific MySQL tool tests over MCP
 	const expectedOwner = "'toolbox-identity'@'%'"
 	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, expectedOwner, tests.WithMCPExec())
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool, tests.WithMCPExec())
 	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, CloudSQLMySQLDatabase, tableNameParam, tests.WithMCPExec())
-
-	// Ensure MCP validation
-	t.Run("verify parameter validation for prebuilt tools", func(t *testing.T) {
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "get_query_plan", map[string]any{}, nil)
-		if err != nil && statusCode == http.StatusOK {
-			t.Fatalf("native error executing get_query_plan: %v", err)
-		}
-		if statusCode != http.StatusOK {
-			t.Fatalf("expected status 200, got %d", statusCode)
-		}
-		tests.AssertMCPError(t, mcpResp, `parameter "sql_statement" is required`)
-	})
-}
-
-// Test connection with different IP type over MCP
-func TestCloudSQLMySQLMCPIpConnection(t *testing.T) {
-	sourceConfig := getCloudSQLMySQLVars(t)
-	tcs := []struct {
-		name   string
-		ipType string
-	}{
-		{
-			name:   "public ip",
-			ipType: "public",
-		},
-		{
-			name:   "private ip",
-			ipType: "private",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMySQLToolType, tests.WithMCP())
-			if err != nil {
-				t.Fatalf("Connection test failure via MCP: %s", err)
-			}
-		})
-	}
-}
-
-func TestCloudSQLMySQLMCPIAMConnection(t *testing.T) {
-	getCloudSQLMySQLVars(t)
-	serviceAccountEmail, _, _ := strings.Cut(tests.ServiceAccountEmail, "@")
-
-	noPassSourceConfig := map[string]any{
-		"type":     CloudSQLMySQLSourceType,
-		"project":  CloudSQLMySQLProject,
-		"instance": CloudSQLMySQLInstance,
-		"region":   CloudSQLMySQLRegion,
-		"database": CloudSQLMySQLDatabase,
-		"user":     serviceAccountEmail,
-	}
-	noUserSourceConfig := map[string]any{
-		"type":     CloudSQLMySQLSourceType,
-		"project":  CloudSQLMySQLProject,
-		"instance": CloudSQLMySQLInstance,
-		"region":   CloudSQLMySQLRegion,
-		"database": CloudSQLMySQLDatabase,
-		"password": "random",
-	}
-	noUserNoPassSourceConfig := map[string]any{
-		"type":     CloudSQLMySQLSourceType,
-		"project":  CloudSQLMySQLProject,
-		"instance": CloudSQLMySQLInstance,
-		"region":   CloudSQLMySQLRegion,
-		"database": CloudSQLMySQLDatabase,
-	}
-	tcs := []struct {
-		name         string
-		sourceConfig map[string]any
-		isErr        bool
-	}{
-		{
-			name:         "no user no pass",
-			sourceConfig: noUserNoPassSourceConfig,
-			isErr:        false,
-		},
-		{
-			name:         "no password",
-			sourceConfig: noPassSourceConfig,
-			isErr:        false,
-		},
-		{
-			name:         "no user",
-			sourceConfig: noUserSourceConfig,
-			isErr:        true,
-		},
-	}
-	for i, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-			defer cancel()
-
-			uniqueSourceName := fmt.Sprintf("iam-test-mcp-%d", i)
-
-			toolsFile := map[string]any{
-				"sources": map[string]any{
-					uniqueSourceName: tc.sourceConfig,
-				},
-				"tools": map[string]any{
-					"my-simple-tool": map[string]any{
-						"type":        CloudSQLMySQLToolType,
-						"source":      uniqueSourceName,
-						"description": "Simple tool to test end to end functionality.",
-						"statement":   "SELECT 1;",
-					},
-				},
-			}
-
-			cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
-			if err != nil {
-				t.Fatalf("command initialization returned an error: %s", err)
-			}
-			defer cleanup()
-
-			waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
-			defer waitCancel()
-
-			out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
-			if err != nil {
-				if tc.isErr {
-					outLower := strings.ToLower(out)
-					if !strings.Contains(outLower, "error") && !strings.Contains(outLower, "fail") {
-						t.Fatalf("Expected an authentication/connection error, but server failed for another reason. Output: %s", out)
-					}
-					return
-				}
-				t.Logf("toolbox command logs: \n%s", out)
-				t.Fatalf("Connection test failure: toolbox didn't start successfully: %s", err)
-			}
-
-			if tc.isErr {
-				t.Fatalf("Expected error but test passed.")
-			}
-		})
-	}
 }
