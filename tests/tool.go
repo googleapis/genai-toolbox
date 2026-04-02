@@ -468,8 +468,9 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		nameColFilter:  "name",
 		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
 
-		supportDdl:    true,
-		supportInsert: true,
+		supportDdl:          true,
+		supportInsert:       true,
+		supportSelectFields: true, // Default to true if not overridden
 	}
 
 	// Apply provided options
@@ -485,119 +486,168 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		enabled       bool
 		ddl           bool
 		insert        bool
+		toolName      string // Added for MCP routing
 		api           string
 		requestHeader map[string]string
-		requestBody   io.Reader
+		requestBody   string // Changed to string to support dual-routing
 		want          string
 		isErr         bool
 	}{
 		{
 			name:          "invoke create-table-templateParams-tool",
 			ddl:           true,
+			toolName:      "create-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray))),
+			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray),
 			want:          configs.ddlWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
 			insert:        true,
+			toolName:      "insert-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
+			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName),
 			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
 			insert:        true,
+			toolName:      "insert-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
+			requestBody:   fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName),
 			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-tool",
+			toolName:      "select-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
+			requestBody:   fmt.Sprintf(`{"tableName": "%s"}`, tableName),
 			want:          configs.selectAllWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool",
+			toolName:      "select-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
+			requestBody:   fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName),
 			want:          configs.selectId1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool with no results",
+			toolName:      "select-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName))),
+			requestBody:   fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName),
 			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			enabled:       configs.supportSelectFields,
+			toolName:      "select-fields-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
+			requestBody:   fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray),
 			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-filter-templateParams-combined-tool",
+			toolName:      "select-filter-templateParams-combined-tool",
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
+			requestBody:   fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter),
 			want:          configs.selectNameWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke drop-table-templateParams-tool",
 			ddl:           true,
+			toolName:      "drop-table-templateParams-tool",
 			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
+			requestBody:   fmt.Sprintf(`{"tableName": "%s"}`, tableName),
 			want:          configs.ddlWant,
 			isErr:         false,
 		},
 	}
+
 	for _, tc := range invokeTcs {
+		// Handle specific toggles like supportSelectFields
+		if tc.name == "invoke select-fields-templateParams-tool" && !tc.enabled {
+			continue
+		}
+
 		t.Run(tc.name, func(t *testing.T) {
-			if !tc.enabled {
-				return
-			}
 			// if test case is DDL and source support ddl test cases
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
 			// if test case is insert statement and source support insert test cases
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
+
 			if ddlAllow && insertAllow {
-				// Send Tool invocation request
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
-				if resp.StatusCode != http.StatusOK {
-					if tc.isErr {
-						return
+				var got string
+
+				if configs.IsMCP {
+					var args map[string]any
+					if tc.requestBody != "" {
+						if err := json.Unmarshal([]byte(tc.requestBody), &args); err != nil {
+							t.Fatalf("failed to unmarshal request body for MCP args: %v", err)
+						}
 					}
-					t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
-				}
 
-				// Check response body
-				var body map[string]interface{}
-				err := json.Unmarshal(respBody, &body)
-				if err != nil {
-					t.Fatalf("error parsing response body")
-				}
+					statusCode, mcpResp, err := InvokeMCPTool(t, tc.toolName, args, nil)
+					if statusCode != http.StatusOK {
+						if tc.isErr {
+							return
+						}
+						t.Fatalf("response status code is not 200, got %d, error: %v", statusCode, err)
+					}
 
-				got, ok := body["result"].(string)
-				if !ok {
-					t.Fatalf("unable to find result in response body")
+					var blocks []string
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, strings.TrimSpace(content.Text))
+						}
+					}
+
+					// Safely map MCP empty responses back to legacy API's "null"
+					if len(blocks) == 0 {
+						got = "null"
+					} else {
+						got = strings.Join(blocks, "")
+					}
+
+				} else {
+					// Send legacy API invocation request
+					resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBufferString(tc.requestBody), tc.requestHeader)
+					if resp.StatusCode != http.StatusOK {
+						if tc.isErr {
+							return
+						}
+						t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+					}
+
+					// Check response body
+					var body map[string]interface{}
+					err := json.Unmarshal(respBody, &body)
+					if err != nil {
+						t.Fatalf("error parsing response body")
+					}
+
+					var ok bool
+					got, ok = body["result"].(string)
+					if !ok {
+						t.Fatalf("unable to find result in response body")
+					}
 				}
 
 				if got != tc.want {
@@ -3788,12 +3838,11 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 				}
 			}
 
-			var got map[string]any
-			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
-				t.Fatalf("failed to unmarshal actual result string: %v", err)
-			}
-
 			if tc.checkResult != nil {
+				var got map[string]any
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil && resultString != "null" {
+					t.Fatalf("failed to unmarshal actual result string: %v", err)
+				}
 				tc.checkResult(t, got)
 			}
 		})

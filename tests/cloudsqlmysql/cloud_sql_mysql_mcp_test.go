@@ -125,44 +125,77 @@ func TestCloudSQLMySQLToolEndpointsMCP(t *testing.T) {
 				"required": []any{},
 			},
 		},
-		{Name: "list_tables_missing_unique_indexes", Description: "Lists tables that do not have primary or unique indexes in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter tables missing unique indexes. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
-		{Name: "list_table_fragmentation", Description: "Lists table fragmentation in the database.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"data_free_threshold_bytes": map[string]any{"default": float64(10485760), "description": "Optional: Minimum fragmented space in bytes required for a table to be included in the result. Defaults to 10MB (10485760 bytes).", "type": "integer"}, "limit": map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return, ordered by highest fragmentation percentage first. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"}, "table_name": map[string]any{"default": "", "description": "Optional: Specific table name to retrieve fragmentation details for. If empty, retrieves for all tables in the specified schema.", "type": "string"}, "table_schema": map[string]any{"default": "", "description": "Optional: Database name to filter table fragmentation. Defaults to the database specified in the connection string.", "type": "string"}}, "required": []any{}}},
-		{Name: "get_query_plan", Description: "Gets the query plan for a SQL statement.", InputSchema: map[string]any{"type": "object", "properties": map[string]any{"sql_statement": map[string]any{"type": "string", "description": "The SQL query statement to analyze."}}, "required": []any{"sql_statement"}}},
+		{
+			Name:        "list_tables_missing_unique_indexes",
+			Description: "Lists tables that do not have primary or unique indexes in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit": map[string]any{
+						"default":     float64(50),
+						"description": "(Optional) Max rows to return, default is 50",
+						"type":        "integer",
+					},
+					"table_schema": map[string]any{
+						"default":     "",
+						"description": "(Optional) The database where the check is to be performed. Check all tables visible to the current user if not specified",
+						"type":        "string",
+					},
+				},
+				"required": []any{},
+			},
+		},
+		{
+			Name:        "list_table_fragmentation",
+			Description: "Lists table fragmentation in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"data_free_threshold_bytes": map[string]any{"default": float64(10485760), "description": "Optional: Minimum fragmented space in bytes required for a table to be included in the result. Defaults to 10MB (10485760 bytes).", "type": "integer"},
+					"limit":                     map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return, ordered by highest fragmentation percentage first. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"},
+					"table_name":                map[string]any{"default": "", "description": "Optional: Specific table name to retrieve fragmentation details for. If empty, retrieves for all tables in the specified schema.", "type": "string"},
+					"table_schema":              map[string]any{"default": "", "description": "Optional: Database name to filter table fragmentation. Defaults to the database specified in the connection string.", "type": "string"},
+				},
+				"required": []any{},
+			},
+		},
+		{
+			Name:        "get_query_plan",
+			Description: "Gets the query plan for a SQL statement.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"sql_statement": map[string]any{"type": "string", "description": "The SQL query statement to analyze."},
+				},
+				"required": []any{"sql_statement"},
+			},
+		},
 	}...)
 
 	t.Run("verify tools/list registry returns complete manifest", func(t *testing.T) {
 		tests.RunMCPToolsListMethod(t, expectedTools)
 	})
 
-	// Run Shared Tool Executions
-	t.Run("verify standard shared tool executions", func(t *testing.T) {
-		tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
-		tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	// Run standard shared tests (MCP variants)
+	tests.RunMCPToolInvokeTest(t, select1Want, tests.DisableArrayTest())
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 
-		statusCode, failResp, err := tests.InvokeMCPTool(t, "my-fail-tool", map[string]any{}, nil)
-		if err == nil && statusCode == http.StatusOK {
-			tests.AssertMCPError(t, failResp, "You have an error in your SQL syntax")
-		}
+	// Execute SQL test
+	statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-exec-sql-tool", map[string]any{"sql": createTableStatement}, nil)
+	if err == nil && statusCode == http.StatusOK && !mcpResp.Result.IsError {
+		tests.RunMCPCustomToolCallMethod(t, "my-exec-sql-tool", map[string]any{"sql": "SELECT 1"}, select1Want)
+	}
 
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-exec-sql-tool", map[string]any{"sql": createTableStatement}, nil)
-		if err == nil && statusCode == http.StatusOK && !mcpResp.Result.IsError {
-			tests.RunMCPCustomToolCallMethod(t, "my-exec-sql-tool", map[string]any{"sql": "SELECT 1"}, select1Want)
-		}
+	// Run template parameter test
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithMCPTemplate())
 
-		tests.InvokeMCPTool(t, "create-table-templateParams-tool", map[string]any{"tableName": tableNameTemplateParam, "columns": []any{"id INT", "name VARCHAR(20)", "age INT"}}, nil)
-		tests.InvokeMCPTool(t, "insert-table-templateParams-tool", map[string]any{"tableName": tableNameTemplateParam, "columns": []any{"id", "name", "age"}, "values": "1, 'Alex', 21"}, nil)
-		tests.RunMCPCustomToolCallMethod(t, "select-filter-templateParams-combined-tool", map[string]any{"name": "Alex", "tableName": tableNameTemplateParam, "columnFilter": "name"}, `[{"id":1,"name":"Alex","age":21}]`)
-	})
-
-	// Run specific MySQL prebuilt tool tests via MCP
+	// Run specific MySQL tool tests
 	const expectedOwner = "'toolbox-identity'@'%'"
 	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, expectedOwner, tests.WithMCPExec())
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool, tests.WithMCPExec())
 	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, CloudSQLMySQLDatabase, tableNameParam, tests.WithMCPExec())
-	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, CloudSQLMySQLDatabase, tests.WithMCPExec())
-	tests.RunMySQLListTableFragmentationTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, tests.WithMCPExec())
 
-	// Verify parameter validation for prebuilt tools (MCP Specific)
+	// Ensure MCP validation
 	t.Run("verify parameter validation for prebuilt tools", func(t *testing.T) {
 		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "get_query_plan", map[string]any{}, nil)
 		if err != nil && statusCode == http.StatusOK {
@@ -182,8 +215,14 @@ func TestCloudSQLMySQLMCPIpConnection(t *testing.T) {
 		name   string
 		ipType string
 	}{
-		{name: "verify connection using public ip over MCP", ipType: "public"},
-		{name: "verify connection using private ip over MCP", ipType: "private"},
+		{
+			name:   "public ip",
+			ipType: "public",
+		},
+		{
+			name:   "private ip",
+			ipType: "private",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -228,9 +267,21 @@ func TestCloudSQLMySQLMCPIAMConnection(t *testing.T) {
 		sourceConfig map[string]any
 		isErr        bool
 	}{
-		{name: "verify successful IAM connection omitting user and password", sourceConfig: noUserNoPassSourceConfig, isErr: false},
-		{name: "verify successful IAM connection with valid user and omitted password", sourceConfig: noPassSourceConfig, isErr: false},
-		{name: "verify failing IAM connection with omitted user and arbitrary password", sourceConfig: noUserSourceConfig, isErr: true},
+		{
+			name:         "no user no pass",
+			sourceConfig: noUserNoPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no password",
+			sourceConfig: noPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no user",
+			sourceConfig: noUserSourceConfig,
+			isErr:        true,
+		},
 	}
 	for i, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {

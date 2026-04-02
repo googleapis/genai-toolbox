@@ -215,9 +215,18 @@ type TemplateParameterTestConfig struct {
 	supportDdl          bool
 	supportInsert       bool
 	supportSelectFields bool
+	IsMCP               bool
 }
 
 type TemplateParamOption func(*TemplateParameterTestConfig)
+
+// WithMCPTemplate flags the test harness to route the request through the local MCP server.
+// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableName, tests.WithMCPTemplate())
+func WithMCPTemplate() TemplateParamOption {
+	return func(c *TemplateParameterTestConfig) {
+		c.IsMCP = true
+	}
+}
 
 // WithDdlWant represents the response value of ddl statements.
 // e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithDdlWant("custom"))
