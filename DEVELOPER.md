@@ -44,6 +44,42 @@ Before you begin, ensure you have the following:
     curl http://127.0.0.1:5000
     ```
 
+#### Cross Compiling For Windows
+
+Most developers work in a Unix or Unix-like environment.
+
+Compiling for Windows requires the download of zig to provide a C and C++
+compiler. These instructions are for cross compiling from Linux x86 but
+should work for macOS with small changes.
+
+1. Download zig for your platform.
+    ```bash
+    cd $HOME
+    curl -fL "https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz" -o zig.tar.xz
+    tar xf zig.tar.xz
+    ```
+    This will create the directory $HOME/zig-x86_64-linux-0.15.2. You only need to do this once.
+
+    If you are on macOS curl from https://ziglang.org/download/0.15.2/zig-x86_64-macos-0.15.2.tar.xz
+    or https://ziglang.org/download/0.15.2/zig-aarch64-macos-0.15.2.tar.xz.
+
+2. Change to your MCP Toolbox directory and run the following:
+    ```bash
+    cd $HOME/genai-toolbox
+    GOOS=windows \
+    GOARCH=amd64 \
+    CGO_ENABLED=1 \
+    CC="$HOME/zig-x86_64-linux-0.15.2/zig cc -target x86_64-windows-gnu"  \
+    CXX="$HOME/zig-x86_64-linux-0.15.2/zig c++ -target x86_64-windows-gnu" \
+    go build -o toolbox.exe
+    ```
+
+    If you are on macOS alter the path `zig-x86_64-linux-0.15.2` to the proper path
+    for your zig installation.
+
+Now the toolbox.exe file is ready to use. Transfer it to your windows machine and test it.
+
+
 ### Tool Naming Conventions
 
 This section details the purpose and conventions for MCP Toolbox's tools naming
@@ -382,6 +418,7 @@ go test -race -v ./cmd/... ./internal/...
   workflows on your PR.
   * Maintainers can comment `/gcbrun` to execute the integration tests.
   * Maintainers can add the label `tests:run` to execute the unit tests.
+  * Maintainers can add the label `docs: deploy-preview` to run the PR Preview workflow.
 
 #### Test Resources
 
@@ -557,7 +594,7 @@ The documentation uses a dynamic versioning system that outputs standard HTML si
 
 **Search Indexing:** All deployment workflows automatically execute `npx pagefind --site public` to generate a version-scoped search index specific to that deployment's base URL.
 
-There are 6 GHA workflows we use to achieve document versioning (each deployment scenario has one workflow for GitHub Pages and one for Cloudflare Pages):
+There are 3 GHA workflows we use to achieve document versioning:
 
 1.  **Deploy In-development docs:**
     This workflow is run on every commit merged into the main branch. It deploys
@@ -567,7 +604,7 @@ There are 6 GHA workflows we use to achieve document versioning (each deployment
 1. **Deploy Versioned Docs:**
     When a new GitHub Release is published, it performs two deployments based on
     the new release tag. One to the new version subdirectory and one to the root
-    directory of the versioned-gh-pages branch.
+    directory of the cloudflare-pages branch.
 
     **Note:** Before the release PR from release-please is merged, add the
     newest version into the hugo.toml file.
@@ -578,7 +615,7 @@ There are 6 GHA workflows we use to achieve document versioning (each deployment
     were released before this new system was in place. This workflow can be
     started on the UI by providing the git version tag which you want to create
     the documentation for. The specific versioned subdirectory and the root docs
-    are updated on the versioned-gh-pages branch.
+    are updated on the cloudflare-pages branch.
 
 #### Contributors
 
