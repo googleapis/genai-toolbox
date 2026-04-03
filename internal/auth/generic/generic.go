@@ -28,6 +28,7 @@ import (
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 const AuthServiceType string = "generic"
@@ -71,6 +72,22 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 	return a, nil
 }
 
+func newSecureHTTPClient() *http.Client {
+	return &http.Client{
+		Timeout: 10 * time.Second,
+		Transport: &http.Transport{
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          10,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   5 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+}
+
 func discoverJWKSURL(AuthorizationServer string) (string, error) {
 	u, err := url.Parse(AuthorizationServer)
 	if err != nil {
@@ -86,20 +103,7 @@ func discoverJWKSURL(AuthorizationServer string) (string, error) {
 	}
 
 	// HTTP Client
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			ForceAttemptHTTP2:     true,
-			MaxIdleConns:          10,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   5 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-		// Prevent redirect loops or redirects to internal sites
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	client := newSecureHTTPClient()
 
 	resp, err := client.Get(oidcConfigURL)
 	if err != nil {
@@ -295,7 +299,15 @@ func (a AuthService) validateJwtToken(ctx context.Context, tokenStr string) erro
 }
 
 func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) error {
-	introspectionURL := a.AuthorizationServer + "/introspect"
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get logger from context: %w", err)
+	}
+
+	introspectionURL, err := url.JoinPath(a.AuthorizationServer, "introspect")
+	if err != nil {
+		return fmt.Errorf("failed to construct introspection URL: %w", err)
+	}
 
 	data := url.Values{}
 	data.Set("token", tokenStr)
@@ -308,17 +320,17 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	req.Header.Set("Accept", "application/json")
 
 	// Send request to auth server's introspection endpoint
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
+	client := newSecureHTTPClient()
 
 	resp, err := client.Do(req)
 	if err != nil {
+		logger.ErrorContext(ctx, "failed to call introspection endpoint: %v", err)
 		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to call introspection endpoint: %v", err), ScopesRequired: a.ScopesRequired}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		logger.WarnContext(ctx, "introspection failed with status: %d", resp.StatusCode)
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("introspection failed with status: %d", resp.StatusCode), ScopesRequired: a.ScopesRequired}
 	}
 
@@ -339,16 +351,20 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	}
 
 	if !introspectResp.Active {
+		logger.InfoContext(ctx, "token is not active")
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Verify audience (client_id)
 	if a.Audience != "" && introspectResp.ClientId != a.Audience {
+		logger.WarnContext(ctx, "audience validation failed: expected %s, got %s", a.Audience, introspectResp.ClientId)
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "audience validation failed", ScopesRequired: a.ScopesRequired}
 	}
 
-	// Verify expiration
-	if introspectResp.Exp > 0 && time.Now().Unix() > introspectResp.Exp {
+	// Verify expiration (with 1 minute leeway) to account for potential time difference between Toolbox and the auth server
+	const leeway = 60
+	if introspectResp.Exp > 0 && time.Now().Unix() > (introspectResp.Exp+leeway) {
+		logger.WarnContext(ctx, "token has expired: exp=%d, now=%d", introspectResp.Exp, time.Now().Unix())
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token has expired", ScopesRequired: a.ScopesRequired}
 	}
 
