@@ -1,0 +1,24 @@
+{
+  "name": "genai-toolbox",
+  "version": "0.1.0",
+  "description": "MCP Toolbox for databases from Codex",
+  "author": {
+    "name": "googleapis",
+    "url": "https://github.com/googleapis/genai-toolbox"
+  },
+  "homepage": "https://github.com/googleapis/genai-toolbox",
+  "repository": "https://github.com/googleapis/genai-toolbox",
+  "keywords": [
+    "mcp",
+    "codex"
+  ],
+  "mcpServers": "./.mcp.json",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "GenAI Toolbox",
+    "shortDescription": "MCP Toolbox for databases from Codex",
+    "longDescription": "MCP Toolbox for Databases. An open source MCP server for databases by Google.",
+    "category": "Database",
+    "websiteURL": "https://github.com/googleapis/genai-toolbox"
+  }
+}

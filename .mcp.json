@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "genai-toolbox": {
+      "command": "npx",
+      "args": [
+        "@toolbox-sdk/server",
+        "--config",
+        "tools.yaml"
+      ]
+    }
+  }
+}
