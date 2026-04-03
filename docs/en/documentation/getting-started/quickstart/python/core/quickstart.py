@@ -55,6 +55,7 @@ async def main():
         ]
         history = []
         for query in queries:
+            print(f"\n[INPUT] User: {query}")
             user_prompt_content = Content(
                 role="user",
                 parts=[Part.from_text(text=query)],
@@ -75,6 +76,8 @@ async def main():
             if response.function_calls:
                 for function_call in response.function_calls:
                     fn_name = function_call.name
+                    print(f"[TOOL CALL] Model requested tool '{fn_name}' with args: {function_call.args}")
+                    
                     # The tools are sorted alphabetically
                     if fn_name == "search-hotels-by-name":
                         function_result = await toolbox_tools[3](**function_call.args)
@@ -109,8 +112,8 @@ async def main():
                 )
                 final_model_response_content = response2.candidates[0].content
                 history.append(final_model_response_content)
-                print(response2.text)
+                print(f"[OUTPUT] AI: {response2.text}")
             else:
-                print(response.text)
+                print(f"[OUTPUT] AI: {response.text}")
 
 asyncio.run(main())
