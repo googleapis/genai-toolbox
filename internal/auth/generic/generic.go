@@ -307,7 +307,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	// Use a client similar to the one in discoverJWKSURL
+	// Send request to auth server's introspection endpoint
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}

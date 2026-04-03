@@ -239,8 +239,8 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			mockResponse: map[string]any{
 				"active": false,
 			},
-			mockStatus: http.StatusOK,
-			wantError:  true,
+			mockStatus:  http.StatusOK,
+			wantError:   true,
 			errContains: "token is not active",
 		},
 		{
@@ -252,21 +252,21 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 				"scope":  "read:files",
 				"exp":    time.Now().Add(time.Hour).Unix(),
 			},
-			mockStatus: http.StatusOK,
-			wantError:  true,
+			mockStatus:  http.StatusOK,
+			wantError:   true,
 			errContains: "insufficient scopes",
 		},
 		{
-			name:           "audience mismatch",
-			token:          "opaque-bad-aud",
-			audience:       "my-audience",
+			name:     "audience mismatch",
+			token:    "opaque-bad-aud",
+			audience: "my-audience",
 			mockResponse: map[string]any{
 				"active":    true,
 				"client_id": "wrong-audience",
 				"exp":       time.Now().Add(time.Hour).Unix(),
 			},
-			mockStatus: http.StatusOK,
-			wantError:  true,
+			mockStatus:  http.StatusOK,
+			wantError:   true,
 			errContains: "audience validation failed",
 		},
 		{
@@ -276,8 +276,8 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 				"active": true,
 				"exp":    time.Now().Add(-1 * time.Hour).Unix(),
 			},
-			mockStatus: http.StatusOK,
-			wantError:  true,
+			mockStatus:  http.StatusOK,
+			wantError:   true,
 			errContains: "token has expired",
 		},
 		{
@@ -286,8 +286,8 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			mockResponse: map[string]any{
 				"error": "server_error",
 			},
-			mockStatus: http.StatusInternalServerError,
-			wantError:  true,
+			mockStatus:  http.StatusInternalServerError,
+			wantError:   true,
 			errContains: "introspection failed with status: 500",
 		},
 	}
@@ -361,3 +361,256 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 	}
 }
 
+func TestValidateJwtToken(t *testing.T) {
+	privateKey := generateRSAPrivateKey(t)
+	keyID := "test-key-id"
+	server := setupJWKSMockServer(t, privateKey, keyID)
+	defer server.Close()
+
+	cfg := Config{
+		Name:                "test-generic-auth",
+		Type:                "generic",
+		Audience:            "my-audience",
+		AuthorizationServer: server.URL,
+		ScopesRequired:      []string{"read:files"},
+	}
+
+	authService, err := cfg.Initialize()
+	if err != nil {
+		t.Fatalf("failed to initialize auth service: %v", err)
+	}
+
+	genericAuth, ok := authService.(*AuthService)
+	if !ok {
+		t.Fatalf("expected *AuthService, got %T", authService)
+	}
+
+	tests := []struct {
+		name        string
+		token       string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name: "valid jwt",
+			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"aud":   "my-audience",
+				"scope": "read:files",
+				"exp":   time.Now().Add(time.Hour).Unix(),
+			}),
+			wantError: false,
+		},
+		{
+			name:        "invalid token (wrong signature)",
+			token:       "header.payload.signature",
+			wantError:   true,
+			errContains: "invalid or expired token",
+		},
+		{
+			name: "audience mismatch",
+			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"aud":   "wrong-audience",
+				"scope": "read:files",
+				"exp":   time.Now().Add(time.Hour).Unix(),
+			}),
+			wantError:   true,
+			errContains: "audience validation failed",
+		},
+		{
+			name: "insufficient scopes",
+			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"aud":   "my-audience",
+				"scope": "wrong:scope",
+				"exp":   time.Now().Add(time.Hour).Unix(),
+			}),
+			wantError:   true,
+			errContains: "insufficient scopes",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := genericAuth.validateJwtToken(context.Background(), tc.token)
+			if tc.wantError {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("expected error containing %q, got: %v", tc.errContains, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestValidateOpaqueToken(t *testing.T) {
+	tests := []struct {
+		name           string
+		token          string
+		scopesRequired []string
+		audience       string
+		mockResponse   map[string]any
+		mockStatus     int
+		wantError      bool
+		errContains    string
+	}{
+		{
+			name:           "valid opaque token",
+			token:          "opaque-valid",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active":    true,
+				"scope":     "read:files write:files",
+				"client_id": "my-audience",
+				"exp":       time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
+			name:           "inactive opaque token",
+			token:          "opaque-inactive",
+			scopesRequired: []string{"read:files"},
+			mockResponse: map[string]any{
+				"active": false,
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "token is not active",
+		},
+		{
+			name:           "insufficient scopes",
+			token:          "opaque-bad-scope",
+			scopesRequired: []string{"read:files", "write:files"},
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "insufficient scopes",
+		},
+		{
+			name:     "audience mismatch",
+			token:    "opaque-bad-aud",
+			audience: "my-audience",
+			mockResponse: map[string]any{
+				"active":    true,
+				"client_id": "wrong-audience",
+				"exp":       time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "audience validation failed",
+		},
+		{
+			name:  "expired token",
+			token: "opaque-expired",
+			mockResponse: map[string]any{
+				"active": true,
+				"exp":    time.Now().Add(-1 * time.Hour).Unix(),
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "token has expired",
+		},
+		{
+			name:  "introspection error status",
+			token: "opaque-error",
+			mockResponse: map[string]any{
+				"error": "server_error",
+			},
+			mockStatus:  http.StatusInternalServerError,
+			wantError:   true,
+			errContains: "introspection failed with status: 500",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/introspect" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(tc.mockStatus)
+					_ = json.NewEncoder(w).Encode(tc.mockResponse)
+					return
+				}
+				http.NotFound(w, r)
+			})
+			server := httptest.NewServer(handler)
+			defer server.Close()
+
+			genericAuth := &AuthService{
+				Config: Config{
+					Audience:            tc.audience,
+					AuthorizationServer: server.URL,
+					ScopesRequired:      tc.scopesRequired,
+				},
+			}
+
+			err := genericAuth.validateOpaqueToken(context.Background(), tc.token)
+
+			if tc.wantError {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("expected error containing %q, got: %v", tc.errContains, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestIsJWTFormat(t *testing.T) {
+	tests := []struct {
+		name  string
+		token string
+		want  bool
+	}{
+		{
+			name:  "valid JWT format",
+			token: "header.payload.signature",
+			want:  true,
+		},
+		{
+			name:  "opaque token",
+			token: "opaque-token",
+			want:  false,
+		},
+		{
+			name:  "too many dots",
+			token: "a.b.c.d",
+			want:  false,
+		},
+		{
+			name:  "too few dots",
+			token: "a.b",
+			want:  false,
+		},
+		{
+			name:  "empty string",
+			token: "",
+			want:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := isJWTFormat(tc.token)
+			if got != tc.want {
+				t.Errorf("isJWTFormat(%q) = %v; want %v", tc.token, got, tc.want)
+			}
+		})
+	}
+}
