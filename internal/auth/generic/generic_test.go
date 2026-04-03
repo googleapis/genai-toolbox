@@ -206,3 +206,158 @@ func TestGetClaimsFromHeader(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateMCPAuth_Opaque(t *testing.T) {
+	tests := []struct {
+		name           string
+		token          string
+		scopesRequired []string
+		audience       string
+		mockResponse   map[string]any
+		mockStatus     int
+		wantError      bool
+		errContains    string
+	}{
+		{
+			name:           "valid opaque token",
+			token:          "opaque-valid",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active":    true,
+				"scope":     "read:files write:files",
+				"client_id": "my-audience",
+				"exp":       time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
+			name:           "inactive opaque token",
+			token:          "opaque-inactive",
+			scopesRequired: []string{"read:files"},
+			mockResponse: map[string]any{
+				"active": false,
+			},
+			mockStatus: http.StatusOK,
+			wantError:  true,
+			errContains: "token is not active",
+		},
+		{
+			name:           "insufficient scopes",
+			token:          "opaque-bad-scope",
+			scopesRequired: []string{"read:files", "write:files"},
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  true,
+			errContains: "insufficient scopes",
+		},
+		{
+			name:           "audience mismatch",
+			token:          "opaque-bad-aud",
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active":    true,
+				"client_id": "wrong-audience",
+				"exp":       time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  true,
+			errContains: "audience validation failed",
+		},
+		{
+			name:  "expired token",
+			token: "opaque-expired",
+			mockResponse: map[string]any{
+				"active": true,
+				"exp":    time.Now().Add(-1 * time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  true,
+			errContains: "token has expired",
+		},
+		{
+			name:  "introspection error status",
+			token: "opaque-error",
+			mockResponse: map[string]any{
+				"error": "server_error",
+			},
+			mockStatus: http.StatusInternalServerError,
+			wantError:  true,
+			errContains: "introspection failed with status: 500",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/.well-known/openid-configuration" {
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]interface{}{
+						"issuer":   "https://example.com",
+						"jwks_uri": "http://" + r.Host + "/jwks",
+					})
+					return
+				}
+				if r.URL.Path == "/jwks" {
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]interface{}{
+						"keys": []any{},
+					})
+					return
+				}
+				if r.URL.Path == "/introspect" {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(tc.mockStatus)
+					_ = json.NewEncoder(w).Encode(tc.mockResponse)
+					return
+				}
+				http.NotFound(w, r)
+			})
+			server := httptest.NewServer(handler)
+			defer server.Close()
+
+			cfg := Config{
+				Name:                "test-generic-auth",
+				Type:                "generic",
+				Audience:            tc.audience,
+				AuthorizationServer: server.URL,
+				ScopesRequired:      tc.scopesRequired,
+			}
+
+			authService, err := cfg.Initialize()
+			if err != nil {
+				t.Fatalf("failed to initialize auth service: %v", err)
+			}
+
+			genericAuth, ok := authService.(*AuthService)
+			if !ok {
+				t.Fatalf("expected *AuthService, got %T", authService)
+			}
+
+			ctx := context.Background()
+			header := http.Header{}
+			header.Set("Authorization", "Bearer "+tc.token)
+
+			err = genericAuth.ValidateMCPAuth(ctx, header)
+
+			if tc.wantError {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tc.errContains != "" && !strings.Contains(err.Error(), tc.errContains) {
+					t.Errorf("expected error containing %q, got: %v", tc.errContains, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+

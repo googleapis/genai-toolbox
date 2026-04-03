@@ -230,7 +230,20 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) error {
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "authorization header must be in the format 'Bearer <token>'", ScopesRequired: a.ScopesRequired}
 	}
 
-	token, err := jwt.Parse(headerParts[1], a.kf.Keyfunc)
+	tokenStr := headerParts[1]
+
+	if isJWTFormat(tokenStr) {
+		return a.validateJwtToken(ctx, tokenStr)
+	}
+	return a.validateOpaqueToken(ctx, tokenStr)
+}
+
+func isJWTFormat(token string) bool {
+	return strings.Count(token, ".") == 2
+}
+
+func (a AuthService) validateJwtToken(ctx context.Context, tokenStr string) error {
+	token, err := jwt.Parse(tokenStr, a.kf.Keyfunc)
 	if err != nil || !token.Valid {
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid or expired token", ScopesRequired: a.ScopesRequired}
 	}
@@ -266,6 +279,82 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) error {
 		}
 
 		tokenScopes := strings.Split(scopeClaim, " ")
+		scopeMap := make(map[string]bool)
+		for _, s := range tokenScopes {
+			scopeMap[s] = true
+		}
+
+		for _, requiredScope := range a.ScopesRequired {
+			if !scopeMap[requiredScope] {
+				return &MCPAuthError{Code: http.StatusForbidden, Message: "insufficient scopes", ScopesRequired: a.ScopesRequired}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) error {
+	introspectionURL := a.AuthorizationServer + "/introspect"
+
+	data := url.Values{}
+	data.Set("token", tokenStr)
+
+	req, err := http.NewRequestWithContext(ctx, "POST", introspectionURL, strings.NewReader(data.Encode()))
+	if err != nil {
+		return fmt.Errorf("failed to create introspection request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json")
+
+	// Use a client similar to the one in discoverJWKSURL
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to call introspection endpoint: %v", err), ScopesRequired: a.ScopesRequired}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("introspection failed with status: %d", resp.StatusCode), ScopesRequired: a.ScopesRequired}
+	}
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return fmt.Errorf("failed to read introspection response: %w", err)
+	}
+
+	var introspectResp struct {
+		Active   bool   `json:"active"`
+		Scope    string `json:"scope"`
+		ClientId string `json:"client_id"`
+		Exp      int64  `json:"exp"`
+	}
+
+	if err := json.Unmarshal(body, &introspectResp); err != nil {
+		return fmt.Errorf("failed to parse introspection response: %w", err)
+	}
+
+	if !introspectResp.Active {
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
+	}
+
+	// Verify audience (client_id)
+	if a.Audience != "" && introspectResp.ClientId != a.Audience {
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "audience validation failed", ScopesRequired: a.ScopesRequired}
+	}
+
+	// Verify expiration
+	if introspectResp.Exp > 0 && time.Now().Unix() > introspectResp.Exp {
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token has expired", ScopesRequired: a.ScopesRequired}
+	}
+
+	// Verify scopes
+	if len(a.ScopesRequired) > 0 {
+		tokenScopes := strings.Split(introspectResp.Scope, " ")
 		scopeMap := make(map[string]bool)
 		for _, s := range tokenScopes {
 			scopeMap[s] = true
