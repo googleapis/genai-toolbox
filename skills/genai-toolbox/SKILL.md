@@ -1,12 +1,7 @@
----
-name: genai-toolbox
-description: MCP Toolbox for databases from Codex
----
+# MCP Toolbox for Codex
 
-# GenAI Toolbox for Codex
-
-Use GenAI Toolbox from Codex via MCP.
+Use MCP Toolbox for Databases from Codex via MCP.
 
 ## When to use
-- When you need genai-toolbox capabilities in your Codex workflow
+- When you need database tool capabilities in your Codex workflow
 - See https://github.com/googleapis/genai-toolbox for full setup instructions

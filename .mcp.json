@@ -3,6 +3,7 @@
     "genai-toolbox": {
       "command": "npx",
       "args": [
+        "-y",
         "@toolbox-sdk/server",
         "--config",
         "tools.yaml"

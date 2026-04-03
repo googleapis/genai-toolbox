@@ -15,7 +15,7 @@
   "mcpServers": "./.mcp.json",
   "skills": "./skills/",
   "interface": {
-    "displayName": "GenAI Toolbox",
+    "displayName": "MCP Toolbox for Databases",
     "shortDescription": "MCP Toolbox for databases from Codex",
     "longDescription": "MCP Toolbox for Databases. An open source MCP server for databases by Google.",
     "category": "Database",
