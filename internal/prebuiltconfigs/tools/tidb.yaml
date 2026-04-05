@@ -1,0 +1,77 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# TiDB Prebuilt Configuration
+#
+# TiDB is a distributed SQL database that supports Hybrid Transactional
+# and Analytical Processing (HTAP) workloads. It is MySQL-compatible and
+# provides horizontal scalability, strong consistency, and high availability.
+#
+# Key TiDB-specific features exposed by these tools:
+# - TiFlash: Columnar storage for real-time analytics (requires TiDB 4.0+)
+# - Distributed query execution with transparent scaling
+#
+# Environment variables:
+#   TIDB_HOST     - TiDB server host (default: localhost)
+#   TIDB_PORT     - TiDB server port (default: 4000)
+#   TIDB_DATABASE - Database name (required)
+#   TIDB_USER     - Database user (required)
+#   TIDB_PASSWORD - Database password (required)
+#
+# For TiDB Cloud, SSL is automatically enabled when the host matches
+# the TiDB Cloud gateway pattern (gateway*.tidbcloud.com).
+
+sources:
+  tidb-source:
+    kind: tidb
+    host: ${TIDB_HOST:localhost}
+    port: ${TIDB_PORT:4000}
+    database: ${TIDB_DATABASE}
+    user: ${TIDB_USER}
+    password: ${TIDB_PASSWORD}
+tools:
+  execute_sql:
+    kind: tidb-execute-sql
+    source: tidb-source
+    description: Execute arbitrary SQL statements on TiDB. Supports SELECT, INSERT, UPDATE, DELETE, and DDL statements. Use with caution for data-modifying operations.
+  list_tables:
+    kind: tidb-list-tables
+    source: tidb-source
+    description: "Lists detailed schema information (columns, constraints, indexes, TiFlash replica count) as JSON for user-created tables. Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas. Excludes system schemas (mysql, information_schema, performance_schema, sys, METRICS_SCHEMA, INSPECTION_SCHEMA)."
+  get_query_plan:
+    kind: tidb-get-query-plan
+    source: tidb-source
+    description: "Provide information about how TiDB executes a SQL statement using EXPLAIN. Common use cases include: 1) analyze query plan to improve performance, 2) determine effectiveness of existing indexes, 3) identify if TiFlash is being used for HTAP queries. Supports 'default', 'analyze' (actual execution stats, SELECT only for safety), and 'verbose' (detailed cost info) explain types. WARNING: EXPLAIN ANALYZE actually executes the query."
+  list_active_queries:
+    kind: tidb-list-active-queries
+    source: tidb-source
+    description: Lists top N (default 10) ongoing queries from TiDB's processlist, ordered by execution time in descending order. Returns detailed information including process id, user, host, database, command, execution time, state, query text (truncated to 1000 chars), memory usage, and transaction start timestamp.
+  list_tiflash_replicas:
+    kind: tidb-list-tiflash-replicas
+    source: tidb-source
+    description: "Lists TiFlash replica status for all tables that have TiFlash replicas configured. TiFlash is TiDB's columnar storage engine that enables real-time HTAP analytics (requires TiDB 4.0+). Returns replica count, availability status, and sync progress for each table. Useful for monitoring TiFlash deployment health and identifying tables ready for analytical queries."
+toolsets:
+  data:
+    - execute_sql
+    - list_tables
+    - get_query_plan
+    - list_active_queries
+  monitor:
+    - get_query_plan
+    - list_active_queries
+    - list_tiflash_replicas
+  htap:
+    - execute_sql
+    - list_tables
+    - list_tiflash_replicas
