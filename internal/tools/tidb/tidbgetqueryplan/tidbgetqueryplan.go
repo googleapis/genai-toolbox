@@ -51,6 +51,8 @@ func isSelectOrWithStatement(sql string) bool {
 
 // containsMultipleStatements checks if SQL contains multiple statements (semicolon)
 func containsMultipleStatements(sql string) bool {
+	// Strip comments first to avoid false positives from semicolons in comments
+	sql = stripSQLComments(sql)
 	// Remove string literals to avoid false positives
 	reString := regexp.MustCompile(`'[^']*'|"[^"]*"`)
 	cleaned := reString.ReplaceAllString(sql, "")

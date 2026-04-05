@@ -92,6 +92,11 @@ func TestStripSQLComments(t *testing.T) {
 			in:   "SELECT * FROM users -- trailing comment",
 			want: "SELECT * FROM users",
 		},
+		{
+			desc: "comment with semicolon",
+			in:   "SELECT 1 -- comment;",
+			want: "SELECT 1",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -179,6 +184,16 @@ func TestContainsMultipleStatements(t *testing.T) {
 		{
 			desc: "semicolon in double quoted string",
 			in:   `SELECT * FROM users WHERE name = "test;value"`,
+			want: false,
+		},
+		{
+			desc: "semicolon in single line comment",
+			in:   "SELECT 1 -- comment;",
+			want: false,
+		},
+		{
+			desc: "semicolon in multi-line comment",
+			in:   "SELECT 1 /* comment; */",
 			want: false,
 		},
 	}

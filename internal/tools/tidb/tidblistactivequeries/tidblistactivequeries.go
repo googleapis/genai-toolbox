@@ -130,11 +130,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	paramsMap := params.AsMap()
 
-	limit := 10
-	if l, ok := paramsMap["limit"].(int); ok && l > 0 {
-		limit = l
-	} else if lf, ok := paramsMap["limit"].(float64); ok && lf > 0 {
-		limit = int(lf)
+	// Framework guarantees type safety for typed constructors like NewIntParameterWithDefault
+	limit := paramsMap["limit"].(int)
+	if limit <= 0 {
+		limit = 10
 	}
 
 	// Cap limit to prevent excessive results
