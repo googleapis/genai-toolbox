@@ -27,8 +27,8 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
-	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 )
 
 type Config struct {

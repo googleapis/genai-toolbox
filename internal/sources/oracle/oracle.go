@@ -14,8 +14,8 @@ import (
 	_ "github.com/godror/godror"   // OCI driver
 	_ "github.com/sijms/go-ora/v2" // Pure Go driver
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 

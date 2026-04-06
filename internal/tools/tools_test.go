@@ -19,8 +19,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestGetMcpManifestMetadata(t *testing.T) {

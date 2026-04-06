@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestTool_Invoke(t *testing.T) {

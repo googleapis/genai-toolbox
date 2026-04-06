@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

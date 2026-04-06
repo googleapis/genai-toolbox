@@ -29,9 +29,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 type transport struct {

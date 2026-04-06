@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/yugabyte/pgx/v5/pgxpool"
 )
 

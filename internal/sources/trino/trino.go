@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	trinogo "github.com/trinodb/trino-go-client/trino"
 	"go.opentelemetry.io/otel/trace"
 )
