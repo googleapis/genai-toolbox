@@ -132,7 +132,7 @@ const configArgs = [{{.ConfigArgs}}];
 const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [
 {{range .OptionalVars}}    '{{.}}',
 {{end}}];
-
+{{end}}
 function getEnv() {
     const envPath = path.resolve(__dirname, '../../../.env');
     const env = { ...process.env };

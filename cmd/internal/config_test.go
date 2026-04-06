@@ -91,6 +91,15 @@ func TestParseEnv(t *testing.T) {
 			want: "user: , password: , ip: public, region: us-central1",
 			wantOptional: []string{"USER_NAME", "PASSWORD", "IP"},
 		},
+		{
+			desc: "variable required in one place and optional in another",
+			in:   "project_req: ${PROJECT_ID}, project_opt: ${PROJECT_ID:default}",
+			env: map[string]string{
+				"PROJECT_ID": "my_project",
+			},
+			want: "project_req: my_project, project_opt: my_project",
+			wantOptional: []string{}, // Because it was marked required at least once
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

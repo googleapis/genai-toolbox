@@ -43,6 +43,7 @@ type Config struct {
 type ConfigParser struct {
 	EnvVars         map[string]string
 	OptionalEnvVars []string
+	RequiredEnvVars []string
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -63,16 +64,22 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 
 		isOptional := len(parts) >= 4 && parts[2] != ""
 		if isOptional {
-			// Add to OptionalEnvVars if not already present
-			foundOptional := false
-			for _, v := range p.OptionalEnvVars {
+			// Add to optional list only if it hasn't been explicitly required
+			if !slices.Contains(p.RequiredEnvVars, variableName) && !slices.Contains(p.OptionalEnvVars, variableName) {
+				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
+			}
+		} else {
+			// Mark as required
+			if !slices.Contains(p.RequiredEnvVars, variableName) {
+				p.RequiredEnvVars = append(p.RequiredEnvVars, variableName)
+			}
+			
+			// Remove from optional list if it's there
+			for i, v := range p.OptionalEnvVars {
 				if v == variableName {
-					foundOptional = true
+					p.OptionalEnvVars = append(p.OptionalEnvVars[:i], p.OptionalEnvVars[i+1:]...)
 					break
 				}
-			}
-			if !foundOptional {
-				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
 			}
 		}
 
