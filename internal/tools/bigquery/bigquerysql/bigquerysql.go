@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
@@ -179,16 +180,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			for i := 0; i < rv.Len(); i++ {
 				val := rv.Index(i).Interface()
 
-				// Use %f for floats to prevent scientific notation issues in BigQuery,
-				// but use %v for everything else (ints, bools, etc.)
-				format := "%v"
-				switch val.(type) {
-				case float32, float64:
-					format = "%f"
+				// Prevent precision loss and scientific notation issues
+				var valStr string
+				switch v := val.(type) {
+				case float64:
+					valStr = strconv.FormatFloat(v, 'f', -1, 64)
+				case float32:
+					valStr = strconv.FormatFloat(float64(v), 'f', -1, 32)
+				default:
+					valStr = fmt.Sprintf("%v", val)
 				}
 
 				arrayValues[i] = &bigqueryrestapi.QueryParameterValue{
-					Value: fmt.Sprintf(format, val),
+					Value: valStr,
 				}
 			}
 			lowLevelParam.ParameterValue.ArrayValues = arrayValues
