@@ -128,6 +128,38 @@ const os = require('os');
 
 const toolName = "{{.Name}}";
 const configArgs = [{{.ConfigArgs}}];
+{{if .OptionalVars}}
+const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [
+{{range .OptionalVars}}    '{{.}}',
+{{end}}];
+{{end}}
+function getToolboxPath() {
+    if (process.env.GEMINI_CLI === '1') {
+        const ext = process.platform === 'win32' ? '.exe' : '';
+        const localPath = path.resolve(__dirname, '../../../toolbox' + ext);
+        if (fs.existsSync(localPath)) {
+            return localPath;
+        }
+    }
+    try {
+        const checkCommand = process.platform === 'win32' ? 'where toolbox' : 'which toolbox';
+        const globalPath = execSync(checkCommand, { stdio: 'pipe', encoding: 'utf-8' }).trim();
+        if (globalPath) {
+            return globalPath.split('\n')[0].trim();
+        }
+        throw new Error("Toolbox binary not found");
+    } catch (e) {
+        throw new Error("Toolbox binary not found");
+    }
+}
+
+let toolboxBinary;
+try {
+    toolboxBinary = getToolboxPath();
+} catch (err) {
+    console.error("Error:", err.message);
+    process.exit(1);
+}
 
 function getEnv() {
     const envPath = path.resolve(__dirname, '../../../.env');
@@ -158,7 +190,13 @@ if (process.env.GEMINI_CLI === '1') {
     env = getEnv();
     userAgent = "skills-geminicli";
 }
-
+{{if .OptionalVars}}
+OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
+    if (env[varName] === '') {
+        delete env[varName];
+    }
+});
+{{end}}
 const args = process.argv.slice(2);
 
 {{if eq .InvocationMode "npx"}}
@@ -219,18 +257,20 @@ type scriptData struct {
 	LicenseHeader  string
 	InvocationMode string
 	ToolboxVersion string
+	OptionalVars  []string
 }
 
 // generateScriptContent creates the content for a Node.js wrapper script.
 // This script invokes the toolbox CLI with the appropriate configuration
 // (using a generated config) and arguments to execute the specific tool.
-func generateScriptContent(name string, configArgs string, licenseHeader string, mode string, version string) (string, error) {
+func generateScriptContent(name string, configArgs string, licenseHeader string, mode string, version string, optionalVars []string) (string, error) {
 	data := scriptData{
 		Name:           name,
 		ConfigArgs:     configArgs,
 		LicenseHeader:  licenseHeader,
 		InvocationMode: mode,
 		ToolboxVersion: version,
+		OptionalVars:  optionalVars,
 	}
 
 	tmpl, err := template.New("script").Parse(nodeScriptTemplate)

@@ -41,7 +41,8 @@ type Config struct {
 }
 
 type ConfigParser struct {
-	EnvVars map[string]string
+	EnvVars         map[string]string
+	OptionalEnvVars []string
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -59,6 +60,22 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 
 		// extract the variable name
 		variableName := parts[1]
+
+		isOptional := len(parts) >= 4 && parts[2] != ""
+		if isOptional {
+			// Add to OptionalEnvVars if not already present
+			foundOptional := false
+			for _, v := range p.OptionalEnvVars {
+				if v == variableName {
+					foundOptional = true
+					break
+				}
+			}
+			if !foundOptional {
+				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
+			}
+		}
+
 		if value, found := os.LookupEnv(variableName); found {
 			p.EnvVars[variableName] = value
 			return value

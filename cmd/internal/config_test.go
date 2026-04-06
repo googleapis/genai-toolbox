@@ -38,12 +38,13 @@ import (
 
 func TestParseEnv(t *testing.T) {
 	tcs := []struct {
-		desc      string
-		env       map[string]string
-		in        string
-		want      string
-		err       bool
-		errString string
+		desc         string
+		env          map[string]string
+		in           string
+		want         string
+		err          bool
+		errString    string
+		wantOptional []string
 	}{
 		{
 			desc:      "without default without env",
@@ -64,11 +65,13 @@ func TestParseEnv(t *testing.T) {
 			desc: "with empty default",
 			in:   "${FOO:}",
 			want: "",
+			wantOptional: []string{"FOO"},
 		},
 		{
 			desc: "with default",
 			in:   "${FOO:bar}",
 			want: "bar",
+			wantOptional: []string{"FOO"},
 		},
 		{
 			desc: "with default with env",
@@ -77,6 +80,16 @@ func TestParseEnv(t *testing.T) {
 			},
 			in:   "${FOO:bar}",
 			want: "hello",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc: "multiple variables",
+			in:   "user: ${USER_NAME:}, password: ${PASSWORD:}, ip: ${IP:public}, region: ${REGION}",
+			env: map[string]string{
+				"REGION": "us-central1",
+			},
+			want: "user: , password: , ip: public, region: us-central1",
+			wantOptional: []string{"USER_NAME", "PASSWORD", "IP"},
 		},
 	}
 	for _, tc := range tcs {
@@ -98,6 +111,14 @@ func TestParseEnv(t *testing.T) {
 			}
 			if tc.want != got {
 				t.Fatalf("unexpected want: got %s, want %s", got, tc.want)
+			}
+			if len(parser.OptionalEnvVars) != len(tc.wantOptional) {
+				t.Fatalf("OptionalEnvVars length mismatch: got %d, want %d. Got: %v, Want: %v", len(parser.OptionalEnvVars), len(tc.wantOptional), parser.OptionalEnvVars, tc.wantOptional)
+			}
+			for i, v := range parser.OptionalEnvVars {
+				if v != tc.wantOptional[i] {
+					t.Errorf("OptionalEnvVars element %d mismatch: got %q, want %q", i, v, tc.wantOptional[i])
+				}
 			}
 		})
 	}

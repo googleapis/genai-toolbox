@@ -191,7 +191,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 
 		for _, toolName := range toolNames {
 			// Generate wrapper script in scripts directory
-			scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader, cmd.invocationMode, cmd.toolboxVersion)
+			scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader, cmd.invocationMode, cmd.toolboxVersion, parser.OptionalEnvVars)
 			if err != nil {
 				errMsg := fmt.Errorf("error generating script content for %s: %w", toolName, err)
 				opts.Logger.ErrorContext(ctx, errMsg.Error())
