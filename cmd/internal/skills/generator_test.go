@@ -269,21 +269,6 @@ func TestGenerateScriptContent(t *testing.T) {
 			},
 		},
 		{
-			name:         "script with optional vars (with default value syntax)",
-			toolName:     "test-tool",
-			configArgs:   `"--prebuilt", "test"`,
-			optionalVars: []string{"CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_IP_TYPE"},
-			wantContains: []string{
-				"const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [",
-				"    'CLOUD_SQL_POSTGRES_USER',",
-				"    'CLOUD_SQL_POSTGRES_IP_TYPE',",
-				"];",
-				"OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {",
-				"    if (env[varName] === '') {",
-				"        delete env[varName];",
-			},
-		},
-		{
 			name:       "npx mode script",
 			toolName:   "npx-tool",
 			configArgs: `"--prebuilt", "test"`,

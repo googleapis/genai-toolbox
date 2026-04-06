@@ -132,34 +132,6 @@ const configArgs = [{{.ConfigArgs}}];
 const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [
 {{range .OptionalVars}}    '{{.}}',
 {{end}}];
-{{end}}
-function getToolboxPath() {
-    if (process.env.GEMINI_CLI === '1') {
-        const ext = process.platform === 'win32' ? '.exe' : '';
-        const localPath = path.resolve(__dirname, '../../../toolbox' + ext);
-        if (fs.existsSync(localPath)) {
-            return localPath;
-        }
-    }
-    try {
-        const checkCommand = process.platform === 'win32' ? 'where toolbox' : 'which toolbox';
-        const globalPath = execSync(checkCommand, { stdio: 'pipe', encoding: 'utf-8' }).trim();
-        if (globalPath) {
-            return globalPath.split('\n')[0].trim();
-        }
-        throw new Error("Toolbox binary not found");
-    } catch (e) {
-        throw new Error("Toolbox binary not found");
-    }
-}
-
-let toolboxBinary;
-try {
-    toolboxBinary = getToolboxPath();
-} catch (err) {
-    console.error("Error:", err.message);
-    process.exit(1);
-}
 
 function getEnv() {
     const envPath = path.resolve(__dirname, '../../../.env');
