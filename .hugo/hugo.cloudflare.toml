@@ -46,8 +46,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 [params]
   description = "MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more."
   copyright = "Google LLC"
-  github_repo = "https://github.com/googleapis/genai-toolbox"
-  github_project_repo = "https://github.com/googleapis/genai-toolbox"
+  github_repo = "https://github.com/googleapis/mcp-toolbox"
+  github_project_repo = "https://github.com/googleapis/mcp-toolbox"
   github_subdir = "docs"
   offlineSearch = false
   version_menu = "Releases"
@@ -64,8 +64,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
     sidebar_menu_compact = false
   [params.ui.feedback]
     enable = true
-    yes = 'Glad to hear it! Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
-    no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
+    yes = 'Glad to hear it! Please <a href="https://github.com/googleapis/mcp-toolbox/issues/new">tell us how we can improve</a>.'
+    no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/mcp-toolbox/issues/new">tell us how we can improve</a>.'
   [params.ui.readingtime]
       enable = true
 
@@ -139,7 +139,7 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 [[menu.main]]
   name = "GitHub"
   weight = 50
-  url = "https://github.com/googleapis/genai-toolbox"
+  url = "https://github.com/googleapis/mcp-toolbox"
   pre = "<i class='fa-brands fa-github'></i>"
 
 [markup.goldmark.renderer]

@@ -68,8 +68,8 @@ CLOUD_SQL_{{.DBTypeUpper}}_PASSWORD=<your-password>
 ` + "```" + `
 
 Please refer to the official documentation for guidance on deploying the toolbox:
-- Deploying the Toolbox: https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/
-- Deploying on GKE: https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/
+- Deploying the Toolbox: https://mcp-toolbox.dev/documentation/deploy-to/
+- Deploying on GKE: https://mcp-toolbox.dev/documentation/deploy-to/kubernetes/
 `
 
 func init() {
