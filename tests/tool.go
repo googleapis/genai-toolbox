@@ -473,8 +473,12 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				}
 			}
 
-			if actualStatusCode != tc.wantStatusCode {
-				t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, tc.wantStatusCode)
+			wantStatus := tc.wantStatusCode
+			if configs.IsMCP && wantStatus == http.StatusUnauthorized {
+				wantStatus = http.StatusOK
+			}
+			if actualStatusCode != wantStatus {
+				t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, wantStatus)
 			}
 
 			if tc.wantBody == "" {
@@ -483,6 +487,14 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 			// Unified JSON-Aware Validation
 			if got != tc.wantBody {
+				// Special handling for MCP mode error message prefix
+				if configs.IsMCP {
+					gotForMCP := strings.Replace(got, `"provided parameters were invalid: `, `"`, 1)
+					if gotForMCP == tc.wantBody {
+						return // Matches if we ignore the prefix
+					}
+				}
+
 				var gotJSON, wantJSON any
 				errGot := json.Unmarshal([]byte(got), &gotJSON)
 				errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)

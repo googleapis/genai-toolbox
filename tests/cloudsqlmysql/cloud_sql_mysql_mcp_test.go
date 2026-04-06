@@ -149,10 +149,10 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 			InputSchema: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"data_free_threshold_bytes": map[string]any{"default": float64(10485760), "description": "Optional: Minimum fragmented space in bytes required for a table to be included in the result. Defaults to 10MB (10485760 bytes).", "type": "integer"},
-					"limit":                     map[string]any{"default": float64(0), "description": "Optional: Maximum number of tables to return, ordered by highest fragmentation percentage first. If 0 or negative, returns all matching tables. (Default: 0)", "type": "integer"},
-					"table_name":                map[string]any{"default": "", "description": "Optional: Specific table name to retrieve fragmentation details for. If empty, retrieves for all tables in the specified schema.", "type": "string"},
-					"table_schema":              map[string]any{"default": "", "description": "Optional: Database name to filter table fragmentation. Defaults to the database specified in the connection string.", "type": "string"},
+					"data_free_threshold_bytes": map[string]any{"default": float64(1), "description": "(Optional) Only show tables with at least this much free space in bytes. Default is 1", "type": "integer"},
+					"limit":                     map[string]any{"default": float64(10), "description": "(Optional) Max rows to return, default is 10", "type": "integer"},
+					"table_name":                map[string]any{"default": "", "description": "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", "type": "string"},
+					"table_schema":              map[string]any{"default": "", "description": "(Optional) The database where fragmentation check is to be executed. Check all tables visible to the current user if not specified", "type": "string"},
 				},
 				"required": []any{},
 			},
