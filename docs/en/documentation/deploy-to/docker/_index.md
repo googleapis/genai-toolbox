@@ -16,7 +16,7 @@ description: >
 
 Create a `tools.yaml` file that contains your configuration for Toolbox. For
 details, see the
-[configuration](https://github.com/googleapis/genai-toolbox/blob/main/README.md#configuration)
+[configuration](https://github.com/googleapis/mcp-toolbox/blob/main/README.md#configuration)
 section.
 
 ## Deploy using Docker Compose

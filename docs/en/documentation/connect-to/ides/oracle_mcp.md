@@ -20,7 +20,7 @@ to expose your developer assistant tools to an Oracle instance:
 * [Gemini CLI][geminicli]
 * [Gemini Code Assist][geminicodeassist]
 
-[toolbox]: https://github.com/googleapis/genai-toolbox
+[toolbox]: https://github.com/googleapis/mcp-toolbox
 [cursor]: #configure-your-mcp-client
 [windsurf]: #configure-your-mcp-client
 [vscode]: #configure-your-mcp-client
@@ -39,7 +39,7 @@ to expose your developer assistant tools to an Oracle instance:
 ## Install MCP Toolbox
 
 3. Download the latest version of Toolbox as a binary. Select the [correct
-   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   binary](https://github.com/googleapis/mcp-toolbox/releases) corresponding
    to your OS and CPU architecture. You are required to use Toolbox version
    V0.26.0+:
 
