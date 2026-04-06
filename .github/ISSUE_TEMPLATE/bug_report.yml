@@ -30,8 +30,8 @@ body:
       label: Prerequisites
       description: |
         Please run through the following list and make sure you've tried the usual "quick fixes":
-        - Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)
-        - Update to the [latest version of Toolbox](https://github.com/googleapis/genai-toolbox/releases)
+        - Search the [current open issues](https://github.com/googleapis/mcp-toolbox/issues)
+        - Update to the [latest version of Toolbox](https://github.com/googleapis/mcp-toolbox/releases)
       options: 
         - label: "I've searched the current open issues"
           required: true

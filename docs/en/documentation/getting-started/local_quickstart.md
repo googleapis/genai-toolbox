@@ -9,7 +9,7 @@ sample_filters: ["Python", "Quickstart", "Local", "ADK", "LangChain", "LlamaInde
 is_sample: true
 ---
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/mcp-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb)
 
 ## Before you begin
 
