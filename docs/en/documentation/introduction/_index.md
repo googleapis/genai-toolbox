@@ -94,7 +94,7 @@ This method is optimized for convenience rather than performance. For a more sta
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
-[releases]: https://github.com/googleapis/genai-toolbox/releases
+[releases]: https://github.com/googleapis/mcp-toolbox/releases
 
 <!-- {x-release-please-start-version} -->
 {{< tabpane text=true >}}
@@ -179,7 +179,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.31.0
+go install github.com/googleapis/mcp-toolbox@v0.31.0
 ```
 
 {{% /tab %}}

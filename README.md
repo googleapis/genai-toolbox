@@ -4,9 +4,9 @@
 
 # MCP Toolbox for Databases
 
-<a href="https://trendshift.io/repositories/13019" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13019" alt="googleapis%2Fgenai-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/13019" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13019" alt="googleapis%2Fmcp-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
+[![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/mcp-toolbox)](https://goreportcard.com/report/github.com/googleapis/mcp-toolbox)
 [![License: Apache
 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://mcp-toolbox.dev/)
@@ -33,7 +33,7 @@ It serves a **dual purpose**:
 This README provides a brief overview. For comprehensive details, see the [full documentation](https://mcp-toolbox.dev/).
 
 > [!NOTE]
-> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/genai-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
+> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/mcp-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -221,7 +221,7 @@ This runs the latest version of the Toolbox server with your configuration file.
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
-[releases]: https://github.com/googleapis/genai-toolbox/releases
+[releases]: https://github.com/googleapis/mcp-toolbox/releases
 
 <details open>
 <summary>Binary</summary>
@@ -324,7 +324,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.31.0
+go install github.com/googleapis/mcp-toolbox@v0.31.0
 ```
 <!-- {x-release-please-end} -->
 
