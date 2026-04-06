@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -38,9 +37,9 @@ import (
 var (
 	ElasticsearchSourceType = "elasticsearch"
 	ElasticsearchToolType   = "elasticsearch-esql"
-	EsAddress               = os.Getenv("ELASTICSEARCH_HOST")
-	EsUser                  = os.Getenv("ELASTICSEARCH_USER")
-	EsPass                  = os.Getenv("ELASTICSEARCH_PASS")
+	EsAddress               = ""
+	EsUser                  = "elastic"
+	EsPass                  = "test-password"
 )
 
 func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, func()) {
@@ -89,9 +88,6 @@ func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, fun
 }
 
 func getElasticsearchVars(t *testing.T) map[string]any {
-	if EsAddress == "" {
-		t.Fatal("'ELASTICSEARCH_HOST' not set")
-	}
 	return map[string]any{
 		"type":      ElasticsearchSourceType,
 		"addresses": []string{EsAddress},
@@ -257,13 +253,13 @@ func getElasticsearchQueries(index string) (string, string, string, string, stri
 }
 
 func getElasticsearchWants() ElasticsearchWants {
-	select1Want := fmt.Sprintf(`[{"email":"%[1]s","email.keyword":"%[1]s","id":1,"name":"Alice","name.keyword":"Alice"},{"email":"janedoe@gmail.com","email.keyword":"janedoe@gmail.com","id":2,"name":"Jane","name.keyword":"Jane"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"},{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"}]`, tests.ServiceAccountEmail)
+	select1Want := fmt.Sprintf(`[{"email":"%[1]s","email.keyword":"%[1]s","id":1,"name":"Alice","name.keyword":"Alice"},{"email":"janedoe@gmail.com","email.keyword":"janedoe@gmail.com","id":2,"name":"Jane","name.keyword":"Jane"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"},{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"},{"email":null,"email.keyword":null,"id":5,"name":"Semantic","name.keyword":"Semantic"}]`, tests.ServiceAccountEmail)
 	myToolId3NameAliceWant := fmt.Sprintf(`[{"email":"%[1]s","email.keyword":"%[1]s","id":1,"name":"Alice","name.keyword":"Alice"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"}]`, tests.ServiceAccountEmail)
 	myToolById4Want := `[{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"}]`
 	nullWant := `{"error":{"root_cause":[{"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"}],"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"},"status":400}`
 	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]}`
 	mcpMyToolId3NameAliceWant := fmt.Sprintf(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"}]"}]}}`, tests.ServiceAccountEmail)
-	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"}]"}]}}`, tests.ServiceAccountEmail)
+	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"},{\"email\":null,\"email.keyword\":null,\"id\":5,\"name\":\"Semantic\",\"name.keyword\":\"Semantic\"}]"}]}}`, tests.ServiceAccountEmail)
 
 	return ElasticsearchWants{
 		Select1:               select1Want,
@@ -292,7 +288,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToo
 				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"query":       "FROM test-index | SORT id ASC",
+				"query":       "FROM test-index | SORT id ASC | KEEP id, name, email",
 			},
 			"my-tool": map[string]any{
 				"type":        toolType,
