@@ -45,7 +45,7 @@ avoiding full table scans or complex filters.
 ### Pre-built Configurations
 
 - [BigQuery using
-  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)
+  MCP](https://mcp-toolbox.dev/documentation/connect-to/ides/bigquery_mcp/)
   Connect your IDE to BigQuery using Toolbox.
 
 ## Requirements
