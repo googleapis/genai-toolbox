@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestToolsetEndpoint(t *testing.T) {

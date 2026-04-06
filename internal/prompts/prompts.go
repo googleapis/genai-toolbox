@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // PromptConfigFactory defines the signature for a function that creates and
