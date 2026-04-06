@@ -74,13 +74,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	annotations := cfg.Annotations
 	if annotations == nil {
-		readOnlyHint := false
-		destructiveHint := true
-		annotations = &tools.ToolAnnotations{
-			ReadOnlyHint:    &readOnlyHint,
-			DestructiveHint: &destructiveHint,
-		}
+		annotations = &tools.ToolAnnotations{}
 	}
+	readOnlyHint := false
+	destructiveHint := true
+	annotations.ReadOnlyHint = &readOnlyHint
+	annotations.DestructiveHint = &destructiveHint
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 

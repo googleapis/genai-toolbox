@@ -86,11 +86,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	annotations := cfg.Annotations
 	if annotations == nil {
-		readOnlyHint := false
-		annotations = &tools.ToolAnnotations{
-			ReadOnlyHint: &readOnlyHint,
-		}
+		annotations = &tools.ToolAnnotations{}
 	}
+	readOnlyHint := false
+	annotations.ReadOnlyHint = &readOnlyHint
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
