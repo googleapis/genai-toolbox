@@ -43,7 +43,7 @@ type Config struct {
 type ConfigParser struct {
 	EnvVars         map[string]string
 	OptionalEnvVars []string
-	RequiredEnvVars []string
+	requiredEnvVars []string
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
