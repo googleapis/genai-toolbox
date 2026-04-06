@@ -285,7 +285,7 @@ tools.
 [temp-param]:
     https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
 [temp-param-doc]:
-    https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
+    https://mcp-toolbox.dev/documentation/configuration/tools/#template-parameters
 
 #### Adding Documentation
 
