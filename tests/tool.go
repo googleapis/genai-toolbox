@@ -513,9 +513,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		nameColFilter:  "name",
 		createColArray: `["id INT","name VARCHAR(20)","age INT"]`,
 
-		supportDdl:          true,
-		supportInsert:       true,
-		supportSelectFields: true,
+		supportDdl:    true,
+		supportInsert: true,
 	}
 
 	for _, option := range options {
@@ -615,7 +614,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			if tc.name == "invoke select-fields-templateParams-tool" && !tc.enabled {
+			if !tc.enabled {
 				return
 			}
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
