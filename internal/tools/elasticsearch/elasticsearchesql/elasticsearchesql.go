@@ -125,14 +125,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if param.GetType() == "array" {
 			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
-		esType := param.GetType()
-		if esType == "string" {
-			esType = "keyword"
-		}
-		sqlParams = append(sqlParams, map[string]any{
-			"value": paramMap[param.GetName()],
-			"type":  esType,
-		})
+		sqlParams = append(sqlParams, map[string]any{param.GetName(): paramMap[param.GetName()]})
 	}
 	resp, err := source.RunSQL(ctx, t.Format, query, sqlParams)
 	if err != nil {
