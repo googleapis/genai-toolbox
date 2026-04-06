@@ -20,7 +20,7 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
     > To always run the latest version, update the MCP server configuration to use:
     > ```npx -y @toolbox-sdk/server@latest```. 
 
-3.  Create your [`tools.yaml` configuration file](https://googleapis.github.io/genai-toolbox/getting-started/configure/).
+3.  Create your [`tools.yaml` configuration file](https://mcp-toolbox.dev/documentation/configuration/).
 
 4.  In the configuration window, enter the full absolute path to your `tools.yaml` file and click **Save**.
 
@@ -49,4 +49,4 @@ Interact with your custom tools using natural language.
 
 ## Documentation
 
-For more information, visit the [MCP Toolbox for Databases documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
+For more information, visit the [MCP Toolbox for Databases documentation](https://mcp-toolbox.dev/documentation/introduction/).

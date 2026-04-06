@@ -121,7 +121,7 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -201,7 +201,8 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolConfig)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolConfig, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}

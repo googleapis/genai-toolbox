@@ -90,7 +90,7 @@ func TestCockroachDB(t *testing.T) {
 	connString := fmt.Sprintf("postgres://root@%s:%s/defaultdb?sslmode=disable", host, port.Port())
 
 	sourceConfig := getCockroachDBVars(host, port.Port())
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initCockroachDBConnectionPool(connString)
 	if err != nil {

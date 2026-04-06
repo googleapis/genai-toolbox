@@ -342,7 +342,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 	}))
 	defer jwksServer.Close()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolType, jwksServer.URL)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)

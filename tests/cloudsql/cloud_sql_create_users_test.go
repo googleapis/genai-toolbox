@@ -130,7 +130,7 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 		http.DefaultClient.Transport = originalTransport
 	})
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getCreateUsersToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

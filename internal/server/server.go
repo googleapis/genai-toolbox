@@ -32,6 +32,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog/v3"
+	"github.com/go-chi/render"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/generic"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -469,6 +470,11 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 			return nil, err
 		}
 		r.Mount("/api", apiR)
+	} else {
+		r.Handle("/api/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			err := errors.New("/api native endpoints are disabled by default. Please use the standard /mcp JSON-RPC endpoint")
+			_ = render.Render(w, r, newErrResponse(err, http.StatusGone))
+		}))
 	}
 	if cfg.UI {
 		webR, err := webRouter()

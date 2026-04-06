@@ -68,7 +68,8 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to write config: %s", err)
 	}
-	args = append(args, "--config", path, "--enable-api")
+
+	args = append(args, "--config", path)
 
 	ctx, cancel := context.WithCancel(ctx)
 	// Open a pipe for tracking the output from the cmd
@@ -96,7 +97,6 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 		t.err = c.ExecuteContext(ctx)
 	}()
 	return t, cleanup, nil
-
 }
 
 // Stop sends the TERM signal to the cmd and returns.

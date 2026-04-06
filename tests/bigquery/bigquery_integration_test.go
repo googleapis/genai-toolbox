@@ -81,7 +81,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initBigQueryConnection(BigqueryProject)
 	if err != nil {
@@ -336,7 +336,8 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Start server
-	cmd, cleanup, err := tests.StartCmd(ctx, config)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, config, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -411,7 +412,8 @@ func TestBigQueryWriteModeAllowed(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -455,7 +457,8 @@ func TestBigQueryWriteModeBlocked(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -518,7 +521,8 @@ func TestBigQueryWriteModeProtected(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}

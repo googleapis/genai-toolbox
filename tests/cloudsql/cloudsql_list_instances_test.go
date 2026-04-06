@@ -81,7 +81,7 @@ func TestListInstance(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getListInstanceToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
