@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -38,6 +39,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/healthcare/v1"
 	"google.golang.org/api/option"
 )
@@ -62,6 +64,12 @@ var (
 	healthcareProject                     = os.Getenv("HEALTHCARE_PROJECT")
 	healthcareRegion                      = os.Getenv("HEALTHCARE_REGION")
 	healthcareDataset                     = os.Getenv("HEALTHCARE_DATASET")
+)
+
+const (
+	testStoreDeleteTimeout           = 2 * time.Minute
+	testStoreDeletionPollingInterval = 2 * time.Second
+	testStoreCleanupMaxAge           = 2 * time.Hour
 )
 
 type DICOMInstance struct {
@@ -92,37 +100,124 @@ func TestMain(m *testing.M) {
 }
 
 func cleanupOrphanedStores(ctx context.Context, service *healthcare.Service) {
-	now := time.Now().Unix()
+	ctx, cancel := context.WithTimeout(ctx, testStoreDeleteTimeout)
+	defer cancel()
+
+	now := time.Now()
 	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", healthcareProject, healthcareRegion, healthcareDataset)
 
-	// Cleanup FHIR stores over 2 hours old
-	_ = service.Projects.Locations.Datasets.FhirStores.List(datasetName).Pages(ctx, func(page *healthcare.ListFhirStoresResponse) error {
+	if err := service.Projects.Locations.Datasets.FhirStores.List(datasetName).Pages(ctx, func(page *healthcare.ListFhirStoresResponse) error {
 		for _, store := range page.FhirStores {
-			if !strings.Contains(store.Name, "/fhirStores/fhir-store-") {
+			if !isTestFHIRStore(store.Name) || !shouldCleanupOrphanedStore(store.Labels, now) {
 				continue
 			}
-			createdAtStr, ok := store.Labels["created_at"]
-			createdAt, err := strconv.ParseInt(createdAtStr, 10, 64)
-			if !ok || err != nil || now-createdAt > 2*3600 {
-				fmt.Printf("Cleaning up orphaned FHIR store: %s\n", store.Name)
-				_, _ = service.Projects.Locations.Datasets.FhirStores.Delete(store.Name).Context(ctx).Do()
+			fmt.Printf("Cleaning up orphaned FHIR store: %s\n", store.Name)
+			if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(store.Name).Context(ctx).Do(); err != nil {
+				var gerr *googleapi.Error
+				if !errors.As(err, &gerr) || gerr.Code != http.StatusNotFound {
+					fmt.Printf("failed to delete orphaned FHIR store %s: %v\n", store.Name, err)
+				}
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		fmt.Printf("failed to list FHIR stores for cleanup: %v\n", err)
+	}
 
-	// Cleanup DICOM stores over 2 hours old
-	_ = service.Projects.Locations.Datasets.DicomStores.List(datasetName).Pages(ctx, func(page *healthcare.ListDicomStoresResponse) error {
+	if err := service.Projects.Locations.Datasets.DicomStores.List(datasetName).Pages(ctx, func(page *healthcare.ListDicomStoresResponse) error {
 		for _, store := range page.DicomStores {
-			if !strings.Contains(store.Name, "/dicomStores/dicom-store-") {
+			if !isTestDICOMStore(store.Name) || !shouldCleanupOrphanedStore(store.Labels, now) {
 				continue
 			}
-			createdAtStr, ok := store.Labels["created_at"]
-			createdAt, err := strconv.ParseInt(createdAtStr, 10, 64)
-			if !ok || err != nil || now-createdAt > 2*3600 {
-				fmt.Printf("Cleaning up orphaned DICOM store: %s\n", store.Name)
-				_, _ = service.Projects.Locations.Datasets.DicomStores.Delete(store.Name).Context(ctx).Do()
+			fmt.Printf("Cleaning up orphaned DICOM store: %s\n", store.Name)
+			if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(store.Name).Context(ctx).Do(); err != nil {
+				var gerr *googleapi.Error
+				if !errors.As(err, &gerr) || gerr.Code != http.StatusNotFound {
+					fmt.Printf("failed to delete orphaned DICOM store %s: %v\n", store.Name, err)
+				}
 			}
+		}
+		return nil
+	}); err != nil {
+		fmt.Printf("failed to list DICOM stores for cleanup: %v\n", err)
+	}
+}
+
+func isTestFHIRStore(storeName string) bool {
+	return strings.Contains(storeName, "/fhirStores/fhir-store-")
+}
+
+func isTestDICOMStore(storeName string) bool {
+	return strings.Contains(storeName, "/dicomStores/dicom-store-")
+}
+
+func shouldCleanupOrphanedStore(labels map[string]string, now time.Time) bool {
+	createdAtStr, ok := labels["created_at"]
+	if !ok {
+		return true
+	}
+
+	createdAt, err := strconv.ParseInt(createdAtStr, 10, 64)
+	if err != nil {
+		return true
+	}
+
+	return now.Sub(time.Unix(createdAt, 0)) > testStoreCleanupMaxAge
+}
+
+func waitForStoreDeletion(ctx context.Context, getStore func() error) error {
+	ticker := time.NewTicker(testStoreDeletionPollingInterval)
+	defer ticker.Stop()
+
+	for {
+		err := getStore()
+		if err != nil {
+			var gerr *googleapi.Error
+			if errors.As(err, &gerr) && gerr.Code == http.StatusNotFound {
+				return nil
+			}
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("waiting for store deletion: %w", ctx.Err())
+		case <-ticker.C:
+		}
+	}
+}
+
+func deleteFHIRStoreAndWait(ctx context.Context, service *healthcare.Service, storeName string) error {
+	if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(storeName).Context(ctx).Do(); err != nil {
+		var gerr *googleapi.Error
+		if errors.As(err, &gerr) && gerr.Code == http.StatusNotFound {
+			return nil
+		}
+		return fmt.Errorf("delete FHIR store: %w", err)
+	}
+
+	return waitForStoreDeletion(ctx, func() error {
+		_, err := service.Projects.Locations.Datasets.FhirStores.Get(storeName).Context(ctx).Do()
+		if err != nil {
+			return fmt.Errorf("verify FHIR store deletion: %w", err)
+		}
+		return nil
+	})
+}
+
+func deleteDICOMStoreAndWait(ctx context.Context, service *healthcare.Service, storeName string) error {
+	if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(storeName).Context(ctx).Do(); err != nil {
+		var gerr *googleapi.Error
+		if errors.As(err, &gerr) && gerr.Code == http.StatusNotFound {
+			return nil
+		}
+		return fmt.Errorf("delete DICOM store: %w", err)
+	}
+
+	return waitForStoreDeletion(ctx, func() error {
+		_, err := service.Projects.Locations.Datasets.DicomStores.Get(storeName).Context(ctx).Do()
+		if err != nil {
+			return fmt.Errorf("verify DICOM store deletion: %w", err)
 		}
 		return nil
 	})
@@ -315,7 +410,10 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 	}
 	// Register cleanup
 	t.Cleanup(func() {
-		if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(fhirStore.Name).Do(); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), testStoreDeleteTimeout)
+		defer cancel()
+
+		if err := deleteFHIRStoreAndWait(ctx, service, fhirStore.Name); err != nil {
 			t.Logf("failed to delete fhir store: %v", err)
 		}
 	})
@@ -329,7 +427,10 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 	}
 	// Register cleanup
 	t.Cleanup(func() {
-		if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(dicomStore.Name).Do(); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), testStoreDeleteTimeout)
+		defer cancel()
+
+		if err := deleteDICOMStoreAndWait(ctx, service, dicomStore.Name); err != nil {
 			t.Logf("failed to delete dicom store: %v", err)
 		}
 	})
