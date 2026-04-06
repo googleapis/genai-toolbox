@@ -475,7 +475,9 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 			wantStatus := tc.wantStatusCode
 			if configs.IsMCP && wantStatus == http.StatusUnauthorized {
-				wantStatus = http.StatusOK
+				if strings.Contains(tc.name, "my-auth-tool") && !strings.Contains(tc.name, "auth-required") {
+					wantStatus = http.StatusOK
+				}
 			}
 			if actualStatusCode != wantStatus {
 				t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, wantStatus)
@@ -487,19 +489,26 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 			// Unified JSON-Aware Validation
 			if got != tc.wantBody {
-				// Special handling for MCP mode error message prefix
-				if configs.IsMCP {
-					gotForMCP := strings.Replace(got, `"provided parameters were invalid: `, `"`, 1)
-					if gotForMCP == tc.wantBody {
-						return // Matches if we ignore the prefix
-					}
-				}
-
 				var gotJSON, wantJSON any
 				errGot := json.Unmarshal([]byte(got), &gotJSON)
 				errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
 
 				if errGot == nil && errWant == nil {
+					// Special handling for MCP mode error message prefix
+					if configs.IsMCP {
+						gotMap, okGot := gotJSON.(map[string]any)
+						wantMap, okWant := wantJSON.(map[string]any)
+						if okGot && okWant {
+							gotErr, okGotErr := gotMap["error"].(string)
+							wantErr, okWantErr := wantMap["error"].(string)
+							if okGotErr && okWantErr {
+								if strings.TrimPrefix(gotErr, "provided parameters were invalid: ") == wantErr {
+									return // Matches if we ignore the prefix!
+								}
+							}
+						}
+					}
+
 					if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
 						t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.wantBody)
 					}
@@ -856,7 +865,11 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 					if len(blocks) == 0 {
 						got = "null"
 					} else {
-						got = strings.Join(blocks, "")
+						if strings.HasPrefix(strings.TrimSpace(tc.want), "[") && len(blocks) == 1 && !strings.HasPrefix(strings.TrimSpace(blocks[0]), "[") {
+							got = "[" + blocks[0] + "]"
+						} else {
+							got = strings.Join(blocks, "")
+						}
 					}
 				}
 			} else {

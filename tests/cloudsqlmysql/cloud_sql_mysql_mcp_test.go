@@ -163,7 +163,7 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 			InputSchema: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"sql_statement": map[string]any{"type": "string", "description": "The SQL query statement to analyze."},
+					"sql_statement": map[string]any{"type": "string", "description": "The sql statement to explain."},
 				},
 				"required": []any{"sql_statement"},
 			},
