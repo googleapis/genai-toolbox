@@ -97,7 +97,7 @@ func TestParseEnv(t *testing.T) {
 			env: map[string]string{
 				"PROJECT_ID": "my_project",
 			},
-			want: "project_req: my_project, project_opt: my_project",
+			want:         "project_req: my_project, project_opt: my_project",
 			wantOptional: []string{}, // Because it was marked required at least once
 		},
 	}

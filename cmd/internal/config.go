@@ -73,7 +73,7 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 			if !slices.Contains(p.requiredEnvVars, variableName) {
 				p.requiredEnvVars = append(p.requiredEnvVars, variableName)
 			}
-			
+
 			// Remove from optional list if it's there
 			if i := slices.Index(p.OptionalEnvVars, variableName); i != -1 {
 				p.OptionalEnvVars = slices.Delete(p.OptionalEnvVars, i, i+1)
