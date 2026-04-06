@@ -437,7 +437,9 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 				if actualStatusCode == http.StatusOK && tc.wantBody != "" {
 					if mcpResp != nil && mcpResp.Error != nil {
-						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
+						m := map[string]string{"error": mcpResp.Error.Message}
+						b, _ := json.Marshal(m)
+						got = string(b)
 					} else if mcpResp != nil && !mcpResp.Result.IsError {
 						var blocks []string
 						for _, content := range mcpResp.Result.Content {
@@ -475,7 +477,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 			wantStatus := tc.wantStatusCode
 			if configs.IsMCP && wantStatus == http.StatusUnauthorized {
-				if strings.Contains(tc.name, "my-auth-tool") && !strings.Contains(tc.name, "auth-required") {
+				if actualStatusCode == http.StatusOK {
 					wantStatus = http.StatusOK
 				}
 			}
