@@ -173,10 +173,6 @@ function prepareEnvironment() {
     return { env, userAgent };
 }
 
-
-/**
- * Main execution function.
- */
 function main() {
     const { env, userAgent } = prepareEnvironment();
     const args = process.argv.slice(2);
