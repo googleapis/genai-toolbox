@@ -65,13 +65,13 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 		isOptional := len(parts) >= 4 && parts[2] != ""
 		if isOptional {
 			// Add to optional list only if it hasn't been explicitly required
-			if !slices.Contains(p.RequiredEnvVars, variableName) && !slices.Contains(p.OptionalEnvVars, variableName) {
+			if !slices.Contains(p.requiredEnvVars, variableName) && !slices.Contains(p.OptionalEnvVars, variableName) {
 				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
 			}
 		} else {
 			// Mark as required
-			if !slices.Contains(p.RequiredEnvVars, variableName) {
-				p.RequiredEnvVars = append(p.RequiredEnvVars, variableName)
+			if !slices.Contains(p.requiredEnvVars, variableName) {
+				p.requiredEnvVars = append(p.requiredEnvVars, variableName)
 			}
 			
 			// Remove from optional list if it's there
