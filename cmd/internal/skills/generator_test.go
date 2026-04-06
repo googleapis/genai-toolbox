@@ -285,6 +285,18 @@ func TestGenerateScriptContent(t *testing.T) {
 				`const npxArgs = ["--yes", "@toolbox-sdk/server@0.31.0"`,
 			},
 		},
+		{
+			name:       "claude code script",
+			toolName:   "claude-tool",
+			configArgs: `"--prebuilt", "test"`,
+			mode:       "bin",
+			wantContains: []string{
+				`userAgent = "skills-claudecode";`,
+				`const prefix = 'CLAUDE_PLUGIN_OPTION_';`,
+				`if (key.startsWith(prefix)) {`,
+				`env[key.substring(prefix.length)] = process.env[key];`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
