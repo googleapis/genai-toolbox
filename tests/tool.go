@@ -230,6 +230,7 @@ func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpl
 // RunToolInvoke runs the tool invoke endpoint
 func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
 	// Resolve options
+	// Default values for InvokeTestConfig
 	configs := &InvokeTestConfig{
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
@@ -405,6 +406,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
+
 			name:           "Invoke my-client-auth-tool with invalid auth token",
 			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
 			enabled:        configs.supportClientAuth,
@@ -418,14 +420,15 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			if !tc.enabled {
 				return
 			}
-			reqBytes, _ := io.ReadAll(tc.requestBody)
-			var got string
-			var actualStatusCode int
 
 			if configs.IsMCP {
+				var got string
+				var actualStatusCode int
+
 				parts := strings.Split(tc.api, "/")
 				toolName := parts[len(parts)-2]
 
+				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
 					_ = json.Unmarshal(reqBytes, &args)
@@ -447,7 +450,6 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 								blocks = append(blocks, strings.TrimSpace(content.Text))
 							}
 						}
-						// If the test is expecting a JSON array
 						if tc.wantBody != "" && strings.HasPrefix(strings.TrimSpace(tc.wantBody), "[") {
 							got = "[" + strings.Join(blocks, ",") + "]"
 						} else if len(blocks) == 0 {
@@ -457,36 +459,45 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 						}
 					}
 				}
-			} else {
-				// Reconstruct a fresh buffer for the legacy API request using the saved bytes
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
-				actualStatusCode = resp.StatusCode
 
-				if tc.wantBody != "" && actualStatusCode == tc.wantStatusCode {
-					var body map[string]interface{}
-					err = json.Unmarshal(respBody, &body)
-					if err != nil {
-						t.Fatalf("error parsing response body: %s", err)
-					}
-
-					if errStr, ok := body["error"].(string); ok {
-						got = fmt.Sprintf(`{"error":"%s"}`, errStr)
-					} else if resStr, ok := body["result"].(string); ok {
-						got = resStr
-					}
+				if actualStatusCode != tc.wantStatusCode {
+					t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, tc.wantStatusCode)
 				}
-			}
 
-			if actualStatusCode != tc.wantStatusCode {
-				t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, tc.wantStatusCode)
-			}
+				if tc.wantBody == "" {
+					return
+				}
 
-			if tc.wantBody == "" {
-				return
-			}
+				if !strings.Contains(got, tc.wantBody) {
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
+				}
 
-			if !strings.Contains(got, tc.wantBody) {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
+			} else {
+				// Pure Clean Branch Logic - 100% Isolated
+				resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
+
+				if resp.StatusCode != tc.wantStatusCode {
+					t.Errorf("StatusCode mismatch: got %d, want %d. Response body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+				}
+
+				if tc.wantBody == "" {
+					return
+				}
+
+				var body map[string]interface{}
+				err = json.Unmarshal(respBody, &body)
+				if err != nil {
+					t.Fatalf("error parsing response body: %s", err)
+				}
+
+				got, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+
+				if got != tc.wantBody {
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
+				}
 			}
 		})
 	}
@@ -494,6 +505,8 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 // RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
 func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
+	// Resolve options
+	// Default values for TemplateParameterTestConfig
 	configs := &TemplateParameterTestConfig{
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
@@ -511,12 +524,14 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		supportSelectFields: true,
 	}
 
+	// Apply provided options
 	for _, option := range options {
 		option(configs)
 	}
 
 	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
+	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		enabled       bool
@@ -611,12 +626,14 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			if tc.name == "invoke select-fields-templateParams-tool" && !tc.enabled {
 				return
 			}
+			// if test case is DDL and source support ddl test cases
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
+			// if test case is insert statement and source support insert test cases
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
 				if configs.IsMCP {
-					// MCP Invocation Path
+					var got string
 					parts := strings.Split(tc.api, "/")
 					toolName := parts[len(parts)-2]
 
@@ -637,7 +654,6 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("response status code is not 200, got %d, error: %v", statusCode, err)
 					}
 
-					var got string
 					if mcpResp != nil && mcpResp.Error != nil {
 						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
 					} else if mcpResp != nil && !mcpResp.Result.IsError {
@@ -654,7 +670,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						}
 					}
 
-					// MCP JSON-aware comparision to handle DB column ordering
+					// MCP Validation
 					var gotJSON, wantJSON any
 					errGot := json.Unmarshal([]byte(got), &gotJSON)
 					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
@@ -668,6 +684,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 					}
 
 				} else {
+					// API Endpoint path
 					resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 					if resp.StatusCode != http.StatusOK {
 						if tc.isErr {
@@ -676,6 +693,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 					}
 
+					// Check response body
 					var body map[string]interface{}
 					err := json.Unmarshal(respBody, &body)
 					if err != nil {
@@ -801,15 +819,13 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-
-			// Read buffer ONCE to prevent draining
-			reqBytes, _ := io.ReadAll(tc.requestBody)
-			var got string
-
 			if configs.IsMCP {
+				// MCP Endpoint Path
+				var got string
 				parts := strings.Split(tc.api, "/")
 				toolName := parts[len(parts)-2]
 
+				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
 					_ = json.Unmarshal(reqBytes, &args)
@@ -829,22 +845,28 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 					return
 				}
 
-				var blocks []string
-				if mcpResp != nil && !mcpResp.Result.IsError {
+				if mcpResp != nil && mcpResp.Error != nil {
+					got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
+				} else if mcpResp != nil && !mcpResp.Result.IsError {
+					var blocks []string
 					for _, content := range mcpResp.Result.Content {
 						if content.Type == "text" {
 							blocks = append(blocks, strings.TrimSpace(content.Text))
 						}
 					}
+					if len(blocks) == 0 {
+						got = "null"
+					} else {
+						got = strings.Join(blocks, "")
+					}
 				}
-				if len(blocks) == 0 {
-					got = "null"
-				} else {
-					got = strings.Join(blocks, "")
+
+				if got != tc.want {
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 				}
 			} else {
-				// Reconstruct a fresh buffer for the legacy API request using the saved bytes
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
+				// API Endpoint path
+				resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 				if resp.StatusCode != http.StatusOK {
 					if tc.isErr {
 						return
@@ -855,21 +877,21 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 					return
 				}
 
+				// Check response body
 				var body map[string]interface{}
 				err = json.Unmarshal(respBody, &body)
 				if err != nil {
 					t.Fatalf("error parsing response body")
 				}
 
-				var ok bool
-				got, ok = body["result"].(string)
+				got, ok := body["result"].(string)
 				if !ok {
 					t.Fatalf("unable to find result in response body")
 				}
-			}
 
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				if got != tc.want {
+					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				}
 			}
 		})
 	}
