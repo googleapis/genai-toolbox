@@ -229,7 +229,7 @@ type scriptData struct {
 	LicenseHeader  string
 	InvocationMode string
 	ToolboxVersion string
-	OptionalVars  []string
+	OptionalVars   []string
 }
 
 // generateScriptContent creates the content for a Node.js wrapper script.
@@ -242,7 +242,7 @@ func generateScriptContent(name string, configArgs string, licenseHeader string,
 		LicenseHeader:  licenseHeader,
 		InvocationMode: mode,
 		ToolboxVersion: version,
-		OptionalVars:  optionalVars,
+		OptionalVars:   optionalVars,
 	}
 
 	tmpl, err := template.New("script").Parse(nodeScriptTemplate)

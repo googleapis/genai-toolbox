@@ -62,15 +62,15 @@ func TestParseEnv(t *testing.T) {
 			want: "bar",
 		},
 		{
-			desc: "with empty default",
-			in:   "${FOO:}",
-			want: "",
+			desc:         "with empty default",
+			in:           "${FOO:}",
+			want:         "",
 			wantOptional: []string{"FOO"},
 		},
 		{
-			desc: "with default",
-			in:   "${FOO:bar}",
-			want: "bar",
+			desc:         "with default",
+			in:           "${FOO:bar}",
+			want:         "bar",
 			wantOptional: []string{"FOO"},
 		},
 		{
@@ -78,8 +78,8 @@ func TestParseEnv(t *testing.T) {
 			env: map[string]string{
 				"FOO": "hello",
 			},
-			in:   "${FOO:bar}",
-			want: "hello",
+			in:           "${FOO:bar}",
+			want:         "hello",
 			wantOptional: []string{"FOO"},
 		},
 		{
@@ -88,7 +88,7 @@ func TestParseEnv(t *testing.T) {
 			env: map[string]string{
 				"REGION": "us-central1",
 			},
-			want: "user: , password: , ip: public, region: us-central1",
+			want:         "user: , password: , ip: public, region: us-central1",
 			wantOptional: []string{"USER_NAME", "PASSWORD", "IP"},
 		},
 		{
