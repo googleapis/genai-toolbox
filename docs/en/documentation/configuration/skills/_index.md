@@ -39,7 +39,7 @@ toolbox <tool-source> skills-generate \
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
 - `--additional-notes`: (Optional) Additional notes to add under the Usage section of the generated SKILL.md.
-- `--invocation-mode`: (Optional) Invocation mode for the generated scripts: 'binary' or 'npx' (default: "binary").
+- `--invocation-mode`: (Optional) Invocation mode for the generated scripts: 'binary' or 'npx' (default: "npx").
 - `--toolbox-version`: (Optional) Version of @toolbox-sdk/server to use for npx approach (defaults to current toolbox version).
 
 {{< notice note >}}
