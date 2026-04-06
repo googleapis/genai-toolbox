@@ -244,9 +244,9 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
-	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id OR name == ?name | SORT id ASC | KEEP id, name, email`, index)
-	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id | KEEP id, name, email`, index)
-	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name | KEEP id, name, email`, index)
+	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id OR name == ?name | SORT id ASC | KEEP id, name, name.keyword, email, email.keyword`, index)
+	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id | KEEP id, name, name.keyword, email, email.keyword`, index)
+	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name | KEEP id, name, name.keyword, email, email.keyword`, index)
 	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?first_name_array`, index) // Not supported yet.
 	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ?email | KEEP name`, index)
 	return paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement
@@ -288,7 +288,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToo
 				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"query":       "FROM test-index | SORT id ASC | KEEP id, name, email",
+				"query":       "FROM test-index | SORT id ASC | KEEP id, name, name.keyword, email, email.keyword",
 			},
 			"my-tool": map[string]any{
 				"type":        toolType,

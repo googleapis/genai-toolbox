@@ -40,7 +40,7 @@ func init() {
 
 type compatibleSource interface {
 	ElasticsearchClient() es.EsClient
-	RunSQL(ctx context.Context, format, query string, params []map[string]any) (any, error)
+	RunSQL(ctx context.Context, format, query string, params any) (any, error)
 }
 
 type Config struct {
@@ -109,7 +109,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	query := t.Query
-	sqlParams := make([]map[string]any, 0, len(params))
+	sqlParams := make(map[string]any)
 	paramMap := params.AsMap()
 	// If a query is provided in the params and not already set in the tool, use it.
 	if queryVal, ok := paramMap["query"]; ok {
@@ -125,7 +125,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if param.GetType() == "array" {
 			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
-		sqlParams = append(sqlParams, map[string]any{param.GetName(): paramMap[param.GetName()]})
+		sqlParams[param.GetName()] = paramMap[param.GetName()]
 	}
 	resp, err := source.RunSQL(ctx, t.Format, query, sqlParams)
 	if err != nil {
