@@ -219,11 +219,14 @@ func TestGenerateScriptContent(t *testing.T) {
 		configArgs    string
 		wantContains  []string
 		licenseHeader string
+		mode          string
+		version       string
 	}{
 		{
-			name:       "basic script",
+			name:       "basic script (binary default)",
 			toolName:   "test-tool",
 			configArgs: `"--prebuilt", "test"`,
+			mode:       "binary",
 			wantContains: []string{
 				`const toolName = "test-tool";`,
 				`const configArgs = ["--prebuilt", "test"];`,
@@ -244,15 +247,27 @@ func TestGenerateScriptContent(t *testing.T) {
 			toolName:      "test-tool",
 			configArgs:    `"--prebuilt", "test"`,
 			licenseHeader: "// My License",
+			mode:          "binary",
 			wantContains: []string{
 				"// My License",
+			},
+		},
+		{
+			name:       "npx mode script",
+			toolName:   "npx-tool",
+			configArgs: `"--prebuilt", "test"`,
+			mode:       "npx",
+			version:    "0.31.0",
+			wantContains: []string{
+				`const toolName = "npx-tool";`,
+				`const npxArgs = ["--yes", "@toolbox-sdk/server@0.31.0"`,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generateScriptContent(tt.toolName, tt.configArgs, tt.licenseHeader)
+			got, err := generateScriptContent(tt.toolName, tt.configArgs, tt.licenseHeader, tt.mode, tt.version)
 			if err != nil {
 				t.Fatalf("generateScriptContent() error = %v", err)
 			}
