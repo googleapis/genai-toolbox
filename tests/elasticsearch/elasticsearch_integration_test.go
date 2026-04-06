@@ -77,6 +77,10 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
+	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?query) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content OR name == ?text_to_embed | LIMIT 0", index)
+	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
 	if err != nil {
 		t.Fatalf("failed to start cmd: %v", err)
@@ -137,7 +141,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 		t.Fatalf("error creating index: %s", err)
 	}
 	if res.IsError() {
-		// Ignore resource_already_exists_exception if it somehow exists
+		t.Logf("Create index response error (might be ignored): %s", res.String())
 	}
 
 	vectorSize := 768
@@ -173,10 +177,6 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 			t.Fatalf("error indexing document: %s", err)
 		}
 	}
-
-	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?query) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
-	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content OR name == ?text_to_embed | LIMIT 0", index)
-	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
 
 	// Get configs for tests
 	wants := getElasticsearchWants()
