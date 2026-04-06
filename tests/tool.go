@@ -608,20 +608,19 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			if !tc.enabled {
+			if tc.name == "invoke select-fields-templateParams-tool" && !tc.enabled {
 				return
 			}
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
-				reqBytes, _ := io.ReadAll(tc.requestBody)
-				var got string
-
 				if configs.IsMCP {
+					// MCP Invocation Path
 					parts := strings.Split(tc.api, "/")
 					toolName := parts[len(parts)-2]
 
+					reqBytes, _ := io.ReadAll(tc.requestBody)
 					var args map[string]any
 					if len(reqBytes) > 0 {
 						_ = json.Unmarshal(reqBytes, &args)
@@ -638,24 +637,38 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("response status code is not 200, got %d, error: %v", statusCode, err)
 					}
 
-					var blocks []string
-					if mcpResp != nil && !mcpResp.Result.IsError {
+					var got string
+					if mcpResp != nil && mcpResp.Error != nil {
+						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
+					} else if mcpResp != nil && !mcpResp.Result.IsError {
+						var blocks []string
 						for _, content := range mcpResp.Result.Content {
 							if content.Type == "text" {
 								blocks = append(blocks, strings.TrimSpace(content.Text))
 							}
 						}
+						if len(blocks) == 0 {
+							got = "null"
+						} else {
+							got = strings.Join(blocks, "")
+						}
 					}
 
-					if mcpResp != nil && mcpResp.Error != nil {
-						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
-					} else if len(blocks) == 0 {
-						got = "null"
-					} else {
-						got = strings.Join(blocks, "")
+					// MCP JSON-aware comparision to handle DB column ordering
+					var gotJSON, wantJSON any
+					errGot := json.Unmarshal([]byte(got), &gotJSON)
+					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
+
+					if errGot == nil && errWant == nil {
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+						}
+					} else if got != tc.want {
+						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 					}
+
 				} else {
-					resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
+					resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, tc.requestHeader)
 					if resp.StatusCode != http.StatusOK {
 						if tc.isErr {
 							return
@@ -669,23 +682,12 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("error parsing response body")
 					}
 
-					var ok bool
-					got, ok = body["result"].(string)
+					got, ok := body["result"].(string)
 					if !ok {
 						t.Fatalf("unable to find result in response body")
 					}
-				}
 
-				if got != tc.want {
-					var gotJSON, wantJSON any
-					errGot := json.Unmarshal([]byte(got), &gotJSON)
-					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
-
-					if errGot == nil && errWant == nil {
-						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
-						}
-					} else {
+					if got != tc.want {
 						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 					}
 				}

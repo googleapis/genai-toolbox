@@ -177,7 +177,7 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest(), tests.WithMCPInvoke(true))
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithMCPExecuteSql(true))
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithMCPTemplate()) // Assuming generic WithMCP for this helper
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithMCPTemplate())
 
 	// Run specific MySQL tool tests over MCP
 	const expectedOwner = "'toolbox-identity'@'%'"
