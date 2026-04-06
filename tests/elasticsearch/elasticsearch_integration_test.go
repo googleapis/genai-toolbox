@@ -29,8 +29,10 @@ import (
 	"github.com/elastic/go-elasticsearch/v9"
 	"github.com/elastic/go-elasticsearch/v9/esapi"
 
-	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/tests"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var (
@@ -40,6 +42,51 @@ var (
 	EsUser                  = os.Getenv("ELASTICSEARCH_USER")
 	EsPass                  = os.Getenv("ELASTICSEARCH_PASS")
 )
+
+func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, func()) {
+	t.Helper()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "docker.elastic.co/elasticsearch/elasticsearch:8.12.2",
+		ExposedPorts: []string{"9200/tcp"},
+		Env: map[string]string{
+			"discovery.type":         "single-node",
+			"xpack.security.enabled": "false",
+		},
+		WaitingFor: wait.ForAll(
+			wait.ForHTTP("/"),
+			wait.ForExposedPort(),
+		),
+	}
+
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatalf("failed to start elasticsearch container: %s", err)
+	}
+
+	cleanup := func() {
+		if err := container.Terminate(ctx); err != nil {
+			t.Fatalf("failed to terminate container: %s", err)
+		}
+	}
+
+	host, err := container.Host(ctx)
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get container host: %s", err)
+	}
+
+	mappedPort, err := container.MappedPort(ctx, "9200")
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get container mapped port: %s", err)
+	}
+
+	return fmt.Sprintf("http://%s:%s", host, mappedPort.Port()), cleanup
+}
 
 func getElasticsearchVars(t *testing.T) map[string]any {
 	if EsAddress == "" {
@@ -64,8 +111,12 @@ type ElasticsearchWants struct {
 }
 
 func TestElasticsearchToolEndpoints(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
+
+	var containerCleanup func()
+	EsAddress, containerCleanup = setupElasticsearchContainer(ctx, t)
+	defer containerCleanup()
 
 	args := []string{"--enable-api"}
 
@@ -197,9 +248,9 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
-	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id OR name == ?name | SORT id ASC`, index)
-	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id`, index)
-	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name`, index)
+	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id OR name == ?name | SORT id ASC | KEEP id, name, email`, index)
+	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id | KEEP id, name, email`, index)
+	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name | KEEP id, name, email`, index)
 	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?first_name_array`, index) // Not supported yet.
 	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ?email | KEEP name`, index)
 	return paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement
