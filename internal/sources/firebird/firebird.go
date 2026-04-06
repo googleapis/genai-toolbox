@@ -24,7 +24,7 @@ import (
 	_ "github.com/nakagami/firebirdsql"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 )
 
 const SourceType string = "firebird"

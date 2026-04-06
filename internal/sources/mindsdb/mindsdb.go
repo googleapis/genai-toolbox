@@ -22,8 +22,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlcommon"
 	"go.opentelemetry.io/otel/trace"
 )
 

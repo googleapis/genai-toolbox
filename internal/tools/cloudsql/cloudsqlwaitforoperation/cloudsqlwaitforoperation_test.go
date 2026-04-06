@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	cloudsqlwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	cloudsqlwaitforoperation "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
 )
 
 func TestParseFromYaml(t *testing.T) {

@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"google.golang.org/genai"
 )
 

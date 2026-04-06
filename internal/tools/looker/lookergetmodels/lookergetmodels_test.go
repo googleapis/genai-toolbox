@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookergetmodels"
 )
 
 func TestParseFromYamlLookerGetModels(t *testing.T) {

@@ -17,7 +17,7 @@ package prompts
 import (
 	"fmt"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 type PromptsetConfig struct {

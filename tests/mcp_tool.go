@@ -25,8 +25,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	v20251125 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20251125"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
 )
 
 // NewMCPRequestHeader takes custom headers and appends headers required for MCP.
