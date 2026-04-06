@@ -52,11 +52,16 @@ func AddSemanticSearchConfig(t *testing.T, config map[string]any, toolKind, inse
 		t.Fatalf("unable to get tools from config")
 	}
 
+	queryKey := "statement"
+	if toolKind == "elasticsearch-esql" {
+		queryKey = "query"
+	}
+
 	tools["insert_docs"] = map[string]any{
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Stores content and its vector embedding into the documents table.",
-		"statement":   insertStmt,
+		queryKey:      insertStmt,
 		"parameters": []any{
 			map[string]any{
 				"name":        "content",
@@ -77,7 +82,7 @@ func AddSemanticSearchConfig(t *testing.T, config map[string]any, toolKind, inse
 		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Finds the most semantically similar document to the query vector.",
-		"statement":   searchStmt,
+		queryKey:      searchStmt,
 		"parameters": []any{
 			map[string]any{
 				"name":        "query",
