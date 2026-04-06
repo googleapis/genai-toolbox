@@ -961,3 +961,143 @@ func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 		})
 	}
 }
+
+// createSpannerPostgresqlDatabase creates a temporary PostgreSQL database in Spanner
+func createSpannerPostgresqlDatabase(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, project, instance, dbName string) error {
+	op, err := adminClient.CreateDatabase(ctx, &databasepb.CreateDatabaseRequest{
+		Parent:          fmt.Sprintf("projects/%s/instances/%s", project, instance),
+		CreateStatement: fmt.Sprintf("CREATE DATABASE \"%s\"", dbName),
+		DatabaseDialect: databasepb.DatabaseDialect_POSTGRESQL,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = op.Wait(ctx)
+	return err
+}
+
+// setupSpannerPgVectorTable creates a vector table in Spanner (PostgreSQL dialect) for semantic search testing
+func setupSpannerPgVectorTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dbString string) (string, func(*testing.T)) {
+	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createStatement := fmt.Sprintf(`CREATE TABLE %s (
+		id bigint PRIMARY KEY,
+		content text,
+		embedding float4[]
+	)`, tableName)
+
+	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		Database:   dbString,
+		Statements: []string{createStatement},
+	})
+	if err != nil {
+		t.Fatalf("unable to start create vector table operation %s: %s", tableName, err)
+	}
+	err = op.Wait(ctx)
+	if err != nil {
+		t.Fatalf("unable to create test vector table %s: %s", tableName, err)
+	}
+
+	return tableName, func(t *testing.T) {
+		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   dbString,
+			Statements: []string{fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)},
+		})
+		if err != nil {
+			t.Errorf("unable to start drop %s operation: %s", tableName, err)
+			return
+		}
+		opErr := op.Wait(ctx)
+		if opErr != nil {
+			t.Errorf("Teardown failed: %s", opErr)
+		}
+	}
+}
+
+// getSpannerPgVectorSearchStmts returns statements for spanner semantic search (PostgreSQL dialect)
+func getSpannerPgVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, $1, $2)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, COSINE_DISTANCE(embedding, $1) AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
+}
+
+func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
+	// Skip if environment variables are not set
+	if SpannerProject == "" || SpannerInstance == "" {
+		t.Skip("SPANNER_PROJECT or SPANNER_INSTANCE not set, skipping PostgreSQL tests")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+
+	// Create admin client
+	adminClient, err := database.NewDatabaseAdminClient(ctx)
+	if err != nil {
+		t.Fatalf("unable to create admin client: %s", err)
+	}
+	defer adminClient.Close()
+
+	// Create unique DB name
+	dbName := "pg_db_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+
+	t.Logf("Creating temporary PostgreSQL database: %s", dbName)
+	err = createSpannerPostgresqlDatabase(t, ctx, adminClient, SpannerProject, SpannerInstance, dbName)
+	if err != nil {
+		t.Fatalf("unable to create PostgreSQL database: %s", err)
+	}
+	defer func() {
+		t.Logf("Dropping temporary PostgreSQL database: %s", dbName)
+		err := adminClient.DropDatabase(ctx, &databasepb.DropDatabaseRequest{
+			Database: fmt.Sprintf("projects/%s/instances/%s/databases/%s", SpannerProject, SpannerInstance, dbName),
+		})
+		if err != nil {
+			t.Errorf("failed to drop database %s: %s", dbName, err)
+		}
+	}()
+
+	dbString := fmt.Sprintf("projects/%s/instances/%s/databases/%s", SpannerProject, SpannerInstance, dbName)
+	dataClient, err := spanner.NewClient(ctx, dbString)
+	if err != nil {
+		t.Fatalf("unable to create data client: %s", err)
+	}
+	defer dataClient.Close()
+
+	// Set up table for semantic search
+	vectorTableName, tearDownVectorTable := setupSpannerPgVectorTable(t, ctx, adminClient, dbString)
+	defer tearDownVectorTable(t)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := getSpannerPgVectorSearchStmts(vectorTableName)
+
+	// We need to create a tools file for this test
+	config := map[string]any{
+		"sources": map[string]any{
+			"my-instance": map[string]any{
+				"type":     "spanner",
+				"project":  SpannerProject,
+				"instance": SpannerInstance,
+				"database": dbName,
+				"dialect":  "postgresql",
+			},
+		},
+		"tools": map[string]any{},
+	}
+
+	toolsConfig := tests.AddSemanticSearchConfig(t, config, SpannerToolType, insertStmt, searchStmt)
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Run semantic search test
+	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+}
