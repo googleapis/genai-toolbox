@@ -36,6 +36,7 @@ source: my-looker-instance
 description: |
   Create a new Looker agent.
   - `name` (string): The name of the agent.
+  - `description` (string): The description of the agent.
   - `instructions` (string): The instructions (system prompt) for the agent.
   - `sources` (array): Optional. A list of JSON-encoded data sources for the agent (e.g., `[{"model": "my_model", "explore": "my_explore"}]`).
   - `code_interpreter` (boolean): Optional. Enables Code Interpreter for this Agent.

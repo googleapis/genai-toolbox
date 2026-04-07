@@ -71,6 +71,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
 	nameParameter := parameters.NewStringParameterWithDefault("name", "", "The name of the agent.")
+	descriptionParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the agent.")
 	instructionsParameter := parameters.NewStringParameterWithDefault("instructions", "", "The instructions (system prompt) for the agent.")
 	sourcesParameter := parameters.NewArrayParameterWithRequired(
 		"sources",
@@ -83,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		),
 	)
 	codeInterpreterParameter := parameters.NewBooleanParameterWithDefault("code_interpreter", false, "Optional. Enables Code Interpreter for this Agent.")
-	params := parameters.Parameters{agentIdParameter, nameParameter, instructionsParameter, sourcesParameter, codeInterpreterParameter}
+	params := parameters.Parameters{agentIdParameter, nameParameter, descriptionParameter, instructionsParameter, sourcesParameter, codeInterpreterParameter}
 
 	annotations := &tools.ToolAnnotations{}
 	if cfg.Annotations != nil {
@@ -139,29 +140,35 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	logger.DebugContext(ctx, fmt.Sprintf("%s params = ", t.Name), mapParams)
 
-	var agentId, name, instructions string
+	var agentId, name, description, instructions string
 	if v, ok := mapParams["agent_id"].(string); ok {
 		agentId = v
 	}
 	if v, ok := mapParams["name"].(string); ok {
 		name = v
 	}
+	if v, ok := mapParams["description"].(string); ok {
+		description = v
+	}
 	if v, ok := mapParams["instructions"].(string); ok {
 		instructions = v
 	}
 
+	codeInterpreter, hasCodeInterpreter := mapParams["code_interpreter"].(bool)
+
+	if agentId == "" {
+		return nil, util.NewClientServerError(fmt.Sprintf("%s operation: agent_id must be specified", t.Type), http.StatusBadRequest, nil)
+	}
+
 	agentSources := make([]v4.Source, 0)
-	if _, ok := mapParams["sources"]; ok {
-		sources, _ := mapParams["sources"].([]map[string]string)
-		if !ok {
-			return nil, util.NewClientServerError("invalid source format: expected sources of type []map[string]string", http.StatusBadRequest, nil)
-		}
+	if sources, ok := mapParams["sources"].([]any); ok {
 		for _, s := range sources {
-			model, ok := s["model"]
+			source := s.(map[string]any)
+			model, ok := source["model"].(string)
 			if !ok {
 				return nil, util.NewClientServerError("invalid source format: expected model of type string", http.StatusBadRequest, nil)
 			}
-			explore, ok := s["explore"]
+			explore, ok := source["explore"].(string)
 			if !ok {
 				return nil, util.NewClientServerError("invalid source format: expected explore of type string", http.StatusBadRequest, nil)
 			}
@@ -170,16 +177,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				Explore: &explore,
 			})
 		}
+	} else {
+		if _, ok := mapParams["sources"]; ok {
+			return nil, util.NewClientServerError(fmt.Sprintf("invalid sources. got %T, expected []any", mapParams["sources"]), http.StatusBadRequest, nil)
+		}
 	}
 
-	codeInterpreter, hasCodeInterpreter := mapParams["code_interpreter"].(bool)
-
-	if agentId == "" {
-		return nil, util.NewClientServerError(fmt.Sprintf("%s operation: agent_id must be specified", t.Type), http.StatusBadRequest, nil)
-	}
 	body := v4.WriteAgent{}
 	if name != "" {
 		body.Name = &name
+	}
+	if description != "" {
+		body.Description = &description
 	}
 	if instructions != "" {
 		body.Context = &v4.Context{
