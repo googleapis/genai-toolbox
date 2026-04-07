@@ -32,6 +32,10 @@ It serves a **dual purpose**:
 
 This README provides a brief overview. For comprehensive details, see the [full documentation](https://mcp-toolbox.dev/).
 
+> [!IMPORTANT]  
+> **Repository Name Update:** The `genai-toolbox` repository has been officially renamed to `mcp-toolbox`. To ensure your local environment reflects the new name, you may update your remote:
+> `git remote set-url origin https://github.com/googleapis/mcp-toolbox.git`
+
 > [!NOTE]
 > This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/mcp-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
 
