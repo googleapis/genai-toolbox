@@ -124,8 +124,8 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
-	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?query) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
-	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content OR name == ?text_to_embed | LIMIT 0", index)
+	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ? OR name == ? | LIMIT 0", index)
 	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
@@ -244,11 +244,11 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
-	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id OR name == ?name | SORT id ASC | KEEP id, name, name.keyword, email, email.keyword`, index)
-	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id | KEEP id, name, name.keyword, email, email.keyword`, index)
-	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name | KEEP id, name, name.keyword, email, email.keyword`, index)
-	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?first_name_array`, index) // Not supported yet.
-	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ?email | KEEP name`, index)
+	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ? OR name == ? | SORT id ASC | KEEP id, name, name.keyword, email, email.keyword`, index)
+	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ? | KEEP id, name, name.keyword, email, email.keyword`, index)
+	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ? | KEEP id, name, name.keyword, email, email.keyword`, index)
+	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?`, index) // Not supported yet.
+	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ? | KEEP name`, index)
 	return paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement
 }
 

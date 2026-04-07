@@ -162,10 +162,10 @@ type EsqlResult struct {
 	Values  [][]any      `json:"values"`
 }
 
-func (s *Source) RunSQL(ctx context.Context, format, query string, params any) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, format, query string, params []map[string]any) (any, error) {
 	bodyStruct := struct {
-		Query  string `json:"query"`
-		Params any    `json:"params,omitempty"`
+		Query  string           `json:"query"`
+		Params []map[string]any `json:"params,omitempty"`
 	}{
 		Query:  query,
 		Params: params,
