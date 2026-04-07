@@ -50,14 +50,15 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name               string                `yaml:"name" validate:"required"`
-	Type               string                `yaml:"type" validate:"required"`
-	Source             string                `yaml:"source" validate:"required"`
-	Description        string                `yaml:"description" validate:"required"`
-	Statement          string                `yaml:"statement" validate:"required"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
+	Name               string                 `yaml:"name" validate:"required"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Description        string                 `yaml:"description" validate:"required"`
+	Statement          string                 `yaml:"statement" validate:"required"`
+	AuthRequired       []string               `yaml:"authRequired"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -78,6 +79,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:        cfg.Name,
 		Description: cfg.Description,
 		InputSchema: paramMcpManifest,
+		Annotations: tools.NewDestructiveAnnotations(),
 	}
 
 	t := Tool{

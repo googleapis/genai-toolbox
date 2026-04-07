@@ -50,15 +50,16 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                `yaml:"name" validate:"required"`
-	Type         string                `yaml:"type" validate:"required"`
-	Source       string                `yaml:"source" validate:"required"`
-	Description  string                `yaml:"description" validate:"required"`
-	Statement    string                `yaml:"statement" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired"`
-	IsQuery      bool                  `yaml:"isQuery"`
-	Timeout      string                `yaml:"timeout"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	Statement    string                 `yaml:"statement" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	IsQuery      bool                   `yaml:"isQuery"`
+	Timeout      string                 `yaml:"timeout"`
+	Parameters   parameters.Parameters  `yaml:"parameters"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -69,7 +70,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters, annotations)
 
 	// finish tool setup
 	t := Tool{
