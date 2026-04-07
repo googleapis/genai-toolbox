@@ -229,6 +229,8 @@ func RunToolInvokeParametersTest(t *testing.T, name string, params []byte, simpl
 
 // RunToolInvoke runs the tool invoke endpoint
 func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOption) {
+	// Resolve options
+	// Default values for InvokeTestConfig
 	configs := &InvokeTestConfig{
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
@@ -241,6 +243,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		supportSelect1Auth:       true,
 	}
 
+	// Apply provided options
 	for _, option := range options {
 		option(configs)
 	}
@@ -251,12 +254,14 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
+	// Get access token
 	accessToken, err := sources.GetIAMAccessToken(t.Context())
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
 	accessToken = "Bearer " + accessToken
 
+	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name           string
 		api            string
@@ -421,9 +426,11 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			var actualStatusCode int
 
 			if configs.IsMCP {
+				// Extract tool name from the API URL for MCP invocation
 				parts := strings.Split(tc.api, "/")
 				toolName := parts[len(parts)-2]
 
+				// Parse request body as map for MCP arguments
 				var args map[string]any
 				if len(reqBytes) > 0 {
 					_ = json.Unmarshal(reqBytes, &args)
@@ -432,9 +439,11 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 					args = make(map[string]any)
 				}
 
+				// Invoke the tool via MCP protocol
 				mcpStatusCode, mcpResp, _ := InvokeMCPTool(t, toolName, args, tc.requestHeader)
 				actualStatusCode = mcpStatusCode
 
+				// Translate MCP response back to string for unified assertion
 				if actualStatusCode == http.StatusOK && tc.wantBody != "" {
 					if mcpResp != nil && mcpResp.Error != nil {
 						m := map[string]string{"error": mcpResp.Error.Message}
@@ -475,6 +484,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				}
 			}
 
+			// Check status code
 			wantStatus := tc.wantStatusCode
 			if configs.IsMCP && wantStatus == http.StatusUnauthorized {
 				if actualStatusCode == http.StatusOK {
@@ -485,10 +495,12 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, wantStatus)
 			}
 
+			// skip response body check
 			if tc.wantBody == "" {
 				return
 			}
 
+			// Check response body
 			// Unified JSON-Aware Validation
 			if got != tc.wantBody {
 				var gotJSON, wantJSON any
@@ -524,6 +536,8 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 // RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
 func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options ...TemplateParamOption) {
+	// Resolve options
+	// Default values for TemplateParameterTestConfig
 	configs := &TemplateParameterTestConfig{
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
@@ -540,12 +554,14 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		supportInsert: true,
 	}
 
+	// Apply provided options
 	for _, option := range options {
 		option(configs)
 	}
 
 	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
+	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		enabled       bool
@@ -640,10 +656,13 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			if !tc.enabled {
 				return
 			}
+			// if test case is DDL and source support ddl test cases
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
+			// if test case is insert statement and source support insert test cases
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
+				// Send Tool invocation request
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var got string
 
@@ -725,6 +744,8 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 }
 
 func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want string, options ...ExecuteSqlOption) {
+	// Resolve options
+	// Default values for ExecuteSqlTestConfig
 	configs := &ExecuteSqlTestConfig{
 		select1Statement: `"SELECT 1"`,
 		createWant:       "null",
@@ -732,6 +753,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 		selectEmptyWant:  "null",
 	}
 
+	// Apply provided options
 	for _, option := range options {
 		option(configs)
 	}
@@ -742,6 +764,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
+	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		api           string
@@ -829,6 +852,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
 			reqBytes, _ := io.ReadAll(tc.requestBody)
 			var got string
 
@@ -3111,6 +3135,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
 			}
 
+			// Checking only the current database where the test tables are created to avoid brittle tests.
 			if tc.isAllTables {
 				filteredGot := []objectDetails{}
 				if got != nil {
