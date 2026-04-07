@@ -91,6 +91,75 @@ templateParameters:
     description: Table to select from
 ```
 
+### Example with Vector Search
+
+SingleStore supports vector operations. When using an `embeddingModel` with a `singlestore-sql` tool, the tool automatically converts text parameters into a JSON string array. You can then use SingleStore's `JSON_ARRAY_PACK()` function in your SQL statement to pack this string into a binary vector format (BLOB) for vector storage and similarity search.
+
+#### Define the Embedding Model
+See [EmbeddingModels](../../../documentation/configuration/embedding-models/_index.md) for more information.
+
+```yaml
+kind: embeddingModel
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: ${GOOGLE_API_KEY}
+dimension: 768
+```
+
+#### Vector Ingestion Tool
+This tool stores both the raw text and its vector representation. It uses `valueFromParam` to hide the vector conversion logic from the LLM, ensuring the Agent only has to provide the content once.
+
+```yaml
+kind: tool
+name: insert_doc_singlestore
+type: singlestore-sql
+source: my-s2-source
+statement: |
+  INSERT INTO vector_table (id, content, embedding)
+  VALUES (1, ?, JSON_ARRAY_PACK(?))
+description: |
+  Index new documents for semantic search in SingleStore.
+parameters:
+  - name: content
+    type: string
+    description: The text content to store.
+  - name: text_to_embed
+    type: string
+    # Automatically copies 'content' and converts it to a vector string array
+    valueFromParam: content
+    embeddedBy: gemini-model
+```
+
+#### Vector Search Tool
+This tool allows the Agent to perform a natural language search. The query string provided by the Agent is converted into a vector string array before the SQL is executed.
+
+```yaml
+kind: tool
+name: search_docs_singlestore
+type: singlestore-sql
+source: my-s2-source
+statement: |
+  SELECT 
+    id, 
+    content, 
+    DOT_PRODUCT(embedding, JSON_ARRAY_PACK(?)) AS score 
+  FROM 
+    vector_table 
+  ORDER BY 
+    score DESC
+  LIMIT 1
+description: |
+  Search for documents in SingleStore using natural language. 
+  Returns the most semantically similar result.
+parameters:
+  - name: query
+    type: string
+    description: The search query to be converted to a vector.
+    embeddedBy: gemini-model
+```
+
+
 ## Reference
 
 | **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
