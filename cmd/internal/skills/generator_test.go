@@ -221,6 +221,7 @@ func TestGenerateScriptContent(t *testing.T) {
 		licenseHeader string
 		mode          string
 		version       string
+		optionalVars  []string
 	}{
 		{
 			name:       "basic script (binary default)",
@@ -253,6 +254,21 @@ func TestGenerateScriptContent(t *testing.T) {
 			},
 		},
 		{
+			name:         "script with optional vars",
+			toolName:     "test-tool",
+			configArgs:   `"--prebuilt", "test"`,
+			optionalVars: []string{"OPTIONAL_A", "OPTIONAL_B"},
+			wantContains: []string{
+				"const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [",
+				"    'OPTIONAL_A',",
+				"    'OPTIONAL_B',",
+				"];",
+				"OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {",
+				"    if (env[varName] === '') {",
+				"        delete env[varName];",
+			},
+		},
+		{
 			name:       "npx mode script",
 			toolName:   "npx-tool",
 			configArgs: `"--prebuilt", "test"`,
@@ -267,7 +283,7 @@ func TestGenerateScriptContent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generateScriptContent(tt.toolName, tt.configArgs, tt.licenseHeader, tt.mode, tt.version)
+			got, err := generateScriptContent(tt.toolName, tt.configArgs, tt.licenseHeader, tt.mode, tt.version, tt.optionalVars)
 			if err != nil {
 				t.Fatalf("generateScriptContent() error = %v", err)
 			}

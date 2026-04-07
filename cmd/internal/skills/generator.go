@@ -128,7 +128,11 @@ const os = require('os');
 
 const toolName = "{{.Name}}";
 const configArgs = [{{.ConfigArgs}}];
-
+{{if .OptionalVars}}
+const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [
+{{range .OptionalVars}}    '{{.}}',
+{{end}}];
+{{end}}
 function getEnv() {
     const envPath = path.resolve(__dirname, '../../../.env');
     const env = { ...process.env };
@@ -158,7 +162,13 @@ if (process.env.GEMINI_CLI === '1') {
     env = getEnv();
     userAgent = "skills-geminicli";
 }
-
+{{if .OptionalVars}}
+OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
+    if (env[varName] === '') {
+        delete env[varName];
+    }
+});
+{{end}}
 const args = process.argv.slice(2);
 
 {{if eq .InvocationMode "npx"}}
@@ -219,18 +229,20 @@ type scriptData struct {
 	LicenseHeader  string
 	InvocationMode string
 	ToolboxVersion string
+	OptionalVars   []string
 }
 
 // generateScriptContent creates the content for a Node.js wrapper script.
 // This script invokes the toolbox CLI with the appropriate configuration
 // (using a generated config) and arguments to execute the specific tool.
-func generateScriptContent(name string, configArgs string, licenseHeader string, mode string, version string) (string, error) {
+func generateScriptContent(name string, configArgs string, licenseHeader string, mode string, version string, optionalVars []string) (string, error) {
 	data := scriptData{
 		Name:           name,
 		ConfigArgs:     configArgs,
 		LicenseHeader:  licenseHeader,
 		InvocationMode: mode,
 		ToolboxVersion: version,
+		OptionalVars:   optionalVars,
 	}
 
 	tmpl, err := template.New("script").Parse(nodeScriptTemplate)
