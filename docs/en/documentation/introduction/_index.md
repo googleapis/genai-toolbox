@@ -12,6 +12,11 @@ It serves a **dual purpose**:
 1. **Ready-to-use MCP Server (aka ['Build-Time'](/getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
 2. **Custom Tools Framework (aka ['Run-Time'](/getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
+{{< notice tip >}}
+**Repository Name Update:** The GitHub repository for this project has been officially renamed from `genai-toolbox` to `mcp-toolbox`. We recommend updating your local Git remote URL for consistency:
+`git remote set-url origin https://github.com/googleapis/mcp-toolbox.git`
+{{< /notice >}}
+
 {{< notice note >}}
 This document has been updated to support the flat configuration file format. To
 view documentation with original configuration file format, please navigate to the
