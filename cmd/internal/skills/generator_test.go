@@ -297,6 +297,16 @@ func TestGenerateScriptContent(t *testing.T) {
 				`env[key.substring(prefix.length)] = process.env[key];`,
 			},
 		},
+		{
+			name:       "codex ci script",
+			toolName:   "codex-tool",
+			configArgs: `"--prebuilt", "test"`,
+			mode:       "bin",
+			wantContains: []string{
+				`userAgent = "skills-codex";`,
+				`} else if (process.env.CODEX_CI === '1') {`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
