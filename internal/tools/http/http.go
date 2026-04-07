@@ -56,19 +56,20 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                `yaml:"name" validate:"required"`
-	Type         string                `yaml:"type" validate:"required"`
-	Source       string                `yaml:"source" validate:"required"`
-	Description  string                `yaml:"description" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Path         string                `yaml:"path" validate:"required"`
-	Method       tools.HTTPMethod      `yaml:"method" validate:"required"`
-	Headers      map[string]string     `yaml:"headers"`
-	RequestBody  string                `yaml:"requestBody"`
-	PathParams   parameters.Parameters `yaml:"pathParams"`
-	QueryParams  parameters.Parameters `yaml:"queryParams"`
-	BodyParams   parameters.Parameters `yaml:"bodyParams"`
-	HeaderParams parameters.Parameters `yaml:"headerParams"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Path         string                 `yaml:"path" validate:"required"`
+	Method       tools.HTTPMethod       `yaml:"method" validate:"required"`
+	Headers      map[string]string      `yaml:"headers"`
+	RequestBody  string                 `yaml:"requestBody"`
+	PathParams   parameters.Parameters  `yaml:"pathParams"`
+	QueryParams  parameters.Parameters  `yaml:"queryParams"`
+	BodyParams   parameters.Parameters  `yaml:"bodyParams"`
+	HeaderParams parameters.Parameters  `yaml:"headerParams"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -114,7 +115,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
 
 	// finish tool setup
 	return Tool{

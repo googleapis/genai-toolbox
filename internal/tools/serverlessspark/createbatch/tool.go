@@ -46,6 +46,7 @@ func NewTool(cfg Config, originalCfg tools.ToolConfig, srcs map[string]sources.S
 		Name:        cfg.Name,
 		Description: desc,
 		InputSchema: inputSchema,
+		Annotations: tools.NewDestructiveAnnotations(),
 	}
 
 	return &Tool{
