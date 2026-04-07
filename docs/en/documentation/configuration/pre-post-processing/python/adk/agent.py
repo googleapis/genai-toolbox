@@ -128,7 +128,7 @@ async def main():
         runner,
         session_id,
         user_id,
-        "Book a hotel with id 5 with checkin date 2025-01-18 and checkout date 2025-02-10",
+        "Update hotel with id 5 with checkin date 2025-01-18 and checkout date 2025-02-10",
     )
     await toolset.close()
 

@@ -124,98 +124,141 @@ const nodeScriptTemplate = `#!/usr/bin/env node
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const toolName = "{{.Name}}";
 const configArgs = [{{.ConfigArgs}}];
+{{if .OptionalVars}}
+const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [
+{{range .OptionalVars}}    '{{.}}',
+{{end}}];
+{{end}}
 
-function getToolboxPath() {
-    if (process.env.GEMINI_CLI === '1') {
-        const ext = process.platform === 'win32' ? '.exe' : '';
-        const localPath = path.resolve(__dirname, '../../../toolbox' + ext);
-        if (fs.existsSync(localPath)) {
-            return localPath;
-        }
-    }
-    try {
-        const checkCommand = process.platform === 'win32' ? 'where toolbox' : 'which toolbox';
-        const globalPath = execSync(checkCommand, { stdio: 'pipe', encoding: 'utf-8' }).trim();
-        if (globalPath) {
-            return globalPath.split('\n')[0].trim();
-        }
-        throw new Error("Toolbox binary not found");
-    } catch (e) {
-        throw new Error("Toolbox binary not found");
-    }
+function mergeEnvVars(env) {
+	if (process.env.GEMINI_CLI === '1') {
+		const envPath = path.resolve(__dirname, '../../../.env');
+		if (fs.existsSync(envPath)) {
+			const envContent = fs.readFileSync(envPath, 'utf-8');
+			envContent.split('\n').forEach(line => {
+				const trimmed = line.trim();
+				if (trimmed && !trimmed.startsWith('#')) {
+					const splitIdx = trimmed.indexOf('=');
+					if (splitIdx !== -1) {
+						const key = trimmed.slice(0, splitIdx).trim();
+						let value = trimmed.slice(splitIdx + 1).trim();
+						value = value.replace(/(^['"]|['"]$)/g, '');
+						if (env[key] === undefined) {
+							env[key] = value;
+						}
+					}
+				}
+			});
+		}
+	} else if (process.env.CLAUDECODE === '1') {
+		const prefix = 'CLAUDE_PLUGIN_OPTION_';
+		for (const key in process.env) {
+			if (key.startsWith(prefix)) {
+				env[key.substring(prefix.length)] = process.env[key];
+			}
+		}
+	}
 }
 
-let toolboxBinary;
-try {
-    toolboxBinary = getToolboxPath();
-} catch (err) {
-    console.error("Error:", err.message);
-    process.exit(1);
+function prepareEnvironment() {
+	let env = { ...process.env };
+	let userAgent = "skills";
+	if (process.env.GEMINI_CLI === '1') {
+		userAgent = "skills-geminicli";
+	} else if (process.env.CLAUDECODE === '1') {
+		userAgent = "skills-claudecode";
+	}
+	mergeEnvVars(env);
+	{{if .OptionalVars}}
+	OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
+		if (env[varName] === '') {
+			delete env[varName];
+		}
+	});
+	{{end}}
+
+	return { env, userAgent };
 }
 
-function getEnv() {
-    const envPath = path.resolve(__dirname, '../../../.env');
-    const env = { ...process.env };
-    if (fs.existsSync(envPath)) {
-        const envContent = fs.readFileSync(envPath, 'utf-8');
-        envContent.split('\n').forEach(line => {
-            const trimmed = line.trim();
-            if (trimmed && !trimmed.startsWith('#')) {
-                const splitIdx = trimmed.indexOf('=');
-                if (splitIdx !== -1) {
-                    const key = trimmed.slice(0, splitIdx).trim();
-                    let value = trimmed.slice(splitIdx + 1).trim();
-                    value = value.replace(/(^['"]|['"]$)/g, '');
-                    if (env[key] === undefined) {
-                        env[key] = value;
-                    }
-                }
-            }
-        });
-    }
-    return env;
+function main() {
+    const { env, userAgent } = prepareEnvironment();
+    const args = process.argv.slice(2);
+		{{if eq .InvocationMode "npx"}}
+		const command = os.platform() === 'win32' ? 'npx.cmd' : 'npx';
+		const processedArgs = os.platform() === 'win32' ? args.map(arg => arg.includes('"') ? '"' + arg.replace(/"/g, '""') + '"' : arg) : args;
+		const npxArgs = ["--yes", "@toolbox-sdk/server@{{.ToolboxVersion}}", "--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...processedArgs];
+
+		const child = spawn(command, npxArgs, { shell: os.platform() === 'win32', stdio: 'inherit', env });
+		{{else}}
+		function getToolboxPath() {
+				if (process.env.GEMINI_CLI === '1') {
+						const ext = process.platform === 'win32' ? '.exe' : '';
+						const localPath = path.resolve(__dirname, '../../../toolbox' + ext);
+						if (fs.existsSync(localPath)) {
+								return localPath;
+						}
+				}
+				try {
+						const checkCommand = process.platform === 'win32' ? 'where toolbox' : 'which toolbox';
+						const globalPath = execSync(checkCommand, { stdio: 'pipe', encoding: 'utf-8' }).trim();
+						if (globalPath) {
+								return globalPath.split('\n')[0].trim();
+						}
+						throw new Error("Toolbox binary not found");
+				} catch (e) {
+						throw new Error("Toolbox binary not found");
+				}
+		}
+
+		let toolboxBinary;
+		try {
+				toolboxBinary = getToolboxPath();
+		} catch (err) {
+				console.error("Error:", err.message);
+				process.exit(1);
+		}
+
+		const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...args];
+		const child = spawn(toolboxBinary, toolboxArgs, { stdio: 'inherit', env });
+		{{end}}
+
+    child.on('close', (code) => {
+        process.exit(code);
+    });
+
+    child.on('error', (err) => {
+        console.error("Error executing toolbox:", err);
+        process.exit(1);
+    });
 }
 
-let env = process.env;
-let userAgent = "skills";
-if (process.env.GEMINI_CLI === '1') {
-    env = getEnv();
-    userAgent = "skills-geminicli";
-}
-
-const args = process.argv.slice(2);
-
-const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...args];
-
-const child = spawn(toolboxBinary, toolboxArgs, { stdio: 'inherit', env });
-
-child.on('close', (code) => {
-  process.exit(code);
-});
-
-child.on('error', (err) => {
-  console.error("Error executing toolbox:", err);
-  process.exit(1);
-});
+main();
 `
 
 type scriptData struct {
-	Name          string
-	ConfigArgs    string
-	LicenseHeader string
+	Name           string
+	ConfigArgs     string
+	LicenseHeader  string
+	InvocationMode string
+	ToolboxVersion string
+	OptionalVars   []string
 }
 
 // generateScriptContent creates the content for a Node.js wrapper script.
 // This script invokes the toolbox CLI with the appropriate configuration
 // (using a generated config) and arguments to execute the specific tool.
-func generateScriptContent(name string, configArgs string, licenseHeader string) (string, error) {
+func generateScriptContent(name string, configArgs string, licenseHeader string, mode string, version string, optionalVars []string) (string, error) {
 	data := scriptData{
-		Name:          name,
-		ConfigArgs:    configArgs,
-		LicenseHeader: licenseHeader,
+		Name:           name,
+		ConfigArgs:     configArgs,
+		LicenseHeader:  licenseHeader,
+		InvocationMode: mode,
+		ToolboxVersion: version,
+		OptionalVars:   optionalVars,
 	}
 
 	tmpl, err := template.New("script").Parse(nodeScriptTemplate)

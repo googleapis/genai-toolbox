@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
 [![License: Apache
 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://googleapis.github.io/genai-toolbox/)
+[![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://mcp-toolbox.dev/)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
 [![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@mcp_toolbox)
 
@@ -30,7 +30,7 @@ It serves a **dual purpose**:
 2. **Custom Tools Framework (Run-Time):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 
-This README provides a brief overview. For comprehensive details, see the [full documentation](https://googleapis.github.io/genai-toolbox/).
+This README provides a brief overview. For comprehensive details, see the [full documentation](https://mcp-toolbox.dev/).
 
 > [!NOTE]
 > This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/genai-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
@@ -88,7 +88,7 @@ You can use the Toolbox in any MCP-compatible IDE or client (e.g., Gemini CLI, G
     }
     ```
 
-2. Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+2. Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/).
 
 When you run Toolbox with a `--prebuilt=<database>` flag, you instantly get access to standard tools to interact with that database. 
 
@@ -96,7 +96,7 @@ Supported databases currently include:
 - **Google Cloud:** AlloyDB, BigQuery, Cloud SQL (PostgreSQL, MySQL, SQL Server), Spanner, Firestore, Dataplex
 - **Other Databases:** PostgreSQL, MySQL, SQL Server, Oracle, MongoDB, Redis, Elasticsearch, CockroachDB, ClickHouse, Couchbase, Neo4j, Snowflake, Trino, and more.
 
-For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/).
 
 *See the [Install & Run the Toolbox server](#install--run-the-toolbox-server) section for different execution methods like Docker or binaries.*
 
@@ -115,7 +115,7 @@ have multiple files, you can tell Toolbox which to load with the `--config
 tools.yaml` flag.
 
 You can find more detailed reference documentation to all resource types in the
-[Resources](https://googleapis.github.io/genai-toolbox/resources/).
+[Resources](https://mcp-toolbox.dev/documentation/configuration/).
 
 ### Sources
 
@@ -135,7 +135,7 @@ password: my-password
 ```
 
 For more details on configuring different types of sources, see the
-[Sources](https://googleapis.github.io/genai-toolbox/resources/sources).
+[Sources](https://mcp-toolbox.dev/documentation/configuration/sources/).
 
 ### Tools
 
@@ -156,7 +156,7 @@ statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 ```
 
 For more details on configuring different types of tools, see the
-[Tools](https://googleapis.github.io/genai-toolbox/resources/tools).
+[Tools](https://mcp-toolbox.dev/documentation/configuration/tools/).
 
 ### Toolsets
 
@@ -197,7 +197,7 @@ arguments:
 ```
 
 For more details on configuring prompts, see the
-[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
+[Prompts](https://mcp-toolbox.dev/documentation/configuration/prompts/).
 
 ---
 
@@ -455,7 +455,7 @@ terminate signal (`ctrl+c` on most platforms).
 
 For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
-section](https://googleapis.github.io/genai-toolbox/how-to/)
+section](https://mcp-toolbox.dev/documentation/deploy-to/)
 
 ---
 
@@ -1021,7 +1021,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
 To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
 tools and toolsets with features such as authorized parameters. To learn more,
-visit [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/).
+visit [Toolbox UI](https://mcp-toolbox.dev/documentation/configuration/toolbox-ui/).
 
 ```sh
 ./toolbox --ui
@@ -1031,7 +1031,7 @@ visit [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/
 
 Toolbox emits traces and metrics via OpenTelemetry. Use `--telemetry-otlp=<endpoint>` 
 to export to any OTLP-compatible backend like Google Cloud Monitoring, Agnost AI, or 
-others. See the [telemetry docs](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/) for details.
+others. See the [telemetry docs](https://mcp-toolbox.dev/documentation/monitoring/export_telemetry/) for details.
 
 ### Generate Agent Skills
 
@@ -1050,7 +1050,7 @@ Once generated, you can install the skill into the Gemini CLI:
 gemini skills install ./skills/my-skill
 ```
 
-For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate_skill/).
+For more details, see the [Generate Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
 
 ---
 
@@ -1064,7 +1064,7 @@ The Public API includes the Toolbox Server (CLI, configuration manifests, and pr
 - **Minor versions** are incremented for new features, including modifications to pre-built toolsets or beta features.
 - **Patch versions** are incremented for backward-compatible bug fixes.
 
-For more details, see our [Full Versioning Policy](https://googleapis.github.io/genai-toolbox/about/versioning/).
+For more details, see our [Full Versioning Policy](https://mcp-toolbox.dev/reference/versioning/).
 
 ---
 

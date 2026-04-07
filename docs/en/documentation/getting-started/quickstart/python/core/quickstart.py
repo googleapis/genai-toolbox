@@ -41,6 +41,7 @@ async def main():
         # (https://github.com/googleapis/mcp-toolbox-python-sdk/tree/main/packages), use the
         # provided wrapper packages, which handle framework-specific boilerplate.
         toolbox_tools = await toolbox_client.load_toolset("my-toolset")
+        tool_map = {tool.__name__: tool for tool in toolbox_tools}
         genai_client = genai.Client(
             vertexai=True, project=project, location="us-central1"
         )
@@ -55,6 +56,7 @@ async def main():
         ]
         history = []
         for query in queries:
+            print(f"\n[INPUT] User: {query}")
             user_prompt_content = Content(
                 role="user",
                 parts=[Part.from_text(text=query)],
@@ -62,7 +64,7 @@ async def main():
             history.append(user_prompt_content)
 
             response = genai_client.models.generate_content(
-                model="gemini-2.0-flash-001",
+                model="gemini-2.5-flash",
                 contents=history,
                 config=GenerateContentConfig(
                     system_instruction=prompt,
@@ -75,17 +77,10 @@ async def main():
             if response.function_calls:
                 for function_call in response.function_calls:
                     fn_name = function_call.name
-                    # The tools are sorted alphabetically
-                    if fn_name == "search-hotels-by-name":
-                        function_result = await toolbox_tools[3](**function_call.args)
-                    elif fn_name == "search-hotels-by-location":
-                        function_result = await toolbox_tools[2](**function_call.args)
-                    elif fn_name == "book-hotel":
-                        function_result = await toolbox_tools[0](**function_call.args)
-                    elif fn_name == "update-hotel":
-                        function_result = await toolbox_tools[4](**function_call.args)
-                    elif fn_name == "cancel-hotel":
-                        function_result = await toolbox_tools[1](**function_call.args)
+                    print(f"[TOOL CALL] Model requested tool '{fn_name}' with args: {function_call.args}")
+                    
+                    if fn_name in tool_map:
+                        function_result = await tool_map[fn_name](**function_call.args)
                     else:
                         raise ValueError(f"Function name {fn_name} not present.")
 
@@ -101,7 +96,7 @@ async def main():
                 history.append(tool_response_content)
 
                 response2 = genai_client.models.generate_content(
-                    model="gemini-2.0-flash-001",
+                    model="gemini-2.5-flash",
                     contents=history,
                     config=GenerateContentConfig(
                         tools=genai_tools,
@@ -109,8 +104,8 @@ async def main():
                 )
                 final_model_response_content = response2.candidates[0].content
                 history.append(final_model_response_content)
-                print(response2.text)
+                print(f"[OUTPUT] AI: {response2.text}")
             else:
-                print(response.text)
+                print(f"[OUTPUT] AI: {response.text}")
 
 asyncio.run(main())

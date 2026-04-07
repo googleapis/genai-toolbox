@@ -105,6 +105,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 
 	// Set server version
 	opts.Cfg.Version = versionString
+	opts.VersionNum = strings.TrimSpace(versionNum)
 
 	// set baseCmd in, out and err the same as cmd.
 	cmd.SetIn(opts.IOStreams.In)

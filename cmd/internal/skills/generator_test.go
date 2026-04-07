@@ -219,21 +219,30 @@ func TestGenerateScriptContent(t *testing.T) {
 		configArgs    string
 		wantContains  []string
 		licenseHeader string
+		mode          string
+		version       string
+		optionalVars  []string
 	}{
 		{
-			name:       "basic script",
+			name:       "basic script (binary default)",
 			toolName:   "test-tool",
 			configArgs: `"--prebuilt", "test"`,
+			mode:       "bin",
 			wantContains: []string{
 				`const toolName = "test-tool";`,
 				`const configArgs = ["--prebuilt", "test"];`,
 				`const toolboxArgs = ["--log-level", "error", ...configArgs, "invoke", toolName, "--user-agent-metadata", userAgent, ...args];`,
+				`function mergeEnvVars(env) {`,
+				`function prepareEnvironment() {`,
+				`function main() {`,
+				`main();`,
 			},
 		},
 		{
 			name:       "script with config",
 			toolName:   "complex-tool",
 			configArgs: `"--config", path.join(__dirname, "..", "assets", "test")`,
+			mode:       "bin",
 			wantContains: []string{
 				`const toolName = "complex-tool";`,
 				`const configArgs = ["--config", path.join(__dirname, "..", "assets", "test")];`,
@@ -244,15 +253,55 @@ func TestGenerateScriptContent(t *testing.T) {
 			toolName:      "test-tool",
 			configArgs:    `"--prebuilt", "test"`,
 			licenseHeader: "// My License",
+			mode:          "bin",
 			wantContains: []string{
 				"// My License",
+			},
+		},
+		{
+			name:         "script with optional vars",
+			toolName:     "test-tool",
+			configArgs:   `"--prebuilt", "test"`,
+			optionalVars: []string{"OPTIONAL_A", "OPTIONAL_B"},
+			mode:         "bin",
+			wantContains: []string{
+				"const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [",
+				"    'OPTIONAL_A',",
+				"    'OPTIONAL_B',",
+				"];",
+				"OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {",
+				"if (env[varName] === '') {",
+				"delete env[varName];",
+			},
+		},
+		{
+			name:       "npx mode script",
+			toolName:   "npx-tool",
+			configArgs: `"--prebuilt", "test"`,
+			mode:       "npx",
+			version:    "0.31.0",
+			wantContains: []string{
+				`const toolName = "npx-tool";`,
+				`const npxArgs = ["--yes", "@toolbox-sdk/server@0.31.0"`,
+			},
+		},
+		{
+			name:       "claude code script",
+			toolName:   "claude-tool",
+			configArgs: `"--prebuilt", "test"`,
+			mode:       "bin",
+			wantContains: []string{
+				`userAgent = "skills-claudecode";`,
+				`const prefix = 'CLAUDE_PLUGIN_OPTION_';`,
+				`if (key.startsWith(prefix)) {`,
+				`env[key.substring(prefix.length)] = process.env[key];`,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generateScriptContent(tt.toolName, tt.configArgs, tt.licenseHeader)
+			got, err := generateScriptContent(tt.toolName, tt.configArgs, tt.licenseHeader, tt.mode, tt.version, tt.optionalVars)
 			if err != nil {
 				t.Fatalf("generateScriptContent() error = %v", err)
 			}
