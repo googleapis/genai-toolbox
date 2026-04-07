@@ -171,7 +171,9 @@ function prepareEnvironment() {
 		userAgent = "skills-geminicli";
 	} else if (process.env.CLAUDECODE === '1') {
 		userAgent = "skills-claudecode";
-	}
+	} else if (process.env.CODEX_CI === '1') {
+        userAgent = "skills-codex";
+    }
 	mergeEnvVars(env);
 	{{if .OptionalVars}}
 	OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
