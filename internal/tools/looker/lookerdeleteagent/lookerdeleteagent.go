@@ -72,9 +72,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
 	params := parameters.Parameters{agentIdParameter}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		annotations = &tools.ToolAnnotations{}
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
 	}
 	readOnlyHint := false
 	destructiveHint := true

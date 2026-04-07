@@ -85,9 +85,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	codeInterpreterParameter := parameters.NewBooleanParameterWithDefault("code_interpreter", false, "Optional. Enables Code Interpreter for this Agent.")
 	params := parameters.Parameters{agentIdParameter, nameParameter, instructionsParameter, sourcesParameter, codeInterpreterParameter}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		annotations = &tools.ToolAnnotations{}
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
 	}
 	readOnlyHint := false
 	annotations.ReadOnlyHint = &readOnlyHint

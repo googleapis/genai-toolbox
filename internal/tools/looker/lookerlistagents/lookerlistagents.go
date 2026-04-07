@@ -71,9 +71,9 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	params := parameters.Parameters{}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		annotations = &tools.ToolAnnotations{}
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
 	}
 	readOnlyHint := true
 	annotations.ReadOnlyHint = &readOnlyHint
