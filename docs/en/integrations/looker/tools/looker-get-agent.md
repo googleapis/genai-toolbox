@@ -1,5 +1,5 @@
 ---
-title: "looker-get-agent"
+title: "looker-get-agent Tool"
 type: docs
 weight: 1
 description: >

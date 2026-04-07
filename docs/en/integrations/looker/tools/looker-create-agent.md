@@ -1,5 +1,5 @@
 ---
-title: "looker-create-agent"
+title: "looker-create-agent Tool"
 type: docs
 weight: 1
 description: >

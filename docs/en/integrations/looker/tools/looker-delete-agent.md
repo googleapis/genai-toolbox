@@ -1,5 +1,5 @@
 ---
-title: "looker-delete-agent"
+title: "looker-delete-agent Tool"
 type: docs
 weight: 1
 description: >

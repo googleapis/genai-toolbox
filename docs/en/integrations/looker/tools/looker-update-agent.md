@@ -46,6 +46,6 @@ description: |
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "looker-update-agents".                    |
+| type        |  string  |     true     | Must be "looker-update-agent".                     |
 | source      |  string  |     true     | Name of the Looker source.                         |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
