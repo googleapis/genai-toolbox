@@ -135,42 +135,53 @@ const OPTIONAL_VARS_TO_OMIT_IF_EMPTY = [
 {{end}}
 
 function mergeEnvVars(env) {
-	const envPath = path.resolve(__dirname, '../../../.env');
-	if (fs.existsSync(envPath)) {
+	if (process.env.GEMINI_CLI === '1') {
+		const envPath = path.resolve(__dirname, '../../../.env');
+		if (fs.existsSync(envPath)) {
 			const envContent = fs.readFileSync(envPath, 'utf-8');
 			envContent.split('\n').forEach(line => {
-					const trimmed = line.trim();
-					if (trimmed && !trimmed.startsWith('#')) {
-							const splitIdx = trimmed.indexOf('=');
-							if (splitIdx !== -1) {
-									const key = trimmed.slice(0, splitIdx).trim();
-									let value = trimmed.slice(splitIdx + 1).trim();
-									value = value.replace(/(^['"]|['"]$)/g, '');
-									if (env[key] === undefined) {
-											env[key] = value;
-									}
-							}
+				const trimmed = line.trim();
+				if (trimmed && !trimmed.startsWith('#')) {
+					const splitIdx = trimmed.indexOf('=');
+					if (splitIdx !== -1) {
+						const key = trimmed.slice(0, splitIdx).trim();
+						let value = trimmed.slice(splitIdx + 1).trim();
+						value = value.replace(/(^['"]|['"]$)/g, '');
+						if (env[key] === undefined) {
+							env[key] = value;
+						}
 					}
+				}
 			});
+		}
+	} else if (process.env.CLAUDECODE === '1') {
+		const prefix = 'CLAUDE_PLUGIN_OPTION_';
+		for (const key in process.env) {
+			if (key.startsWith(prefix)) {
+				env[key.substring(prefix.length)] = process.env[key];
+			}
+		}
 	}
 }
 
 function prepareEnvironment() {
-    let env = { ...process.env };
-		let userAgent = "skills";
-		if (process.env.GEMINI_CLI === '1') {
-				userAgent = "skills-geminicli";
-				mergeEnvVars(env);
+	let env = { ...process.env };
+	let userAgent = "skills";
+	if (process.env.GEMINI_CLI === '1') {
+		userAgent = "skills-geminicli";
+	} else if (process.env.CLAUDECODE === '1') {
+		userAgent = "skills-claudecode";
+	}
+	mergeEnvVars(env);
+	{{if .OptionalVars}}
+	OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
+		if (env[varName] === '') {
+			delete env[varName];
 		}
-		{{if .OptionalVars}}
-		OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
-				if (env[varName] === '') {
-						delete env[varName];
-				}
-		});
-    {{end}}
+	});
+	{{end}}
 
-    return { env, userAgent };
+	return { env, userAgent };
 }
 
 function main() {
