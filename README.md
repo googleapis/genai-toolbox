@@ -7,6 +7,7 @@
 <a href="https://trendshift.io/repositories/13019" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13019" alt="googleapis%2Fgenai-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleapis/genai-toolbox)](https://goreportcard.com/report/github.com/googleapis/genai-toolbox)
+[![Loaditout Security Grade](https://loaditout.ai/badge/googleapis/genai-toolbox)](https://loaditout.ai/skills/googleapis/genai-toolbox)
 [![License: Apache
 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Docs](https://img.shields.io/badge/Docs-MCP_Toolbox-blue)](https://mcp-toolbox.dev/)
