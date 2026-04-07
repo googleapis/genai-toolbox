@@ -69,11 +69,11 @@ parameters:
 
 ### Vector Search
 
-Neo4j supports high-performance vector similarity search. When using an embeddingModel with a neo4j-cypher tool, the tool automatically converts text parameters into the vector format required by Neo4j.
+Neo4j supports vector similarity search. When using an `embeddingModel` with a `neo4j-cypher` tool, the tool automatically converts text parameters into the vector format required by Neo4j.
 
 #### Define the Embedding Model
 
-See EmbeddingModels for more information.
+See [EmbeddingModels](../../../documentation/configuration/embedding-models/_index.md) for more information.
 
 kind: embeddingModel
 name: gemini-model
@@ -84,7 +84,7 @@ dimension: 768
 
 #### Vector Ingestion Tool
 
-This tool stores both the raw text and its vector representation. It uses valueFromParam to hide the vector conversion logic from the LLM, ensuring the Agent only has to provide the content once.
+This tool stores both the raw text and its vector representation. It uses `valueFromParam` to hide the vector conversion logic from the LLM, ensuring the Agent only has to provide the content once.
 ```yaml
 kind: tool
 name: insert_doc_neo4j
