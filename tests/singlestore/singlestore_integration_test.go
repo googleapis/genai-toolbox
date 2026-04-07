@@ -214,10 +214,10 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 
 	insertStmt := `INSERT INTO senseai_docs (content, embedding) VALUES (?, ?)`
 	searchStmt := `
-		SELECT content 
-		FROM senseai_docs
-		ORDER BY DOT_PRODUCT(embedding, JSON_ARRAY_UNPACK(?)) DESC
-		LIMIT 1`
+SELECT content 
+FROM senseai_docs
+ORDER BY DOT_PRODUCT(embedding, JSON_ARRAY_UNPACK(?)) DESC
+LIMIT 1`
 	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, SingleStoreToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
