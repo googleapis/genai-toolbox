@@ -118,13 +118,13 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 
 	insertStmt := `CREATE (n:SenseAIDocument {content: $content, embedding: $text_to_embed}) RETURN 1 as result`
 	searchStmt := `
-		MATCH (n:SenseAIDocument)
-		WITH n, vector.similarity.cosine(n.embedding, $query) AS score
-		WHERE score IS NOT NULL
-		ORDER BY score DESC
-		LIMIT 1
-		RETURN n.content as content
-	`
+        MATCH (n:SenseAIDocument)
+        WITH n, vector.similarity.cosine(n.embedding, $query) AS score
+        WHERE score IS NOT NULL
+        ORDER BY score DESC
+        LIMIT 1
+        RETURN n.content as content
+    `
 	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, "neo4j-cypher", insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
