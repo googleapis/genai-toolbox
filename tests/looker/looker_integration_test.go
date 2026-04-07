@@ -288,8 +288,28 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
-			"project_git_branch": map[string]any{
-				"type":        "looker-git-branch",
+			"list_git_branches": map[string]any{
+				"type":        "looker-list-git-branches",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_git_branch": map[string]any{
+				"type":        "looker-get-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_git_branch": map[string]any{
+				"type":        "looker-create-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"switch_git_branch": map[string]any{
+				"type":        "looker-switch-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"delete_git_branch": map[string]any{
+				"type":        "looker-delete-git-branch",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -1848,9 +1868,9 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-	tests.RunToolGetTestByName(t, "project_git_branch",
+	tests.RunToolGetTestByName(t, "list_git_branches",
 		map[string]any{
-			"project_git_branch": map[string]any{
+			"list_git_branches": map[string]any{
 				"description":  "Simple tool to test end to end functionality.",
 				"authRequired": []any{},
 				"parameters": []any{
@@ -1860,29 +1880,6 @@ func TestLooker(t *testing.T) {
 						"name":         "project_id",
 						"required":     true,
 						"type":         "string",
-					},
-					map[string]any{
-						"authServices": []any{},
-						"description":  "The operation, one of `list`, `get`, `create`, `switch`, or `delete`",
-						"name":         "operation",
-						"required":     true,
-						"type":         "string",
-					},
-					map[string]any{
-						"authServices": []any{},
-						"description":  "The git branch on which to operate. Not required for `list` or `get` operations.",
-						"name":         "branch",
-						"required":     false,
-						"type":         "string",
-						"default":      "",
-					},
-					map[string]any{
-						"authServices": []any{},
-						"description":  "The ref to use as the start of a new branch. If not specified for a `create` operation it will default to HEAD of current branch. If supplied with a `switch` operation will `reset --hard` the branch.",
-						"name":         "ref",
-						"required":     false,
-						"type":         "string",
-						"default":      "",
 					},
 				},
 			},
@@ -1963,23 +1960,23 @@ func TestLooker(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "master"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "list", "project_id": "the_look"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "list_git_branches", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = fmt.Sprintf("test_branch_%s", randstr)
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(fmt.Sprintf(`{"operation": "create", "project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
+	tests.RunToolInvokeParametersTest(t, "create_git_branch", []byte(fmt.Sprintf(`{"project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
 
 	time.Sleep(5 * time.Second)
 	wantResult = "d2d4eafdf8932837b2a12b773282c165a43fb0c0"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(fmt.Sprintf(`{"operation": "switch", "project_id": "the_look", "branch": "test_branch_%s", "ref": "d2d4eafdf8932837b2a12b773282c165a43fb0c0"}`, randstr)), wantResult)
+	tests.RunToolInvokeParametersTest(t, "switch_git_branch", []byte(fmt.Sprintf(`{"project_id": "the_look", "branch": "test_branch_%s", "ref": "d2d4eafdf8932837b2a12b773282c165a43fb0c0"}`, randstr)), wantResult)
 
 	wantResult = fmt.Sprintf("test_branch_%s", randstr)
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "get", "project_id": "the_look"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "get_git_branch", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "dev-mike-deangelo-twqb"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(`{"operation": "switch", "project_id": "the_look", "branch": "dev-mike-deangelo-twqb"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "switch_git_branch", []byte(`{"project_id": "the_look", "branch": "dev-mike-deangelo-twqb"}`), wantResult)
 
 	wantResult = "Deleted"
-	tests.RunToolInvokeParametersTest(t, "project_git_branch", []byte(fmt.Sprintf(`{"operation": "delete", "project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
+	tests.RunToolInvokeParametersTest(t, "delete_git_branch", []byte(fmt.Sprintf(`{"project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
 
 	wantResult = "[]"
 	tests.RunToolInvokeParametersTest(t, "get_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
