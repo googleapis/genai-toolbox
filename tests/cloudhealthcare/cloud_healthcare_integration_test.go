@@ -163,7 +163,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	toolsFile := getToolsConfig(sourceConfig)
 	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 
-	var args []string
+	args := []string{"--enable-api"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -248,7 +248,8 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	}
 
 	// Start server
-	cmd, cleanup, err := tests.StartCmd(ctx, config)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, config, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}

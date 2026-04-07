@@ -17,14 +17,26 @@ steps:
     waitFor: ['-']
     script: |
         #!/usr/bin/env bash
+        set -e
         export VERSION=$(cat ./cmd/version.txt)
         docker buildx create --name container-builder --driver docker-container --bootstrap --use
 
         export TAGS="-t ${_DOCKER_URI}:$VERSION"
-        if [[ $_PUSH_LATEST == 'true' ]]; then
+        if [[ "$_PUSH_LATEST" == "true" ]]; then
           export TAGS="$TAGS -t ${_DOCKER_URI}:latest"
         fi
-        docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) $TAGS --push .
+        
+        # Build and push
+        docker buildx build \
+          --platform linux/amd64,linux/arm64 \
+          --build-arg BUILD_TYPE=container.release \
+          --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) \
+          $TAGS \
+          --push .
+
+        # Pull the image to ensure it's available for provenance generation.
+        docker pull ${_DOCKER_URI}:${VERSION}
+        docker tag ${_DOCKER_URI}:${VERSION} ${_DOCKER_URI}:latest
 
   - id: "install-dependencies"
     name: golang:1
@@ -339,7 +351,11 @@ steps:
         export VERSION=v$(cat ./cmd/version.txt)
         gcloud storage cp toolbox.geminicli.windows.amd64 gs://$_BUCKET_NAME/geminicli/$VERSION/windows/amd64/toolbox.exe
 
+images:
+  - "${_DOCKER_URI}:latest"
+
 options:
+  requestedVerifyOption: VERIFIED # This ensures provenance is generated
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY # Necessary for custom service account

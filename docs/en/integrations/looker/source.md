@@ -1,6 +1,7 @@
 ---
 title: "Looker Source"
 linkTitle: "Source"
+type: docs
 weight: 1
 description: >
   Looker is a business intelligence tool that also provides a semantic layer.

@@ -87,7 +87,7 @@ func TestLogAdminToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	_, err := initLogAdminConnection(LogAdminProject)
 	if err != nil {

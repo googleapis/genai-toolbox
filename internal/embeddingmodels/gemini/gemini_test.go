@@ -16,6 +16,7 @@ package gemini_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -37,23 +38,23 @@ func TestParseFromYamlGemini(t *testing.T) {
 			kind: embeddingModel
 			name: my-gemini-model
 			type: gemini
-			model: text-embedding-004
+			model: gemini-embedding-001
             `,
 			want: map[string]embeddingmodels.EmbeddingModelConfig{
 				"my-gemini-model": gemini.Config{
 					Name:  "my-gemini-model",
 					Type:  gemini.EmbeddingModelType,
-					Model: "text-embedding-004",
+					Model: "gemini-embedding-001",
 				},
 			},
 		},
 		{
-			desc: "full example with optional fields",
+			desc: "full example with Google AI fields",
 			in: `
             kind: embeddingModel
             name: complex-gemini
             type: gemini
-            model: text-embedding-004
+            model: gemini-embedding-001
             apiKey: "test-api-key"
             dimension: 768
             `,
@@ -61,9 +62,31 @@ func TestParseFromYamlGemini(t *testing.T) {
 				"complex-gemini": gemini.Config{
 					Name:      "complex-gemini",
 					Type:      gemini.EmbeddingModelType,
-					Model:     "text-embedding-004",
+					Model:     "gemini-embedding-001",
 					ApiKey:    "test-api-key",
 					Dimension: 768,
+				},
+			},
+		},
+		{
+			desc: "Vertex AI configuration",
+			in: `
+            kind: embeddingModel
+            name: vertex-gemini
+            type: gemini
+            model: gemini-embedding-001
+            project: "my-project"
+            location: "us-central1"
+            dimension: 512
+            `,
+			want: map[string]embeddingmodels.EmbeddingModelConfig{
+				"vertex-gemini": gemini.Config{
+					Name:      "vertex-gemini",
+					Type:      gemini.EmbeddingModelType,
+					Model:     "gemini-embedding-001",
+					Project:   "my-project",
+					Location:  "us-central1",
+					Dimension: 512,
 				},
 			},
 		},
@@ -81,6 +104,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 		})
 	}
 }
+
 func TestFailParseFromYamlGemini(t *testing.T) {
 	tcs := []struct {
 		desc string
@@ -94,7 +118,6 @@ func TestFailParseFromYamlGemini(t *testing.T) {
             name: bad-model
             type: gemini
             `,
-			// Removed the specific model name from the prefix to match your output
 			err: "error unmarshaling embeddingModel: unable to parse as \"bad-model\": Key: 'Config.Model' Error:Field validation for 'Model' failed on the 'required' tag",
 		},
 		{
@@ -103,21 +126,45 @@ func TestFailParseFromYamlGemini(t *testing.T) {
             kind: embeddingModel
             name: bad-field
             type: gemini
-            model: text-embedding-004
+            model: gemini-embedding-001
             invalid_param: true
             `,
-			// Updated to match the specific line-starting format of your error output
-			err: "error unmarshaling embeddingModel: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: text-embedding-004\n   3 | name: bad-field\n   4 | type: gemini",
+			err: "error unmarshaling embeddingModel: unable to parse as \"bad-field\": [1:1] unknown field \"invalid_param\"\n>  1 | invalid_param: true\n       ^\n   2 | model: gemini-embedding-001\n   3 | name: bad-field\n   4 | type: gemini",
+		},
+		{
+			desc: "missing both Vertex and Google AI credentials",
+			in: `
+        kind: embeddingModel
+        name: missing-creds
+        type: gemini
+        model: text-embedding-004
+        `,
+			err: "unable to initialize embedding model \"missing-creds\": missing credentials for Gemini embedding: For Google AI: Provide 'apiKey' in YAML or set GOOGLE_API_KEY/GEMINI_API_KEY env vars. For Vertex AI: Provide 'project'/'location' in YAML or via GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION env vars. See documentation for details: https://googleapis.github.io/genai-toolbox/resources/embeddingmodels/gemini/",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
-			if err == nil {
-				t.Fatalf("expect parsing to fail")
+			t.Setenv("GOOGLE_API_KEY", "")
+			t.Setenv("GEMINI_API_KEY", "")
+			t.Setenv("GOOGLE_CLOUD_PROJECT", "")
+			t.Setenv("GOOGLE_CLOUD_LOCATION", "")
+
+			_, embeddingConfigs, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err != nil {
+				if err.Error() != tc.err {
+					t.Fatalf("unexpected unmarshal error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
+				}
+				return
 			}
-			if err.Error() != tc.err {
-				t.Fatalf("unexpected error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
+
+			for _, cfg := range embeddingConfigs {
+				_, err = cfg.Initialize()
+				if err == nil {
+					t.Fatalf("expect initialization to fail for case: %s", tc.desc)
+				}
+				if !strings.Contains(err.Error(), tc.err) {
+					t.Fatalf("unexpected init error:\ngot:  %q\nwant: %q", err.Error(), tc.err)
+				}
 			}
 		})
 	}

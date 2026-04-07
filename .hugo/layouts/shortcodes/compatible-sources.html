@@ -1,5 +1,9 @@
-{{/* Automatically identify the "Native" source (Grandparent _index.md, since this is strictly used inside tools/) */}}
-{{ $nativeSource := .Page.Parent.Parent }}
+{{/* Automatically identify the "Native" source (Grandparent source.md, since this is strictly used inside tools/) */}}
+{{ $nativeSource := .Page.Parent.Parent.GetPage "source.md" }}
+
+{{ if not $nativeSource }}
+  {{ $nativeSource = .Page.Parent.Parent.GetPage "source" }}
+{{ end }}
 
 <div class="compatibility-section">
   <p>This tool can be used with the following database sources:</p>
@@ -19,11 +23,13 @@
       {{ end }}
 
       {{/* Process additional sources passed via the "others" parameter */}}
+
       {{ $others := .Get "others" }}
       {{ if $others }}
         {{ range split $others "," }}
           {{ $path := trim . " " }}
-          {{ $remotePage := site.GetPage $path }}
+          {{ $cleanPath := trim $path "/" }}
+          {{ $remotePage := site.GetPage (printf "%s/source.md" $cleanPath) }}
 
           {{ if $remotePage }}
           <tr>

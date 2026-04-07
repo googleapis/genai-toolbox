@@ -151,7 +151,7 @@ func TestAlloyDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getAlloyDBToolsConfig()
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -1099,7 +1099,7 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getAlloyDBToolsConfig()
 	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -1209,7 +1209,7 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getAlloyDBToolsConfig()
 	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -1335,7 +1335,7 @@ func TestAlloyDBCreateUser(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getAlloyDBToolsConfig()
 	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

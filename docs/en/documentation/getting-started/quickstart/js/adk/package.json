@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/adk": "^0.5.0",
+    "@google/adk": "^0.6.0",
     "@toolbox-sdk/adk": "^0.3.0"
   }
 }

@@ -425,6 +425,7 @@ async def run_application():
         # (https://github.com/googleapis/mcp-toolbox-python-sdk/tree/main/packages), use the
         # provided wrapper packages, which handle framework-specific boilerplate.
         toolbox_tools = await toolbox_client.load_toolset("my-toolset")
+        tool_map = {tool.__name__: tool for tool in toolbox_tools}
         genai_client = genai.Client(
             vertexai=True, project="project-id", location="us-central1"
         )
@@ -457,19 +458,10 @@ async def run_application():
             function_response_parts = []
             for function_call in response.function_calls:
                 fn_name = function_call.name
-                # The tools are sorted alphabetically
-                if fn_name == "search-hotels-by-name":
-                    function_result = await toolbox_tools[3](**function_call.args)
-                elif fn_name == "search-hotels-by-location":
-                    function_result = await toolbox_tools[2](**function_call.args)
-                elif fn_name == "book-hotel":
-                    function_result = await toolbox_tools[0](**function_call.args)
-                elif fn_name == "update-hotel":
-                    function_result = await toolbox_tools[4](**function_call.args)
-                elif fn_name == "cancel-hotel":
-                    function_result = await toolbox_tools[1](**function_call.args)
+                if fn_name in tool_map:
+                    function_result = await tool_map[fn_name](**function_call.args)
                 else:
-                    raise ValueError("Function name not present.")
+                    raise ValueError(f"Function name {fn_name} not present.")
                 function_response = {"result": function_result}
                 function_response_part = Part.from_function_response(
                     name=function_call.name,

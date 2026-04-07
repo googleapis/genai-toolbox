@@ -122,7 +122,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initAlloyDBPgConnectionPool(AlloyDBPostgresProject, AlloyDBPostgresRegion, AlloyDBPostgresCluster, AlloyDBPostgresInstance, "public", AlloyDBPostgresUser, AlloyDBPostgresPass, AlloyDBPostgresDatabase)
 	if err != nil {
@@ -222,7 +222,7 @@ func TestAlloyDBPgPrebuiltStatementTools(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	args := []string{"--prebuilt", "alloydb-postgres"}
+	args := []string{"--prebuilt", "alloydb-postgres", "--enable-api"}
 
 	cmd, cleanup, err := tests.StartCmd(ctx, map[string]any{}, args...)
 	if err != nil {

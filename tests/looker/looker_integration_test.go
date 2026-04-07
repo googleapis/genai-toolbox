@@ -84,7 +84,7 @@ func TestLooker(t *testing.T) {
 	}
 	ctx = util.WithLogger(ctx, testLogger)
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to command
 

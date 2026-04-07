@@ -27,12 +27,12 @@ import (
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
-	Name                         string
-	Description                  string
-	Params                       []parameters.Parameter
-	manifest                     tools.Manifest
-	unauthorized                 bool
-	requiresClientAuthrorization bool
+	Name                        string
+	Description                 string
+	Params                      []parameters.Parameter
+	manifest                    tools.Manifest
+	unauthorized                bool
+	requiresClientAuthorization bool
 }
 
 func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, util.ToolboxError) {
@@ -68,7 +68,7 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 
 func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthrorization, nil
+	return t.requiresClientAuthorization, nil
 }
 
 func (t MockTool) GetParameters() parameters.Parameters {

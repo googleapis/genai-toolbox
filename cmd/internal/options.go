@@ -44,6 +44,7 @@ type ToolboxOptions struct {
 	Configs         []string
 	ConfigFolder    string
 	PrebuiltConfigs []string
+	VersionNum      string
 }
 
 // Option defines a function that modifies the ToolboxOptions struct.
