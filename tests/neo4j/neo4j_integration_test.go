@@ -77,40 +77,40 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	// This configuration defines the data source and the tools to be tested.
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-neo4j-instance": sourceConfig,
+			"my-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{
 				"type":        "neo4j-cypher",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
 			"my-simple-execute-cypher-tool": map[string]any{
 				"type":        "neo4j-execute-cypher",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-readonly-execute-cypher-tool": map[string]any{
 				"type":        "neo4j-execute-cypher",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "A readonly cypher execution tool.",
 				"readOnly":    true,
 			},
 			"my-schema-tool": map[string]any{
 				"type":        "neo4j-schema",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "A tool to get the Neo4j schema.",
 			},
 			"my-schema-tool-with-cache": map[string]any{
 				"type":               "neo4j-schema",
-				"source":             "my-neo4j-instance",
+				"source":             "my-instance",
 				"description":        "A schema tool with a custom cache expiration.",
 				"cacheExpireMinutes": 10,
 			},
 			"my-populated-schema-tool": map[string]any{
 				"type":        "neo4j-schema",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "A tool to get the Neo4j schema from a populated DB.",
 			},
 		},
