@@ -243,3 +243,40 @@ func TestMcpManifest(t *testing.T) {
 		}
 	}
 }
+
+func TestAnnotations(t *testing.T) {
+	readOnlyTrue := true
+	destructiveFalse := false
+	cfg := lkr.Config{
+		Name:        "test_tool",
+		Type:        "looker-delete-agent",
+		Source:      "my-instance",
+		Description: "test description",
+		Annotations: &tools.ToolAnnotations{
+			ReadOnlyHint:    &readOnlyTrue,
+			DestructiveHint: &destructiveFalse,
+		},
+	}
+
+	tool, err := cfg.Initialize(nil)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	mcp := tool.McpManifest()
+	if mcp.Annotations == nil {
+		t.Fatal("mcp manifest annotations is nil")
+	}
+	if mcp.Annotations.ReadOnlyHint == nil {
+		t.Fatal("mcp manifest ReadOnlyHint is nil")
+	}
+	if *mcp.Annotations.ReadOnlyHint != false {
+		t.Errorf("ReadOnlyHint should be false, got %v", *mcp.Annotations.ReadOnlyHint)
+	}
+	if mcp.Annotations.DestructiveHint == nil {
+		t.Fatal("mcp manifest DestructiveHint is nil")
+	}
+	if *mcp.Annotations.DestructiveHint != true {
+		t.Errorf("DestructiveHint should be true, got %v", *mcp.Annotations.DestructiveHint)
+	}
+}

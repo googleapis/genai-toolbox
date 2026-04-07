@@ -72,15 +72,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
 	params := parameters.Parameters{agentIdParameter}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		readOnlyHint := false
-		destructiveHint := true
-		annotations = &tools.ToolAnnotations{
-			ReadOnlyHint:    &readOnlyHint,
-			DestructiveHint: &destructiveHint,
-		}
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
 	}
+	readOnlyHint := false
+	destructiveHint := true
+	annotations.ReadOnlyHint = &readOnlyHint
+	annotations.DestructiveHint = &destructiveHint
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
