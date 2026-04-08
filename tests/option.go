@@ -14,8 +14,6 @@
 
 package tests
 
-
-
 /* Configurations for RunToolInvokeTest()  */
 
 // InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
