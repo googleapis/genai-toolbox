@@ -47,6 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	LookupContext(context.Context, string, []string) (*dataplexpb.LookupContextResponse, error)
+	ProjectID() string
 }
 
 type Config struct {
@@ -68,7 +69,7 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	resources := parameters.NewArrayParameter("resources",
-		"Required. A list of up to 10 resource names from same project and location.",
+		"Required. A list of up to 10 resource names. Resources may belong to different projects, but all must belong to the same location.",
 		parameters.NewStringParameter("resource",
 			"Name of a resource in the following format: projects/{project_id_or_number}/locations/{location}/entryGroups/{group}/entries/{entry}."+
 				" Example for a BigQuery table: 'projects/{project_id_or_number}/locations/{location}/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}'."+
@@ -120,6 +121,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError(err.Error(), err)
 	}
 	var name string
+	var firstLocation string
 	for i, resource := range resources {
 		parts := strings.Split(resource, "/")
 		if len(parts) < 4 || parts[0] != "projects" || parts[2] != "locations" {
@@ -127,11 +129,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, util.NewAgentError(err.Error(), err)
 		}
 
-		currentName := strings.Join(parts[:4], "/")
+		location := parts[3]
 		if i == 0 {
-			name = currentName
-		} else if name != currentName {
-			err := fmt.Errorf("all resources must belong to the same project and location. Please make separate calls for each distinct project and location combination")
+			firstLocation = location
+			project := source.ProjectID()
+			name = fmt.Sprintf("projects/%s/locations/%s", project, location)
+		} else if location != firstLocation {
+			err := fmt.Errorf("all resources must belong to the same location. Please make separate calls for each distinct location")
 			return nil, util.NewAgentError(err.Error(), err)
 		}
 	}
