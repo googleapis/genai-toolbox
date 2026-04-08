@@ -38,12 +38,13 @@ import (
 
 func TestParseEnv(t *testing.T) {
 	tcs := []struct {
-		desc      string
-		env       map[string]string
-		in        string
-		want      string
-		err       bool
-		errString string
+		desc         string
+		env          map[string]string
+		in           string
+		want         string
+		err          bool
+		errString    string
+		wantOptional []string
 	}{
 		{
 			desc:      "without default without env",
@@ -61,22 +62,43 @@ func TestParseEnv(t *testing.T) {
 			want: "bar",
 		},
 		{
-			desc: "with empty default",
-			in:   "${FOO:}",
-			want: "",
+			desc:         "with empty default",
+			in:           "${FOO:}",
+			want:         "",
+			wantOptional: []string{"FOO"},
 		},
 		{
-			desc: "with default",
-			in:   "${FOO:bar}",
-			want: "bar",
+			desc:         "with default",
+			in:           "${FOO:bar}",
+			want:         "bar",
+			wantOptional: []string{"FOO"},
 		},
 		{
 			desc: "with default with env",
 			env: map[string]string{
 				"FOO": "hello",
 			},
-			in:   "${FOO:bar}",
-			want: "hello",
+			in:           "${FOO:bar}",
+			want:         "hello",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc: "multiple variables",
+			in:   "user: ${USER_NAME:}, password: ${PASSWORD:}, ip: ${IP:public}, region: ${REGION}",
+			env: map[string]string{
+				"REGION": "us-central1",
+			},
+			want:         "user: , password: , ip: public, region: us-central1",
+			wantOptional: []string{"USER_NAME", "PASSWORD", "IP"},
+		},
+		{
+			desc: "variable required in one place and optional in another",
+			in:   "project_req: ${PROJECT_ID}, project_opt: ${PROJECT_ID:default}",
+			env: map[string]string{
+				"PROJECT_ID": "my_project",
+			},
+			want:         "project_req: my_project, project_opt: my_project",
+			wantOptional: []string{}, // Because it was marked required at least once
 		},
 	}
 	for _, tc := range tcs {
@@ -98,6 +120,14 @@ func TestParseEnv(t *testing.T) {
 			}
 			if tc.want != got {
 				t.Fatalf("unexpected want: got %s, want %s", got, tc.want)
+			}
+			if len(parser.OptionalEnvVars) != len(tc.wantOptional) {
+				t.Fatalf("OptionalEnvVars length mismatch: got %d, want %d. Got: %v, Want: %v", len(parser.OptionalEnvVars), len(tc.wantOptional), parser.OptionalEnvVars, tc.wantOptional)
+			}
+			for i, v := range parser.OptionalEnvVars {
+				if v != tc.wantOptional[i] {
+					t.Errorf("OptionalEnvVars element %d mismatch: got %q, want %q", i, v, tc.wantOptional[i])
+				}
 			}
 		})
 	}
