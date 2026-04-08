@@ -557,7 +557,7 @@ func TestCloudGDAConservationalAnalyticsTools(t *testing.T) {
 }
 
 func runListAccessibleDataAgentsInvokeTest(t *testing.T, dataAgentDisplayName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -663,7 +663,7 @@ func runListAccessibleDataAgentsInvokeTest(t *testing.T, dataAgentDisplayName st
 }
 
 func runGetDataAgentInfoInvokeTest(t *testing.T, dataAgentName, dataAgentDisplayName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -767,7 +767,7 @@ func runAskDataAgentInvokeTest(t *testing.T, dataAgentID string) {
 	const maxRetries = 3
 	const requestTimeout = 340 * time.Second
 
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
