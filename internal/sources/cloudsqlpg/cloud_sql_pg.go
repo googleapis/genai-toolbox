@@ -74,6 +74,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
+	var res int
+	err = pool.QueryRow(ctx, "SELECT 1").Scan(&res)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute 'SELECT 1' after connection: %w", err)
+	}
+
 	s := &Source{
 		Config: r,
 		Pool:   pool,
