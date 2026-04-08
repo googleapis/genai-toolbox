@@ -35,10 +35,10 @@ type InvokeTestConfig struct {
 
 type InvokeTestOption func(*InvokeTestConfig)
 
-// WithMCPInvoke enables the MCP routing for standard Tool Invoke tests
-func WithMCPInvoke(isMCP bool) InvokeTestOption {
+// WithMCP enables the MCP routing for standard Tool Invoke tests
+func WithMCP() InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.IsMCP = isMCP
+		c.IsMCP = true
 	}
 }
 
@@ -187,10 +187,10 @@ func WithSelect1Statement(s string) ExecuteSqlOption {
 	}
 }
 
-// WithMCPExecuteSql enables the MCP routing for ExecuteSql tests
-func WithMCPExecuteSql(isMCP bool) ExecuteSqlOption {
+// WithMCPSql enables the MCP routing for ExecuteSql tests
+func WithMCPSql() ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
-		c.IsMCP = isMCP
+		c.IsMCP = true
 	}
 }
 
