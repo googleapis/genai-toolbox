@@ -12,29 +12,24 @@
 * Add MCP tool annotations to all remaining tools ([#2221](https://github.com/googleapis/mcp-toolbox/issues/2221)) ([ea09db9](https://github.com/googleapis/mcp-toolbox/commit/ea09db90ce3ed78225dc246cedefd30064a88fad))
 * **bigquery:** Add conversational analytics tools for Data Agents ([#2517](https://github.com/googleapis/mcp-toolbox/issues/2517)) ([2490a4b](https://github.com/googleapis/mcp-toolbox/commit/2490a4b4fb3c9232270f6f4347b8556d2d6e0390))
 * **embeddingModel:** Add Backend API selection fields ([#2592](https://github.com/googleapis/mcp-toolbox/issues/2592)) ([912aa9e](https://github.com/googleapis/mcp-toolbox/commit/912aa9edd7bc3ce932828003fbd67d1a3b9c2348))
-* **server:** MCP endpoints API consolidation ([#2829](https://github.com/googleapis/mcp-toolbox/issues/2829)) ([c3059c2](https://github.com/googleapis/mcp-toolbox/commit/c3059c233502a1e99abb4d87e4b9bfe7c6ea7a4a))
 * **skills:** Add Claude Code support to generated scripts ([#2966](https://github.com/googleapis/mcp-toolbox/issues/2966)) ([a1609e1](https://github.com/googleapis/mcp-toolbox/commit/a1609e10a2eaf4ea68eae36acec3eed355b8a052))
 * **skills:** Add codex user agent ([#2973](https://github.com/googleapis/mcp-toolbox/issues/2973)) ([070e939](https://github.com/googleapis/mcp-toolbox/commit/070e9399c02f088d43175ce6bf343378beb7f584))
-* **skill:** Tool invocation via npx ([#2916](https://github.com/googleapis/mcp-toolbox/issues/2916)) ([377dc5b](https://github.com/googleapis/mcp-toolbox/commit/377dc5b00145a0044eef39314dd6b0ef5966fcd7))
+* **skills:** Tool invocation via npx ([#2916](https://github.com/googleapis/mcp-toolbox/issues/2916)) ([377dc5b](https://github.com/googleapis/mcp-toolbox/commit/377dc5b00145a0044eef39314dd6b0ef5966fcd7))
 * **sources/singlestore:** Add ConnectionParams to SingleStore Config ([#2555](https://github.com/googleapis/mcp-toolbox/issues/2555)) ([73e2a8c](https://github.com/googleapis/mcp-toolbox/commit/73e2a8c5cb5ef095a53df9be1d600cc7d508ea19))
-* **tool/dataplex-lookup-context:** Relax project constraint and enfo… ([#2952](https://github.com/googleapis/mcp-toolbox/issues/2952)) ([7ebfdf1](https://github.com/googleapis/mcp-toolbox/commit/7ebfdf1cfc7debac020de51be1aa01c81628879e))
+* **tool/dataplex-lookup-context:** Relax project constraint and enforce location ([#2952](https://github.com/googleapis/mcp-toolbox/issues/2952)) ([7ebfdf1](https://github.com/googleapis/mcp-toolbox/commit/7ebfdf1cfc7debac020de51be1aa01c81628879e))
 * **tools/looker:** Looker agent management from MCP ([#2830](https://github.com/googleapis/mcp-toolbox/issues/2830)) ([649d4ad](https://github.com/googleapis/mcp-toolbox/commit/649d4ad26f0d4d883ae3dbcc0c7f8069adc0d639))
+* **ui:** Update to use `/mcp` endpoint ([#2829](https://github.com/googleapis/mcp-toolbox/issues/2829)) ([c3059c2](https://github.com/googleapis/mcp-toolbox/commit/c3059c233502a1e99abb4d87e4b9bfe7c6ea7a4a))
 
 
 ### Bug Fixes
 
 * **bigquery:** Add impersonateServiceAccount to prebuilt config ([#2770](https://github.com/googleapis/mcp-toolbox/issues/2770)) ([9c3a748](https://github.com/googleapis/mcp-toolbox/commit/9c3a748de43eb588586f22590ff74bd433b24d68))
-* Error on invalid v1 config docs ([#2993](https://github.com/googleapis/mcp-toolbox/issues/2993)) ([62bdabb](https://github.com/googleapis/mcp-toolbox/commit/62bdabb512d7875d2760c1cd8eb331221b58a09c))
 * **quickstart:** Robust tool lookup and modernize dependencies in Python samples ([#2863](https://github.com/googleapis/mcp-toolbox/issues/2863)) ([4c0845d](https://github.com/googleapis/mcp-toolbox/commit/4c0845dc9081d79046dea5f28a032d531faff40f))
-* **skill:** Fix skill generation template ([#2914](https://github.com/googleapis/mcp-toolbox/issues/2914)) ([a01a15e](https://github.com/googleapis/mcp-toolbox/commit/a01a15ed1aa9a83eda8362578fed2e3a3c8dde99))
+* **skills:** Fix skill generation template ([#2914](https://github.com/googleapis/mcp-toolbox/issues/2914)) ([a01a15e](https://github.com/googleapis/mcp-toolbox/commit/a01a15ed1aa9a83eda8362578fed2e3a3c8dde99))
 * **skills:** Prevent empty strings overriding optional env vars in node scripts ([#2963](https://github.com/googleapis/mcp-toolbox/issues/2963)) ([c52adeb](https://github.com/googleapis/mcp-toolbox/commit/c52adeba76fc13d0e6e415f6393def0648e478d6))
 * **tests/bigquery:** Implement uuid-based isolation and reliable resource cleanup ([#2547](https://github.com/googleapis/mcp-toolbox/issues/2547)) ([479d842](https://github.com/googleapis/mcp-toolbox/commit/479d8424046406d50af02b0602e6bac58aea534f))
 * **tests/Bigtable:** Implement uuid-based isolation and reliable resource cleanup ([#2880](https://github.com/googleapis/mcp-toolbox/issues/2880)) ([a769f15](https://github.com/googleapis/mcp-toolbox/commit/a769f15c3ab8d631198546909a6dd1f09446e6b0))
-
-
-### Miscellaneous Chores
-
-* Release 0.32.0 ([#3006](https://github.com/googleapis/mcp-toolbox/issues/3006)) ([4e11d20](https://github.com/googleapis/mcp-toolbox/commit/4e11d20ce77a977de94ce24e0285372cb3cb1e16))
+* Update error for ConvertConfig function ([#2993](https://github.com/googleapis/mcp-toolbox/issues/2993)) ([62bdabb](https://github.com/googleapis/mcp-toolbox/commit/62bdabb512d7875d2760c1cd8eb331221b58a09c))
 
 
 ### Code Refactoring
