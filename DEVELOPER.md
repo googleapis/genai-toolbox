@@ -285,7 +285,7 @@ tools.
 [temp-param]:
     https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
 [temp-param-doc]:
-    https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
+    https://mcp-toolbox.dev/documentation/configuration/tools/#template-parameters
 
 #### Adding Documentation
 
@@ -530,7 +530,6 @@ When adding or updating a Source page, your markdown file must strictly adhere t
 When adding or updating a Tool page, your markdown file must strictly adhere to the following architectural rules:
 
   * **Location:** Native tools must be placed inside a nested `tools/` directory.
-  * **Frontmatter:** The `title` field must end with the word "Tool" (e.g., `title: "execute-sql Tool"`).
   * **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
   * **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
       * **Required Headings:** `About`, `Example`

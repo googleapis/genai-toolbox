@@ -7,7 +7,7 @@ As part of this milestone, we have introduced several breaking changes and
 deprecations that require updates to your configuration and code.
 
 **📖 New Versioning Policy**
-We have officially published our [Versioning Policy](https://googleapis.github.io/genai-toolbox/dev/about/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
+We have officially published our [Versioning Policy](https://mcp-toolbox.dev/reference/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
 * **Major (vX.0.0):** Breaking changes requiring manual updates.
 * **Minor (v1.X.0):** New, backward-compatible features and deprecation notices.
 * **Patch (v1.0.X):** Backward-compatible bug fixes and security patches.
@@ -109,4 +109,4 @@ The following CLI flags are deprecated and will be removed in a future release. 
 
 * **Prebuilt Tools:** Toolsets have been resized for better performance.
 ## 📚 Documentation Moved
-Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](http://mcp-toolbox.dev).
+Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](https://mcp-toolbox.dev).

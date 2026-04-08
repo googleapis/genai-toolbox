@@ -76,7 +76,8 @@ type Config struct {
 	AnalyzeQuery   bool           `yaml:"analyzeQuery"` // Analyze query (boolean, not parameterizable)
 
 	// Parameters for template substitution
-	Parameters parameters.Parameters `yaml:"parameters"`
+	Parameters  parameters.Parameters  `yaml:"parameters"`
+	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -95,7 +96,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters, annotations)
 
 	// finish tool setup
 	t := Tool{

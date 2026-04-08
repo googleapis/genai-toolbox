@@ -51,11 +51,12 @@ type compatibleSource interface {
 
 // Config defines the configuration for the get-instances tool.
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Description  string   `yaml:"description"`
-	Source       string   `yaml:"source" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Description  string                 `yaml:"description"`
+	Source       string                 `yaml:"source" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -96,7 +97,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Gets a particular cloud sql instance."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, annotations)
 
 	return Tool{
 		Config:      cfg,
