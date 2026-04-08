@@ -293,6 +293,31 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"list_agents": map[string]any{
+				"type":        "looker-list-agents",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_agent": map[string]any{
+				"type":        "looker-get-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_agent": map[string]any{
+				"type":        "looker-create-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"update_agent": map[string]any{
+				"type":        "looker-update-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"delete_agent": map[string]any{
+				"type":        "looker-delete-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -1900,24 +1925,6 @@ func TestLooker(t *testing.T) {
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
 
-	wantResult = "\"Connection\":\"thelook\""
-	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
-
-	wantResult = "[]"
-	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_schedule_failures"}`), wantResult)
-
-	wantResult = "[{\"Feature\":\"Unsupported in Looker (Google Cloud core)\"}]"
-	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_legacy_features"}`), wantResult)
-
-	wantResult = "\"Project\":\"the_look\""
-	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
-
-	wantResult = "\"Model\":\"the_look\""
-	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "explores", "project": "the_look", "model": "the_look", "explore": "inventory_items"}`), wantResult)
-
-	wantResult = "\"Model\":\"the_look\""
-	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
-
 	wantResult = "the_look"
 	tests.RunToolInvokeSimpleTest(t, "get_projects", wantResult)
 
@@ -2001,6 +2008,23 @@ func TestLooker(t *testing.T) {
 	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
 	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)
 
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "create_agent", []byte(fmt.Sprintf(`{"name": "agent_%s", "description": "test description", "instructions": "test instructions", "sources": [{"model": "the_look", "explore": "events"}]}`, randstr)), wantResult)
+
+	agentId, _ := findTestAgentId(t, fmt.Sprintf("agent_%s", randstr))
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "list_agents", []byte(`{}`), wantResult)
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "get_agent", []byte(fmt.Sprintf(`{"agent_id": "%s"}`, agentId)), wantResult)
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "update_agent", []byte(fmt.Sprintf(`{"agent_id": "%s", "sources": [{"model": "system__activity", "explore": "history"}]}`, agentId)), wantResult)
+
+	wantResult = ""
+	tests.RunToolInvokeParametersTest(t, "delete_agent", []byte(fmt.Sprintf(`{"agent_id": "%s"}`, agentId)), wantResult)
+
 	runConversationalAnalytics(t, "system__activity", "content_usage")
 
 	deleteLook := testMakeLook(t, randstr)
@@ -2010,6 +2034,40 @@ func TestLooker(t *testing.T) {
 	defer deleteDashboard()
 	testAddDashboardFilter(t, dashboardId)
 	testAddDashboardElement(t, dashboardId)
+
+	wantResult = "\"Connection\":\"thelook\""
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_schedule_failures"}`), wantResult)
+
+	wantResult = "[{\"Feature\":\"Unsupported in Looker (Google Cloud core)\"}]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_legacy_features"}`), wantResult)
+
+	wantResult = "\"Project\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
+
+	wantResult = "\"Model\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "explores", "project": "the_look", "model": "the_look", "explore": "inventory_items"}`), wantResult)
+
+	wantResult = "\"Model\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
+}
+
+func findTestAgentId(t *testing.T, name string) (string, error) {
+	sdk := newLookerTestSDK(t)
+	reqSearchAgents := v4.RequestSearchAgents{
+		Name: &name,
+	}
+	agents, err := sdk.SearchAgents(reqSearchAgents, nil)
+	if len(agents) == 0 {
+		t.Fatalf("Failed to find agent %s", name)
+	} else if len(agents) > 1 {
+		t.Fatalf("Found more than one agent with name %s", name)
+	}
+	agentId := *agents[0].Id
+	t.Logf("Found Agent Id %s", agentId)
+	return agentId, err
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
