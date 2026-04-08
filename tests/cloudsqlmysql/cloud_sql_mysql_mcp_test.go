@@ -16,6 +16,7 @@ package cloudsqlmysql
 
 import (
 	"context"
+	"database/sql"
 	"regexp"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
-func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
+func TestCloudSQLMySQLMCPListTools(t *testing.T) {
 	sourceConfig := getCloudSQLMySQLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -75,9 +76,6 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Get configs for tests
-	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetMySQLWants()
-
 	// Expected Manifest
 	expectedTools := tests.GetBaseMCPExpectedTools()
 	expectedTools = append(expectedTools, tests.GetExecuteSQLMCPExpectedTools()...)
@@ -89,16 +87,8 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 			InputSchema: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"output_format": map[string]any{
-						"default":     "detailed",
-						"description": "Optional: Use 'simple' for names only or 'detailed' for full info.",
-						"type":        "string",
-					},
-					"table_names": map[string]any{
-						"default":     "",
-						"description": "Optional: A comma-separated list of table names. If empty, details for all tables will be listed.",
-						"type":        "string",
-					},
+					"output_format": map[string]any{"default": "detailed", "description": "Optional: Use 'simple' for names only or 'detailed' for full info.", "type": "string"},
+					"table_names":   map[string]any{"default": "", "description": "Optional: A comma-separated list of table names. If empty, details for all tables will be listed.", "type": "string"},
 				},
 				"required": []any{},
 			},
@@ -109,16 +99,8 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 			InputSchema: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"limit": map[string]any{
-						"default":     float64(100),
-						"description": "Optional: The maximum number of rows to return.",
-						"type":        "integer",
-					},
-					"min_duration_secs": map[string]any{
-						"default":     float64(0),
-						"description": "Optional: Only show queries running for at least this long in seconds",
-						"type":        "integer",
-					},
+					"limit":             map[string]any{"default": float64(100), "description": "Optional: The maximum number of rows to return.", "type": "integer"},
+					"min_duration_secs": map[string]any{"default": float64(0), "description": "Optional: Only show queries running for at least this long in seconds", "type": "integer"},
 				},
 				"required": []any{},
 			},
@@ -129,16 +111,8 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 			InputSchema: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
-					"limit": map[string]any{
-						"default":     float64(50),
-						"description": "(Optional) Max rows to return, default is 50",
-						"type":        "integer",
-					},
-					"table_schema": map[string]any{
-						"default":     "",
-						"description": "(Optional) The database where the check is to be performed. Check all tables visible to the current user if not specified",
-						"type":        "string",
-					},
+					"limit":        map[string]any{"default": float64(50), "description": "(Optional) Max rows to return, default is 50", "type": "integer"},
+					"table_schema": map[string]any{"default": "", "description": "(Optional) The database where the check is to be performed. Check all tables visible to the current user if not specified", "type": "string"},
 				},
 				"required": []any{},
 			},
@@ -173,6 +147,58 @@ func TestCloudSQLMySQLMCPToolEndpoints(t *testing.T) {
 	t.Run("verify tools/list registry returns complete manifest", func(t *testing.T) {
 		tests.RunMCPToolsListMethod(t, expectedTools)
 	})
+}
+
+func TestCloudSQLMySQLMCPCallTool(t *testing.T) {
+	sourceConfig := getCloudSQLMySQLVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	pool, err := initCloudSQLMySQLConnectionPool(CloudSQLMySQLProject, CloudSQLMySQLRegion, CloudSQLMySQLInstance, "public", CloudSQLMySQLUser, CloudSQLMySQLPass, CloudSQLMySQLDatabase)
+	if err != nil {
+		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
+	}
+
+	// cleanup test environment
+	tests.CleanupMySQLTables(t, ctx, pool)
+
+	// create table name with UUID
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+
+	// set up data for param tool
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetMySQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupMySQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetMySQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupMySQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := tests.GetToolsConfig(sourceConfig, CloudSQLMySQLToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLMySQLToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddMySQLPrebuiltToolConfig(t, toolsFile)
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, waitCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer waitCancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetMySQLWants()
 
 	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest(), tests.WithMCPInvoke(true))
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)

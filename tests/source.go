@@ -30,21 +30,11 @@ import (
 )
 
 // RunSourceConnection test for source connection
-func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType string, options ...ConnectionTestOption) error {
-	configs := &ConnectionTestConfig{
-		UseMCP: false,
-	}
-	for _, opt := range options {
-		opt(configs)
-	}
-
+func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	args := []string{}
-	if !configs.UseMCP {
-		args = append(args, "--enable-api")
-	}
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
