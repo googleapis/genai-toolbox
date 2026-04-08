@@ -105,7 +105,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cloudsqlpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="cloudsqlpg|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
         
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting Cloud SQL Postgres tests..."
@@ -136,7 +136,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydb|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|.ci/"
+        PATTERN="alloydb|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/mcp_tool.go|.ci/"
         
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting AlloyDB tests..."
@@ -168,7 +168,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydbpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="alloydbpg|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running AlloyDB Postgres tests..."
@@ -226,7 +226,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydbomni|internal/sources/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="alloydbomni|internal/sources/postgres|internal/tools/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running AlloyDB Omni tests..."
@@ -454,7 +454,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="postgres|internal/tools/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Postgres tests..."
