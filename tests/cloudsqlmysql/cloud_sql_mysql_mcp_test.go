@@ -16,7 +16,6 @@ package cloudsqlmysql
 
 import (
 	"context"
-	"database/sql"
 	"regexp"
 	"strings"
 	"testing"
@@ -43,7 +42,6 @@ func TestCloudSQLMySQLMCPListTools(t *testing.T) {
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetMySQLParamToolInfo(tableNameParam)
