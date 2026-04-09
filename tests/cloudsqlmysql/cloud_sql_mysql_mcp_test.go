@@ -198,9 +198,9 @@ func TestCloudSQLMySQLMCPCallTool(t *testing.T) {
 
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetMySQLWants()
 
-	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest(), tests.WithMCP())
+	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest(), tests.WithMCP(), tests.WithNullWant("[]"))
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithMCPSql())
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want, tests.WithMCPSql(), tests.WithExecuteCreateWant("[]"), tests.WithExecuteDropWant("[]"), tests.WithExecuteSelectEmptyWant("[]"))
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithMCPTemplate())
 
 	// Run specific MySQL tool tests over MCP
