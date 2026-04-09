@@ -22,6 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["CF: Deploy Dev Docs", "CF: Deploy Versioned Docs", "CF: Deploy Previous Version Docs"]
     types: [completed]
@@ -29,7 +30,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:

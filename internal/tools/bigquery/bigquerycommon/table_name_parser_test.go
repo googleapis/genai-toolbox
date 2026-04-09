@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
+	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 )
 
 func TestTableParser(t *testing.T) {
