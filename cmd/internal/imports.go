@@ -98,6 +98,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataproclistjobs"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/elasticsearch/elasticsearchesql"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/elasticsearch/elasticsearchexecuteesql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/firebird/firebirdexecutesql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/firebird/firebirdsql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoreadddocuments"
