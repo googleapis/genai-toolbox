@@ -105,7 +105,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cloudsqlpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="cloudsqlpg|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
         
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting Cloud SQL Postgres tests..."
@@ -136,7 +136,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydb|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|.ci/"
+        PATTERN="alloydb|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
         
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting AlloyDB tests..."
@@ -168,7 +168,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydbpg|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="alloydbpg|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running AlloyDB Postgres tests..."
@@ -226,7 +226,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydbomni|internal/sources/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="alloydbomni|internal/sources/postgres|internal/tools/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running AlloyDB Omni tests..."
@@ -454,7 +454,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="postgres|internal/tools/postgres|internal/server/|tests/common.go|tests/tool.go|tests/mcp_tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Postgres tests..."
@@ -998,10 +998,18 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Cloud SQL Wait for Operation" \
-          cloudsql \
-          cloudsql
+        PATTERN="tests/cloudsql|internal/sources/cloudsqladmin|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Cloud SQL tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud SQL Wait for Operation" \
+            cloudsql \
+            cloudsql
+        else
+          echo "No relevant changes for Cloud SQL. Skipping shard."
+          exit 0
+        fi
 
   - id: "tidb"
     name: golang:1
@@ -1309,7 +1317,7 @@ steps:
 
   - id: "dataproc"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-test-binary", "detect-changes"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -1323,9 +1331,17 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Dataproc" \
-          dataproc
+        PATTERN="dataproc|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Dataproc tests..."
+          .ci/test_with_coverage.sh \
+            "Dataproc" \
+            dataproc
+        else
+          echo "No relevant changes for Dataproc. Skipping shard."
+          exit 0
+        fi
 
   - id: "singlestore"
     name: golang:1
