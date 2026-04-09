@@ -28,90 +28,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
-	"google.golang.org/api/sqladmin/v1"
 )
-
-var (
-	restoreBackupToolKind = "cloud-sql-restore-backup"
-)
-
-type restoreBackupTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *restoreBackupTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type masterRestoreBackupHandler struct {
-	t *testing.T
-}
-
-func (h *masterRestoreBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-	var body sqladmin.InstancesRestoreBackupRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		h.t.Fatalf("failed to decode request body: %v", err)
-	} else {
-		h.t.Logf("Received request body: %+v", body)
-	}
-
-	var expectedBody sqladmin.InstancesRestoreBackupRequest
-	var response any
-	var statusCode int
-
-	switch {
-	case body.Backup != "":
-		expectedBody = sqladmin.InstancesRestoreBackupRequest{
-			Backup: "projects/p1/backups/test-uid",
-		}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	case body.BackupdrBackup != "":
-		expectedBody = sqladmin.InstancesRestoreBackupRequest{
-			BackupdrBackup: "projects/p1/locations/us-central1/backupVaults/test-vault/dataSources/test-ds/backups/test-uid",
-		}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	case body.RestoreBackupContext != nil:
-		expectedBody = sqladmin.InstancesRestoreBackupRequest{
-			RestoreBackupContext: &sqladmin.RestoreBackupContext{
-				Project:     "p1",
-				InstanceId:  "source",
-				BackupRunId: 12345,
-			},
-		}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	default:
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]string{
-			"error": `oaraneter "backup_id" is required`,
-		})
-		return
-	}
-
-	if diff := cmp.Diff(expectedBody, body); diff != "" {
-		h.t.Errorf("unexpected request body (-want +got):\n%s", diff)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
 
 func TestRestoreBackupToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -242,21 +161,5 @@ func TestRestoreBackupToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result string:\n got: %s\nwant: %s", got, want)
 			}
 		})
-	}
-}
-
-func getRestoreBackupToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
-			},
-		},
-		"tools": map[string]any{
-			"restore-backup": map[string]any{
-				"kind":   restoreBackupToolKind,
-				"source": "my-cloud-sql-source",
-			},
-		},
 	}
 }

@@ -25,85 +25,12 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
-
-var (
-	createUserToolType = "cloud-sql-create-users"
-)
-
-type createUsersTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *createUsersTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type userCreateRequest struct {
-	Name     string `json:"name"`
-	Password string `json:"password,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
-type masterCreateUserHandler struct {
-	t *testing.T
-}
-
-func (h *masterCreateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-
-	var body userCreateRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		h.t.Fatalf("failed to decode request body: %v", err)
-	}
-
-	var expectedBody userCreateRequest
-	var response any
-	var statusCode int
-
-	switch body.Name {
-	case "test-user":
-		expectedBody = userCreateRequest{Name: "test-user", Password: "password", Type: "BUILT_IN"}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	case "iam-user":
-		expectedBody = userCreateRequest{Name: "iam-user", Type: "CLOUD_IAM_USER"}
-		response = map[string]any{"name": "op2", "status": "PENDING"}
-		statusCode = http.StatusOK
-	default:
-		http.Error(w, fmt.Sprintf("unhandled user name: %s", body.Name), http.StatusInternalServerError)
-		return
-	}
-
-	// For IAM user, password is not expected
-	if body.Type == "CLOUD_IAM_USER" {
-		expectedBody.Password = ""
-	}
-
-	if diff := cmp.Diff(expectedBody, body); diff != "" {
-		h.t.Errorf("unexpected request body (-want +got):\n%s", diff)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
 
 func TestCreateUsersToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -221,21 +148,5 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
-	}
-}
-
-func getCreateUsersToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"type": "cloud-sql-admin",
-			},
-		},
-		"tools": map[string]any{
-			"create-user": map[string]any{
-				"type":   createUserToolType,
-				"source": "my-cloud-sql-source",
-			},
-		},
 	}
 }

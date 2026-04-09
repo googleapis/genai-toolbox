@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
 package cloudsql
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -30,11 +28,50 @@ import (
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
 	"github.com/googleapis/mcp-toolbox/tests"
+
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
 )
 
-func TestListInstance(t *testing.T) {
+type transport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
+
+func getListInstanceToolsConfig() map[string]any {
+	return map[string]any{
+		"sources": map[string]any{
+			"my-cloud-sql-source": map[string]any{
+				"type": "cloud-sql-admin",
+			},
+			"my-invalid-cloud-sql-source": map[string]any{
+				"type":           "cloud-sql-admin",
+				"useClientOAuth": true,
+			},
+		},
+		"tools": map[string]any{
+			"list-instances": map[string]any{
+				"type":   "cloud-sql-list-instances",
+				"source": "my-cloud-sql-source",
+			},
+			"list-instances-fail": map[string]any{
+				"type":        "cloud-sql-list-instances",
+				"description": "list instances",
+				"source":      "my-invalid-cloud-sql-source",
+			},
+		},
+	}
+}
+
+func TestListInstanceMCP(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
 			t.Errorf("User-Agent header not found")
@@ -68,10 +105,8 @@ func TestListInstance(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	args := []string{"--enable-api"}
-
 	toolsFile := getListInstanceToolsConfig()
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -88,67 +123,76 @@ func TestListInstance(t *testing.T) {
 	tcs := []struct {
 		name        string
 		toolName    string
-		body        string
+		args        map[string]any
 		want        string
 		expectError bool
 	}{
 		{
 			name:     "successful operation",
 			toolName: "list-instances",
-			body:     `{"project": "test-project"}`,
+			args:     map[string]any{"project": "test-project"},
 			want:     `[{"name":"test-instance","instanceType":"CLOUD_SQL_INSTANCE"}]`,
 		},
 		{
 			name:        "failed operation",
 			toolName:    "list-instances-fail",
-			body:        `{"project": "test-project"}`,
+			args:        map[string]any{"project": "test-project"},
 			expectError: true,
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, tc.toolName, tc.args, nil)
 			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
+				t.Fatalf("native error executing %s: %s", tc.toolName, err)
 			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
 
 			if tc.expectError {
-				if resp.StatusCode == http.StatusOK {
-					t.Fatal("expected error but got status 200")
+				if statusCode != http.StatusOK {
+					// Expected failure at HTTP level (e.g. 401)
+					return
 				}
+				if mcpResp.Error != nil || mcpResp.Result.IsError {
+					// Expected failure at MCP level
+					return
+				}
+				t.Fatal("expected error result but got success")
 				return
 			}
 
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			if statusCode != http.StatusOK {
+				t.Fatalf("expected status 200, got %d", statusCode)
 			}
 
-			var result struct {
-				Result string `json:"result"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
+			if mcpResp.Result.IsError {
+				t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
 			}
 
-			var got, want any
-			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
-				t.Fatalf("failed to unmarshal result: %v", err)
-			}
-			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
-				t.Fatalf("failed to unmarshal want: %v", err)
+			if len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("%s returned empty content field", tc.toolName)
 			}
 
-			if !reflect.DeepEqual(got, want) {
-				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
+			// Gather all the text blocks
+			var blocks []string
+			for _, content := range mcpResp.Result.Content {
+				if content.Type == "text" {
+					blocks = append(blocks, strings.TrimSpace(content.Text))
+				}
+			}
+
+			got := strings.Join(blocks, "")
+
+			var gotArr, wantArr []map[string]any
+			if err := json.Unmarshal([]byte(got), &gotArr); err != nil {
+				t.Fatalf("failed to unmarshal result array: %v\nraw: %s", err, got)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &wantArr); err != nil {
+				t.Fatalf("failed to unmarshal want array: %v", err)
+			}
+
+			if !reflect.DeepEqual(gotArr, wantArr) {
+				t.Fatalf("unexpected result: got %+v, want %+v", gotArr, wantArr)
 			}
 		})
 	}

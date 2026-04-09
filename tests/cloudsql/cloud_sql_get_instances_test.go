@@ -25,72 +25,12 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"strings"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
-
-var (
-	getInstancesToolType = "cloud-sql-get-instance"
-)
-
-type getInstancesTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *getInstancesTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type instance struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
-}
-
-type handler struct {
-	mu        sync.Mutex
-	instances map[string]*instance
-	t         *testing.T
-}
-
-func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-
-	if !strings.HasPrefix(r.URL.Path, "/v1/projects/") {
-		http.Error(w, "unexpected path", http.StatusBadRequest)
-		return
-	}
-
-	// The format is /v1/projects/{project}/instances/{instance_name}
-	// We only care about the instance_name for the test
-	parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
-	instanceName := parts[len(parts)-1]
-
-	inst, ok := h.instances[instanceName]
-	if !ok {
-		http.NotFound(w, r)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(inst); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
 
 func TestGetInstancesToolEndpoints(t *testing.T) {
 	h := &handler{
@@ -224,31 +164,5 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
-	}
-}
-
-func getToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"type": "cloud-sql-admin",
-			},
-			"my-invalid-cloud-sql-source": map[string]any{
-				"type":           "cloud-sql-admin",
-				"useClientOAuth": true,
-			},
-		},
-		"tools": map[string]any{
-			"get-instance-1": map[string]any{
-				"type":        getInstancesToolType,
-				"description": "get instance 1",
-				"source":      "my-cloud-sql-source",
-			},
-			"get-instance-2": map[string]any{
-				"type":        getInstancesToolType,
-				"description": "get instance 2",
-				"source":      "my-invalid-cloud-sql-source",
-			},
-		},
 	}
 }

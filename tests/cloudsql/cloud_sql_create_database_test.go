@@ -25,79 +25,12 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
-
-var (
-	createDatabaseToolType = "cloud-sql-create-database"
-)
-
-type createDatabaseTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *createDatabaseTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type databaseCreateRequest struct {
-	Name     string `json:"name"`
-	Project  string `json:"project"`
-	Instance string `json:"instance"`
-}
-
-type masterCreateDatabaseHandler struct {
-	t *testing.T
-}
-
-func (h *masterCreateDatabaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-	var body databaseCreateRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		h.t.Fatalf("failed to decode request body: %v", err)
-	}
-
-	var expectedBody databaseCreateRequest
-	var response any
-	var statusCode int
-
-	switch body.Name {
-	case "test-db":
-		expectedBody = databaseCreateRequest{
-			Name:     "test-db",
-			Project:  "p1",
-			Instance: "i1",
-		}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	default:
-		http.Error(w, fmt.Sprintf("unhandled database name: %s", body.Name), http.StatusInternalServerError)
-		return
-	}
-
-	if diff := cmp.Diff(expectedBody, body); diff != "" {
-		h.t.Errorf("unexpected request body (-want +got):\n%s", diff)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
 
 func TestCreateDatabaseToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -209,21 +142,5 @@ func TestCreateDatabaseToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
-	}
-}
-
-func getCreateDatabaseToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"type": "cloud-sql-admin",
-			},
-		},
-		"tools": map[string]any{
-			"create-database": map[string]any{
-				"type":   createDatabaseToolType,
-				"source": "my-cloud-sql-source",
-			},
-		},
 	}
 }

@@ -25,8 +25,6 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -35,92 +33,6 @@ import (
 
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
 )
-
-var (
-	cloudsqlWaitToolType = "cloud-sql-wait-for-operation"
-)
-
-type waitForOperationTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *waitForOperationTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type cloudsqlOperation struct {
-	Name          string `json:"name"`
-	Status        string `json:"status"`
-	TargetLink    string `json:"targetLink"`
-	OperationType string `json:"operationType"`
-	Error         *struct {
-		Errors []struct {
-			Code    string `json:"code"`
-			Message string `json:"message"`
-		} `json:"errors"`
-	} `json:"error,omitempty"`
-}
-
-type cloudsqlInstance struct {
-	Region          string `json:"region"`
-	DatabaseVersion string `json:"databaseVersion"`
-}
-
-type cloudsqlHandler struct {
-	mu         sync.Mutex
-	operations map[string]*cloudsqlOperation
-	instances  map[string]*cloudsqlInstance
-	t          *testing.T
-}
-
-func (h *cloudsqlHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-
-	if match, _ := regexp.MatchString("/v1/projects/p1/operations/.*", r.URL.Path); match {
-		parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
-		opName := parts[len(parts)-1]
-
-		op, ok := h.operations[opName]
-		if !ok {
-			http.NotFound(w, r)
-			return
-		}
-
-		if op.Status != "DONE" {
-			op.Status = "DONE"
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(op); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else if match, _ := regexp.MatchString("/v1/projects/p1/instances/.*", r.URL.Path); match {
-		parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
-		instanceName := parts[len(parts)-1]
-
-		instance, ok := h.instances[instanceName]
-		if !ok {
-			http.NotFound(w, r)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(instance); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	} else {
-		http.NotFound(w, r)
-	}
-}
 
 func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 	h := &cloudsqlHandler{
@@ -284,32 +196,5 @@ func TestCloudSQLWaitToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
-	}
-}
-
-func getCloudSQLWaitToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"type": "cloud-sql-admin",
-			},
-		},
-		"tools": map[string]any{
-			"wait-for-op1": map[string]any{
-				"type":        cloudsqlWaitToolType,
-				"source":      "my-cloud-sql-source",
-				"description": "wait for op1",
-			},
-			"wait-for-op2": map[string]any{
-				"type":        cloudsqlWaitToolType,
-				"source":      "my-cloud-sql-source",
-				"description": "wait for op2",
-			},
-			"wait-for-op3": map[string]any{
-				"type":        cloudsqlWaitToolType,
-				"source":      "my-cloud-sql-source",
-				"description": "wait for op3",
-			},
-		},
 	}
 }

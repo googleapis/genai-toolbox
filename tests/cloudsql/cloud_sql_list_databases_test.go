@@ -33,55 +33,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/tests"
 )
 
-var (
-	listDatabasesToolType = "cloud-sql-list-databases"
-)
-
-type listDatabasesTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *listDatabasesTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type masterListDatabasesHandler struct {
-	t *testing.T
-}
-
-func (h *masterListDatabasesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-
-	response := map[string]any{
-		"items": []map[string]any{
-			{
-				"name":      "db1",
-				"charset":   "utf8",
-				"collation": "utf8_general_ci",
-			},
-			{
-				"name":      "db2",
-				"charset":   "utf8mb4",
-				"collation": "utf8mb4_unicode_ci",
-			},
-		},
-	}
-	statusCode := http.StatusOK
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 func TestListDatabasesToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -206,21 +157,5 @@ func TestListDatabasesToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
-	}
-}
-
-func getListDatabasesToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"type": "cloud-sql-admin",
-			},
-		},
-		"tools": map[string]any{
-			"list-databases": map[string]any{
-				"type":   listDatabasesToolType,
-				"source": "my-cloud-sql-source",
-			},
-		},
 	}
 }

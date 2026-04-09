@@ -25,76 +25,12 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
-	"google.golang.org/api/sqladmin/v1"
 )
-
-var (
-	createBackupToolType = "cloud-sql-create-backup"
-)
-
-type createBackupTransport struct {
-	transport http.RoundTripper
-	url       *url.URL
-}
-
-func (t *createBackupTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		req.URL.Scheme = t.url.Scheme
-		req.URL.Host = t.url.Host
-	}
-	return t.transport.RoundTrip(req)
-}
-
-type mastercreateBackupHandler struct {
-	t *testing.T
-}
-
-func (h *mastercreateBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
-		h.t.Errorf("User-Agent header not found")
-	}
-	var backupRun sqladmin.BackupRun
-	if err := json.NewDecoder(r.Body).Decode(&backupRun); err != nil {
-		h.t.Fatalf("failed to decode request body: %v", err)
-	} else {
-		h.t.Logf("Received request body: %+v", backupRun)
-	}
-
-	var expectedBackupRun sqladmin.BackupRun
-	var response any
-	var statusCode int
-
-	switch backupRun.Description {
-	case "":
-		expectedBackupRun = sqladmin.BackupRun{}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	case "test desc":
-		expectedBackupRun = sqladmin.BackupRun{Location: "us-central1", Description: "test desc"}
-		response = map[string]any{"name": "op1", "status": "PENDING"}
-		statusCode = http.StatusOK
-	default:
-		http.Error(w, fmt.Sprintf("unhandled instance name: %s", backupRun.Instance), http.StatusInternalServerError)
-		return
-	}
-
-	if diff := cmp.Diff(expectedBackupRun, backupRun); diff != "" {
-		h.t.Errorf("unexpected request body (-want +got):\n%s", diff)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
 
 func TestCreateBackupToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -211,21 +147,5 @@ func TestCreateBackupToolEndpoints(t *testing.T) {
 				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
 			}
 		})
-	}
-}
-
-func getCreateBackupToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-cloud-sql-source": map[string]any{
-				"type": "cloud-sql-admin",
-			},
-		},
-		"tools": map[string]any{
-			"create-backup": map[string]any{
-				"type":   createBackupToolType,
-				"source": "my-cloud-sql-source",
-			},
-		},
 	}
 }
