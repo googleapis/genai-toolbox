@@ -301,7 +301,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToo
 				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"query":       "FROM test-index | SORT id ASC",
+				"query":       "FROM test-index | WHERE id <= 4 | KEEP id, name, email | SORT id ASC",
 			},
 			"my-tool": map[string]any{
 				"type":        toolType,
