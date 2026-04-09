@@ -306,8 +306,8 @@ The tool handles common errors:
 
 ## Additional Resources
 
-- [cockroachdb-sql](_index.md) - Execute parameterized queries
+- [cockroachdb-sql](./cockroachdb-sql.md) - Execute parameterized queries
 - [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - Execute ad-hoc SQL
 - [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database
-- [CockroachDB Source](_index.md) - Source configuration reference
+- [CockroachDB Source](../source.md) - Source configuration reference
 - [CockroachDB Schema Design](https://www.cockroachlabs.com/docs/stable/schema-design-overview.html) - Official documentation

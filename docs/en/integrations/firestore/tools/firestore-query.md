@@ -432,6 +432,6 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 
 - [firestore-query-collection](firestore-query-collection.md) -
   Non-parameterizable query tool
-- [Firestore Source Configuration](_index.md)
+- [Firestore Source Configuration](../source.md)
 - [Firestore Query
   Documentation](https://firebase.google.com/docs/firestore/query-data/queries)

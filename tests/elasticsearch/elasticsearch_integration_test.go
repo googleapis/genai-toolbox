@@ -15,8 +15,11 @@
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -146,6 +149,9 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 		tests.WithNullWant(wants.Null),
 	)
 	tests.RunMCPToolCallMethod(t, wants.McpMyFailTool, wants.McpSelect1, tests.WithMcpMyToolId3NameAliceWant(wants.McpMyToolId3NameAlice))
+
+	runExecuteEsqlTest(t, index)
+
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
@@ -303,7 +309,39 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToo
 				"description": "Tool to test statement with incorrect syntax.",
 				"query":       "SELEC 1;",
 			},
+			"my-execute-tool": map[string]any{
+				"type":        "elasticsearch-execute-esql",
+				"source":      "my-instance",
+				"description": "Tool to test arbitrary ES|QL execution.",
+			},
 		},
 	}
 	return toolsFile
+}
+
+func runExecuteEsqlTest(t *testing.T, index string) {
+	t.Run("invoke my-execute-tool", func(t *testing.T) {
+		api := "http://127.0.0.1:5000/api/tool/my-execute-tool/invoke"
+		reqBody := map[string]any{
+			"query": fmt.Sprintf("FROM %s | KEEP id | SORT id ASC", index),
+		}
+		bodyBytes, _ := json.Marshal(reqBody)
+		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer(bodyBytes), nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+		}
+		var body map[string]interface{}
+		err := json.Unmarshal(respBody, &body)
+		if err != nil {
+			t.Fatalf("error parsing response body")
+		}
+		got, ok := body["result"].(string)
+		if !ok {
+			t.Fatalf("unable to find result in response body")
+		}
+		want := `[{"id":1},{"id":2},{"id":3},{"id":4}]`
+		if got != want {
+			t.Fatalf("unexpected value: got %q, want %q", got, want)
+		}
+	})
 }
