@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"google.golang.org/genai"
 )
 
@@ -97,7 +97,7 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 		return nil, fmt.Errorf("missing credentials for Gemini embedding: " +
 			"For Google AI: Provide 'apiKey' in YAML or set GOOGLE_API_KEY/GEMINI_API_KEY env vars. " +
 			"For Vertex AI: Provide 'project'/'location' in YAML or via GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION env vars. " +
-			"See documentation for details: https://googleapis.github.io/genai-toolbox/resources/embeddingmodels/gemini/")
+			"See documentation for details: https://mcp-toolbox.dev/documentation/configuration/embedding-models/gemini/")
 	}
 
 	// Set user agent

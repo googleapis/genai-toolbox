@@ -20,20 +20,20 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
-	"github.com/googleapis/genai-toolbox/internal/auth/google"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
-	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/http"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth/google"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	cloudsqlpgsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlpg"
+	httpsrc "github.com/googleapis/mcp-toolbox/internal/sources/http"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/http"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseEnv(t *testing.T) {
@@ -531,19 +531,30 @@ tools:
 `,
 		},
 		{
-			desc: "invalid source",
-			in:   `sources: invalid`,
-			want: "",
+			desc:   "invalid source",
+			in:     `sources: invalid`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "sources": expected map`,
 		},
 		{
-			desc: "invalid toolset",
-			in:   `toolsets: invalid`,
-			want: "",
+			desc:   "invalid toolset",
+			in:     `toolsets: invalid`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "toolsets": expected map`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			output, err := ConvertConfig([]byte(tc.in))
+			if tc.isErr {
+				if err == nil {
+					t.Fatalf("expected error")
+				}
+				if tc.errStr != "" && err.Error() != tc.errStr {
+					t.Fatalf("incorrect error string: got %s, want %s", err, tc.errStr)
+				}
+				return
+			}
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}

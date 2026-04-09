@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlGemini(t *testing.T) {
@@ -139,7 +139,7 @@ func TestFailParseFromYamlGemini(t *testing.T) {
         type: gemini
         model: text-embedding-004
         `,
-			err: "unable to initialize embedding model \"missing-creds\": missing credentials for Gemini embedding: For Google AI: Provide 'apiKey' in YAML or set GOOGLE_API_KEY/GEMINI_API_KEY env vars. For Vertex AI: Provide 'project'/'location' in YAML or via GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION env vars. See documentation for details: https://googleapis.github.io/genai-toolbox/resources/embeddingmodels/gemini/",
+			err: "unable to initialize embedding model \"missing-creds\": missing credentials for Gemini embedding: For Google AI: Provide 'apiKey' in YAML or set GOOGLE_API_KEY/GEMINI_API_KEY env vars. For Vertex AI: Provide 'project'/'location' in YAML or via GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION env vars. See documentation for details: https://mcp-toolbox.dev/documentation/configuration/embedding-models/gemini/",
 		},
 	}
 	for _, tc := range tcs {

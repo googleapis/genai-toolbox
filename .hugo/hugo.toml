@@ -32,13 +32,13 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 [params]
   description = "MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more."
   copyright = "Google LLC"
-  github_repo = "https://github.com/googleapis/genai-toolbox"
-  github_project_repo = "https://github.com/googleapis/genai-toolbox"
+  github_repo = "https://github.com/googleapis/mcp-toolbox"
+  github_project_repo = "https://github.com/googleapis/mcp-toolbox"
   github_subdir = "docs"
   offlineSearch = false
   version_menu = "Releases"
-  releases_url = "/genai-toolbox/releases.releases"
-  global_logo_url = "/genai-toolbox/"
+  releases_url = "/mcp-toolbox/releases.releases"
+  global_logo_url = "/mcp-toolbox/"
   version = "dev"
   pagefind = true
   [params.ui]
@@ -49,119 +49,123 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
     sidebar_menu_compact = false
   [params.ui.feedback]
     enable = true
-    yes = 'Glad to hear it! Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
-    no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/genai-toolbox/issues/new">tell us how we can improve</a>.'
+    yes = 'Glad to hear it! Please <a href="https://github.com/googleapis/mcp-toolbox/issues/new">tell us how we can improve</a>.'
+    no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/mcp-toolbox/issues/new">tell us how we can improve</a>.'
   [params.ui.readingtime]
       enable = true
 
 [[params.versions]]
   version = "dev"
-  url = "https://googleapis.github.io/genai-toolbox/dev/"
+  url = "https://mcp-toolbox.dev/dev/"
 
 # Add a new version block here before every release
 # The order of versions in this file is mirrored into the dropdown
 
 [[params.versions]]
+  version = "v0.32.0"
+  url = "https://mcp-toolbox.dev/v0.32.0/"
+
+[[params.versions]]
   version = "v0.31.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.31.0/"
+  url = "https://mcp-toolbox.dev/v0.31.0/"
 
 [[params.versions]]
   version = "v0.30.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.30.0/"
+  url = "https://mcp-toolbox.dev/v0.30.0/"
 
 [[params.versions]]
   version = "v0.29.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.29.0/"
+  url = "https://mcp-toolbox.dev/v0.29.0/"
 
 [[params.versions]]
   version = "v0.28.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.28.0/"
+  url = "https://mcp-toolbox.dev/v0.28.0/"
 
 [[params.versions]]
   version = "v0.27.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.27.0/"
+  url = "https://mcp-toolbox.dev/v0.27.0/"
 
 [[params.versions]]
   version = "v0.26.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.26.0/"
+  url = "https://mcp-toolbox.dev/v0.26.0/"
 
 [[params.versions]]
   version = "v0.25.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.25.0/"
+  url = "https://mcp-toolbox.dev/v0.25.0/"
 
 [[params.versions]]
   version = "v0.24.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.24.0/"
+  url = "https://mcp-toolbox.dev/v0.24.0/"
 
 [[params.versions]]
   version = "v0.23.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.23.0/"
+  url = "https://mcp-toolbox.dev/v0.23.0/"
 
 [[params.versions]]
   version = "v0.22.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.22.0/"
+  url = "https://mcp-toolbox.dev/v0.22.0/"
 
 [[params.versions]]
   version = "v0.21.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.21.0/"
+  url = "https://mcp-toolbox.dev/v0.21.0/"
   
 [[params.versions]]
   version = "v0.20.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.20.0/"
+  url = "https://mcp-toolbox.dev/v0.20.0/"
   
 [[params.versions]]
   version = "v0.19.1"
-  url = "https://googleapis.github.io/genai-toolbox/v0.19.1/"
+  url = "https://mcp-toolbox.dev/v0.19.1/"
   
 [[params.versions]]
   version = "v0.18.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.18.0/"
+  url = "https://mcp-toolbox.dev/v0.18.0/"
   
 [[params.versions]]
   version = "v0.17.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.17.0/"
+  url = "https://mcp-toolbox.dev/v0.17.0/"
   
 [[params.versions]]
   version = "v0.16.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.16.0/"
+  url = "https://mcp-toolbox.dev/v0.16.0/"
 
 [[params.versions]]
   version = "v0.15.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.15.0/"
+  url = "https://mcp-toolbox.dev/v0.15.0/"
 
 [[params.versions]]
   version = "v0.14.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.14.0/"
+  url = "https://mcp-toolbox.dev/v0.14.0/"
 
 [[params.versions]]
   version = "v0.13.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.13.0/"
+  url = "https://mcp-toolbox.dev/v0.13.0/"
 
 [[params.versions]]
   version = "v0.12.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.12.0/"
+  url = "https://mcp-toolbox.dev/v0.12.0/"
 
 [[params.versions]]
   version = "v0.11.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.11.0/"
+  url = "https://mcp-toolbox.dev/v0.11.0/"
 
 [[params.versions]]
   version = "v0.10.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.10.0/"
+  url = "https://mcp-toolbox.dev/v0.10.0/"
 
 [[params.versions]]
   version = "v0.9.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.9.0/"
+  url = "https://mcp-toolbox.dev/v0.9.0/"
 
 [[params.versions]]
   version = "v0.8.0"
-  url = "https://googleapis.github.io/genai-toolbox/v0.8.0/"
+  url = "https://mcp-toolbox.dev/v0.8.0/"
 
 
 [[menu.main]]
   name = "GitHub"
   weight = 50
-  url = "https://github.com/googleapis/genai-toolbox"
+  url = "https://github.com/googleapis/mcp-toolbox"
   pre = "<i class='fa-brands fa-github'></i>"
 
 [markup.goldmark.renderer]

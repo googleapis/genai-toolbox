@@ -22,8 +22,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/spf13/cobra"
 )
 

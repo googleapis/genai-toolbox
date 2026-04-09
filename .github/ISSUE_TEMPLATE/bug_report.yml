@@ -30,8 +30,8 @@ body:
       label: Prerequisites
       description: |
         Please run through the following list and make sure you've tried the usual "quick fixes":
-        - Search the [current open issues](https://github.com/googleapis/genai-toolbox/issues)
-        - Update to the [latest version of Toolbox](https://github.com/googleapis/genai-toolbox/releases)
+        - Search the [current open issues](https://github.com/googleapis/mcp-toolbox/issues)
+        - Update to the [latest version of Toolbox](https://github.com/googleapis/mcp-toolbox/releases)
       options: 
         - label: "I've searched the current open issues"
           required: true
@@ -57,7 +57,7 @@ body:
       value: |
         1. OS type and version: (output of `uname -a`)
         2. How are you running Toolbox: 
-          - As a downloaded binary (e.g. from `curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox`)
+          - As a downloaded binary (e.g. from `curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox`)
           - As a container (e.g. from `us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION`)
           - Compiled from source (include the command used to build)
 

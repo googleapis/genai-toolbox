@@ -24,8 +24,8 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 )
 
 // GDAClientID is the client ID for Gemini Data Analytics

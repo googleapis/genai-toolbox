@@ -21,11 +21,11 @@ import (
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const resourceType string = "alloydb-wait-for-operation"
@@ -69,8 +69,8 @@ ALLOYDB_POSTGRES_PASSWORD=<your-password>
 ` + "```" + `
 
 Please refer to the official documentation for guidance on deploying the toolbox:
-- Deploying the Toolbox: https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/
-- Deploying on GKE: https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/
+- Deploying the Toolbox: https://mcp-toolbox.dev/documentation/deploy-to/
+- Deploying on GKE: https://mcp-toolbox.dev/documentation/deploy-to/kubernetes/
 `
 
 func init() {
