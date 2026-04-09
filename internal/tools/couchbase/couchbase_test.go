@@ -17,12 +17,12 @@ package couchbase_test
 import (
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools/couchbase"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools/couchbase"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYaml(t *testing.T) {

@@ -19,7 +19,7 @@ import (
 	"log"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/valkey-io/valkey-go"
 	"go.opentelemetry.io/otel/trace"
 )

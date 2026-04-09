@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 

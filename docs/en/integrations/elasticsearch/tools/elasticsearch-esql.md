@@ -28,7 +28,7 @@ for more information.
 | query      |                 string                  |    false     | The ES\|QL query to run. Can also be passed by parameters.                                                                                          |
 | format     |                 string                  |    false     | The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.                                        |
 | timeout    |                 integer                 |    false     | The timeout for the query in seconds. Default is 60 (1 minute).                                                                                     |
-| parameters | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the ES\|QL query.<br/>Only supports “string”, “integer”, “float”, “boolean”. |
+| parameters | [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) |    false     | List of [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) that will be used with the ES\|QL query.<br/>Only supports “string”, “integer”, “float”, “boolean”. |
 
 ## Example
 

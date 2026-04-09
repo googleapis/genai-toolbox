@@ -65,7 +65,7 @@ should work for macOS with small changes.
 
 2. Change to your MCP Toolbox directory and run the following:
     ```bash
-    cd $HOME/genai-toolbox
+    cd $HOME/mcp-toolbox
     GOOS=windows \
     GOARCH=amd64 \
     CGO_ENABLED=1 \
@@ -166,7 +166,7 @@ func (t *MyTool) Invoke(ctx context.Context, sp tools.SourceProvider, params par
 ### Adding a New Database Source or Tool
 
 Please create an
-[issue](https://github.com/googleapis/genai-toolbox/issues) before
+[issue](https://github.com/googleapis/mcp-toolbox/issues) before
 implementation to ensure we can accept the contribution and no duplicated work.
 This issue should include an overview of the API design. If you have any
 questions, reach out on our [Discord](https://discord.gg/Dmm69peqjh) to chat
@@ -174,14 +174,14 @@ directly with the team.
 
 > [!NOTE]
 > New tools can be added for [pre-existing data
-> sources](https://github.com/googleapis/genai-toolbox/tree/main/internal/sources).
+> sources](https://github.com/googleapis/mcp-toolbox/tree/main/internal/sources).
 > However, any new database source should also include at least one new tool
 > type.
 
 #### Adding a New Database Source
 
 We recommend looking at an [example source
-implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/sources/postgres/postgres.go).
+implementation](https://github.com/googleapis/mcp-toolbox/blob/main/internal/sources/postgres/postgres.go).
 
 * **Create a new directory** under `internal/sources` for your database type
   (e.g., `internal/sources/newdb`).
@@ -191,7 +191,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
   name) and a `Source` struct to store necessary parameters for tools (e.g.,
   Name, Type, connection object, additional config).
 * **Implement the
-  [`SourceConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L57)
+  [`SourceConfig`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L57)
   interface**. This interface requires two methods:
   * `SourceConfigType() string`: Returns a unique string identifier for your
     data source (e.g., `"newdb"`).
@@ -199,7 +199,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
     Creates a new instance of your data source and establishes a connection to
     the database.
 * **Implement the
-  [`Source`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L63)
+  [`Source`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L63)
   interface**. This interface requires one method:
   * `SourceType() string`: Returns the same string identifier as `SourceConfigType()`.
 * **Implement `init()`** to register the new Source.
@@ -212,7 +212,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 > [here](#tool-naming-conventions).
 
 We recommend looking at an [example tool
-implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
+implementation](https://github.com/googleapis/mcp-toolbox/tree/main/internal/tools/postgres/postgressql).
 
 Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
 
@@ -221,7 +221,7 @@ Remember to keep your PRs small. For example, if you are contributing a new Sour
 Create a `Config` struct and a `Tool` struct to store necessary parameters for
 tools.
 * **Implement the
-  [`ToolConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
+  [`ToolConfig`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
   interface**. This interface requires one method:
   * `ToolConfigType() string`: Returns a unique string identifier for your tool
     (e.g., `"newdb-tool"`).
@@ -275,15 +275,15 @@ tools.
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 
 [tool-get]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L41
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L41
 [tool-call]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L229
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L229
 [mcp-call]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L789
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L789
 [execute-sql]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L609
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L609
 [temp-param]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L454
 [temp-param-doc]:
     https://mcp-toolbox.dev/documentation/configuration/tools/#template-parameters
 
@@ -479,7 +479,7 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
 1.  **Update the Link:** Correct the broken URL or update the content where it is used.
 2.  **Ignore the Link:** If you can't fix the link (e.g., due to **external rate-limits** or if it's a **local-only URL**), tell Lychee to **ignore** it.
 
-    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
+    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/mcp-toolbox/blob/main/.lycheeignore)** file, one entry per line.
     * **Always add a comment** explaining **why** the link is being skipped to prevent link rot. **Example `.lycheeignore`:**
        ```text
        # These are email addresses, not standard web URLs, and usually cause check failures.
@@ -530,7 +530,6 @@ When adding or updating a Source page, your markdown file must strictly adhere t
 When adding or updating a Tool page, your markdown file must strictly adhere to the following architectural rules:
 
   * **Location:** Native tools must be placed inside a nested `tools/` directory.
-  * **Frontmatter:** The `title` field must end with the word "Tool" (e.g., `title: "execute-sql Tool"`).
   * **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
   * **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
       * **Required Headings:** `About`, `Example`
@@ -662,7 +661,7 @@ The `regionInclude` shortcode reads a file, extracts content between `[START reg
 **Example Code Snippet (`samples/program.js`):**
 ```javascript
 // [START program_setup]
-import { Toolbox } from '@googleapis/genai-toolbox';
+import { Toolbox } from '@googleapis/mcp-toolbox';
 const toolbox = new Toolbox();
 // [END program_setup]
 ```
@@ -763,13 +762,13 @@ Cloud project, `database-toolbox`.
 ### How-to Release a new Version
 
 1. [Optional] If you want to override the version number, send a
-   [PR](https://github.com/googleapis/genai-toolbox/pull/31) to trigger
+   [PR](https://github.com/googleapis/mcp-toolbox/pull/31) to trigger
    [release-please](https://github.com/googleapis/release-please?tab=readme-ov-file#how-do-i-change-the-version-number).
    You can generate a commit with the following line: `git commit -m "chore:
    release 0.1.0" -m "Release-As: 0.1.0" --allow-empty`
 1. [Optional] If you want to edit the changelog, send commits to the release PR
 1. Approve and merge the PR with the title “[chore(main): release
-   x.x.x](https://github.com/googleapis/genai-toolbox/pull/16)”
+   x.x.x](https://github.com/googleapis/mcp-toolbox/pull/16)”
 1. The
    [trigger](https://pantheon.corp.google.com/cloud-build/triggers;region=us-central1/edit/27bd0d21-264a-4446-b2d7-0df4e9915fb3?e=13802955&inv=1&invt=AbhU8A&mods=logs_tg_staging&project=database-toolbox)
    should automatically run when a new tag is pushed. You can view [triggered
@@ -824,7 +823,7 @@ settings:
 * **Region:** global (for default worker pools)
 * **Source:**
   * Generation: 1st gen
-  * Repo: googleapis/genai-toolbox (GitHub App)
+  * Repo: googleapis/mcp-toolbox (GitHub App)
   * Base branch: `^main$`
 * **Comment control:** Required except for owners and collaborators
 * **Filters:** Add directory filter

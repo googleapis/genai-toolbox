@@ -22,7 +22,7 @@ import (
 	"sort"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/types"
 	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 )
 

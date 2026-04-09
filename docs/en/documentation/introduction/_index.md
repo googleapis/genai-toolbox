@@ -12,6 +12,11 @@ It serves a **dual purpose**:
 1. **Ready-to-use MCP Server (aka ['Build-Time'](/getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
 2. **Custom Tools Framework (aka ['Run-Time'](/getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
+{{< notice tip >}}
+**Repository Name Update:** The GitHub repository for this project has been officially renamed from `genai-toolbox` to `mcp-toolbox`. We recommend updating your local Git remote URL for consistency:
+`git remote set-url origin https://github.com/googleapis/mcp-toolbox.git`
+{{< /notice >}}
+
 {{< notice note >}}
 This document has been updated to support the flat configuration file format. To
 view documentation with original configuration file format, please navigate to the
@@ -67,7 +72,7 @@ Add the following to your client's MCP configuration file (usually `mcp.json` or
 }
 ```
 
-Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+Set the appropriate environment variables to connect, see the [Prebuilt Tools Reference](https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/).
 
 When you run Toolbox with a `--prebuilt=<database>` flag, you instantly get access to standard tools to interact with that database. 
 
@@ -75,7 +80,7 @@ Supported databases currently include:
 - **Google Cloud:** AlloyDB, BigQuery, Cloud SQL (PostgreSQL, MySQL, SQL Server), Spanner, Firestore, Dataplex
 - **Other Databases:** PostgreSQL, MySQL, SQL Server, Oracle, MongoDB, Redis, Elasticsearch, CockroachDB, ClickHouse, Couchbase, Neo4j, Snowflake, Trino, and more.
 
-For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/).
+For a full list of available tools and their capabilities across all supported databases, see the [Prebuilt Tools Reference](https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/).
 
 #### Custom Tools
 
@@ -94,7 +99,7 @@ This method is optimized for convenience rather than performance. For a more sta
 For the latest version, check the [releases page][releases] and use the
 following instructions for your OS and CPU architecture.
 
-[releases]: https://github.com/googleapis/genai-toolbox/releases
+[releases]: https://github.com/googleapis/mcp-toolbox/releases
 
 <!-- {x-release-please-start-version} -->
 {{< tabpane text=true >}}
@@ -105,8 +110,8 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.31.0
-curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
+export VERSION=0.32.0
+curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
 
@@ -116,8 +121,8 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.31.0
-curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
+export VERSION=0.32.0
+curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
 
@@ -127,8 +132,8 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.31.0
-curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
+export VERSION=0.32.0
+curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
 
@@ -138,8 +143,8 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=0.31.0
-curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+set VERSION=0.32.0
+curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -148,8 +153,8 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "0.31.0"
-curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
+$VERSION = "0.32.0"
+curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -160,7 +165,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.31.0
+export VERSION=0.32.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -179,7 +184,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.31.0
+go install github.com/googleapis/mcp-toolbox@v0.32.0
 ```
 
 {{% /tab %}}
@@ -736,4 +741,4 @@ For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [module'
 For more detailed instructions on using the Toolbox Go SDK, see the
 [README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
-For more details, see the [Generate Agent Skills guide](https://googleapis.github.io/genai-toolbox/how-to/generate_skill/).
+For more details, see the [Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
