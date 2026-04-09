@@ -66,5 +66,5 @@ description: "Creates an exact copy of a Cloud SQL instance at a specific point 
 
 ## Additional Resources
 - [Cloud SQL Admin API documentation](https://cloud.google.com/sql/docs/mysql/admin-api)
-- [Toolbox Cloud SQL tools documentation](_index.md)
+- [Toolbox Cloud SQL tools documentation](../source.md)
 - [Cloud SQL Clone API documentation](https://cloud.google.com/sql/docs/mysql/clone-instance)
