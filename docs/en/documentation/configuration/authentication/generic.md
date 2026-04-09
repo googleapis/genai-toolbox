@@ -104,9 +104,10 @@ When a request is received in this mode, the service will:
    - Verifies expiration (`exp`) and audience (`aud`).
    - Verifies required scopes in `scope` claim.
 4. For **Opaque Tokens**:
-   - Calls the introspection endpoint (`<authorizationServer>/introspect`).
+   - Calls the introspection endpoint (as listed in the `authorizationServer`'s
+     OIDC configuration).
    - Verifies that the token is `active`.
-   - Verifies expiration (`exp`) and audience (`client_id`).
+   - Verifies expiration (`exp`) and audience (`aud`).
    - Verifies required scopes in `scope` field.
 
 #### Example
