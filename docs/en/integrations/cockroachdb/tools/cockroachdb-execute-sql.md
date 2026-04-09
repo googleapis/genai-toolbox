@@ -157,7 +157,7 @@ This tool is ideal for:
 - Debugging and troubleshooting
 - Schema inspection
 
-For production use cases, use [cockroachdb-sql](_index.md) with parameterized queries.
+For production use cases, use [cockroachdb-sql](cockroachdb-sql.md) with parameterized queries.
 
 #### Be Cautious with Data Modification
 
