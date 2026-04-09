@@ -542,7 +542,6 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			}
 		})
 	}
-	}
 }
 
 // RunToolInvokeWithTemplateParameters runs tool invoke test cases with template parameters.
