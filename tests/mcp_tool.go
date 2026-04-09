@@ -143,6 +143,10 @@ func RunMCPToolsListMethod(t *testing.T, expectedOutput []MCPToolManifest) {
 		t.Fatalf("error unmarshalling tools into MCPToolManifest: %v", err)
 	}
 
+	if len(actualTools) != len(expectedOutput) {
+		t.Fatalf("expected %d tools, got %d. Actual tools: %+v", len(expectedOutput), len(actualTools), actualTools)
+	}
+
 	for _, expected := range expectedOutput {
 		found := false
 		for _, actual := range actualTools {
