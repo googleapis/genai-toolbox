@@ -24,10 +24,9 @@ for more information.
 
 ## Parameters
 
-| **name** | **type** | **required** | **description**                                                                                              |
-| -------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------ |
-| query    |  string  |     true     | The ES\|QL statement to execute.                                                                             |
-| format   |  string  |    false     | The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow. |
+| **name** | **type** | **required** | **description**                  |
+| -------- | :------: | :----------: | -------------------------------- |
+| query    |  string  |     true     | The ES|QL statement to execute. |
 
 ## Example
 
@@ -39,4 +38,13 @@ source: elasticsearch-source
 description: Use this tool to execute arbitrary ES|QL statements.
 format: json
 ```
+
+## Reference
+
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| type        |                   string                   |     true     | Must be "elasticsearch-execute-esql".                                                            |
+| source      |                   string                   |     true     | Name of the source the ES|QL should execute on.                                                   |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| format      |                   string                   |     false    | The format of the query. Default is json. Valid values are `csv`, `json`, `tsv`, `txt`, `yaml`, `cbor`, `smile`, or `arrow`. |
 
