@@ -27,7 +27,7 @@ import (
 
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 )
 
 const AuthServiceType string = "generic"

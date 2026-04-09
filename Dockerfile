@@ -20,7 +20,7 @@ RUN curl -fL "https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz
     tar -xf zig.tar.xz -C /zig --strip-components=1 && \
     rm zig.tar.xz
 
-WORKDIR /go/src/genai-toolbox
+WORKDIR /go/src/mcp-toolbox
 COPY . .
 
 ARG TARGETOS
@@ -40,16 +40,16 @@ RUN export ZIG_TARGET="" && \
     CC="/zig/zig cc -target ${ZIG_TARGET}" \
     CXX="/zig/zig c++ -target ${ZIG_TARGET}" \
     go build \
-    -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}" \
-    -o genai-toolbox .
+    -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.buildType=${BUILD_TYPE} -X github.com/googleapis/mcp-toolbox/cmd.commitSha=${COMMIT_SHA}" \
+    -o mcp-toolbox .
 
 # Final Stage
 FROM gcr.io/distroless/cc-debian12:nonroot
 
 WORKDIR /app
-COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
+COPY --from=build --chown=nonroot /go/src/mcp-toolbox/mcp-toolbox /toolbox
 USER nonroot
 
-LABEL io.modelcontextprotocol.server.name="io.github.googleapis/genai-toolbox"
+LABEL io.modelcontextprotocol.server.name="io.github.googleapis/mcp-toolbox"
 
 ENTRYPOINT ["/toolbox"] 

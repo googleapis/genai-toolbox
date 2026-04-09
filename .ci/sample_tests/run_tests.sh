@@ -66,7 +66,7 @@ setup_toolbox() {
   echo "Setting up Toolbox server..."
   TOOLBOX_YAML="/tools.yaml"
   echo "${TOOLS_YAML_CONTENT}" > "$TOOLBOX_YAML"
-  wget -q "https://storage.googleapis.com/genai-toolbox/v${VERSION}/linux/amd64/toolbox" -O "/toolbox"
+  wget -q "https://storage.googleapis.com/mcp-toolbox-for-databases/v${VERSION}/linux/amd64/toolbox" -O "/toolbox"
   chmod +x "/toolbox"
   /toolbox --tools-file "$TOOLBOX_YAML" > "$TOOLBOX_LOG" 2>&1 &
   TOOLBOX_PID=$!

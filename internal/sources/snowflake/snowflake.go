@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/snowflakedb/gosnowflake"
 	"go.opentelemetry.io/otel/trace"
