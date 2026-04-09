@@ -38,10 +38,17 @@ import (
 var (
 	ElasticsearchSourceType = "elasticsearch"
 	ElasticsearchToolType   = "elasticsearch-esql"
-	EsAddress               = os.Getenv("ELASTICSEARCH_HOST")
-	EsUser                  = os.Getenv("ELASTICSEARCH_USER")
-	EsPass                  = os.Getenv("ELASTICSEARCH_PASS")
+	EsAddress               = getEnvOrDefault("ELASTICSEARCH_HOST", "http://localhost:9200")
+	EsUser                  = getEnvOrDefault("ELASTICSEARCH_USER", "elastic")
+	EsPass                  = getEnvOrDefault("ELASTICSEARCH_PASS", "password")
 )
+
+func getEnvOrDefault(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
 
 func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, func()) {
 	t.Helper()
