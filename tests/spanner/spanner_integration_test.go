@@ -42,6 +42,7 @@ var (
 	SpannerProject    = os.Getenv("SPANNER_PROJECT")
 	SpannerDatabase   = os.Getenv("SPANNER_DATABASE")
 	SpannerInstance   = os.Getenv("SPANNER_INSTANCE")
+	SpannerPgDatabase = os.Getenv("SPANNER_PG_DATABASE")
 )
 
 func getSpannerVars(t *testing.T) map[string]any {
@@ -962,20 +963,6 @@ func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	}
 }
 
-// createSpannerPostgresqlDatabase creates a temporary PostgreSQL database in Spanner
-func createSpannerPostgresqlDatabase(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, project, instance, dbName string) error {
-	op, err := adminClient.CreateDatabase(ctx, &databasepb.CreateDatabaseRequest{
-		Parent:          fmt.Sprintf("projects/%s/instances/%s", project, instance),
-		CreateStatement: fmt.Sprintf("CREATE DATABASE \"%s\"", dbName),
-		DatabaseDialect: databasepb.DatabaseDialect_POSTGRESQL,
-	})
-	if err != nil {
-		return err
-	}
-	_, err = op.Wait(ctx)
-	return err
-}
-
 // setupSpannerPgVectorTable creates a vector table in Spanner (PostgreSQL dialect) for semantic search testing
 func setupSpannerPgVectorTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dbString string) (string, func(*testing.T)) {
 	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -1036,23 +1023,11 @@ func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
 	}
 	defer adminClient.Close()
 
-	// Create unique DB name
-	dbName := "pg_db_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:20]
-
-	t.Logf("Creating temporary PostgreSQL database: %s", dbName)
-	err = createSpannerPostgresqlDatabase(t, ctx, adminClient, SpannerProject, SpannerInstance, dbName)
-	if err != nil {
-		t.Fatalf("unable to create PostgreSQL database: %s", err)
+	dbName := SpannerPgDatabase
+	if dbName == "" {
+		dbName = "pg_test_database"
 	}
-	defer func() {
-		t.Logf("Dropping temporary PostgreSQL database: %s", dbName)
-		err := adminClient.DropDatabase(ctx, &databasepb.DropDatabaseRequest{
-			Database: fmt.Sprintf("projects/%s/instances/%s/databases/%s", SpannerProject, SpannerInstance, dbName),
-		})
-		if err != nil {
-			t.Errorf("failed to drop database %s: %s", dbName, err)
-		}
-	}()
+	t.Logf("Using PostgreSQL database: %s", dbName)
 
 	dbString := fmt.Sprintf("projects/%s/instances/%s/databases/%s", SpannerProject, SpannerInstance, dbName)
 	dataClient, err := spanner.NewClient(ctx, dbString)
