@@ -23,10 +23,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/server/resources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 
 	"github.com/spf13/cobra"
 )
@@ -40,6 +40,8 @@ type skillsCmd struct {
 	outputDir       string
 	licenseHeader   string
 	additionalNotes string
+	invocationMode  string
+	toolboxVersion  string
 }
 
 // NewCommand creates a new Command.
@@ -62,6 +64,8 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	flags.StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
 	flags.StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
 	flags.StringVar(&cmd.additionalNotes, "additional-notes", "", "Additional notes to add under the Usage section of the generated SKILL.md")
+	flags.StringVar(&cmd.invocationMode, "invocation-mode", "npx", "Invocation mode for the generated scripts: 'binary' or 'npx'")
+	flags.StringVar(&cmd.toolboxVersion, "toolbox-version", opts.VersionNum, "Version of @toolbox-sdk/server to use for npx approach")
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("description")
 	return cmd.Command
@@ -187,7 +191,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 
 		for _, toolName := range toolNames {
 			// Generate wrapper script in scripts directory
-			scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader)
+			scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader, cmd.invocationMode, cmd.toolboxVersion, parser.OptionalEnvVars)
 			if err != nil {
 				errMsg := fmt.Errorf("error generating script content for %s: %w", toolName, err)
 				opts.Logger.ErrorContext(ctx, errMsg.Error())

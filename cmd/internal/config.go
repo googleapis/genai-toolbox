@@ -27,8 +27,8 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
-	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 )
 
 type Config struct {
@@ -41,7 +41,9 @@ type Config struct {
 }
 
 type ConfigParser struct {
-	EnvVars map[string]string
+	EnvVars         map[string]string
+	OptionalEnvVars []string
+	requiredEnvVars []string
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -59,6 +61,25 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 
 		// extract the variable name
 		variableName := parts[1]
+
+		isOptional := len(parts) >= 4 && parts[2] != ""
+		if isOptional {
+			// Add to optional list only if it hasn't been explicitly required
+			if !slices.Contains(p.requiredEnvVars, variableName) && !slices.Contains(p.OptionalEnvVars, variableName) {
+				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
+			}
+		} else {
+			// Mark as required
+			if !slices.Contains(p.requiredEnvVars, variableName) {
+				p.requiredEnvVars = append(p.requiredEnvVars, variableName)
+			}
+
+			// Remove from optional list if it's there
+			if i := slices.Index(p.OptionalEnvVars, variableName); i != -1 {
+				p.OptionalEnvVars = slices.Delete(p.OptionalEnvVars, i, i+1)
+			}
+		}
+
 		if value, found := os.LookupEnv(variableName); found {
 			p.EnvVars[variableName] = value
 			return value
@@ -107,6 +128,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	encoder := yaml.NewEncoder(&buf)
 
 	v1keys := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
 			if err == io.EOF {
@@ -114,10 +136,11 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			}
 			return nil, err
 		}
+		docIndex++
 		for _, item := range input {
 			key, ok := item.Key.(string)
 			if !ok {
-				return nil, fmt.Errorf("unexpected non-string key in input: %v", item.Key)
+				return nil, fmt.Errorf("doc %d: unexpected non-string key in input: %v", docIndex, item.Key)
 			}
 			// check if the key is config file v1's key
 			if slices.Contains(v1keys, key) {
@@ -142,7 +165,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					}
 					transformed, err := transformDocs(key, slice)
 					if err != nil {
-						return nil, err
+						return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
 					}
 					// encode per-doc
 					for _, doc := range transformed {
@@ -151,15 +174,14 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 						}
 					}
 				} else {
-					// invalid input will be ignored
-					// we don't want to throw error here since the config could
-					// be valid but with a different order such as:
-					// ---
-					// tools:
-					// - tool_a
-					// kind: toolset
-					// ---
-					continue
+					if hasKindField(input) {
+						// this doc is already v2, encode to buf
+						if err := encoder.Encode(input); err != nil {
+							return nil, err
+						}
+						break
+					}
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: expected map", docIndex, key)
 				}
 			} else {
 				// this doc is already v2, encode to buf
@@ -171,6 +193,15 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 		}
 	}
 	return buf.Bytes(), nil
+}
+
+func hasKindField(input yaml.MapSlice) bool {
+	for _, item := range input {
+		if key, ok := item.Key.(string); ok && key == "kind" {
+			return true
+		}
+	}
+	return false
 }
 
 // transformDocs transforms the configuration file from v1 format to v2

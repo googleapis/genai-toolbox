@@ -9,9 +9,9 @@
 > few things you can do to make sure it goes smoothly:
 
 - [ ] Make sure you reviewed
-  [CONTRIBUTING.md](https://github.com/googleapis/genai-toolbox/blob/main/CONTRIBUTING.md)
+  [CONTRIBUTING.md](https://github.com/googleapis/mcp-toolbox/blob/main/CONTRIBUTING.md)
 - [ ] Make sure to open an issue as a
-  [bug/issue](https://github.com/googleapis/genai-toolbox/issues/new/choose)
+  [bug/issue](https://github.com/googleapis/mcp-toolbox/issues/new/choose)
   before writing your code! That way we can discuss the change, evaluate
   designs, and agree on the general idea
 - [ ] Ensure the tests and linter pass

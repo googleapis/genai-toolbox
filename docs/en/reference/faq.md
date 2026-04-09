@@ -16,7 +16,7 @@ For detailed instructions, check out these resources:
 - [Quickstart: How to Run Locally](../documentation/getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../documentation/deploy-to/cloud-run/_index.md)
 
-[release-notes]: https://github.com/googleapis/genai-toolbox/releases/
+[release-notes]: https://github.com/googleapis/mcp-toolbox/releases/
 
 ## Do I need a Google Cloud account/project to get started with Toolbox?
 
@@ -30,8 +30,8 @@ Absolutely! Please check out our [DEVELOPER.md][] for instructions on how to get
 started developing _on_ Toolbox instead of with it, and the [CONTRIBUTING.md][]
 for instructions on completing the CLA and getting a PR accepted.
 
-[DEVELOPER.md]: https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md
-[CONTRIBUTING.MD]: https://github.com/googleapis/genai-toolbox/blob/main/CONTRIBUTING.md
+[DEVELOPER.md]: https://github.com/googleapis/mcp-toolbox/blob/main/DEVELOPER.md
+[CONTRIBUTING.MD]: https://github.com/googleapis/mcp-toolbox/blob/main/CONTRIBUTING.md
 
 ## Can Toolbox support a feature to let me do _$FOO_?
 
@@ -40,7 +40,7 @@ discussion (or seeing if there is already one open), so we can better understand
 your use case and the best way to solve it. Generally we aim to prioritize the
 most popular issues, so make sure to +1 ones you are the most interested in.
 
-[github-issue]: https://github.com/googleapis/genai-toolbox/issues
+[github-issue]: https://github.com/googleapis/mcp-toolbox/issues
 
 ## Can Toolbox be used for non-database tools?
 

@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbcreateuser "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	alloydbcreateuser "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbcreateuser"
 )
 
 func TestParseFromYaml(t *testing.T) {

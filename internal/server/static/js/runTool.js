@@ -80,15 +80,33 @@ export async function handleRunTool(toolId, form, responseArea, parameters, pret
 
     console.debug('Running tool:', toolId, 'with typed params:', typedParams);
     try {
-        const response = await fetch(`/api/tool/${toolId}/invoke`, {
+        const body = {
+            jsonrpc: "2.0",
+            id: "2",
+            method: "tools/call",
+            params: {
+                name: toolId,
+                arguments: typedParams
+            }
+        };
+
+        const mcpHeaders = { 
+            ...headers, 
+            'Content-Type': 'application/json',
+            'MCP-Protocol-Version': '2025-11-25'
+        };
+
+        const response = await fetch(`/mcp`, {
             method: 'POST',
-            headers: headers,
-            body: JSON.stringify(typedParams)
+            headers: mcpHeaders,
+            body: JSON.stringify(body)
         });
+
         if (!response.ok) {
             const errorBody = await response.text();
             throw new Error(`HTTP error ${response.status}: ${errorBody}`);
         }
+        
         const results = await response.json();
         updateLastResults(results);
         displayResults(results, responseArea, prettifyCheckbox.checked);
@@ -144,19 +162,34 @@ export function displayResults(results, responseArea, prettify) {
     if (results === null || results === undefined) {
         return;
     }
+
+    if (results.error) {
+        responseArea.value = `MCP Error ${results.error.code}: ${results.error.message}\n${JSON.stringify(results.error.data, null, 2) || ''}`;
+        return;
+    }
+
     try {
-        const resultJson = JSON.parse(results.result);
-        if (prettify) {
-            responseArea.value = JSON.stringify(resultJson, null, 2);
+        let textContent = "";
+        if (results.result && Array.isArray(results.result.content)) {
+            textContent = results.result.content
+                .filter(c => c.type === 'text' && typeof c.text === 'string')
+                .map(c => c.text)
+                .join('\n');
+        } else if (results.result && typeof results.result.content === 'string') {
+            textContent = results.result.content;
         } else {
-            responseArea.value = JSON.stringify(resultJson);
+            textContent = JSON.stringify(results.result, null, 2);
+        }
+
+        try {
+            const resultJson = JSON.parse(textContent);
+            responseArea.value = prettify ? JSON.stringify(resultJson, null, 2) : JSON.stringify(resultJson);
+        } catch (e) {
+            // Not pure JSON string, output as-is
+            responseArea.value = textContent;
         }
     } catch (error) {
         console.error("Error parsing or stringifying results:", error);
-        if (typeof results.result === 'string') {
-            responseArea.value = results.result;
-        } else {
-            responseArea.value = "Error displaying results. Invalid format.";
-        }
+        responseArea.value = typeof results === 'object' ? JSON.stringify(results, null, 2) : String(results);
     }
 }

@@ -157,7 +157,7 @@ This tool is ideal for:
 - Debugging and troubleshooting
 - Schema inspection
 
-For production use cases, use [cockroachdb-sql](_index.md) with parameterized queries.
+For production use cases, use [cockroachdb-sql](./cockroachdb-sql.md) with parameterized queries.
 
 #### Be Cautious with Data Modification
 
@@ -273,8 +273,8 @@ The tool will return descriptive errors for:
 
 ## Additional Resources
 
-- [cockroachdb-sql](_index.md) - For parameterized, production-ready queries
+- [cockroachdb-sql](./cockroachdb-sql.md) - For parameterized, production-ready queries
 - [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database
 - [cockroachdb-list-schemas](./cockroachdb-list-schemas.md) - List database schemas
-- [CockroachDB Source](_index.md) - Source configuration reference
+- [CockroachDB Source](../source.md) - Source configuration reference
 - [CockroachDB SQL Reference](https://www.cockroachlabs.com/docs/stable/sql-statements.html) - Official SQL documentation

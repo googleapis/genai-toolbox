@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/snowflakedb/gosnowflake"
 )
@@ -101,7 +101,7 @@ func TestSnowflake(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	db, err := initSnowflakeConnectionPool(ctx, SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
 	if err != nil {

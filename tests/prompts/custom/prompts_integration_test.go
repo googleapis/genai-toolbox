@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 func getPromptsConfig() map[string]any {
@@ -79,7 +79,8 @@ func TestMCPPromptsIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd, cleanup, err := tests.StartCmd(ctx, getPromptsConfig())
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, getPromptsConfig(), args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %v", err)
 	}

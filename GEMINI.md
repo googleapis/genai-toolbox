@@ -1,10 +1,11 @@
-# MCP Toolbox Context
+# MCP Toolbox Context & Style Guide
 
-This file (symlinked as `CLAUDE.md` and `AGENTS.md`) provides context and guidelines for AI agents working on the MCP Toolbox for Databases project. It summarizes key information from `CONTRIBUTING.md` and `DEVELOPER.md`.
+This file (symlinked as `CLAUDE.md`, `AGENTS.md`, and `.gemini/styleguide.md`) provides context and guidelines for AI agents working on the MCP Toolbox for Databases project. It summarizes key information from `CONTRIBUTING.md` and `DEVELOPER.md`.
 
 ## Project Overview
 
 **MCP Toolbox for Databases** is a Go-based project designed to provide Model Context Protocol (MCP) tools for various data sources and services. It allows Large Language Models (LLMs) to interact with databases and other tools safely and efficiently.
+
 
 ## Tech Stack
 
@@ -50,6 +51,7 @@ This file (symlinked as `CLAUDE.md` and `AGENTS.md`) provides context and guidel
     -   Add new sources to `.ci/integration.cloudbuild.yaml`
 -   **Linting:** `golangci-lint run --fix`
 
+
 ## Developing Documentation
 
 ### Prerequisites
@@ -91,6 +93,60 @@ There are 6 workflows in total, handling parallel deployments to both GitHub Pag
     -   Format: `<type>(<scope>): <description>`
     -   Example: `feat(source/postgres): add new connection option`
     -   Types: `feat`, `fix`, `docs`, `chore`, `test`, `ci`, `refactor`, `revert`, `style`.
+
+ ### PR Title Format
+
+Format: `<type>[optional scope]: <description>`
+
+- **Example:** `feat(source/postgres): add support for "new-field" field`
+- **Example (Breaking Change):** `fix(tool/sql)!: change default parameter value`
+
+#### Types
+
+| Type | Description | Version change affected |
+| :--- | :--- | :--- |
+| **BREAKING CHANGE** | Anything with this type or a `!` after the type/scope introduces a breaking API change. E.g. `fix!: description` or `feat!: description`. | major |
+| **feat** | Adding a new feature to the codebase. | minor |
+| **fix** | Fixing a bug or typo in the codebase. | patch |
+| **ci** | Changes made to the continuous integration configuration files or scripts (usually the yml and other configuration files). | n/a |
+| **docs** | Documentations-related PRs, including fixes on docs. | n/a |
+| **chore** | Other small tasks or updates that don't fall into any of the types above. | n/a |
+| **perf** | changed src code, with improvement of performance metrics. | n/a |
+| **refactor** | Change src code but unlike feat, there are no tests broken and no lines lost coverage. | n/a |
+| **revert** | Revert changes made in another commit. | n/a |
+| **style** | updated src code, with only formatting and whitespace updates. In other words, this includes anything a code formatter or linter changes. | n/a |
+| **test** | Changes made to test files. | n/a |
+| **build** | Changes related to build of the projects and dependency. | n/a |
+
+#### Scopes
+
+PRs addressing a specific source or tool should **always** add the source or tool name as scope.
+
+The scope is formatted as `<type>/<kind>`. Common scopes include:
+- `source/postgres`, `source/cloudsql-mysql`
+- `tool/mssql-sql`, `tool/list-tables`
+- `auth/google`
+
+**Multiple Scopes:**
+- If the PR covers multiple scopes of the same kind, separate them with a comma: `feat(source/postgres,source/alloydbpg): ...`.
+- If the PR covers multiple scope types (e.g., adding a new database source and tool), disregard the scope type prefix: `feat(new-db): adding support for new-db source and tool`.
+
+#### PR Description
+
+Every PR must include a description that follows the repository's template:
+
+**1. Description**
+A concise description of the changes (bug or feature), its impact, and a summary of the solution.
+
+**2. PR Checklist**
+- [ ] Make sure to open an issue as a bug/issue before writing your code!
+- [ ] Ensure the tests and linter pass
+- [ ] Code coverage does not decrease (if any source code was changed)
+- [ ] Appropriate docs were updated (if necessary)
+- [ ] Make sure to add `!` if this involves a breaking change
+
+**3. Issue Reference**
+Use the format: `Fixes #<issue_number> 🦕`
 
 ## Adding New Features
 
@@ -145,9 +201,8 @@ When generating or editing documentation for this repository, you must strictly 
 ##### Tool Page Constraints (`integrations/**/tools/*.md`)
 
 1.  **Location:** All native tools must reside inside a nested `tools/` subdirectory. The `tools/` directory must contain an `_index.md` file consisting **strictly of frontmatter**.
-2.  **Title Convention:** The YAML frontmatter `title` must always end with "Tool" (e.g., `title: "Execute SQL Tool"`).
-3.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
-4.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
+2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
+3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
     *   `## About` (Required)
     *   `## Compatible Sources` (Optional)
     *   `## Requirements` (Optional)
@@ -158,7 +213,7 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Advanced Usage` (Optional)
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
-5.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
 
 ##### Samples Architecture Constraints
 Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope.
@@ -184,3 +239,4 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 ##### Asset Constraints (`docs/`)
 
 1.  **File Size Limits:** Never add files larger than 24MB to the `docs/` directory.
+

@@ -20,14 +20,16 @@ import (
 	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
 	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 )
 
 const SourceType string = "cloud-gemini-data-analytics"
+const CloudPlatformScope string = "https://www.googleapis.com/auth/cloud-platform"
 
 // NewDataChatClient can be overridden for testing.
 var NewDataChatClient = geminidataanalytics.NewDataChatClient
@@ -101,6 +103,18 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) GetProjectID() string {
 	return s.ProjectID
+}
+
+func (s *Source) GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	if scope == "" {
+		scope = CloudPlatformScope
+	}
+
+	creds, err := google.FindDefaultCredentials(ctx, scope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find default credentials: %w", err)
+	}
+	return creds.TokenSource, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {

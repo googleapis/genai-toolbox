@@ -30,8 +30,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"google.golang.org/api/sqladmin/v1"
 )
 
@@ -161,7 +161,7 @@ func TestCreateInstanceToolEndpoints(t *testing.T) {
 		http.DefaultClient.Transport = originalTransport
 	})
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getCreateInstanceToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

@@ -38,9 +38,9 @@ do
     # Get release URL
     if [ "$OS" = 'windows' ];
     then
-        URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox.exe"
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox.exe"
     else
-        URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox"
     fi
 
     curl "$URL" --fail --output toolbox || exit 1

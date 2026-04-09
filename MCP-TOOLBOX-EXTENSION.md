@@ -237,7 +237,7 @@ SQL (e.g., self-hosted on-prem, on a VM, or in another cloud).
 
     This extension can be used with any Google Cloud database to build custom
     tools. For more information, see the [MCP Toolbox
-    documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
+    documentation](https://mcp-toolbox.dev/documentation/introduction/).
 
     ```bash
     gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox

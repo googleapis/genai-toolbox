@@ -20,11 +20,11 @@ import (
 	"net/http"
 
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -46,6 +46,7 @@ func NewTool(cfg Config, originalCfg tools.ToolConfig, srcs map[string]sources.S
 		Name:        cfg.Name,
 		Description: desc,
 		InputSchema: inputSchema,
+		Annotations: tools.NewDestructiveAnnotations(),
 	}
 
 	return &Tool{

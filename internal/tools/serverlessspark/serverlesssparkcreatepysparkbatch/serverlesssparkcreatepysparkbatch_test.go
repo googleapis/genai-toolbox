@@ -17,10 +17,10 @@ package serverlesssparkcreatepysparkbatch_test
 import (
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/createbatch"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkcreatepysparkbatch"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/createbatch"
+	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/serverlesssparkcreatepysparkbatch"
+	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/testutils"
 )
 
 func TestParseFromYaml(t *testing.T) {

@@ -20,10 +20,10 @@ import (
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/createbatch"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/createbatch"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const resourceType = "serverless-spark-create-pyspark-batch"

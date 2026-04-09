@@ -21,11 +21,11 @@ import (
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const resourceType string = "alloydb-wait-for-operation"
@@ -69,8 +69,8 @@ ALLOYDB_POSTGRES_PASSWORD=<your-password>
 ` + "```" + `
 
 Please refer to the official documentation for guidance on deploying the toolbox:
-- Deploying the Toolbox: https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/
-- Deploying on GKE: https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/
+- Deploying the Toolbox: https://mcp-toolbox.dev/documentation/deploy-to/
+- Deploying on GKE: https://mcp-toolbox.dev/documentation/deploy-to/kubernetes/
 `
 
 func init() {
@@ -102,10 +102,11 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 
 	// Polling configuration
-	Delay      string  `yaml:"delay"`
-	MaxDelay   string  `yaml:"maxDelay"`
-	Multiplier float64 `yaml:"multiplier"`
-	MaxRetries int     `yaml:"maxRetries"`
+	Delay       string                 `yaml:"delay"`
+	MaxDelay    string                 `yaml:"maxDelay"`
+	Multiplier  float64                `yaml:"multiplier"`
+	MaxRetries  int                    `yaml:"maxRetries"`
+	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -148,7 +149,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		description = "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, annotations)
 
 	var delay time.Duration
 	if cfg.Delay == "" {

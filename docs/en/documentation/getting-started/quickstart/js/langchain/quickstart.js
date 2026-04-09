@@ -25,7 +25,7 @@ const queries = [
 
 export async function main() {
   const model = new ChatGoogleGenerativeAI({
-    model: "gemini-2.0-flash",
+    model: "gemini-2.5-flash",
   });
 
   const client = new ToolboxClient("http://127.0.0.1:5000");

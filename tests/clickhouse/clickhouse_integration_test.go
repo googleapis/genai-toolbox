@@ -29,9 +29,9 @@ import (
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -106,7 +106,7 @@ func TestClickHouse(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
 	if err != nil {
@@ -268,7 +268,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
 	if err != nil {
@@ -418,7 +418,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 		},
 	}
 
-	var args []string
+	args := []string{"--enable-api"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -529,7 +529,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		},
 	}
 
-	var args []string
+	args := []string{"--enable-api"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -666,7 +666,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 		},
 	}
 
-	var args []string
+	args := []string{"--enable-api"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -918,7 +918,7 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 		},
 	}
 
-	var args []string
+	args := []string{"--enable-api"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -1047,7 +1047,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 		},
 	}
 
-	var args []string
+	args := []string{"--enable-api"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)

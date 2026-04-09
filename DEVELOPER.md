@@ -44,6 +44,42 @@ Before you begin, ensure you have the following:
     curl http://127.0.0.1:5000
     ```
 
+#### Cross Compiling For Windows
+
+Most developers work in a Unix or Unix-like environment.
+
+Compiling for Windows requires the download of zig to provide a C and C++
+compiler. These instructions are for cross compiling from Linux x86 but
+should work for macOS with small changes.
+
+1. Download zig for your platform.
+    ```bash
+    cd $HOME
+    curl -fL "https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz" -o zig.tar.xz
+    tar xf zig.tar.xz
+    ```
+    This will create the directory $HOME/zig-x86_64-linux-0.15.2. You only need to do this once.
+
+    If you are on macOS curl from https://ziglang.org/download/0.15.2/zig-x86_64-macos-0.15.2.tar.xz
+    or https://ziglang.org/download/0.15.2/zig-aarch64-macos-0.15.2.tar.xz.
+
+2. Change to your MCP Toolbox directory and run the following:
+    ```bash
+    cd $HOME/mcp-toolbox
+    GOOS=windows \
+    GOARCH=amd64 \
+    CGO_ENABLED=1 \
+    CC="$HOME/zig-x86_64-linux-0.15.2/zig cc -target x86_64-windows-gnu"  \
+    CXX="$HOME/zig-x86_64-linux-0.15.2/zig c++ -target x86_64-windows-gnu" \
+    go build -o toolbox.exe
+    ```
+
+    If you are on macOS alter the path `zig-x86_64-linux-0.15.2` to the proper path
+    for your zig installation.
+
+Now the toolbox.exe file is ready to use. Transfer it to your windows machine and test it.
+
+
 ### Tool Naming Conventions
 
 This section details the purpose and conventions for MCP Toolbox's tools naming
@@ -130,7 +166,7 @@ func (t *MyTool) Invoke(ctx context.Context, sp tools.SourceProvider, params par
 ### Adding a New Database Source or Tool
 
 Please create an
-[issue](https://github.com/googleapis/genai-toolbox/issues) before
+[issue](https://github.com/googleapis/mcp-toolbox/issues) before
 implementation to ensure we can accept the contribution and no duplicated work.
 This issue should include an overview of the API design. If you have any
 questions, reach out on our [Discord](https://discord.gg/Dmm69peqjh) to chat
@@ -138,14 +174,14 @@ directly with the team.
 
 > [!NOTE]
 > New tools can be added for [pre-existing data
-> sources](https://github.com/googleapis/genai-toolbox/tree/main/internal/sources).
+> sources](https://github.com/googleapis/mcp-toolbox/tree/main/internal/sources).
 > However, any new database source should also include at least one new tool
 > type.
 
 #### Adding a New Database Source
 
 We recommend looking at an [example source
-implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/sources/postgres/postgres.go).
+implementation](https://github.com/googleapis/mcp-toolbox/blob/main/internal/sources/postgres/postgres.go).
 
 * **Create a new directory** under `internal/sources` for your database type
   (e.g., `internal/sources/newdb`).
@@ -155,7 +191,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
   name) and a `Source` struct to store necessary parameters for tools (e.g.,
   Name, Type, connection object, additional config).
 * **Implement the
-  [`SourceConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L57)
+  [`SourceConfig`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L57)
   interface**. This interface requires two methods:
   * `SourceConfigType() string`: Returns a unique string identifier for your
     data source (e.g., `"newdb"`).
@@ -163,7 +199,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
     Creates a new instance of your data source and establishes a connection to
     the database.
 * **Implement the
-  [`Source`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L63)
+  [`Source`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L63)
   interface**. This interface requires one method:
   * `SourceType() string`: Returns the same string identifier as `SourceConfigType()`.
 * **Implement `init()`** to register the new Source.
@@ -176,7 +212,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 > [here](#tool-naming-conventions).
 
 We recommend looking at an [example tool
-implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
+implementation](https://github.com/googleapis/mcp-toolbox/tree/main/internal/tools/postgres/postgressql).
 
 Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
 
@@ -185,7 +221,7 @@ Remember to keep your PRs small. For example, if you are contributing a new Sour
 Create a `Config` struct and a `Tool` struct to store necessary parameters for
 tools.
 * **Implement the
-  [`ToolConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
+  [`ToolConfig`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
   interface**. This interface requires one method:
   * `ToolConfigType() string`: Returns a unique string identifier for your tool
     (e.g., `"newdb-tool"`).
@@ -239,17 +275,17 @@ tools.
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 
 [tool-get]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L41
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L41
 [tool-call]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L229
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L229
 [mcp-call]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L789
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L789
 [execute-sql]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L609
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L609
 [temp-param]:
-    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
+    https://github.com/googleapis/mcp-toolbox/blob/v0.23.0/tests/tool.go#L454
 [temp-param-doc]:
-    https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
+    https://mcp-toolbox.dev/documentation/configuration/tools/#template-parameters
 
 #### Adding Documentation
 
@@ -382,6 +418,7 @@ go test -race -v ./cmd/... ./internal/...
   workflows on your PR.
   * Maintainers can comment `/gcbrun` to execute the integration tests.
   * Maintainers can add the label `tests:run` to execute the unit tests.
+  * Maintainers can add the label `docs: deploy-preview` to run the PR Preview workflow.
 
 #### Test Resources
 
@@ -442,7 +479,7 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
 1.  **Update the Link:** Correct the broken URL or update the content where it is used.
 2.  **Ignore the Link:** If you can't fix the link (e.g., due to **external rate-limits** or if it's a **local-only URL**), tell Lychee to **ignore** it.
 
-    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
+    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/mcp-toolbox/blob/main/.lycheeignore)** file, one entry per line.
     * **Always add a comment** explaining **why** the link is being skipped to prevent link rot. **Example `.lycheeignore`:**
        ```text
        # These are email addresses, not standard web URLs, and usually cause check failures.
@@ -493,7 +530,6 @@ When adding or updating a Source page, your markdown file must strictly adhere t
 When adding or updating a Tool page, your markdown file must strictly adhere to the following architectural rules:
 
   * **Location:** Native tools must be placed inside a nested `tools/` directory.
-  * **Frontmatter:** The `title` field must end with the word "Tool" (e.g., `title: "execute-sql Tool"`).
   * **No H1 Headings:** Do not use H1 (`#`) tags in the markdown body. The page title is automatically generated from the frontmatter.
   * **H2 Heading Hierarchy:** You must use H2 (`##`) headings in a strict, specific order.
       * **Required Headings:** `About`, `Example`
@@ -557,7 +593,7 @@ The documentation uses a dynamic versioning system that outputs standard HTML si
 
 **Search Indexing:** All deployment workflows automatically execute `npx pagefind --site public` to generate a version-scoped search index specific to that deployment's base URL.
 
-There are 6 GHA workflows we use to achieve document versioning (each deployment scenario has one workflow for GitHub Pages and one for Cloudflare Pages):
+There are 3 GHA workflows we use to achieve document versioning:
 
 1.  **Deploy In-development docs:**
     This workflow is run on every commit merged into the main branch. It deploys
@@ -567,7 +603,7 @@ There are 6 GHA workflows we use to achieve document versioning (each deployment
 1. **Deploy Versioned Docs:**
     When a new GitHub Release is published, it performs two deployments based on
     the new release tag. One to the new version subdirectory and one to the root
-    directory of the versioned-gh-pages branch.
+    directory of the cloudflare-pages branch.
 
     **Note:** Before the release PR from release-please is merged, add the
     newest version into the hugo.toml file.
@@ -578,7 +614,7 @@ There are 6 GHA workflows we use to achieve document versioning (each deployment
     were released before this new system was in place. This workflow can be
     started on the UI by providing the git version tag which you want to create
     the documentation for. The specific versioned subdirectory and the root docs
-    are updated on the versioned-gh-pages branch.
+    are updated on the cloudflare-pages branch.
 
 #### Contributors
 
@@ -625,7 +661,7 @@ The `regionInclude` shortcode reads a file, extracts content between `[START reg
 **Example Code Snippet (`samples/program.js`):**
 ```javascript
 // [START program_setup]
-import { Toolbox } from '@googleapis/genai-toolbox';
+import { Toolbox } from '@googleapis/mcp-toolbox';
 const toolbox = new Toolbox();
 // [END program_setup]
 ```
@@ -726,13 +762,13 @@ Cloud project, `database-toolbox`.
 ### How-to Release a new Version
 
 1. [Optional] If you want to override the version number, send a
-   [PR](https://github.com/googleapis/genai-toolbox/pull/31) to trigger
+   [PR](https://github.com/googleapis/mcp-toolbox/pull/31) to trigger
    [release-please](https://github.com/googleapis/release-please?tab=readme-ov-file#how-do-i-change-the-version-number).
    You can generate a commit with the following line: `git commit -m "chore:
    release 0.1.0" -m "Release-As: 0.1.0" --allow-empty`
 1. [Optional] If you want to edit the changelog, send commits to the release PR
 1. Approve and merge the PR with the title “[chore(main): release
-   x.x.x](https://github.com/googleapis/genai-toolbox/pull/16)”
+   x.x.x](https://github.com/googleapis/mcp-toolbox/pull/16)”
 1. The
    [trigger](https://pantheon.corp.google.com/cloud-build/triggers;region=us-central1/edit/27bd0d21-264a-4446-b2d7-0df4e9915fb3?e=13802955&inv=1&invt=AbhU8A&mods=logs_tg_staging&project=database-toolbox)
    should automatically run when a new tag is pushed. You can view [triggered
@@ -787,7 +823,7 @@ settings:
 * **Region:** global (for default worker pools)
 * **Source:**
   * Generation: 1st gen
-  * Repo: googleapis/genai-toolbox (GitHub App)
+  * Repo: googleapis/mcp-toolbox (GitHub App)
   * Base branch: `^main$`
 * **Comment control:** Required except for owners and collaborators
 * **Filters:** Add directory filter

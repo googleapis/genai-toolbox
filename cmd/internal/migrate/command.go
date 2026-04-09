@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/spf13/cobra"
 )
 

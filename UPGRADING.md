@@ -7,7 +7,7 @@ As part of this milestone, we have introduced several breaking changes and
 deprecations that require updates to your configuration and code.
 
 **📖 New Versioning Policy**
-We have officially published our [Versioning Policy](https://googleapis.github.io/genai-toolbox/dev/about/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
+We have officially published our [Versioning Policy](https://mcp-toolbox.dev/reference/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
 * **Major (vX.0.0):** Breaking changes requiring manual updates.
 * **Minor (v1.X.0):** New, backward-compatible features and deprecation notices.
 * **Patch (v1.0.X):** Backward-compatible bug fixes and security patches.
@@ -25,8 +25,7 @@ If you still require the legacy `/api` endpoint, you must explicitly activate it
 * **Migration:** You must update all custom implementations to use the `/mcp`
   endpoint exclusively, as the `/api` endpoint is now deprecated. If your workflow  
   relied on a non-standard feature that is missing from the new implementation, please submit a
-  feature request on our [GitHub Issues page](https://github.com/googleapis/genai-toolbox/issues).
-* **UI Dependency:** Until the UI is officially migrated, it still requires the API to function. You must run the toolbox with both flags: `./toolbox --ui --enable-api`.
+  feature request on our [GitHub Issues page](https://github.com/googleapis/mcp-toolbox/issues).
 
 ### 2. Strict Tool Naming Validation (SEP986)
 Tool names are now strictly validated against [ModelContextProtocol SEP986 guidelines](https://github.com/alexhancock/modelcontextprotocol/blob/main/docs/specification/draft/server/tools.mdx#tool-names) prior to MCP initialization.
@@ -110,4 +109,4 @@ The following CLI flags are deprecated and will be removed in a future release. 
 
 * **Prebuilt Tools:** Toolsets have been resized for better performance.
 ## 📚 Documentation Moved
-Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](http://mcp-toolbox.dev).
+Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](https://mcp-toolbox.dev).

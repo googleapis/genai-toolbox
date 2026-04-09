@@ -3,8 +3,7 @@ import asyncio
 from langgraph.prebuilt import create_react_agent
 
 # TODO(developer): replace this with another import if needed
-from langchain_google_vertexai import ChatVertexAI
-# from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 # from langchain_anthropic import ChatAnthropic
 
 from langgraph.checkpoint.memory import MemorySaver
@@ -29,8 +28,7 @@ queries = [
 
 async def main():
     # TODO(developer): replace this with another model if needed
-    model = ChatVertexAI(model_name="gemini-2.0-flash-001")
-    # model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-001")
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
     # model = ChatAnthropic(model="claude-3-5-sonnet-20240620")
 
     # Load the tools from the Toolbox server
@@ -42,7 +40,8 @@ async def main():
         config = {"configurable": {"thread_id": "thread-1"}}
         for query in queries:
             inputs = {"messages": [("user", prompt + query)]}
+            print(f"\n[INPUT] User: {query}")
             response = agent.invoke(inputs, stream_mode="values", config=config)
-            print(response["messages"][-1].content)
+            print(f"[OUTPUT] AI: {response['messages'][-1].content}")
 
 asyncio.run(main())

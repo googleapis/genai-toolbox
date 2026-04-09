@@ -26,7 +26,7 @@
             debounceTimeoutMs: 300,
             bundlePath: "{{ relURL "pagefind/" }}",
             processResult: function (result) {
-              const ignoredSegments = ["en", "docs", "dev", "genai-toolbox"];
+              const ignoredSegments = ["en", "docs", "dev", "mcp-toolbox"];
               let path = result.url.replace(/^https?:\/\/[^\/]+/, "").split('#')[0].replace(/\/$/, "");
               let parts = path.split("/").filter(p => p && !ignoredSegments.includes(p));
               parts.pop();
