@@ -37,7 +37,25 @@ func TestAlloyDBListTools(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	toolsFile := getAlloyDBToolsConfig()
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"alloydb-admin-source": map[string]any{
+				"type": "alloydb-admin",
+			},
+		},
+		"tools": map[string]any{
+			"alloydb-list-clusters": map[string]any{
+				"type":        "alloydb-list-clusters",
+				"source":      "alloydb-admin-source",
+				"description": "Lists all AlloyDB clusters in a given project and location.",
+			},
+			"alloydb-list-users": map[string]any{
+				"type":        "alloydb-list-users",
+				"source":      "alloydb-admin-source",
+				"description": "Lists all AlloyDB users within a specific cluster.",
+			},
+		},
+	}
 
 	// Start the toolbox server
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)

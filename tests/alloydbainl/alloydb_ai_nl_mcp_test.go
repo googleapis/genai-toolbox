@@ -47,29 +47,57 @@ func TestAlloyDBAINLListTools(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	statusCode, toolsList, err := tests.GetMCPToolsList(t, nil)
-	if err != nil {
-		t.Fatalf("native error executing tools/list: %s", err)
-	}
-	if statusCode != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", statusCode)
+	// Verify list of tools
+	expectedTools := []tests.MCPToolManifest{
+		{
+			Name:        "my-simple-tool",
+			Description: "Simple tool to test end to end functionality.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"question": map[string]any{
+						"description": "The natural language question to ask.",
+						"type":        "string",
+					},
+				},
+				"required": []any{"question"},
+			},
+		},
+		{
+			Name:        "my-auth-tool",
+			Description: "Tool to test authenticated parameters.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"question": map[string]any{
+						"description": "The natural language question to ask.",
+						"type":        "string",
+					},
+					"email": map[string]any{
+						"description": "user email",
+						"type":        "string",
+					},
+				},
+				"required": []any{"question", "email"},
+			},
+		},
+		{
+			Name:        "my-auth-required-tool",
+			Description: "Tool to test auth required invocation.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"question": map[string]any{
+						"description": "The natural language question to ask.",
+						"type":        "string",
+					},
+				},
+				"required": []any{"question"},
+			},
+		},
 	}
 
-	// Verify that my-simple-tool is in the list
-	found := false
-	for _, tool := range toolsList {
-		toolMap, ok := tool.(map[string]any)
-		if !ok {
-			continue
-		}
-		if toolMap["name"] == "my-simple-tool" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected tool 'my-simple-tool' not found in list")
-	}
+	tests.RunMCPToolsListMethod(t, expectedTools)
 }
 
 func TestAlloyDBAINLCallTool(t *testing.T) {

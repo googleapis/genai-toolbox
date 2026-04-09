@@ -28,6 +28,7 @@ import (
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
 
@@ -86,7 +87,37 @@ func TestHTTPListTools(t *testing.T) {
 	}))
 	defer jwksServer.Close()
 
-	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolType, jwksServer.URL)
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"tools": map[string]any{
+			"my-simple-tool": map[string]any{
+				"type":        HttpToolType,
+				"path":        "/tool0",
+				"method":      "POST",
+				"source":      "my-instance",
+				"requestBody": "{}",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"my-tool": map[string]any{
+				"type":        HttpToolType,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/tool1",
+				"description": "some description",
+				"queryParams": []parameters.Parameter{
+					parameters.NewIntParameter("id", "user ID")},
+				"bodyParams": []parameters.Parameter{parameters.NewStringParameter("name", "user name")},
+				"requestBody": `{
+"age": 36,
+"name": "{{.name}}"
+}
+`,
+				"headers": map[string]string{"Content-Type": "application/json"},
+			},
+		},
+	}
 
 	// Start the toolbox server.
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
