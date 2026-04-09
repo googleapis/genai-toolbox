@@ -1345,7 +1345,7 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 		name           string
 		toolName       string
 		requestHeader  map[string]string
-		args          map[string]any
+		args           map[string]any
 		wantStatusCode int
 		want           string
 		isAllTables    bool
