@@ -536,7 +536,7 @@ steps:
       - "GOPATH=/gopath"
       - "NEO4J_DATABASE=$_NEO4J_DATABASE"
       - "NEO4J_URI=$_NEO4J_URI"
-    secretEnv: ["NEO4J_USER", "NEO4J_PASS"]
+    secretEnv: ["NEO4J_USER", "NEO4J_PASS", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
