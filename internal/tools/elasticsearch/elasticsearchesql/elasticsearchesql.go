@@ -20,14 +20,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	es "github.com/googleapis/genai-toolbox/internal/sources/elasticsearch"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	es "github.com/googleapis/mcp-toolbox/internal/sources/elasticsearch"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 const resourceType string = "elasticsearch-esql"

@@ -449,4 +449,4 @@ with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
     result = tool(param="value")
 ```
 
-Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/core/#opentelemetry) for a full setup example.
+Configure your OpenTelemetry `TracerProvider` and `MeterProvider` before creating the client. See the [toolbox-core OpenTelemetry documentation](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry) for a full setup example.
