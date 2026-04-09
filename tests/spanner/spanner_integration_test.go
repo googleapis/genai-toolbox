@@ -1037,7 +1037,7 @@ func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
 	defer adminClient.Close()
 
 	// Create unique DB name
-	dbName := "pg_db_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	dbName := "pg_db_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:20]
 
 	t.Logf("Creating temporary PostgreSQL database: %s", dbName)
 	err = createSpannerPostgresqlDatabase(t, ctx, adminClient, SpannerProject, SpannerInstance, dbName)
