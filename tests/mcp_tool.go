@@ -136,6 +136,35 @@ func InvokeMCPTool(t *testing.T, toolName string, arguments map[string]any, requ
 	return resp.StatusCode, &mcpResp, nil
 }
 
+// getMCPResultText safely extracts the text from content blocks, unmarshaling them if they are valid JSON.
+//
+// TODO: For tests that need to strictly validate the exact schema or structure of the output,
+// consider avoiding this helper and instead unmarshal the raw JSON directly into expected Go structs for comparison.
+func getMCPResultText(t *testing.T, resp *MCPCallToolResponse) []any {
+	if len(resp.Result.Content) == 0 {
+		return []any{}
+	}
+
+	var res []any
+	for _, content := range resp.Result.Content {
+		var item any
+		if err := json.Unmarshal([]byte(content.Text), &item); err != nil {
+			res = append(res, content.Text)
+		} else {
+			if slice, ok := item.([]any); ok {
+				res = append(res, slice...)
+			} else {
+				res = append(res, item)
+			}
+		}
+
+	}
+	if res == nil {
+		return []any{}
+	}
+	return res
+}
+
 // GetMCPToolsList is a JSON-RPC harness that fetches the tools/list registry.
 func GetMCPToolsList(t *testing.T, requestHeader map[string]string) (int, []any, error) {
 	headers := NewMCPRequestHeader(t, requestHeader)
@@ -251,13 +280,11 @@ func RunMCPCustomToolCallMethod(t *testing.T, toolName string, arguments map[str
 	if mcpResp.Result.IsError {
 		t.Fatalf("%s returned error result: %v", toolName, mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
-		t.Fatalf("%s returned empty content field", toolName)
-	}
-	got := mcpResp.Result.Content[0].Text
-	if !strings.Contains(got, want) {
-		t.Fatalf(`expected %q to contain %q`, got, want)
-	}
+	got := getMCPResultText(t, mcpResp)
+	gotBytes, _ := json.Marshal(got)
+	gotStr := string(gotBytes)
+	if !strings.Contains(gotStr, want) {
+		t.Fatalf(`expected %q to contain %q`, gotStr, want)
 }
 
 // RunMCPToolInvokeTest runs the tool invoke test cases over MCP protocol.
@@ -352,12 +379,11 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTes
 			if mcpResp.Result.IsError {
 				t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
 			}
-			if len(mcpResp.Result.Content) == 0 {
-				t.Fatalf("%s returned empty content field", tc.toolName)
-			}
-			got := mcpResp.Result.Content[0].Text
-			if !strings.Contains(got, tc.wantResult) {
-				t.Fatalf(`expected %q to contain %q`, got, tc.wantResult)
+			got := getMCPResultText(t, mcpResp)
+			gotBytes, _ := json.Marshal(got)
+			gotStr := string(gotBytes)
+			if !strings.Contains(gotStr, tc.wantResult) {
+				t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantResult)
 			}
 		})
 	}
