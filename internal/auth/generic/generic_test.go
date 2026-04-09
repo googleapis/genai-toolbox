@@ -15,6 +15,7 @@
 package generic
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -27,6 +28,8 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func generateRSAPrivateKey(t *testing.T) *rsa.PrivateKey {
@@ -213,6 +216,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 		token          string
 		scopesRequired []string
 		audience       string
+		mockOidcConfig map[string]any
 		mockResponse   map[string]any
 		mockStatus     int
 		wantError      bool
@@ -224,10 +228,41 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			scopesRequired: []string{"read:files"},
 			audience:       "my-audience",
 			mockResponse: map[string]any{
-				"active":    true,
-				"scope":     "read:files write:files",
-				"client_id": "my-audience",
-				"exp":       time.Now().Add(time.Hour).Unix(),
+				"active": true,
+				"scope":  "read:files write:files",
+				"aud":    "my-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
+			name:           "valid opaque token with custom introspection endpoint",
+			token:          "opaque-valid-custom",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockOidcConfig: map[string]any{
+				"introspection_endpoint": "http://SERVER_HOST/custom-introspect",
+			},
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files",
+				"aud":    "my-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
+			name:           "valid opaque token with array aud",
+			token:          "opaque-valid-array-aud",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files",
+				"aud":    []string{"other-audience", "my-audience"},
+				"exp":    time.Now().Add(time.Hour).Unix(),
 			},
 			mockStatus: http.StatusOK,
 			wantError:  false,
@@ -261,9 +296,9 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			token:    "opaque-bad-aud",
 			audience: "my-audience",
 			mockResponse: map[string]any{
-				"active":    true,
-				"client_id": "wrong-audience",
-				"exp":       time.Now().Add(time.Hour).Unix(),
+				"active": true,
+				"aud":    "wrong-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
 			},
 			mockStatus:  http.StatusOK,
 			wantError:   true,
@@ -297,10 +332,21 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "/.well-known/openid-configuration" {
 					w.Header().Set("Content-Type", "application/json")
-					_ = json.NewEncoder(w).Encode(map[string]interface{}{
+					config := map[string]interface{}{
 						"issuer":   "https://example.com",
 						"jwks_uri": "http://" + r.Host + "/jwks",
-					})
+					}
+					if tc.mockOidcConfig != nil {
+						for k, v := range tc.mockOidcConfig {
+							valStr, ok := v.(string)
+							if ok && strings.Contains(valStr, "SERVER_HOST") {
+								config[k] = strings.Replace(valStr, "SERVER_HOST", r.Host, 1)
+							} else {
+								config[k] = v
+							}
+						}
+					}
+					_ = json.NewEncoder(w).Encode(config)
 					return
 				}
 				if r.URL.Path == "/jwks" {
@@ -310,7 +356,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 					})
 					return
 				}
-				if r.URL.Path == "/introspect" {
+				if r.URL.Path == "/introspect" || r.URL.Path == "/custom-introspect" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(tc.mockStatus)
 					_ = json.NewEncoder(w).Encode(tc.mockResponse)
@@ -339,7 +385,12 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 				t.Fatalf("expected *AuthService, got %T", authService)
 			}
 
-			ctx := context.Background()
+			logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+			if err != nil {
+				t.Fatalf("failed to create logger: %v", err)
+			}
+			ctx := util.WithLogger(context.Background(), logger)
+
 			header := http.Header{}
 			header.Set("Authorization", "Bearer "+tc.token)
 
@@ -430,7 +481,12 @@ func TestValidateJwtToken(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := genericAuth.validateJwtToken(context.Background(), tc.token)
+			logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+			if err != nil {
+				t.Fatalf("failed to create logger: %v", err)
+			}
+			ctx := util.WithLogger(context.Background(), logger)
+			err = genericAuth.validateJwtToken(ctx, tc.token)
 			if tc.wantError {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -453,6 +509,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 		token          string
 		scopesRequired []string
 		audience       string
+		mockOidcConfig map[string]any
 		mockResponse   map[string]any
 		mockStatus     int
 		wantError      bool
@@ -464,10 +521,41 @@ func TestValidateOpaqueToken(t *testing.T) {
 			scopesRequired: []string{"read:files"},
 			audience:       "my-audience",
 			mockResponse: map[string]any{
-				"active":    true,
-				"scope":     "read:files write:files",
-				"client_id": "my-audience",
-				"exp":       time.Now().Add(time.Hour).Unix(),
+				"active": true,
+				"scope":  "read:files write:files",
+				"aud":    "my-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
+			name:           "valid opaque token with custom introspection endpoint",
+			token:          "opaque-valid-custom",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockOidcConfig: map[string]any{
+				"introspection_endpoint": "http://SERVER_HOST/custom-introspect",
+			},
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files",
+				"aud":    "my-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
+			name:           "valid opaque token with array aud",
+			token:          "opaque-valid-array-aud",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files",
+				"aud":    []string{"other-audience", "my-audience"},
+				"exp":    time.Now().Add(time.Hour).Unix(),
 			},
 			mockStatus: http.StatusOK,
 			wantError:  false,
@@ -501,9 +589,9 @@ func TestValidateOpaqueToken(t *testing.T) {
 			token:    "opaque-bad-aud",
 			audience: "my-audience",
 			mockResponse: map[string]any{
-				"active":    true,
-				"client_id": "wrong-audience",
-				"exp":       time.Now().Add(time.Hour).Unix(),
+				"active": true,
+				"aud":    "wrong-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
 			},
 			mockStatus:  http.StatusOK,
 			wantError:   true,
@@ -535,7 +623,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/introspect" {
+				if r.URL.Path == "/introspect" || r.URL.Path == "/custom-introspect" {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(tc.mockStatus)
 					_ = json.NewEncoder(w).Encode(tc.mockResponse)
@@ -552,9 +640,16 @@ func TestValidateOpaqueToken(t *testing.T) {
 					AuthorizationServer: server.URL,
 					ScopesRequired:      tc.scopesRequired,
 				},
+				client: newSecureHTTPClient(),
 			}
 
-			err := genericAuth.validateOpaqueToken(context.Background(), tc.token)
+			logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+			if err != nil {
+				t.Fatalf("failed to create logger: %v", err)
+			}
+			ctx := util.WithLogger(context.Background(), logger)
+
+			err = genericAuth.validateOpaqueToken(ctx, tc.token)
 
 			if tc.wantError {
 				if err == nil {
