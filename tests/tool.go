@@ -33,8 +33,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -249,7 +249,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	}
 
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -624,7 +624,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -748,52 +748,6 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 }
 
-// RunInitialize runs the initialize lifecycle for mcp to set up client-server connection
-func RunInitialize(t *testing.T, protocolVersion string) string {
-	url := "http://127.0.0.1:5000/mcp"
-
-	initializeRequestBody := map[string]any{
-		"jsonrpc": "2.0",
-		"id":      "mcp-initialize",
-		"method":  "initialize",
-		"params": map[string]any{
-			"protocolVersion": protocolVersion,
-		},
-	}
-	reqMarshal, err := json.Marshal(initializeRequestBody)
-	if err != nil {
-		t.Fatalf("unexpected error during marshaling of body")
-	}
-
-	resp, _ := RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
-	if resp.StatusCode != 200 {
-		t.Fatalf("response status code is not 200")
-	}
-
-	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
-		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
-	}
-
-	sessionId := resp.Header.Get("Mcp-Session-Id")
-
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
-	}
-
-	initializeNotificationBody := map[string]any{
-		"jsonrpc": "2.0",
-		"method":  "notifications/initialized",
-	}
-	notiMarshal, err := json.Marshal(initializeNotificationBody)
-	if err != nil {
-		t.Fatalf("unexpected error during marshaling of notifications body")
-	}
-
-	_, _ = RunRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
-	return sessionId
-}
-
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
 func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, options ...McpTestOption) {
 	// Resolve options
@@ -819,7 +773,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	}
 	accessToken = "Bearer " + accessToken
 
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1417,7 +1371,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
-		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/genai-toolbox/issues/2562
+		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/mcp-toolbox/issues/2562
 		// {
 		// 	name:           "invoke list_schemas with owner name",
 		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
@@ -4765,33 +4719,6 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 			}
 		})
 	}
-}
-
-// RunRequest is a helper function to send HTTP requests and return the response
-func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
-	// Send request
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		t.Fatalf("unable to create request: %s", err)
-	}
-
-	req.Header.Set("Content-type", "application/json")
-
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("unable to send request: %s", err)
-	}
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("unable to read request body: %s", err)
-	}
-
-	defer resp.Body.Close()
-	return resp, respBody
 }
 
 func RunStatementToolsTest(t *testing.T, tools map[string]string) {

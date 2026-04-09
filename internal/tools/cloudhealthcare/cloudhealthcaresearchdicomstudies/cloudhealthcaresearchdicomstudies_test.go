@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	searchdicomstudies "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomstudies"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	searchdicomstudies "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomstudies"
 )
 
 func TestParseFromYamlHealthcareSearchDICOMStudies(t *testing.T) {

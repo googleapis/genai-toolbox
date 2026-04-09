@@ -32,12 +32,12 @@ import (
 	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
 	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	source "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudgda"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	source "github.com/googleapis/mcp-toolbox/internal/sources/cloudgda"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudgda"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
@@ -557,7 +557,7 @@ func TestCloudGDAConservationalAnalyticsTools(t *testing.T) {
 }
 
 func runListAccessibleDataAgentsInvokeTest(t *testing.T, dataAgentDisplayName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -663,7 +663,7 @@ func runListAccessibleDataAgentsInvokeTest(t *testing.T, dataAgentDisplayName st
 }
 
 func runGetDataAgentInfoInvokeTest(t *testing.T, dataAgentName, dataAgentDisplayName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -767,7 +767,7 @@ func runAskDataAgentInvokeTest(t *testing.T, dataAgentID string) {
 	const maxRetries = 3
 	const requestTimeout = 340 * time.Second
 
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}

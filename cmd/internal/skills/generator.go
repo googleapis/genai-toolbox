@@ -20,8 +20,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const skillTemplate = `---
@@ -171,7 +171,9 @@ function prepareEnvironment() {
 		userAgent = "skills-geminicli";
 	} else if (process.env.CLAUDECODE === '1') {
 		userAgent = "skills-claudecode";
-	}
+	} else if (process.env.CODEX_CI === '1') {
+        userAgent = "skills-codex";
+    }
 	mergeEnvVars(env);
 	{{if .OptionalVars}}
 	OPTIONAL_VARS_TO_OMIT_IF_EMPTY.forEach(varName => {
