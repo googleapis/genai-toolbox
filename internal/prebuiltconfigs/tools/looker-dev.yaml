@@ -388,25 +388,55 @@ tools:
           Output:
           A confirmation message upon successful view generation, or an error message if the operation fails.
 
-    project_git_branch:
-        kind: looker-git-branch
+    list_git_branches:
+        kind: looker-list-git-branches
         source: looker-source
         description: |
-          This tool is used to retrieve and manipulate the git branch of a LookML project.
-
-          An operation id must be provided which is one of the following:
-          * `list` - List all the available branch names.
-          * `get` - Get the current branch name.
-          * `create` - Create a new branch. The branch is initial set to the current ref, unless ref is specified. This only works in dev mode.
-          * `switch` - Change the branch to the given branch, and update to the given ref if specified. This only works in dev mode.
-          * `delete` - Delete a branch. This only works in dev mode.  
+          This tool is used to retrieve the list of available git branches of a LookML project.
 
           Parameters:
           - project_id (required): The unique ID of the LookML project.
-          - operation (required): One of `list`, `get`, `create`, `switch`, or `delete`.
-          - branch (optional): The branch to create, switch to, or delete.
-          - ref (optional): The ref to start a newly created branch, or change a branch with `reset --hard` on a switch operation.
 
+    get_git_branch:
+        kind: looker-get-git-branch
+        source: looker-source
+        description: |
+          This tool is used to retrieve the current git branch of a LookML project.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+
+    create_git_branch:
+        kind: looker-create-git-branch
+        source: looker-source
+        description: |
+          This tool is used to create a new git branch of a LookML project. This only works in dev mode.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - branch (required): The branch to create.
+          - ref (optional): The ref to start a newly created branch.
+
+    switch_git_branch:
+        kind: looker-switch-git-branch
+        source: looker-source
+        description: |
+          This tool is used to switch the git branch of a LookML project. This only works in dev mode.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - branch (required): The branch to switch to.
+          - ref (optional): The ref to change a branch with `reset --hard` on a switch operation.
+
+    delete_git_branch:
+        kind: looker-delete-git-branch
+        source: looker-source
+        description: |
+          This tool is used to delete a git branch of a LookML project. This only works in dev mode.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - branch (required): The branch to delete.
 toolsets:
     looker_dev_tools:
         - health_pulse
@@ -431,4 +461,8 @@ toolsets:
         - get_lookml_tests
         - run_lookml_tests
         - create_view_from_table
-        - project_git_branch
+        - list_git_branches
+        - get_git_branch
+        - create_git_branch
+        - switch_git_branch
+        - delete_git_branch

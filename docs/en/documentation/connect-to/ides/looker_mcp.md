@@ -551,7 +551,11 @@ as well as get the database schema needed to write LookML effectively.
 1. **get_lookml_tests**: Retrieves a list of available LookML tests for a project.
 1. **run_lookml_tests**: Executes specific LookML tests within a project.
 1. **create_view_from_table**: Generates boilerplate LookML views directly from the database schema.
-1. **project_git_branch**: Fetch and manipulate the git branch of a LookML project.
+1. **list_git_branches**: List the available git branches of a LookML project.
+1. **get_git_branch**: Get the current git branch of a LookML project.
+1. **create_git_branch**: Create a new git branch for a LookML project.
+1. **switch_git_branch**: Switch the git branch of a LookML project.
+1. **delete_git_branch**: Delete a git branch of a LookML project.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

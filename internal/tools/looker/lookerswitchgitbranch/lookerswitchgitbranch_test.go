@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package lookergitbranch_test
+package lookerswitchgitbranch_test
 
 import (
 	"strings"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookergitbranch"
+	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerswitchgitbranch"
 )
 
-func TestParseFromYamlLookerGitBranch(t *testing.T) {
+func TestParseFromYamlLookerSwitchGitBranch(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,14 +39,14 @@ func TestParseFromYamlLookerGitBranch(t *testing.T) {
 			in: `
             kind: tool
             name: example_tool
-            type: looker-git-branch
+            type: looker-switch-git-branch
             source: my-instance
             description: some description
 				`,
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Type:         "looker-git-branch",
+					Type:         "looker-switch-git-branch",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -56,7 +56,6 @@ func TestParseFromYamlLookerGitBranch(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			// Parse contents
 			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
@@ -66,10 +65,9 @@ func TestParseFromYamlLookerGitBranch(t *testing.T) {
 			}
 		})
 	}
-
 }
 
-func TestFailParseFromYamlLookerGitBranch(t *testing.T) {
+func TestFailParseFromYamlLookerSwitchGitBranch(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -84,17 +82,16 @@ func TestFailParseFromYamlLookerGitBranch(t *testing.T) {
 			in: `
             kind: tool
             name: example_tool
-            type: looker-git-branch
+            type: looker-switch-git-branch
             source: my-instance
             method: GOT
             description: some description
 			`,
-			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-git-branch\": [3:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n>  3 | method: GOT\n       ^\n   4 | name: example_tool\n   5 | source: my-instance\n   6 | type: looker-git-branch",
+			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-switch-git-branch\": [3:1] unknown field \"method\"",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			// Parse contents
 			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
@@ -105,5 +102,4 @@ func TestFailParseFromYamlLookerGitBranch(t *testing.T) {
 			}
 		})
 	}
-
 }
