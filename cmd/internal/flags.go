@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

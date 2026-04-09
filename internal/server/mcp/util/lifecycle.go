@@ -15,7 +15,7 @@
 package util
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 )
 
 const (

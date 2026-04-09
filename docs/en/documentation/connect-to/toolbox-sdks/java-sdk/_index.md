@@ -25,7 +25,7 @@ within your Java applications or AI orchestration frameworks.
 ## Getting Started
 
 First make sure MCP Toolbox Server is set up and is running (either locally or deployed on Cloud Run). Follow the instructions here: [**MCP Toolbox Getting Started
-    Guide**](https://googleapis.github.io/genai-toolbox/getting-started/introduction/#getting-started)
+    Guide**](https://mcp-toolbox.dev/documentation/introduction/#getting-started)
 
 ## Installation
 

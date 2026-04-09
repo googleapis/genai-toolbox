@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/cloudsqlconn"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 // RunSourceConnection test for source connection

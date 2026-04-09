@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/googleapis/genai-toolbox/cmd"
+	"github.com/googleapis/mcp-toolbox/cmd"
 )
 
 func main() {

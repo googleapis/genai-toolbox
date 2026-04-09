@@ -31,8 +31,8 @@ import (
 	dataplex "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
@@ -418,7 +418,7 @@ func runDataplexToolGetTest(t *testing.T) {
 }
 
 func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, datasetName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -551,7 +551,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 }
 
 func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datasetName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -721,7 +721,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 }
 
 func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -837,7 +837,7 @@ func runDataplexSearchAspectTypesToolInvokeTest(t *testing.T, aspectTypeId strin
 }
 
 func runDataplexLookupContextToolInvokeTest(t *testing.T, tableName string, datasetName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}

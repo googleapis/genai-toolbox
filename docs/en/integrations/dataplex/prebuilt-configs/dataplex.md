@@ -19,3 +19,4 @@ description: "Details of the Dataplex prebuilt configuration."
         Catalog.
     *   `search_aspect_types`: Finds aspect types relevant to the
         query.
+    *   `lookup_context`: Retrieves rich metadata regarding one or more data assets along with their relationships.

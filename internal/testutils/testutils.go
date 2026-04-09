@@ -23,8 +23,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 // formatYaml is a utility function for stripping out tabs in multiline strings
