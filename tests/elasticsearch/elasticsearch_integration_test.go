@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -27,19 +28,19 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v9"
 	"github.com/elastic/go-elasticsearch/v9/esapi"
-
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
 	ElasticsearchSourceType = "elasticsearch"
 	ElasticsearchToolType   = "elasticsearch-esql"
-	EsAddress               = ""
-	EsUser                  = "elastic"
-	EsPass                  = "test-password"
+	EsAddress               = os.Getenv("ELASTICSEARCH_HOST")
+	EsUser                  = os.Getenv("ELASTICSEARCH_USER")
+	EsPass                  = os.Getenv("ELASTICSEARCH_PASS")
 )
 
 func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, func()) {
@@ -88,6 +89,9 @@ func setupElasticsearchContainer(ctx context.Context, t *testing.T) (string, fun
 }
 
 func getElasticsearchVars(t *testing.T) map[string]any {
+	if EsAddress == "" {
+		t.Fatal("'ELASTICSEARCH_HOST' not set")
+	}
 	return map[string]any{
 		"type":      ElasticsearchSourceType,
 		"addresses": []string{EsAddress},
@@ -124,8 +128,8 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
-	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
-	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ? OR name == ? | LIMIT 0", index)
+	searchStmt := fmt.Sprintf("FROM %s | WHERE embedding IS NOT NULL | EVAL score = COSINE_SIMILARITY(embedding, ?query) | SORT score DESC | LIMIT 1 | KEEP id, name", index)
+	insertStmt := fmt.Sprintf("FROM %s | WHERE name == ?content OR name == ?text_to_embed | LIMIT 0", index)
 	toolsConfig = tests.AddSemanticSearchConfig(t, toolsConfig, ElasticsearchToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
@@ -244,22 +248,22 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
-	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ? OR name == ? | SORT id ASC | KEEP id, name, name.keyword, email, email.keyword`, index)
-	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ? | KEEP id, name, name.keyword, email, email.keyword`, index)
-	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ? | KEEP id, name, name.keyword, email, email.keyword`, index)
-	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?`, index) // Not supported yet.
-	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ? | KEEP name`, index)
+	paramToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id OR name == ?name | SORT id ASC | KEEP id, name, email`, index)
+	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id | KEEP id, name, email`, index)
+	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name | KEEP id, name, email`, index)
+	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?first_name_array`, index) // Not supported yet.
+	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ?email | KEEP name`, index)
 	return paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement
 }
 
 func getElasticsearchWants() ElasticsearchWants {
-	select1Want := fmt.Sprintf(`[{"email":"%[1]s","email.keyword":"%[1]s","id":1,"name":"Alice","name.keyword":"Alice"},{"email":"janedoe@gmail.com","email.keyword":"janedoe@gmail.com","id":2,"name":"Jane","name.keyword":"Jane"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"},{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"},{"email":null,"email.keyword":null,"id":5,"name":"Semantic","name.keyword":"Semantic"}]`, tests.ServiceAccountEmail)
+	select1Want := fmt.Sprintf(`[{"email":"%[1]s","email.keyword":"%[1]s","id":1,"name":"Alice","name.keyword":"Alice"},{"email":"janedoe@gmail.com","email.keyword":"janedoe@gmail.com","id":2,"name":"Jane","name.keyword":"Jane"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"},{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"}]`, tests.ServiceAccountEmail)
 	myToolId3NameAliceWant := fmt.Sprintf(`[{"email":"%[1]s","email.keyword":"%[1]s","id":1,"name":"Alice","name.keyword":"Alice"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"}]`, tests.ServiceAccountEmail)
 	myToolById4Want := `[{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"}]`
 	nullWant := `{"error":{"root_cause":[{"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"}],"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"},"status":400}`
 	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]}`
 	mcpMyToolId3NameAliceWant := fmt.Sprintf(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"}]"}]}}`, tests.ServiceAccountEmail)
-	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"},{\"email\":null,\"email.keyword\":null,\"id\":5,\"name\":\"Semantic\",\"name.keyword\":\"Semantic\"}]"}]}}`, tests.ServiceAccountEmail)
+	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"}]"}]}}`, tests.ServiceAccountEmail)
 
 	return ElasticsearchWants{
 		Select1:               select1Want,
@@ -288,7 +292,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToo
 				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
-				"query":       "FROM test-index | SORT id ASC | KEEP id, name, name.keyword, email, email.keyword",
+				"query":       "FROM test-index | SORT id ASC",
 			},
 			"my-tool": map[string]any{
 				"type":        toolType,
