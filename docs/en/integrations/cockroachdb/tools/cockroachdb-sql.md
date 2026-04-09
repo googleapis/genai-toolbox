@@ -292,4 +292,4 @@ The tool automatically handles:
 - [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - For ad-hoc SQL execution
 - [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database
 - [cockroachdb-list-schemas](./cockroachdb-list-schemas.md) - List database schemas
-- [CockroachDB Source](_index.md) - Source configuration reference
+- [CockroachDB Source](../source.md) - Source configuration reference
