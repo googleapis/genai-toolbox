@@ -245,6 +245,8 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	// Semantic search tests
 	semanticSearchWant := `[{"id":5,"name":"Semantic","name.keyword":"Semantic"}]`
 	tests.RunSemanticSearchToolInvokeTest(t, "", "", semanticSearchWant)
+
+	runExecuteEsqlTest(t, index)
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
