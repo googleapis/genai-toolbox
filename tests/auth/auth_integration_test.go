@@ -68,10 +68,10 @@ func TestMcpAuth(t *testing.T) {
 		if r.URL.Path == "/introspect" {
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"active":    true,
-				"scope":     "read:files",
-				"client_id": "test-audience",
-				"exp":       time.Now().Add(time.Hour).Unix(),
+				"active": true,
+				"scope":  "read:files",
+				"aud":    "test-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
 			})
 			return
 		}
