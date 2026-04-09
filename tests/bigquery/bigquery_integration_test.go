@@ -156,6 +156,14 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	// Set up table for semantic search
+	vectorTableName, teardownVectorTable := setupBigQueryVectorTable(t, ctx, client, datasetName)
+	defer teardownVectorTable(t)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := getBigQueryVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, BigqueryToolType, insertStmt, searchStmt)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -205,6 +213,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
+	tests.RunSemanticSearchToolInvokeTest(t, ddlWant, "", "The quick brown fox")
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
@@ -3262,4 +3271,25 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			}
 		})
 	}
+}
+
+// setupBigQueryVectorTable creates a vector table in BigQuery for semantic search testing
+func setupBigQueryVectorTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string) (string, func(*testing.T)) {
+	tableName := fmt.Sprintf("vector_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	fullTableName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, datasetName, tableName)
+	createStatement := fmt.Sprintf(`CREATE TABLE %s (
+		id INT64,
+		content STRING,
+		embedding ARRAY<FLOAT64>
+	)`, fullTableName)
+
+	teardownTable := setupBigQueryTable(t, ctx, client, createStatement, "", datasetName, fullTableName, nil)
+	return fullTableName, teardownTable
+}
+
+// getBigQueryVectorSearchStmts returns statements for bigquery semantic search
+func getBigQueryVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, @content, @text_to_embed)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, ML.DISTANCE(embedding, @query, 'COSINE') AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
 }
