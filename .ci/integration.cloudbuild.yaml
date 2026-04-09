@@ -276,7 +276,7 @@ steps:
       - "GOPATH=/gopath"
       - "BIGQUERY_PROJECT=$PROJECT_ID"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
+    secretEnv: ["CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"

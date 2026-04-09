@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookergitbranch
+package lookercreategitbranch
 
 import (
 	"context"
@@ -29,7 +29,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const resourceType string = "looker-git-branch"
+const resourceType string = "looker-create-git-branch"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -70,12 +70,16 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	projectIdParameter := parameters.NewStringParameter("project_id", "The project_id")
-	operationParameter := parameters.NewStringParameter("operation", "The operation, one of `list`, `get`, `create`, `switch`, or `delete`")
-	branchParameter := parameters.NewStringParameterWithDefault("branch", "", "The git branch on which to operate. Not required for `list` or `get` operations.")
-	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to use as the start of a new branch. If not specified for a `create` operation it will default to HEAD of current branch. If supplied with a `switch` operation will `reset --hard` the branch.")
-	params := parameters.Parameters{projectIdParameter, operationParameter, branchParameter, refParameter}
+	branchParameter := parameters.NewStringParameter("branch", "The git branch to create")
+	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to use as the start of a new branch. Defaults to HEAD of current branch if not specified.")
+	params := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
 	annotations := cfg.Annotations
+	if annotations == nil {
+		annotations = &tools.ToolAnnotations{}
+	}
+	readOnlyHint := false
+	annotations.ReadOnlyHint = &readOnlyHint
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
@@ -112,78 +116,30 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
-	}
-
 	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
 		return nil, util.NewClientServerError(fmt.Sprintf("error getting sdk: %v", err), http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
-	logger.DebugContext(ctx, "looker_git_branch params = ", mapParams)
 	projectId := mapParams["project_id"].(string)
-	operation := mapParams["operation"].(string)
 	branch := mapParams["branch"].(string)
 	ref := mapParams["ref"].(string)
-
-	switch operation {
-	case "list":
-		resp, err := sdk.AllGitBranches(projectId, source.LookerApiSettings())
-		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error making list_git_branches request: %s", err), http.StatusInternalServerError, err)
-		}
-		return resp, nil
-	case "get":
-		resp, err := sdk.GitBranch(projectId, source.LookerApiSettings())
-		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error making get_git_branch request: %s", err), http.StatusInternalServerError, err)
-		}
-		return resp, nil
-	case "create":
-		if branch == "" {
-			return nil, util.NewClientServerError(fmt.Sprintf("%s operation: branch must be specified", operation), http.StatusInternalServerError, nil)
-		}
-		body := v4.WriteGitBranch{
-			Name: &branch,
-		}
-		if ref != "" {
-			body.Ref = &ref
-		}
-		resp, err := sdk.CreateGitBranch(projectId, body, source.LookerApiSettings())
-		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error making create_git_branch request: %s", err), http.StatusInternalServerError, err)
-		}
-		return resp, nil
-	case "switch":
-		if branch == "" {
-			return nil, util.NewClientServerError(fmt.Sprintf("%s operation: branch must be specified", operation), http.StatusInternalServerError, nil)
-		}
-		body := v4.WriteGitBranch{
-			Name: &branch,
-		}
-		if ref != "" {
-			body.Ref = &ref
-		}
-		resp, err := sdk.UpdateGitBranch(projectId, body, source.LookerApiSettings())
-		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error making update_git_branch request: %s", err), http.StatusInternalServerError, err)
-		}
-		return resp, nil
-	case "delete":
-		if branch == "" {
-			return nil, util.NewClientServerError(fmt.Sprintf("%s operation: branch must be specified", operation), http.StatusInternalServerError, nil)
-		}
-		_, err := sdk.DeleteGitBranch(projectId, branch, source.LookerApiSettings())
-		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error making delete_git_branch request: %s", err), http.StatusInternalServerError, err)
-		}
-		return fmt.Sprintf("Deleted branch %s", branch), nil
-	default:
-		return nil, util.NewClientServerError(fmt.Sprintf("unknown operation: %s. Must be one of `list`, `get`, `create`, `switch`, or `delete`", operation), http.StatusInternalServerError, nil)
+	if branch == "" {
+		return nil, util.NewClientServerError("branch must be specified", http.StatusInternalServerError, nil)
 	}
+
+	body := v4.WriteGitBranch{
+		Name: &branch,
+	}
+	if ref != "" {
+		body.Ref = &ref
+	}
+	resp, err := sdk.CreateGitBranch(projectId, body, source.LookerApiSettings())
+	if err != nil {
+		return nil, util.NewClientServerError(fmt.Sprintf("error making create_git_branch request: %s", err), http.StatusInternalServerError, err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

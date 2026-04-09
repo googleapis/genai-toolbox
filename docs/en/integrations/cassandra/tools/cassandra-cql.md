@@ -61,7 +61,7 @@ parameters:
 > including keyspaces, table names, and column names. **This makes it more
 > vulnerable to CQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](../#template-parameters).
+> [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters).
 
 ```yaml
 kind: tool
@@ -95,5 +95,5 @@ templateParameters:
 | description        |                    string                     |     true     | Description of the tool that is passed to the LLM.                                                                                      |
 | statement          |                    string                     |     true     | CQL statement to execute.                                                                                                               |
 | authRequired       |                   []string                    |    false     | List of authentication requirements for the source.                                                                                     |
-| parameters         |    [parameters](../#specifying-parameters)    |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the CQL statement.                                           |
-| templateParameters | [templateParameters](../#template-parameters) |    false     | List of [templateParameters](../#template-parameters) that will be inserted into the CQL statement before executing prepared statement. |
+| parameters         |    [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters)    |    false     | List of [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) that will be inserted into the CQL statement.                                           |
+| templateParameters | [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters) |    false     | List of [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters) that will be inserted into the CQL statement before executing prepared statement. |
