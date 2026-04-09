@@ -285,6 +285,7 @@ func RunMCPCustomToolCallMethod(t *testing.T, toolName string, arguments map[str
 	gotStr := string(gotBytes)
 	if !strings.Contains(gotStr, want) {
 		t.Fatalf(`expected %q to contain %q`, gotStr, want)
+	}
 }
 
 // RunMCPToolInvokeTest runs the tool invoke test cases over MCP protocol.
