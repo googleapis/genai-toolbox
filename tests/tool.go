@@ -406,7 +406,6 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
- 
 			name:           "Invoke my-client-auth-tool with invalid auth token",
 			toolName:       "my-client-auth-tool",
 			enabled:        configs.supportClientAuth,
