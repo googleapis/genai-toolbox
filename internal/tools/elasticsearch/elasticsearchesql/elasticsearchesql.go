@@ -40,7 +40,7 @@ func init() {
 
 type compatibleSource interface {
 	ElasticsearchClient() es.EsClient
-	RunSQL(ctx context.Context, format, query string, params any) (any, error)
+	RunSQL(ctx context.Context, format, query string, params []map[string]any) (any, error)
 }
 
 type Config struct {
