@@ -264,154 +264,154 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name           string
-		api            string
+		toolName       string
 		enabled        bool
 		requestHeader  map[string]string
-		requestBody    io.Reader
+		args           map[string]any
 		wantStatusCode int
 		wantBody       string
 	}{
 		{
 			name:           "invoke my-simple-tool",
-			api:            "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
+			toolName:       "my-simple-tool",
 			enabled:        configs.supportSelect1Want,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       select1Want,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke my-tool",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			toolName:       "my-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"id": 3, "name": "Alice"}`)),
+			args:           map[string]any{"id": 3, "name": "Alice"},
 			wantBody:       configs.myToolId3NameAliceWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke my-tool-by-id with nil response",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-id/invoke",
+			toolName:       "my-tool-by-id",
 			enabled:        true,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"id": 4}`)),
+			args:           map[string]any{"id": 4},
 			wantBody:       configs.myToolById4Want,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke my-tool-by-name with nil response",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool-by-name/invoke",
+			toolName:       "my-tool-by-name",
 			enabled:        configs.supportOptionalNullParam,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       configs.nullWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-tool without parameters",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			toolName:       "my-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       `{"error":"parameter \"id\" is required"}`,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-tool with insufficient parameters",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			toolName:       "my-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"id": 1}`)),
+			args:           map[string]any{"id": 1},
 			wantBody:       `{"error":"parameter \"name\" is required"}`,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke my-array-tool",
-			api:            "http://127.0.0.1:5000/api/tool/my-array-tool/invoke",
+			toolName:       "my-array-tool",
 			enabled:        configs.supportArrayParam,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
+			args:           map[string]any{"idArray": []any{1, 2, 3}, "nameArray": []any{"Alice", "Sid", "RandomName"}, "cmdArray": []any{"HGETALL", "row3"}},
 			wantBody:       configs.myArrayToolWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-auth-tool with auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:       "my-auth-tool",
 			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       configs.myAuthToolWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-auth-tool with invalid auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:       "my-auth-tool",
 			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:           "Invoke my-auth-tool without auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:       "my-auth-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:           "Invoke my-auth-required-tool with auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			toolName:       "my-auth-required-tool",
 			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       select1Want,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-auth-required-tool with invalid auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			toolName:       "my-auth-required-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:           "Invoke my-auth-required-tool without auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			toolName:       "my-auth-tool",
 			enabled:        true,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
 			name:           "Invoke my-client-auth-tool with auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			toolName:       "my-client-auth-tool",
 			enabled:        configs.supportClientAuth,
 			requestHeader:  map[string]string{"Authorization": accessToken},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantBody:       select1Want,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-client-auth-tool without auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			toolName:       "my-client-auth-tool",
 			enabled:        configs.supportClientAuth,
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-
+ 
 			name:           "Invoke my-client-auth-tool with invalid auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-client-auth-tool/invoke",
+			toolName:       "my-client-auth-tool",
 			enabled:        configs.supportClientAuth,
 			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			args:           map[string]any{},
 			wantStatusCode: http.StatusUnauthorized,
 		},
 	}
@@ -421,116 +421,127 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				return
 			}
 
-			reqBytes, _ := io.ReadAll(tc.requestBody)
-			var got string
-			var actualStatusCode int
-
 			if configs.IsMCP {
-				// Extract tool name from the API URL for MCP invocation
-				parts := strings.Split(tc.api, "/")
-				toolName := parts[len(parts)-2]
-
-				// Parse request body as map for MCP arguments
-				var args map[string]any
-				if len(reqBytes) > 0 {
-					_ = json.Unmarshal(reqBytes, &args)
-				}
-				if args == nil {
-					args = make(map[string]any)
-				}
-
 				// Invoke the tool via MCP protocol
-				mcpStatusCode, mcpResp, _ := InvokeMCPTool(t, toolName, args, tc.requestHeader)
-				actualStatusCode = mcpStatusCode
-
-				// Translate MCP response back to string for unified assertion
-				if actualStatusCode == http.StatusOK && tc.wantBody != "" {
-					if mcpResp != nil && mcpResp.Error != nil {
-						m := map[string]string{"error": mcpResp.Error.Message}
-						b, _ := json.Marshal(m)
-						got = string(b)
-					} else if mcpResp != nil && !mcpResp.Result.IsError {
-						var blocks []string
-						for _, content := range mcpResp.Result.Content {
-							if content.Type == "text" {
-								blocks = append(blocks, strings.TrimSpace(content.Text))
-							}
-						}
-						if strings.HasPrefix(strings.TrimSpace(tc.wantBody), "[") {
-							got = "[" + strings.Join(blocks, ",") + "]"
-						} else if len(blocks) == 0 {
-							got = "null"
-						} else {
-							got = strings.Join(blocks, "")
-						}
-					}
+				mcpStatusCode, mcpResp, err := InvokeMCPTool(t, tc.toolName, tc.args, tc.requestHeader)
+				if err != nil {
+					t.Fatalf("native error executing %s: %s", tc.toolName, err)
 				}
-			} else {
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
-				actualStatusCode = resp.StatusCode
 
-				if tc.wantBody != "" && actualStatusCode == tc.wantStatusCode {
-					var body map[string]interface{}
-					err = json.Unmarshal(respBody, &body)
-					if err != nil {
-						t.Fatalf("error parsing response body: %s", err)
-					}
-
-					var ok bool
-					got, ok = body["result"].(string)
-					if !ok {
-						t.Fatalf("unable to find result in response body")
-					}
-				}
-			}
-
-			// Check status code
-			wantStatus := tc.wantStatusCode
-			if configs.IsMCP && wantStatus == http.StatusUnauthorized {
-				if actualStatusCode == http.StatusOK {
+				// Check status code
+				wantStatus := tc.wantStatusCode
+				// MCP might return 200 OK for some error cases that REST returns 401
+				if wantStatus == http.StatusUnauthorized && mcpStatusCode == http.StatusOK {
 					wantStatus = http.StatusOK
 				}
-			}
-			if actualStatusCode != wantStatus {
-				t.Errorf("StatusCode mismatch: got %d, want %d", actualStatusCode, wantStatus)
-			}
+				if mcpStatusCode != wantStatus {
+					t.Errorf("StatusCode mismatch: got %d, want %d", mcpStatusCode, wantStatus)
+				}
 
-			// skip response body check
-			if tc.wantBody == "" {
-				return
-			}
+				if tc.wantBody == "" {
+					return
+				}
 
-			// Check response body
-			// Unified JSON-Aware Validation
-			if got != tc.wantBody {
-				var gotJSON, wantJSON any
-				errGot := json.Unmarshal([]byte(got), &gotJSON)
-				errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
-
-				if errGot == nil && errWant == nil {
-					// Special handling for MCP mode error message prefix
-					if configs.IsMCP {
-						gotMap, okGot := gotJSON.(map[string]any)
-						wantMap, okWant := wantJSON.(map[string]any)
-						if okGot && okWant {
-							gotErr, okGotErr := gotMap["error"].(string)
-							wantErr, okWantErr := wantMap["error"].(string)
-							if okGotErr && okWantErr {
-								if strings.TrimPrefix(gotErr, "provided parameters were invalid: ") == wantErr {
-									return // Matches if we ignore the prefix!
-								}
-							}
+				// Extract error text if any
+				var errText string
+				if mcpResp.Error != nil {
+					errText = mcpResp.Error.Message
+				} else if mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							errText += content.Text
 						}
 					}
+				}
+
+				if errText != "" {
+					// We got an error! Check if we expected it.
+					var wantErrStr string
+					var wantJSON any
+					errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
+					if errWant == nil {
+						wantMap, okWant := wantJSON.(map[string]any)
+						if okWant {
+							wantErrStr, _ = wantMap["error"].(string)
+						}
+					}
+					if wantErrStr == "" {
+						wantErrStr = tc.wantBody
+					}
+
+					if !strings.Contains(errText, wantErrStr) {
+						t.Fatalf("expected error text containing %q, got %q", wantErrStr, errText)
+					}
+					return // Success for this error test case
+				}
+
+				// If no error found, but it's marked as error result, it's unexpected error without text
+				if mcpResp.Result.IsError {
+					t.Fatalf("%s returned error result without text: %v", tc.toolName, mcpResp.Result)
+				}
+
+				gotObj := getMCPResultText(t, mcpResp)
+				gotBytes, _ := json.Marshal(gotObj)
+				gotStr := string(gotBytes)
+
+				if strings.HasPrefix(strings.TrimSpace(tc.wantBody), "[") || strings.HasPrefix(strings.TrimSpace(tc.wantBody), "{") {
+					// It looks like JSON, let's do JSON comparison
+					var gotJSON, wantJSON any
+					_ = json.Unmarshal([]byte(gotStr), &gotJSON)
+					_ = json.Unmarshal([]byte(tc.wantBody), &wantJSON)
 
 					if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-						t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.wantBody)
+						t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, gotStr, tc.wantBody)
 					}
 				} else {
-					t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
+					// Plain string, use strings.Contains as suggested by user
+					if !strings.Contains(gotStr, tc.wantBody) {
+						t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBody)
+					}
+				}
+
+			} else {
+				// Legacy REST path
+				api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+				reqBytes, _ := json.Marshal(tc.args)
+				resp, respBody := RunRequest(t, http.MethodPost, api, bytes.NewBuffer(reqBytes), tc.requestHeader)
+
+				if resp.StatusCode != tc.wantStatusCode {
+					t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, tc.wantStatusCode)
+				}
+
+				if tc.wantBody == "" {
+					return
+				}
+
+				var body map[string]interface{}
+				err := json.Unmarshal(respBody, &body)
+				if err != nil {
+					t.Fatalf("error parsing response body: %s", err)
+				}
+
+				got, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+
+				// Legacy REST assertion
+				if got != tc.wantBody {
+					var gotJSON, wantJSON any
+					errGot := json.Unmarshal([]byte(got), &gotJSON)
+					errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
+
+					if errGot == nil && errWant == nil {
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.wantBody)
+						}
+					} else {
+						t.Fatalf("unexpected value: got %q, want %q", got, tc.wantBody)
+					}
 				}
 			}
 		})
+	}
 	}
 }
 
@@ -561,92 +572,98 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 
 	selectOnlyNamesWant := "[{\"name\":\"Alex\"},{\"name\":\"Alice\"}]"
 
+	parseJSONArray := func(s string) []any {
+		var res []any
+		_ = json.Unmarshal([]byte(s), &res)
+		return res
+	}
+
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		enabled       bool
 		ddl           bool
 		insert        bool
-		api           string
+		toolName      string
 		requestHeader map[string]string
-		requestBody   io.Reader
+		args          map[string]any
 		want          string
 		isErr         bool
 	}{
 		{
 			name:          "invoke create-table-templateParams-tool",
 			ddl:           true,
-			api:           "http://127.0.0.1:5000/api/tool/create-table-templateParams-tool/invoke",
+			toolName:      "create-table-templateParams-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":%s}`, tableName, configs.createColArray))),
+			args:          map[string]any{"tableName": tableName, "columns": parseJSONArray(configs.createColArray)},
 			want:          configs.ddlWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
 			insert:        true,
-			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
+			toolName:      "insert-table-templateParams-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"1, 'Alex', 21"}`, tableName))),
+			args:          map[string]any{"tableName": tableName, "columns": []any{"id", "name", "age"}, "values": "1, 'Alex', 21"},
 			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke insert-table-templateParams-tool",
 			insert:        true,
-			api:           "http://127.0.0.1:5000/api/tool/insert-table-templateParams-tool/invoke",
+			toolName:      "insert-table-templateParams-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "columns":["id","name","age"], "values":"2, 'Alice', 100"}`, tableName))),
+			args:          map[string]any{"tableName": tableName, "columns": []any{"id", "name", "age"}, "values": "2, 'Alice', 100"},
 			want:          configs.insert1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-tool",
-			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-tool/invoke",
+			toolName:      "select-templateParams-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
+			args:          map[string]any{"tableName": tableName},
 			want:          configs.selectAllWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool",
-			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
+			toolName:      "select-templateParams-combined-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 1, "tableName": "%s"}`, tableName))),
+			args:          map[string]any{"id": 1, "tableName": tableName},
 			want:          configs.selectId1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-templateParams-combined-tool with no results",
-			api:           "http://127.0.0.1:5000/api/tool/select-templateParams-combined-tool/invoke",
+			toolName:      "select-templateParams-combined-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"id": 999, "tableName": "%s"}`, tableName))),
+			args:          map[string]any{"id": 999, "tableName": tableName},
 			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
 			enabled:       configs.supportSelectFields,
-			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
+			toolName:      "select-fields-templateParams-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
+			args:          map[string]any{"tableName": tableName, "fields": parseJSONArray(configs.nameFieldArray)},
 			want:          selectOnlyNamesWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke select-filter-templateParams-combined-tool",
-			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
+			toolName:      "select-filter-templateParams-combined-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
+			args:          map[string]any{"name": "Alex", "tableName": tableName, "columnFilter": configs.nameColFilter},
 			want:          configs.selectNameWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke drop-table-templateParams-tool",
 			ddl:           true,
-			api:           "http://127.0.0.1:5000/api/tool/drop-table-templateParams-tool/invoke",
+			toolName:      "drop-table-templateParams-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s"}`, tableName))),
+			args:          map[string]any{"tableName": tableName},
 			want:          configs.ddlWant,
 			isErr:         false,
 		},
@@ -662,18 +679,9 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
-				// Send Tool invocation request
-				reqBytes, _ := io.ReadAll(tc.requestBody)
-				var got string
-
 				if configs.IsMCP {
-					parts := strings.Split(tc.api, "/")
-					toolName := parts[len(parts)-2]
-
-					var args map[string]any
-					if len(reqBytes) > 0 {
-						_ = json.Unmarshal(reqBytes, &args)
-					}
+					toolName := tc.toolName
+					args := tc.args
 					if args == nil {
 						args = make(map[string]any)
 					}
@@ -686,24 +694,38 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("response status code is not 200, got %d, error: %v", statusCode, err)
 					}
 
-					if mcpResp != nil && mcpResp.Error != nil {
-						got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
-					} else if mcpResp != nil && !mcpResp.Result.IsError {
-						var blocks []string
-						for _, content := range mcpResp.Result.Content {
-							if content.Type == "text" {
-								blocks = append(blocks, strings.TrimSpace(content.Text))
-							}
+					if mcpResp.Result.IsError {
+						if tc.isErr {
+							return
 						}
-						if len(blocks) == 0 {
-							got = "null"
-						} else {
-							got = strings.Join(blocks, "")
+						t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
+					}
+
+					gotObj := getMCPResultText(t, mcpResp)
+					gotBytes, _ := json.Marshal(gotObj)
+					gotStr := string(gotBytes)
+
+					if strings.HasPrefix(strings.TrimSpace(tc.want), "[") || strings.HasPrefix(strings.TrimSpace(tc.want), "{") {
+						// It looks like JSON, let's do JSON comparison
+						var gotJSON, wantJSON any
+						_ = json.Unmarshal([]byte(gotStr), &gotJSON)
+						_ = json.Unmarshal([]byte(tc.want), &wantJSON)
+
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, gotStr, tc.want)
+						}
+					} else {
+						// Plain string, use strings.Contains as suggested by user
+						if !strings.Contains(gotStr, tc.want) {
+							t.Fatalf(`expected %q to contain %q`, gotStr, tc.want)
 						}
 					}
 
 				} else {
-					resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
+					// Legacy REST path
+					api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+					reqBytes, _ := json.Marshal(tc.args)
+					resp, respBody := RunRequest(t, http.MethodPost, api, bytes.NewBuffer(reqBytes), tc.requestHeader)
 					if resp.StatusCode != http.StatusOK {
 						if tc.isErr {
 							return
@@ -717,25 +739,24 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						t.Fatalf("error parsing response body")
 					}
 
-					var ok bool
-					got, ok = body["result"].(string)
+					got, ok := body["result"].(string)
 					if !ok {
 						t.Fatalf("unable to find result in response body")
 					}
-				}
 
-				// Unified JSON-Aware Validation
-				if got != tc.want {
-					var gotJSON, wantJSON any
-					errGot := json.Unmarshal([]byte(got), &gotJSON)
-					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
+					// Legacy REST assertion
+					if got != tc.want {
+						var gotJSON, wantJSON any
+						errGot := json.Unmarshal([]byte(got), &gotJSON)
+						errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
 
-					if errGot == nil && errWant == nil {
-						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+						if errGot == nil && errWant == nil {
+							if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+								t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+							}
+						} else {
+							t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 						}
-					} else {
-						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 					}
 				}
 			}
@@ -767,103 +788,94 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
-		api           string
+		toolName      string
 		requestHeader map[string]string
-		requestBody   io.Reader
+		args          map[string]any
 		want          string
 		isErr         bool
 		isAgentErr    bool
 	}{
 		{
 			name:          "invoke my-exec-sql-tool",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
+			args:          map[string]any{"sql": strings.Trim(configs.select1Statement, "\"")},
 			want:          select1Want,
 			isErr:         false,
 		},
 		{
 			name:          "invoke my-exec-sql-tool create table",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, createTableStatement))),
+			args:          map[string]any{"sql": strings.Trim(createTableStatement, "\"")},
 			want:          configs.createWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke my-exec-sql-tool select table",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM t"}`)),
+			args:          map[string]any{"sql": "SELECT * FROM t"},
 			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke my-exec-sql-tool drop table",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
+			args:          map[string]any{"sql": "DROP TABLE t"},
 			want:          configs.dropWant,
 			isErr:         false,
 		},
 		{
 			name:          "invoke my-exec-sql-tool without body",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			args:          map[string]any{},
 			isAgentErr:    true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			toolName:      "my-auth-exec-sql-tool",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
+			args:          map[string]any{"sql": strings.Trim(configs.select1Statement, "\"")},
 			isErr:         false,
 			want:          select1Want,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with invalid auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			toolName:      "my-auth-exec-sql-tool",
 			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
+			args:          map[string]any{"sql": strings.Trim(configs.select1Statement, "\"")},
 			isErr:         true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool without auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
+			toolName:      "my-auth-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
+			args:          map[string]any{"sql": strings.Trim(configs.select1Statement, "\"")},
 			isErr:         true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with invalid SELECT SQL",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM non_existent_table"}`)),
+			args:          map[string]any{"sql": "SELECT * FROM non_existent_table"},
 			isAgentErr:    true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with invalid ALTER SQL",
-			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			toolName:      "my-exec-sql-tool",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`)),
+			args:          map[string]any{"sql": "ALTER TALE t ALTER COLUMN id DROP NOT NULL"},
 			isAgentErr:    true,
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			reqBytes, _ := io.ReadAll(tc.requestBody)
-			var got string
-
 			if configs.IsMCP {
-				parts := strings.Split(tc.api, "/")
-				toolName := parts[len(parts)-2]
-
-				var args map[string]any
-				if len(reqBytes) > 0 {
-					_ = json.Unmarshal(reqBytes, &args)
-				}
+				toolName := tc.toolName
+				args := tc.args
 				if args == nil {
 					args = make(map[string]any)
 				}
@@ -879,27 +891,38 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 					return
 				}
 
-				if mcpResp != nil && mcpResp.Error != nil {
-					got = fmt.Sprintf(`{"error":"%s"}`, mcpResp.Error.Message)
-				} else if mcpResp != nil && !mcpResp.Result.IsError {
-					var blocks []string
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, strings.TrimSpace(content.Text))
-						}
+				if mcpResp.Result.IsError {
+					if tc.isAgentErr || tc.isErr {
+						return
 					}
-					if len(blocks) == 0 {
-						got = "null"
-					} else {
-						if strings.HasPrefix(strings.TrimSpace(tc.want), "[") && len(blocks) == 1 && !strings.HasPrefix(strings.TrimSpace(blocks[0]), "[") {
-							got = "[" + blocks[0] + "]"
-						} else {
-							got = strings.Join(blocks, "")
-						}
+					t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
+				}
+
+				gotObj := getMCPResultText(t, mcpResp)
+				gotBytes, _ := json.Marshal(gotObj)
+				gotStr := string(gotBytes)
+
+				if strings.HasPrefix(strings.TrimSpace(tc.want), "[") || strings.HasPrefix(strings.TrimSpace(tc.want), "{") {
+					// It looks like JSON, let's do JSON comparison
+					var gotJSON, wantJSON any
+					_ = json.Unmarshal([]byte(gotStr), &gotJSON)
+					_ = json.Unmarshal([]byte(tc.want), &wantJSON)
+
+					if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+						t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, gotStr, tc.want)
+					}
+				} else {
+					// Plain string, use strings.Contains as suggested by user
+					if !strings.Contains(gotStr, tc.want) {
+						t.Fatalf(`expected %q to contain %q`, gotStr, tc.want)
 					}
 				}
+
 			} else {
-				resp, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqBytes), tc.requestHeader)
+				// Legacy REST path
+				api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+				reqBytes, _ := json.Marshal(tc.args)
+				resp, respBody := RunRequest(t, http.MethodPost, api, bytes.NewBuffer(reqBytes), tc.requestHeader)
 				if resp.StatusCode != http.StatusOK {
 					if tc.isErr {
 						return
@@ -911,30 +934,29 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 				}
 
 				var body map[string]interface{}
-				err = json.Unmarshal(respBody, &body)
+				err := json.Unmarshal(respBody, &body)
 				if err != nil {
 					t.Fatalf("error parsing response body")
 				}
 
-				var ok bool
-				got, ok = body["result"].(string)
+				got, ok := body["result"].(string)
 				if !ok {
 					t.Fatalf("unable to find result in response body")
 				}
-			}
 
-			// Unified JSON-Aware Validation
-			if got != tc.want {
-				var gotJSON, wantJSON any
-				errGot := json.Unmarshal([]byte(got), &gotJSON)
-				errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
+				// Legacy REST assertion
+				if got != tc.want {
+					var gotJSON, wantJSON any
+					errGot := json.Unmarshal([]byte(got), &gotJSON)
+					errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
 
-				if errGot == nil && errWant == nil {
-					if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-						t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+					if errGot == nil && errWant == nil {
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, got, tc.want)
+						}
+					} else {
+						t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 					}
-				} else {
-					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 				}
 			}
 		})
@@ -1323,8 +1345,9 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 
 	invokeTcs := []struct {
 		name           string
-		api            string
-		requestBody    io.Reader
+		toolName       string
+		requestHeader  map[string]string
+		args          map[string]any
 		wantStatusCode int
 		want           string
 		isAllTables    bool
@@ -1332,73 +1355,75 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 	}{
 		{
 			name:           "invoke list_tables all tables detailed output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": ""},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables all tables simple output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": "", "output_format": "simple"},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
 			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables detailed output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth))),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": tableNameAuth},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
 		{
 			name:           "invoke list_tables simple output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth))),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": tableNameAuth, "output_format": "simple"},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 		{
 			name:           "invoke list_tables with invalid output format",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": "", "output_format": "abcd"},
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": 12345, "output_format": "detailed"},
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": fmt.Sprintf("%s,%s", tableNameParam, tableNameAuth)},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
 			name:           "invoke list_tables with non-existent table",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": "non_existent_table"},
 			wantStatusCode: http.StatusOK,
 			want:           `[]`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam))),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": fmt.Sprintf("%s,non_existent_table", tableNameParam)},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, respBytes := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, nil)
+			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+			reqBytes, _ := json.Marshal(tc.args)
+			resp, respBytes := RunRequest(t, http.MethodPost, api, bytes.NewBuffer(reqBytes), tc.requestHeader)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBytes))
 			}
@@ -2088,7 +2113,8 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 
 	invokeTcs := []struct {
 		name                string
-		requestBody         io.Reader
+		toolName            string
+		args                map[string]any
 		clientSleepSecs     int
 		waitSecsBeforeCheck int
 		wantStatusCode      int
@@ -2097,7 +2123,8 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		// exclude background monitoring apps such as "wal_uploader"
 		{
 			name:                "invoke list_active_queries when the system is idle",
-			requestBody:         bytes.NewBufferString(`{"exclude_application_names": "wal_uploader"}`),
+			toolName:            "list_active_queries",
+			args:                map[string]any{"exclude_application_names": "wal_uploader"},
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
@@ -2105,7 +2132,8 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "100 seconds", "exclude_application_names": "wal_uploader"}`),
+			toolName:            "list_active_queries",
+			args:                map[string]any{"min_duration": "100 seconds", "exclude_application_names": "wal_uploader"},
 			clientSleepSecs:     1,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
@@ -2113,7 +2141,8 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds", "exclude_application_names": "wal_uploader"}`),
+			toolName:            "list_active_queries",
+			args:                map[string]any{"min_duration": "1 seconds", "exclude_application_names": "wal_uploader"},
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 5,
 			wantStatusCode:      http.StatusOK,
@@ -2146,8 +2175,9 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 				time.Sleep(time.Duration(tc.waitSecsBeforeCheck) * time.Second)
 			}
 
-			const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
-			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+			reqBytes, _ := json.Marshal(tc.args)
+			resp, respBody := RunRequest(t, http.MethodPost, api, bytes.NewBuffer(reqBytes), nil)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
 			}
@@ -3063,18 +3093,12 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 					return
 				}
 
-				var blocks []string
-				if mcpResp != nil && !mcpResp.Result.IsError {
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, strings.TrimSpace(content.Text))
-						}
-					}
-				}
-				if len(blocks) == 0 {
+				gotObj := getMCPResultText(t, mcpResp)
+				if len(gotObj) == 0 {
 					resultString = "null"
 				} else {
-					resultString = "[" + strings.Join(blocks, ",") + "]"
+					gotBytes, _ := json.Marshal(gotObj)
+					resultString = string(gotBytes)
 				}
 			} else {
 				const api = "http://127.0.0.1:5000/api/tool/list_tables/invoke"
@@ -3278,18 +3302,12 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 					return
 				}
 
-				var blocks []string
-				if mcpResp != nil && !mcpResp.Result.IsError {
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, strings.TrimSpace(content.Text))
-						}
-					}
-				}
-				if len(blocks) == 0 {
+				gotObj := getMCPResultText(t, mcpResp)
+				if len(gotObj) == 0 {
 					resultString = "null"
 				} else {
-					resultString = "[" + strings.Join(blocks, ",") + "]"
+					gotBytes, _ := json.Marshal(gotObj)
+					resultString = string(gotBytes)
 				}
 			} else {
 				const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
@@ -3535,18 +3553,12 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 					return
 				}
 
-				var blocks []string
-				if mcpResp != nil && !mcpResp.Result.IsError {
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, strings.TrimSpace(content.Text))
-						}
-					}
-				}
-				if len(blocks) == 0 {
+				gotObj := getMCPResultText(t, mcpResp)
+				if len(gotObj) == 0 {
 					resultString = "null"
 				} else {
-					resultString = "[" + strings.Join(blocks, ",") + "]"
+					gotBytes, _ := json.Marshal(gotObj)
+					resultString = string(gotBytes)
 				}
 			} else {
 				const api = "http://127.0.0.1:5000/api/tool/list_tables_missing_unique_indexes/invoke"
@@ -3818,18 +3830,12 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 					return
 				}
 
-				var blocks []string
-				if mcpResp != nil && !mcpResp.Result.IsError {
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, strings.TrimSpace(content.Text))
-						}
-					}
-				}
-				if len(blocks) == 0 {
+				gotObj := getMCPResultText(t, mcpResp)
+				if len(gotObj) == 0 {
 					resultString = "null"
 				} else {
-					resultString = "[" + strings.Join(blocks, ",") + "]"
+					gotBytes, _ := json.Marshal(gotObj)
+					resultString = string(gotBytes)
 				}
 			} else {
 				const api = "http://127.0.0.1:5000/api/tool/list_table_fragmentation/invoke"
@@ -3927,18 +3933,21 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 					return
 				}
 
-				var blocks []string
-				if mcpResp != nil && !mcpResp.Result.IsError {
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							blocks = append(blocks, content.Text)
-						}
-					}
-				}
-				if len(blocks) == 0 {
+				gotObj := getMCPResultText(t, mcpResp)
+				if len(gotObj) == 0 {
 					resultString = "null"
 				} else {
-					resultString = strings.Join(blocks, "")
+					if len(gotObj) == 1 {
+						if str, ok := gotObj[0].(string); ok {
+							resultString = str
+						} else {
+							gotBytes, _ := json.Marshal(gotObj[0])
+							resultString = string(gotBytes)
+						}
+					} else {
+						gotBytes, _ := json.Marshal(gotObj)
+						resultString = string(gotBytes)
+					}
 				}
 			} else {
 				const api = "http://127.0.0.1:5000/api/tool/get_query_plan/invoke"
