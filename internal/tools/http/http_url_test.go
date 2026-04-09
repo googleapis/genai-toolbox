@@ -18,7 +18,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestGetURLHostOverride(t *testing.T) {

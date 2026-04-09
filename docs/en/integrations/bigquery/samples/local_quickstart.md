@@ -10,7 +10,7 @@ is_sample: true
 ---
 
 [![Open In
-Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb)
+Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/googleapis/mcp-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb)
 
 ## Before you begin
 
@@ -175,13 +175,13 @@ to use BigQuery, and then run the Toolbox server.
 
     {{< notice tip >}}
  Select the
- [correct binary](https://github.com/googleapis/genai-toolbox/releases)
+ [correct binary](https://github.com/googleapis/mcp-toolbox/releases)
  corresponding to your OS and CPU architecture.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.30.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 

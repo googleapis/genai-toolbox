@@ -32,9 +32,9 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -43,7 +43,7 @@ var (
 )
 
 func getHTTPSourceConfig(t *testing.T) map[string]any {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting ID token: %s", err)
 	}

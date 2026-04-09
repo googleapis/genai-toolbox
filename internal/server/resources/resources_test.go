@@ -18,13 +18,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/server/resources"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestUpdateServer(t *testing.T) {

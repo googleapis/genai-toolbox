@@ -15,8 +15,8 @@
 package tests
 
 import (
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	v20251125 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20251125"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
 )
 
 // CallToolParams represents the internal payload of an MCP tool call request

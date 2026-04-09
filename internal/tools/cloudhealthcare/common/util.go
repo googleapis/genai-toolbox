@@ -19,7 +19,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
 )
 

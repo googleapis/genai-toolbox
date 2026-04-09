@@ -43,7 +43,7 @@ function getHomepageInstructions() {
       <div class="resource-instructions">
         <h1 class="resource-title">Welcome to Toolbox UI</h1>
         <p class="resource-intro">Toolbox UI is a built-in web interface that allows users to visually inspect and test out configured resources such as tools and toolsets. To get started, select a resource from the navigation tab to the left.</p>
-        <a href="https://googleapis.github.io/genai-toolbox/how-to/use-toolbox-ui/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Toolbox UI Documentation</a>
+        <a href="https://mcp-toolbox.dev/documentation/configuration/toolbox-ui/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Toolbox UI Documentation</a>
       </div>
     `;
 }
@@ -59,7 +59,7 @@ function getToolInstructions() {
           You can define Tools as a map in the <code>tools</code> section of your <code>tools.yaml</code> file. <br><br>
           Some tools also use <strong>parameters</strong>. Parameters for each Tool will define what inputs the agent will need to provide to invoke them. 
         </p>
-        <a href="https://googleapis.github.io/genai-toolbox/resources/tools/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Tools Documentation</a>
+        <a href="https://mcp-toolbox.dev/documentation/configuration/tools/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Tools Documentation</a>
       </div>
     `;
 }
@@ -74,7 +74,7 @@ function getToolsetInstructions() {
           Toolsets define groups of tools an agent can access. You can define Toolsets as a map in the <code>toolsets</code> section of your <code>tools.yaml</code> file. Toolsets may
           only include valid tools that are also defined in your <code>tools.yaml</code> file.
         </p>
-        <a href="https://googleapis.github.io/genai-toolbox/getting-started/configure/#toolsets" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Toolsets Documentation</a>
+        <a href="https://mcp-toolbox.dev/documentation/configuration/#toolsets" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Toolsets Documentation</a>
       </div>
     `;
 }

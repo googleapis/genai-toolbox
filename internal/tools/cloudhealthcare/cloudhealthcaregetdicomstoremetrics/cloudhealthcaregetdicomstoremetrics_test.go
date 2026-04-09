@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	getdicomstoremetrics "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdicomstoremetrics"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	getdicomstoremetrics "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdicomstoremetrics"
 )
 
 func TestParseFromYamlHealthcareGetDICOMStoreMetrics(t *testing.T) {

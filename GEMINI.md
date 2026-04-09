@@ -201,9 +201,8 @@ When generating or editing documentation for this repository, you must strictly 
 ##### Tool Page Constraints (`integrations/**/tools/*.md`)
 
 1.  **Location:** All native tools must reside inside a nested `tools/` subdirectory. The `tools/` directory must contain an `_index.md` file consisting **strictly of frontmatter**.
-2.  **Title Convention:** The YAML frontmatter `title` must always end with "Tool" (e.g., `title: "Execute SQL Tool"`).
-3.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
-4.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
+2.  **No H1 Tags:** Never generate H1 (`#`) headings in the markdown body.
+3.  **Strict H2 Ordering:** You must use the following H2 (`##`) headings in this exact sequence.
     *   `## About` (Required)
     *   `## Compatible Sources` (Optional)
     *   `## Requirements` (Optional)
@@ -214,7 +213,7 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Advanced Usage` (Optional)
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
-5.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
 
 ##### Samples Architecture Constraints
 Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope.

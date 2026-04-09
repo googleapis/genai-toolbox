@@ -23,7 +23,7 @@ TOOL_PACKAGE_NAMES=("$@")
 COVERAGE_FILE="${TEST_BINARY%.test}_coverage.out"
 FILTERED_COVERAGE_FILE="${TEST_BINARY%.test}_filtered_coverage.out"
 
-export path="github.com/googleapis/genai-toolbox/internal/"
+export path="github.com/googleapis/mcp-toolbox/internal/"
 
 GREP_PATTERN="^mode:|${path}${SOURCE_PATH}"
 # Add each tool package path to the grep pattern

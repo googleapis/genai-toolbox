@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
-	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
+	"github.com/googleapis/mcp-toolbox/internal/sources/serverlessspark"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
