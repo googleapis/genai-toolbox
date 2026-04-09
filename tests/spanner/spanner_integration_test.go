@@ -1003,7 +1003,7 @@ func setupSpannerPgVectorTable(t *testing.T, ctx context.Context, adminClient *d
 // getSpannerPgVectorSearchStmts returns statements for spanner semantic search (PostgreSQL dialect)
 func getSpannerPgVectorSearchStmts(vectorTableName string) (string, string) {
 	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, $1, $2)", vectorTableName)
-	searchStmt := fmt.Sprintf("SELECT id, content, COSINE_DISTANCE(embedding, $1) AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, spanner.cosine_distance(embedding, $1::float4[]) AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
 	return insertStmt, searchStmt
 }
 
@@ -1043,7 +1043,6 @@ func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
 	// Add semantic search tool config
 	insertStmt, searchStmt := getSpannerPgVectorSearchStmts(vectorTableName)
 
-	// We need to create a tools file for this test
 	config := map[string]any{
 		"sources": map[string]any{
 			"my-instance": map[string]any{
