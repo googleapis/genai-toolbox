@@ -65,6 +65,16 @@ func TestMcpAuth(t *testing.T) {
 			})
 			return
 		}
+		if r.URL.Path == "/introspect" {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"active": true,
+				"scope":  "read:files",
+				"aud":    "test-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			})
+			return
+		}
 		http.NotFound(w, r)
 	}))
 	defer jwksServer.Close()
@@ -82,7 +92,7 @@ func TestMcpAuth(t *testing.T) {
 		},
 		"tools": map[string]any{},
 	}
-	args := []string{"--enable-api"}
+	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5000"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -99,73 +109,85 @@ func TestMcpAuth(t *testing.T) {
 
 	api := "http://127.0.0.1:5000/mcp/sse"
 
-	t.Run("401 Unauthorized without token", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodGet, api, nil)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("unable to send request: %s", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusUnauthorized {
-			t.Fatalf("expected 401, got %d", resp.StatusCode)
-		}
-		authHeader := resp.Header.Get("WWW-Authenticate")
-		if !strings.Contains(authHeader, `resource_metadata="/.well-known/oauth-protected-resource"`) || !strings.Contains(authHeader, `scope="read:files"`) {
-			t.Fatalf("expected WWW-Authenticate header to contain resource_metadata and scope, got: %s", authHeader)
-		}
+	// Generate invalid token (wrong scopes)
+	invalidToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"aud":   "test-audience",
+		"scope": "wrong:scope",
+		"sub":   "test-user",
+		"exp":   time.Now().Add(time.Hour).Unix(),
 	})
+	invalidToken.Header["kid"] = "test-key-id"
+	invalidSignedString, _ := invalidToken.SignedString(privateKey)
 
-	t.Run("403 Forbidden with insufficient scopes", func(t *testing.T) {
-		// Generate valid token but wrong scopes
-		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-			"aud":   "test-audience",
-			"scope": "wrong:scope",
-			"sub":   "test-user",
-			"exp":   time.Now().Add(time.Hour).Unix(),
+	// Generate valid token (correct scopes)
+	validToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"aud":   "test-audience",
+		"scope": "read:files",
+		"sub":   "test-user",
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
+	validToken.Header["kid"] = "test-key-id"
+	validSignedString, _ := validToken.SignedString(privateKey)
+
+	tests := []struct {
+		name           string
+		token          string
+		wantStatusCode int
+		checkWWWAuth   func(t *testing.T, authHeader string)
+	}{
+		{
+			name:           "401 Unauthorized without token",
+			token:          "",
+			wantStatusCode: http.StatusUnauthorized,
+			checkWWWAuth: func(t *testing.T, authHeader string) {
+				if !strings.Contains(authHeader, `resource_metadata="http://127.0.0.1:5000/.well-known/oauth-protected-resource"`) || !strings.Contains(authHeader, `scope="read:files"`) {
+					t.Fatalf("expected WWW-Authenticate header to contain resource_metadata and scope, got: %s", authHeader)
+				}
+			},
+		},
+		{
+			name:           "403 Forbidden with insufficient scopes",
+			token:          invalidSignedString,
+			wantStatusCode: http.StatusForbidden,
+			checkWWWAuth: func(t *testing.T, authHeader string) {
+				if !strings.Contains(authHeader, `resource_metadata="http://127.0.0.1:5000/.well-known/oauth-protected-resource"`) || !strings.Contains(authHeader, `scope="read:files"`) || !strings.Contains(authHeader, `error="insufficient_scope"`) {
+					t.Fatalf("expected WWW-Authenticate header to contain error, scope, and resource_metadata, got: %s", authHeader)
+				}
+			},
+		},
+		{
+			name:           "200 OK with valid token",
+			token:          validSignedString,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "200 OK with valid opaque token",
+			token:          "this-is-an-opaque-token",
+			wantStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req, _ := http.NewRequest(http.MethodGet, api, nil)
+			if tc.token != "" {
+				req.Header.Add("Authorization", "Bearer "+tc.token)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("expected %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+			}
+
+			if tc.checkWWWAuth != nil {
+				authHeader := resp.Header.Get("WWW-Authenticate")
+				tc.checkWWWAuth(t, authHeader)
+			}
 		})
-		token.Header["kid"] = "test-key-id"
-		signedString, _ := token.SignedString(privateKey)
-
-		req, _ := http.NewRequest(http.MethodGet, api, nil)
-		req.Header.Add("Authorization", "Bearer "+signedString)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("unable to send request: %s", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusForbidden {
-			t.Fatalf("expected 403, got %d", resp.StatusCode)
-		}
-		authHeader := resp.Header.Get("WWW-Authenticate")
-		if !strings.Contains(authHeader, `resource_metadata="/.well-known/oauth-protected-resource"`) || !strings.Contains(authHeader, `scope="read:files"`) || !strings.Contains(authHeader, `error="insufficient_scope"`) {
-			t.Fatalf("expected WWW-Authenticate header to contain error, scope, and resource_metadata, got: %s", authHeader)
-		}
-	})
-
-	t.Run("200 OK with valid token", func(t *testing.T) {
-		// Generate valid token with correct scopes
-		token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-			"aud":   "test-audience",
-			"scope": "read:files",
-			"sub":   "test-user",
-			"exp":   time.Now().Add(time.Hour).Unix(),
-		})
-		token.Header["kid"] = "test-key-id"
-		signedString, _ := token.SignedString(privateKey)
-
-		req, _ := http.NewRequest(http.MethodGet, api, nil)
-		req.Header.Add("Authorization", "Bearer "+signedString)
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("unable to send request: %s", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			bodyBytes, _ := io.ReadAll(resp.Body)
-			t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-		}
-	})
+	}
 }
