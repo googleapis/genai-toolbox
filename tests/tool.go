@@ -3860,7 +3860,12 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 }
 
 // RunMSSQLListTablesTest run tests againsts the mssql-list-tables tools.
-func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
+func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string, opts ...ToolExecOption) {
+	config := &ToolExecConfig{}
+	for _, opt := range opts {
+		opt(config)
+	}
+
 	// TableNameParam columns to construct want.
 	const paramTableColumns = `[
         {"column_name": "id", "data_type": "INT", "column_ordinal_position": 1, "is_not_nullable": true},
@@ -3905,90 +3910,157 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 
 	invokeTcs := []struct {
 		name           string
-		api            string
-		requestBody    string
+		toolName       string
+		args           map[string]any
 		wantStatusCode int
 		want           string
+		wantMCPError   string
 		isAllTables    bool
 		isAgentErr     bool
 	}{
 		{
 			name:           "invoke list_tables for all tables detailed output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    `{"table_names": ""}`,
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": ""},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables for all tables simple output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    `{"table_names": "", "output_format": "simple"}`,
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": "", "output_format": "simple"},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
 			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables detailed output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": tableNameAuth},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
 		{
 			name:           "invoke list_tables simple output",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": tableNameAuth, "output_format": "simple"},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getSimpleWant(tableNameAuth)),
 		},
 		{
 			name:           "invoke list_tables with invalid output format",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    `{"table_names": "", "output_format": "abcd"}`,
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": "", "output_format": "abcd"},
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
+			wantMCPError:   "invalid value for output_format: must be 'simple' or 'detailed'",
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    `{"table_names": 12345, "output_format": "detailed"}`,
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": 12345, "output_format": "detailed"},
 			wantStatusCode: http.StatusOK,
 			isAgentErr:     true,
+			wantMCPError:   "not type \"string\"",
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": fmt.Sprintf("%s,%s", tableNameParam, tableNameAuth)},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 		{
 			name:           "invoke list_tables with non-existent table",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    `{"table_names": "non_existent_table"}`,
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": "non_existent_table"},
 			wantStatusCode: http.StatusOK,
 			want:           `[]`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
-			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameParam),
+			toolName:       "list_tables",
+			args:           map[string]any{"table_names": fmt.Sprintf("%s,non_existent_table", tableNameParam)},
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameParam, paramTableColumns)),
 		},
 	}
+
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, respBytes := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer([]byte(tc.requestBody)), nil)
+			var resultString string
 
-			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(respBytes))
-			}
+			if config.IsMCP {
+				statusCode, mcpResp, err := InvokeMCPTool(t, tc.toolName, tc.args, nil)
 
-			if tc.wantStatusCode == http.StatusOK {
+				if statusCode != tc.wantStatusCode {
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, tc.wantStatusCode, err)
+				}
+				if tc.wantStatusCode != http.StatusOK {
+					return
+				}
+
+				if tc.isAgentErr {
+					if mcpResp == nil || (!mcpResp.Result.IsError && mcpResp.Error == nil) {
+						t.Fatalf("expected error result in MCP, but got success")
+					}
+					
+					if tc.wantMCPError != "" {
+						errStr := ""
+						if mcpResp.Error != nil {
+							errStr = mcpResp.Error.Message
+						} else if mcpResp.Result.IsError {
+							var blocks []string
+							for _, content := range mcpResp.Result.Content {
+								if content.Type == "text" {
+									blocks = append(blocks, content.Text)
+								}
+							}
+							errStr = strings.Join(blocks, " ")
+						}
+						
+						if !strings.Contains(errStr, tc.wantMCPError) {
+							t.Fatalf("MCP error message does not contain expected substring. Got: %q, Want: %q", errStr, tc.wantMCPError)
+						}
+					}
+					return
+				}
+
+				var blocks []string
+				if mcpResp != nil && !mcpResp.Result.IsError {
+					for _, content := range mcpResp.Result.Content {
+						if content.Type == "text" {
+							blocks = append(blocks, strings.TrimSpace(content.Text))
+						}
+					}
+				}
+				if len(blocks) == 0 {
+					resultString = "[]"
+				} else {
+					resultString = "[" + strings.Join(blocks, ",") + "]"
+				}
+			} else {
+				apiURL := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+				reqBytes, err := json.Marshal(tc.args)
+				if err != nil {
+					t.Fatalf("failed to marshal args: %v", err)
+				}
+				resp, respBytes := RunRequest(t, http.MethodPost, apiURL, bytes.NewBuffer(reqBytes), nil)
+
+				if resp.StatusCode != tc.wantStatusCode {
+					t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(respBytes))
+				}
+
+				if tc.wantStatusCode != http.StatusOK {
+					return
+				}
+
+				if tc.isAgentErr {
+					return
+				}
+
 				var bodyWrapper map[string]json.RawMessage
-
 				if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
 					t.Fatalf("error parsing response wrapper: %s, body: %s", err, string(respBytes))
 				}
@@ -3998,12 +4070,6 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 					t.Fatal("unable to find 'result' in response body")
 				}
 
-				var resultString string
-
-				if tc.isAgentErr {
-					return
-				}
-
 				if err := json.Unmarshal(resultJSON, &resultString); err != nil {
 					if string(resultJSON) == "null" {
 						resultString = "null"
@@ -4011,64 +4077,62 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 						t.Fatalf("'result' is not a JSON-encoded string: %s", err)
 					}
 				}
+			}
 
-				var got, want []any
+			var got, want []any
 
-				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
-					t.Fatalf("failed to unmarshal actual result string: %v", err)
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal actual result string: %v, resultString: %s", err, resultString)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatalf("failed to unmarshal expected want string: %v", err)
+			}
+
+			for _, item := range got {
+				itemMap, ok := item.(map[string]any)
+				if !ok {
+					continue
 				}
-				if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
-					t.Fatalf("failed to unmarshal expected want string: %v", err)
+
+				detailsStr, ok := itemMap["object_details"].(string)
+				if !ok {
+					continue
 				}
 
+				var detailsMap map[string]any
+				if err := json.Unmarshal([]byte(detailsStr), &detailsMap); err != nil {
+					t.Fatalf("failed to unmarshal nested object_details string: %v", err)
+				}
+
+				// clean unpredictable fields
+				delete(detailsMap, "constraints")
+				delete(detailsMap, "indexes")
+
+				itemMap["object_details"] = detailsMap
+			}
+
+			// Checking only the default dbo schema where the test tables are created to avoid brittle tests.
+			if tc.isAllTables {
+				var filteredGot []any
 				for _, item := range got {
-					itemMap, ok := item.(map[string]any)
-					if !ok {
-						continue
-					}
-
-					detailsStr, ok := itemMap["object_details"].(string)
-					if !ok {
-						continue
-					}
-
-					var detailsMap map[string]any
-					if err := json.Unmarshal([]byte(detailsStr), &detailsMap); err != nil {
-						t.Fatalf("failed to unmarshal nested object_details string: %v", err)
-					}
-
-					// clean unpredictable fields
-					delete(detailsMap, "constraints")
-					delete(detailsMap, "indexes")
-
-					itemMap["object_details"] = detailsMap
-				}
-
-				// Checking only the default dbo schema where the test tables are created to avoid brittle tests.
-				if tc.isAllTables {
-					var filteredGot []any
-					for _, item := range got {
-						if tableMap, ok := item.(map[string]interface{}); ok {
-							if schema, ok := tableMap["schema_name"]; ok && schema == "dbo" {
-								filteredGot = append(filteredGot, item)
-							}
+					if tableMap, ok := item.(map[string]interface{}); ok {
+						if schema, ok := tableMap["schema_name"]; ok && schema == "dbo" {
+							filteredGot = append(filteredGot, item)
 						}
 					}
-					got = filteredGot
 				}
+				got = filteredGot
+			}
 
-				sort.SliceStable(got, func(i, j int) bool {
-					return fmt.Sprintf("%v", got[i]) < fmt.Sprintf("%v", got[j])
-				})
-				sort.SliceStable(want, func(i, j int) bool {
-					return fmt.Sprintf("%v", want[i]) < fmt.Sprintf("%v", want[j])
-				})
+			sort.SliceStable(got, func(i, j int) bool {
+				return fmt.Sprintf("%v", got[i]) < fmt.Sprintf("%v", got[j])
+			})
+			sort.SliceStable(want, func(i, j int) bool {
+				return fmt.Sprintf("%v", want[i]) < fmt.Sprintf("%v", want[j])
+			})
 
-				if !reflect.DeepEqual(got, want) {
-					gotJSON, _ := json.MarshalIndent(got, "", "  ")
-					wantJSON, _ := json.MarshalIndent(want, "", "  ")
-					t.Errorf("Unexpected result:\ngot:\n%s\n\nwant:\n%s", string(gotJSON), string(wantJSON))
-				}
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
 			}
 		})
 	}
