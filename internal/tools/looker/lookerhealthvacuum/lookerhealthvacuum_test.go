@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lhv "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	lhv "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerhealthvacuum"
 )
 
 func TestParseFromYamlLookerHealthVacuum(t *testing.T) {

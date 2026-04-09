@@ -19,10 +19,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -295,6 +295,16 @@ func TestGenerateScriptContent(t *testing.T) {
 				`const prefix = 'CLAUDE_PLUGIN_OPTION_';`,
 				`if (key.startsWith(prefix)) {`,
 				`env[key.substring(prefix.length)] = process.env[key];`,
+			},
+		},
+		{
+			name:       "codex ci script",
+			toolName:   "codex-tool",
+			configArgs: `"--prebuilt", "test"`,
+			mode:       "bin",
+			wantContains: []string{
+				`userAgent = "skills-codex";`,
+				`} else if (process.env.CODEX_CI === '1') {`,
 			},
 		},
 	}

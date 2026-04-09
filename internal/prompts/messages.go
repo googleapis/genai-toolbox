@@ -17,7 +17,7 @@ package prompts
 import (
 	"fmt"
 
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // Message represents a single message in a prompt, with a role and content.

@@ -23,7 +23,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
 
-	"github.com/googleapis/genai-toolbox/cmd"
+	"github.com/googleapis/mcp-toolbox/cmd"
 )
 
 // tmpFileWithCleanup creates a temporary file with the content and returns the path and

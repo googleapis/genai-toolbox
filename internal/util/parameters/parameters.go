@@ -26,8 +26,8 @@ import (
 	"strings"
 	"text/template"
 
-	embeddingmodels "github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	embeddingmodels "github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 const (

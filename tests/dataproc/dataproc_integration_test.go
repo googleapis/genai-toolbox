@@ -31,9 +31,9 @@ import (
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/google/go-cmp/cmp"
-	dataprocsrc "github.com/googleapis/genai-toolbox/internal/sources/dataproc"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	dataprocsrc "github.com/googleapis/mcp-toolbox/internal/sources/dataproc"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -593,7 +593,7 @@ func listClustersRpc(t *testing.T, client *dataproc.ClusterControllerClient, ctx
 }
 
 func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStatus int) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
