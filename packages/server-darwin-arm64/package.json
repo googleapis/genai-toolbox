@@ -10,7 +10,7 @@
     "arm64"
   ],
   "main": "bin/toolbox",
-  "repository": "googleapis/genai-toolbox",
+  "repository": "googleapis/mcp-toolbox",
   "scripts": {
     "prepack": "node scripts/downloadBinary.js darwin arm64"
   },

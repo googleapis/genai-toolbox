@@ -37,7 +37,7 @@ if (!gcsPlatform || !gcsArch) {
 
 const extension = targetPlatform === 'win32' ? '.exe' : '';
 const binaryName = `toolbox${extension}`;
-const url = `https://storage.googleapis.com/genai-toolbox/v${version}/${gcsPlatform}/${gcsArch}/${binaryName}`;
+const url = `https://storage.googleapis.com/mcp-toolbox-for-databases/v${version}/${gcsPlatform}/${gcsArch}/${binaryName}`;
 
 // 4. Prepare Output
 const binDir = path.join(process.cwd(), 'bin');
@@ -58,7 +58,7 @@ console.log(`[Source]  ${url}`);
 const file = fs.createWriteStream(destPath);
 https.get(url, function(response) {
   if (response.statusCode !== 200) {
-    console.error(`❌ Failed to download. Status Code: ${response.statusCode}`);
+    console.error(`Failed to download. Status Code: ${response.statusCode}`);
     fs.unlink(destPath, () => {}); // Delete partial file
     process.exit(1);
   }
@@ -72,14 +72,14 @@ https.get(url, function(response) {
         try {
           execSync(`chmod +x "${destPath}"`);
         } catch (err) {
-          console.warn("⚠️  Could not set executable permissions (chmod failed).");
+          console.warn("Could not set executable permissions (chmod failed).");
         }
       }
-      console.log(`✅ Success! Binary saved to ${destPath}`);
+      console.log(`Success! Binary saved to ${destPath}`);
     });
   });
 }).on('error', function(err) {
   fs.unlink(destPath, () => {});
-  console.error(`❌ Download Error: ${err.message}`);
+  console.error(`Download Error: ${err.message}`);
   process.exit(1);
 });

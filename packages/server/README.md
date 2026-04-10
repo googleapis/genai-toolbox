@@ -53,7 +53,7 @@ prompts:
         required: true
 ```
 
-To learn more on how to configure your toolbox, visit the [official docsite](https://googleapis.github.io/genai-toolbox/getting-started/configure/).
+To learn more on how to configure your toolbox, visit the [official docsite](https://mcp-toolbox.dev/documentation/configuration/).
 
 ## Platform Support
 
@@ -65,5 +65,5 @@ The toolbox automatically handles platform-specific binaries. Supported platform
 ## Resources
 
 For more information, visit the 
-- [MCP Toolbox repository](https://github.com/googleapis/genai-toolbox)
-- [Official Documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/)
+- [MCP Toolbox repository](https://github.com/googleapis/mcp-toolbox)
+- [Official Documentation](https://mcp-toolbox.dev/documentation)

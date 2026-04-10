@@ -9,7 +9,7 @@
   "files": [
     "bin/run.js"
   ],
-  "repository": "googleapis/genai-toolbox",
+  "repository": "googleapis/mcp-toolbox",
   "optionalDependencies": {
     "@toolbox-sdk/server-darwin-arm64": "0.31.0",
     "@toolbox-sdk/server-darwin-x64": "0.31.0",

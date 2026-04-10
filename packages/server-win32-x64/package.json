@@ -10,7 +10,7 @@
     "x64"
   ],
   "main": "bin/toolbox.exe",
-  "repository": "googleapis/genai-toolbox",
+  "repository": "googleapis/mcp-toolbox",
   "scripts": {
     "prepack": "node scripts/downloadBinary.js win32 x64"
   },
