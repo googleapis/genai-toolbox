@@ -116,20 +116,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if param.GetType() == "array" {
 			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
+
+		// ES|QL requires an array of single-key objects for named parameters
 		if val, ok := paramMap[param.GetName()]; ok {
-			esType := "keyword"
-			switch param.GetType() {
-			case "integer":
-				esType = "integer"
-			case "float":
-				esType = "double"
-			case "boolean":
-				esType = "boolean"
-			}
-			paramsList = append(paramsList, map[string]any{
-				"value": val,
-				"type":  esType,
-			})
+			paramsList = append(paramsList, map[string]any{param.GetName(): val})
 		}
 	}
 
