@@ -43,5 +43,5 @@ description: "Creates a backup on the given Cloud SQL instance."
 
 ## Additional Resources
 - [Cloud SQL Admin API documentation](https://cloud.google.com/sql/docs/mysql/admin-api)
-- [Toolbox Cloud SQL tools documentation](_index.md)
+- [Toolbox Cloud SQL tools documentation](../source.md)
 - [Cloud SQL Backup API documentation](https://cloud.google.com/sql/docs/mysql/backup-recovery/backups)

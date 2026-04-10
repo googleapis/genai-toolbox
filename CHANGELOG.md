@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.0.0](https://github.com/googleapis/mcp-toolbox/compare/v0.32.0...v1.0.0) (2026-04-10)
+
+
+> [!IMPORTANT]
+> This is the first stable release. Please review the [UPGRADING.md](UPGRADING.md) guide for instructions on migrating from previous beta versions.
+
+
+### ⚠ BREAKING CHANGES
+
+* **tools/elasticsearch:** add vector search support and remove query passing through param ([#2891](https://github.com/googleapis/mcp-toolbox/issues/2891))
+* **tools/looker:** refactor looker-git-branch tool into 5 separate tools ([#2976](https://github.com/googleapis/mcp-toolbox/issues/2976))
+
+### Features
+
+* **auth:** Support opaque token validation for `generic` authService ([#2944](https://github.com/googleapis/mcp-toolbox/issues/2944)) ([c924701](https://github.com/googleapis/mcp-toolbox/commit/c924701adede95877594423d78b7ae72fe0b9c82))
+* **cloudsqlpg:** Run `SELECT 1` after successful connection attempt ([#2997](https://github.com/googleapis/mcp-toolbox/issues/2997)) ([6ed9700](https://github.com/googleapis/mcp-toolbox/commit/6ed9700e15f08b31e65eb0afa605f4a8ea937e66))
+* **tools/bigquerysql:** Add semantic search support ([#2890](https://github.com/googleapis/mcp-toolbox/issues/2890)) ([862c396](https://github.com/googleapis/mcp-toolbox/commit/862c396cadfa1d95d12cc121312a81035c22cbad))
+* **tools/elasticsearch-execute-esql:** Add Tool to execute arbitrary ES/QL queries ([#3013](https://github.com/googleapis/mcp-toolbox/issues/3013)) ([ae49fb7](https://github.com/googleapis/mcp-toolbox/commit/ae49fb737031d783b6734a0ea35488dd0f4c7ccc))
+* **tools/elasticsearch:** Add vector search support and remove query passing through param ([#2891](https://github.com/googleapis/mcp-toolbox/issues/2891)) ([d44e879](https://github.com/googleapis/mcp-toolbox/commit/d44e879336f6628790e3f1dca2477cb56fe8f080))
+* **tools/looker:** Refactor looker-git-branch tool into 5 separate tools ([#2976](https://github.com/googleapis/mcp-toolbox/issues/2976)) ([b2472d4](https://github.com/googleapis/mcp-toolbox/commit/b2472d4926dacc496fc6956185fb281b5e75f56f))
+* **tools/mysql:** Add list-table-stats-tool to list table statistics in MySQL and Cloud SQL MySQL source. ([#2938](https://github.com/googleapis/mcp-toolbox/issues/2938)) ([dc2c2b4](https://github.com/googleapis/mcp-toolbox/commit/dc2c2b44e512e34d4d3a0b9c63b59374c37c4c4a))
+
 ## [0.32.0](https://github.com/googleapis/mcp-toolbox/compare/v0.31.0...v0.32.0) (2026-04-08)
 
 

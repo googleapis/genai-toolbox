@@ -109,19 +109,19 @@ After you install Looker in the MCP Store, resources and tools from the server a
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.32.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.0.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.32.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.0.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.32.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.0.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.32.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.0.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -551,7 +551,11 @@ as well as get the database schema needed to write LookML effectively.
 1. **get_lookml_tests**: Retrieves a list of available LookML tests for a project.
 1. **run_lookml_tests**: Executes specific LookML tests within a project.
 1. **create_view_from_table**: Generates boilerplate LookML views directly from the database schema.
-1. **project_git_branch**: Fetch and manipulate the git branch of a LookML project.
+1. **list_git_branches**: List the available git branches of a LookML project.
+1. **get_git_branch**: Get the current git branch of a LookML project.
+1. **create_git_branch**: Create a new git branch for a LookML project.
+1. **switch_git_branch**: Switch the git branch of a LookML project.
+1. **delete_git_branch**: Delete a git branch of a LookML project.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

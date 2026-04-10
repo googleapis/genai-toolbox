@@ -156,7 +156,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForPgvector)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
@@ -108,6 +109,7 @@ type Tool struct {
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
+
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
@@ -153,28 +155,44 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			Value: value,
 		})
 
-		// 2. Create the low-level parameter for the dry run, using the defined type from `p`.
+		// 2. Create the low-level parameter for the dry run.
 		lowLevelParam := &bigqueryrestapi.QueryParameter{
 			Name:           paramNameForHighLevel,
 			ParameterType:  &bigqueryrestapi.QueryParameterType{},
 			ParameterValue: &bigqueryrestapi.QueryParameterValue{},
 		}
 
-		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
-			// Handle array types based on their defined item type.
+		rv := reflect.ValueOf(value)
+		if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() != reflect.Uint8 {
 			lowLevelParam.ParameterType.Type = "ARRAY"
-			itemType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType())
-			if err != nil {
-				return nil, util.NewAgentError("unable to get BigQuery type from tool parameter type", err)
+
+			// Default item type to FLOAT64 for embeddings, or use config if available.
+			itemType := "FLOAT64"
+			if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
+				if bqType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType()); err == nil {
+					itemType = bqType
+				}
 			}
 			lowLevelParam.ParameterType.ArrayType = &bigqueryrestapi.QueryParameterType{Type: itemType}
 
 			// Build the array values.
-			sliceVal := reflect.ValueOf(value)
-			arrayValues := make([]*bigqueryrestapi.QueryParameterValue, sliceVal.Len())
-			for i := 0; i < sliceVal.Len(); i++ {
+			arrayValues := make([]*bigqueryrestapi.QueryParameterValue, rv.Len())
+			for i := 0; i < rv.Len(); i++ {
+				val := rv.Index(i).Interface()
+
+				// Prevent precision loss and scientific notation issues
+				var valStr string
+				switch v := val.(type) {
+				case float64:
+					valStr = strconv.FormatFloat(v, 'f', -1, 64)
+				case float32:
+					valStr = strconv.FormatFloat(float64(v), 'f', -1, 32)
+				default:
+					valStr = fmt.Sprintf("%v", val)
+				}
+
 				arrayValues[i] = &bigqueryrestapi.QueryParameterValue{
-					Value: fmt.Sprintf("%v", sliceVal.Index(i).Interface()),
+					Value: valStr,
 				}
 			}
 			lowLevelParam.ParameterValue.ArrayValues = arrayValues
@@ -220,8 +238,21 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func formatVectorForBigQuery(vectorFloats []float32) any {
+	if len(vectorFloats) == 0 {
+		return []float64{}
+	}
+
+	res := make([]float64, len(vectorFloats))
+	for i, f := range vectorFloats {
+		// Convert to float64
+		res[i] = float64(f)
+	}
+	return res
+}
+
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, formatVectorForBigQuery)
 }
 
 func (t Tool) Manifest() tools.Manifest {

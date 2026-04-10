@@ -263,6 +263,9 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := getSingleStoreTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	insertStmt := `INSERT INTO senseai_docs (content, embedding) VALUES (?, JSON_ARRAY_PACK(?))`
+	searchStmt := `SELECT content FROM senseai_docs ORDER BY DOT_PRODUCT(embedding, JSON_ARRAY_PACK(?)) DESC LIMIT 1`
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, SingleStoreToolType, insertStmt, searchStmt)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -286,4 +289,22 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Create table for semantic search
+	_, err = pool.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS senseai_docs (id INT AUTO_INCREMENT PRIMARY KEY, content TEXT, embedding BLOB);")
+	if err != nil {
+		t.Fatalf("unable to create semantic search table: %s", err)
+	}
+	defer func() {
+		_, err = pool.ExecContext(ctx, "DROP TABLE IF EXISTS senseai_docs;")
+		if err != nil {
+			t.Logf("Teardown failed: %s", err)
+		}
+	}()
+
+	// Semantic search tests
+	httpSemanticInsertWant := `null`
+	mcpSemanticInsertWant := ``
+	semanticSearchWant := `The quick brown fox jumps over the lazy dog`
+	tests.RunSemanticSearchToolInvokeTest(t, httpSemanticInsertWant, mcpSemanticInsertWant, semanticSearchWant)
 }
