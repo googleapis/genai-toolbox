@@ -1350,7 +1350,7 @@ steps:
       - "SINGLESTORE_USER=$_SINGLESTORE_USER"
       - "SINGLESTORE_DATABASE=$_SINGLESTORE_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["SINGLESTORE_PASSWORD", "SINGLESTORE_HOST", "CLIENT_ID"]
+    secretEnv: ["SINGLESTORE_PASSWORD", "SINGLESTORE_HOST", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1364,7 +1364,9 @@ steps:
           .ci/test_with_coverage.sh \
             "SingleStore" \
             singlestore \
-            singlestore
+            singlestore \
+            "" \
+            "API_KEY"
         else
           echo "No relevant changes for SingleStore. Skipping shard."
           exit 0
