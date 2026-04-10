@@ -373,8 +373,8 @@ substitutions:
   _REGION: us-central1
   _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
   _AR_REPO_NAME: toolbox
-  _OLD_BUCKET_NAME: toolbox-test-old
-  _BUCKET_NAME: toolbox-test-build
+  _OLD_BUCKET_NAME: genai-toolbox
+  _BUCKET_NAME: mcp-toolbox-for-databases
   _ASSETS_BUCKET: toolbox-build-assets
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
   _PUSH_LATEST: "false" # Substituted in trigger
