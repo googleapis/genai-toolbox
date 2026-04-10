@@ -576,7 +576,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     [project's README][toolbox-llamaindex-readme].
 
     [toolbox-llamaindex]: https://pypi.org/project/toolbox-llamaindex/
-    [toolbox-llamaindex-readme]: https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md
+    [toolbox-llamaindex-readme]: https://github.com/googleapis/mcp-toolbox-llamaindex-python/blob/main/README.md
 
   </details>
 </details>

@@ -281,7 +281,7 @@ For more detailed instructions on using the Toolbox LangChain SDK, see the
 {{% tab header="Llamaindex" lang="en" %}}
 
 Once you've installed the [Toolbox Llamaindex
-SDK](https://github.com/googleapis/genai-toolbox-llamaindex-python), you can load
+SDK](https://github.com/googleapis/mcp-toolbox-llamaindex-python), you can load
 tools:
 
 {{< highlight python >}}
@@ -296,7 +296,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
-[README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
+[README](https://github.com/googleapis/mcp-toolbox-llamaindex-python/blob/main/README.md).
 
 {{% /tab %}}
 {{< /tabpane >}}

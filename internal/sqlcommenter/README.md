@@ -86,18 +86,9 @@ ctx = sqlcommenter.WithAgentName(ctx, clientInfo.Name)  // injected per session
 
 ---
 
-## Files changed
-
-| File | What changed |
-|---|---|
-| `internal/sqlcommenter/commenter.go` | **This package** — context helpers, `AppendComment`, `JobLabels`, BQ label sanitizer |
-| `internal/tools/postgres/postgresexecutesql/postgresexecutesql.go` | `Invoke()` injects tool name + `"pgx"` driver, calls `AppendComment` |
-| `internal/tools/mysql/mysqlexecutesql/mysqlexecutesql.go` | `Invoke()` injects tool name + `"mysql"` driver, calls `AppendComment` |
-| `internal/tools/bigquery/bigqueryexecutesql/bigqueryexecutesql.go` | `Invoke()` injects tool name into context before `RunSQL` |
-| `internal/sources/bigquery/bigquery.go` | `RunSQL()` reads `JobLabels(ctx)` and assigns to `query.Labels` |
-| `internal/server/mcp/mcp.go` | `InitializeResponse()` now returns `clientInfo.name` |
-| `internal/server/mcp.go` | Stores `clientName` per session on `initialize`; injects via `WithAgentName` on every `tools/call` |
-| `internal/server/server.go` | Adds `mcpClientNames sync.Map` to `Server` for per-session storage |
+| `internal/sources/pgx_util.go` | **Centralized Handler** — Executes SQL with SQLCommenter telemetry for all Postgres-based drivers |
+| `internal/server/mcp.go` | Stores `clientName` per session on `initialize`; handles **onRemove** session cleanup to prevent leaks |
+| `internal/server/server.go` | Initializes `mcpClientNames` and lifecycle callbacks for memory safety |
 
 Cloud SQL Postgres, Cloud SQL MySQL, and AlloyDB are covered automatically —
 they reuse the same `postgres-execute-sql` / `mysql-execute-sql` tool types,

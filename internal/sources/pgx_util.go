@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/googleapis/genai-toolbox/internal/sqlcommenter"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5"
 )
 

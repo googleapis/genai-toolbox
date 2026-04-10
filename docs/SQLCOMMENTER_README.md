@@ -48,6 +48,7 @@ Drivers like **MongoDB, Firestore, Redis, Bigtable, and Dgraph** are currently e
 1. **Context injection** – each `RunSQL` method calls `sqlcommenter.WithDBDriver` to store the driver name in the request context.
 2. **Comment generation** – `sqlcommenter.AppendComment` reads the context (tool name, controller, driver, traceparent) and prepends the comment to the SQL statement.
 3. **BigQuery job labels** – for BigQuery, the same metadata is attached to job labels as key-value pairs (e.g., `controller=mcp-toolbox`).
+4. **Session Lifecycle Management** – The `sseManager` in `internal/server/mcp.go` now implements an `onRemove` callback to safely deregister agent identities when a session times out or is closed, preventing memory leaks in high-velocity environments.
 
 ## Configuration & Identity Extraction
 The SQLCommenter metadata handles identity tracking using a strict "Automatic First, Static Second" priority sequence.
@@ -66,4 +67,4 @@ The `controller` tag maps the query directly to the identity of the AI Agent exe
 - Build verification (`go build ./...`) ensures no breaking signature changes were introduced.
 
 ---
-*Last updated on 2026‑03‑30 by Antigravity*
+*Last updated on 2026‑04‑10 by Antigravity*
