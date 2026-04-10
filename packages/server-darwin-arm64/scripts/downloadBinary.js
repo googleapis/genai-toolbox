@@ -37,7 +37,7 @@ if (!gcsPlatform || !gcsArch) {
 
 const extension = targetPlatform === 'win32' ? '.exe' : '';
 const binaryName = `toolbox${extension}`;
-const url = `https://storage.googleapis.com/genai-toolbox/v${version}/${gcsPlatform}/${gcsArch}/${binaryName}`;
+const url = `https://storage.googleapis.com/mcp-toolbox-for-databases/v${version}/${gcsPlatform}/${gcsArch}/${binaryName}`;
 
 // 4. Prepare Output
 const binDir = path.join(process.cwd(), 'bin');
