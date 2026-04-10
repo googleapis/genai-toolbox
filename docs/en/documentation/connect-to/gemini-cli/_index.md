@@ -36,7 +36,7 @@ Below are a list of Gemini CLI Extensions powered by MCP Toolbox:
 * [cloud-sql-postgresql-observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
 * [cloud-sql-sqlserver](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
 * [cloud-sql-sqlserver-observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
-* [dataplex](https://github.com/gemini-cli-extensions/dataplex)
+* [knowledge-catalog](https://github.com/gemini-cli-extensions/knowledge-catalog)
 * [firestore-native](https://github.com/gemini-cli-extensions/firestore-native)
 * [looker](https://github.com/gemini-cli-extensions/looker)
 * [mcp-toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)

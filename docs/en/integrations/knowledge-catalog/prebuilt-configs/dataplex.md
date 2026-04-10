@@ -1,10 +1,10 @@
 ---
-title: "Dataplex"
+title: "Knowledge Catalog (formerly known as Dataplex)"
 type: docs
-description: "Details of the Dataplex prebuilt configuration."
+description: "Details of the Knowledge Catalog prebuilt configuration."
 ---
 
-## Dataplex
+## Knowledge Catalog
 
 *   `--prebuilt` value: `dataplex`
 *   **Environment Variables:**
@@ -14,9 +14,8 @@ description: "Details of the Dataplex prebuilt configuration."
         entries.
     *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
 *   **Tools:**
-    *   `search_entries`: Searches for entries in Dataplex Catalog.
-    *   `lookup_entry`: Retrieves a specific entry from Dataplex
-        Catalog.
+    *   `search_entries`: Searches for entries in Knowledge Catalog.
+    *   `lookup_entry`: Retrieves a specific entry from Knowledge Catalog.
     *   `search_aspect_types`: Finds aspect types relevant to the
         query.
     *   `lookup_context`: Retrieves rich metadata regarding one or more data assets along with their relationships.
