@@ -44,6 +44,10 @@ tools:
     kind: mysql-list-tables
     source: cloud-sql-mysql-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+  list_table_stats:
+    kind: mysql-list-table-stats
+    source: cloud-sql-mysql-source
+    description: "Display table statistics including table size, total latency, rows read, rows written, read and write latency for entire instance, a specified database, or a specified table. Specifying a database name or table name filters the output to that specific db or table. Results are limited to 10 by default."
   list_tables_missing_unique_indexes:
     kind: mysql-list-tables-missing-unique-indexes
     source: cloud-sql-mysql-source
@@ -148,6 +152,7 @@ toolsets:
     - get_query_metrics
     - get_system_metrics
     - list_table_fragmentation
+    - list_table_stats
     - list_tables_missing_unique_indexes
   lifecycle:
     - create_backup

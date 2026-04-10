@@ -3280,6 +3280,140 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 	}
 }
 
+func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string, tableNameParam string, tableNameAuth string) {
+	type tableStatsDetails struct {
+		TableSchema    string `json:"table_schema"`
+		TableName      string `json:"table_name"`
+		DataSize       any    `json:"size_MB"`
+		RowCount       any    `json:"row_count"`
+		TotalLatency   any    `json:"total_latency_secs"`
+		RowsFetched    any    `json:"rows_fetched"`
+		RowsInserted   any    `json:"rows_inserted"`
+		RowsUpdated    any    `json:"rows_updated"`
+		RowsDeleted    any    `json:"rows_deleted"`
+		IOReads        any    `json:"io_reads"`
+		IOReadLatency  any    `json:"io_read_latency"`
+		IOWriteLatency any    `json:"io_write_latency"`
+		IOMiscLatency  any    `json:"io_misc_latency"`
+	}
+
+	paramTableEntryWanted := tableStatsDetails{
+		TableSchema:    databaseName,
+		TableName:      tableNameParam,
+		DataSize:       any(nil),
+		RowCount:       any(nil),
+		TotalLatency:   any(nil),
+		RowsFetched:    any(nil),
+		RowsInserted:   any(nil),
+		RowsUpdated:    any(nil),
+		RowsDeleted:    any(nil),
+		IOReads:        any(nil),
+		IOReadLatency:  any(nil),
+		IOWriteLatency: any(nil),
+		IOMiscLatency:  any(nil),
+	}
+
+	authTableEntryWanted := tableStatsDetails{
+		TableSchema:    databaseName,
+		TableName:      tableNameAuth,
+		DataSize:       any(nil),
+		RowCount:       any(nil),
+		TotalLatency:   any(nil),
+		RowsFetched:    any(nil),
+		RowsInserted:   any(nil),
+		RowsUpdated:    any(nil),
+		RowsDeleted:    any(nil),
+		IOReads:        any(nil),
+		IOReadLatency:  any(nil),
+		IOWriteLatency: any(nil),
+		IOMiscLatency:  any(nil),
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           any
+	}{
+		{
+			name:           "invoke list_table_stats with no arguments, expected 2 results",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails{paramTableEntryWanted, authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_stats with schema other than connected to, expected log error and nil results",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "somerandomdb_xyx")),
+			wantStatusCode: http.StatusInternalServerError,
+			want:           []tableStatsDetails(nil),
+		},
+		{
+			name:           "invoke list_table_stats on 1 database and all tables, expected to have 2 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, databaseName)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails{paramTableEntryWanted, authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_stats on 1 database and 1 specific table name, expected to have 1 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s"}`, databaseName, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails{authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_stats on 1 non-exist table on 1 database, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table"}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails(nil),
+		},
+	}
+
+	// Generating additional stats for tableNameParam
+	for i := 0; i < 3; i++ {
+		selectStmt := fmt.Sprintf("SELECT * FROM %s", tableNameParam)
+		if _, err := pool.ExecContext(ctx, selectStmt); err != nil {
+			t.Logf("warning: unable to execute select: %v", err)
+		}
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_table_stats/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []tableStatsDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b tableStatsDetails) bool {
+				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
 func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableFragmentationDetails struct {
 		TableSchema             string `json:"table_schema"`

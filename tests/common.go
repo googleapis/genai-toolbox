@@ -456,6 +456,11 @@ func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]
 		"source":      "my-instance",
 		"description": "Lists table fragmentation in the database.",
 	}
+	tools["list_table_stats"] = map[string]any{
+		"type":        "mysql-list-table-stats",
+		"source":      "my-instance",
+		"description": "Lists table stats in the database.",
+	}
 	tools["get_query_plan"] = map[string]any{
 		"type":        "mysql-get-query-plan",
 		"source":      "my-instance",

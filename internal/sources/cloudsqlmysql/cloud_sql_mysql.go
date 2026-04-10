@@ -102,6 +102,10 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
+func (s *Source) MySQLDatabase() string {
+	return s.Database
+}
+
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
 	results, err := s.MySQLPool().QueryContext(ctx, statement, params...)
 	if err != nil {
