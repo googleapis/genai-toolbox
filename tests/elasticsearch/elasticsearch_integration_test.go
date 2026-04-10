@@ -400,7 +400,7 @@ func runExecuteEsqlTest(t *testing.T, index string) {
 		if !ok {
 			t.Fatalf("unable to find result in response body")
 		}
-		want := `[{"id":1},{"id":2},{"id":3},{"id":4}]`
+		want := `[{"id":1},{"id":2},{"id":3},{"id":4},{"id":5}]`
 		if got != want {
 			t.Fatalf("unexpected value: got %q, want %q", got, want)
 		}
