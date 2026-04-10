@@ -20,30 +20,31 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
-	"github.com/googleapis/genai-toolbox/internal/auth/google"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
-	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/http"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth/google"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
+	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	cloudsqlpgsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlpg"
+	httpsrc "github.com/googleapis/mcp-toolbox/internal/sources/http"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/http"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseEnv(t *testing.T) {
 	tcs := []struct {
-		desc      string
-		env       map[string]string
-		in        string
-		want      string
-		err       bool
-		errString string
+		desc         string
+		env          map[string]string
+		in           string
+		want         string
+		err          bool
+		errString    string
+		wantOptional []string
 	}{
 		{
 			desc:      "without default without env",
@@ -61,22 +62,43 @@ func TestParseEnv(t *testing.T) {
 			want: "bar",
 		},
 		{
-			desc: "with empty default",
-			in:   "${FOO:}",
-			want: "",
+			desc:         "with empty default",
+			in:           "${FOO:}",
+			want:         "",
+			wantOptional: []string{"FOO"},
 		},
 		{
-			desc: "with default",
-			in:   "${FOO:bar}",
-			want: "bar",
+			desc:         "with default",
+			in:           "${FOO:bar}",
+			want:         "bar",
+			wantOptional: []string{"FOO"},
 		},
 		{
 			desc: "with default with env",
 			env: map[string]string{
 				"FOO": "hello",
 			},
-			in:   "${FOO:bar}",
-			want: "hello",
+			in:           "${FOO:bar}",
+			want:         "hello",
+			wantOptional: []string{"FOO"},
+		},
+		{
+			desc: "multiple variables",
+			in:   "user: ${USER_NAME:}, password: ${PASSWORD:}, ip: ${IP:public}, region: ${REGION}",
+			env: map[string]string{
+				"REGION": "us-central1",
+			},
+			want:         "user: , password: , ip: public, region: us-central1",
+			wantOptional: []string{"USER_NAME", "PASSWORD", "IP"},
+		},
+		{
+			desc: "variable required in one place and optional in another",
+			in:   "project_req: ${PROJECT_ID}, project_opt: ${PROJECT_ID:default}",
+			env: map[string]string{
+				"PROJECT_ID": "my_project",
+			},
+			want:         "project_req: my_project, project_opt: my_project",
+			wantOptional: []string{}, // Because it was marked required at least once
 		},
 	}
 	for _, tc := range tcs {
@@ -98,6 +120,14 @@ func TestParseEnv(t *testing.T) {
 			}
 			if tc.want != got {
 				t.Fatalf("unexpected want: got %s, want %s", got, tc.want)
+			}
+			if len(parser.OptionalEnvVars) != len(tc.wantOptional) {
+				t.Fatalf("OptionalEnvVars length mismatch: got %d, want %d. Got: %v, Want: %v", len(parser.OptionalEnvVars), len(tc.wantOptional), parser.OptionalEnvVars, tc.wantOptional)
+			}
+			for i, v := range parser.OptionalEnvVars {
+				if v != tc.wantOptional[i] {
+					t.Errorf("OptionalEnvVars element %d mismatch: got %q, want %q", i, v, tc.wantOptional[i])
+				}
 			}
 		})
 	}
@@ -501,19 +531,30 @@ tools:
 `,
 		},
 		{
-			desc: "invalid source",
-			in:   `sources: invalid`,
-			want: "",
+			desc:   "invalid source",
+			in:     `sources: invalid`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "sources": expected map`,
 		},
 		{
-			desc: "invalid toolset",
-			in:   `toolsets: invalid`,
-			want: "",
+			desc:   "invalid toolset",
+			in:     `toolsets: invalid`,
+			isErr:  true,
+			errStr: `doc 1: invalid config format at key "toolsets": expected map`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			output, err := ConvertConfig([]byte(tc.in))
+			if tc.isErr {
+				if err == nil {
+					t.Fatalf("expected error")
+				}
+				if tc.errStr != "" && err.Error() != tc.errStr {
+					t.Fatalf("incorrect error string: got %s, want %s", err, tc.errStr)
+				}
+				return
+			}
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
@@ -1722,7 +1763,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
 				},
 				"lifecycle": tools.ToolsetConfig{
 					Name:      "lifecycle",
@@ -1806,7 +1847,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
 				},
 			},
 		},
@@ -1836,7 +1877,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_dev_tools": tools.ToolsetConfig{
 					Name:      "looker_dev_tools",
-					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table", "project_git_branch"},
+					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table", "list_git_branches", "get_git_branch", "create_git_branch", "switch_git_branch", "delete_git_branch"},
 				},
 			},
 		},

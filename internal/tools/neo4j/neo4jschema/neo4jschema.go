@@ -22,14 +22,14 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/cache"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/cache"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/helpers"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 )
 
@@ -63,12 +63,13 @@ type compatibleSource interface {
 // Config holds the configuration settings for the Neo4j schema tool.
 // These settings are typically read from a YAML file.
 type Config struct {
-	Name               string   `yaml:"name" validate:"required"`
-	Type               string   `yaml:"type" validate:"required"`
-	Source             string   `yaml:"source" validate:"required"`
-	Description        string   `yaml:"description" validate:"required"`
-	AuthRequired       []string `yaml:"authRequired"`
-	CacheExpireMinutes *int     `yaml:"cacheExpireMinutes,omitempty"` // Cache expiration time in minutes.
+	Name               string                 `yaml:"name" validate:"required"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Description        string                 `yaml:"description" validate:"required"`
+	AuthRequired       []string               `yaml:"authRequired"`
+	CacheExpireMinutes *int                   `yaml:"cacheExpireMinutes,omitempty"` // Cache expiration time in minutes.
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // Statically verify that Config implements the tools.ToolConfig interface.
@@ -83,7 +84,8 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 
 	params := parameters.Parameters{}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
 	// Set a default cache expiration if not provided in the configuration.
 	if cfg.CacheExpireMinutes == nil {

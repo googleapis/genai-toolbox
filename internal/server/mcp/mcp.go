@@ -21,15 +21,15 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
-	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
-	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
-	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
-	v20251125 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20251125"
-	"github.com/googleapis/genai-toolbox/internal/server/resources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
+	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
+	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
+	v20250618 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250618"
+	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 // LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.

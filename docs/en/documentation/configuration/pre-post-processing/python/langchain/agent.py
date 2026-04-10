@@ -4,7 +4,7 @@ from datetime import datetime
 from langchain.agents import create_agent
 from langchain.agents.middleware import wrap_tool_call
 from langchain_core.messages import ToolMessage
-from langchain_google_vertexai import ChatVertexAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from toolbox_langchain import ToolboxClient
 
 system_prompt = """
@@ -84,7 +84,7 @@ async def enrich_response(request, handler):
 async def main():
     async with ToolboxClient("http://127.0.0.1:5000") as client:
         tools = await client.aload_toolset("my-toolset")
-        model = ChatVertexAI(model="gemini-2.5-flash")
+        model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
         agent = create_agent(
             system_prompt=system_prompt,
             model=model,
@@ -94,22 +94,24 @@ async def main():
         )
         # Test post-processing
         user_input = "Book hotel with id 3."
+        print(f"\n[INPUT] User: {user_input}")
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
         )
 
         print("-" * 50)
         last_ai_msg = response["messages"][-1].content
-        print(f"AI: {last_ai_msg}")
+        print(f"[OUTPUT] AI: {last_ai_msg}")
 
         # Test Pre-processing
         print("-" * 50)
         user_input = "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-02-20."
+        print(f"\n[INPUT] User: {user_input}")
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
         )
         last_ai_msg = response["messages"][-1].content
-        print(f"AI: {last_ai_msg}")
+        print(f"[OUTPUT] AI: {last_ai_msg}")
 
 
 if __name__ == "__main__":

@@ -31,19 +31,19 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	// Importing the cmd/internal package also import packages for side effect of registration
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/cmd/internal/invoke"
-	"github.com/googleapis/genai-toolbox/cmd/internal/migrate"
-	"github.com/googleapis/genai-toolbox/cmd/internal/serve"
-	"github.com/googleapis/genai-toolbox/cmd/internal/skills"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/invoke"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/migrate"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/serve"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/skills"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -105,6 +105,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 
 	// Set server version
 	opts.Cfg.Version = versionString
+	opts.VersionNum = strings.TrimSpace(versionNum)
 
 	// set baseCmd in, out and err the same as cmd.
 	cmd.SetIn(opts.IOStreams.In)

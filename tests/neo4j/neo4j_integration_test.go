@@ -29,8 +29,8 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -77,44 +77,56 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	// This configuration defines the data source and the tools to be tested.
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-neo4j-instance": sourceConfig,
+			"my-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{
 				"type":        "neo4j-cypher",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
 			"my-simple-execute-cypher-tool": map[string]any{
 				"type":        "neo4j-execute-cypher",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-readonly-execute-cypher-tool": map[string]any{
 				"type":        "neo4j-execute-cypher",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "A readonly cypher execution tool.",
 				"readOnly":    true,
 			},
 			"my-schema-tool": map[string]any{
 				"type":        "neo4j-schema",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "A tool to get the Neo4j schema.",
 			},
 			"my-schema-tool-with-cache": map[string]any{
 				"type":               "neo4j-schema",
-				"source":             "my-neo4j-instance",
+				"source":             "my-instance",
 				"description":        "A schema tool with a custom cache expiration.",
 				"cacheExpireMinutes": 10,
 			},
 			"my-populated-schema-tool": map[string]any{
 				"type":        "neo4j-schema",
-				"source":      "my-neo4j-instance",
+				"source":      "my-instance",
 				"description": "A tool to get the Neo4j schema from a populated DB.",
 			},
 		},
 	}
+
+	insertStmt := `CREATE (n:SenseAIDocument {content: $content, embedding: $text_to_embed}) RETURN 1 as result`
+	searchStmt := `
+        MATCH (n:SenseAIDocument)
+        WITH n, vector.similarity.cosine(n.embedding, $query) AS score
+        WHERE score IS NOT NULL
+        ORDER BY score DESC
+        LIMIT 1
+        RETURN n.content as content
+    `
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, "neo4j-cypher", insertStmt, searchStmt)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -578,4 +590,9 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			}
 		})
 	}
+
+	// Semantic search tests
+	semanticInsertWant := `[{"result":1}]`
+	semanticSearchWant := `[{"content":"The quick brown fox jumps over the lazy dog"}]`
+	tests.RunSemanticSearchToolInvokeTest(t, semanticInsertWant, semanticInsertWant, semanticSearchWant)
 }

@@ -27,18 +27,18 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/auth/generic"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 func TestServe(t *testing.T) {
@@ -474,5 +474,76 @@ func TestPRMOverride(t *testing.T) {
 
 	if got["resource"] != "https://override.example.com" {
 		t.Errorf("expected resource 'https://override.example.com', got '%v'", got["resource"])
+	}
+}
+
+// TestLegacyAPIGone verifies that requests to legacy /api/* endpoints return 410 Gone.
+func TestLegacyAPIGone(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Setup Logging and Instrumentation (Using Discard to act as Noop)
+	testLogger, err := log.NewStdLogger(io.Discard, io.Discard, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	// Configure the server (EnableAPI defaults to false)
+	addr, port := "127.0.0.1", 5003
+	cfg := server.ServerConfig{
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		AllowedHosts: []string{"*"},
+	}
+
+	// Initialize and Start the Server
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("unable to initialize server: %v", err)
+	}
+
+	if err := s.Listen(ctx); err != nil {
+		t.Fatalf("unable to start listener: %v", err)
+	}
+
+	go func() {
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("Server serve error: %v\n", err)
+		}
+	}()
+	defer func() {
+		if err := s.Shutdown(ctx); err != nil {
+			t.Errorf("failed to cleanly shutdown server: %v", err)
+		}
+	}()
+
+	// Perform the request to a legacy endpoint
+	url := fmt.Sprintf("http://%s:%d/api/tool/list", addr, port)
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatalf("error when sending request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusGone {
+		t.Fatalf("expected status 410 (Gone), got %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("error reading body: %s", err)
+	}
+
+	want := "/api native endpoints are disabled by default. Please use the standard /mcp JSON-RPC endpoint"
+	if !strings.Contains(string(body), want) {
+		t.Errorf("expected response body to contain %q, got %q", want, string(body))
 	}
 }

@@ -21,9 +21,9 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -71,7 +71,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	err = pool.Ping(ctx)
 	if err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
+	}
+
+	var res int
+	err = pool.QueryRow(ctx, "SELECT 1").Scan(&res)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to execute 'SELECT 1' after connection: %w", err)
 	}
 
 	s := &Source{

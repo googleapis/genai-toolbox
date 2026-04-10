@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"reflect"
 	"regexp"
 	"sort"
@@ -32,119 +31,10 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
-
-var (
-	AlloyDBProject  = os.Getenv("ALLOYDB_PROJECT")
-	AlloyDBLocation = os.Getenv("ALLOYDB_REGION")
-	AlloyDBCluster  = os.Getenv("ALLOYDB_CLUSTER")
-	AlloyDBInstance = os.Getenv("ALLOYDB_INSTANCE")
-	AlloyDBUser     = os.Getenv("ALLOYDB_POSTGRES_USER")
-)
-
-func getAlloyDBVars(t *testing.T) map[string]string {
-	if AlloyDBProject == "" {
-		t.Fatal("'ALLOYDB_PROJECT' not set")
-	}
-	if AlloyDBLocation == "" {
-		t.Fatal("'ALLOYDB_REGION' not set")
-	}
-	if AlloyDBCluster == "" {
-		t.Fatal("'ALLOYDB_CLUSTER' not set")
-	}
-	if AlloyDBInstance == "" {
-		t.Fatal("'ALLOYDB_INSTANCE' not set")
-	}
-	if AlloyDBUser == "" {
-		t.Fatal("'ALLOYDB_USER' not set")
-	}
-	return map[string]string{
-		"project":  AlloyDBProject,
-		"location": AlloyDBLocation,
-		"cluster":  AlloyDBCluster,
-		"instance": AlloyDBInstance,
-		"user":     AlloyDBUser,
-	}
-}
-
-func getAlloyDBToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"alloydb-admin-source": map[string]any{
-				"type": "alloydb-admin",
-			},
-		},
-		"tools": map[string]any{
-			// Tool for RunAlloyDBToolGetTest
-			"my-simple-tool": map[string]any{
-				"type":        "alloydb-list-clusters",
-				"source":      "alloydb-admin-source",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			// Tool for MCP test
-			"my-param-tool": map[string]any{
-				"type":        "alloydb-list-clusters",
-				"source":      "alloydb-admin-source",
-				"description": "Tool to list clusters",
-			},
-			// Tool for MCP test that fails
-			"my-fail-tool": map[string]any{
-				"type":        "alloydb-list-clusters",
-				"source":      "alloydb-admin-source",
-				"description": "Tool that will fail",
-			},
-			// AlloyDB specific tools
-			"alloydb-list-clusters": map[string]any{
-				"type":        "alloydb-list-clusters",
-				"source":      "alloydb-admin-source",
-				"description": "Lists all AlloyDB clusters in a given project and location.",
-			},
-			"alloydb-list-users": map[string]any{
-				"type":        "alloydb-list-users",
-				"source":      "alloydb-admin-source",
-				"description": "Lists all AlloyDB users within a specific cluster.",
-			},
-			"alloydb-list-instances": map[string]any{
-				"type":        "alloydb-list-instances",
-				"source":      "alloydb-admin-source",
-				"description": "Lists all AlloyDB instances within a specific cluster.",
-			},
-			"alloydb-get-cluster": map[string]any{
-				"type":        "alloydb-get-cluster",
-				"source":      "alloydb-admin-source",
-				"description": "Retrieves details of a specific AlloyDB cluster.",
-			},
-			"alloydb-get-instance": map[string]any{
-				"type":        "alloydb-get-instance",
-				"source":      "alloydb-admin-source",
-				"description": "Retrieves details of a specific AlloyDB instance.",
-			},
-			"alloydb-get-user": map[string]any{
-				"type":        "alloydb-get-user",
-				"source":      "alloydb-admin-source",
-				"description": "Retrieves details of a specific AlloyDB user.",
-			},
-			"alloydb-create-cluster": map[string]any{
-				"type":        "alloydb-create-cluster",
-				"description": "create cluster",
-				"source":      "alloydb-admin-source",
-			},
-			"alloydb-create-instance": map[string]any{
-				"type":        "alloydb-create-instance",
-				"description": "create instance",
-				"source":      "alloydb-admin-source",
-			},
-			"alloydb-create-user": map[string]any{
-				"type":        "alloydb-create-user",
-				"description": "create user",
-				"source":      "alloydb-admin-source",
-			},
-		},
-	}
-}
 
 func TestAlloyDBToolEndpoints(t *testing.T) {
 	vars := getAlloyDBVars(t)

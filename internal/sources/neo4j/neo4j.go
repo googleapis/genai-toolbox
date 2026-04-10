@@ -19,10 +19,10 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher/classifier"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jexecutecypher/classifier"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/helpers"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 	neo4jconf "github.com/neo4j/neo4j-go-driver/v6/neo4j/config"
 

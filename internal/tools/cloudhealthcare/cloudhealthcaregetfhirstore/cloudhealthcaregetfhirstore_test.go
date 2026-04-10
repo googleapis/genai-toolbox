@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	getfhirstore "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetfhirstore"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	getfhirstore "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetfhirstore"
 )
 
 func TestParseFromYamlHealthcareGetFHIRStore(t *testing.T) {

@@ -33,8 +33,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -249,7 +249,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	}
 
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -624,7 +624,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 
 	// Get ID token
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -748,52 +748,6 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 }
 
-// RunInitialize runs the initialize lifecycle for mcp to set up client-server connection
-func RunInitialize(t *testing.T, protocolVersion string) string {
-	url := "http://127.0.0.1:5000/mcp"
-
-	initializeRequestBody := map[string]any{
-		"jsonrpc": "2.0",
-		"id":      "mcp-initialize",
-		"method":  "initialize",
-		"params": map[string]any{
-			"protocolVersion": protocolVersion,
-		},
-	}
-	reqMarshal, err := json.Marshal(initializeRequestBody)
-	if err != nil {
-		t.Fatalf("unexpected error during marshaling of body")
-	}
-
-	resp, _ := RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
-	if resp.StatusCode != 200 {
-		t.Fatalf("response status code is not 200")
-	}
-
-	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
-		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
-	}
-
-	sessionId := resp.Header.Get("Mcp-Session-Id")
-
-	header := map[string]string{}
-	if sessionId != "" {
-		header["Mcp-Session-Id"] = sessionId
-	}
-
-	initializeNotificationBody := map[string]any{
-		"jsonrpc": "2.0",
-		"method":  "notifications/initialized",
-	}
-	notiMarshal, err := json.Marshal(initializeNotificationBody)
-	if err != nil {
-		t.Fatalf("unexpected error during marshaling of notifications body")
-	}
-
-	_, _ = RunRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
-	return sessionId
-}
-
 // RunMCPToolCallMethod runs the tool/call for mcp endpoint
 func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, options ...McpTestOption) {
 	// Resolve options
@@ -819,7 +773,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	}
 	accessToken = "Bearer " + accessToken
 
-	idToken, err := GetGoogleIdToken(ClientId)
+	idToken, err := GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1417,7 +1371,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
-		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/genai-toolbox/issues/2562
+		// TODO: Re-enable this test case after this issue is fixed: https://github.com/googleapis/mcp-toolbox/issues/2562
 		// {
 		// 	name:           "invoke list_schemas with owner name",
 		// 	requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, owner))),
@@ -3326,6 +3280,140 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 	}
 }
 
+func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string, tableNameParam string, tableNameAuth string) {
+	type tableStatsDetails struct {
+		TableSchema    string `json:"table_schema"`
+		TableName      string `json:"table_name"`
+		DataSize       any    `json:"size_MB"`
+		RowCount       any    `json:"row_count"`
+		TotalLatency   any    `json:"total_latency_secs"`
+		RowsFetched    any    `json:"rows_fetched"`
+		RowsInserted   any    `json:"rows_inserted"`
+		RowsUpdated    any    `json:"rows_updated"`
+		RowsDeleted    any    `json:"rows_deleted"`
+		IOReads        any    `json:"io_reads"`
+		IOReadLatency  any    `json:"io_read_latency"`
+		IOWriteLatency any    `json:"io_write_latency"`
+		IOMiscLatency  any    `json:"io_misc_latency"`
+	}
+
+	paramTableEntryWanted := tableStatsDetails{
+		TableSchema:    databaseName,
+		TableName:      tableNameParam,
+		DataSize:       any(nil),
+		RowCount:       any(nil),
+		TotalLatency:   any(nil),
+		RowsFetched:    any(nil),
+		RowsInserted:   any(nil),
+		RowsUpdated:    any(nil),
+		RowsDeleted:    any(nil),
+		IOReads:        any(nil),
+		IOReadLatency:  any(nil),
+		IOWriteLatency: any(nil),
+		IOMiscLatency:  any(nil),
+	}
+
+	authTableEntryWanted := tableStatsDetails{
+		TableSchema:    databaseName,
+		TableName:      tableNameAuth,
+		DataSize:       any(nil),
+		RowCount:       any(nil),
+		TotalLatency:   any(nil),
+		RowsFetched:    any(nil),
+		RowsInserted:   any(nil),
+		RowsUpdated:    any(nil),
+		RowsDeleted:    any(nil),
+		IOReads:        any(nil),
+		IOReadLatency:  any(nil),
+		IOWriteLatency: any(nil),
+		IOMiscLatency:  any(nil),
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           any
+	}{
+		{
+			name:           "invoke list_table_stats with no arguments, expected 2 results",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails{paramTableEntryWanted, authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_stats with schema other than connected to, expected log error and nil results",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "somerandomdb_xyx")),
+			wantStatusCode: http.StatusInternalServerError,
+			want:           []tableStatsDetails(nil),
+		},
+		{
+			name:           "invoke list_table_stats on 1 database and all tables, expected to have 2 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, databaseName)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails{paramTableEntryWanted, authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_stats on 1 database and 1 specific table name, expected to have 1 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s"}`, databaseName, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails{authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_stats on 1 non-exist table on 1 database, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table"}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableStatsDetails(nil),
+		},
+	}
+
+	// Generating additional stats for tableNameParam
+	for i := 0; i < 3; i++ {
+		selectStmt := fmt.Sprintf("SELECT * FROM %s", tableNameParam)
+		if _, err := pool.ExecContext(ctx, selectStmt); err != nil {
+			t.Logf("warning: unable to execute select: %v", err)
+		}
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_table_stats/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []tableStatsDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b tableStatsDetails) bool {
+				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
 func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableFragmentationDetails struct {
 		TableSchema             string `json:"table_schema"`
@@ -4765,33 +4853,6 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 			}
 		})
 	}
-}
-
-// RunRequest is a helper function to send HTTP requests and return the response
-func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
-	// Send request
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		t.Fatalf("unable to create request: %s", err)
-	}
-
-	req.Header.Set("Content-type", "application/json")
-
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("unable to send request: %s", err)
-	}
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("unable to read request body: %s", err)
-	}
-
-	defer resp.Body.Close()
-	return resp, respBody
 }
 
 func RunStatementToolsTest(t *testing.T, tools map[string]string) {

@@ -18,15 +18,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	singlestoresrc "github.com/googleapis/mcp-toolbox/internal/sources/singlestore"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -167,9 +170,50 @@ func addSingleStoreExecuteSQLConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
-// Copied over from singlestore.go
-func initSingleStoreConnectionPool(host, port, user, pass, dbname string) (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+// Copied over from singlestore.go, with context and tracer removed
+func initSingleStoreConnectionPool(cfg singlestoresrc.Config) (*sql.DB, error) {
+	// Build query parameters via url.Values for deterministic order and proper escaping.
+	connectionParams := url.Values{}
+
+	mysqlCfg := mysql.Config{
+		User:                 cfg.User,
+		Passwd:               cfg.Password,
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		DBName:               cfg.Database,
+		ParseTime:            true,
+		AllowNativePasswords: true,
+		CheckConnLiveness:    true,
+		MaxAllowedPacket:     64 << 20,
+		ConnectionAttributes: "_connector_name:MCP toolbox for Databases",
+		Params: map[string]string{
+			"vector_type_project_format": "JSON",
+		},
+	}
+
+	// Default to TLS preferred; can be overridden via connectionParams.
+	connectionParams.Set("tls", "preferred")
+
+	// Derive readTimeout from queryTimeout when provided.
+	if cfg.QueryTimeout != "" {
+		timeout, err := time.ParseDuration(cfg.QueryTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("invalid queryTimeout %q: %w", cfg.QueryTimeout, err)
+		}
+		connectionParams.Set("readTimeout", timeout.String())
+	}
+
+	// Custom user parameters (e.g. tls, compress) — may override defaults above.
+	for k, v := range cfg.ConnectionParams {
+		if v == "" {
+			continue // skip empty values
+		}
+		connectionParams.Set(k, v)
+	}
+	dsn := mysqlCfg.FormatDSN()
+	if enc := connectionParams.Encode(); enc != "" {
+		dsn += "&" + enc
+	}
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)
@@ -186,7 +230,14 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 
 	args := []string{"--enable-api"}
 
-	pool, err := initSingleStoreConnectionPool(SingleStoreHost, SingleStorePort, SingleStoreUser, SingleStorePass, SingleStoreDatabase)
+	cfg := singlestoresrc.Config{
+		Host:     SingleStoreHost,
+		Port:     SingleStorePort,
+		User:     SingleStoreUser,
+		Password: SingleStorePass,
+		Database: SingleStoreDatabase,
+	}
+	pool, err := initSingleStoreConnectionPool(cfg)
 	if err != nil {
 		t.Fatalf("unable to create SingleStore connection pool: %s", err)
 	}
@@ -212,6 +263,9 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := getSingleStoreTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	insertStmt := `INSERT INTO senseai_docs (content, embedding) VALUES (?, JSON_ARRAY_PACK(?))`
+	searchStmt := `SELECT content FROM senseai_docs ORDER BY DOT_PRODUCT(embedding, JSON_ARRAY_PACK(?)) DESC LIMIT 1`
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, SingleStoreToolType, insertStmt, searchStmt)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -235,4 +289,22 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Create table for semantic search
+	_, err = pool.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS senseai_docs (id INT AUTO_INCREMENT PRIMARY KEY, content TEXT, embedding BLOB);")
+	if err != nil {
+		t.Fatalf("unable to create semantic search table: %s", err)
+	}
+	defer func() {
+		_, err = pool.ExecContext(ctx, "DROP TABLE IF EXISTS senseai_docs;")
+		if err != nil {
+			t.Logf("Teardown failed: %s", err)
+		}
+	}()
+
+	// Semantic search tests
+	httpSemanticInsertWant := `null`
+	mcpSemanticInsertWant := ``
+	semanticSearchWant := `The quick brown fox jumps over the lazy dog`
+	tests.RunSemanticSearchToolInvokeTest(t, httpSemanticInsertWant, mcpSemanticInsertWant, semanticSearchWant)
 }

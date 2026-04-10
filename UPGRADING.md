@@ -7,7 +7,7 @@ As part of this milestone, we have introduced several breaking changes and
 deprecations that require updates to your configuration and code.
 
 **📖 New Versioning Policy**
-We have officially published our [Versioning Policy](https://googleapis.github.io/genai-toolbox/dev/about/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
+We have officially published our [Versioning Policy](https://mcp-toolbox.dev/reference/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
 * **Major (vX.0.0):** Breaking changes requiring manual updates.
 * **Minor (v1.X.0):** New, backward-compatible features and deprecation notices.
 * **Patch (v1.0.X):** Backward-compatible bug fixes and security patches.
@@ -16,7 +16,16 @@ This guide outlines what has changed and the steps you need to take to upgrade.
 
 ## 🚨 Breaking Changes (Action Required)
 
-### 1. Endpoint Transition: `/api` disabled by default
+### 1. Repository Rename: genai-toolbox ➡️ mcp-toolbox
+The GitHub repository has been officially renamed to `googleapis/mcp-toolbox`. To update your local environment, run the following commands:
+
+1. Rename your local directory: `cd .. && mv genai-toolbox mcp-toolbox && cd mcp-toolbox`
+
+2. Update the remote URL: `git remote set-url origin git@github.com:googleapis/mcp-toolbox.git`
+
+3. Verify the update: `git remote -v`
+
+### 2. Endpoint Transition: `/api` disabled by default
 The legacy `/api` endpoint for the native Toolbox protocol is now disabled by default. All official SDKs have been updated to use the `/mcp` endpoint, which aligns with the standard Model Context Protocol (MCP) specification. 
 
 If you still require the legacy `/api` endpoint, you must explicitly activate it using a new command-line flag.
@@ -25,18 +34,17 @@ If you still require the legacy `/api` endpoint, you must explicitly activate it
 * **Migration:** You must update all custom implementations to use the `/mcp`
   endpoint exclusively, as the `/api` endpoint is now deprecated. If your workflow  
   relied on a non-standard feature that is missing from the new implementation, please submit a
-  feature request on our [GitHub Issues page](https://github.com/googleapis/genai-toolbox/issues).
-* **UI Dependency:** Until the UI is officially migrated, it still requires the API to function. You must run the toolbox with both flags: `./toolbox --ui --enable-api`.
+  feature request on our [GitHub Issues page](https://github.com/googleapis/mcp-toolbox/issues).
 
-### 2. Strict Tool Naming Validation (SEP986)
+### 3. Strict Tool Naming Validation (SEP986)
 Tool names are now strictly validated against [ModelContextProtocol SEP986 guidelines](https://github.com/alexhancock/modelcontextprotocol/blob/main/docs/specification/draft/server/tools.mdx#tool-names) prior to MCP initialization.
 * **Migration:** Ensure all your tool names **only** contain alphanumeric characters, hyphens (`-`), underscores (`_`), and periods (`.`). Any other special characters will cause initialization to fail.
 
-### 3. Removed CLI Flags
+### 4. Removed CLI Flags
 The legacy snake_case flag `--tools_file` has been completely removed.
 * **Migration:** Update your deployment scripts to use `--config` instead.
 
-### 4. Singular `kind` Values in Configuration
+### 5. Singular `kind` Values in Configuration
 _(This step applies only if you are currently using the new flat format.)_
 
 All primitive kind fields in configuration files have been updated to use singular nouns instead of plural. For example, `kind: sources` is now `kind: source`, and `kind: tools` is now `kind: tool`.
@@ -45,12 +53,12 @@ All primitive kind fields in configuration files have been updated to use singul
 values. _(Note: If you transitioned to the flat format using the `./toolbox migrate` command, this step was handled automatically.)_
 
 
-### 5. Configuration Schema: `authSources` renamed
+### 6. Configuration Schema: `authSources` renamed
 The `authSources` field is no longer supported in configuration files.
 * **Migration:** Rename all instances of `authSources` to `authService` in your
   configuration files.
 
-### 6. CloudSQL for SQL Server: `ipAddress` removed
+### 7. CloudSQL for SQL Server: `ipAddress` removed
 The `ipAddress` field for the CloudSQL for SQL Server source was redundant and has been removed.
 * **Migration:** Remove the `ipAddress` field from your CloudSQL for SQL Server configurations.
 
@@ -110,4 +118,4 @@ The following CLI flags are deprecated and will be removed in a future release. 
 
 * **Prebuilt Tools:** Toolsets have been resized for better performance.
 ## 📚 Documentation Moved
-Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](http://mcp-toolbox.dev).
+Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](https://mcp-toolbox.dev).

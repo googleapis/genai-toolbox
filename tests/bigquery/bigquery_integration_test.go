@@ -31,9 +31,9 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
@@ -156,6 +156,14 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	// Set up table for semantic search
+	vectorTableName, teardownVectorTable := setupBigQueryVectorTable(t, ctx, client, datasetName)
+	defer teardownVectorTable(t)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := getBigQueryVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, BigqueryToolType, insertStmt, searchStmt)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -205,6 +213,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
+	tests.RunSemanticSearchToolInvokeTest(t, ddlWant, "", "The quick brown fox")
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
@@ -952,7 +961,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 
 func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam, ddlWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1336,7 +1345,7 @@ func runBigQueryWriteModeProtectedTest(t *testing.T, permanentDatasetName string
 
 func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1444,7 +1453,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 }
 
 func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1582,7 +1591,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 }
 
 func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1783,7 +1792,7 @@ func runBigQueryDataTypeTests(t *testing.T) {
 
 func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1905,7 +1914,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 
 func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetInfoWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2055,7 +2064,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 
 func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_want string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2205,7 +2214,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 
 func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName, tableInfoWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2358,7 +2367,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	const maxRetries = 3
 	const requestTimeout = 340 * time.Second
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2921,7 +2930,7 @@ func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName,
 
 func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, tableName string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -3262,4 +3271,25 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			}
 		})
 	}
+}
+
+// setupBigQueryVectorTable creates a vector table in BigQuery for semantic search testing
+func setupBigQueryVectorTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string) (string, func(*testing.T)) {
+	tableName := fmt.Sprintf("vector_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	fullTableName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, datasetName, tableName)
+	createStatement := fmt.Sprintf(`CREATE TABLE %s (
+		id INT64,
+		content STRING,
+		embedding ARRAY<FLOAT64>
+	)`, fullTableName)
+
+	teardownTable := setupBigQueryTable(t, ctx, client, createStatement, "", datasetName, fullTableName, nil)
+	return fullTableName, teardownTable
+}
+
+// getBigQueryVectorSearchStmts returns statements for bigquery semantic search
+func getBigQueryVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, @content, @text_to_embed)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, ML.DISTANCE(embedding, @query, 'COSINE') AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
 }

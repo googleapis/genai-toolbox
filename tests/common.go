@@ -27,10 +27,10 @@ import (
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/bigtable"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlmysql"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/api/iterator"
 )
@@ -455,6 +455,11 @@ func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]
 		"type":        "mysql-list-table-fragmentation",
 		"source":      "my-instance",
 		"description": "Lists table fragmentation in the database.",
+	}
+	tools["list_table_stats"] = map[string]any{
+		"type":        "mysql-list-table-stats",
+		"source":      "my-instance",
+		"description": "Lists table stats in the database.",
 	}
 	tools["get_query_plan"] = map[string]any{
 		"type":        "mysql-get-query-plan",
