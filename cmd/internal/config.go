@@ -242,6 +242,11 @@ func processValue(v any, isToolset bool) any {
 			if item.Key == "kind" {
 				item.Key = "type"
 			}
+			if item.Key == "description" {
+				if s, ok := item.Value.(string); ok {
+					item.Value = strings.TrimSpace(strings.ReplaceAll(s, "\n", " "))
+				}
+			}
 			// Recursive call for nested values (e.g., nested objects or lists)
 			item.Value = processValue(item.Value, false)
 			newVal[i] = item
