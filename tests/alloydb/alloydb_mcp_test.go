@@ -227,7 +227,7 @@ func TestAlloyDBListTools(t *testing.T) {
 		},
 	}
 
-	tests.RunMCPToolsListMethod(t, expectedTools)
+	tests.RunMCPToolsListMethod(t, ctx, expectedTools)
 }
 
 func TestAlloyDBCallTool(t *testing.T) {
@@ -252,15 +252,15 @@ func TestAlloyDBCallTool(t *testing.T) {
 	}
 
 	// Run tool-specific invoke tests
-	runAlloyDBListClustersMCPTest(t, vars)
-	runAlloyDBListInstancesMCPTest(t, vars)
-	runAlloyDBListUsersMCPTest(t, vars)
-	runAlloyDBGetClusterMCPTest(t, vars)
-	runAlloyDBGetInstanceMCPTest(t, vars)
-	runAlloyDBGetUserMCPTest(t, vars)
+	runAlloyDBListClustersMCPTest(t, ctx, vars)
+	runAlloyDBListInstancesMCPTest(t, ctx, vars)
+	runAlloyDBListUsersMCPTest(t, ctx, vars)
+	runAlloyDBGetClusterMCPTest(t, ctx, vars)
+	runAlloyDBGetInstanceMCPTest(t, ctx, vars)
+	runAlloyDBGetUserMCPTest(t, ctx, vars)
 
 	t.Run("MCP Invoke invalid tool", func(t *testing.T) {
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "non-existent-tool", map[string]any{}, nil)
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "non-existent-tool", map[string]any{}, nil)
 		if err != nil {
 			t.Fatalf("native error executing %s: %s", "non-existent-tool", err)
 		}
@@ -271,7 +271,7 @@ func TestAlloyDBCallTool(t *testing.T) {
 	})
 }
 
-func runAlloyDBListClustersMCPTest(t *testing.T, vars map[string]string) {
+func runAlloyDBListClustersMCPTest(t *testing.T, ctx context.Context, vars map[string]string) {
 	type ListClustersResponse struct {
 		Clusters []struct {
 			Name string `json:"name"`
@@ -345,7 +345,7 @@ func runAlloyDBListClustersMCPTest(t *testing.T, vars map[string]string) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-list-clusters", tc.args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-list-clusters", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing: %s", err)
 			}
@@ -382,7 +382,7 @@ func runAlloyDBListClustersMCPTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-func runAlloyDBListInstancesMCPTest(t *testing.T, vars map[string]string) {
+func runAlloyDBListInstancesMCPTest(t *testing.T, ctx context.Context, vars map[string]string) {
 	type ListInstancesResponse struct {
 		Instances []struct {
 			Name string `json:"name"`
@@ -460,7 +460,7 @@ func runAlloyDBListInstancesMCPTest(t *testing.T, vars map[string]string) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-list-instances", tc.args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-list-instances", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing: %s", err)
 			}
@@ -497,7 +497,7 @@ func runAlloyDBListInstancesMCPTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-func runAlloyDBListUsersMCPTest(t *testing.T, vars map[string]string) {
+func runAlloyDBListUsersMCPTest(t *testing.T, ctx context.Context, vars map[string]string) {
 	type UsersResponse struct {
 		Users []struct {
 			Name string `json:"name"`
@@ -549,7 +549,7 @@ func runAlloyDBListUsersMCPTest(t *testing.T, vars map[string]string) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-list-users", tc.args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-list-users", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing: %s", err)
 			}
@@ -585,7 +585,7 @@ func runAlloyDBListUsersMCPTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-func runAlloyDBGetClusterMCPTest(t *testing.T, vars map[string]string) {
+func runAlloyDBGetClusterMCPTest(t *testing.T, ctx context.Context, vars map[string]string) {
 	invokeTcs := []struct {
 		name           string
 		args           map[string]any
@@ -635,7 +635,7 @@ func runAlloyDBGetClusterMCPTest(t *testing.T, vars map[string]string) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-get-cluster", tc.args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-get-cluster", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing: %s", err)
 			}
@@ -671,7 +671,7 @@ func runAlloyDBGetClusterMCPTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-func runAlloyDBGetInstanceMCPTest(t *testing.T, vars map[string]string) {
+func runAlloyDBGetInstanceMCPTest(t *testing.T, ctx context.Context, vars map[string]string) {
 	invokeTcs := []struct {
 		name           string
 		args           map[string]any
@@ -728,7 +728,7 @@ func runAlloyDBGetInstanceMCPTest(t *testing.T, vars map[string]string) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-get-instance", tc.args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-get-instance", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing: %s", err)
 			}
@@ -764,7 +764,7 @@ func runAlloyDBGetInstanceMCPTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-func runAlloyDBGetUserMCPTest(t *testing.T, vars map[string]string) {
+func runAlloyDBGetUserMCPTest(t *testing.T, ctx context.Context, vars map[string]string) {
 	invokeTcs := []struct {
 		name           string
 		args           map[string]any
@@ -821,7 +821,7 @@ func runAlloyDBGetUserMCPTest(t *testing.T, vars map[string]string) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-get-user", tc.args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-get-user", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing: %s", err)
 			}
@@ -1027,7 +1027,7 @@ func TestAlloyDBCreateClusterMCP(t *testing.T) {
 				t.Fatalf("failed to unmarshal body: %v", err)
 			}
 
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-create-cluster", args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-create-cluster", args, nil)
 			if err != nil {
 				t.Fatalf("native error executing %s: %s", "alloydb-create-cluster", err)
 			}
@@ -1133,7 +1133,7 @@ func TestAlloyDBCreateInstanceMCP(t *testing.T) {
 				t.Fatalf("failed to unmarshal body: %v", err)
 			}
 
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-create-instance", args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-create-instance", args, nil)
 			if err != nil {
 				t.Fatalf("native error executing %s: %s", "alloydb-create-instance", err)
 			}
@@ -1254,7 +1254,7 @@ func TestAlloyDBCreateUserMCP(t *testing.T) {
 				t.Fatalf("failed to unmarshal body: %v", err)
 			}
 
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, "alloydb-create-user", args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "alloydb-create-user", args, nil)
 			if err != nil {
 				t.Fatalf("native error executing %s: %s", "alloydb-create-user", err)
 			}

@@ -16,6 +16,7 @@ package alloydbainl
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
 	"regexp"
@@ -97,7 +98,7 @@ func TestAlloyDBAINLListTools(t *testing.T) {
 		},
 	}
 
-	tests.RunMCPToolsListMethod(t, expectedTools)
+	tests.RunMCPToolsListMethod(t, ctx, expectedTools)
 }
 
 func TestAlloyDBAINLCallTool(t *testing.T) {
@@ -202,7 +203,7 @@ func TestAlloyDBAINLCallTool(t *testing.T) {
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, tc.toolName, tc.args, tc.requestHeader)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, tc.toolName, tc.args, tc.requestHeader)
 			if err != nil {
 				t.Fatalf("native error executing %s: %s", tc.toolName, err)
 			}
@@ -226,12 +227,17 @@ func TestAlloyDBAINLCallTool(t *testing.T) {
 				if mcpResp.Result.IsError {
 					t.Fatalf("expected success result, got tool error: %v", mcpResp.Result)
 				}
-				if len(mcpResp.Result.Content) == 0 {
-					t.Fatalf("expected at least one content item, got none")
+				got := tests.GetMCPResultText(t, mcpResp)
+				var gotStr string
+				if len(got) == 1 {
+					gotBytes, _ := json.Marshal(got[0])
+					gotStr = string(gotBytes)
+				} else {
+					gotBytes, _ := json.Marshal(got)
+					gotStr = string(gotBytes)
 				}
-				got := mcpResp.Result.Content[0].Text
-				if got != tc.want {
-					t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+				if gotStr != tc.want {
+					t.Fatalf("unexpected value: got %q, want %q", gotStr, tc.want)
 				}
 			}
 		})

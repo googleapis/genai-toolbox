@@ -20,7 +20,7 @@ sources:
     instance: ${CLOUD_SQL_POSTGRES_INSTANCE}
     database: ${CLOUD_SQL_POSTGRES_DATABASE}
     user: ${CLOUD_SQL_POSTGRES_USER:}
-    password: ${CLOUD_SQL_POSTGRES_PASSWORD:}
+    password: ${CLOUD_SQL_POSTGRES_PASS:}
     ipType: ${CLOUD_SQL_POSTGRES_IP_TYPE:public}
   cloud-sql-admin-source:
     kind: cloud-sql-admin

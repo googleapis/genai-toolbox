@@ -16,91 +16,15 @@ package cloudsqlpg
 
 import (
 	"context"
-	"fmt"
-	"net"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"cloud.google.com/go/cloudsqlconn"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-var (
-	CloudSQLPostgresSourceType = "cloud-sql-postgres"
-	CloudSQLPostgresToolType   = "postgres-sql"
-	CloudSQLPostgresProject    = os.Getenv("CLOUD_SQL_POSTGRES_PROJECT")
-	CloudSQLPostgresRegion     = os.Getenv("CLOUD_SQL_POSTGRES_REGION")
-	CloudSQLPostgresInstance   = os.Getenv("CLOUD_SQL_POSTGRES_INSTANCE")
-	CloudSQLPostgresDatabase   = os.Getenv("CLOUD_SQL_POSTGRES_DATABASE")
-	CloudSQLPostgresUser       = os.Getenv("CLOUD_SQL_POSTGRES_USER")
-	CloudSQLPostgresPass       = os.Getenv("CLOUD_SQL_POSTGRES_PASS")
-)
-
-func getCloudSQLPgVars(t *testing.T) map[string]any {
-	switch "" {
-	case CloudSQLPostgresProject:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PROJECT' not set")
-	case CloudSQLPostgresRegion:
-		t.Fatal("'CLOUD_SQL_POSTGRES_REGION' not set")
-	case CloudSQLPostgresInstance:
-		t.Fatal("'CLOUD_SQL_POSTGRES_INSTANCE' not set")
-	case CloudSQLPostgresDatabase:
-		t.Fatal("'CLOUD_SQL_POSTGRES_DATABASE' not set")
-	case CloudSQLPostgresUser:
-		t.Fatal("'CLOUD_SQL_POSTGRES_USER' not set")
-	case CloudSQLPostgresPass:
-		t.Fatal("'CLOUD_SQL_POSTGRES_PASS' not set")
-	}
-
-	return map[string]any{
-		"type":     CloudSQLPostgresSourceType,
-		"project":  CloudSQLPostgresProject,
-		"instance": CloudSQLPostgresInstance,
-		"region":   CloudSQLPostgresRegion,
-		"database": CloudSQLPostgresDatabase,
-		"user":     CloudSQLPostgresUser,
-		"password": CloudSQLPostgresPass,
-	}
-}
-
-// Copied over from cloud_sql_pg.go
-func initCloudSQLPgConnectionPool(project, region, instance, ip_type, user, pass, dbname string) (*pgxpool.Pool, error) {
-	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
-	config, err := pgxpool.ParseConfig(dsn)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
-	}
-
-	// Create a new dialer with options
-	dialOpts, err := tests.GetCloudSQLDialOpts(ip_type)
-	if err != nil {
-		return nil, err
-	}
-	d, err := cloudsqlconn.NewDialer(context.Background(), cloudsqlconn.WithDefaultDialOptions(dialOpts...))
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
-	}
-
-	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	i := fmt.Sprintf("%s:%s:%s", project, region, instance)
-	config.ConnConfig.DialFunc = func(ctx context.Context, _ string, instance string) (net.Conn, error) {
-		return d.Dial(ctx, i)
-	}
-
-	// Interact with the driver directly as you normally would
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
-	if err != nil {
-		return nil, err
-	}
-	return pool, nil
-}
 
 func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	sourceConfig := getCloudSQLPgVars(t)
@@ -109,7 +33,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 
 	args := []string{"--enable-api"}
 
-	pool, err := initCloudSQLPgConnectionPool(CloudSQLPostgresProject, CloudSQLPostgresRegion, CloudSQLPostgresInstance, "public", CloudSQLPostgresUser, CloudSQLPostgresPass, CloudSQLPostgresDatabase)
+	pool, err := initCloudSQLPgConnectionPool(ctx, CloudSQLPostgresProject, CloudSQLPostgresRegion, CloudSQLPostgresInstance, "public", CloudSQLPostgresUser, CloudSQLPostgresPass, CloudSQLPostgresDatabase)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}

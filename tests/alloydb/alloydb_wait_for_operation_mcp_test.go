@@ -172,7 +172,7 @@ func TestWaitToolEndpointsMCP(t *testing.T) {
 				t.Fatalf("failed to unmarshal body: %v", err)
 			}
 
-			statusCode, mcpResp, err := tests.InvokeMCPTool(t, tc.toolName, args, nil)
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, tc.toolName, args, nil)
 			if err != nil {
 				t.Fatalf("native error executing %s: %s", tc.toolName, err)
 			}

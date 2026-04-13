@@ -545,7 +545,7 @@ func TestHTTPListTools(t *testing.T) {
 		},
 	}
 
-	tests.RunMCPToolsListMethod(t, expectedTools)
+	tests.RunMCPToolsListMethod(t, ctx, expectedTools)
 }
 
 func TestHTTPCallTool(t *testing.T) {
@@ -608,24 +608,24 @@ func TestHTTPCallTool(t *testing.T) {
 	}
 
 	// Run Generic Auth Tests
-	runGenericAuthMCPInvokeTest(t, privateKey)
+	runGenericAuthMCPInvokeTest(t, ctx, privateKey)
 
 	// Run Advanced Tool Tests
-	runAdvancedHTTPMCPInvokeTest(t)
+	runAdvancedHTTPMCPInvokeTest(t, ctx)
 
 	// Run Query Parameter Tests
-	runQueryParamMCPInvokeTest(t)
+	runQueryParamMCPInvokeTest(t, ctx)
 
 	// Use shared helper for standard database tools
 	t.Run("use shared RunMCPToolInvokeTest", func(t *testing.T) {
-		tests.RunMCPToolInvokeTest(t, `"hello world"`,
+		tests.RunMCPToolInvokeTest(t, ctx, `"hello world"`,
 			tests.WithMyToolId3NameAliceWant(`{"id":1,"name":"Alice"}`),
 			tests.WithMyToolById4Want(`{"id":4,"name":null}`),
 		)
 	})
 }
 
-func runGenericAuthMCPInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {
+func runGenericAuthMCPInvokeTest(t *testing.T, ctx context.Context, privateKey *rsa.PrivateKey) {
 	// Generic Auth Success
 	t.Run("invoke generic auth tool with valid token", func(t *testing.T) {
 		// Generate valid token
@@ -642,7 +642,7 @@ func runGenericAuthMCPInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {
 		}
 
 		headers := map[string]string{"my-generic-auth_token": signedString}
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-auth-required-generic-tool", map[string]any{}, headers)
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "my-auth-required-generic-tool", map[string]any{}, headers)
 		if err != nil {
 			t.Fatalf("native error executing %s: %s", "my-auth-required-generic-tool", err)
 		}
@@ -656,7 +656,7 @@ func runGenericAuthMCPInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {
 
 	// Auth Failure: Invoke generic auth tool without token
 	t.Run("invoke generic auth tool without token", func(t *testing.T) {
-		statusCode, _, err := tests.InvokeMCPTool(t, "my-auth-required-generic-tool", map[string]any{}, nil)
+		statusCode, _, err := tests.InvokeMCPTool(t, ctx, "my-auth-required-generic-tool", map[string]any{}, nil)
 		if err != nil {
 			t.Fatalf("native error executing %s: %s", "my-auth-required-generic-tool", err)
 		}
@@ -666,25 +666,25 @@ func runGenericAuthMCPInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {
 	})
 }
 
-func runQueryParamMCPInvokeTest(t *testing.T) {
+func runQueryParamMCPInvokeTest(t *testing.T, ctx context.Context) {
 	// Query Parameter Variations: Tests with optional parameters omitted or nil
 	t.Run("invoke query-param-tool optional omitted", func(t *testing.T) {
 		arguments := map[string]any{"reqId": "test1"}
-		tests.RunMCPCustomToolCallMethod(t, "my-query-param-tool", arguments, `"reqId=test1"`)
+		tests.RunMCPCustomToolCallMethod(t, ctx, "my-query-param-tool", arguments, `"reqId=test1"`)
 	})
 
 	t.Run("invoke query-param-tool some optional nil", func(t *testing.T) {
 		arguments := map[string]any{"reqId": "test2", "page": "5", "filter": nil}
-		tests.RunMCPCustomToolCallMethod(t, "my-query-param-tool", arguments, `"page=5\u0026reqId=test2"`) // 'filter' omitted!
+		tests.RunMCPCustomToolCallMethod(t, ctx, "my-query-param-tool", arguments, `"page=5\u0026reqId=test2"`) // 'filter' omitted!
 	})
 
 	t.Run("invoke query-param-tool some optional absent", func(t *testing.T) {
 		arguments := map[string]any{"reqId": "test2", "page": "5"}
-		tests.RunMCPCustomToolCallMethod(t, "my-query-param-tool", arguments, `"page=5\u0026reqId=test2"`) // 'filter' omitted!
+		tests.RunMCPCustomToolCallMethod(t, ctx, "my-query-param-tool", arguments, `"page=5\u0026reqId=test2"`) // 'filter' omitted!
 	})
 
 	t.Run("invoke query-param-tool required param nil", func(t *testing.T) {
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-query-param-tool", map[string]any{"reqId": nil, "page": "1"}, nil)
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "my-query-param-tool", map[string]any{"reqId": nil, "page": "1"}, nil)
 		if err != nil {
 			t.Fatalf("native error executing %s: %s", "my-query-param-tool", err)
 		}
@@ -695,7 +695,7 @@ func runQueryParamMCPInvokeTest(t *testing.T) {
 	})
 }
 
-func runAdvancedHTTPMCPInvokeTest(t *testing.T) {
+func runAdvancedHTTPMCPInvokeTest(t *testing.T, ctx context.Context) {
 	// Mock Server Error: Invoke tool with parameters that cause the mock server to return 400
 	t.Run("invoke my-advanced-tool with wrong params causing mock 400", func(t *testing.T) {
 		arguments := map[string]any{
@@ -705,7 +705,7 @@ func runAdvancedHTTPMCPInvokeTest(t *testing.T) {
 			"country":        "US",
 			"X-Other-Header": "test",
 		}
-		statusCode, mcpResp, err := tests.InvokeMCPTool(t, "my-advanced-tool", arguments, nil)
+		statusCode, mcpResp, err := tests.InvokeMCPTool(t, ctx, "my-advanced-tool", arguments, nil)
 		if err != nil {
 			t.Fatalf("native error executing %s: %s", "my-advanced-tool", err)
 		}
@@ -724,6 +724,6 @@ func runAdvancedHTTPMCPInvokeTest(t *testing.T) {
 			"country":        "US",
 			"X-Other-Header": "test",
 		}
-		tests.RunMCPCustomToolCallMethod(t, "my-advanced-tool", arguments, `"hello world"`)
+		tests.RunMCPCustomToolCallMethod(t, ctx, "my-advanced-tool", arguments, `"hello world"`)
 	})
 }
