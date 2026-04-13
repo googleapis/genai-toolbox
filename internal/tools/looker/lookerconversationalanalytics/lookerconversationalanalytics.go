@@ -85,7 +85,7 @@ type SecretBased struct {
 	ClientSecret string `json:"clientSecret"`
 }
 type TokenBased struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken string `json:"access_token"`
 }
 type OAuthCredentials struct {
 	Secret SecretBased `json:"secret,omitzero"`
