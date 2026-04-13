@@ -58,6 +58,8 @@ type Config struct {
 	Description  string                 `yaml:"description"`
 	AuthRequired []string               `yaml:"authRequired"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -202,3 +204,7 @@ FROM INFORMATION_SCHEMA.PROPERTY_GRAPHS PG
 WHERE 
 	EXISTS (SELECT 1 FROM FilterGraphNames WHERE FilterGraphNames.GRAPH_NAME = '%') OR PG.PROPERTY_GRAPH_NAME IN (SELECT GRAPH_NAME FROM FilterGraphNames)
 `
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
+}

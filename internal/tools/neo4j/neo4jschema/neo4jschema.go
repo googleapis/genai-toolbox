@@ -70,6 +70,8 @@ type Config struct {
 	AuthRequired       []string               `yaml:"authRequired"`
 	CacheExpireMinutes *int                   `yaml:"cacheExpireMinutes,omitempty"` // Cache expiration time in minutes.
 	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // Statically verify that Config implements the tools.ToolConfig interface.
@@ -704,4 +706,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 // This tool does not have parameters, so return an empty set.
 func (t Tool) GetParameters() parameters.Parameters {
 	return parameters.Parameters{}
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }
