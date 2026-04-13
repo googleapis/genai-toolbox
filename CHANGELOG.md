@@ -10,7 +10,11 @@
 
 ### Bug Fixes
 
-* **looker:** Convert prebuilt tool yaml to flat format ([#3022](https://github.com/googleapis/mcp-toolbox/issues/3022)) ([45c05e3](https://github.com/googleapis/mcp-toolbox/commit/45c05e37eac867c5a444d950bc51fdf1b1b687ea))
+* **looker:** Convert configuration yaml to flat format ([#3022](https://github.com/googleapis/mcp-toolbox/issues/3022)) ([45c05e3](https://github.com/googleapis/mcp-toolbox/commit/45c05e37eac867c5a444d950bc51fdf1b1b687ea))
+
+### Docs Update
+
+* **knowledge-catalog:** Rename dataplex to knowledge-catalog across docs ([#3039](https://github.com/googleapis/mcp-toolbox/pull/3039)) ([45c05e3](https://github.com/googleapis/mcp-toolbox/commit/24ce6ce3bc6468d2b4b11a86b90ea223daa7e6cf))
 
 ## [1.0.0](https://github.com/googleapis/mcp-toolbox/compare/v0.32.0...v1.0.0) (2026-04-10)
 
