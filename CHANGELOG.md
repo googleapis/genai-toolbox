@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/googleapis/mcp-toolbox/compare/v1.0.0...v1.1.0) (2026-04-13)
+
+
+### Features
+
+* **tools/cloudsqlpg:** Add vector assist tools for Cloud SQL Postgres ([#2909](https://github.com/googleapis/mcp-toolbox/issues/2909)) ([7a6d849](https://github.com/googleapis/mcp-toolbox/commit/7a6d8492fa316237b55ea7570588b0c9860b616c))
+
+
+### Bug Fixes
+
+* **looker:** Convert prebuilt tool yaml to flat format ([#3022](https://github.com/googleapis/mcp-toolbox/issues/3022)) ([45c05e3](https://github.com/googleapis/mcp-toolbox/commit/45c05e37eac867c5a444d950bc51fdf1b1b687ea))
+
 ## [1.0.0](https://github.com/googleapis/mcp-toolbox/compare/v0.32.0...v1.0.0) (2026-04-10)
 
 
