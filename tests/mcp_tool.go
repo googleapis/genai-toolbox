@@ -1600,7 +1600,6 @@ func RunMCPPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxp
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-
 			statusCode, mcpResp, err := InvokeMCPTool(t, ctx, "list_indexes", tc.args, nil)
 			if err != nil {
 				t.Fatalf("native error executing list_indexes: %s", err)
@@ -2041,14 +2040,14 @@ func RunMCPPostgresGetColumnCardinalityTest(t *testing.T, ctx context.Context, p
 			if mcpResp.Result.IsError {
 				t.Fatalf("get_column_cardinality returned error result: %v", mcpResp.Result)
 			}
-			if len(mcpResp.Result.Content) == 0 {
+			gotObj := GetMCPResultText(t, mcpResp)
+			if len(gotObj) == 0 {
 				if tc.shouldHaveData {
 					t.Fatalf("get_column_cardinality returned empty content field")
 				}
 				t.Logf("DEBUG: get_column_cardinality returned empty content as expected for non-existent table")
 				return
 			}
-			gotObj := GetMCPResultText(t, mcpResp)
 
 			if tc.shouldHaveData {
 				if len(gotObj) == 0 {

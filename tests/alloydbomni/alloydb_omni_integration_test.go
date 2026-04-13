@@ -28,14 +28,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-)
-
-var (
-	AlloyDBUser     = "postgres"
-	AlloyDBPass     = "mysecretpassword"
-	AlloyDBDatabase = "postgres"
 )
 
 func buildPostgresURL(host, port, user, pass, dbname string) *url.URL {
@@ -55,51 +47,6 @@ func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool
 	}
 
 	return pool, nil
-}
-
-func setupAlloyDBContainer(ctx context.Context, t *testing.T) (string, string, func()) {
-	t.Helper()
-
-	req := testcontainers.ContainerRequest{
-		Image:        "google/alloydbomni:16.9.0-ubi9", // Pinning version for stability
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_PASSWORD": AlloyDBPass,
-		},
-		WaitingFor: wait.ForAll(
-			wait.ForLog("database system was shut down at"),
-			wait.ForLog("database system is ready to accept connections"),
-			wait.ForExposedPort(),
-		),
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		t.Fatalf("failed to start alloydb container: %s", err)
-	}
-
-	cleanup := func() {
-		if err := container.Terminate(ctx); err != nil {
-			t.Fatalf("failed to terminate container: %s", err)
-		}
-	}
-
-	host, err := container.Host(ctx)
-	if err != nil {
-		cleanup()
-		t.Fatalf("failed to get container host: %s", err)
-	}
-
-	mappedPort, err := container.MappedPort(ctx, "5432")
-	if err != nil {
-		cleanup()
-		t.Fatalf("failed to get container mapped port: %s", err)
-	}
-
-	return host, mappedPort.Port(), cleanup
 }
 
 func TestAlloyDBOmni(t *testing.T) {

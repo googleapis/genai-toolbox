@@ -4855,8 +4855,10 @@ func RunStatementToolsTest(t *testing.T, tools map[string]string) {
 			}
 			defer resp.Body.Close()
 
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			t.Logf("Legacy response for %s: %s", toolName, string(bodyBytes))
+
 			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 		})
