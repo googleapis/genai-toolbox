@@ -14,9 +14,6 @@
 
 package alloydbpg
 
-// TODO: We may want to add tests for custom tools defined in alloydb-postgres.yaml
-// in the future, rather than just testing the prebuilt tools.
-
 import (
 	"context"
 	"fmt"
@@ -149,7 +146,7 @@ func TestAlloyDBPgListTools(t *testing.T) {
 }
 
 func TestAlloyDBPgCallTool(t *testing.T) {
-	getAlloyDBPgVars(t)
+	sourceConfig := getAlloyDBPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
@@ -162,9 +159,40 @@ func TestAlloyDBPgCallTool(t *testing.T) {
 
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	args := []string{"--prebuilt", "alloydb-postgres"}
+	t.Cleanup(func() {
+		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
+	})
 
-	cmd, cleanup, err := tests.StartCmd(ctx, map[string]any{}, args...)
+	tableNameParam := "param_table_" + uniqueID
+	tableNameAuth := "auth_table_" + uniqueID
+
+	// set up data for param tool
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	defer teardownTable1(t)
+
+	// set up data for auth tool
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	defer teardownTable2(t)
+
+	// Set up table for semantic search
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, AlloyDBPostgresToolType, insertStmt, searchStmt)
+
+	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %v", err)
 	}
@@ -177,6 +205,19 @@ func TestAlloyDBPgCallTool(t *testing.T) {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %v", err)
 	}
+
+	// Get configs for tests
+	select1Want, _, createTableStatement, _ := tests.GetPostgresWants()
+
+	// Run custom tool tests via MCP
+	tests.RunMCPToolInvokeTest(t, ctx, select1Want)
+
+	// Run execute-sql tool tests via MCP
+	tests.RunMCPExecuteSqlToolInvokeTest(t, ctx, createTableStatement, select1Want)
+
+	// Run template parameters tool tests via MCP
+	tableNameTemplateParam := "template_param_table_" + uniqueID
+	tests.RunMCPToolInvokeWithTemplateParameters(t, ctx, tableNameTemplateParam)
 
 	// Run shared Postgres tests
 	tests.RunMCPPostgresListViewsTest(t, ctx, pool)
