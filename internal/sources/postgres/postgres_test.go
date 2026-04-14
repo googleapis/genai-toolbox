@@ -225,6 +225,12 @@ func TestBuildPostgresURL(t *testing.T) {
 			want: "postgres://u:p@[2001:db8::1]:5432/mydb",
 		},
 		{
+			desc: "ipv6 link-local with zone id",
+			host: "fe80::1%eth0",
+			port: "5432",
+			want: "postgres://u:p@[fe80::1%25eth0]:5432/mydb",
+		},
+		{
 			desc:        "query params sorted and encoded",
 			host:        "db.example.com",
 			port:        "5432",
