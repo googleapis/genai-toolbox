@@ -214,3 +214,18 @@ func GenAIMetricAttrsFromContext(ctx context.Context) *GenAIMetricAttrs {
 	}
 	return nil
 }
+
+const authTokenClaimsKey contextKey = "authTokenClaims"
+
+// WithAuthTokenClaims adds auth token claims into the context as a value
+func WithAuthTokenClaims(ctx context.Context, claims map[string]any) context.Context {
+	return context.WithValue(ctx, authTokenClaimsKey, claims)
+}
+
+// AuthTokenClaimsFromContext retrieves the auth token claims from context
+func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
+	if claims, ok := ctx.Value(authTokenClaimsKey).(map[string]any); ok {
+		return claims
+	}
+	return nil
+}
