@@ -184,7 +184,8 @@ func TestConvertConfig(t *testing.T) {
                     model: gemini-embedding-001
                     apiKey: some-key
                     dimension: 768`,
-			want: `kind: source
+			want: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -261,7 +262,8 @@ dimension: 768
             toolsets:
                 example_toolset:
                     - example_tool`,
-			want: `kind: tool
+			want: `
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -382,7 +384,8 @@ tools:
             kind: embeddingModel
             name: gemini-model2
             type: gemini`,
-			want: `kind: source
+			want: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -478,7 +481,8 @@ type: gemini
 		},
 		{
 			desc: "no convertion needed",
-			in: `kind: source
+			in: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -503,7 +507,8 @@ kind: toolset
 name: example_toolset
 tools:
 - example_tool`,
-			want: `kind: source
+			want: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project

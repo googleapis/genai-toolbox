@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -120,14 +121,28 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 
 // ConvertConfig converts configuration file to flat format.
 func ConvertConfig(raw []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	// Manually copy top-level comments and empty lines from the source
+	scanner := bufio.NewScanner(bytes.NewReader(raw))
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+
+		// If the line is a comment or whitespace, preserve it
+		if strings.HasPrefix(trimmed, "#") || trimmed == "" {
+			buf.WriteString(line + "\n")
+		} else {
+			// Stop at the first line of actual data
+			break
+		}
+	}
+
+	// convert configuration file to flat format
 	var input yaml.MapSlice
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
+	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	// convert to config file v2
-	var buf bytes.Buffer
-	encoder := yaml.NewEncoder(&buf)
-
-	v1keys := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -142,15 +157,15 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			if !ok {
 				return nil, fmt.Errorf("doc %d: unexpected non-string key in input: %v", docIndex, item.Key)
 			}
-			// check if the key is config file v1's key
-			if slices.Contains(v1keys, key) {
+			// check if the key is config file nested format's key
+			if slices.Contains(nestedFormatKey, key) {
 				// check if value conversion to yaml.MapSlice successfully
 				// fields such as "tools" in toolsets might pass the first check but
 				// fail to convert to MapSlice
 				if slice, ok := item.Value.(yaml.MapSlice); ok {
 					// Deprecated: convert authSources to authServices
 					switch key {
-					case "authSources", "authServices":
+					case "authServices":
 						key = "authService"
 					case "sources":
 						key = "source"
@@ -175,7 +190,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					}
 				} else {
 					if hasKindField(input) {
-						// this doc is already v2, encode to buf
+						// this doc is already in flat format, encode to buf
 						if err := encoder.Encode(input); err != nil {
 							return nil, err
 						}
@@ -184,7 +199,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					return nil, fmt.Errorf("doc %d: invalid config format at key %q: expected map", docIndex, key)
 				}
 			} else {
-				// this doc is already v2, encode to buf
+				// this doc is already in flat format, encode to buf
 				if err := encoder.Encode(input); err != nil {
 					return nil, err
 				}
@@ -204,7 +219,7 @@ func hasKindField(input yaml.MapSlice) bool {
 	return false
 }
 
-// transformDocs transforms the configuration file from v1 format to v2
+// transformDocs transforms the configuration file from nested to flat format
 // yaml.MapSlice will preserve the order in a map
 func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 	var transformed []yaml.MapSlice
