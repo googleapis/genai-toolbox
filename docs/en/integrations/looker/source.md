@@ -63,17 +63,37 @@ To initialize the application default credential run `gcloud auth login
 
 ## Example
 
+Initialize a Looker source for standard and development tools:
+
 ```yaml
 kind: source
 name: my-looker-source
 type: looker
-base_url: http://looker.example.com
-client_id: ${LOOKER_CLIENT_ID}
-client_secret: ${LOOKER_CLIENT_SECRET}
-project: ${LOOKER_PROJECT}
-location: ${LOOKER_LOCATION}
-verify_ssl: true
+base_url: ${LOOKER_BASE_URL}
+client_id: ${LOOKER_CLIENT_ID:}
+client_secret: ${LOOKER_CLIENT_SECRET:}
+verify_ssl: ${LOOKER_VERIFY_SSL:true}
 timeout: 600s
+use_client_oauth: ${LOOKER_USE_CLIENT_OAUTH:false}
+show_hidden_models: ${LOOKER_SHOW_HIDDEN_MODELS:true}
+show_hidden_explores: ${LOOKER_SHOW_HIDDEN_EXPLORES:true}
+show_hidden_fields: ${LOOKER_SHOW_HIDDEN_FIELDS:true}
+```
+
+Initialize a Looker source for conversational analytics:
+
+```yaml
+kind: source
+name: my-looker-conversational-source
+type: looker
+base_url: ${LOOKER_BASE_URL}
+client_id: ${LOOKER_CLIENT_ID:}
+client_secret: ${LOOKER_CLIENT_SECRET:}
+verify_ssl: ${LOOKER_VERIFY_SSL:true}
+timeout: 600s
+use_client_oauth: ${LOOKER_USE_CLIENT_OAUTH:false}
+project: ${LOOKER_PROJECT:}
+location: ${LOOKER_LOCATION:}
 ```
 
 The Looker base url will look like "https://looker.example.com", don't include

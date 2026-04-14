@@ -1747,6 +1747,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "replication",
 					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_roles", "list_pg_settings", "database_overview"},
 				},
+				"vectorassist": {
+					Name:      "vectorassist",
+					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query"},
+				},
 			},
 		},
 		{
