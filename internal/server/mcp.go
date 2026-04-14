@@ -586,10 +586,11 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			}
 			var mcpErr *generic.MCPAuthError
 			if errors.As(err, &mcpErr) {
-				if mcpErr.Code == http.StatusForbidden {
+				switch mcpErr.Code {
+				case http.StatusForbidden:
 					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
 					w.WriteHeader(http.StatusForbidden)
-				} else if mcpErr.Code == http.StatusUnauthorized {
+				case http.StatusUnauthorized:
 					scopesArg := ""
 					if len(mcpErr.ScopesRequired) > 0 {
 						scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
