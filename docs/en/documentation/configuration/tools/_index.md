@@ -260,7 +260,13 @@ templateParameters:
 | excludedValues |     []string     |      false      | Input value will be checked against this field. Regex is also supported.            |
 | items          | parameter object | true (if array) | Specify a Parameter object for the type of the values in the array (string only).   |
 
-## Authorized Invocations
+## Tool-Level Scopes (MCP Authorization)
+
+The Model Context Protocol supports [MCP Authorization](https://modelcontextprotocol.io/docs/tutorials/security/authorization) to secure interactions between clients and servers. When using MCP Authorization in Toolbox, you can enforce granular tool-level scope authorization by specifying the `scopesRequired` field in the tool configuration.
+
+For detailed information on how to configure this and examples, please see the [Generic OIDC Auth](../authentication/generic.md#tool-level-scopes) documentation.
+
+## Authorized Invocations (Toolbox Native Authorization)
 
 You can require an authorization check for any Tool invocation request by
 specifying an `authRequired` field. Specify a list of
@@ -278,30 +284,6 @@ authRequired:
   - my-google-auth
   - other-auth-service
 ```
-
-## Tool-Level Scopes (MCP Auth)
-
-When using MCP Authorization (with `mcpEnabled: true` in the auth service), you can enforce granular tool-level scope authorization by specifying the `scopesRequired` field in the tool configuration.
-
-This ensures that a client can only invoke the tool if their authorization token contains all the specified scopes.
-
-```yaml
-kind: tool
-name: update_flight_status
-type: postgres-sql
-source: my-pg-instance
-statement: |
-  UPDATE flights SET status = $1 WHERE flight_number = $2
-description: Update flight status
-authRequired:
-  - my-generic-auth
-scopesRequired:
-  - execute:sql
-  - write:flights
-```
-
-If a client attempts to invoke this tool without the required scopes, the server will return an HTTP 403 Forbidden response with a `WWW-Authenticate` header challenge indicating the missing scopes, as per the MCP Auth specification.
-
 
 ## Tool Annotations
 

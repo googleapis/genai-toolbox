@@ -158,6 +158,29 @@ scopesRequired:
 > [!NOTE]
 > If you are using Okta's Org Authorization Server (instead of a Custom Authorization Server), your `authorizationServer` URL will be `https://your-subdomain.okta.com`.
 
+#### Tool-Level Scopes
+
+When using MCP Authorization (with `mcpEnabled: true` in the auth service), you can enforce granular tool-level scope authorization by specifying the `scopesRequired` field in the tool configuration.
+
+This ensures that a client can only invoke the tool if their authorization token contains all the specified scopes.
+
+```yaml
+kind: tool
+name: update_flight_status
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  UPDATE flights SET status = $1 WHERE flight_number = $2
+description: Update flight status
+authRequired:
+  - my-generic-auth
+scopesRequired:
+  - execute:sql
+  - write:flights
+```
+
+If a client attempts to invoke this tool without the required scopes, the server will return an HTTP 403 Forbidden response with a `WWW-Authenticate` header challenge indicating the missing scopes, as per the MCP Auth specification.
+
 {{< notice tip >}} Use environment variable replacement with the format
 ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}

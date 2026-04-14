@@ -394,7 +394,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			header := http.Header{}
 			header.Set("Authorization", "Bearer "+tc.token)
 
-			err = genericAuth.ValidateMCPAuth(ctx, header)
+			_, err = genericAuth.ValidateMCPAuth(ctx, header)
 
 			if tc.wantError {
 				if err == nil {
@@ -486,7 +486,7 @@ func TestValidateJwtToken(t *testing.T) {
 				t.Fatalf("failed to create logger: %v", err)
 			}
 			ctx := util.WithLogger(context.Background(), logger)
-			err = genericAuth.validateJwtToken(ctx, tc.token)
+			_, err = genericAuth.validateJwtToken(ctx, tc.token)
 			if tc.wantError {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -649,7 +649,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 			}
 			ctx := util.WithLogger(context.Background(), logger)
 
-			err = genericAuth.validateOpaqueToken(ctx, tc.token)
+			_, err = genericAuth.validateOpaqueToken(ctx, tc.token)
 
 			if tc.wantError {
 				if err == nil {
