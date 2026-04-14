@@ -53,7 +53,7 @@ jobs:
           fi
 
       - name: Restore lychee cache
-        if: steps.changed-files.outputs.HAS_CHANGES == 'true'
+        # if: steps.changed-files.outputs.HAS_CHANGES == 'true'
         uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: .lycheecache
@@ -62,7 +62,7 @@ jobs:
 
       - name: Link Checker
         id: lychee-check       
-        if: steps.changed-files.outputs.HAS_CHANGES == 'true'
+        # if: steps.changed-files.outputs.HAS_CHANGES == 'true'
         uses: lycheeverse/lychee-action@8646ba30535128ac92d33dfc9133794bfdd9b411 # v2
         continue-on-error: true 
         with:
@@ -73,7 +73,9 @@ jobs:
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
             --max-retries 10
-            ${{ steps.changed-files.outputs.CHECK_FILES }}
+            README.md
+            docs/
+
           output: lychee-report.md
           format: markdown
           fail: true           
@@ -83,7 +85,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare Report 
-        if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
+        # if: steps.changed-files.outputs.HAS_CHANGES == 'true' && steps.lychee-check.outcome == 'failure'
         run: |
           echo "## Link Resolution Note" > full-report.md
           echo "Local links and directory changes work differently on GitHub than on the docsite. You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
@@ -94,7 +96,7 @@ jobs:
 
       - name: Display Failure Report
         # Run this ONLY if the link checker failed
-        if: steps.lychee-check.outcome == 'failure'
+        # if: steps.lychee-check.outcome == 'failure'
         run: |
           # We can now simply output the prepared file to the job summary
           cat full-report.md >> $GITHUB_STEP_SUMMARY
