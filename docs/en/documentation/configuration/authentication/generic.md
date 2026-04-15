@@ -123,6 +123,22 @@ scopesRequired:
   - write
 ```
 
+#### Google Opaque Access Token Validation Example
+
+To use Google's `tokeninfo` endpoint for validating opaque access tokens, configure the service to use the `GET` method and `access_token` parameter name:
+
+```yaml
+kind: authServices
+name: google-auth
+type: generic
+audience: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+authorizationServer: https://accounts.google.com
+introspectionEndpoint: https://www.googleapis.com/oauth2/v1/tokeninfo
+introspectionMethod: GET
+introspectionParamName: access_token
+mcpEnabled: true
+```
+
 {{< notice tip >}} Use environment variable replacement with the format
 ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
