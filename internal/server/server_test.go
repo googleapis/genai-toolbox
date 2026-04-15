@@ -90,13 +90,9 @@ func TestServe(t *testing.T) {
 	}
 
 	// start server in background
-	errCh := make(chan error)
 	go func() {
-		defer close(errCh)
-
-		err = s.Serve(ctx)
-		if err != nil {
-			errCh <- err
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			t.Errorf("server serve error: %v", err)
 		}
 	}()
 
@@ -259,7 +255,6 @@ func TestEndpointSecurityAllowedOrigin(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error setting up server: %s", err)
 			}
-			defer s.Shutdown(ctx)
 
 			err = s.Listen(ctx)
 			if err != nil {
@@ -269,13 +264,9 @@ func TestEndpointSecurityAllowedOrigin(t *testing.T) {
 			urlAddr := s.Addr()
 
 			// start server in background
-			errCh := make(chan error)
 			go func() {
-				defer close(errCh)
-
-				err = s.Serve(ctx)
-				if err != nil {
-					errCh <- err
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
 				}
 			}()
 
@@ -325,7 +316,10 @@ func TestEndpointSecurityAllowedOrigin(t *testing.T) {
 				t.Run(e.desc, func(t *testing.T) {
 					url := fmt.Sprintf("http://%s%s", urlAddr, e.url)
 					client := &http.Client{}
-					req, _ := http.NewRequest(e.requestType, url, nil)
+					req, err := http.NewRequest(e.requestType, url, nil)
+					if err != nil {
+						t.Fatalf("Failed to create request: %v", err)
+					}
 					req.Header.Set("Origin", tc.origin)
 					resp, err := client.Do(req)
 					if err != nil {
@@ -409,7 +403,6 @@ func TestEndpointSecurityAllowedHost(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error setting up server: %s", err)
 			}
-			defer s.Shutdown(ctx)
 
 			err = s.Listen(ctx)
 			if err != nil {
@@ -424,13 +417,9 @@ func TestEndpointSecurityAllowedHost(t *testing.T) {
 			hostWithPort := net.JoinHostPort(tc.host, actualPort)
 
 			// start server in background
-			errCh := make(chan error)
 			go func() {
-				defer close(errCh)
-
-				err = s.Serve(ctx)
-				if err != nil {
-					errCh <- err
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
 				}
 			}()
 
@@ -488,7 +477,10 @@ func TestEndpointSecurityAllowedHost(t *testing.T) {
 				t.Run(e.desc, func(t *testing.T) {
 					url := fmt.Sprintf("http://%s%s", urlAddr, e.url)
 					client := &http.Client{}
-					req, _ := http.NewRequest(e.requestType, url, nil)
+					req, err := http.NewRequest(e.requestType, url, nil)
+					if err != nil {
+						t.Fatalf("Failed to create request: %v", err)
+					}
 					req.Host = hostWithPort
 					resp, err := client.Do(req)
 					if err != nil {
@@ -643,11 +635,9 @@ func TestPRMEndpoint(t *testing.T) {
 		t.Fatalf("unable to start server: %v", err)
 	}
 
-	errCh := make(chan error)
 	go func() {
-		defer close(errCh)
 		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
-			errCh <- err
+			t.Errorf("server serve error: %v", err)
 		}
 	}()
 	defer func() {
