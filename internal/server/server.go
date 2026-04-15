@@ -492,6 +492,16 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
 	})
 
+	// healthz endpoint for container orchestration health checks
+	// (Kubernetes liveness/readiness probes, Docker HEALTHCHECK, etc.).
+	// Returns 200 OK with a small JSON body so probes can rely on both
+	// status code and payload.
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+
 	return s, nil
 }
 
