@@ -104,10 +104,9 @@ When a request is received in this mode, the service will:
    - Verifies expiration (`exp`) and audience (`aud`).
    - Verifies required scopes in `scope` claim.
 4. For **Opaque Tokens**:
-   - Calls the introspection endpoint (as listed in the `authorizationServer`'s
-     OIDC configuration).
-   - Verifies that the token is `active`.
-   - Verifies expiration (`exp`) and audience (`aud`).
+   - Calls the introspection endpoint (either configured via `introspectionEndpoint`
+     or discovered from the `authorizationServer`'s OIDC configuration).
+   - Verifies expiration (`exp`) and audience (`aud` or `"audience"` fallback).
    - Verifies required scopes in `scope` field.
 
 #### Example
@@ -142,3 +141,6 @@ ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 | authorizationServer |  string  |     true     | The base URL of your OIDC provider. The service will append `/.well-known/openid-configuration` to discover the JWKS URI. HTTP is allowed but logs a warning. |
 | mcpEnabled          |   bool   |    false     | Indicates if MCP endpoint authentication should be applied. Defaults to false.                                                                                |
 | scopesRequired      | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid.                                                           |
+| introspectionEndpoint| string  |    false     | Optional override for the token introspection URL. Useful if the provider does not list it in OIDC discovery (e.g., Google).                                  |
+| introspectionMethod  | string  |    false     | HTTP method to use for introspection. Defaults to "POST". Set to "GET" for providers like Google.                                                             |
+| introspectionParamName|string  |    false     | Parameter name for the token in the introspection request. Defaults to "token". Set to "access_token" for Google.                                             |
