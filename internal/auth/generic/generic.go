@@ -313,7 +313,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return fmt.Errorf("failed to read introspection response: %w", err)
+		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to read introspection response: %v", err), ScopesRequired: a.ScopesRequired}
 	}
 
 	var introspectResp struct {
