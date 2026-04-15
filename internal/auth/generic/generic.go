@@ -324,7 +324,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	}
 
 	if err := json.Unmarshal(body, &introspectResp); err != nil {
-		return fmt.Errorf("failed to parse introspection response: %w", err)
+		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to parse introspection response: %v", err), ScopesRequired: a.ScopesRequired}
 	}
 
 	if !introspectResp.Active {

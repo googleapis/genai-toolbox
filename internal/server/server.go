@@ -527,6 +527,10 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						return
 					}
 				}
+				// Fail closed on unexpected errors
+				s.logger.ErrorContext(r.Context(), "unexpected error during MCP auth validation", "error", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				return
 			}
 
 			next.ServeHTTP(w, r)
