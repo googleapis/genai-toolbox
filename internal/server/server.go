@@ -317,6 +317,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Skip host validation for health check probes. Container
+			// orchestrators (Kubernetes, Docker, Cloud Run) typically hit
+			// /healthz via the pod IP or localhost, which would otherwise
+			// trip a strict AllowedHosts setting and break liveness probes.
+			if r.URL.Path == "/healthz" {
+				next.ServeHTTP(w, r)
+				return
+			}
 			_, hasWildcard := allowedHosts["*"]
 			hostname := r.Host
 			if host, _, err := net.SplitHostPort(r.Host); err == nil {
