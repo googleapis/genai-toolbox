@@ -245,19 +245,19 @@ func getExecuteSqlToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"execute-sql-many": map[string]any{
-				"type":   executeSqlManyToolType,
-				"source": "my-cloud-sql-source",
+				"type":        executeSqlManyToolType,
+				"source":      "my-cloud-sql-source",
 				"description": "Use this tool to execute sql statement on a specific instance.",
 			},
 			"sql-many": map[string]any{
-				"type":   sqlManyToolType,
-				"source": "my-cloud-sql-source",
+				"type":        sqlManyToolType,
+				"source":      "my-cloud-sql-source",
 				"description": "Use this tool to get user details from a specific instance.",
-				"statement": "SELECT * FROM users WHERE id = {{.user_id}}",
+				"statement":   "SELECT * FROM users WHERE id = {{.user_id}}",
 				"templateParameters": []map[string]any{
 					{
-						"name": "user_id",
-						"type": "string",
+						"name":        "user_id",
+						"type":        "string",
 						"description": "The ID of the user.",
 					},
 				},
