@@ -63,7 +63,7 @@ steps:
         tar -xf zig.tar.xz -C /zig-tools --strip-components=1
 
   - id: "install-macos-sdk"
-    name: golang:1
+    name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor: ['-']
     volumes:
       - name: 'macos-sdk'
@@ -73,8 +73,8 @@ steps:
         set -e
         apt-get update && apt-get install -y xz-utils
         echo "Downloading macOS 14.5 SDK..."
-        curl -fL -o sdk.tar.xz https://github.com/alexey-lysiuk/macos-sdk/releases/download/14.5/MacOSX14.5.tar.xz
-        
+        gcloud storage cp gs://${_ASSETS_BUCKET}/MacOSX14.5.tar.xz sdk.tar.xz
+
         mkdir -p /macos-sdk/MacOSX14.5.sdk
         echo "Unpacking macOS 14.5 SDK..."
         tar -xf sdk.tar.xz -C /macos-sdk/MacOSX14.5.sdk --strip-components=1
@@ -375,5 +375,6 @@ substitutions:
   _AR_REPO_NAME: toolbox
   _OLD_BUCKET_NAME: genai-toolbox
   _BUCKET_NAME: mcp-toolbox-for-databases
+  _ASSETS_BUCKET: toolbox-build-assets
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
   _PUSH_LATEST: "false" # Substituted in trigger
