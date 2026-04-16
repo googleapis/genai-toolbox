@@ -211,6 +211,11 @@ func TestGoogleTokenValidation(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("tokeninfo returned non-200 status %d: %s", resp.StatusCode, string(body))
+	}
+
 	var tokenInfo struct {
 		Audience string `json:"audience"`
 	}

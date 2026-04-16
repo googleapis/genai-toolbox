@@ -59,14 +59,14 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 	httpClient := newSecureHTTPClient()
 
 	// Discover OIDC endpoints
-	jwksURL, introspectionUrl, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
+	jwksURL, introspectionURL, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover OIDC config: %w", err)
 	}
 
 	// Override introspection URL if configured
 	if cfg.IntrospectionEndpoint != "" {
-		introspectionUrl = cfg.IntrospectionEndpoint
+		introspectionURL = cfg.IntrospectionEndpoint
 	}
 
 	// Create the keyfunc to fetch and cache the JWKS in the background
@@ -79,7 +79,7 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 		Config:           cfg,
 		kf:               kf,
 		client:           httpClient,
-		introspectionUrl: introspectionUrl,
+		introspectionURL: introspectionURL,
 	}
 	return a, nil
 }
@@ -161,7 +161,7 @@ type AuthService struct {
 	Config
 	kf               keyfunc.Keyfunc
 	client           *http.Client
-	introspectionUrl string
+	introspectionURL string
 }
 
 // Returns the auth service type
@@ -288,7 +288,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 		return fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
-	introspectionURL := a.introspectionUrl
+	introspectionURL := a.introspectionURL
 	if introspectionURL == "" {
 		introspectionURL, err = url.JoinPath(a.AuthorizationServer, "introspect")
 		if err != nil {
@@ -296,13 +296,13 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 		}
 	}
 
-	paramName := a.Config.IntrospectionParamName
+	paramName := a.IntrospectionParamName
 	if paramName == "" {
 		paramName = "token"
 	}
 
 	var req *http.Request
-	if a.Config.IntrospectionMethod == "GET" {
+	if a.IntrospectionMethod == "GET" {
 		u, err := url.Parse(introspectionURL)
 		if err != nil {
 			return fmt.Errorf("failed to parse introspection URL: %w", err)
@@ -344,7 +344,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	}
 
 	var introspectResp struct {
-		Active   bool            `json:"active"`
+		Active   *bool           `json:"active"`
 		Scope    string          `json:"scope"`
 		Aud      json.RawMessage `json:"aud"`
 		Audience json.RawMessage `json:"audience"`
@@ -353,6 +353,11 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 
 	if err := json.Unmarshal(body, &introspectResp); err != nil {
 		return fmt.Errorf("failed to parse introspection response: %w", err)
+	}
+
+	if introspectResp.Active != nil && !*introspectResp.Active {
+		logger.InfoContext(ctx, "token is not active")
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Verify expiration (with 1 minute leeway)
