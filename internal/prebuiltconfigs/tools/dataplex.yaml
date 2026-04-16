@@ -34,6 +34,10 @@ tools:
     kind: dataplex-lookup-context
     source: dataplex-source
     description: Retrieves rich metadata regarding one or more data assets along with their relationships.
+  search_dq_scans:
+    kind: dataplex-search-dq-scans
+    source: dataplex-source
+    description: Use this tool to search for data quality scans in Dataplex.
 
 toolsets:
   discovery:
@@ -41,3 +45,4 @@ toolsets:
     - lookup_entry
     - search_aspect_types
     - lookup_context
+    - search_dq_scans
