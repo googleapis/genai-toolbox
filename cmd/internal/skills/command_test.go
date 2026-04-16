@@ -59,7 +59,7 @@ func TestGenerateSkill(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
@@ -158,7 +158,7 @@ func TestGenerateSkill_Toolsets(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
@@ -247,7 +247,7 @@ func TestGenerateSkill_SpecificToolset(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
