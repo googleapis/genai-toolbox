@@ -19,10 +19,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -88,13 +90,9 @@ func TestServe(t *testing.T) {
 	}
 
 	// start server in background
-	errCh := make(chan error)
 	go func() {
-		defer close(errCh)
-
-		err = s.Serve(ctx)
-		if err != nil {
-			errCh <- err
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			t.Errorf("server serve error: %v", err)
 		}
 	}()
 
@@ -202,6 +200,307 @@ func TestUpdateServer(t *testing.T) {
 	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
 	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"]); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
+	}
+}
+
+func TestEndpointSecurityAllowedOrigin(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	testCases := []struct {
+		desc           string
+		allowedOrigins []string
+		origin         string
+		corsBlocked    bool
+	}{
+		{
+			desc:           "allowed origin all",
+			allowedOrigins: []string{"*"},
+			origin:         "https://evil.com",
+		},
+		{
+			desc:           "allowed origin trusted with trusted origin",
+			allowedOrigins: []string{"https://trusted.com"},
+			origin:         "https://trusted.com",
+		},
+		{
+			desc:           "allowed origin trusted with evil origin",
+			allowedOrigins: []string{"https://trusted.com"},
+			origin:         "https://evil.com",
+			corsBlocked:    true,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			addr, port := "127.0.0.1", 0
+			cfg := server.ServerConfig{
+				Version:        "0.0.0",
+				Address:        addr,
+				Port:           port,
+				EnableAPI:      true,
+				AllowedOrigins: tc.allowedOrigins,
+				AllowedHosts:   []string{"*"},
+			}
+
+			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			ctx = util.WithInstrumentation(ctx, instrumentation)
+
+			s, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("error setting up server: %s", err)
+			}
+
+			err = s.Listen(ctx)
+			if err != nil {
+				t.Fatalf("unable to start server: %v", err)
+			}
+
+			urlAddr := s.Addr()
+
+			// start server in background
+			go func() {
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
+				}
+			}()
+
+			// test every endpoints that we support in Toolbox
+			endpoints := []struct {
+				desc        string
+				requestType string
+				url         string
+			}{
+				{
+					desc:        "GET api toolset",
+					requestType: "GET",
+					url:         "/api/toolset",
+				},
+				{
+					desc:        "GET api tool",
+					requestType: "GET",
+					url:         "/api/tool/tool_one",
+				},
+				{
+					desc:        "POST api tool",
+					requestType: "POST",
+					url:         "/api/tool/tool_one/invoke",
+				},
+				{
+					desc:        "GET mcp sse",
+					requestType: "GET",
+					url:         "/mcp/sse",
+				},
+				{
+					desc:        "GET mcp",
+					requestType: "GET",
+					url:         "/mcp",
+				},
+				{
+					desc:        "POST mcp",
+					requestType: "POST",
+					url:         "/mcp",
+				},
+				{
+					desc:        "DELETE mcp",
+					requestType: "DELETE",
+					url:         "/mcp",
+				},
+			}
+			for _, e := range endpoints {
+				t.Run(e.desc, func(t *testing.T) {
+					url := fmt.Sprintf("http://%s%s", urlAddr, e.url)
+					client := &http.Client{}
+					req, err := http.NewRequest(e.requestType, url, nil)
+					if err != nil {
+						t.Fatalf("Failed to create request: %v", err)
+					}
+					req.Header.Set("Origin", tc.origin)
+					resp, err := client.Do(req)
+					if err != nil {
+						t.Fatalf("Failed to send request: %v", err)
+					}
+					defer resp.Body.Close()
+
+					gotOrigin := resp.Header.Get("Access-Control-Allow-Origin")
+					if !tc.corsBlocked {
+						// if cors is not blocked, the origin header should be
+						// within allowedOrigins
+						if !slices.Contains(tc.allowedOrigins, gotOrigin) {
+							t.Errorf(`origin "%s" is not part of allowed origins %s`, gotOrigin, tc.allowedOrigins)
+						}
+					} else if tc.corsBlocked {
+						// if cors is blocked, the origin header should not
+						// contain origin
+						if gotOrigin == "*" {
+							t.Errorf("REGRESSION: Server is forcing a wildcard '*' header!")
+						}
+						if gotOrigin == tc.origin {
+							t.Errorf("server allowed an origin not in the whitelist: %s", gotOrigin)
+						}
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestEndpointSecurityAllowedHost(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	testCases := []struct {
+		desc         string
+		allowedHosts []string
+		host         string
+		wantStatus   int
+	}{
+		{
+			desc:         "allowed hosts all",
+			allowedHosts: []string{"*"},
+			host:         "evil.com",
+			wantStatus:   http.StatusOK,
+		},
+		{
+			desc:         "allowed hosts trusted with trusted host",
+			allowedHosts: []string{"trusted.com"},
+			host:         "trusted.com",
+			wantStatus:   http.StatusOK,
+		},
+		{
+			desc:         "allowed hosts trusted with evil host",
+			allowedHosts: []string{"trusted.com"},
+			host:         "evil.com",
+			wantStatus:   http.StatusForbidden,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			addr, port := "127.0.0.1", 0
+			cfg := server.ServerConfig{
+				Version:      "0.0.0",
+				Address:      addr,
+				Port:         port,
+				EnableAPI:    true,
+				AllowedHosts: tc.allowedHosts,
+			}
+
+			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			ctx = util.WithInstrumentation(ctx, instrumentation)
+
+			s, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("error setting up server: %s", err)
+			}
+
+			err = s.Listen(ctx)
+			if err != nil {
+				t.Fatalf("unable to start server: %v", err)
+			}
+
+			urlAddr := s.Addr()
+			_, actualPort, err := net.SplitHostPort(urlAddr)
+			if err != nil {
+				t.Fatalf("failed to parse server address: %v", err)
+			}
+			hostWithPort := net.JoinHostPort(tc.host, actualPort)
+
+			// start server in background
+			go func() {
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
+				}
+			}()
+
+			// test every endpoints that we support in Toolbox
+			endpoints := []struct {
+				desc        string
+				requestType string
+				url         string
+				requestErr  int
+				errStr      string
+			}{
+				{
+					desc:        "GET api toolset",
+					requestType: "GET",
+					url:         "/api/toolset",
+				},
+				{
+					desc:        "GET api tool",
+					requestType: "GET",
+					url:         "/api/tool/tool_one",
+					requestErr:  http.StatusNotFound,
+					errStr:      "invalid tool name",
+				},
+				{
+					desc:        "POST api tool",
+					requestType: "POST",
+					url:         "/api/tool/tool_one/invoke",
+					requestErr:  http.StatusNotFound,
+					errStr:      "invalid tool name",
+				},
+				{
+					desc:        "GET mcp sse",
+					requestType: "GET",
+					url:         "/mcp/sse",
+				},
+				{
+					desc:        "GET mcp",
+					requestType: "GET",
+					url:         "/mcp",
+					requestErr:  http.StatusMethodNotAllowed,
+					errStr:      "toolbox does not support streaming in streamable HTTP transport",
+				},
+				{
+					desc:        "POST mcp",
+					requestType: "POST",
+					url:         "/mcp",
+				},
+				{
+					desc:        "DELETE mcp",
+					requestType: "DELETE",
+					url:         "/mcp",
+				},
+			}
+			for _, e := range endpoints {
+				t.Run(e.desc, func(t *testing.T) {
+					url := fmt.Sprintf("http://%s%s", urlAddr, e.url)
+					client := &http.Client{}
+					req, err := http.NewRequest(e.requestType, url, nil)
+					if err != nil {
+						t.Fatalf("Failed to create request: %v", err)
+					}
+					req.Host = hostWithPort
+					resp, err := client.Do(req)
+					if err != nil {
+						t.Fatalf("Failed to send request: %v", err)
+					}
+					defer resp.Body.Close()
+
+					if resp.StatusCode != tc.wantStatus {
+						bodyBytes, _ := io.ReadAll(resp.Body)
+						if resp.StatusCode == e.requestErr {
+							if !strings.Contains(string(bodyBytes), e.errStr) {
+								t.Fatalf("got err %s, expected error %s", string(bodyBytes), e.errStr)
+							}
+							return
+						}
+						t.Fatalf("expected status %d, got %d: %s", tc.wantStatus, resp.StatusCode, string(bodyBytes))
+					}
+				})
+			}
+		})
 	}
 }
 
@@ -336,11 +635,9 @@ func TestPRMEndpoint(t *testing.T) {
 		t.Fatalf("unable to start server: %v", err)
 	}
 
-	errCh := make(chan error)
 	go func() {
-		defer close(errCh)
 		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
-			errCh <- err
+			t.Errorf("server serve error: %v", err)
 		}
 	}()
 	defer func() {
