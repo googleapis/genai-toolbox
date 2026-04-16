@@ -1,12 +1,12 @@
-# Dataplex MCP Server
+# Knowledge Catalog MCP Server
 
-The Dataplex Model Context Protocol (MCP) Server gives AI-powered development tools the ability to work with your Google Cloud Dataplex Catalog. It supports searching and looking up entries and aspect types.
+The Knowledge Catalog (formerly known as Dataplex) Model Context Protocol (MCP) Server gives AI-powered development tools the ability to work with your Google Cloud Knowledge Catalog. It supports searching and looking up entries and aspect types.
 
 ## Features
 
-An editor configured to use the Dataplex MCP server can use its AI capabilities to help you:
+An editor configured to use the Knowledge Catalog MCP server can use its AI capabilities to help you:
 
-- **Search Catalog** - Search for entries in Dataplex Catalog
+- **Search Catalog** - Search for entries in Knowledge Catalog
 - **Explore Metadata** - Lookup specific entries and search aspect types
 
 ## Prerequisites
@@ -37,18 +37,18 @@ You'll now be able to see all enabled tools in the "Tools" tab.
 
 ## Usage
 
-Once configured, the MCP server will automatically provide Dataplex capabilities to your AI assistant. You can:
+Once configured, the MCP server will automatically provide Knowledge Catalog capabilities to your AI assistant. You can:
 
-*   "Search for entries related to 'sales' in Dataplex."
+*   "Search for entries related to 'sales' in Knowledge Catalog."
 *   "Look up details for the entry 'projects/my-project/locations/us-central1/entryGroups/my-group/entries/my-entry'."
 
 ## Server Capabilities
 
-The Dataplex MCP server provides the following tools:
+The Knowledge Catalog MCP server provides the following tools:
 
 | Tool Name             | Description                                                                                                                  |
 |:----------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| `search_entries`      | Search for entries in Dataplex Catalog.                                                                                      |
+| `search_entries`      | Search for entries in Knowledge Catalog.                                                                                      |
 | `lookup_entry`        | Retrieve specific subset of metadata (for example, schema, usage, business overview, and contacts) of a specific data asset. |
 | `search_aspect_types` | Find aspect types relevant to the query.                                                                                     |
 | `lookup_context`      | Retrieve rich metadata regarding one or more data assets along with their relationships.                                     |
@@ -79,4 +79,4 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 
 ## Documentation
 
-For more information, visit the [Dataplex documentation](https://cloud.google.com/dataplex/docs).
+For more information, visit the [Knowledge Catalog documentation](https://cloud.google.com/dataplex/docs).

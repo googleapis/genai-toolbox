@@ -8,7 +8,7 @@ description: >
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Dataplex Catalog (e.g.
+A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
 tables, views, models) that matches given user query.
 
 `dataplex-search-entries` takes a required `query` parameter based on which
@@ -31,15 +31,15 @@ following parameters:
 
 ### IAM Permissions
 
-Dataplex uses [Identity and Access Management (IAM)][iam-overview] to control
-user and group access to Dataplex resources. Toolbox will use your
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
 [Application Default Credentials (ADC)][adc] to authorize and authenticate when
-interacting with [Dataplex][dataplex-docs].
+interacting with [Knowledge Catalog][dataplex-docs].
 
 In addition to [setting the ADC for your server][set-adc], you need to ensure
 the IAM identity has been given the correct IAM permissions for the tasks you
-intend to perform. See [Dataplex Universal Catalog IAM permissions][iam-permissions]
-and [Dataplex Universal Catalog IAM roles][iam-roles] for more information on
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
 applying IAM permissions and roles to an identity.
 
 [iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
@@ -53,7 +53,7 @@ applying IAM permissions and roles to an identity.
 
 ```yaml
 kind: tool
-name: dataplex-search-entries
+name: search_entries
 type: dataplex-search-entries
 source: my-dataplex-source
 description: Use this tool to get all the entries based on the provided query.

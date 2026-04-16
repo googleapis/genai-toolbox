@@ -284,6 +284,18 @@ tools:
   get_instance:
     kind: cloud-sql-get-instance
     source: cloud-sql-admin-source
+  define_spec:
+    kind: vector-assist-define-spec
+    source: cloudsql-pg-source
+  modify_spec:
+    kind: vector-assist-modify-spec
+    source: cloudsql-pg-source
+  apply_spec:
+    kind: vector-assist-apply-spec
+    source: cloudsql-pg-source
+  generate_query:
+    kind: vector-assist-generate-query
+    source: cloudsql-pg-source
 toolsets:
   admin:
     - create_instance
@@ -343,3 +355,9 @@ toolsets:
     - list_roles
     - list_pg_settings
     - database_overview
+  vectorassist:
+    - execute_sql
+    - define_spec
+    - modify_spec
+    - apply_spec
+    - generate_query

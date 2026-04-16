@@ -166,16 +166,16 @@ instances, often by analyzing metrics and logs.
 
 ### Other Google Cloud Data Services
 
-#### Dataplex
+#### Knowledge Catalog (formerly known as Dataplex)
 
-* For interacting with Dataplex data lakes and assets:
+* For interacting with Knowledge Catalog data lakes and assets:
 
     ```bash
-    gemini extensions install https://github.com/gemini-cli-extensions/dataplex
+    gemini extensions install https://github.com/gemini-cli-extensions/knowledge-catalog
     ```
 
     Configuration:
-    https://github.com/gemini-cli-extensions/dataplex/tree/main?tab=readme-ov-file#configuration
+    https://github.com/gemini-cli-extensions/knowledge-catalog/tree/main?tab=readme-ov-file#configuration
 
 #### Looker
 

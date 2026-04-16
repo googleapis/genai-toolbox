@@ -1,37 +1,27 @@
 ---
-title: "dataplex-lookup-entry"
+title: "dataplex-search-dq-scans"
 type: docs
 weight: 1
 description: >
-  A "dataplex-lookup-entry" tool returns details of a particular entry in Dataplex Catalog.
+  A "dataplex-search-dq-scans" tool allows to search for data quality scans based on the provided parameters.
+aliases:
+- /resources/tools/dataplex-search-dq-scans
 ---
 
 ## About
 
-A `dataplex-lookup-entry` tool returns details of a particular entry in Dataplex
-Catalog.
+A `dataplex-search-dq-scans` tool returns data quality scans that match the given criteria.
+It's compatible with the following sources:
 
-`dataplex-lookup-entry` takes a required `name` parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required `entry`
-parameter which is the resource name of the entry in the following form:
-projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
-It also optionally accepts following parameters:
+- [dataplex](../../sources/dataplex.md)
 
-- `view` - View to control which parts of an entry the service should return.
-    It takes integer values from 1-4 corresponding to type of view - BASIC,
-    FULL, CUSTOM, ALL
-- `aspectTypes` - Limits the aspects returned to the provided aspect types in
-    the format
-    `projects/{project}/locations/{location}/aspectTypes/{aspectType}`. It only
-    works for CUSTOM view.
-- `paths` - Limits the aspects returned to those associated with the provided
-    paths within the Entry. It only works for CUSTOM view.
+`dataplex-search-dq-scans` accepts the following optional parameters:
 
-
-## Compatible Sources
-
-{{< compatible-sources >}}
+- `filter` - Filter string to search/filter data quality scans. E.g. "display_name = \"my-scan\"".
+- `data_scan_id` - The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.
+- `table_name` - The name of the table to filter by. Maps to data.entity in the filter string. E.g. "//bigquery.googleapis.com/projects/P/datasets/D/tables/T".
+- `pageSize` - Number of returned data quality scans in the page. Defaults to `10`.
+- `orderBy` - Specifies the ordering of results.
 
 ## Requirements
 
@@ -53,21 +43,22 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Example
 
 ```yaml
-kind: tool
-name: lookup_entry
-type: dataplex-lookup-entry
+kind: tools
+name: dataplex-search-dq-scans
+type: dataplex-search-dq-scans
 source: my-dataplex-source
-description: Use this tool to retrieve a specific entry in Dataplex Catalog.
+description: Use this tool to search for data quality scans.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-lookup-entry".                   |
+| type        |  string  |     true     | Must be "dataplex-search-dq-scans".                |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

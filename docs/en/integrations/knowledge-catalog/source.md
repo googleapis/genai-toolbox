@@ -1,22 +1,22 @@
 ---
-title: "Dataplex Source"
+title: "Knowledge Catalog (formerly known as Dataplex) Source"
 type: docs
 linkTitle: "Source"
 weight: 1
 description: >
-  Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
+  Knowledge Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Knowledge Catalog powers AI, analytics, and business intelligence at scale.
 no_list: true
 ---
 
 ## About
 
-[Dataplex][dataplex-docs] Universal Catalog is a unified, intelligent governance
-solution for data and AI assets in Google Cloud. Dataplex Universal Catalog
+[Knowledge Catalog][dataplex-docs] is a unified, intelligent governance
+solution for data and AI assets in Google Cloud. Knowledge Catalog
 powers AI, analytics, and business intelligence at scale.
 
 At the heart of these governance capabilities is a catalog that contains a
-centralized inventory of the data assets in your organization. Dataplex
-Universal Catalog holds business, technical, and runtime metadata for all of
+centralized inventory of the data assets in your organization. Knowledge Catalog
+holds business, technical, and runtime metadata for all of
 your data. It helps you discover relationships and semantics in the metadata by
 applying artificial intelligence and machine learning.
 
@@ -182,7 +182,7 @@ Entries are organized within Entry Groups, which are logical groupings of Entrie
 Entries can be linked together using EntryLinks to represent relationships between data assets (e.g. foreign keys).
 
 # Tool instructions
-## Tool: dataplex_search_entries
+## Tool: search_entries
 ## General
 - Do not try to search within search results on your own.
 - Do not fetch multiple pages of results unless explicitly asked.
@@ -359,10 +359,17 @@ This abbreviated syntax works for the qualified predicates except for `label` in
     1. Explain that no search result was found
     2. Suggest to provide a more specific search query.
 
-## Tool: dataplex_lookup_entry
+## Tool: lookup_entry
 ### Request
-1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter. If you do not know the name of the aspect type, use the `dataplex_search_aspect_types` tool.
-2. If you do not know the name of the entry, use `dataplex_search_entries` tool
+1. Always try to limit the size of the response by specifying `aspect_types` parameter. Make sure to include to select view=CUSTOM when using aspect_types parameter. If you do not know the name of the aspect type, use the `search_aspect_types` tool.
+2. If you do not know the name of the entry, use `search_entries` tool
 ### Response
 1. Unless asked for a specific aspect, respond with all aspects attached to the entry.
+
+## Tool: lookup_context
+### Request
+1. Use this tool to retrieve rich metadata regarding one or more data assets along with their relationships.
+2. You must provide the `resources` list with full resource names.
+### Response
+1. Present the requested metadata and relationship information. 
 ```
