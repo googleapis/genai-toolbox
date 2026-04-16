@@ -73,6 +73,11 @@ name: restore_backup
 type: cloud-sql-restore-backup
 source: cloud-sql-admin-source
 ---
+kind: tool
+name: execute_sql_many
+type: postgres-execute-sql-many
+source: cloud-sql-admin-source
+---
 kind: toolset
 name: cloud_sql_postgres_admin_tools
 tools:
@@ -87,3 +92,4 @@ tools:
 - clone_instance
 - create_backup
 - restore_backup
+- execute_sql_many

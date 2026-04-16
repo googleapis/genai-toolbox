@@ -74,10 +74,23 @@ func (h *masterExecuteSqlHandler) ServeHTTP(w http.ResponseWriter, r *http.Reque
 
 	// Mock response
 	response := map[string]any{
-		"rows": []map[string]any{
+		"results": []map[string]any{
 			{
-				"result": "success",
-				"sql":    payload["sqlStatement"],
+				"columns": []map[string]any{
+					{
+						"name": "result",
+						"type": "STRING",
+					},
+				},
+				"rows": []map[string]any{
+					{
+						"values": []map[string]any{
+							{
+								"value": "success",
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -143,13 +156,13 @@ func TestExecuteSqlManyToolEndpoints(t *testing.T) {
 			name:     "successful execute-sql-many",
 			toolName: "execute-sql-many",
 			body:     `{"project": "p1", "region": "r1", "instance": "i1", "database": "db1", "sql": "SELECT 1"}`,
-			want:     `{"rows":[{"result":"success","sql":"SELECT 1"}]}`,
+			want:     `{"results":[{"columns":[{"name":"result","type":"STRING"}],"rows":[{"values":[{"value":"success"}]}]}]}`,
 		},
 		{
 			name:     "successful sql-many",
 			toolName: "sql-many",
 			body:     `{"project": "p1", "region": "r1", "instance": "i1", "database": "db1", "user_id": "123"}`,
-			want:     `{"rows":[{"result":"success","sql":"SELECT * FROM users WHERE id = 123"}]}`,
+			want:     `{"results":[{"columns":[{"name":"result","type":"STRING"}],"rows":[{"values":[{"value":"success"}]}]}]}`,
 		},
 		{
 			name:     "missing required param in execute-sql-many",
