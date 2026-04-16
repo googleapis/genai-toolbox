@@ -26,7 +26,7 @@ import (
 )
 
 // DryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (*bigqueryrestapi.Job, error) {
+func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, maximumBytesBilled int64) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
 
 	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
@@ -46,6 +46,7 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 				UseLegacySql:         &useLegacySql,
 				ConnectionProperties: restConnProps,
 				QueryParameters:      params,
+				MaximumBytesBilled:   maximumBytesBilled,
 			},
 		},
 	}
