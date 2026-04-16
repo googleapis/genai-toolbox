@@ -2,4 +2,4 @@ langchain==1.2.12
 langchain-google-genai==4.2.1
 langgraph==1.1.6
 toolbox-langchain==1.0.0
-pytest==9.0.2
+pytest==9.0.3
