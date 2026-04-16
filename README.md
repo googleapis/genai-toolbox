@@ -240,7 +240,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=1.0.0
+> export VERSION=1.1.0
 > curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -253,7 +253,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=1.0.0
+> export VERSION=1.1.0
 > curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -266,7 +266,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=1.0.0
+> export VERSION=1.1.0
 > curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -279,7 +279,7 @@ To install Toolbox as a binary:
 >
 > ```cmd
 > :: see releases page for other versions
-> set VERSION=1.0.0
+> set VERSION=1.1.0
 > curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
@@ -291,7 +291,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "1.0.0"
+> $VERSION = "1.1.0"
 > curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
@@ -304,7 +304,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.0.0
+export VERSION=1.1.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -328,7 +328,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.0.0
+go install github.com/googleapis/mcp-toolbox@v1.1.0
 ```
 <!-- {x-release-please-end} -->
 
