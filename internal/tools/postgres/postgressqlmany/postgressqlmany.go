@@ -69,7 +69,6 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	infraParams := parameters.Parameters{
 		parameters.NewStringParameter("project", "The GCP project ID."),
-		parameters.NewStringParameter("region", "The GCP region."),
 		parameters.NewStringParameter("instance", "The Cloud SQL instance ID."),
 		parameters.NewStringParameter("database", "The database name."),
 	}
@@ -110,17 +109,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	if len(t.Parameters) > 0 {
-		return nil, util.NewAgentError("standard parameters are not supported by postgres-sql-many, use templateParameters instead", nil)
-	}
-
 	// Extract parameters from the parameter values map.
 	paramsMap := params.AsMap()
 	project, _ := paramsMap["project"].(string)
 	instance, _ := paramsMap["instance"].(string)
 	database, _ := paramsMap["database"].(string)
 
-	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	newStatement, err := parameters.ResolveTemplateParams(t.allParams, t.Statement, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract template params", err)
 	}

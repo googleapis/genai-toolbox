@@ -8,7 +8,7 @@ description: >
 
 ## About
 
-A `postgres-sql-many` tool executes a predefined SQL statement against a specific Cloud SQL Postgres instance identified by project, region, instance, and database parameters provided at runtime.
+A `postgres-sql-many` tool executes a predefined SQL statement against a specific Cloud SQL Postgres instance identified by project, instance, and database parameters provided at runtime.
 
 It supports `templateParameters` to allow dynamic values to be injected into the query at runtime.
 
@@ -25,7 +25,6 @@ The following parameters are required at runtime when invoking the tool:
 | **Parameter** | **Type** | **Description**            |
 | :------------ | :------- | :------------------------- |
 | `project`     | string   | The GCP project ID.        |
-| `region`      | string   | The GCP region.            |
 | `instance`    | string   | The Cloud SQL instance ID. |
 | `database`    | string   | The database name.         |
 

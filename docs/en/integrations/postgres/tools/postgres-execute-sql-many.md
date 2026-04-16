@@ -8,7 +8,7 @@ description: >
 
 ## About
 
-A `postgres-execute-sql-many` tool executes a SQL statement against a specific Cloud SQL Postgres instance identified by project, region, instance, and database parameters provided at runtime.
+A `postgres-execute-sql-many` tool executes a SQL statement against a specific Cloud SQL Postgres instance identified by project, instance, and database parameters provided at runtime.
 
 This tool is useful for executing arbitrary SQL queries across multiple database instances without needing to configure a separate tool for each instance.
 
@@ -25,7 +25,6 @@ The following parameters are required at runtime when invoking the tool:
 | **Parameter** | **Type** | **Description**               |
 | :------------ | :------- | :---------------------------- |
 | `project`     | string   | The GCP project ID.           |
-| `region`      | string   | The GCP region.               |
 | `instance`    | string   | The Cloud SQL instance ID.    |
 | `database`    | string   | The database name.            |
 | `sql`         | string   | The SQL statement to execute. |

@@ -67,7 +67,6 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	params := parameters.Parameters{
 		parameters.NewStringParameter("project", "The GCP project ID."),
-		parameters.NewStringParameter("region", "The GCP region."),
 		parameters.NewStringParameter("instance", "The Cloud SQL instance ID."),
 		parameters.NewStringParameter("database", "The database name."),
 		parameters.NewStringParameter("sql", "The SQL statement to execute."),

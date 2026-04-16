@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressqlmany"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlSqlMany(t *testing.T) {
@@ -53,6 +54,41 @@ func TestParseFromYamlSqlMany(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM users WHERE id = {{.id}}",
 					AuthRequired: []string{"my-google-auth-service"},
+				},
+			},
+		},
+		{
+			desc: "with parameters and templateParameters",
+			in: `
+            kind: tool
+            name: example_tool_params
+            type: postgres-sql-many
+            source: my-instance
+            description: some description
+            statement: "SELECT * FROM users WHERE id = {{.id}} AND status = {{.status}}"
+            parameters:
+                - name: status
+                  type: string
+                  description: User status
+            templateParameters:
+                - name: id
+                  type: string
+                  description: User ID
+			`,
+			want: server.ToolConfigs{
+				"example_tool_params": postgressqlmany.Config{
+					Name:         "example_tool_params",
+					Type:         "postgres-sql-many",
+					Source:       "my-instance",
+					Description:  "some description",
+					Statement:    "SELECT * FROM users WHERE id = {{.id}} AND status = {{.status}}",
+					AuthRequired: []string{},
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameter("status", "User status"),
+					},
+					TemplateParameters: parameters.Parameters{
+						parameters.NewStringParameter("id", "User ID"),
+					},
 				},
 			},
 		},
