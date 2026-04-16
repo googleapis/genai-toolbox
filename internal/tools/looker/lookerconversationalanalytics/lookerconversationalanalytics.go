@@ -85,7 +85,7 @@ type SecretBased struct {
 	ClientSecret string `json:"clientSecret"`
 }
 type TokenBased struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken string `json:"access_token"`
 }
 type OAuthCredentials struct {
 	Secret SecretBased `json:"secret,omitzero"`
@@ -249,7 +249,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	oauth_creds := OAuthCredentials{}
 	if source.UseClientAuthorization() {
-		oauth_creds.Token = TokenBased{AccessToken: string(accessToken)}
+		rawToken, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, err.(util.ToolboxError)
+		}
+		oauth_creds.Token = TokenBased{AccessToken: rawToken}
 	} else {
 		oauth_creds.Secret = SecretBased{ClientId: source.LookerApiSettings().ClientId, ClientSecret: source.LookerApiSettings().ClientSecret}
 	}

@@ -569,3 +569,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
 	return s.srv.Shutdown(ctx)
 }
+
+func (s *Server) Addr() string {
+	return s.listener.Addr().String()
+}

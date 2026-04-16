@@ -53,6 +53,7 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
+	GetMaximumBytesBilled() int64
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 	BigQuerySession() bigqueryds.BigQuerySessionProvider
@@ -219,7 +220,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 					{Key: "session_id", Value: session.ID},
 				}
 			}
-			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, inputData, nil, connProps)
+			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, inputData, nil, connProps, source.GetMaximumBytesBilled())
 			if err != nil {
 				return nil, util.ProcessGcpError(err)
 			}
