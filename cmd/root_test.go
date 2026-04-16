@@ -699,7 +699,7 @@ func TestFileLoadingErrors(t *testing.T) {
 }
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	// Setup custom config
 	customContent := `
 kind: tool
@@ -867,7 +867,7 @@ tools:
 }
 
 func TestDefaultConfigBehavior(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	testCases := []struct {
 		desc      string
 		args      []string

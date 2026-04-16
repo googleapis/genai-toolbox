@@ -52,7 +52,7 @@ func TestInvokeTool(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
