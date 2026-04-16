@@ -54,6 +54,7 @@ type compatibleSource interface {
 	BigQuerySession() bigqueryds.BigQuerySessionProvider
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
+	GetMaximumBytesBilled() int64
 	RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty) (any, error)
 }
@@ -225,7 +226,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
 
-	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, connProps)
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, connProps, source.GetMaximumBytesBilled())
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
