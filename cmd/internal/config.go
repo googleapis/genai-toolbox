@@ -157,59 +157,48 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			if !ok {
 				return nil, fmt.Errorf("doc %d: unexpected non-string key in input: %v", docIndex, item.Key)
 			}
-			// check if the key is config file nested format's key
-			if slices.Contains(nestedFormatKey, key) {
-				// check if value conversion to yaml.MapSlice successfully
-				// fields such as "tools" in toolsets might pass the first check but
-				// fail to convert to MapSlice
-				if slice, ok := item.Value.(yaml.MapSlice); ok {
-					// Deprecated: convert authSources to authServices
-					switch key {
-					case "authServices":
-						key = "authService"
-					case "sources":
-						key = "source"
-					case "embeddingModels":
-						key = "embeddingModel"
-					case "tools":
-						key = "tool"
-					case "toolsets":
-						key = "toolset"
-					case "prompts":
-						key = "prompt"
-					}
-					transformed, err := transformDocs(key, slice)
-					if err != nil {
-						return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
-					}
-					// encode per-doc
-					for _, doc := range transformed {
-						if err := encoder.Encode(doc); err != nil {
-							return nil, err
-						}
-					}
-				} else {
-					if hasKindField(input) {
-						// this doc is already in flat format, encode to buf
-						if err := encoder.Encode(input); err != nil {
-							return nil, err
-						}
-						break
-					}
-					return nil, fmt.Errorf("doc %d: invalid config format at key %q: expected map", docIndex, key)
-				}
-			} else {
+			if hasKindField(input) {
 				// this doc is already in flat format, encode to buf
 				if err := encoder.Encode(input); err != nil {
 					return nil, err
 				}
 				break
 			}
+			// check if value conversion to yaml.MapSlice successfully
+			if slice, ok := item.Value.(yaml.MapSlice); slices.Contains(nestedFormatKey, key) && ok {
+				switch key {
+				case "authServices":
+					key = "authService"
+				case "sources":
+					key = "source"
+				case "embeddingModels":
+					key = "embeddingModel"
+				case "tools":
+					key = "tool"
+				case "toolsets":
+					key = "toolset"
+				case "prompts":
+					key = "prompt"
+				}
+				transformed, err := transformDocs(key, slice)
+				if err != nil {
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
+				}
+				// encode per-doc
+				for _, doc := range transformed {
+					if err := encoder.Encode(doc); err != nil {
+						return nil, err
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("doc %d: invalid config format at key %q: expected nested format keys and type map", docIndex, key)
+			}
 		}
 	}
 	return buf.Bytes(), nil
 }
 
+// hasKindField is a helper function to check if an input is in flat format
 func hasKindField(input yaml.MapSlice) bool {
 	for _, item := range input {
 		if key, ok := item.Key.(string); ok && key == "kind" {

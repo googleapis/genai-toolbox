@@ -539,13 +539,13 @@ tools:
 			desc:   "invalid source",
 			in:     `sources: invalid`,
 			isErr:  true,
-			errStr: `doc 1: invalid config format at key "sources": expected map`,
+			errStr: `doc 1: invalid config format at key "sources": expected nested format keys and type map`,
 		},
 		{
 			desc:   "invalid toolset",
 			in:     `toolsets: invalid`,
 			isErr:  true,
-			errStr: `doc 1: invalid config format at key "toolsets": expected map`,
+			errStr: `doc 1: invalid config format at key "toolsets": expected nested format keys and type map`,
 		},
 	}
 	for _, tc := range tcs {
