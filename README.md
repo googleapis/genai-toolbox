@@ -446,7 +446,7 @@ After installing a [Gemini CLI extensions](https://geminicli.com/extensions/), t
 gemini
 
 # List extensions
-/exttensions list
+/extensions list
 # List MCP servers
 /mcp list
 ```
