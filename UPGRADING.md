@@ -1,80 +1,102 @@
 # Upgrading to MCP Toolbox for Databases v1.0.0
 
-Welcome to the v1.0.0 release of the MCP Toolbox for Databases! 
+Welcome to the v1.0.0 release of the MCP Toolbox for Databases!
 
-This release stabilizes our core APIs and standardizes our protocol alignments.
-As part of this milestone, we have introduced several breaking changes and
-deprecations that require updates to your configuration and code.
+This release stabilizes core APIs and aligns the system with the Model Context Protocol (MCP). It introduces several breaking changes and deprecations. Please review and update your setup accordingly.
 
-**📖 New Versioning Policy**
-We have officially published our [Versioning Policy](https://mcp-toolbox.dev/reference/versioning/). Moving forward, we follow standard versioning conventions to classify updates:
-* **Major (vX.0.0):** Breaking changes requiring manual updates.
-* **Minor (v1.X.0):** New, backward-compatible features and deprecation notices.
-* **Patch (v1.0.X):** Backward-compatible bug fixes and security patches.
+---
 
-This guide outlines what has changed and the steps you need to take to upgrade.
+## 📖 Versioning Policy
+
+We follow semantic versioning:
+
+* **Major (vX.0.0):** Breaking changes requiring manual migration
+* **Minor (v1.X.0):** Backward-compatible features and deprecations
+* **Patch (v1.0.X):** Bug fixes and security updates
+
+---
 
 ## 🚨 Breaking Changes (Action Required)
 
-### 1. Repository Rename: genai-toolbox ➡️ mcp-toolbox
-The GitHub repository has been officially renamed to `googleapis/mcp-toolbox`. To update your local environment, run the following commands:
+### 1. Repository Rename
 
-1. Rename your local directory: `cd .. && mv genai-toolbox mcp-toolbox && cd mcp-toolbox`
+The repository has been renamed to:
 
-2. Update the remote URL: `git remote set-url origin git@github.com:googleapis/mcp-toolbox.git`
+`googleapis/mcp-toolbox`
 
-3. Verify the update: `git remote -v`
+### Migration steps:
 
-### 2. Endpoint Transition: `/api` disabled by default
-The legacy `/api` endpoint for the native Toolbox protocol is now disabled by default. All official SDKs have been updated to use the `/mcp` endpoint, which aligns with the standard Model Context Protocol (MCP) specification. 
+```bash
+# Rename your local folder (adjust old name if different)
+mv <old-repo-folder> mcp-toolbox
+cd mcp-toolbox
 
-If you still require the legacy `/api` endpoint, you must explicitly activate it using a new command-line flag.
+# Update remote URL
+git remote set-url origin git@github.com:googleapis/mcp-toolbox.git
 
-* **Usage:** `./toolbox --enable-api`
-* **Migration:** You must update all custom implementations to use the `/mcp`
-  endpoint exclusively, as the `/api` endpoint is now deprecated. If your workflow  
-  relied on a non-standard feature that is missing from the new implementation, please submit a
-  feature request on our [GitHub Issues page](https://github.com/googleapis/mcp-toolbox/issues).
+# Verify
+git remote -v
+```
 
-### 3. Strict Tool Naming Validation (SEP986)
-Tool names are now strictly validated against [ModelContextProtocol SEP986 guidelines](https://github.com/alexhancock/modelcontextprotocol/blob/main/docs/specification/draft/server/tools.mdx#tool-names) prior to MCP initialization.
-* **Migration:** Ensure all your tool names **only** contain alphanumeric characters, hyphens (`-`), underscores (`_`), and periods (`.`). Any other special characters will cause initialization to fail.
+---
 
-### 4. Removed CLI Flags
-The legacy snake_case flag `--tools_file` has been completely removed.
-* **Migration:** Update your deployment scripts to use `--config` instead.
+### 2. Endpoint Change: `/api` deprecated
 
-### 5. Singular `kind` Values in Configuration
-_(This step applies only if you are currently using the new flat format.)_
+The `/api` endpoint is deprecated. Use `/mcp` instead.
 
-All primitive kind fields in configuration files have been updated to use singular nouns instead of plural. For example, `kind: sources` is now `kind: source`, and `kind: tools` is now `kind: tool`.
+Some legacy systems may still require `/api`, but it is no longer enabled by default.
 
-* **Migration:** Update your configuration files to use the singular form for all `kind`
-values. _(Note: If you transitioned to the flat format using the `./toolbox migrate` command, this step was handled automatically.)_
+Enable legacy support (if required):
 
+```bash
+./toolbox --enable-api
+```
 
-### 6. Configuration Schema: `authSources` renamed
-The `authSources` field is no longer supported in configuration files.
-* **Migration:** Rename all instances of `authSources` to `authService` in your
-  configuration files.
+All SDKs should migrate to:
 
-### 7. CloudSQL for SQL Server: `ipAddress` removed
-The `ipAddress` field for the CloudSQL for SQL Server source was redundant and has been removed.
-* **Migration:** Remove the `ipAddress` field from your CloudSQL for SQL Server configurations.
+```
+/mcp
+```
 
+---
 
-## ⚠️ Deprecations & Modernization
+### 3. Tool Naming Rules (MCP Standard)
 
-### 1. Flat Configuration Format Introduced
-We have introduced a new, streamlined "flat" format for configuration files. While the older nested format is still supported for now, **all new features will only be added to the flat format.**
+Tool names must follow MCP naming rules:
 
-**Schema Restructuring (`kind` vs. `type`):**
-Along with the flat format, the configuration schema has been reorganized. The
-old `kind` field (which specified the specific primitive types, like
-`alloydb-postgres`) has been renamed to `type`. The `kind` field is now strictly
-used to declare the core primitive of the block (e.g., `source` or `tool`).
+* Allowed: `a-z`, `A-Z`, `0-9`, `-`, `_`, `.`
+* No spaces or special characters
 
-**Example of the new flat format:**
+Invalid names will fail MCP initialization.
+
+Reference: MCP specification for tool naming.
+
+---
+
+### 4. CLI Flag Changes
+
+Removed:
+
+* `--tools-file`
+* `--tools-files`
+* `--tools-folder`
+
+Use instead:
+
+```bash
+--config
+--configs
+--config-folder
+```
+
+---
+
+### 5. Configuration Schema Update
+
+* `kind` now represents the resource type (`source` or `tool`)
+* `type` defines the specific implementation
+
+Example:
 
 ```yaml
 kind: source
@@ -85,37 +107,68 @@ region: my-region
 instance: my-instance
 ---
 kind: tool
-name: my-simple-tool
+name: my-tool
 type: postgres-execute-sql
 source: my-source
-description: this is a tool that executes the sql provided.
+description: Executes SQL queries on the configured database
 ```
 
-**Migration:**
+---
 
-You can automatically migrate your existing nested configurations to the new flat format using the CLI. Run the following command:
+### 6. Configuration Field Rename
 
-```Bash
-./toolbox migrate --config <path-to-your-config>
+* `authSources` → `authService`
+
+Update all configuration files accordingly.
+
+---
+
+### 7. CloudSQL SQL Server Change
+
+The `ipAddress` field has been removed.
+
+Remove it from all configurations.
+
+---
+
+## ⚠️ Deprecations & Modernization
+
+### 1. Flat Configuration Format
+
+A new flat configuration format is now recommended.
+
+Legacy nested format is still supported but will be phased out.
+
+---
+
+### Migration Tool
+
+```bash
+./toolbox migrate --config <path>
 ```
-_Note: You can also use the `--configs` or `--config-folder` flags with this command._
 
-### 2. Deprecated CLI Flags
-The following CLI flags are deprecated and will be removed in a future release. Please update your scripts:
+Supports:
 
-* `--tools-file` ➡️ Use `--config`
-* `--tools-files` ➡️ Use `--configs`
-* `--tools-folder` ➡️ Use `--config-folder`
+* single config file
+* multiple configs
+* config folders
 
-## 💡 Other Notable Updates
-* **Enhanced Error Handling:** Errors are now strictly categorized between Agent Errors (allowing the LLM to self-correct) and Client/Server Errors (which signal a hard stop).
+---
 
-* **Telemetry Updates:** The /mcp endpoint telemetry has been revised to fully comply with the [OpenTelemetry semantic conventions for MCP](https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/).
+## 💡 Other Updates
 
-* **MCP Authorization Support:** The Model Context Protocol's [authorization specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) is now fully supported.
+* Improved error classification (agent vs system errors)
+* Updated telemetry to OpenTelemetry MCP standards
+* Full MCP authorization support added
+* CloudSQL MySQL validation relaxed for database name field
+* Prebuilt toolsets optimized for performance
 
-* **Database Name Validation:** Removed the "required field" validation for the database name in CloudSQL for MySQL and generic MySQL sources.
+---
 
-* **Prebuilt Tools:** Toolsets have been resized for better performance.
-## 📚 Documentation Moved
-Our official documentation has a new home! Please update your bookmarks to [mcp-toolbox.dev](https://mcp-toolbox.dev).
+## 📚 Documentation Update
+
+Official documentation has moved to:
+
+https://mcp-toolbox.dev
+
+Please update bookmarks accordingly.
