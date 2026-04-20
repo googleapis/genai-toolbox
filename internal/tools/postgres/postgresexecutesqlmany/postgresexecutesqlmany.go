@@ -52,7 +52,7 @@ type Config struct {
 	Name         string                 `yaml:"name" validate:"required"`
 	Type         string                 `yaml:"type" validate:"required"`
 	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
+	Description  string                 `yaml:"description"`
 	AuthRequired []string               `yaml:"authRequired"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
@@ -72,13 +72,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameter("sql", "The SQL statement to execute."),
 	}
 
+	description := cfg.Description
+	if description == "" {
+		description = "Executes multiple SQL statements on a Postgres database."
+	}
+
 	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, params, annotations)
 
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:    tools.Manifest{Description: description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
 	return t, nil
