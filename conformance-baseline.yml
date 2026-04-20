@@ -13,9 +13,7 @@
 # limitations under the License.
 
 server:
-  - server-initialize
   - logging-set-level
-  - ping
   - completion-complete
   - tools-list
   - tools-call-simple-text
@@ -37,7 +35,6 @@ server:
   - resources-templates-read
   - resources-subscribe
   - resources-unsubscribe
-  - prompts-list
   - prompts-get-simple
   - prompts-get-with-args
   - prompts-get-embedded-resource
