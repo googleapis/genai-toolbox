@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Nightly SDK Tier Assessment
+name: Nightly Server Tier Assessment
 
 on:
   schedule:
@@ -47,7 +47,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Run SDK Tier Assessment
+      - name: Run Server Tier Assessment
         id: assessment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -62,7 +62,7 @@ jobs:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('tier_report.txt', 'utf8');
-            const title = 'Nightly SDK Tier Assessment Failure';
+            const title = 'Nightly Server Tier Assessment Failure';
             const periodicLabel = 'periodic-failure';
             
             const prevIssues = await github.rest.issues.listForRepo({
@@ -80,7 +80,7 @@ jobs:
                 await github.rest.issues.createComment({
                   ...context.repo,
                   issue_number: existingIssue.number,
-                  body: "🎉 The nightly SDK Tier Assessment confirms we are now **Tier 1**! Closing this issue."
+                  body: "🎉 The nightly Server Tier Assessment confirms we are now **Tier 1**! Closing this issue."
                 });
                 await github.rest.issues.update({
                   ...context.repo,
@@ -91,7 +91,7 @@ jobs:
               return;
             }
             
-            const body = `The nightly SDK Tier Assessment found gaps preventing Tier 1 status:\n\n${report}\n\nPlease fix these operational gaps.`;
+            const body = `The nightly Server Tier Assessment found gaps preventing Tier 1 status:\n\n${report}\n\nPlease fix these operational gaps.`;
             
             if (existingIssue) {
               console.log(`Found previous issue ${existingIssue.html_url}, updating body`);
