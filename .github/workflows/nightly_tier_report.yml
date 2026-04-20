@@ -51,7 +51,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npx --yes @modelcontextprotocol/conformance@latest tier-check --repo ${{ github.repository }} --conformance-server-url "http://localhost:5000/mcp" > tier_report.txt 2>&1
+          npx --yes @modelcontextprotocol/conformance@latest tier-check --repo ${{ github.repository }} --output markdown --conformance-server-url "http://localhost:5000/mcp" > tier_report.txt
         continue-on-error: true
 
       - name: Report Tier Status
@@ -90,7 +90,7 @@ jobs:
               return;
             }
             
-            const body = `The nightly SDK Tier Assessment found gaps preventing Tier 1 status:\n\n\`\`\`text\n${report}\n\`\`\`\n\nPlease fix these operational gaps.`;
+            const body = `The nightly SDK Tier Assessment found gaps preventing Tier 1 status:\n\n${report}\n\nPlease fix these operational gaps.`;
             
             if (existingIssue) {
               console.log(`Found previous issue ${existingIssue.html_url}, updating body`);
