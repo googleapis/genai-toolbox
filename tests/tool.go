@@ -639,7 +639,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			insertAllow := !tc.insert || (tc.insert && configs.supportInsert)
 
 			if ddlAllow && insertAllow {
-				if configs.IsMCP {
+				if configs.isMCP {
 					toolName := tc.toolName
 					args := tc.args
 					if args == nil {
@@ -836,7 +836,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			if configs.IsMCP {
+			if configs.isMCP {
 				toolName := tc.toolName
 				args := tc.args
 				if args == nil {
@@ -3038,7 +3038,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		t.Run(tc.name, func(t *testing.T) {
 			var resultString string
 
-			if config.IsMCP {
+			if config.isMCP {
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
@@ -3247,7 +3247,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 
 			var resultString string
 
-			if config.IsMCP {
+			if config.isMCP {
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
@@ -3498,7 +3498,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 
 			var resultString string
 
-			if config.IsMCP {
+			if config.isMCP {
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
@@ -3930,7 +3930,7 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 		t.Run(tc.name, func(t *testing.T) {
 			var resultString string
 
-			if config.IsMCP {
+			if config.isMCP {
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
