@@ -3561,7 +3561,11 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 	}
 }
 
-func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string, tableNameParam string, tableNameAuth string) {
+func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string, tableNameParam string, tableNameAuth string, opts ...ToolExecOption) {
+	config := &ToolExecConfig{}
+	for _, opt := range opts {
+		opt(config)
+	}
 	type tableStatsDetails struct {
 		TableSchema    string `json:"table_schema"`
 		TableName      string `json:"table_name"`
@@ -3658,25 +3662,68 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			const api = "http://127.0.0.1:5000/api/tool/list_table_stats/invoke"
-			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
-			if resp.StatusCode != tc.wantStatusCode {
-				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
-			}
-			if tc.wantStatusCode != http.StatusOK {
-				return
-			}
-
-			var bodyWrapper struct {
-				Result json.RawMessage `json:"result"`
-			}
-			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
-				t.Fatalf("error decoding response wrapper: %v", err)
-			}
-
 			var resultString string
-			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
-				resultString = string(bodyWrapper.Result)
+ 
+			if config.isMCP {
+				reqBytes, _ := io.ReadAll(tc.requestBody)
+				var args map[string]any
+				if len(reqBytes) > 0 {
+					_ = json.Unmarshal(reqBytes, &args)
+				}
+				if args == nil {
+					args = make(map[string]any)
+				}
+ 
+				statusCode, mcpResp, err := InvokeMCPTool(t, "list_table_stats", args, nil)
+				
+				// For the error case (expecting 500 in REST), we expect 200 OK in MCP with IsError=true
+				expectedStatus := tc.wantStatusCode
+				if tc.wantStatusCode == http.StatusInternalServerError {
+					expectedStatus = http.StatusOK
+				}
+ 
+				if statusCode != expectedStatus {
+					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, expectedStatus, err)
+				}
+ 
+				if tc.wantStatusCode == http.StatusInternalServerError {
+					if !mcpResp.Result.IsError {
+						t.Fatalf("expected error result for list_table_stats")
+					}
+					return // Error case, no need to check result body
+				}
+ 
+				if mcpResp.Result.IsError {
+					t.Fatalf("list_table_stats returned error result: %v", mcpResp.Result)
+				}
+ 
+				gotObj := getMCPResultText(t, mcpResp)
+				if len(gotObj) == 0 {
+					resultString = "null"
+				} else {
+					gotBytes, _ := json.Marshal(gotObj)
+					resultString = string(gotBytes)
+				}
+			} else {
+				const api = "http://127.0.0.1:5000/api/tool/list_table_stats/invoke"
+				resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+				if resp.StatusCode != tc.wantStatusCode {
+					t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+				}
+				if tc.wantStatusCode != http.StatusOK {
+					return
+				}
+ 
+				var bodyWrapper struct {
+					Result json.RawMessage `json:"result"`
+				}
+				if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+					t.Fatalf("error decoding response wrapper: %v", err)
+				}
+ 
+				if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+					resultString = string(bodyWrapper.Result)
+				}
 			}
 
 			var got any
@@ -3695,7 +3742,12 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 	}
 }
 
-func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string, opts ...ToolExecOption) {
+	config := &ToolExecConfig{}
+	for _, opt := range opts {
+		opt(config)
+	}
+
 	type tableFragmentationDetails struct {
 		TableSchema             string `json:"table_schema"`
 		TableName               string `json:"table_name"`
@@ -3775,7 +3827,7 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 		t.Run(tc.name, func(t *testing.T) {
 			var resultString string
 
-			if config.IsMCP {
+			if config.isMCP {
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
 				if len(reqBytes) > 0 {
