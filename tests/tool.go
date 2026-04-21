@@ -263,13 +263,14 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name           string
-		toolName       string
-		enabled        bool
-		requestHeader  map[string]string
-		args           map[string]any
-		wantStatusCode int
-		wantBody       string
+		name              string
+		toolName          string
+		enabled           bool
+		requestHeader     map[string]string
+		args              map[string]any
+		wantStatusCode    int
+		wantBody          string
+		wantContentErr    string
 	}{
 		{
 			name:           "invoke my-simple-tool",
@@ -371,22 +372,24 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-required-tool with invalid auth token",
-			toolName:       "my-auth-required-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			args:           map[string]any{},
-			wantBody:       "",
-			wantStatusCode: http.StatusUnauthorized,
+			name:              "Invoke my-auth-required-tool with invalid auth token",
+			toolName:          "my-auth-required-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			args:              map[string]any{},
+			wantBody:          "",
+			wantStatusCode:    http.StatusUnauthorized,
+			wantContentErr:    "invalid token",
 		},
 		{
-			name:           "Invoke my-auth-required-tool without auth token",
-			toolName:       "my-auth-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantBody:       "",
-			wantStatusCode: http.StatusUnauthorized,
+			name:              "Invoke my-auth-required-tool without auth token",
+			toolName:          "my-auth-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantBody:          "",
+			wantStatusCode:    http.StatusUnauthorized,
+			wantContentErr:    "missing access token",
 		},
 		{
 			name:           "Invoke my-client-auth-tool with auth token",
@@ -398,20 +401,22 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-client-auth-tool without auth token",
-			toolName:       "my-client-auth-tool",
-			enabled:        configs.supportClientAuth,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantStatusCode: http.StatusUnauthorized,
+			name:              "Invoke my-client-auth-tool without auth token",
+			toolName:          "my-client-auth-tool",
+			enabled:           configs.supportClientAuth,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantStatusCode:    http.StatusUnauthorized,
+			wantContentErr:    "missing access token",
 		},
 		{
-			name:           "Invoke my-client-auth-tool with invalid auth token",
-			toolName:       "my-client-auth-tool",
-			enabled:        configs.supportClientAuth,
-			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
-			args:           map[string]any{},
-			wantStatusCode: http.StatusUnauthorized,
+			name:              "Invoke my-client-auth-tool with invalid auth token",
+			toolName:          "my-client-auth-tool",
+			enabled:           configs.supportClientAuth,
+			requestHeader:     map[string]string{"Authorization": "Bearer invalid-token"},
+			args:              map[string]any{},
+			wantStatusCode:    http.StatusUnauthorized,
+			wantContentErr:    "invalid token",
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -420,85 +425,41 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				return
 			}
 
-			if configs.IsMCP {
+			if configs.isMCP {
 				// Invoke the tool via MCP protocol
 				mcpStatusCode, mcpResp, err := InvokeMCPTool(t, tc.toolName, tc.args, tc.requestHeader)
 				if err != nil {
 					t.Fatalf("native error executing %s: %s", tc.toolName, err)
 				}
-
-				// Check status code
-				wantStatus := tc.wantStatusCode
-				// MCP might return 200 OK for some error cases that REST returns 401
-				if wantStatus == http.StatusUnauthorized && mcpStatusCode == http.StatusOK {
-					wantStatus = http.StatusOK
-				}
-				if mcpStatusCode != wantStatus {
-					t.Errorf("StatusCode mismatch: got %d, want %d", mcpStatusCode, wantStatus)
+				if mcpStatusCode != http.StatusOK {
+					t.Fatalf("expected status ok")
 				}
 
-				if tc.wantBody == "" {
+				if tc.wantContentErr != "" {
+					AssertMCPError(t, mcpResp, tc.wantContentErr)
 					return
 				}
-
-				// Extract error text if any
-				var errText string
-				if mcpResp.Error != nil {
-					errText = mcpResp.Error.Message
-				} else if mcpResp.Result.IsError {
-					for _, content := range mcpResp.Result.Content {
-						if content.Type == "text" {
-							errText += content.Text
-						}
-					}
-				}
-
-				if errText != "" {
-					// We got an error! Check if we expected it.
-					var wantErrStr string
-					var wantJSON any
-					errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
-					if errWant == nil {
-						wantMap, okWant := wantJSON.(map[string]any)
-						if okWant {
-							wantErrStr, _ = wantMap["error"].(string)
-						}
-					}
-					if wantErrStr == "" {
-						wantErrStr = tc.wantBody
-					}
-
-					if !strings.Contains(errText, wantErrStr) {
-						t.Fatalf("expected error text containing %q, got %q", wantErrStr, errText)
-					}
-					return // Success for this error test case
-				}
-
-				// If no error found, but it's marked as error result, it's unexpected error without text
 				if mcpResp.Result.IsError {
-					t.Fatalf("%s returned error result without text: %v", tc.toolName, mcpResp.Result)
+					t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
 				}
-
 				gotObj := getMCPResultText(t, mcpResp)
-				gotBytes, _ := json.Marshal(gotObj)
-				gotStr := string(gotBytes)
-
-				if strings.HasPrefix(strings.TrimSpace(tc.wantBody), "[") || strings.HasPrefix(strings.TrimSpace(tc.wantBody), "{") {
-					// It looks like JSON, let's do JSON comparison
+				gotBytes, err := json.Marshal(gotObj)
+				if err != nil {
+					t.Fatalf("error marshaling result object")
+				}
+				if string(gotBytes) != tc.wantBody {
 					var gotJSON, wantJSON any
-					_ = json.Unmarshal([]byte(gotStr), &gotJSON)
-					_ = json.Unmarshal([]byte(tc.wantBody), &wantJSON)
+					errGot := json.Unmarshal(gotBytes, &gotJSON)
+					errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
 
-					if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-						t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, gotStr, tc.wantBody)
-					}
-				} else {
-					// Plain string, use strings.Contains as suggested by user
-					if !strings.Contains(gotStr, tc.wantBody) {
-						t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBody)
+					if errGot == nil && errWant == nil {
+						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, string(gotBytes), tc.wantBody)
+						}
+					} else {
+						t.Fatalf("unexpected value: got %q, want %q", string(gotBytes), tc.wantBody)
 					}
 				}
-
 			} else {
 				// Legacy REST path
 				api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
@@ -586,6 +547,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		requestHeader map[string]string
 		args          map[string]any
 		want          string
+		wantContentErr string
 		isErr         bool
 	}{
 		{
@@ -691,6 +653,11 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						}
 						t.Fatalf("response status code is not 200, got %d, error: %v", statusCode, err)
 					}
+ 
+					if tc.wantContentErr != "" {
+						AssertMCPError(t, mcpResp, tc.wantContentErr)
+						return
+					}
 
 					if mcpResp.Result.IsError {
 						if tc.isErr {
@@ -703,19 +670,17 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 					gotBytes, _ := json.Marshal(gotObj)
 					gotStr := string(gotBytes)
 
-					if strings.HasPrefix(strings.TrimSpace(tc.want), "[") || strings.HasPrefix(strings.TrimSpace(tc.want), "{") {
-						// It looks like JSON, let's do JSON comparison
+					if gotStr != tc.want {
 						var gotJSON, wantJSON any
-						_ = json.Unmarshal([]byte(gotStr), &gotJSON)
-						_ = json.Unmarshal([]byte(tc.want), &wantJSON)
+						errGot := json.Unmarshal([]byte(gotStr), &gotJSON)
+						errWant := json.Unmarshal([]byte(tc.want), &wantJSON)
 
-						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, gotStr, tc.want)
-						}
-					} else {
-						// Plain string, use strings.Contains as suggested by user
-						if !strings.Contains(gotStr, tc.want) {
-							t.Fatalf(`expected %q to contain %q`, gotStr, tc.want)
+						if errGot == nil && errWant == nil {
+							if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
+								t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, gotStr, tc.want)
+							}
+						} else {
+							t.Fatalf("unexpected value: got %q, want %q", gotStr, tc.want)
 						}
 					}
 

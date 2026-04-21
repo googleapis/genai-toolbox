@@ -28,7 +28,7 @@ type InvokeTestConfig struct {
 	supportArrayParam        bool
 	supportClientAuth        bool
 	supportSelect1Auth       bool
-	IsMCP                    bool
+	isMCP                    bool
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
@@ -36,7 +36,7 @@ type InvokeTestOption func(*InvokeTestConfig)
 // WithMCP enables the MCP routing for standard Tool Invoke tests
 func WithMCP() InvokeTestOption {
 	return func(c *InvokeTestConfig) {
-		c.IsMCP = true
+		c.isMCP = true
 	}
 }
 
@@ -172,7 +172,7 @@ type ExecuteSqlTestConfig struct {
 	createWant       string
 	dropWant         string
 	selectEmptyWant  string
-	IsMCP            bool
+	isMCP            bool
 }
 
 type ExecuteSqlOption func(*ExecuteSqlTestConfig)
@@ -188,7 +188,7 @@ func WithSelect1Statement(s string) ExecuteSqlOption {
 // WithMCPSql enables the MCP routing for ExecuteSql tests
 func WithMCPSql() ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
-		c.IsMCP = true
+		c.isMCP = true
 	}
 }
 
@@ -231,7 +231,7 @@ type TemplateParameterTestConfig struct {
 	supportDdl          bool
 	supportInsert       bool
 	supportSelectFields bool
-	IsMCP               bool
+	isMCP               bool
 }
 
 type TemplateParamOption func(*TemplateParameterTestConfig)
@@ -240,7 +240,7 @@ type TemplateParamOption func(*TemplateParameterTestConfig)
 // e.g. tests.RunToolInvokeWithTemplateParameters(t, tableName, tests.WithMCPTemplate())
 func WithMCPTemplate() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
-		c.IsMCP = true
+		c.isMCP = true
 	}
 }
 
@@ -344,7 +344,7 @@ func DisableSelectFilterTest() TemplateParamOption {
 
 // ToolExecConfig holds the configuration for executing prebuilt tool tests.
 type ToolExecConfig struct {
-	IsMCP bool
+	isMCP bool
 }
 
 // ToolExecOption is a functional option used to configure a ToolExecConfig.
@@ -354,6 +354,6 @@ type ToolExecOption func(*ToolExecConfig)
 // instead of the Native Toolbox REST API.
 func WithMCPExec() ToolExecOption {
 	return func(c *ToolExecConfig) {
-		c.IsMCP = true
+		c.isMCP = true
 	}
 }
