@@ -75,4 +75,4 @@ jobs:
           mode: server
           url: 'http://localhost:5000/mcp'
           suite: active
-          expected-failures: conformance-baseline.yml
+          expected-failures: tests/conformance-baseline.yml
