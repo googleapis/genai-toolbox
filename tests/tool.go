@@ -263,14 +263,14 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name              string
-		toolName          string
-		enabled           bool
-		requestHeader     map[string]string
-		args              map[string]any
-		wantStatusCode    int
-		wantBody          string
-		wantContentErr    string
+		name           string
+		toolName       string
+		enabled        bool
+		requestHeader  map[string]string
+		args           map[string]any
+		wantStatusCode int
+		wantBody       string
+		wantContentErr string
 	}{
 		{
 			name:           "invoke my-simple-tool",
@@ -372,24 +372,24 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:              "Invoke my-auth-required-tool with invalid auth token",
-			toolName:          "my-auth-required-tool",
-			enabled:           true,
-			requestHeader:     map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			args:              map[string]any{},
-			wantBody:          "",
-			wantStatusCode:    http.StatusUnauthorized,
-			wantContentErr:    "invalid token",
+			name:           "Invoke my-auth-required-tool with invalid auth token",
+			toolName:       "my-auth-required-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			args:           map[string]any{},
+			wantBody:       "",
+			wantStatusCode: http.StatusUnauthorized,
+			wantContentErr: "invalid token",
 		},
 		{
-			name:              "Invoke my-auth-required-tool without auth token",
-			toolName:          "my-auth-tool",
-			enabled:           true,
-			requestHeader:     map[string]string{},
-			args:              map[string]any{},
-			wantBody:          "",
-			wantStatusCode:    http.StatusUnauthorized,
-			wantContentErr:    "missing access token",
+			name:           "Invoke my-auth-required-tool without auth token",
+			toolName:       "my-auth-tool",
+			enabled:        true,
+			requestHeader:  map[string]string{},
+			args:           map[string]any{},
+			wantBody:       "",
+			wantStatusCode: http.StatusUnauthorized,
+			wantContentErr: "missing access token",
 		},
 		{
 			name:           "Invoke my-client-auth-tool with auth token",
@@ -401,22 +401,22 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:              "Invoke my-client-auth-tool without auth token",
-			toolName:          "my-client-auth-tool",
-			enabled:           configs.supportClientAuth,
-			requestHeader:     map[string]string{},
-			args:              map[string]any{},
-			wantStatusCode:    http.StatusUnauthorized,
-			wantContentErr:    "missing access token",
+			name:           "Invoke my-client-auth-tool without auth token",
+			toolName:       "my-client-auth-tool",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{},
+			args:           map[string]any{},
+			wantStatusCode: http.StatusUnauthorized,
+			wantContentErr: "missing access token",
 		},
 		{
-			name:              "Invoke my-client-auth-tool with invalid auth token",
-			toolName:          "my-client-auth-tool",
-			enabled:           configs.supportClientAuth,
-			requestHeader:     map[string]string{"Authorization": "Bearer invalid-token"},
-			args:              map[string]any{},
-			wantStatusCode:    http.StatusUnauthorized,
-			wantContentErr:    "invalid token",
+			name:           "Invoke my-client-auth-tool with invalid auth token",
+			toolName:       "my-client-auth-tool",
+			enabled:        configs.supportClientAuth,
+			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
+			args:           map[string]any{},
+			wantStatusCode: http.StatusUnauthorized,
+			wantContentErr: "invalid token",
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -539,16 +539,16 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name          string
-		enabled       bool
-		ddl           bool
-		insert        bool
-		toolName      string
-		requestHeader map[string]string
-		args          map[string]any
-		want          string
+		name           string
+		enabled        bool
+		ddl            bool
+		insert         bool
+		toolName       string
+		requestHeader  map[string]string
+		args           map[string]any
+		want           string
 		wantContentErr string
-		isErr         bool
+		isErr          bool
 	}{
 		{
 			name:          "invoke create-table-templateParams-tool",
@@ -653,7 +653,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 						}
 						t.Fatalf("response status code is not 200, got %d, error: %v", statusCode, err)
 					}
- 
+
 					if tc.wantContentErr != "" {
 						AssertMCPError(t, mcpResp, tc.wantContentErr)
 						return
@@ -3663,7 +3663,7 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			var resultString string
- 
+
 			if config.isMCP {
 				reqBytes, _ := io.ReadAll(tc.requestBody)
 				var args map[string]any
@@ -3673,30 +3673,30 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 				if args == nil {
 					args = make(map[string]any)
 				}
- 
+
 				statusCode, mcpResp, err := InvokeMCPTool(t, "list_table_stats", args, nil)
-				
+
 				// For the error case (expecting 500 in REST), we expect 200 OK in MCP with IsError=true
 				expectedStatus := tc.wantStatusCode
 				if tc.wantStatusCode == http.StatusInternalServerError {
 					expectedStatus = http.StatusOK
 				}
- 
+
 				if statusCode != expectedStatus {
 					t.Fatalf("wrong status code: got %d, want %d, err: %v", statusCode, expectedStatus, err)
 				}
- 
+
 				if tc.wantStatusCode == http.StatusInternalServerError {
 					if !mcpResp.Result.IsError {
 						t.Fatalf("expected error result for list_table_stats")
 					}
 					return // Error case, no need to check result body
 				}
- 
+
 				if mcpResp.Result.IsError {
 					t.Fatalf("list_table_stats returned error result: %v", mcpResp.Result)
 				}
- 
+
 				gotObj := getMCPResultText(t, mcpResp)
 				if len(gotObj) == 0 {
 					resultString = "null"
@@ -3713,14 +3713,14 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 				if tc.wantStatusCode != http.StatusOK {
 					return
 				}
- 
+
 				var bodyWrapper struct {
 					Result json.RawMessage `json:"result"`
 				}
 				if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
 					t.Fatalf("error decoding response wrapper: %v", err)
 				}
- 
+
 				if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
 					resultString = string(bodyWrapper.Result)
 				}
