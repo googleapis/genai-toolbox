@@ -458,7 +458,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				if wantStatus != http.StatusOK {
 					return
 				}
- 
+
 				if tc.wantContentErr != "" {
 					AssertMCPError(t, mcpResp, tc.wantContentErr)
 					return
@@ -479,7 +479,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 					var gotJSON, wantJSON any
 					errGot := json.Unmarshal(gotBytes, &gotJSON)
 					errWant := json.Unmarshal([]byte(wantResultBody), &wantJSON)
- 
+
 					if errGot == nil && errWant == nil {
 						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
 							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, string(gotBytes), wantResultBody)
