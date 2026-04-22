@@ -10,21 +10,20 @@ The primary way to configure Toolbox is through the `tools.yaml` file. If you
 have multiple files, you can tell toolbox which to load with the `--config
 tools.yaml` flag.
 
-
 ### Using Environment Variables
 
 To avoid hardcoding certain secret fields like passwords, usernames, API keys
 etc., you could use environment variables instead with the format `${ENV_NAME}`.
 
 ```yaml
-  user: ${USER_NAME}
-  password: ${PASSWORD}
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 A default value can be specified like `${ENV_NAME:default}`.
 
 ```yaml
-  port: ${DB_PORT:3306}
+port: ${DB_PORT:3306}
 ```
 
 ### Sources
@@ -91,7 +90,7 @@ tools:
 
 ### Prompts
 
-The `prompt` kind  of your `tools.yaml` defines the templates containing
+The `prompt` kind of your `tools.yaml` defines the templates containing
 structured messages and instructions for interacting with language models.
 
 ```yaml
@@ -107,6 +106,40 @@ arguments:
 
 For more details on configuring different types of prompts, see the
 [Prompts](./prompts/_index.md).
+
+### Read-Only Configuration
+
+Toolbox provides mechanisms to ensure data safety and prevent unintended modifications. Here is how you can configure read-only access and ensure safety:
+
+#### Custom Tools and SQL Injection Protection
+
+When creating custom tools (e.g., `postgres-sql` or `mysql-sql`), you should protect them from SQL injections by using parameterized queries. This ensures that the tools only execute the intended query structure and cannot be manipulated to perform data modification operations.
+
+- **Always use placeholders** (like `$1`, `$2` for Postgres or `?` for MySQL) to pass parameters to your SQL statements.
+- **Avoid constructing dynamic SQL** that interpolates user input directly.
+
+**Example (Safe Parameterized Query):**
+
+```yaml
+kind: tool
+name: search-hotels-by-name
+type: postgres-sql
+source: my-pg-source
+description: Search for hotels based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the hotel.
+statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+```
+
+#### BigQuery Source Read-Only Mode
+
+For BigQuery sources, you can configure read-only access at the source level. This provides a hard boundary at the source connection level, ensuring that no modification operations can be performed regardless of the tool configuration.
+
+#### Database Permissions
+
+You can further increase safety by making sure the credentials used by Toolbox only have read-only permissions to the database. This ensures that even if a tool is misconfigured or compromised, the database will reject any data modification attempts. This is the most effective way to enforce read-only behavior.
 
 ---
 

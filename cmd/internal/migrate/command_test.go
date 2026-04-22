@@ -52,7 +52,8 @@ sources:
     user: my_user
     password: my_pass`
 
-	toolsFileContentNew := `kind: source
+	toolsFileContentNew := `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -74,7 +75,8 @@ tools:
         type: string
         description: some description`
 
-	toolsFileContent2New := `kind: tool
+	toolsFileContent2New := `
+kind: tool
 name: example_tool2
 type: postgres-sql
 source: my-pg-instance
@@ -268,7 +270,8 @@ sources:
     password: my_pass
 `
 
-	toolsFileContentNew := `kind: source
+	toolsFileContentNew := `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -283,18 +286,23 @@ tools:
   example_tool2:
     kind: postgres-sql
     source: my-pg-instance
-    description: some description
+    description: |
+      some description
+      - string
     statement: SELECT * FROM SQL_STATEMENT;
     parameters:
       - name: country
         type: string
         description: some description`
 
-	toolsFileContent2New := `kind: tool
+	toolsFileContent2New := `
+kind: tool
 name: example_tool2
 type: postgres-sql
 source: my-pg-instance
-description: some description
+description: |
+  some description
+  - string
 statement: SELECT * FROM SQL_STATEMENT;
 parameters:
 - name: country

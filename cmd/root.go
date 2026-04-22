@@ -87,6 +87,7 @@ func Execute() {
 	opts := internal.NewToolboxOptions()
 
 	if err := NewCommand(opts).Execute(); err != nil {
+		fmt.Fprintf(opts.IOStreams.ErrOut, "Error: %v\n", err)
 		exit := 1
 		os.Exit(exit)
 	}
