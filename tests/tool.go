@@ -263,160 +263,180 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
-		name           string
-		toolName       string
-		enabled        bool
-		requestHeader  map[string]string
-		args           map[string]any
-		wantStatusCode int
-		wantBody       string
-		wantContentErr string
+		name              string
+		toolName          string
+		enabled           bool
+		requestHeader     map[string]string
+		args              map[string]any
+		wantStatusCode    int
+		wantStatusCodeMCP int
+		wantBody          string
+		wantBodyMCP       string
+		wantContentErr    string
 	}{
 		{
-			name:           "invoke my-simple-tool",
-			toolName:       "my-simple-tool",
-			enabled:        configs.supportSelect1Want,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantBody:       select1Want,
-			wantStatusCode: http.StatusOK,
+			name:              "invoke my-simple-tool",
+			toolName:          "my-simple-tool",
+			enabled:           configs.supportSelect1Want,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantBody:          select1Want,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "invoke my-tool",
-			toolName:       "my-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{"id": 3, "name": "Alice"},
-			wantBody:       configs.myToolId3NameAliceWant,
-			wantStatusCode: http.StatusOK,
+			name:              "invoke my-tool",
+			toolName:          "my-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{"id": 3, "name": "Alice"},
+			wantBody:          configs.myToolId3NameAliceWant,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "invoke my-tool-by-id with nil response",
-			toolName:       "my-tool-by-id",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{"id": 4},
-			wantBody:       configs.myToolById4Want,
-			wantStatusCode: http.StatusOK,
+			name:              "invoke my-tool-by-id with nil response",
+			toolName:          "my-tool-by-id",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{"id": 4},
+			wantBody:          configs.myToolById4Want,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "invoke my-tool-by-name with nil response",
-			toolName:       "my-tool-by-name",
-			enabled:        configs.supportOptionalNullParam,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantBody:       configs.nullWant,
-			wantStatusCode: http.StatusOK,
+			name:              "invoke my-tool-by-name with nil response",
+			toolName:          "my-tool-by-name",
+			enabled:           configs.supportOptionalNullParam,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantBody:          configs.nullWant,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-tool without parameters",
-			toolName:       "my-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantBody:       `{"error":"parameter \"id\" is required"}`,
-			wantStatusCode: http.StatusOK,
+			name:              "Invoke my-tool without parameters",
+			toolName:          "my-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantBody:          `{"error":"parameter \"id\" is required"}`,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-tool with insufficient parameters",
-			toolName:       "my-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{"id": 1},
-			wantBody:       `{"error":"parameter \"name\" is required"}`,
-			wantStatusCode: http.StatusOK,
+			name:              "Invoke my-tool with insufficient parameters",
+			toolName:          "my-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{"id": 1},
+			wantBody:          `{"error":"parameter \"name\" is required"}`,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "invoke my-array-tool",
-			toolName:       "my-array-tool",
-			enabled:        configs.supportArrayParam,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{"idArray": []any{1, 2, 3}, "nameArray": []any{"Alice", "Sid", "RandomName"}, "cmdArray": []any{"HGETALL", "row3"}},
-			wantBody:       configs.myArrayToolWant,
-			wantStatusCode: http.StatusOK,
+			name:              "invoke my-array-tool",
+			toolName:          "my-array-tool",
+			enabled:           configs.supportArrayParam,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{"idArray": []any{1, 2, 3}, "nameArray": []any{"Alice", "Sid", "RandomName"}, "cmdArray": []any{"HGETALL", "row3"}},
+			wantBody:          configs.myArrayToolWant,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-tool with auth token",
-			toolName:       "my-auth-tool",
-			enabled:        configs.supportSelect1Auth,
-			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			args:           map[string]any{},
-			wantBody:       configs.myAuthToolWant,
-			wantStatusCode: http.StatusOK,
+			name:              "Invoke my-auth-tool with auth token",
+			toolName:          "my-auth-tool",
+			enabled:           configs.supportSelect1Auth,
+			requestHeader:     map[string]string{"my-google-auth_token": idToken},
+			args:              map[string]any{},
+			wantBody:          configs.myAuthToolWant,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-tool with invalid auth token",
-			toolName:       "my-auth-tool",
-			enabled:        configs.supportSelect1Auth,
-			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			args:           map[string]any{},
-			wantBody:       "",
-			wantStatusCode: http.StatusUnauthorized,
+			name:              "Invoke my-auth-tool with invalid auth token",
+			toolName:          "my-auth-tool",
+			enabled:           configs.supportSelect1Auth,
+			requestHeader:     map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			args:              map[string]any{},
+			wantBody:          "",
+			wantBodyMCP:       "[]",
+			wantStatusCode:    http.StatusUnauthorized,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-tool without auth token",
-			toolName:       "my-auth-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantBody:       "",
-			wantStatusCode: http.StatusUnauthorized,
+			name:              "Invoke my-auth-tool without auth token",
+			toolName:          "my-auth-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantBody:          "",
+			wantBodyMCP:       "[]",
+			wantStatusCode:    http.StatusUnauthorized,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-required-tool with auth token",
-			toolName:       "my-auth-required-tool",
-			enabled:        configs.supportSelect1Auth,
-			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			args:           map[string]any{},
-			wantBody:       select1Want,
-			wantStatusCode: http.StatusOK,
+			name:              "Invoke my-auth-required-tool with auth token",
+			toolName:          "my-auth-required-tool",
+			enabled:           configs.supportSelect1Auth,
+			requestHeader:     map[string]string{"my-google-auth_token": idToken},
+			args:              map[string]any{},
+			wantBody:          select1Want,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-required-tool with invalid auth token",
-			toolName:       "my-auth-required-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			args:           map[string]any{},
-			wantBody:       "",
-			wantStatusCode: http.StatusUnauthorized,
-			wantContentErr: "invalid token",
+			name:              "Invoke my-auth-required-tool with invalid auth token",
+			toolName:          "my-auth-required-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			args:              map[string]any{},
+			wantBody:          "",
+			wantStatusCode:    http.StatusUnauthorized,
+			wantStatusCodeMCP: http.StatusUnauthorized,
+			wantContentErr:    "invalid token",
 		},
 		{
-			name:           "Invoke my-auth-required-tool without auth token",
-			toolName:       "my-auth-tool",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantBody:       "",
-			wantStatusCode: http.StatusUnauthorized,
-			wantContentErr: "missing access token",
+			name:              "Invoke my-auth-required-tool without auth token",
+			toolName:          "my-auth-tool",
+			enabled:           true,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantBody:          "",
+			wantStatusCode:    http.StatusUnauthorized,
+			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    "missing or invalid authentication header",
 		},
 		{
-			name:           "Invoke my-client-auth-tool with auth token",
-			toolName:       "my-client-auth-tool",
-			enabled:        configs.supportClientAuth,
-			requestHeader:  map[string]string{"Authorization": accessToken},
-			args:           map[string]any{},
-			wantBody:       select1Want,
-			wantStatusCode: http.StatusOK,
+			name:              "Invoke my-client-auth-tool with auth token",
+			toolName:          "my-client-auth-tool",
+			enabled:           configs.supportClientAuth,
+			requestHeader:     map[string]string{"Authorization": accessToken},
+			args:              map[string]any{},
+			wantBody:          select1Want,
+			wantStatusCode:    http.StatusOK,
+			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-client-auth-tool without auth token",
-			toolName:       "my-client-auth-tool",
-			enabled:        configs.supportClientAuth,
-			requestHeader:  map[string]string{},
-			args:           map[string]any{},
-			wantStatusCode: http.StatusUnauthorized,
-			wantContentErr: "missing access token",
+			name:              "Invoke my-client-auth-tool without auth token",
+			toolName:          "my-client-auth-tool",
+			enabled:           configs.supportClientAuth,
+			requestHeader:     map[string]string{},
+			args:              map[string]any{},
+			wantStatusCode:    http.StatusUnauthorized,
+			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    "missing access token",
 		},
 		{
-			name:           "Invoke my-client-auth-tool with invalid auth token",
-			toolName:       "my-client-auth-tool",
-			enabled:        configs.supportClientAuth,
-			requestHeader:  map[string]string{"Authorization": "Bearer invalid-token"},
-			args:           map[string]any{},
-			wantStatusCode: http.StatusUnauthorized,
-			wantContentErr: "invalid token",
+			name:              "Invoke my-client-auth-tool with invalid auth token",
+			toolName:          "my-client-auth-tool",
+			enabled:           configs.supportClientAuth,
+			requestHeader:     map[string]string{"Authorization": "Bearer invalid-token"},
+			args:              map[string]any{},
+			wantStatusCode:    http.StatusUnauthorized,
+			wantStatusCodeMCP: http.StatusOK,
+			wantContentErr:    "invalid token",
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -431,10 +451,14 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				if err != nil {
 					t.Fatalf("native error executing %s: %s", tc.toolName, err)
 				}
-				if mcpStatusCode != http.StatusOK {
-					t.Fatalf("expected status ok")
+				wantStatus := tc.wantStatusCodeMCP
+				if mcpStatusCode != wantStatus {
+					t.Fatalf("expected status %d, got %d", wantStatus, mcpStatusCode)
 				}
-
+				if wantStatus != http.StatusOK {
+					return
+				}
+ 
 				if tc.wantContentErr != "" {
 					AssertMCPError(t, mcpResp, tc.wantContentErr)
 					return
@@ -447,17 +471,21 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 				if err != nil {
 					t.Fatalf("error marshaling result object")
 				}
-				if string(gotBytes) != tc.wantBody {
+				wantResultBody := tc.wantBody
+				if tc.wantBodyMCP != "" {
+					wantResultBody = tc.wantBodyMCP
+				}
+				if string(gotBytes) != wantResultBody {
 					var gotJSON, wantJSON any
 					errGot := json.Unmarshal(gotBytes, &gotJSON)
-					errWant := json.Unmarshal([]byte(tc.wantBody), &wantJSON)
-
+					errWant := json.Unmarshal([]byte(wantResultBody), &wantJSON)
+ 
 					if errGot == nil && errWant == nil {
 						if diff := cmp.Diff(wantJSON, gotJSON); diff != "" {
-							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, string(gotBytes), tc.wantBody)
+							t.Fatalf("unexpected JSON value mismatch (-want +got):\n%s\nRaw got: %s\nRaw want: %s", diff, string(gotBytes), wantResultBody)
 						}
 					} else {
-						t.Fatalf("unexpected value: got %q, want %q", string(gotBytes), tc.wantBody)
+						t.Fatalf("unexpected value: got %q, want %q", string(gotBytes), wantResultBody)
 					}
 				}
 			} else {

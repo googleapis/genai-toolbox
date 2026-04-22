@@ -130,6 +130,21 @@ func TestCloudSQLMySQLMCPListTools(t *testing.T) {
 			},
 		},
 		{
+			Name:        "list_table_stats",
+			Description: "Lists table stats in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"connected_schema": map[string]any{"description": "(Optional) The connected db", "type": "string"},
+					"limit":            map[string]any{"default": float64(10), "description": "(Optional) Max rows to return, default is 10", "type": "integer"},
+					"sort_by":          map[string]any{"default": "", "description": "(Optional) The column to sort by", "type": "string"},
+					"table_name":       map[string]any{"default": "", "description": "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", "type": "string"},
+					"table_schema":     map[string]any{"default": "", "description": "(Optional) The database where statistics  is to be executed. Check all tables visible to the current user if not specified", "type": "string"},
+				},
+				"required": []any{},
+			},
+		},
+		{
 			Name:        "get_query_plan",
 			Description: "Gets the query plan for a SQL statement.",
 			InputSchema: map[string]any{
