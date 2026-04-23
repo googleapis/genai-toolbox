@@ -33,5 +33,4 @@ server:
   - resources-unsubscribe
   - prompts-get-embedded-resource
   - prompts-get-with-image
-  - dns-rebinding-protection
   - server-sse-multiple-streams
