@@ -20,16 +20,21 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
     > To always run the latest version, update the MCP server configuration to use:
     > ```npx -y @toolbox-sdk/server@latest```. 
 
-3.  Create your [`tools.yaml` configuration file](https://mcp-toolbox.dev/documentation/configuration/).
+2.  Create your [`tools.yaml` configuration file](https://mcp-toolbox.dev/documentation/configuration/).
 
-4.  In the configuration window, enter the full absolute path to your `tools.yaml` file and click **Save**.
+3.  In the configuration window, enter the full absolute path to your `tools.yaml` file and click **Save**.
 
 > [!NOTE]
 > If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 
-Interact with your custom tools using natural language.
+Interact with your custom tools using natural language queries.
+
+For example:
+- "Show all users from the database"
+- "Find orders placed in the last 7 days"
+- "List all tables in the database"
 
 ## Custom MCP Server Configuration
 
