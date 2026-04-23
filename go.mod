@@ -16,6 +16,7 @@ require (
 	cloud.google.com/go/logging v1.16.0
 	cloud.google.com/go/longrunning v0.11.0
 	cloud.google.com/go/spanner v1.89.0
+	cloud.google.com/go/storage v1.62.0
 	github.com/ClickHouse/clickhouse-go/v2 v2.45.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.56.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.32.0
