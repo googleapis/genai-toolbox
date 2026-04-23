@@ -297,6 +297,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgresreplicationstats"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/redis"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/scylladb/scyllacql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/serverlesssparkcancelbatch"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/serverlesssparkcreatepysparkbatch"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/serverlesssparkcreatesparkbatch"
