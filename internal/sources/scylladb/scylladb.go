@@ -117,7 +117,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params parameters
 	}
 
 	if err := iter.Close(); err != nil {
-		return nil, fmt.Errorf("unable to parse rows: %w", err)
+		return nil, fmt.Errorf("failed to execute ScyllaDB query: %w", err)
 	}
 	return out, nil
 }
