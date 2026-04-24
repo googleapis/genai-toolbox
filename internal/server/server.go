@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -535,7 +536,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 }
 
 // Listen starts a listener for the given Server instance.
-func (s *Server) Listen(ctx context.Context) error {
+func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -543,11 +544,26 @@ func (s *Server) Listen(ctx context.Context) error {
 		return fmt.Errorf("server is already listening: %s", s.listener.Addr().String())
 	}
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
-	var err error
-	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
+	if err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
-	s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+
+	if certFile != "" || keyFile != "" {
+		// Load the certificates
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			ln.Close()
+			return fmt.Errorf("failed to load TLS key pair (cert: %q, key: %q): %w", certFile, keyFile, err)
+		}
+		// Wrap the listener with TLS
+		config := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+		s.listener = tls.NewListener(ln, config)
+		s.logger.DebugContext(ctx, fmt.Sprintf("secure server listening on %s", s.srv.Addr))
+	} else {
+		s.listener = ln
+		s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+	}
 	return nil
 }
 
