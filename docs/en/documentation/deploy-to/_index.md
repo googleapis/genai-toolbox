@@ -17,3 +17,5 @@ Choose your preferred deployment platform below to get started:
 {{< notice tip >}}
 **Production Security:** When moving to production, never hardcode passwords or API keys directly into your `tools.yaml`. Always use environment variable substitution and inject those values securely through your deployment platform's secret manager.
 {{< /notice >}}
+
+{{< production-security-warning >}}
