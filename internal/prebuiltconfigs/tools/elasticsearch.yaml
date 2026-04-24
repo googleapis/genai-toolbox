@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  elasticsearch-source:
-    kind: elasticsearch
-    addresses:
-      - ${ELASTICSEARCH_HOST}
-    apikey: ${ELASTICSEARCH_APIKEY}
-
+kind: source
+name: elasticsearch-source
+type: elasticsearch
+addresses:
+- ${ELASTICSEARCH_HOST}
+apikey: ${ELASTICSEARCH_APIKEY}
+---
+kind: tool
+name: execute_esql_query
+type: elasticsearch-esql
+source: elasticsearch-source
+description: Use this tool to execute ES|QL queries.
+parameters:
+- name: query
+  type: string
+  description: The ES|QL query to execute.
+---
+kind: toolset
+name: elasticsearch-tools
 tools:
-  execute_esql_query:
-    kind: elasticsearch-esql
-    source: elasticsearch-source
-    description: Use this tool to execute ES|QL queries.
-    parameters:
-      - name: query
-        type: string
-        description: The ES|QL query to execute.
-toolsets:
-  elasticsearch-tools:
-    - execute_esql_query
+- execute_esql_query

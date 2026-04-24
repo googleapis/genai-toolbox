@@ -12,45 +12,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  serverless-spark-source:
-    kind: serverless-spark
-    project: ${SERVERLESS_SPARK_PROJECT}
-    location: ${SERVERLESS_SPARK_LOCATION}
-
+kind: source
+name: serverless-spark-source
+type: serverless-spark
+project: ${SERVERLESS_SPARK_PROJECT}
+location: ${SERVERLESS_SPARK_LOCATION}
+---
+kind: tool
+name: list_batches
+type: serverless-spark-list-batches
+source: serverless-spark-source
+---
+kind: tool
+name: get_batch
+type: serverless-spark-get-batch
+source: serverless-spark-source
+---
+kind: tool
+name: cancel_batch
+type: serverless-spark-cancel-batch
+source: serverless-spark-source
+---
+kind: tool
+name: create_pyspark_batch
+type: serverless-spark-create-pyspark-batch
+source: serverless-spark-source
+---
+kind: tool
+name: create_spark_batch
+type: serverless-spark-create-spark-batch
+source: serverless-spark-source
+---
+kind: tool
+name: get_session_template
+type: serverless-spark-get-session-template
+source: serverless-spark-source
+---
+kind: tool
+name: list_sessions
+type: serverless-spark-list-sessions
+source: serverless-spark-source
+---
+kind: tool
+name: get_session
+type: serverless-spark-get-session
+source: serverless-spark-source
+---
+kind: toolset
+name: serverless_spark_tools
 tools:
-  list_batches:
-    kind: serverless-spark-list-batches
-    source: serverless-spark-source
-  get_batch:
-    kind: serverless-spark-get-batch
-    source: serverless-spark-source
-  cancel_batch:
-    kind: serverless-spark-cancel-batch
-    source: serverless-spark-source
-  create_pyspark_batch:
-    kind: serverless-spark-create-pyspark-batch
-    source: serverless-spark-source
-  create_spark_batch:
-    kind: serverless-spark-create-spark-batch
-    source: serverless-spark-source
-  get_session_template:
-    kind: serverless-spark-get-session-template
-    source: serverless-spark-source
-  list_sessions:
-    kind: serverless-spark-list-sessions
-    source: serverless-spark-source
-  get_session:
-    kind: serverless-spark-get-session
-    source: serverless-spark-source
-
-toolsets:
-  serverless_spark_tools:
-    - list_batches
-    - get_batch
-    - cancel_batch
-    - create_pyspark_batch
-    - create_spark_batch
-    - get_session_template
-    - list_sessions
-    - get_session
+- list_batches
+- get_batch
+- cancel_batch
+- create_pyspark_batch
+- create_spark_batch
+- get_session_template
+- list_sessions
+- get_session
