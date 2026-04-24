@@ -15,7 +15,7 @@
 kind: source
 name: test-sqlite
 type: sqlite
-database: tests/test.db
+database: tests/conformance/test.db
 ---
 kind: tool
 name: test_simple_text

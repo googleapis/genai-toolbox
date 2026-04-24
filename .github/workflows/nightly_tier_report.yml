@@ -38,7 +38,7 @@ jobs:
       - name: Start MCP Toolbox Server
         run: |
           go build -o toolbox
-          ./toolbox --allowed-hosts localhost --config tests/tools.yaml &
+          ./toolbox --allowed-hosts localhost --config tests/conformance/tools.yaml &
           sleep 5 # Give the server a moment to bind to port 5000
 
       - name: Setup Node
