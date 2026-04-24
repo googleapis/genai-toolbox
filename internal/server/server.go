@@ -391,7 +391,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allow any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommend to use `--allowed-origins` with specific local addresses.")
+		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -404,7 +404,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Use(cors.Handler(corsOpts))
 	// validate hosts for DNS rebinding attacks
 	if slices.Contains(cfg.AllowedHosts, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) hosts allows any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of wehther you are in production or local development environment. For improved security, use the `--allowed-hosts` flag to specify trusted domains.")
+		s.logger.WarnContext(ctx, "wildcard (*) hosts allow any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of whether you are in a production or local development environment. For improved security, use the --allowed-hosts flag to specify trusted domains.")
 	}
 	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
 	for _, h := range cfg.AllowedHosts {
