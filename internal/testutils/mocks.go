@@ -20,9 +20,11 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // MockTool is used to mock tools in tests
@@ -179,4 +181,32 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 		Args:        args,
 		manifest:    manifest,
 	}
+}
+
+// MockSource is used to mock sources in tests
+type MockSource struct {
+	Name string
+	Type string
+}
+
+func (m MockSource) SourceType() string {
+	return m.Type
+}
+
+func (m MockSource) ToConfig() sources.SourceConfig {
+	return MockSourceConfig(m)
+}
+
+// MockSourceConfig is used to mock source configs in tests
+type MockSourceConfig struct {
+	Name string
+	Type string
+}
+
+func (mc MockSourceConfig) SourceConfigType() string {
+	return mc.Type
+}
+
+func (mc MockSourceConfig) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	return MockSource(mc), nil
 }

@@ -57,3 +57,4 @@ description: "Details of the AlloyDB Postgres prebuilt configuration."
         each database in the AlloyDB instance.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).

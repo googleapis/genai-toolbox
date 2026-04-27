@@ -28,6 +28,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydblistinstances"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydblistusers"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbsearchcatalog"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"

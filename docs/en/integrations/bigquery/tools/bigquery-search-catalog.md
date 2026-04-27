@@ -29,8 +29,8 @@ following parameters:
 
 ### IAM Permissions
 
-Bigquery uses [Identity and Access Management (IAM)][iam-overview] to control
-user and group access to Knowledge Catalog (formerly known as Dataplex) resources. Toolbox will use your
+Knowledge Catalog (formerly known as Dataplex) uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to its resources. Toolbox will use your
 [Application Default Credentials (ADC)][adc] to authorize and authenticate when
 interacting with [Knowledge Catalog][dataplex-docs].
 
@@ -45,6 +45,8 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex/docs
+
 
 ## Example
 

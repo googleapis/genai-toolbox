@@ -93,6 +93,7 @@ func getAlloyDBToolsConfig() map[string]any {
 				"source":      "alloydb-admin-source",
 				"description": "Tool that will fail",
 			},
+
 			// AlloyDB specific tools
 			"alloydb-list-clusters": map[string]any{
 				"type":        "alloydb-list-clusters",

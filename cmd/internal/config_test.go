@@ -1714,6 +1714,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
 				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure", "search_catalog"},
+				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
 					ToolNames: []string{"list_active_queries", "list_query_stats", "get_query_plan", "get_query_metrics", "get_system_metrics", "long_running_transactions", "list_locks", "list_database_stats"},

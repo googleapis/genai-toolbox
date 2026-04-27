@@ -114,6 +114,7 @@ database: my_db
 user: ${USER_NAME}
 password: ${PASSWORD}
 # ipType: "public"
+# useClientOAuth: false
 ```
 
 {{< notice tip >}}
@@ -142,4 +143,5 @@ The interface is identical, so there's no additional configuration required on t
 | database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").                                                              |
 | user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
-| ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
+| ipType         |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorizing Catalog/Dataplex search requests. Defaults to `false`.   |

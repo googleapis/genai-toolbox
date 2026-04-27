@@ -45,7 +45,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -240,11 +239,9 @@ func TestUpdateServer(t *testing.T) {
 	}
 
 	newSources := map[string]sources.Source{
-		"example-source": &alloydbpg.Source{
-			Config: alloydbpg.Config{
-				Name: "example-alloydb-source",
-				Type: "alloydb-postgres",
-			},
+		"example-source": testutils.MockSource{
+			Name: "example-source",
+			Type: "mock-type",
 		},
 	}
 	newAuth := map[string]auth.AuthService{"example-auth": nil}

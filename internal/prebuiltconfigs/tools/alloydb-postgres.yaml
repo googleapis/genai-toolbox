@@ -421,6 +421,12 @@ name: list_instances
 type: alloydb-list-instances
 source: alloydb-admin-source
 ---
+kind: tool
+name: search_catalog
+type: alloydb-search-catalog
+source: alloydb-pg-source
+description: Searches for data assets (eg. AlloyDB tables, views, schemas or databases) in Catalog based on the provided search query.
+---
 kind: toolset
 name: admin
 tools:
@@ -454,6 +460,19 @@ tools:
 - list_indexes
 - list_sequences
 - list_stored_procedure
+---
+kind: toolset
+name: data_with_discovery
+tools:
+- execute_sql
+- list_tables
+- list_views
+- list_schemas
+- list_triggers
+- list_indexes
+- list_sequences
+- list_stored_procedure
+- search_catalog
 ---
 kind: toolset
 name: monitor

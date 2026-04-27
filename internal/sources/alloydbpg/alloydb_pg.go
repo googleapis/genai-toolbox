@@ -21,8 +21,10 @@ import (
 	"strings"
 
 	"cloud.google.com/go/alloydbconn"
+	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -50,16 +52,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string         `yaml:"name" validate:"required"`
-	Type     string         `yaml:"type" validate:"required"`
-	Project  string         `yaml:"project" validate:"required"`
-	Region   string         `yaml:"region" validate:"required"`
-	Cluster  string         `yaml:"cluster" validate:"required"`
-	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	User     string         `yaml:"user"`
-	Password string         `yaml:"password"`
-	Database string         `yaml:"database" validate:"required"`
+	Name           string         `yaml:"name" validate:"required"`
+	Type           string         `yaml:"type" validate:"required"`
+	Project        string         `yaml:"project" validate:"required"`
+	Region         string         `yaml:"region" validate:"required"`
+	Cluster        string         `yaml:"cluster" validate:"required"`
+	Instance       string         `yaml:"instance" validate:"required"`
+	IPType         sources.IPType `yaml:"ipType" validate:"required"`
+	User           string         `yaml:"user"`
+	Password       string         `yaml:"password"`
+	Database       string         `yaml:"database" validate:"required"`
+	UseClientOAuth bool           `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -77,9 +80,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
 	}
 
+	onDataplexEvict := func(key string, value interface{}) {
+		if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
+			client.Close()
+		}
+	}
+
 	s := &Source{
 		Config: r,
 		Pool:   pool,
+		dataplexMgr: &searchcatalog.DataplexClientManager{
+			UseClientOAuth: r.UseClientOAuth,
+			Cache:          sources.NewCache(onDataplexEvict),
+		},
 	}
 	return s, nil
 }
@@ -88,7 +101,8 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Pool *pgxpool.Pool
+	Pool        *pgxpool.Pool
+	dataplexMgr *searchcatalog.DataplexClientManager
 }
 
 func (s *Source) SourceType() string {
@@ -101,6 +115,18 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
+}
+
+func (s *Source) ProjectID() string {
+	return s.Project
+}
+
+func (s *Source) UseClientAuthorization() bool {
+	return s.UseClientOAuth
+}
+
+func (s *Source) GetCatalogClient(ctx context.Context, tokenString string) (*dataplexapi.CatalogClient, error) {
+	return s.dataplexMgr.GetCatalogClient(ctx, tokenString)
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
@@ -223,4 +249,27 @@ func initAlloyDBPgConnectionPool(ctx context.Context, tracer trace.Tracer, name,
 		return nil, err
 	}
 	return pool, nil
+}
+
+func (s *Source) InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error) {
+	typeMap := map[string]string{
+		"alloydb-cluster":  "CLUSTER",
+		"alloydb-database": "DATABASE",
+		"alloydb-instance": "INSTANCE",
+		"alloydb-table":    "TABLE",
+		"alloydb-view":     "VIEW",
+		"alloydb-schema":   "DATABASE_SCHEMA",
+	}
+	return searchcatalog.InvokeSearchCatalog(
+		ctx,
+		params,
+		tokenStr,
+		"AlloyDB",
+		"databaseIds",
+		typeMap,
+		s.ProjectID(),
+		func(ctx context.Context, token string) (*dataplexapi.CatalogClient, error) {
+			return s.GetCatalogClient(ctx, token)
+		},
+	)
 }

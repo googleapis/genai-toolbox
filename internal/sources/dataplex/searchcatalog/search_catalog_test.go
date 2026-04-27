@@ -98,7 +98,7 @@ func TestConstructSearchQuery(t *testing.T) {
 			parentIds:  []string{"d1"},
 			types:      []string{"t1"},
 			system:     "sys1",
-			want:       "search projectid=p1 AND parent=d1 AND type=t1 AND system=sys1",
+			want:       "search projectid=p1 AND parent:d1 AND type=t1 AND system=sys1",
 		},
 		{
 			name:       "with multiple items",
@@ -107,7 +107,7 @@ func TestConstructSearchQuery(t *testing.T) {
 			parentIds:  []string{"d1"},
 			types:      []string{},
 			system:     "",
-			want:       "search (projectid=p1 OR projectid=p2) AND parent=d1",
+			want:       "search (projectid=p1 OR projectid=p2) AND parent:d1",
 		},
 	}
 

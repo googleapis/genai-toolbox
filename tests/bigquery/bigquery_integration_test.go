@@ -881,25 +881,8 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"source":      "my-client-auth-source",
 		"description": "Tool to ask BigQuery conversational analytics",
 	}
-	tools["my-search-catalog-tool"] = map[string]any{
-		"type":        "bigquery-search-catalog",
-		"source":      "my-instance",
-		"description": "Tool to search the BiqQuery catalog",
-	}
-	tools["my-auth-search-catalog-tool"] = map[string]any{
-		"type":        "bigquery-search-catalog",
-		"source":      "my-instance",
-		"description": "Tool to search the BiqQuery catalog",
-		"authRequired": []string{
-			"my-google-auth",
-		},
-	}
-	tools["my-client-auth-search-catalog-tool"] = map[string]any{
-		"type":        "bigquery-search-catalog",
-		"source":      "my-client-auth-source",
-		"description": "Tool to search the BiqQuery catalog",
-	}
 	config["tools"] = tools
+	config = tests.AddSearchCatalogConfig(t, config, "bigquery-search-catalog")
 	return config
 }
 
