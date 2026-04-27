@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -391,7 +392,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
+		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -404,7 +405,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Use(cors.Handler(corsOpts))
 	// validate hosts for DNS rebinding attacks
 	if slices.Contains(cfg.AllowedHosts, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
+		s.logger.WarnContext(ctx, "wildcard (*) hosts allow any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of whether you are in a production or local development environment. For improved security, use the --allowed-hosts flag to specify trusted domains.")
 	}
 	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
 	for _, h := range cfg.AllowedHosts {
@@ -535,7 +536,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 }
 
 // Listen starts a listener for the given Server instance.
-func (s *Server) Listen(ctx context.Context) error {
+func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -543,11 +544,26 @@ func (s *Server) Listen(ctx context.Context) error {
 		return fmt.Errorf("server is already listening: %s", s.listener.Addr().String())
 	}
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
-	var err error
-	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
+	if err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
-	s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+
+	if certFile != "" || keyFile != "" {
+		// Load the certificates
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			ln.Close()
+			return fmt.Errorf("failed to load TLS key pair (cert: %q, key: %q): %w", certFile, keyFile, err)
+		}
+		// Wrap the listener with TLS
+		config := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+		s.listener = tls.NewListener(ln, config)
+		s.logger.DebugContext(ctx, fmt.Sprintf("secure server listening on %s", s.srv.Addr))
+	} else {
+		s.listener = ln
+		s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+	}
 	return nil
 }
 
