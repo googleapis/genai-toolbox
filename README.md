@@ -85,7 +85,8 @@ You can use the Toolbox in any MCP-compatible IDE or client (e.g., Gemini CLI, G
           "args": [
             "-y",
             "@toolbox-sdk/server",
-            "--prebuilt=postgres"
+            "--prebuilt=postgres",
+            "--stdio"
           ]
         }
       }
