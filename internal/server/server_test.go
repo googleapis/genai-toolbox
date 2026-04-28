@@ -16,9 +16,16 @@ package server_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -27,6 +34,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -43,17 +51,62 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
+// Helper function to create temporary self-signed certs for the test
+func generateTestCerts(t *testing.T) (string, string, func()) {
+	priv, _ := rsa.GenerateKey(rand.Reader, 2048)
+
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{Organization: []string{"Test Co"}},
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
+	}
+
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
+	if err != nil {
+		t.Fatalf("failed to create certificate: %v", err)
+	}
+
+	// Create temp files
+	certFile, err := os.CreateTemp("", "cert.*.pem")
+	if err != nil {
+		t.Fatalf("failed to create temp cert file: %v", err)
+	}
+
+	keyFile, err := os.CreateTemp("", "key.*.pem")
+	if err != nil {
+		t.Fatalf("failed to create temp key file: %v", err)
+	}
+
+	// Check the error return values for pem.Encode
+	if err := pem.Encode(certFile, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		t.Fatalf("failed to encode certificate: %v", err)
+	}
+
+	if err := pem.Encode(keyFile, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)}); err != nil {
+		t.Fatalf("failed to encode key: %v", err)
+	}
+
+	certFile.Close()
+	keyFile.Close()
+
+	cleanup := func() {
+		os.Remove(certFile.Name())
+		os.Remove(keyFile.Name())
+	}
+
+	return certFile.Name(), keyFile.Name(), cleanup
+}
+
 func TestServe(t *testing.T) {
+	certFile, keyFile, cleanupCerts := generateTestCerts(t)
+	defer cleanupCerts()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	addr, port := "127.0.0.1", 5000
-	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		AllowedHosts: []string{"*"},
-	}
 
 	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
 	if err != nil {
@@ -72,46 +125,92 @@ func TestServe(t *testing.T) {
 	}
 	ctx = util.WithLogger(ctx, testLogger)
 
-	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
+	tests := []struct {
+		name string
+		cert string
+		key  string
+		addr string
+		port int
+	}{
+		{
+			name: "HTTP mode",
+			addr: "127.0.0.1",
+			port: 5001,
+		},
+		{
+			name: "HTTPS mode",
+			cert: certFile,
+			key:  keyFile,
+			addr: "127.0.0.1",
+			port: 5002,
+		},
 	}
 
-	ctx = util.WithInstrumentation(ctx, instrumentation)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				Version:      "0.0.0",
+				Address:      tt.addr,
+				Port:         tt.port,
+				AllowedHosts: []string{"*"},
+			}
 
-	s, err := server.NewServer(ctx, cfg)
-	if err != nil {
-		t.Fatalf("unable to initialize server: %v", err)
+			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			ctx = util.WithInstrumentation(ctx, instrumentation)
+
+			s, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("unable to initialize server: %v", err)
+			}
+
+			err = s.Listen(ctx, tt.cert, tt.key)
+			if err != nil {
+				t.Fatalf("unable to start server: %v", err)
+			}
+
+			// start server in background
+			go func() {
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
+				}
+			}()
+
+			// Setup Client to handle self-signed certs
+			client := &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				},
+			}
+
+			useTLS := tt.cert != "" || tt.key != ""
+			protocol := "http"
+			if useTLS {
+				protocol = "https"
+			}
+
+			url := fmt.Sprintf("%s://%s:%d/", protocol, tt.addr, tt.port)
+			resp, err := client.Get(url)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != 200 {
+				t.Fatalf("response status code is not 200")
+			}
+			raw, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("error reading from request body: %s", err)
+			}
+			if got := string(raw); strings.Contains(got, "0.0.0") {
+				t.Fatalf("version missing from output: %q", got)
+			}
+		})
 	}
 
-	err = s.Listen(ctx)
-	if err != nil {
-		t.Fatalf("unable to start server: %v", err)
-	}
-
-	// start server in background
-	go func() {
-		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
-			t.Errorf("server serve error: %v", err)
-		}
-	}()
-
-	url := fmt.Sprintf("http://%s:%d/", addr, port)
-	resp, err := http.Get(url)
-	if err != nil {
-		t.Fatalf("error when sending a request: %s", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("response status code is not 200")
-	}
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("error reading from request body: %s", err)
-	}
-	if got := string(raw); strings.Contains(got, "0.0.0") {
-		t.Fatalf("version missing from output: %q", got)
-	}
 }
 
 func TestUpdateServer(t *testing.T) {
@@ -256,7 +355,7 @@ func TestEndpointSecurityAllowedOrigin(t *testing.T) {
 				t.Fatalf("error setting up server: %s", err)
 			}
 
-			err = s.Listen(ctx)
+			err = s.Listen(ctx, "", "")
 			if err != nil {
 				t.Fatalf("unable to start server: %v", err)
 			}
@@ -404,7 +503,7 @@ func TestEndpointSecurityAllowedHost(t *testing.T) {
 				t.Fatalf("error setting up server: %s", err)
 			}
 
-			err = s.Listen(ctx)
+			err = s.Listen(ctx, "", "")
 			if err != nil {
 				t.Fatalf("unable to start server: %v", err)
 			}
@@ -607,7 +706,7 @@ func TestPRMEndpoint(t *testing.T) {
 	defer mockOIDC.Close()
 
 	// Configure the server
-	addr, port := "127.0.0.1", 5001
+	addr, port := "127.0.0.1", 5003
 	cfg := server.ServerConfig{
 		Version:      "0.0.0",
 		Address:      addr,
@@ -631,7 +730,7 @@ func TestPRMEndpoint(t *testing.T) {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
 
-	if err := s.Listen(ctx); err != nil {
+	if err := s.Listen(ctx, "", ""); err != nil {
 		t.Fatalf("unable to start server: %v", err)
 	}
 
@@ -716,7 +815,7 @@ func TestPRMOverride(t *testing.T) {
 	ctx = util.WithInstrumentation(ctx, instrumentation)
 
 	// Configure the server with the Override Flag
-	addr, port := "127.0.0.1", 5002
+	addr, port := "127.0.0.1", 5004
 	cfg := server.ServerConfig{
 		Version:      "0.0.0",
 		Address:      addr,
@@ -731,7 +830,7 @@ func TestPRMOverride(t *testing.T) {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
 
-	if err := s.Listen(ctx); err != nil {
+	if err := s.Listen(ctx, "", ""); err != nil {
 		t.Fatalf("unable to start listener: %v", err)
 	}
 
@@ -793,7 +892,7 @@ func TestLegacyAPIGone(t *testing.T) {
 	ctx = util.WithInstrumentation(ctx, instrumentation)
 
 	// Configure the server (EnableAPI defaults to false)
-	addr, port := "127.0.0.1", 5003
+	addr, port := "127.0.0.1", 5005
 	cfg := server.ServerConfig{
 		Version:      "0.0.0",
 		Address:      addr,
@@ -807,7 +906,7 @@ func TestLegacyAPIGone(t *testing.T) {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
 
-	if err := s.Listen(ctx); err != nil {
+	if err := s.Listen(ctx, "", ""); err != nil {
 		t.Fatalf("unable to start listener: %v", err)
 	}
 
