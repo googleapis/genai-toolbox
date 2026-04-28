@@ -256,3 +256,96 @@ func TestCreateAndUpdatePrimitives(t *testing.T) {
 		t.Fatalf("update failed: got %+v, want %+v", pc, pConfig)
 	}
 }
+
+func TestDeletePrimitives(t *testing.T) {
+	resMgr := resources.NewResourceManager(
+		"test-version",
+		map[string]sources.Source{"foo": testutils.MockSource{}},
+		map[string]auth.AuthService{"foo": testutils.MockAuthService{}},
+		map[string]embeddingmodels.EmbeddingModel{"foo": testutils.MockEmbeddingModel{}},
+		map[string]tools.Tool{"foo": testutils.MockTool{}},
+		map[string]tools.Toolset{"foo": tools.Toolset{}, "": tools.Toolset{ToolsetConfig: tools.ToolsetConfig{ToolNames: []string{"foo"}}}},
+		map[string]prompts.Prompt{"foo": testutils.MockPrompt{}},
+		map[string]prompts.Promptset{"": prompts.Promptset{PromptsetConfig: prompts.PromptsetConfig{PromptNames: []string{"foo"}}}},
+	)
+
+	var found bool
+	var err error
+	err = resMgr.Delete("source", "foo")
+	if err != nil {
+		t.Fatalf("expected delete to be successful: %s", err)
+	}
+	_, found = resMgr.GetSource("foo")
+	if found {
+		t.Fatalf("found source but expected to be deleted")
+	}
+	err = resMgr.Delete("source", "nonexistent")
+	if err == nil {
+		t.Fatalf("expected delete of non-existent resource to return false, but got true")
+	}
+
+	err = resMgr.Delete("authservice", "foo")
+	if err != nil {
+		t.Fatalf("expected delete to be successful: %s", err)
+	}
+	_, found = resMgr.GetAuthService("foo")
+	if found {
+		t.Fatalf("found auth service but expected to be deleted")
+	}
+	err = resMgr.Delete("authservice", "nonexistent")
+	if err == nil {
+		t.Fatalf("expected delete of non-existent resource to return false, but got true")
+	}
+
+	err = resMgr.Delete("embeddingmodel", "foo")
+	if err != nil {
+		t.Fatalf("expected delete to be successful: %s", err)
+	}
+	_, found = resMgr.GetEmbeddingModel("foo")
+	if found {
+		t.Fatalf("found embedding model but expected to be deleted")
+	}
+	err = resMgr.Delete("embeddingmodel", "nonexistent")
+	if err == nil {
+		t.Fatalf("expected delete of non-existent resource to return false, but got true")
+	}
+
+	err = resMgr.Delete("tool", "foo")
+	if err != nil {
+		t.Fatalf("expected delete to be successful: %s", err)
+	}
+	_, found = resMgr.GetTool("foo")
+	if found {
+		t.Fatalf("found tool but expected to be deleted")
+	}
+	err = resMgr.Delete("tool", "nonexistent")
+	if err == nil {
+		t.Fatalf("expected delete of non-existent resource to return false, but got true")
+	}
+
+	err = resMgr.Delete("toolset", "foo")
+	if err != nil {
+		t.Fatalf("expected delete to be successful: %s", err)
+	}
+	_, found = resMgr.GetToolset("foo")
+	if found {
+		t.Fatalf("found toolset but expected to be deleted")
+	}
+	err = resMgr.Delete("toolset", "nonexistent")
+	if err == nil {
+		t.Fatalf("expected delete of non-existent resource to return false, but got true")
+	}
+
+	err = resMgr.Delete("prompt", "foo")
+	if err != nil {
+		t.Fatalf("expected delete to be successful: %s", err)
+	}
+	_, found = resMgr.GetPrompt("foo")
+	if found {
+		t.Fatalf("found prompt but expected to be deleted")
+	}
+	err = resMgr.Delete("prompt", "nonexistent")
+	if err == nil {
+		t.Fatalf("expected delete of non-existent resource to return false, but got true")
+	}
+}

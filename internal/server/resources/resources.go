@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
@@ -402,6 +403,133 @@ func (r *ResourceManager) UpdatePrompt(ctx context.Context, name string, config 
 	if err != nil {
 		delete(r.prompts, name)
 		return fmt.Errorf("error updating promptset: %w", err)
+	}
+	r.promptsets[""] = defaultPromptset
+	return nil
+}
+
+// deleteFromMap is a helper method that handles the "check and delete" logic.
+func deleteFromMap[T any](m map[string]T, name string) bool {
+	if _, ok := m[name]; !ok {
+		return false
+	}
+	delete(m, name)
+	return true
+}
+
+func (r *ResourceManager) Delete(kind string, name string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	var deleted bool
+	k := ResourceKind(strings.ToLower(kind))
+
+	switch k {
+	case KindSource:
+		deleted = deleteFromMap(r.sources, name)
+	case KindAuthService:
+		deleted = deleteFromMap(r.authServices, name)
+	case KindEmbeddingModel:
+		deleted = deleteFromMap(r.embeddingModels, name)
+	case KindTool:
+		deleted = deleteFromMap(r.tools, name)
+		err := r.RemoveFromDefaultToolset(name)
+		if err != nil {
+			return fmt.Errorf("error removing %s from default toolset: %w", name, err)
+		}
+	case KindToolset:
+		deleted = deleteFromMap(r.toolsets, name)
+	case KindPrompt:
+		deleted = deleteFromMap(r.prompts, name)
+		err := r.RemoveFromDefaultPromptset(name)
+		if err != nil {
+			return fmt.Errorf("error removing %s from default promptset: %w", name, err)
+		}
+	default:
+		return fmt.Errorf("invalid primitive kind provided")
+	}
+
+	if !deleted {
+		return fmt.Errorf("%s %s not found", kind, name)
+	}
+	return nil
+}
+
+// RemoveDefaultToolset remove a tool from default toolset.
+func (r *ResourceManager) RemoveFromDefaultToolset(name string) error {
+	defaultToolset, toolsetExists := r.toolsets[""]
+	if !toolsetExists {
+		return fmt.Errorf("toolset does not exists")
+	}
+
+	// Filter the slice in-place
+	originalToolNames := defaultToolset.ToolNames
+	newToolNames := originalToolNames[:0] // Zero-length slice with same capacity
+
+	for _, tool := range originalToolNames {
+		// Safe check for nested pointers
+		if tool != "" {
+			if tool == name {
+				// Skip this tool (effectively deleting it)
+				continue
+			}
+		}
+		newToolNames = append(newToolNames, tool)
+	}
+
+	// Garbage collection safety: nil out the remaining slots in the original backing array
+	for i := len(newToolNames); i < len(originalToolNames); i++ {
+		originalToolNames[i] = ""
+	}
+
+	defaultToolset.ToolNames = newToolNames
+	// re-initialize toolsets to update lists manifest
+	err := defaultToolset.Initialize(r.serverVersion, r.tools)
+	if err != nil {
+		return fmt.Errorf("error initializing toolset: %w", err)
+	}
+	if len(newToolNames) >= len(originalToolNames) {
+		return fmt.Errorf("new toolNames length is equal or greater to original toolNames")
+	}
+	r.toolsets[""] = defaultToolset
+	return nil
+}
+
+// RemoveFromDefaultPromptset remove a prompt from default promptset.
+func (r *ResourceManager) RemoveFromDefaultPromptset(name string) error {
+	defaultPromptset, promptsetExists := r.promptsets[""]
+	if !promptsetExists {
+		return fmt.Errorf("promptset does not exists")
+	}
+
+	// Filter the slice in-place
+	originalPromptNames := defaultPromptset.PromptNames
+	newPromptNames := originalPromptNames[:0] // Zero-length slice with same capacity
+
+	for _, prompt := range originalPromptNames {
+		// Safe check for nested pointers
+		if prompt != "" {
+			if prompt == name {
+				// Skip this prompt (effectively deleting it)
+				continue
+			}
+		}
+		newPromptNames = append(newPromptNames, prompt)
+	}
+
+	// Garbage collection safety: nil out the remaining slots in the original backing array
+	for i := len(newPromptNames); i < len(originalPromptNames); i++ {
+		originalPromptNames[i] = ""
+	}
+
+	defaultPromptset.PromptNames = newPromptNames
+	// re-initialize promptset to update lists manifest
+	err := defaultPromptset.Initialize(r.serverVersion, r.prompts)
+	if err != nil {
+		return fmt.Errorf("error initializing promptset: %w", err)
+	}
+	if len(newPromptNames) >= len(originalPromptNames) {
+		return fmt.Errorf("new promptNames length is equal or greater to original promptNames")
 	}
 	r.promptsets[""] = defaultPromptset
 	return nil

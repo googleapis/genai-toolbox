@@ -36,8 +36,31 @@ func adminRouter(s *Server) (chi.Router, error) {
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	r.Put("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { createOrUpdatePrimitives(s, w, r) })
+	r.Delete("/{kind}/{name}", func(w http.ResponseWriter, r *http.Request) { deletePrimitives(s, w, r) })
 
 	return r, nil
+}
+
+// deletePrimitives handles the deletion of primitives
+// Invalid primitive kind will result in http.StatusBadRequest
+// Primitive not found will result in http.StatusNotFound
+func deletePrimitives(s *Server, w http.ResponseWriter, r *http.Request) {
+	kind := chi.URLParam(r, "kind")
+	name := chi.URLParam(r, "name")
+
+	if err := s.ResourceMgr.Delete(kind, name); err != nil {
+		s.logger.DebugContext(r.Context(), err.Error())
+
+		// Determine status code based on error message/type
+		status := http.StatusNotFound
+		if strings.Contains(err.Error(), "invalid primitive kind provided") {
+			status = http.StatusBadRequest
+		}
+
+		_ = render.Render(w, r, newErrResponse(err, status))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // createOrUpdatePrimitives handles the creation or updating of primitives
