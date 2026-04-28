@@ -232,6 +232,20 @@ func TestServerConfigFlags(t *testing.T) {
 				UserAgentMetadata: []string{"foo", "bar"},
 			}),
 		},
+		{
+			desc: "cert file",
+			args: []string{"--tls-cert", "cert.pem"},
+			want: withDefaults(server.ServerConfig{
+				CertFile: "cert.pem",
+			}),
+		},
+		{
+			desc: "key file",
+			args: []string{"--tls-key", "key.pem"},
+			want: withDefaults(server.ServerConfig{
+				KeyFile: "key.pem",
+			}),
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
