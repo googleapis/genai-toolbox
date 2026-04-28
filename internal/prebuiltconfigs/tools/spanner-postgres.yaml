@@ -230,9 +230,23 @@ parameters:
   description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
   default: detailed
 ---
+kind: tool
+name: search_catalog
+type: spanner-search-catalog
+source: spanner-source
+description: Searches for data assets (eg. Spanner instances, tables, views, or databases) in catalog based on the provided search query
+---
 kind: toolset
 name: data
 tools:
 - execute_sql
 - execute_sql_dql
 - list_tables
+---
+kind: toolset
+name: data_with_discovery
+tools:
+- execute_sql
+- execute_sql_dql
+- list_tables
+- search_catalog
