@@ -12,27 +12,83 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package testutils
 
 import (
 	"context"
 	"fmt"
+	"net/http"
 
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"go.opentelemetry.io/otel/trace"
 )
+
+type MockSource struct {
+	MockSourceConfig
+	Name string
+}
+
+func (s MockSource) SourceType() string {
+	return "mock"
+}
+
+func (s MockSource) ToConfig() sources.SourceConfig {
+	return &s.MockSourceConfig
+}
+
+type MockAuthService struct {
+	MockAuthServiceConfig
+	Name string
+}
+
+func (a MockAuthService) AuthServiceType() string {
+	return "mock"
+}
+
+func (a MockAuthService) GetName() string {
+	return a.Name
+}
+
+func (a MockAuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (map[string]any, error) {
+	return nil, nil
+}
+
+func (a MockAuthService) ToConfig() auth.AuthServiceConfig {
+	return &a.MockAuthServiceConfig
+}
+
+type MockEmbeddingModel struct {
+	MockEmbeddingModelConfig
+	Name string
+}
+
+func (e MockEmbeddingModel) EmbeddingModelType() string {
+	return "mock"
+}
+
+func (e MockEmbeddingModel) ToConfig() embeddingmodels.EmbeddingModelConfig {
+	return &e.MockEmbeddingModelConfig
+}
+
+func (e MockEmbeddingModel) EmbedParameters(ctx context.Context, t []string) ([][]float32, error) {
+	return nil, nil
+}
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
-	Name                         string
-	Description                  string
-	Params                       []parameters.Parameter
-	manifest                     tools.Manifest
-	unauthorized                 bool
-	requiresClientAuthrorization bool
+	MockToolConfig
+	Name                string
+	Description         string
+	Params              []parameters.Parameter
+	ToolManifest        tools.Manifest
+	Unauthorized        bool
+	ClientAuthorization bool
 }
 
 func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, util.ToolboxError) {
@@ -41,7 +97,7 @@ func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.Param
 }
 
 func (t MockTool) ToConfig() tools.ToolConfig {
-	return nil
+	return &t.MockToolConfig
 }
 
 // claims is a map of user info decoded from an auth token
@@ -63,12 +119,12 @@ func (t MockTool) Manifest() tools.Manifest {
 
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	// defaulted to true
-	return !t.unauthorized
+	return !t.Unauthorized
 }
 
 func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthrorization, nil
+	return t.ClientAuthorization, nil
 }
 
 func (t MockTool) GetParameters() parameters.Parameters {
@@ -118,6 +174,7 @@ func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
 
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
+	MockPromptConfig
 	Name        string
 	Description string
 	Args        prompts.Arguments
@@ -156,5 +213,79 @@ func (p MockPrompt) McpManifest() prompts.McpManifest {
 }
 
 func (p MockPrompt) ToConfig() prompts.PromptConfig {
-	return nil
+	return &p.MockPromptConfig
+}
+
+type MockSourceConfig struct {
+	Foo  string `yaml:"foo"`
+	Type string `yaml:"type"`
+}
+
+func (m *MockSourceConfig) SourceConfigType() string {
+	return "mock"
+}
+
+func (m *MockSourceConfig) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	return MockSource{MockSourceConfig: *m}, nil
+}
+
+type MockAuthServiceConfig struct {
+	Foo  string `yaml:"foo"`
+	Type string `yaml:"type"`
+}
+
+func (m *MockAuthServiceConfig) AuthServiceConfigType() string {
+	return "mock"
+}
+
+func (m *MockAuthServiceConfig) Initialize() (auth.AuthService, error) {
+	return MockAuthService{MockAuthServiceConfig: *m}, nil
+}
+
+type MockEmbeddingModelConfig struct {
+	Foo  string `yaml:"foo"`
+	Type string `yaml:"type"`
+}
+
+func (m *MockEmbeddingModelConfig) EmbeddingModelConfigType() string {
+	return "mock"
+}
+
+func (m *MockEmbeddingModelConfig) Initialize(ctx context.Context) (embeddingmodels.EmbeddingModel, error) {
+	return MockEmbeddingModel{MockEmbeddingModelConfig: *m}, nil
+}
+
+type MockToolConfig struct {
+	Foo          string   `yaml:"foo"`
+	Type         string   `yaml:"type"`
+	AuthRequired []string `yaml:"authRequired"`
+}
+
+func (m *MockToolConfig) ToolConfigType() string {
+	return "mock"
+}
+
+func (m *MockToolConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
+	return MockTool{MockToolConfig: *m}, nil
+}
+
+type MockToolsetConfig struct {
+	tools.ToolsetConfig
+}
+
+func (m *MockToolsetConfig) Initialize(serverVersion string, toolsMap map[string]tools.Tool) (tools.Toolset, error) {
+	return tools.Toolset{ToolsetConfig: m.ToolsetConfig}, nil
+}
+
+type MockPromptConfig struct {
+	Foo  string `yaml:"foo"`
+	Type string `yaml:"type"`
+}
+
+func (m *MockPromptConfig) PromptConfigType() string {
+	return "mock"
+}
+
+func (m *MockPromptConfig) Initialize() (prompts.Prompt, error) {
+	return MockPrompt{MockPromptConfig: *m}, nil
 }

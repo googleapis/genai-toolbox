@@ -374,7 +374,7 @@ func NewServer(ctx context.Context, cfg ServerConfig, enableAdmin bool) (*Server
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	resourceManager := resources.NewResourceManager(cfg.Version, sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
 		version:         cfg.Version,

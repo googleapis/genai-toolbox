@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"strings"
 
@@ -39,7 +38,10 @@ func FormatYaml(in string) []byte {
 // ContextWithNewLogger create a new context with new logger
 func ContextWithNewLogger() (context.Context, error) {
 	ctx := context.Background()
-	logger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	defer pr.Close()
+	logger, err := log.NewStdLogger(pw, pw, "info")
 	if err != nil {
 		return nil, fmt.Errorf("unable to create logger: %s", err)
 	}

@@ -35,6 +35,25 @@ func (t Toolset) ToConfig() ToolsetConfig {
 	return t.ToolsetConfig
 }
 
+func (ts *Toolset) Initialize(serverVersion string, toolsMap map[string]Tool) error {
+	ts.Tools = make([]*Tool, 0, len(ts.ToolNames))
+	ts.Manifest = ToolsetManifest{
+		ServerVersion: serverVersion,
+		ToolsManifest: make(map[string]Manifest),
+	}
+	for _, toolName := range ts.ToolNames {
+		tool, ok := toolsMap[toolName]
+		if !ok {
+			return fmt.Errorf("tool does not exist: %s", toolName)
+		}
+		t := tool
+		ts.Tools = append(ts.Tools, &t)
+		ts.Manifest.ToolsManifest[toolName] = tool.Manifest()
+		ts.McpManifest = append(ts.McpManifest, tool.McpManifest())
+	}
+	return nil
+}
+
 type ToolsetManifest struct {
 	ServerVersion string              `json:"serverVersion"`
 	ToolsManifest map[string]Manifest `json:"tools"`
@@ -43,27 +62,16 @@ type ToolsetManifest struct {
 func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool) (Toolset, error) {
 	// finish toolset setup
 	// Check each declared tool name exists
-	var toolset Toolset
+	toolset := &Toolset{ToolsetConfig: t}
 	toolset.Name = t.Name
 	if !IsValidName(toolset.Name) {
-		return toolset, fmt.Errorf("invalid toolset name: %s", toolset.Name)
+		return *toolset, fmt.Errorf("invalid toolset name: %s", toolset.Name)
 	}
-	toolset.Tools = make([]*Tool, 0, len(t.ToolNames))
-	toolset.Manifest = ToolsetManifest{
-		ServerVersion: serverVersion,
-		ToolsManifest: make(map[string]Manifest),
+	err := toolset.Initialize(serverVersion, toolsMap)
+	if err != nil {
+		return *toolset, err
 	}
-	for _, toolName := range t.ToolNames {
-		tool, ok := toolsMap[toolName]
-		if !ok {
-			return toolset, fmt.Errorf("tool does not exist: %s", toolName)
-		}
-		toolset.Tools = append(toolset.Tools, &tool)
-		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
-		toolset.McpManifest = append(toolset.McpManifest, tool.McpManifest())
-	}
-
-	return toolset, nil
+	return *toolset, nil
 }
 
 var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)

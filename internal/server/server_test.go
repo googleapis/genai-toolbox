@@ -327,7 +327,7 @@ func TestPRMEndpoint(t *testing.T) {
 	}
 
 	// Initialize and start the server
-	s, err := server.NewServer(ctx, cfg)
+	s, err := server.NewServer(ctx, cfg, false)
 	if err != nil {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
@@ -429,7 +429,7 @@ func TestPRMOverride(t *testing.T) {
 	}
 
 	// Initialize and Start the Server
-	s, err := server.NewServer(ctx, cfg)
+	s, err := server.NewServer(ctx, cfg, false)
 	if err != nil {
 		t.Fatalf("unable to initialize server: %v", err)
 	}

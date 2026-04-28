@@ -71,7 +71,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	resourceMgr := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	resourceMgr := resources.NewResourceManager(opts.Cfg.Version, sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	// Execute Tool
 	toolName := args[0]

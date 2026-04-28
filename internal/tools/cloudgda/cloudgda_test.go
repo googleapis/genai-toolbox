@@ -269,7 +269,7 @@ func TestInvoke(t *testing.T) {
 		{Name: "query", Value: query},
 	}
 
-	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
+	resourceMgr := resources.NewResourceManager("test-version", srcs, nil, nil, nil, nil, nil, nil)
 
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 

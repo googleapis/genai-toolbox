@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
 const jsonrpcVersion = "2.0"
@@ -76,10 +77,10 @@ var prompt2Args = []any{
 }
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -421,10 +422,10 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -908,7 +909,7 @@ func TestMcpEndpoint(t *testing.T) {
 }
 
 func TestInvalidProtocolVersionHeader(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -934,7 +935,7 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 }
 
 func TestDeleteEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -949,7 +950,7 @@ func TestDeleteEndpoint(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -972,7 +973,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1092,8 +1093,8 @@ func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mockTools := []MockTool{tool1, tool2, tool3}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
@@ -1124,7 +1125,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceManager := resources.NewResourceManager("test-version", nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	server := &Server{
 		version:         fakeVersionString,

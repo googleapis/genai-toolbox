@@ -93,7 +93,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "default",
+					Name:        "default",
+					PromptNames: []string{"prompt1", "prompt2"},
 				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
@@ -121,7 +122,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "single",
+					Name:        "single",
+					PromptNames: []string{"prompt1"},
 				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
@@ -144,7 +146,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				Name:        "invalid name", // Contains a space
 				PromptNames: []string{"prompt1"},
 			},
-			want:    prompts.Promptset{PromptsetConfig: prompts.PromptsetConfig{Name: "invalid name"}}, // Expect partial struct
+			want:    prompts.Promptset{PromptsetConfig: prompts.PromptsetConfig{Name: "invalid name", PromptNames: []string{"prompt1"}}}, // Expect partial struct
 			wantErr: "invalid promptset name",
 		},
 		{
@@ -156,7 +158,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			// Expect partial struct with fields populated up to the error
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "missing_prompt",
+					Name:        "missing_prompt",
+					PromptNames: []string{"prompt1", "prompt_does_not_exist"},
 				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
@@ -181,7 +184,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "empty",
+					Name:        "empty",
+					PromptNames: []string{},
 				},
 				Prompts: []*prompts.Prompt{},
 				Manifest: prompts.PromptsetManifest{

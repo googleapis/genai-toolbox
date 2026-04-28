@@ -26,8 +26,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
+
+	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -36,16 +41,16 @@ import (
 const fakeVersionString = "0.0.0"
 
 var (
-	_ tools.Tool     = MockTool{}
-	_ prompts.Prompt = MockPrompt{}
+	_ tools.Tool     = testutils.MockTool{}
+	_ prompts.Prompt = testutils.MockPrompt{}
 )
 
-var tool1 = MockTool{
+var tool1 = testutils.MockTool{
 	Name:   "no_params",
 	Params: []parameters.Parameter{},
 }
 
-var tool2 = MockTool{
+var tool2 = testutils.MockTool{
 	Name: "some_params",
 	Params: parameters.Parameters{
 		parameters.NewIntParameter("param1", "This is the first parameter."),
@@ -53,7 +58,7 @@ var tool2 = MockTool{
 	},
 }
 
-var tool3 = MockTool{
+var tool3 = testutils.MockTool{
 	Name:        "array_param",
 	Description: "some description",
 	Params: parameters.Parameters{
@@ -61,24 +66,24 @@ var tool3 = MockTool{
 	},
 }
 
-var tool4 = MockTool{
+var tool4 = testutils.MockTool{
 	Name:         "unauthorized_tool",
 	Params:       []parameters.Parameter{},
-	unauthorized: true,
+	Unauthorized: true,
 }
 
-var tool5 = MockTool{
-	Name:                         "require_client_auth_tool",
-	Params:                       []parameters.Parameter{},
-	requiresClientAuthrorization: true,
+var tool5 = testutils.MockTool{
+	Name:                "require_client_auth_tool",
+	Params:              []parameters.Parameter{},
+	ClientAuthorization: true,
 }
 
-var prompt1 = MockPrompt{
+var prompt1 = testutils.MockPrompt{
 	Name: "prompt1",
 	Args: prompts.Arguments{},
 }
 
-var prompt2 = MockPrompt{
+var prompt2 = testutils.MockPrompt{
 	Name: "prompt2",
 	Args: prompts.Arguments{
 		{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
@@ -86,11 +91,11 @@ var prompt2 = MockPrompt{
 }
 
 // setUpResources setups resources to test against
-func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
+func setUpResources(t *testing.T, mockTools []testutils.MockTool, mockPrompts []testutils.MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
-		tool.manifest = tool.Manifest()
+		tool.ToolManifest = tool.Manifest()
 		toolsMap[tool.Name] = tool
 		allTools = append(allTools, tool.Name)
 	}
@@ -130,7 +135,7 @@ func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 }
 
 // setUpServer create a new server with tools, toolsets, prompts, and promptsets.
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
+func setUpServer(t *testing.T, router string, sources map[string]sources.Source, authServices map[string]auth.AuthService, embeddingModels map[string]embeddingmodels.EmbeddingModel, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -150,7 +155,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
+	resourceManager := resources.NewResourceManager("test-version", sources, authServices, embeddingModels, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         fakeVersionString,

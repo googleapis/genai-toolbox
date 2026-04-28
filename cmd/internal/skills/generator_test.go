@@ -19,8 +19,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
@@ -175,7 +175,7 @@ func TestFormatParameters(t *testing.T) {
 
 func TestGenerateSkillMarkdown(t *testing.T) {
 	toolsMap := map[string]tools.Tool{
-		"tool1": server.MockTool{
+		"tool1": testutils.MockTool{
 			Description: "First tool",
 			Params: []parameters.Parameter{
 				parameters.NewStringParameter("p1", "d1"),

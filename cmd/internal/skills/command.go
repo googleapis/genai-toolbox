@@ -229,7 +229,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		return nil, fmt.Errorf("failed to initialize resources: %w", err)
 	}
 
-	resourceMgr := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	resourceMgr := resources.NewResourceManager(opts.Cfg.Version, sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	skillsToTools := make(map[string]map[string]tools.Tool)
 
