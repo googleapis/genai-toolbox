@@ -40,6 +40,10 @@ type ServerConfig struct {
 	Address string
 	// Port is the port the server will listen on.
 	Port int
+	// CertFile is the path to tls certificate file
+	CertFile string
+	// KeyFile is the path to TLS key file
+	KeyFile string
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
 	// AuthServiceConfigs defines what sources of authentication are available for tools.

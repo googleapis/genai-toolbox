@@ -1003,8 +1003,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
-			want:          ddlWant,
-			isErr:         true,
+			want:          `{"error":"error processing GCP request: failed to insert dry run job: googleapi: Error 400: Table \"t\" must be qualified with a dataset (e.g. dataset.table)., invalid"}`,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with data present in table",
@@ -1027,8 +1026,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
-			want:          ddlWant,
-			isErr:         true,
+			want:          `{"error":"error processing GCP request: failed to insert dry run job: googleapi: Error 400: Table \"t\" must be qualified with a dataset (e.g. dataset.table)., invalid"}`,
 		},
 		{
 			name:          "invoke my-exec-sql-tool insert entry",
