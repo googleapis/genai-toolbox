@@ -4,7 +4,7 @@ linkTitle: "Source"
 type: docs
 weight: 1
 description: >
-  Cloud Storage is Google Cloud's managed service for storing unstructured objects (files) in buckets. Toolbox connects at the project level, allowing tools to list, read, and manage objects across any bucket the credentials can access.
+  Cloud Storage is Google Cloud's managed service for storing unstructured objects (files) in buckets. Toolbox connects at the project level, allowing tools to list buckets, list objects, read object metadata and content, and transfer objects between Cloud Storage and the server filesystem.
 no_list: true
 ---
 
@@ -40,12 +40,21 @@ interacting with Cloud Storage.
 In addition to [setting the ADC for your server][set-adc], ensure the IAM
 identity has the appropriate role for the tools being exposed. Common roles:
 
-- `roles/storage.objectViewer` — read-only access to objects (sufficient for
-  `cloud-storage-list-objects` and `cloud-storage-read-object`)
-- `roles/storage.objectUser` — read and write access to objects
+- `roles/storage.bucketViewer` — read-only access to bucket metadata, including
+  listing buckets with `cloud-storage-list-buckets`.
+- `roles/storage.objectViewer` — read-only access to objects and object
+  metadata, sufficient for `cloud-storage-list-objects`,
+  `cloud-storage-get-object-metadata`, `cloud-storage-read-object`, and
+  `cloud-storage-download-object`.
+- `roles/storage.objectUser` — read and write access to objects, sufficient for
+  `cloud-storage-upload-object`.
 - `roles/storage.admin` — full control, including bucket management
 
 See [Cloud Storage IAM roles][gcs-iam] for the full list.
+
+Tools that read from or write to local files operate on the filesystem of the
+Toolbox server process, not the client machine. The server process must have
+the corresponding local file permissions.
 
 [iam-overview]: https://cloud.google.com/storage/docs/access-control/iam
 [adc]: https://cloud.google.com/docs/authentication#adc

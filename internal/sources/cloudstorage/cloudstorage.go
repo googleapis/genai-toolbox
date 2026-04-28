@@ -16,8 +16,12 @@ package cloudstorage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"mime"
+	"os"
+	"path/filepath"
 	"unicode/utf8"
 
 	"cloud.google.com/go/storage"
@@ -182,6 +186,132 @@ func (s *Source) ReadObject(ctx context.Context, bucket, object string, offset, 
 		"content":     string(data),
 		"contentType": reader.Attrs.ContentType,
 		"size":        len(data),
+	}, nil
+}
+
+// ListBuckets lists buckets in a project. When project is empty, the source's
+// configured project is used. maxResults == 0 returns up to the GCS per-page
+// default (1000). A non-empty pageToken resumes listing. The returned map
+// contains "buckets" ([]*storage.BucketAttrs) and "nextPageToken" (empty when
+// there are no more results).
+func (s *Source) ListBuckets(ctx context.Context, project, prefix string, maxResults int, pageToken string) (map[string]any, error) {
+	if project == "" {
+		project = s.Project
+	}
+	it := s.client.Buckets(ctx, project)
+	if prefix != "" {
+		it.Prefix = prefix
+	}
+	ps := maxResults
+	if ps <= 0 {
+		ps = 1000
+	}
+	pager := iterator.NewPager(it, ps, pageToken)
+
+	var buckets []*storage.BucketAttrs
+	nextPageToken, err := pager.NextPage(&buckets)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list buckets in project %q: %w", project, err)
+	}
+	return map[string]any{
+		"buckets":       buckets,
+		"nextPageToken": nextPageToken,
+	}, nil
+}
+
+// GetObjectMetadata returns the raw *storage.ObjectAttrs for an object, giving
+// callers the full field set the GCS client exposes (name, size, contentType,
+// hashes, timestamps, user metadata, etc.) without a curated subset.
+func (s *Source) GetObjectMetadata(ctx context.Context, bucket, object string) (*storage.ObjectAttrs, error) {
+	attrs, err := s.client.Bucket(bucket).Object(object).Attrs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metadata for object %q in bucket %q: %w", object, bucket, err)
+	}
+	return attrs, nil
+}
+
+// DownloadObject streams a GCS object to destination on the local filesystem.
+// Unlike ReadObject there is no size cap and no UTF-8 check — the bytes go to
+// disk, not into the LLM context, so binary payloads are fine. When overwrite
+// is false, a pre-existing destination returns cloudstoragecommon.ErrDestinationExists
+// (mapped to AgentError so the caller can retry with overwrite=true).
+func (s *Source) DownloadObject(ctx context.Context, bucket, object, destination string, overwrite bool) (map[string]any, error) {
+	reader, err := s.client.Bucket(bucket).Object(object).NewReader(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open object %q in bucket %q: %w", object, bucket, err)
+	}
+	defer reader.Close()
+
+	flags := os.O_WRONLY | os.O_CREATE
+	if overwrite {
+		flags |= os.O_TRUNC
+	} else {
+		flags |= os.O_EXCL
+	}
+	f, err := os.OpenFile(destination, flags, 0o644)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return nil, fmt.Errorf("destination %q: %w", destination, cloudstoragecommon.ErrDestinationExists)
+		}
+		return nil, fmt.Errorf("failed to open destination %q: %w", destination, err)
+	}
+
+	n, err := io.Copy(f, reader)
+	if err != nil {
+		_ = f.Close()
+		return nil, fmt.Errorf("failed to write object %q to %q: %w", object, destination, err)
+	}
+	if err := f.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close destination %q: %w", destination, err)
+	}
+
+	return map[string]any{
+		"destination": destination,
+		"bytes":       n,
+		"contentType": reader.Attrs.ContentType,
+	}, nil
+}
+
+// UploadObject streams a local file into a GCS object. When contentType is
+// empty, mime.TypeByExtension is consulted; if inference still fails the
+// writer's ContentType is left unset so GCS content-sniffs the first 512 bytes.
+// The returned contentType is the post-Close value from w.Attrs(), i.e. what
+// GCS actually recorded.
+func (s *Source) UploadObject(ctx context.Context, bucket, object, source, contentType string) (map[string]any, error) {
+	f, err := os.Open(source)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open source %q: %w", source, err)
+	}
+	defer f.Close()
+
+	if contentType == "" {
+		contentType = mime.TypeByExtension(filepath.Ext(source))
+	}
+
+	w := s.client.Bucket(bucket).Object(object).NewWriter(ctx)
+	if contentType != "" {
+		w.ContentType = contentType
+	}
+
+	n, err := io.Copy(w, f)
+	if err != nil {
+		_ = w.Close()
+		return nil, fmt.Errorf("failed to copy %q to object %q in bucket %q: %w", source, object, bucket, err)
+	}
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize upload of %q to %q/%q: %w", source, bucket, object, err)
+	}
+
+	attrs := w.Attrs()
+	finalContentType := ""
+	if attrs != nil {
+		finalContentType = attrs.ContentType
+	}
+	return map[string]any{
+		"bucket":      bucket,
+		"object":      object,
+		"bytes":       n,
+		"contentType": finalContentType,
 	}, nil
 }
 
