@@ -463,7 +463,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	ctx := r.Context()
-	ctx = util.WithLogger(ctx, s.logger)
 
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
