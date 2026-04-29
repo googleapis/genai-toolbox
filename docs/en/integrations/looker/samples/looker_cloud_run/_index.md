@@ -76,7 +76,7 @@ It is easy to run MCP Toolbox in Google Cloud Run.
     ```json
     "mcpServers": {
         "looker": {
-            "httpUrl": "https://looker-mcp-toolbox-713326649261.us-central1.run.app/mcp",
+            "httpUrl": "https://<your-cloud-run-url>/mcp",
             "oauth": {
                 "clientId": "gemini-cli",
                 "redirectUri": "http://localhost:7777/oauth/callback"
