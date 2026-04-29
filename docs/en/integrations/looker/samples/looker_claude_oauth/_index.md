@@ -4,7 +4,7 @@ type: docs
 weight: 2
 description: >
   How to connect to Looker from Claude Desktop with end-user credentials
-sample_filters: ["looker", "mcp", "oauth", "claude_desktop"]
+sample_filters: ["Looker", "OAuth", "Claude Desktop"]
 is_sample: true
 ---
 
