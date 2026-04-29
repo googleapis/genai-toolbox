@@ -365,6 +365,14 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	logger := l.SlogLogger()
 	r.Use(httplog.RequestLogger(logger, httpOpts))
 
+	// Inject logger into ctx for all requests
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			ctx := util.WithLogger(req.Context(), l)
+			next.ServeHTTP(w, req.WithContext(ctx))
+		})
+	})
+
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)

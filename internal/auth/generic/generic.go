@@ -313,7 +313,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to read introspection response: %v", err), ScopesRequired: a.ScopesRequired}
+		return fmt.Errorf("failed to read introspection response: %w", err)
 	}
 
 	var introspectResp struct {
@@ -324,7 +324,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	}
 
 	if err := json.Unmarshal(body, &introspectResp); err != nil {
-		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to parse introspection response: %v", err), ScopesRequired: a.ScopesRequired}
+		return fmt.Errorf("failed to parse introspection response: %w", err)
 	}
 
 	if !introspectResp.Active {
