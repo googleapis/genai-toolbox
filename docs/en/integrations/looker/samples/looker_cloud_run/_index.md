@@ -4,7 +4,7 @@ type: docs
 weight: 2
 description: >
   How to start an MCP Toolbox instance in Google Cloud Run to connect to Looker.
-sample_filters: ["mcp", "looker", "oauth", "google_cloud_run"]
+sample_filters: ["Looker", "OAuth", "Google Cloud Run"]
 is_sample: true
 ---
 
