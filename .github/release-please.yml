@@ -39,6 +39,10 @@ extraFiles: [
     "docs/en/documentation/connect-to/ides/sqlite_mcp.md",
     "docs/en/documentation/connect-to/ides/oracle_mcp.md",
     "gemini-extension.json",
+    "npm/server-darwin-arm64/version.txt",
+    "npm/server-darwin-x64/version.txt",
+    "npm/server-linux-x64/version.txt",
+    "npm/server-win32-x64/version.txt",
     {
         "type": "json",
         "path": "server.json",
@@ -49,4 +53,49 @@ extraFiles: [
         "path": "server.json",
         "jsonpath": "$.packages[0].identifier"
     },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-darwin-arm64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-darwin-x64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-linux-x64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-win32-x64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-darwin-arm64/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-darwin-x64/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-linux-x64/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-win32-x64/package.json",
+        "jsonpath": "$.version"
+    }
 ]
