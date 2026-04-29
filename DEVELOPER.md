@@ -87,9 +87,11 @@ Now the toolbox.exe file is ready to use. Transfer it to your windows machine an
 
 3. Run the following commands from your mcp-toolbox folder in PowerShell.
     ```powershell
+    $env:GOOS="windows"
+    $env:GOARCH="amd64"
     $env:CGO_ENABLED=1
-    $env:CC="zig cc"
-    $env:CXX="zig c++"
+    $env:CC="zig cc -target x86_64-windows-gnu"
+    $env:CXX="zig c++ -target x86_64-windows-gnu"
     go build -o toolbox.exe
     ```
 
