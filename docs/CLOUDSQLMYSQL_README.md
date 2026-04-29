@@ -9,6 +9,7 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
 - **Query Data** - Execute SQL queries and analyze query plans
 - **Explore Schema** - List tables and view schema details
 - **Database Maintenance** - Check for fragmentation and missing indexes
+- **Search Catalog** - Search for data assets in Knowledge Catalog (Dataplex)
 - **Monitor Performance** - View active queries
 
 For Cloud SQL infrastructure management, search the MCP store for the Cloud SQL for MySQL Admin MCP Server.
@@ -47,6 +48,7 @@ Once configured, the MCP server will automatically provide Cloud SQL for MySQL c
 
 *   "Show me the schema for the 'orders' table."
 *   "List the top 10 active queries."
+*   "Search for tables related to customers in the catalog."
 *   "Check for tables missing unique indexes."
 
 ## Server Capabilities
@@ -57,6 +59,7 @@ The Cloud SQL for MySQL MCP server provides the following tools:
 |:-------------------------------------|:------------------------------------------------------------------------|
 | `execute_sql`                        | Use this tool to execute SQL.                                           |
 | `list_active_queries`                | Lists top N ongoing queries from processlist and innodb_trx.            |
+| `search_catalog`                      | Searches for data assets in Knowledge Catalog (Dataplex).               |
 | `get_query_plan`                     | Provide information about how MySQL executes a SQL statement (EXPLAIN). |
 | `list_tables`                        | Lists detailed schema information for user-created tables.              |
 | `list_tables_missing_unique_indexes` | Find tables that do not have primary or unique key constraint.          |

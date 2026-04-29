@@ -70,7 +70,7 @@ func ConstructSearchQuery(prompt string, projectIds []string, parentIds []string
 		queryParts = append(queryParts, clause)
 	}
 
-	if clause := ConstructSearchQueryHelper("parent", "=", parentIds); clause != "" {
+	if clause := ConstructSearchQueryHelper("parent", ":", parentIds); clause != "" {
 		queryParts = append(queryParts, clause)
 	}
 

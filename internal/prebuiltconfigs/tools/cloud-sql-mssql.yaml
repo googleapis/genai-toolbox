@@ -152,6 +152,12 @@ type: cloud-sql-wait-for-operation
 source: cloud-sql-admin-source
 multiplier: 4
 ---
+kind: tool
+name: search_catalog
+type: mssql-search-catalog
+source: cloudsql-mssql-source
+description: Searches for data assets (eg. MSSQL tables, views, or databases) in catalog based on the provided search query
+---
 kind: toolset
 name: admin
 tools:
@@ -168,6 +174,13 @@ name: data
 tools:
 - execute_sql
 - list_tables
+---
+kind: toolset
+name: data_with_discovery
+tools:
+- execute_sql
+- list_tables
+- search_catalog
 ---
 kind: toolset
 name: monitor

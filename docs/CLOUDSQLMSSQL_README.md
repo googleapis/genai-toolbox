@@ -8,6 +8,7 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 
 - **Query Data** - Execute SQL queries
 - **Explore Schema** - List tables and view schema details
+- **Search Catalog** - Search for data assets in Knowledge Catalog (Dataplex)
 
 For Cloud SQL infrastructure management, search the MCP store for the Cloud SQL for SQL Server Admin MCP Server.
 
@@ -45,6 +46,7 @@ Once configured, the MCP server will automatically provide Cloud SQL for SQL Ser
 
 *   "Select top 10 rows from the customers table."
 *   "List all tables in the database."
+*   "Search for tables related to customers in the catalog."
 
 ## Server Capabilities
 
@@ -54,6 +56,7 @@ The Cloud SQL for SQL Server MCP server provides the following tools:
 |:--------------|:-----------------------------------------------------------|
 | `execute_sql` | Use this tool to execute SQL.                              |
 | `list_tables` | Lists detailed schema information for user-created tables. |
+| `search_catalog` | Searches for data assets in Knowledge Catalog (Dataplex). |
 
 ## Custom MCP Server Configuration
 

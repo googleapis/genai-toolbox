@@ -24,3 +24,4 @@ description: "Details of the Cloud SQL for SQL Server prebuilt configuration."
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (formerly known as Dataplex).
