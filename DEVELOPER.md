@@ -65,7 +65,6 @@ should work for macOS with small changes.
 
 2. Change to your MCP Toolbox directory and run the following:
     ```bash
-    cd $HOME/mcp-toolbox
     GOOS=windows \
     GOARCH=amd64 \
     CGO_ENABLED=1 \
@@ -79,6 +78,22 @@ should work for macOS with small changes.
 
 Now the toolbox.exe file is ready to use. Transfer it to your windows machine and test it.
 
+#### Compiling on Windows
+
+1. Download and install the zig 0.15.2 package for windows.
+
+2. Make sure that zig is in your path by typing `zig` at the command line. You should get
+   help data.
+
+3. Run the following commands from your mcp-toolbox folder in PowerShell.
+    ```powershell
+    $env:GOOS="windows"
+    $env:GOARCH="amd64"
+    $env:CGO_ENABLED=1
+    $env:CC="zig cc -target x86_64-windows-gnu"
+    $env:CXX="zig c++ -target x86_64-windows-gnu"
+    go build -o toolbox.exe
+    ```
 
 ### Tool Naming Conventions
 
