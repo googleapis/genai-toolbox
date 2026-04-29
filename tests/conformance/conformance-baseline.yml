@@ -34,3 +34,4 @@ server:
   - prompts-get-embedded-resource
   - prompts-get-with-image
   - server-sse-multiple-streams
+  - sep-2164-resource-not-found
