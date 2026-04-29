@@ -47,8 +47,8 @@ It is easy to run MCP Toolbox in Google Cloud Run.
 
     ```json
     {
-    "resource": "https://looker-mcp-toolbox-713326649261.us-central1.run.app/mcp",
-    "authorization_servers": ["https://sandbox.looker-devrel.com"],
+    "resource": "https://<your-cloud-run-url>/mcp",
+    "authorization_servers": ["https://<your-looker-instance>.looker.com"],
     "scopes_supported": ["cors_api"]
     }
     ```
