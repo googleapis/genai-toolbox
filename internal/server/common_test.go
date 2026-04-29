@@ -29,7 +29,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -186,16 +185,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		}
 	}
 
-	wrapper := chi.NewRouter()
-	wrapper.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			ctx := util.WithLogger(req.Context(), server.logger)
-			next.ServeHTTP(w, req.WithContext(ctx))
-		})
-	})
-	wrapper.Mount("/", r)
-
-	return wrapper, shutdown
+	return r, shutdown
 }
 
 func runServer(r chi.Router, tls bool) *httptest.Server {
