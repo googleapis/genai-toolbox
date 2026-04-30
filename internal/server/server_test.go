@@ -724,6 +724,34 @@ func TestMCPAuthMiddleware(t *testing.T) {
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Errorf("expected status %d, got %d", tc.wantStatusCode, resp.StatusCode)
 			}
+
+			contentType := resp.Header.Get("Content-Type")
+			if !strings.Contains(contentType, "application/json") {
+				t.Errorf("expected Content-Type to contain application/json, got %q", contentType)
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("failed to read body: %v", err)
+			}
+
+			var jsonResp map[string]any
+			if err := json.Unmarshal(body, &jsonResp); err != nil {
+				t.Errorf("response body is not valid JSON: %v\nBody: %s", err, string(body))
+			}
+
+			if tc.wantStatusCode != http.StatusOK {
+				if _, ok := jsonResp["error"]; !ok {
+					t.Errorf("expected error field in response, got: %s", string(body))
+				}
+				if jsonResp["jsonrpc"] != "2.0" {
+					t.Errorf("expected jsonrpc 2.0, got: %v", jsonResp["jsonrpc"])
+				}
+			} else {
+				if _, ok := jsonResp["result"]; !ok {
+					t.Errorf("expected result field in response, got: %s", string(body))
+				}
+			}
 		})
 	}
 }
