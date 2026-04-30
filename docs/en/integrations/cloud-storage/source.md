@@ -4,7 +4,7 @@ linkTitle: "Source"
 type: docs
 weight: 1
 description: >
-  Cloud Storage is Google Cloud's managed service for storing unstructured objects (files) in buckets. Toolbox connects at the project level, allowing tools to list buckets, list objects, read object metadata and content, and transfer objects between Cloud Storage and the server filesystem.
+  Cloud Storage is Google Cloud's managed service for storing unstructured objects (files) in buckets. Toolbox connects at the project level, allowing tools to list buckets, list objects, read object metadata and content, mutate objects, and transfer objects between Cloud Storage and the server filesystem.
 no_list: true
 ---
 
@@ -47,8 +47,19 @@ identity has the appropriate role for the tools being exposed. Common roles:
   `cloud-storage-get-object-metadata`, `cloud-storage-read-object`, and
   `cloud-storage-download-object`.
 - `roles/storage.objectUser` — read and write access to objects, sufficient for
-  `cloud-storage-upload-object`.
+  `cloud-storage-upload-object`, `cloud-storage-write-object`, and
+  `cloud-storage-copy-object`.
 - `roles/storage.admin` — full control, including bucket management
+
+Object mutation tools require the corresponding object permissions:
+
+- `cloud-storage-upload-object`, `cloud-storage-write-object`, and
+  `cloud-storage-copy-object` require object create or update permissions on
+  the destination object.
+- `cloud-storage-move-object` requires `storage.objects.move` and
+  `storage.objects.create` in the same bucket. If the destination object
+  already exists, `storage.objects.delete` is also required.
+- `cloud-storage-delete-object` requires object delete permission.
 
 See [Cloud Storage IAM roles][gcs-iam] for the full list.
 

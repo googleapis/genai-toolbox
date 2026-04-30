@@ -315,6 +315,91 @@ func (s *Source) UploadObject(ctx context.Context, bucket, object, source, conte
 	}, nil
 }
 
+// WriteObject writes text content directly into a GCS object. When contentType
+// is empty, the writer's ContentType is left unset so Cloud Storage detects it
+// from the first 512 bytes. The returned contentType is the post-Close value
+// from w.Attrs(), i.e. what GCS actually recorded.
+func (s *Source) WriteObject(ctx context.Context, bucket, object, content, contentType string) (map[string]any, error) {
+	w := s.client.Bucket(bucket).Object(object).NewWriter(ctx)
+	if contentType != "" {
+		w.ContentType = contentType
+	}
+
+	n, err := io.WriteString(w, content)
+	if err != nil {
+		_ = w.Close()
+		return nil, fmt.Errorf("failed to write content to object %q in bucket %q: %w", object, bucket, err)
+	}
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize write to %q/%q: %w", bucket, object, err)
+	}
+
+	attrs := w.Attrs()
+	finalContentType := ""
+	if attrs != nil {
+		finalContentType = attrs.ContentType
+	}
+	return map[string]any{
+		"bucket":      bucket,
+		"object":      object,
+		"bytes":       n,
+		"contentType": finalContentType,
+	}, nil
+}
+
+// CopyObject copies an object to a destination object. The destination may be
+// in the same bucket or a different bucket. Existing destination objects are
+// replaced, matching Cloud Storage's copy semantics without preconditions.
+func (s *Source) CopyObject(ctx context.Context, sourceBucket, sourceObject, destinationBucket, destinationObject string) (map[string]any, error) {
+	src := s.client.Bucket(sourceBucket).Object(sourceObject)
+	dst := s.client.Bucket(destinationBucket).Object(destinationObject)
+
+	attrs, err := dst.CopierFrom(src).Run(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy %q/%q to %q/%q: %w", sourceBucket, sourceObject, destinationBucket, destinationObject, err)
+	}
+
+	return map[string]any{
+		"sourceBucket":      sourceBucket,
+		"sourceObject":      sourceObject,
+		"destinationBucket": destinationBucket,
+		"destinationObject": destinationObject,
+		"bytes":             attrs.Size,
+		"contentType":       attrs.ContentType,
+	}, nil
+}
+
+// MoveObject atomically renames or moves an object within the same bucket using
+// Cloud Storage's native move API. Cross-bucket moves should be modeled as
+// CopyObject followed by DeleteObject.
+func (s *Source) MoveObject(ctx context.Context, bucket, sourceObject, destinationObject string) (map[string]any, error) {
+	attrs, err := s.client.Bucket(bucket).Object(sourceObject).Move(ctx, storage.MoveObjectDestination{Object: destinationObject})
+	if err != nil {
+		return nil, fmt.Errorf("failed to move %q to %q in bucket %q: %w", sourceObject, destinationObject, bucket, err)
+	}
+
+	return map[string]any{
+		"bucket":            bucket,
+		"sourceObject":      sourceObject,
+		"destinationObject": destinationObject,
+		"bytes":             attrs.Size,
+		"contentType":       attrs.ContentType,
+	}, nil
+}
+
+// DeleteObject deletes a GCS object.
+func (s *Source) DeleteObject(ctx context.Context, bucket, object string) (map[string]any, error) {
+	if err := s.client.Bucket(bucket).Object(object).Delete(ctx); err != nil {
+		return nil, fmt.Errorf("failed to delete object %q in bucket %q: %w", object, bucket, err)
+	}
+
+	return map[string]any{
+		"bucket":  bucket,
+		"object":  object,
+		"deleted": true,
+	}, nil
+}
+
 func initGCSClient(ctx context.Context, tracer trace.Tracer, name, project string) (*storage.Client, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
