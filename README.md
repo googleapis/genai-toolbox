@@ -37,7 +37,7 @@ This README provides a brief overview. For comprehensive details, see the [full 
 > `git remote set-url origin https://github.com/googleapis/mcp-toolbox.git`
 
 > [!NOTE]
-> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/mcp-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
+> This solution was originally named “Gen AI Toolbox for Databases” (github.com/googleapis/genai-toolbox) as its initial development predated MCP, but was renamed to align with the MCP compatibility.
 
 <!-- TOC ignore:true -->
 ## Table of Contents
@@ -446,7 +446,7 @@ After installing a [Gemini CLI extensions](https://geminicli.com/extensions/), t
 gemini
 
 # List extensions
-/exttensions list
+/extensions list
 # List MCP servers
 /mcp list
 ```

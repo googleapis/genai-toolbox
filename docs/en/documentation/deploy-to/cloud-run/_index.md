@@ -72,8 +72,8 @@ database are in the same VPC network.
 
 1. Grant additional permissions to the service account that are specific to the
    source, e.g.:
-    - [AlloyDB for PostgreSQL](../../../integrations/alloydb/_index.md#iam-permissions)
-    - [Cloud SQL for PostgreSQL](../../../integrations/cloud-sql-pg/_index.md#iam-permissions)
+    - [AlloyDB for PostgreSQL](../../../integrations/alloydb/source.md#iam-authentication)
+    - [Cloud SQL for PostgreSQL](../../../integrations/cloud-sql-pg/source.md#iam-permissions)
 
 ## Configure `tools.yaml` file
 

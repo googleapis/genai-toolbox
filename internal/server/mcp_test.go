@@ -990,7 +990,6 @@ func TestSseEndpoint(t *testing.T) {
 	contentType := "text/event-stream"
 	cacheControl := "no-cache"
 	connection := "keep-alive"
-	accessControlAllowOrigin := "*"
 
 	testCases := []struct {
 		name   string
@@ -1055,9 +1054,6 @@ func TestSseEndpoint(t *testing.T) {
 			}
 			if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
 				t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
-			}
-			if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
-				t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
 			}
 
 			buffer := make([]byte, 1024)

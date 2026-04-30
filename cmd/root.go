@@ -87,6 +87,7 @@ func Execute() {
 	opts := internal.NewToolboxOptions()
 
 	if err := NewCommand(opts).Execute(); err != nil {
+		fmt.Fprintf(opts.IOStreams.ErrOut, "Error: %v\n", err)
 		exit := 1
 		os.Exit(exit)
 	}
@@ -475,6 +476,12 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
+	useTLS := opts.Cfg.CertFile != "" || opts.Cfg.KeyFile != ""
+	protocol := "http"
+	if useTLS {
+		protocol = "https"
+	}
+
 	// run server in background
 	srvErr := make(chan error)
 	if opts.Cfg.Stdio {
@@ -486,7 +493,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 			}
 		}()
 	} else {
-		err = s.Listen(ctx)
+		err = s.Listen(ctx, opts.Cfg.CertFile, opts.Cfg.KeyFile)
 		if err != nil {
 			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -494,7 +501,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		}
 		opts.Logger.InfoContext(ctx, "Server ready to serve!")
 		if opts.Cfg.UI {
-			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://%s:%d/ui", opts.Cfg.Address, opts.Cfg.Port))
+			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: %s://%s:%d/ui", protocol, opts.Cfg.Address, opts.Cfg.Port))
 		}
 
 		go func() {

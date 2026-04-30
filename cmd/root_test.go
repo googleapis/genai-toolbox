@@ -232,6 +232,20 @@ func TestServerConfigFlags(t *testing.T) {
 				UserAgentMetadata: []string{"foo", "bar"},
 			}),
 		},
+		{
+			desc: "cert file",
+			args: []string{"--tls-cert", "cert.pem"},
+			want: withDefaults(server.ServerConfig{
+				CertFile: "cert.pem",
+			}),
+		},
+		{
+			desc: "key file",
+			args: []string{"--tls-key", "key.pem"},
+			want: withDefaults(server.ServerConfig{
+				KeyFile: "key.pem",
+			}),
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -699,7 +713,7 @@ func TestFileLoadingErrors(t *testing.T) {
 }
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	// Setup custom config
 	customContent := `
 kind: tool
@@ -867,7 +881,7 @@ tools:
 }
 
 func TestDefaultConfigBehavior(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	testCases := []struct {
 		desc      string
 		args      []string

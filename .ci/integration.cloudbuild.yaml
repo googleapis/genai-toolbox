@@ -448,6 +448,34 @@ steps:
           exit 0
         fi
 
+  - id: "cloud-storage"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CLOUD_STORAGE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="cloudstorage|internal/server/|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Relevant changes detected. Running Cloud Storage tests..."
+          .ci/test_with_coverage.sh \
+            "Cloud Storage" \
+            cloudstorage \
+            cloudstorage
+        else
+          echo "No relevant changes for Cloud Storage. Skipping shard."
+          exit 0
+        fi
+
   - id: "postgres"
     name: golang:1
     waitFor: ["compile-test-binary", "detect-changes"]

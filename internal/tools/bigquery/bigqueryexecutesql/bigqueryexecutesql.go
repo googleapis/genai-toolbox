@@ -192,7 +192,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps, source.GetMaximumBytesBilled())
 	if err != nil {
-		return nil, util.NewClientServerError("query validation failed", http.StatusInternalServerError, err)
+		return nil, util.ProcessGcpError(err)
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
