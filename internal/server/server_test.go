@@ -1027,7 +1027,7 @@ func TestMCPAuthMiddleware(t *testing.T) {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
 
-	if err := s.Listen(ctx); err != nil {
+	if err := s.Listen(ctx, "", ""); err != nil {
 		t.Fatalf("unable to start server: %v", err)
 	}
 
