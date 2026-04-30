@@ -694,6 +694,14 @@ func TestMCPAuthMiddleware(t *testing.T) {
 			},
 			wantStatusCode: http.StatusInternalServerError,
 		},
+		{
+			name:  "unreachable introspection",
+			token: "any-token",
+			setupMock: func() {
+				mockOIDC.Close()
+			},
+			wantStatusCode: http.StatusInternalServerError,
+		},
 	}
 
 	url := fmt.Sprintf("http://%s:%d/mcp", addr, port)
