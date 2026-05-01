@@ -84,7 +84,7 @@ example, does this automatically.
   You may want to specify additional settings.
   {{< /notice >}}
 
-1.  Deploy the toolbox and check that navigating to the proxy server url with the
+4.  Deploy the toolbox and check that navigating to the proxy server url with the
     path `/.well-known/oauth-protected-resource`. You should see the contents of
     your PRM file in the browser.
 

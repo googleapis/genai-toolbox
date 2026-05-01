@@ -42,7 +42,7 @@ It is easy to run MCP Toolbox in Google Cloud Run.
   You may want to specify additional settings under "Container arguments".
   {{< /notice >}}
 
-1.  Under “Variables & Secrets” set `LOOKER_BASE_URL`, setting it to the URL of
+6.  Under “Variables & Secrets” set `LOOKER_BASE_URL`, setting it to the URL of
     your Looker server, and `LOOKER_USE_CLIENT_OAUTH=true`.
     
     ![Container variables](./container_variables.png)
