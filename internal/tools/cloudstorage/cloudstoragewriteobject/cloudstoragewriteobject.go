@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudstoragelistobjects
+package cloudstoragewriteobject
 
 import (
 	"context"
@@ -28,18 +28,13 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "cloud-storage-list-objects"
-
-// maxResultsLimit matches the GCS per-page cap. Values above this are rejected
-// in Invoke so callers see an explicit error instead of a silently-clamped page.
-const maxResultsLimit = 1000
+const resourceType string = "cloud-storage-write-object"
 
 const (
-	bucketKey     = "bucket"
-	prefixKey     = "prefix"
-	delimiterKey  = "delimiter"
-	maxResultsKey = "max_results"
-	pageTokenKey  = "page_token"
+	bucketKey      = "bucket"
+	objectKey      = "object"
+	contentKey     = "content"
+	contentTypeKey = "content_type"
 )
 
 func init() {
@@ -57,7 +52,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxResults int, pageToken string) (map[string]any, error)
+	WriteObject(ctx context.Context, bucket, object, content, contentType string) (map[string]any, error)
 }
 
 type Config struct {
@@ -69,7 +64,6 @@ type Config struct {
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -77,14 +71,13 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from.")
-	prefixParam := parameters.NewStringParameterWithDefault(prefixKey, "", "Filter results to objects whose names begin with this prefix.")
-	delimiterParam := parameters.NewStringParameterWithDefault(delimiterKey, "", "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.")
-	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.")
-	pageTokenParam := parameters.NewStringParameterWithDefault(pageTokenKey, "", "A previously-returned page token for retrieving the next page of results.")
-	params := parameters.Parameters{bucketParam, prefixParam, delimiterParam, maxResultsParam, pageTokenParam}
+	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to write into.")
+	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
+	contentParam := parameters.NewStringParameter(contentKey, "Text content to write to the Cloud Storage object.")
+	contentTypeParam := parameters.NewStringParameterWithDefault(contentTypeKey, "", "MIME type to record on the written object. When empty, Cloud Storage auto-detects from the first 512 bytes of content.")
+	params := parameters.Parameters{bucketParam, objectParam, contentParam, contentTypeParam}
 
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
 	t := Tool{
@@ -96,7 +89,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -121,18 +113,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok || bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
-	prefix, _ := mapParams[prefixKey].(string)
-	delimiter, _ := mapParams[delimiterKey].(string)
-	pageToken, _ := mapParams[pageTokenKey].(string)
-	maxResults, _ := mapParams[maxResultsKey].(int)
-	if maxResults < 0 {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter: %d must be >= 0 (use 0 for the API default)", maxResultsKey, maxResults), nil)
+	object, ok := mapParams[objectKey].(string)
+	if !ok || object == "" {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", objectKey), nil)
 	}
-	if maxResults > maxResultsLimit {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter: %d exceeds the maximum of %d", maxResultsKey, maxResults, maxResultsLimit), nil)
+	content, ok := mapParams[contentKey].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a string", contentKey), nil)
 	}
+	contentType, _ := mapParams[contentTypeKey].(string)
 
-	resp, err := source.ListObjects(ctx, bucket, prefix, delimiter, maxResults, pageToken)
+	resp, err := source.WriteObject(ctx, bucket, object, content, contentType)
 	if err != nil {
 		return nil, cloudstoragecommon.ProcessGCSError(err)
 	}

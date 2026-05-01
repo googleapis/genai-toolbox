@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudstoragelistobjects_test
+package cloudstoragelistbuckets_test
 
 import (
 	"context"
@@ -24,12 +24,12 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragelistobjects"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragelistbuckets"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
+func TestParseFromYamlCloudStorageListBuckets(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -43,17 +43,17 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 			desc: "basic example",
 			in: `
 			kind: tool
-			name: list_objects_tool
-			type: cloud-storage-list-objects
+			name: list_buckets_tool
+			type: cloud-storage-list-buckets
 			source: my-gcs
-			description: List objects in a Cloud Storage bucket
+			description: List Cloud Storage buckets
 			`,
 			want: server.ToolConfigs{
-				"list_objects_tool": cloudstoragelistobjects.Config{
-					Name:         "list_objects_tool",
-					Type:         "cloud-storage-list-objects",
+				"list_buckets_tool": cloudstoragelistbuckets.Config{
+					Name:         "list_buckets_tool",
+					Type:         "cloud-storage-list-buckets",
 					Source:       "my-gcs",
-					Description:  "List objects in a Cloud Storage bucket",
+					Description:  "List Cloud Storage buckets",
 					AuthRequired: []string{},
 				},
 			},
@@ -62,21 +62,20 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 			desc: "with auth requirements",
 			in: `
 			kind: tool
-			name: secure_list_objects
-			type: cloud-storage-list-objects
+			name: secure_list_buckets
+			type: cloud-storage-list-buckets
 			source: prod-gcs
-			description: List objects with authentication
+			description: List buckets with authentication
 			authRequired:
 				- google-auth-service
-				- api-key-service
 			`,
 			want: server.ToolConfigs{
-				"secure_list_objects": cloudstoragelistobjects.Config{
-					Name:         "secure_list_objects",
-					Type:         "cloud-storage-list-objects",
+				"secure_list_buckets": cloudstoragelistbuckets.Config{
+					Name:         "secure_list_buckets",
+					Type:         "cloud-storage-list-buckets",
 					Source:       "prod-gcs",
-					Description:  "List objects with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					Description:  "List buckets with authentication",
+					AuthRequired: []string{"google-auth-service"},
 				},
 			},
 		},
@@ -96,12 +95,14 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 
 type mockSource struct {
 	sources.Source
+	gotProject string
 	listCalled bool
 }
 
-func (m *mockSource) ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxResults int, pageToken string) (map[string]any, error) {
+func (m *mockSource) ListBuckets(ctx context.Context, project, prefix string, maxResults int, pageToken string) (map[string]any, error) {
 	m.listCalled = true
-	return map[string]any{"objects": []any{}, "prefixes": []string{}, "nextPageToken": ""}, nil
+	m.gotProject = project
+	return map[string]any{"buckets": []any{}, "nextPageToken": ""}, nil
 }
 
 type mockSourceProvider struct {
@@ -111,6 +112,21 @@ type mockSourceProvider struct {
 
 func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 	return m.source, true
+}
+
+func initTool(t *testing.T) tools.Tool {
+	t.Helper()
+	cfg := cloudstoragelistbuckets.Config{
+		Name:        "list_buckets_tool",
+		Type:        "cloud-storage-list-buckets",
+		Source:      "my-gcs",
+		Description: "List buckets",
+	}
+	tool, err := cfg.Initialize(nil)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	return tool
 }
 
 func TestInvokeMaxResultsValidation(t *testing.T) {
@@ -124,24 +140,13 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			cfg := cloudstoragelistobjects.Config{
-				Name:        "list_objects_tool",
-				Type:        "cloud-storage-list-objects",
-				Source:      "my-gcs",
-				Description: "List objects",
-			}
-			tool, err := cfg.Initialize(nil)
-			if err != nil {
-				t.Fatalf("failed to initialize tool: %v", err)
-			}
-
+			tool := initTool(t)
 			src := &mockSource{}
 			resourceMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
-				{Name: "bucket", Value: "my-bucket"},
+				{Name: "project", Value: ""},
 				{Name: "prefix", Value: ""},
-				{Name: "delimiter", Value: ""},
 				{Name: "max_results", Value: tc.maxResults},
 				{Name: "page_token", Value: ""},
 			}
@@ -159,7 +164,41 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 				}
 			}
 			if src.listCalled {
-				t.Errorf("expected ListObjects not to be called when validation fails")
+				t.Errorf("expected ListBuckets not to be called when validation fails")
+			}
+		})
+	}
+}
+
+func TestInvokeProjectPassthrough(t *testing.T) {
+	tool := initTool(t)
+
+	tcs := []struct {
+		desc       string
+		project    string
+		wantPassed string
+	}{
+		{desc: "empty project uses source fallback", project: "", wantPassed: ""},
+		{desc: "explicit project overrides", project: "override-project", wantPassed: "override-project"},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			src := &mockSource{}
+			resourceMgr := &mockSourceProvider{source: src}
+			params := parameters.ParamValues{
+				{Name: "project", Value: tc.project},
+				{Name: "prefix", Value: ""},
+				{Name: "max_results", Value: 0},
+				{Name: "page_token", Value: ""},
+			}
+			if _, err := tool.Invoke(context.Background(), resourceMgr, params, ""); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !src.listCalled {
+				t.Fatalf("expected ListBuckets to be called")
+			}
+			if src.gotProject != tc.wantPassed {
+				t.Errorf("project forwarded = %q, want %q", src.gotProject, tc.wantPassed)
 			}
 		})
 	}
