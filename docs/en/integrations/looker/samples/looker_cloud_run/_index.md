@@ -36,13 +36,7 @@ It is easy to run MCP Toolbox in Google Cloud Run.
 
     ![Container Settings](./container_settings.png)
 
-  {{< notice tip >}}
-  Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
-  specifically the subsection on "Hardening Toolbox" for security recommendations.
-  You may want to specify additional settings under "Container arguments".
-  {{< /notice >}}
-
-6.  Under “Variables & Secrets” set `LOOKER_BASE_URL`, setting it to the URL of
+1.  Under “Variables & Secrets” set `LOOKER_BASE_URL`, setting it to the URL of
     your Looker server, and `LOOKER_USE_CLIENT_OAUTH=true`.
     
     ![Container variables](./container_variables.png)
@@ -71,6 +65,12 @@ It is easy to run MCP Toolbox in Google Cloud Run.
 
 1.  Validate the service is running by going to the URL, followed by
     `/.well-known/oauth-protected-resource`.
+
+{{< notice tip >}}
+Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
+specifically the subsection on "Hardening Toolbox" for security recommendations.
+You may want to specify additional settings under "Container arguments".
+{{< /notice >}}
 
 ## Using the MCP Toolbox Via OAuth and Gemini CLI
 

@@ -78,17 +78,17 @@ example, does this automatically.
     use a listening port other than 5000\. Google Cloud Run, for example,
     automatically forwards external traffic from port 443, the HTTPS port, to 8080\.
 
-  {{< notice tip >}}
-  Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
-  specifically the subsection on "Hardening Toolbox" for security recommendations.
-  You may want to specify additional settings.
-  {{< /notice >}}
-
-4.  Deploy the toolbox and check that navigating to the proxy server url with the
+1.  Deploy the toolbox and check that navigating to the proxy server url with the
     path `/.well-known/oauth-protected-resource`. You should see the contents of
     your PRM file in the browser.
 
     ![PRM file in browser](./PRM_file_in_browser.png)
+
+{{< notice tip >}}
+Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
+specifically the subsection on "Hardening Toolbox" for security recommendations.
+You may want to specify additional settings.
+{{< /notice >}}
 
 ## Register the OAuth App in Looker
 1.  In Looker, go to “Applications” at the bottom of the list on the left side and
