@@ -79,7 +79,7 @@ example, does this automatically.
     automatically forwards external traffic from port 443, the HTTPS port, to 8080\.
 
     {{< notice tip >}}
-    Be sure to look at the [Toolbox CLI Reference](https://mcp-toolbox.dev/reference/cli/),
+    Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
     specifically the subsection on "Hardening Toolbox" for security recommendations.
     You may want to specify additional settings.
     {{< /notice >}}

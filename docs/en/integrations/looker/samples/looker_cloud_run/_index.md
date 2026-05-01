@@ -37,7 +37,7 @@ It is easy to run MCP Toolbox in Google Cloud Run.
     ![Container Settings](./container_settings.png)
 
     {{< notice tip >}}
-    Be sure to look at the [Toolbox CLI Reference](https://mcp-toolbox.dev/reference/cli/),
+    Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
     specifically the subsection on "Hardening Toolbox" for security recommendations.
     You may want to specify additional settings under "Container arguments".
     {{< /notice >}}
