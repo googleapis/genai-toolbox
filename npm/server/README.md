@@ -20,7 +20,7 @@ npx @toolbox-sdk/server
 
 The toolbox requires a `tools.yaml` file in the current working directory to define sources, tools, and prompts.
 
-### Example `tools.yaml`
+#### Example `tools.yaml`
 
 ```yaml
 sources:
