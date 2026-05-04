@@ -66,6 +66,12 @@ It is easy to run MCP Toolbox in Google Cloud Run.
 1.  Validate the service is running by going to the URL, followed by
     `/.well-known/oauth-protected-resource`.
 
+{{< notice tip >}}
+Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
+specifically the subsection on "Hardening Toolbox" for security recommendations.
+You may want to specify additional settings under "Container arguments".
+{{< /notice >}}
+
 ## Using the MCP Toolbox Via OAuth and Gemini CLI
 
 1.  Follow the directions to register the [OAuth App in Looker](../looker_gemini_oauth/)

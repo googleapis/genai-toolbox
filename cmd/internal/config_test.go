@@ -1426,36 +1426,40 @@ func TestPrebuiltTools(t *testing.T) {
 	alloydb_omni_config, _ := prebuiltconfigs.Get("alloydb-omni")
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
-	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
-	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
-	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
-	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
 	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
+	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
+	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
+	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	conversationalanalytics_config, _ := prebuiltconfigs.Get("conversational-analytics-with-data-agent")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
+	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
+	elasticsearch_config, _ := prebuiltconfigs.Get("elasticsearch")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
-	mysql_config, _ := prebuiltconfigs.Get("mysql")
-	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
 	looker_dev_config, _ := prebuiltconfigs.Get("looker-dev")
 	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
+	mssql_config, _ := prebuiltconfigs.Get("mssql")
+	mysql_config, _ := prebuiltconfigs.Get("mysql")
+	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	oceanbase_config, _ := prebuiltconfigs.Get("oceanbase")
+	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
+	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	singlestore_config, _ := prebuiltconfigs.Get("singlestore")
+	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
-	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
-	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
-	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
-	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
-	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
-	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
-	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
-	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
-	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
-	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
-	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1512,6 +1516,11 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_SQL_MSSQL_USER", "your_cloudsql_mssql_user")
 	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
 	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
+
+	t.Setenv("CLOUD_GDA_PROJECT", "your_gcp_project_id")
+
+	t.Setenv("ELASTICSEARCH_HOST", "your_elasticsearch_host")
+	t.Setenv("ELASTICSEARCH_APIKEY", "your_api_key")
 
 	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
 	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
@@ -1578,6 +1587,18 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("ORACLE_USE_OCI", "false")
 	t.Setenv("ORACLE_WALLET", "your_path_to_oracldb_wallet")
 	t.Setenv("ORACLE_TNS_ADMIN", "your_path_to_tns_admin")
+
+	t.Setenv("OCEANBASE_HOST", "your_oceanbase_host")
+	t.Setenv("OCEANBASE_PORT", "your_oceanbase_port")
+	t.Setenv("OCEANBASE_DATABASE", "your_oceanbase_db")
+	t.Setenv("OCEANBASE_USER", "your_oceanbase_user")
+	t.Setenv("OCEANBASE_PASSWORD", "your_oceanbase_pass")
+
+	t.Setenv("SINGLESTORE_HOST", "your_singlestore_host")
+	t.Setenv("SINGLESTORE_PORT", "your_singlestore_port")
+	t.Setenv("SINGLESTORE_DATABASE", "your_singlestore_db")
+	t.Setenv("SINGLESTORE_USER", "your_singlestore_user")
+	t.Setenv("SINGLESTORE_PASSWORD", "your_singlestore_pass")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1952,7 +1973,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"mindsdb-tools": tools.ToolsetConfig{
 					Name:      "mindsdb-tools",
-					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
+					ToolNames: []string{"execute_sql", "parameterized_sql"},
 				},
 			},
 		},
@@ -2051,6 +2072,46 @@ func TestPrebuiltTools(t *testing.T) {
 				"oracle_database_tools": tools.ToolsetConfig{
 					Name:      "oracle_database_tools",
 					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
+				},
+			},
+		},
+		{
+			name: "Conversational Analytics with Data Agent prebuilt tools",
+			in:   conversationalanalytics_config,
+			wantToolset: server.ToolsetConfigs{
+				"conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "conversational_analytics_tools",
+					ToolNames: []string{"list_accessible_data_agents", "get_data_agent_info", "ask_data_agent"},
+				},
+			},
+		},
+		{
+			name: "Elasticsearch prebuilt tools",
+			in:   elasticsearch_config,
+			wantToolset: server.ToolsetConfigs{
+				"elasticsearch-tools": tools.ToolsetConfig{
+					Name:      "elasticsearch-tools",
+					ToolNames: []string{"execute_esql_query"},
+				},
+			},
+		},
+		{
+			name: "Oceanbase prebuilt tools",
+			in:   oceanbase_config,
+			wantToolset: server.ToolsetConfigs{
+				"oceanbase_database_tools": tools.ToolsetConfig{
+					Name:      "oceanbase_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "Singlestore prebuilt tools",
+			in:   singlestore_config,
+			wantToolset: server.ToolsetConfigs{
+				"singlestore-database-tools": tools.ToolsetConfig{
+					Name:      "singlestore-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
