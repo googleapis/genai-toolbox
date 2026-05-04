@@ -333,6 +333,13 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.AllowContentType("application/json", "application/json-rpc", "application/jsonrequest"))
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
+	// Inject logger into ctx
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := util.WithLogger(r.Context(), s.logger)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
 	r.Use(mcpAuthMiddleware(s))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
@@ -462,7 +469,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	ctx := r.Context()
-	ctx = util.WithLogger(ctx, s.logger)
 
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)

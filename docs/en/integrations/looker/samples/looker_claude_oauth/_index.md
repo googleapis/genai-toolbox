@@ -84,6 +84,12 @@ example, does this automatically.
 
     ![PRM file in browser](./PRM_file_in_browser.png)
 
+{{< notice tip >}}
+Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
+specifically the subsection on "Hardening Toolbox" for security recommendations.
+You may want to specify additional settings.
+{{< /notice >}}
+
 ## Register the OAuth App in Looker
 1.  In Looker, go to “Applications” at the bottom of the list on the left side and
     then select the “API Explorer”.  
