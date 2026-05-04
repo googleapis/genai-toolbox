@@ -1,4 +1,4 @@
-# Toolbox
+# MCP Toolbox for Databases
 
 A CLI tool for running a toolbox server.
 
