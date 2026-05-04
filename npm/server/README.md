@@ -18,7 +18,20 @@ npx @toolbox-sdk/server
 
 ## Configuration
 
+Toolbox supports two ways to define tools: **Prebuilt Sources** for instant database access and **Custom YAML** for tailored logic.
+
+### 1. Prebuilt Tools
+Use the `--prebuilt` flag to skip configuration files and instantly expose standard database operations.
+
+*   **Usage:** `npx @toolbox-sdk/server --prebuilt <source> --stdio`
+*   **Supported:** [See all supported datasource](https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/).
+*   **Setup:** Requires relevant environment variables (e.g., `BIGQUERY_PROJECT` or `POSTGRES_HOST`).
+
+### 2. Custom Tools (`tools.yaml`)
 The toolbox requires a `tools.yaml` file in the current working directory to define sources, tools, and prompts.
+
+*   **Usage:** The server loads `tools.yaml` automatically, or use `--config <path>`.
+*   **Function:** Defines `sources` (connection details) and `tools` (specific SQL/logic with descriptions for the LLM).
 
 #### Example `tools.yaml`
 
