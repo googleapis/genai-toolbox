@@ -522,12 +522,12 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 						}
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
 						render.Status(r, http.StatusUnauthorized)
-						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INVALID_REQUEST, mcpErr.Message, nil))
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
 						render.Status(r, http.StatusForbidden)
-						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INVALID_REQUEST, mcpErr.Message, nil))
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return
 					}
 				}

@@ -24,6 +24,10 @@ const (
 	METHOD_NOT_FOUND = -32601
 	INVALID_PARAMS   = -32602
 	INTERNAL_ERROR   = -32603
+
+	// Implementation-defined server errors
+	UNAUTHORIZED = -32001
+	FORBIDDEN    = -32003
 )
 
 // ProgressToken is used to associate progress notifications with the original request.
@@ -113,6 +117,10 @@ func (e Error) String() string {
 		return "parse_error"
 	case INVALID_REQUEST:
 		return "invalid_request"
+	case UNAUTHORIZED:
+		return "unauthorized"
+	case FORBIDDEN:
+		return "forbidden"
 	default:
 		return "jsonrpc_error"
 	}
