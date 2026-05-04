@@ -17,15 +17,15 @@ package jsonrpc
 // JSONRPC_VERSION is the version of JSON-RPC used by MCP.
 const JSONRPC_VERSION = "2.0"
 
-// Standard JSON-RPC error codes
 const (
+	// Standard JSON-RPC error codes
 	PARSE_ERROR      = -32700
 	INVALID_REQUEST  = -32600
 	METHOD_NOT_FOUND = -32601
 	INVALID_PARAMS   = -32602
 	INTERNAL_ERROR   = -32603
 
-	// Implementation-defined server errors
+	// Custom auth error codes
 	UNAUTHORIZED = -32001
 	FORBIDDEN    = -32003
 )
