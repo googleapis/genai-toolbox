@@ -15,5 +15,13 @@ Choose your preferred deployment platform below to get started:
 *   **[Kubernetes](./kubernetes/)**: Deploy the Toolbox as a microservice using GKE.
 
 {{< notice tip >}}
-**Production Security:** When moving to production, never hardcode passwords or API keys directly into your `tools.yaml`. Always use environment variable substitution and inject those values securely through your deployment platform's secret manager.
+**Production Security:** When moving to production, never hardcode passwords or
+API keys directly into your `tools.yaml`. Always use environment variable
+substitution and inject those values securely through your deployment platform's
+secret manager.
+
+To enable HTTPS, you must provide a valid pair of `--tls-cert` and `--tls-key`
+files; specifying only one will cause the server to fail at startup.
 {{< /notice >}}
+
+{{< production-security-warning >}}

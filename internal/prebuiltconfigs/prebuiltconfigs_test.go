@@ -30,6 +30,7 @@ var expectedToolSources = []string{
 	"bigquery",
 	"clickhouse",
 	"cloud-healthcare",
+	"cloud-storage",
 	"cloud-sql-mssql-admin",
 	"cloud-sql-mssql-observability",
 	"cloud-sql-mssql",
@@ -142,6 +143,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	neo4jconfig := getOrFatal(t, "neo4j")
 	oracle_config := getOrFatal(t, "oracledb")
 	healthcare_config := getOrFatal(t, "cloud-healthcare")
+	cloudstorage_config := getOrFatal(t, "cloud-storage")
 	snowflake_config := getOrFatal(t, "snowflake")
 	if len(alloydb_omni_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb omni prebuilt tools yaml")
@@ -244,6 +246,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(healthcare_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch healthcare prebuilt tools yaml")
+	}
+	if len(cloudstorage_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud-storage prebuilt tools yaml")
 	}
 	if len(snowflake_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")

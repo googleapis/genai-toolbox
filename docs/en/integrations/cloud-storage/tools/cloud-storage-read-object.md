@@ -1,7 +1,7 @@
 ---
 title: "cloud-storage-read-object"
 type: docs
-weight: 2
+weight: 4
 description: >
   A "cloud-storage-read-object" tool reads the UTF-8 text content of a Cloud Storage object, optionally constrained to a byte range.
 ---
@@ -23,7 +23,7 @@ a larger object.
 
 This tool is intended for small-to-medium textual content an LLM can process
 directly. For bulk downloads of large files to the local filesystem, use
-`cloud-storage-download-object` (coming in a follow-up release).
+`cloud-storage-download-object`.
 
 [gcs-objects]: https://cloud.google.com/storage/docs/objects
 

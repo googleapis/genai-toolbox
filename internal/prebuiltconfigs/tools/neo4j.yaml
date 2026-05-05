@@ -12,26 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  neo4j-source:
-    kind: neo4j
-    uri: ${NEO4J_URI}
-    database: ${NEO4J_DATABASE}
-    user: ${NEO4J_USERNAME}
-    password: ${NEO4J_PASSWORD}
-
+kind: source
+name: neo4j-source
+type: neo4j
+uri: ${NEO4J_URI}
+database: ${NEO4J_DATABASE}
+user: ${NEO4J_USERNAME}
+password: ${NEO4J_PASSWORD}
+---
+kind: tool
+name: execute_cypher
+type: neo4j-execute-cypher
+source: neo4j-source
+description: Use this tool to execute Cypher queries.
+---
+kind: tool
+name: get_schema
+type: neo4j-schema
+source: neo4j-source
+description: Use this tool to get the database schema.
+---
+kind: toolset
+name: neo4j_database_tools
 tools:
-  execute_cypher:
-    kind: neo4j-execute-cypher
-    source: neo4j-source
-    description: Use this tool to execute Cypher queries.
-
-  get_schema:
-    kind: neo4j-schema
-    source: neo4j-source
-    description: Use this tool to get the database schema.
-
-toolsets:
-  neo4j_database_tools:
-    - execute_cypher
-    - get_schema
+- execute_cypher
+- get_schema
