@@ -1,0 +1,19 @@
+{
+  "name": "@toolbox-sdk/server",
+  "version": "1.1.0",
+  "license": "Apache-2.0",
+  "author": "Google LLC",
+  "bin": {
+    "toolbox": "./bin/run.js"
+  },
+  "files": [
+    "bin/run.js"
+  ],
+  "repository": "googleapis/mcp-toolbox",
+  "optionalDependencies": {
+    "@toolbox-sdk/server-darwin-arm64": "1.1.0",
+    "@toolbox-sdk/server-darwin-x64": "1.1.0",
+    "@toolbox-sdk/server-linux-x64": "1.1.0",
+    "@toolbox-sdk/server-win32-x64": "1.1.0"
+  }
+}

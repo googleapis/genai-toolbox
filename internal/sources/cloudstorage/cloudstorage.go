@@ -22,6 +22,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"sort"
 	"unicode/utf8"
 
 	"cloud.google.com/go/storage"
@@ -219,6 +220,78 @@ func (s *Source) ListBuckets(ctx context.Context, project, prefix string, maxRes
 	}, nil
 }
 
+// CreateBucket creates a Cloud Storage bucket in the source project and returns
+// its freshly-read metadata. When location is empty, Cloud Storage applies its
+// service default.
+func (s *Source) CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
+	attrs := &storage.BucketAttrs{Location: location}
+	if uniformBucketLevelAccess {
+		attrs.UniformBucketLevelAccess = storage.UniformBucketLevelAccess{Enabled: true}
+	}
+
+	bkt := s.client.Bucket(bucket)
+	if err := bkt.Create(ctx, s.Project, attrs); err != nil {
+		return nil, fmt.Errorf("failed to create bucket %q in project %q: %w", bucket, s.Project, err)
+	}
+
+	createdAttrs, err := bkt.Attrs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metadata for created bucket %q: %w", bucket, err)
+	}
+	return map[string]any{
+		"bucket":   bucket,
+		"created":  true,
+		"metadata": createdAttrs,
+	}, nil
+}
+
+// GetBucketMetadata returns raw bucket metadata from the Cloud Storage client.
+func (s *Source) GetBucketMetadata(ctx context.Context, bucket string) (*storage.BucketAttrs, error) {
+	attrs, err := s.client.Bucket(bucket).Attrs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metadata for bucket %q: %w", bucket, err)
+	}
+	return attrs, nil
+}
+
+// GetBucketIAMPolicy returns bucket IAM bindings in a stable, agent-friendly
+// shape while preserving conditional bindings when present.
+func (s *Source) GetBucketIAMPolicy(ctx context.Context, bucket string) (map[string]any, error) {
+	policy, err := s.client.Bucket(bucket).IAM().Policy(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get IAM policy for bucket %q: %w", bucket, err)
+	}
+
+	bindings := make([]map[string]any, 0)
+	if policy != nil && policy.InternalProto != nil {
+		for _, binding := range policy.InternalProto.Bindings {
+			members := append([]string(nil), binding.Members...)
+			sort.Strings(members)
+
+			out := map[string]any{
+				"role":    binding.Role,
+				"members": members,
+			}
+			if binding.Condition != nil {
+				out["condition"] = map[string]any{
+					"title":       binding.Condition.Title,
+					"description": binding.Condition.Description,
+					"expression":  binding.Condition.Expression,
+				}
+			}
+			bindings = append(bindings, out)
+		}
+	}
+	sort.Slice(bindings, func(i, j int) bool {
+		return fmt.Sprint(bindings[i]["role"]) < fmt.Sprint(bindings[j]["role"])
+	})
+
+	return map[string]any{
+		"bucket":   bucket,
+		"bindings": bindings,
+	}, nil
+}
+
 // GetObjectMetadata returns the raw *storage.ObjectAttrs for an object, giving
 // callers the full field set the GCS client exposes (name, size, contentType,
 // hashes, timestamps, user metadata, etc.) without a curated subset.
@@ -312,6 +385,103 @@ func (s *Source) UploadObject(ctx context.Context, bucket, object, source, conte
 		"object":      object,
 		"bytes":       n,
 		"contentType": finalContentType,
+	}, nil
+}
+
+// WriteObject writes text content directly into a GCS object. When contentType
+// is empty, the writer's ContentType is left unset so Cloud Storage detects it
+// from the first 512 bytes. The returned contentType is the post-Close value
+// from w.Attrs(), i.e. what GCS actually recorded.
+func (s *Source) WriteObject(ctx context.Context, bucket, object, content, contentType string) (map[string]any, error) {
+	w := s.client.Bucket(bucket).Object(object).NewWriter(ctx)
+	if contentType != "" {
+		w.ContentType = contentType
+	}
+
+	n, err := io.WriteString(w, content)
+	if err != nil {
+		_ = w.Close()
+		return nil, fmt.Errorf("failed to write content to object %q in bucket %q: %w", object, bucket, err)
+	}
+	if err := w.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize write to %q/%q: %w", bucket, object, err)
+	}
+
+	attrs := w.Attrs()
+	finalContentType := ""
+	if attrs != nil {
+		finalContentType = attrs.ContentType
+	}
+	return map[string]any{
+		"bucket":      bucket,
+		"object":      object,
+		"bytes":       n,
+		"contentType": finalContentType,
+	}, nil
+}
+
+// CopyObject copies an object to a destination object. The destination may be
+// in the same bucket or a different bucket. Existing destination objects are
+// replaced, matching Cloud Storage's copy semantics without preconditions.
+func (s *Source) CopyObject(ctx context.Context, sourceBucket, sourceObject, destinationBucket, destinationObject string) (map[string]any, error) {
+	src := s.client.Bucket(sourceBucket).Object(sourceObject)
+	dst := s.client.Bucket(destinationBucket).Object(destinationObject)
+
+	attrs, err := dst.CopierFrom(src).Run(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to copy %q/%q to %q/%q: %w", sourceBucket, sourceObject, destinationBucket, destinationObject, err)
+	}
+
+	return map[string]any{
+		"sourceBucket":      sourceBucket,
+		"sourceObject":      sourceObject,
+		"destinationBucket": destinationBucket,
+		"destinationObject": destinationObject,
+		"bytes":             attrs.Size,
+		"contentType":       attrs.ContentType,
+	}, nil
+}
+
+// MoveObject atomically renames or moves an object within the same bucket using
+// Cloud Storage's native move API. Cross-bucket moves should be modeled as
+// CopyObject followed by DeleteObject.
+func (s *Source) MoveObject(ctx context.Context, bucket, sourceObject, destinationObject string) (map[string]any, error) {
+	attrs, err := s.client.Bucket(bucket).Object(sourceObject).Move(ctx, storage.MoveObjectDestination{Object: destinationObject})
+	if err != nil {
+		return nil, fmt.Errorf("failed to move %q to %q in bucket %q: %w", sourceObject, destinationObject, bucket, err)
+	}
+
+	return map[string]any{
+		"bucket":            bucket,
+		"sourceObject":      sourceObject,
+		"destinationObject": destinationObject,
+		"bytes":             attrs.Size,
+		"contentType":       attrs.ContentType,
+	}, nil
+}
+
+// DeleteObject deletes a GCS object.
+func (s *Source) DeleteObject(ctx context.Context, bucket, object string) (map[string]any, error) {
+	if err := s.client.Bucket(bucket).Object(object).Delete(ctx); err != nil {
+		return nil, fmt.Errorf("failed to delete object %q in bucket %q: %w", object, bucket, err)
+	}
+
+	return map[string]any{
+		"bucket":  bucket,
+		"object":  object,
+		"deleted": true,
+	}, nil
+}
+
+// DeleteBucket deletes an empty Cloud Storage bucket.
+func (s *Source) DeleteBucket(ctx context.Context, bucket string) (map[string]any, error) {
+	if err := s.client.Bucket(bucket).Delete(ctx); err != nil {
+		return nil, fmt.Errorf("failed to delete bucket %q: %w", bucket, err)
+	}
+
+	return map[string]any{
+		"bucket":  bucket,
+		"deleted": true,
 	}, nil
 }
 
