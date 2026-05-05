@@ -1,0 +1,126 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+kind: source
+name: cloud-storage-source
+type: cloud-storage
+project: ${CLOUD_STORAGE_PROJECT}
+---
+kind: tool
+name: list_buckets
+type: cloud-storage-list-buckets
+source: cloud-storage-source
+description: Lists Cloud Storage buckets in the configured project.
+---
+kind: tool
+name: list_objects
+type: cloud-storage-list-objects
+source: cloud-storage-source
+description: Lists objects in a Cloud Storage bucket with optional prefix and delimiter filtering.
+---
+kind: tool
+name: get_bucket_metadata
+type: cloud-storage-get-bucket-metadata
+source: cloud-storage-source
+description: Returns metadata for a Cloud Storage bucket.
+---
+kind: tool
+name: get_bucket_iam_policy
+type: cloud-storage-get-bucket-iam-policy
+source: cloud-storage-source
+description: Returns the IAM policy bindings for a Cloud Storage bucket.
+---
+kind: tool
+name: get_object_metadata
+type: cloud-storage-get-object-metadata
+source: cloud-storage-source
+description: Returns metadata for a Cloud Storage object.
+---
+kind: tool
+name: read_object
+type: cloud-storage-read-object
+source: cloud-storage-source
+description: Reads a UTF-8 text object (or byte range) from a Cloud Storage bucket. Capped at 8 MiB; binary objects are rejected — use download_object for those.
+---
+kind: tool
+name: download_object
+type: cloud-storage-download-object
+source: cloud-storage-source
+description: Downloads a Cloud Storage object to a local file path.
+---
+kind: tool
+name: create_bucket
+type: cloud-storage-create-bucket
+source: cloud-storage-source
+description: Creates a Cloud Storage bucket in the configured project.
+---
+kind: tool
+name: delete_bucket
+type: cloud-storage-delete-bucket
+source: cloud-storage-source
+description: Deletes an empty Cloud Storage bucket.
+---
+kind: tool
+name: upload_object
+type: cloud-storage-upload-object
+source: cloud-storage-source
+description: Uploads a local file to a Cloud Storage object.
+---
+kind: tool
+name: write_object
+type: cloud-storage-write-object
+source: cloud-storage-source
+description: Writes text content directly to a Cloud Storage object.
+---
+kind: tool
+name: copy_object
+type: cloud-storage-copy-object
+source: cloud-storage-source
+description: Copies a Cloud Storage object to a destination object (same or different bucket).
+---
+kind: tool
+name: move_object
+type: cloud-storage-move-object
+source: cloud-storage-source
+description: Atomically renames a Cloud Storage object within the same bucket.
+---
+kind: tool
+name: delete_object
+type: cloud-storage-delete-object
+source: cloud-storage-source
+description: Deletes a Cloud Storage object.
+---
+kind: toolset
+name: cloud-storage-buckets
+description: Use these tools when you need to administer cloud storage buckets, including listing and creating buckets, inspecting bucket metadata and access control policies, and deleting buckets.
+tools:
+  - list_buckets
+  - create_bucket
+  - get_bucket_metadata
+  - get_bucket_iam_policy
+  - delete_bucket
+---
+kind: toolset
+name: cloud-storage-objects
+description: Use these tools when you need to manage files and objects in cloud storage — listing, reading, writing, copying, moving, or deleting objects and retrieving their metadata.
+tools:
+  - list_objects
+  - get_object_metadata
+  - read_object
+  - download_object
+  - write_object
+  - upload_object
+  - copy_object
+  - move_object
+  - delete_object

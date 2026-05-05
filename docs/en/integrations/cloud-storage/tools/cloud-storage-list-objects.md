@@ -1,7 +1,7 @@
 ---
 title: "cloud-storage-list-objects"
 type: docs
-weight: 1
+weight: 2
 description: >
   A "cloud-storage-list-objects" tool lists objects in a Cloud Storage bucket, with optional prefix filtering and delimiter-based grouping.
 ---
@@ -34,7 +34,7 @@ returned by the Cloud Storage API — fields such as `Name`, `Size`, `ContentTyp
 | bucket        |  string  |     true     | Name of the Cloud Storage bucket to list objects from.                                                            |
 | prefix        |  string  |    false     | Filter results to objects whose names begin with this prefix.                                                     |
 | delimiter     |  string  |    false     | Delimiter used to group object names (typically '/'). When set, common prefixes are returned as `prefixes`.       |
-| max_results   | integer  |    false     | Maximum number of objects to return per page. A value of 0 uses the API default (1000); values above 1000 are rejected. |
+| max_results   | integer  |    false     | Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected. |
 | page_token    |  string  |    false     | A previously-returned page token for retrieving the next page of results.                                         |
 
 ## Example

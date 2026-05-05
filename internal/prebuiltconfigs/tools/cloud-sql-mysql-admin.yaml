@@ -12,53 +12,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  cloud-sql-admin-source:
-    kind: cloud-sql-admin
-    defaultProject: ${CLOUD_SQL_MYSQL_PROJECT:}
-
+kind: source
+name: cloud-sql-admin-source
+type: cloud-sql-admin
+defaultProject: ${CLOUD_SQL_MYSQL_PROJECT:}
+---
+kind: tool
+name: create_instance
+type: cloud-sql-mysql-create-instance
+source: cloud-sql-admin-source
+---
+kind: tool
+name: get_instance
+type: cloud-sql-get-instance
+source: cloud-sql-admin-source
+---
+kind: tool
+name: list_instances
+type: cloud-sql-list-instances
+source: cloud-sql-admin-source
+---
+kind: tool
+name: create_database
+type: cloud-sql-create-database
+source: cloud-sql-admin-source
+---
+kind: tool
+name: list_databases
+type: cloud-sql-list-databases
+source: cloud-sql-admin-source
+---
+kind: tool
+name: create_user
+type: cloud-sql-create-users
+source: cloud-sql-admin-source
+---
+kind: tool
+name: wait_for_operation
+type: cloud-sql-wait-for-operation
+source: cloud-sql-admin-source
+multiplier: 4
+---
+kind: tool
+name: clone_instance
+type: cloud-sql-clone-instance
+source: cloud-sql-admin-source
+---
+kind: tool
+name: create_backup
+type: cloud-sql-create-backup
+source: cloud-sql-admin-source
+---
+kind: tool
+name: restore_backup
+type: cloud-sql-restore-backup
+source: cloud-sql-admin-source
+---
+kind: toolset
+name: cloud_sql_mysql_admin_tools
 tools:
-  create_instance:
-    kind: cloud-sql-mysql-create-instance
-    source: cloud-sql-admin-source
-  get_instance:
-    kind: cloud-sql-get-instance
-    source: cloud-sql-admin-source
-  list_instances:
-    kind: cloud-sql-list-instances
-    source: cloud-sql-admin-source
-  create_database:
-    kind: cloud-sql-create-database
-    source: cloud-sql-admin-source
-  list_databases:
-    kind: cloud-sql-list-databases
-    source: cloud-sql-admin-source
-  create_user:
-    kind: cloud-sql-create-users
-    source: cloud-sql-admin-source
-  wait_for_operation:
-    kind: cloud-sql-wait-for-operation
-    source: cloud-sql-admin-source
-    multiplier: 4
-  clone_instance:
-    kind: cloud-sql-clone-instance
-    source: cloud-sql-admin-source
-  create_backup:
-    kind: cloud-sql-create-backup
-    source: cloud-sql-admin-source
-  restore_backup:
-    kind: cloud-sql-restore-backup
-    source: cloud-sql-admin-source
-
-toolsets:
-  cloud_sql_mysql_admin_tools:
-    - create_instance
-    - get_instance
-    - list_instances
-    - create_database
-    - list_databases
-    - create_user
-    - wait_for_operation
-    - clone_instance
-    - create_backup
-    - restore_backup
+- create_instance
+- get_instance
+- list_instances
+- create_database
+- list_databases
+- create_user
+- wait_for_operation
+- clone_instance
+- create_backup
+- restore_backup

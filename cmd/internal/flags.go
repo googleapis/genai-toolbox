@@ -61,6 +61,8 @@ func ConfigFileFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVarP(&opts.Cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&opts.Cfg.Port, "port", "p", 5000, "Port the server will listen on.")
+	flags.StringVar(&opts.Cfg.CertFile, "tls-cert", "", "Path to TLS certificate file")
+	flags.StringVar(&opts.Cfg.KeyFile, "tls-key", "", "Path to TLS key file")
 	flags.BoolVar(&opts.Cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&opts.Cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
 	flags.BoolVar(&opts.Cfg.EnableAPI, "enable-api", false, "Enable the /api endpoint.")
