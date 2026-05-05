@@ -11,34 +11,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-sources:
-  clickhouse-source:
-    kind: clickhouse
-    host: ${CLICKHOUSE_HOST}
-    port: ${CLICKHOUSE_PORT}
-    user: ${CLICKHOUSE_USER}
-    password: ${CLICKHOUSE_PASSWORD}
-    database: ${CLICKHOUSE_DATABASE}
-    protocol: ${CLICKHOUSE_PROTOCOL}
-
+kind: source
+name: clickhouse-source
+type: clickhouse
+host: ${CLICKHOUSE_HOST}
+port: ${CLICKHOUSE_PORT}
+user: ${CLICKHOUSE_USER}
+password: ${CLICKHOUSE_PASSWORD}
+database: ${CLICKHOUSE_DATABASE}
+protocol: ${CLICKHOUSE_PROTOCOL}
+---
+kind: tool
+name: execute_sql
+type: clickhouse-execute-sql
+source: clickhouse-source
+description: Use this tool to execute SQL.
+---
+kind: tool
+name: list_databases
+type: clickhouse-list-databases
+source: clickhouse-source
+description: Use this tool to list all databases in ClickHouse.
+---
+kind: tool
+name: list_tables
+type: clickhouse-list-tables
+source: clickhouse-source
+description: Use this tool to list all tables in a specific ClickHouse database.
+---
+kind: toolset
+name: clickhouse_database_tools
 tools:
-  execute_sql:
-    kind: clickhouse-execute-sql
-    source: clickhouse-source
-    description: Use this tool to execute SQL.
-
-  list_databases:
-    kind: clickhouse-list-databases
-    source: clickhouse-source
-    description: Use this tool to list all databases in ClickHouse.
-
-  list_tables:
-    kind: clickhouse-list-tables
-    source: clickhouse-source
-    description: Use this tool to list all tables in a specific ClickHouse database.
-
-toolsets:
-  clickhouse_database_tools:
-    - execute_sql
-    - list_databases
-    - list_tables
+- execute_sql
+- list_databases
+- list_tables

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
 
 	"cloud.google.com/go/storage"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -40,6 +41,12 @@ var ErrReadSizeLimitExceeded = errors.New("cloud storage read size limit exceede
 // TODO: when the toolbox supports non-text MCP content (embedded resources,
 // images, blobs), remove this guard and return binary payloads directly.
 var ErrBinaryContent = errors.New("cloud storage object is not valid UTF-8 text")
+
+// ErrDestinationExists is returned by the download_object source method when
+// the local destination file already exists and overwrite is false.
+// ProcessGCSError maps this to an Agent error so the LLM can retry the call
+// with overwrite=true.
+var ErrDestinationExists = errors.New("download destination already exists")
 
 // ProcessGCSError classifies an error from the Cloud Storage Go client into
 // either an Agent Error (the LLM can self-correct by changing its input — bad
@@ -74,6 +81,21 @@ func ProcessGCSError(err error) util.ToolboxError {
 		return util.NewAgentError(
 			"object contains non-text (binary) bytes and cannot be returned; only UTF-8 text objects are supported",
 			err)
+	}
+
+	// Download destination already exists — the agent can retry with
+	// overwrite=true.
+	if errors.Is(err, ErrDestinationExists) {
+		return util.NewAgentError(
+			"destination file exists; retry with overwrite=true to replace it",
+			err)
+	}
+
+	// Local-filesystem "not found" — an upload source path or a download
+	// destination's parent directory that doesn't exist. The agent can fix
+	// this by correcting the path, so classify as Agent error.
+	if errors.Is(err, os.ErrNotExist) {
+		return util.NewAgentError("local file or directory not found", err)
 	}
 
 	// GCS sentinel errors — "not found" flavours are agent-fixable.

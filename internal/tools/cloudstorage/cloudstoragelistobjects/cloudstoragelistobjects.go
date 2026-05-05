@@ -80,7 +80,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from.")
 	prefixParam := parameters.NewStringParameterWithDefault(prefixKey, "", "Filter results to objects whose names begin with this prefix.")
 	delimiterParam := parameters.NewStringParameterWithDefault(delimiterKey, "", "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.")
-	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); values above 1000 are rejected.")
+	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.")
 	pageTokenParam := parameters.NewStringParameterWithDefault(pageTokenKey, "", "A previously-returned page token for retrieving the next page of results.")
 	params := parameters.Parameters{bucketParam, prefixParam, delimiterParam, maxResultsParam, pageTokenParam}
 
@@ -125,6 +125,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	delimiter, _ := mapParams[delimiterKey].(string)
 	pageToken, _ := mapParams[pageTokenKey].(string)
 	maxResults, _ := mapParams[maxResultsKey].(int)
+	if maxResults < 0 {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter: %d must be >= 0 (use 0 for the API default)", maxResultsKey, maxResults), nil)
+	}
 	if maxResults > maxResultsLimit {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter: %d exceeds the maximum of %d", maxResultsKey, maxResults, maxResultsLimit), nil)
 	}

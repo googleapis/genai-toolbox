@@ -8,29 +8,31 @@ description: >
 
 ## Reference
 
-| Flag (Short) | Flag (Long)                | Description                                                                                                                                                                      | Default     |
-|--------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
-| `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                              | `127.0.0.1` |
+| Flag (Short) | Flag (Long)                | Description                                                                                                                                                               | Default     |
+|--------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                       | `127.0.0.1` |
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
-| `-h`         | `--help`                   | help for toolbox                                                                                                                                                                 |             |
-|              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
-|              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
-|              | `--mcp-prm-file`           | Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation for MCP Server-Wide Authentication.                                         |             |
-| `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                  | `5000`      |
-|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values.                                                |             |
-|              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                 |             |
-|              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
-|              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
-|              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                        | `toolbox`   |
-|              | `--config`             | File path specifying the tool configuration. Cannot be used with --configs or --config-folder.                                                                                |             |
-|              | `--configs`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --config or --config-folder.                                                    |             |
-|              | `--config-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config or --configs. |             |
-|              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
-|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
-|              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
-|              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
-|              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                        | `0`         |
-| `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
+| `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
+|              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                              | `info`      |
+|              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                             | `standard`  |
+|              | `--mcp-prm-file`           | Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation for MCP Server-Wide Authentication.                                  |             |
+| `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                           | `5000`      |
+|              | `--tls-cert`               | Path to the PEM-encoded TLS certificate file.                                                                                                                             |             |
+|              | `--tls-key`                | Path to the PEM-encoded TLS private key file.                                                                                                                             |             |
+|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
+|              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
+|              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
+|              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                             |             |
+|              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                 | `toolbox`   |
+|              | `--config`                 | File path specifying the tool configuration. Cannot be used with --configs or --config-folder.                                                                            |             |
+|              | `--configs`                | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --config or --config-folder.                                                |             |
+|              | `--config-folder`          | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config or --configs.  |             |
+|              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                       |             |
+|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                              | `*`         |
+|              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                               | `*`         |
+|              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                            |             |
+|              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                 | `0`         |
+| `-v`         | `--version`                | version for toolbox                                                                                                                                                       |             |
 
 ## Sub Commands
 
@@ -81,6 +83,55 @@ For more detailed instructions, see [Generate Agent Skills](../documentation/con
 </details>
 
 ## Examples
+
+### Hardening Toolbox
+
+Toolbox is designed for flexibility, but security should not be ignored—even in
+local development. When exposing the server to a network or running it alongside
+a web browser, use these configurations to protect your data and system.
+
+#### Host Validation & DNS Rebinding Protection
+The `--allowed-hosts` flag controls which Host headers the server accepts.
+Restricting this is the primary defense against DNS Rebinding attacks.
+
+* Flag: `--allowed-hosts`
+* Local Development: Set to localhost or 127.0.0.1.
+* Production: Set to your specific FQDN (e.g., toolbox.example.com).
+* Example:
+  ```
+  ./toolbox --allowed-hosts="localhost,127.0.0.1"
+  ```
+
+
+{{< notice tip >}}
+**The "Local" Fallacy:** Using `--allowed-hosts="*"` is unsafe even on localhost. A
+malicious website can trick your browser into making requests to `127.0.0.1`,
+effectively bypassing the browser's security to control your local Toolbox.
+{{< /notice >}}
+
+#### Cross-Origin Resource Sharing (CORS)
+The `--allowed-origins` flag dictates which web applications (frontends) are
+permitted to communicate with your Toolbox API.
+
+* Flag: `--allowed-origins`
+* Recommendation: Avoid `*` in any environment containing sensitive data. Explicitly list your trusted frontend URLs.
+* Example: 
+  ```
+  ./toolbox --allowed-origins="https://my-mcp-ui.internal.com"
+  ```
+
+#### Transport Layer Security (TLS/HTTPS)
+By default, traffic is unencrypted (HTTP). In production or shared networks, you must enable TLS to prevent Man-in-the-Middle (MitM) attacks and packet sniffing.
+
+* Flag: `--tls-cert` and `--tls-key` (Both cert and key files are required for
+  TLS activation)
+* Protocol: Toolbox enforces TLS 1.2 as a minimum version to ensure modern encryption standards.
+* Use Case: Use Certbot for public domains or mkcert for locally-trusted development certificates.
+* Example:
+  ```
+  ./toolbox --tls-cert=cert.pem --tls-key=key.pem
+  ```
+
 
 ### Transport Configuration
 
