@@ -223,10 +223,9 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 
 ##### Samples Maintenance Rules
 
-1. **Filtering:** Always include `sample_filters` in the frontmatter. Filter values must use Title Case (capitalize the first letter of every word, with words separated by spaces). Include tags from the following categories, if they apply to your sample:
-   * Data Source (e.g., `BigQuery`, `AlloyDB`, etc.)
-   * Language (e.g., `Python`, `JavaScript`, `Go`, etc.)
-   * Client Type (e.g., `MCP Inspector`, `ADK`, etc.)
+1. **Filtering (`sample_filters`):** Always include `sample_filters` in the frontmatter. You MUST use strict enums for filtering.
+   * **Source of Truth:** Always refer to `.hugo/data/filters.yaml` for the permitted list of Data Sources, Languages, Frameworks, and Categories.
+   * **Adding New Filters:** If your sample requires the addition of a new filter, add it to `.hugo/data/filters.yaml` using **Title Case** (capitalize the first letter of every word, with words separated by spaces). Do not use snake_case or lowercase.
 2. **Metadata:** Ensure `is_sample: true` is present to prevent the sample from being excluded from the Samples Gallery.
 
 ##### Prebuilt Config Constraints (`integrations/**/prebuilt-configs/*.md`)

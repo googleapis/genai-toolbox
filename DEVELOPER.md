@@ -323,8 +323,10 @@ When updating documentation, you must adhere to the structural constraints enfor
     2. **Integration-Specific:** `docs/en/integrations/<db>/samples/`. Must include an `_index.md` with strictly only frontmatter.
     3. **General:** `docs/en/samples/`.
   * **Frontmatter Requirements (Maintenance):** To ensure samples appear correctly in the Samples Section, you must provide the following tags:
-    * `is_sample: true` - Required for indexing.
-    * `sample_filters:` - A YAML array used for UI filtering (e.g., `[postgres, go, sql]`).
+    1. `is_sample: true` - Required for indexing.
+    2. **Filtering (`sample_filters`):** Always include `sample_filters` in the frontmatter. You MUST use strict enums for filtering.
+        * **Source of Truth:** Always refer to `.hugo/data/filters.yaml` for the permitted list of Data Sources, Languages, Frameworks, and Categories. All tags are validated via CI (`.ci/lint-sample-filters.sh`).
+        * **Adding New Filters:** If your sample requires a new filter that is not currently listed, add it directly to `.hugo/data/filters.yaml`. You must use **Title Case** (capitalize the first letter of every word, with words separated by spaces). Never use snake_case or lowercase.
 * **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `documentation`), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, update the "Diátaxis Narrative Framework" preamble so AI models understand the purpose of your new section.
 
 #### Adding Prebuilt Tools
@@ -378,6 +380,12 @@ Run the **tool page** linter to validate:
 # From the repository root
 ./.ci/lint-docs-tool-page.sh
 ```
+
+Run the **sample filters** linter to validate frontmatter tags:
+
+```bash
+# From the repository root
+bash .ci/lint-sample-filters.sh
 
 ### Unit Tests
 
