@@ -16,106 +16,15 @@ package alloydbpg
 
 import (
 	"context"
-	"fmt"
-	"net"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"cloud.google.com/go/alloydbconn"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-var (
-	AlloyDBPostgresSourceType = "alloydb-postgres"
-	AlloyDBPostgresToolType   = "postgres-sql"
-	AlloyDBPostgresProject    = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
-	AlloyDBPostgresRegion     = os.Getenv("ALLOYDB_POSTGRES_REGION")
-	AlloyDBPostgresCluster    = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
-	AlloyDBPostgresInstance   = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
-	AlloyDBPostgresDatabase   = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
-	AlloyDBPostgresUser       = os.Getenv("ALLOYDB_POSTGRES_USER")
-	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASSWORD")
-)
-
-func getAlloyDBPgVars(t *testing.T) map[string]any {
-	switch "" {
-	case AlloyDBPostgresProject:
-		t.Fatal("'ALLOYDB_POSTGRES_PROJECT' not set")
-	case AlloyDBPostgresRegion:
-		t.Fatal("'ALLOYDB_POSTGRES_REGION' not set")
-	case AlloyDBPostgresCluster:
-		t.Fatal("'ALLOYDB_POSTGRES_CLUSTER' not set")
-	case AlloyDBPostgresInstance:
-		t.Fatal("'ALLOYDB_POSTGRES_INSTANCE' not set")
-	case AlloyDBPostgresDatabase:
-		t.Fatal("'ALLOYDB_POSTGRES_DATABASE' not set")
-	case AlloyDBPostgresUser:
-		t.Fatal("'ALLOYDB_POSTGRES_USER' not set")
-	case AlloyDBPostgresPass:
-		t.Fatal("'ALLOYDB_POSTGRES_PASSWORD' not set")
-	}
-	return map[string]any{
-		"type":     AlloyDBPostgresSourceType,
-		"project":  AlloyDBPostgresProject,
-		"cluster":  AlloyDBPostgresCluster,
-		"instance": AlloyDBPostgresInstance,
-		"region":   AlloyDBPostgresRegion,
-		"database": AlloyDBPostgresDatabase,
-		"user":     AlloyDBPostgresUser,
-		"password": AlloyDBPostgresPass,
-	}
-}
-
-// Copied over from  alloydb_pg.go
-func getAlloyDBDialOpts(ipType string) ([]alloydbconn.DialOption, error) {
-	switch strings.ToLower(ipType) {
-	case "private":
-		return []alloydbconn.DialOption{alloydbconn.WithPrivateIP()}, nil
-	case "public":
-		return []alloydbconn.DialOption{alloydbconn.WithPublicIP()}, nil
-	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
-	}
-}
-
-// Copied over from  alloydb_pg.go
-func initAlloyDBPgConnectionPool(project, region, cluster, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
-	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
-	config, err := pgxpool.ParseConfig(dsn)
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
-	}
-
-	// Create a new dialer with options
-	dialOpts, err := getAlloyDBDialOpts(ipType)
-	if err != nil {
-		return nil, err
-	}
-	d, err := alloydbconn.NewDialer(context.Background(), alloydbconn.WithDefaultDialOptions(dialOpts...))
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
-	}
-
-	// Tell the driver to use the AlloyDB Go Connector to create connections
-	i := fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", project, region, cluster, instance)
-	config.ConnConfig.DialFunc = func(ctx context.Context, _ string, instance string) (net.Conn, error) {
-		return d.Dial(ctx, i)
-	}
-
-	// Interact with the driver directly as you normally would
-	pool, err := pgxpool.NewWithConfig(context.Background(), config)
-	if err != nil {
-		return nil, err
-	}
-	return pool, nil
-}
 
 func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	sourceConfig := getAlloyDBPgVars(t)
@@ -124,7 +33,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	args := []string{"--enable-api"}
 
-	pool, err := initAlloyDBPgConnectionPool(AlloyDBPostgresProject, AlloyDBPostgresRegion, AlloyDBPostgresCluster, AlloyDBPostgresInstance, "public", AlloyDBPostgresUser, AlloyDBPostgresPass, AlloyDBPostgresDatabase)
+	pool, err := initAlloyDBPgConnectionPool(ctx, AlloyDBPostgresProject, AlloyDBPostgresRegion, AlloyDBPostgresCluster, AlloyDBPostgresInstance, "public", AlloyDBPostgresUser, AlloyDBPostgresPass, AlloyDBPostgresDatabase)
 	if err != nil {
 		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}

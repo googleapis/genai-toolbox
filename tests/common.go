@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -1126,6 +1127,43 @@ func CleanupBigtableTables(t *testing.T, ctx context.Context, adminClient *bigta
 			} else {
 				t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped table %s", table)
 			}
+		}
+	}
+}
+
+// buildPostgresURL constructs a postgres connection URL.
+func buildPostgresURL(host, port, user, pass, dbname string) *url.URL {
+	return &url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, pass),
+		Host:   fmt.Sprintf("%s:%s", host, port),
+		Path:   dbname,
+	}
+}
+
+// InitPostgresConnectionPool initializes a connection pool for Postgres.
+func InitPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+	url := buildPostgresURL(host, port, user, pass, dbname)
+	pool, err := pgxpool.New(context.Background(), url.String())
+	if err != nil {
+		return nil, fmt.Errorf("unable to create connection pool: %w", err)
+	}
+
+	return pool, nil
+}
+
+// createPostgresExtension creates a test extension and returns a cleanup function.
+func createPostgresExtension(t *testing.T, ctx context.Context, pool *pgxpool.Pool, extensionName string) func() {
+	createExtensionCmd := fmt.Sprintf("CREATE EXTENSION IF NOT EXISTS %s", extensionName)
+	_, err := pool.Exec(ctx, createExtensionCmd)
+	if err != nil {
+		t.Fatalf("failed to create extension: %v", err)
+	}
+	return func() {
+		dropExtensionCmd := fmt.Sprintf("DROP EXTENSION IF EXISTS %s", extensionName)
+		_, err := pool.Exec(ctx, dropExtensionCmd)
+		if err != nil {
+			t.Fatalf("failed to drop extension: %v", err)
 		}
 	}
 }

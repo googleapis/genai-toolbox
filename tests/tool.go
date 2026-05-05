@@ -4195,21 +4195,6 @@ func RunPostgresGetColumnCardinalityTest(t *testing.T, ctx context.Context, pool
 	}
 }
 
-func createPostgresExtension(t *testing.T, ctx context.Context, pool *pgxpool.Pool, extensionName string) func() {
-	createExtensionCmd := fmt.Sprintf("CREATE EXTENSION IF NOT EXISTS %s", extensionName)
-	_, err := pool.Exec(ctx, createExtensionCmd)
-	if err != nil {
-		t.Fatalf("failed to create extension: %v", err)
-	}
-	return func() {
-		dropExtensionCmd := fmt.Sprintf("DROP EXTENSION IF EXISTS %s", extensionName)
-		_, err := pool.Exec(ctx, dropExtensionCmd)
-		if err != nil {
-			t.Fatalf("failed to drop extension: %v", err)
-		}
-	}
-}
-
 func RunPostgresListQueryStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	// Insert a simple query by running a SELECT statement
 	// This will record statistics in pg_stat_statements
