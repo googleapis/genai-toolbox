@@ -223,10 +223,10 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 
 ##### Samples Maintenance Rules
 
-1. **Filtering:** Always include `sample_filters` in the frontmatter. Use specific tags for:
-   * Data Source (e.g., `bigquery`, `alloydb`)
-   * Language (e.g., `python`, `js`, `go`)
-   * Tool Type (e.g., `mcp`, `sdk`)
+1. **Filtering:** Always include `sample_filters` in the frontmatter. Filter values must use Title Case (capitalise the first letter of every word, with words separated by spaces). Use specific tags for:
+   * Data Source (e.g., `BigQuery`, `AlloyDB`, etc.)
+   * Language (e.g., `Python`, `JavaScript`, `Go`, etc.)
+   * Client Type (e.g., `MCP Inspector`, `ADK`, etc.)
 2. **Metadata:** Ensure `is_sample: true` is present to prevent the sample from being excluded from the Samples Gallery.
 
 ##### Prebuilt Config Constraints (`integrations/**/prebuilt-configs/*.md`)
