@@ -223,7 +223,7 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 
 ##### Samples Maintenance Rules
 
-1. **Filtering:** Always include `sample_filters` in the frontmatter. Filter values must use Title Case (capitalise the first letter of every word, with words separated by spaces). Include tags from the following categories, if they apply to your sample:
+1. **Filtering:** Always include `sample_filters` in the frontmatter. Filter values must use Title Case (capitalize the first letter of every word, with words separated by spaces). Include tags from the following categories, if they apply to your sample:
    * Data Source (e.g., `BigQuery`, `AlloyDB`, etc.)
    * Language (e.g., `Python`, `JavaScript`, `Go`, etc.)
    * Client Type (e.g., `MCP Inspector`, `ADK`, etc.)
