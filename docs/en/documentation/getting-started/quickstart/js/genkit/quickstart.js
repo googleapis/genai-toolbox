@@ -30,7 +30,7 @@ export async function main() {
         apiKey: process.env.GEMINI_API_KEY || GOOGLE_API_KEY
       })
     ],
-    model: googleAI.model('gemini-3-pro-preview'),
+    model: googleAI.model('gemini-3-flash-preview'),
   });
 
   const toolboxTools = await toolboxClient.loadToolset("my-toolset");

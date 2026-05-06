@@ -27,7 +27,7 @@ export async function main() {
 
   const rootAgent = new LlmAgent({
     name: 'hotel_agent',
-    model: 'gemini-3-pro-preview',
+    model: 'gemini-3-flash-preview',
     description: 'Agent for hotel bookings and administration.',
     instruction: prompt,
     tools: tools,
