@@ -17,7 +17,7 @@ package v20241105
 import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // SERVER_NAME is the server name used in Implementation.
@@ -71,7 +71,22 @@ type ListToolsRequest struct {
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
 	PaginatedResult
-	Tools []tools.McpManifest `json:"tools"`
+	Tools []Tool `json:"tools"`
+}
+
+type Tool struct {
+	// The name of the tool.
+	Name string `json:"name,omitempty"`
+	// A human-readable description of the tool.
+	Description string `json:"description,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+}
+
+type InputSchema struct {
+	Type       string                                     `json:"type"`
+	Properties map[string]parameters.ParameterMcpManifest `json:"properties"`
+	Required   []string                                   `json:"required"`
 }
 
 // Used by the client to invoke a tool provided by the server.
