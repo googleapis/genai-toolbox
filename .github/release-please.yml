@@ -28,9 +28,9 @@ extraFiles: [
     "docs/en/integrations/bigquery/local_quickstart.md",
     "docs/en/integrations/bigquery/mcp_quickstart/_index.md",
     "docs/en/integrations/bigquery/colab_quickstart_bigquery.ipynb",
-    "docs/en/integrations/looker/looker_gemini.md",
-    "docs/en/integrations/looker/looker_gemini_oauth/_index.md",
-    "docs/en/integrations/looker/looker_mcp_inspector/_index.md",
+    "docs/en/integrations/looker/samples/looker_gemini.md",
+    "docs/en/integrations/looker/samples/looker_gemini_oauth/_index.md",
+    "docs/en/integrations/looker/samples/looker_mcp_inspector/_index.md",
     "docs/en/documentation/connect-to/ides/looker_mcp.md",
     "docs/en/documentation/connect-to/ides/mysql_mcp.md",
     "docs/en/documentation/connect-to/ides/mssql_mcp.md",
@@ -39,6 +39,10 @@ extraFiles: [
     "docs/en/documentation/connect-to/ides/sqlite_mcp.md",
     "docs/en/documentation/connect-to/ides/oracle_mcp.md",
     "gemini-extension.json",
+    "npm/server-darwin-arm64/version.txt",
+    "npm/server-darwin-x64/version.txt",
+    "npm/server-linux-x64/version.txt",
+    "npm/server-win32-x64/version.txt",
     {
         "type": "json",
         "path": "server.json",
@@ -49,4 +53,49 @@ extraFiles: [
         "path": "server.json",
         "jsonpath": "$.packages[0].identifier"
     },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-darwin-arm64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-darwin-x64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-linux-x64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server/package.json",
+        "jsonpath": "$.optionalDependencies['@google/mcp-toolbox-server-win32-x64']"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-darwin-arm64/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-darwin-x64/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-linux-x64/package.json",
+        "jsonpath": "$.version"
+    },
+    {
+        "type": "json",
+        "path": "npm/server-win32-x64/package.json",
+        "jsonpath": "$.version"
+    }
 ]
