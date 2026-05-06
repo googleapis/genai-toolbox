@@ -114,10 +114,13 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 }
 
 type Tool interface {
+	GetName() string
+	GetDescription() string
+	GetAuthRequired() []string
+	GetAnnotations() *ToolAnnotations
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest() Manifest
-	McpManifest() McpManifest
 	Authorized([]string) bool
 	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig

@@ -139,9 +139,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameterWithDefault("order_by", "", "Optional: The field to order the results by. Valid values are 'size' and 'commit'."),
 		parameters.NewIntParameterWithDefault("limit", 10, "Optional: The maximum number of rows to return."),
 	}
-	description := cfg.Description
-	if description == "" {
-		description =
+	if cfg.Description == "" {
+		cfg.Description =
 			"Lists the key performance and activity statistics for each PostgreSQL database" +
 				"in the instance, offering insights into cache efficiency, transaction throughput" +
 				"row-level activity, temporary file " +
@@ -163,9 +162,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 				"number of active connections to the database, the timestamp of the " +
 				"last statistics reset, and total database size in bytes."
 	}
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, annotations)
-
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
@@ -174,7 +170,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   allParameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -182,9 +177,8 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	allParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	allParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
@@ -216,16 +210,28 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	return false, nil
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {

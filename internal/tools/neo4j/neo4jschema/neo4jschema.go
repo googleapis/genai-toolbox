@@ -84,8 +84,6 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 
 	params := parameters.Parameters{}
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
 	// Set a default cache expiration if not provided in the configuration.
 	if cfg.CacheExpireMinutes == nil {
@@ -95,10 +93,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Finish tool setup by creating the Tool instance.
 	t := Tool{
-		Config:      cfg,
-		cache:       cache.NewCache(),
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:   cfg,
+		cache:    cache.NewCache(),
+		manifest: tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -110,9 +107,8 @@ var _ tools.Tool = Tool{}
 // It holds the Neo4j driver, database information, and a cache for the schema.
 type Tool struct {
 	Config
-	cache       *cache.Cache
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	cache    *cache.Cache
+	manifest tools.Manifest
 }
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
@@ -150,11 +146,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 // Manifest returns the tool's manifest, which describes its purpose and parameters.
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-// McpManifest returns the machine-consumable manifest for the tool.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 // Authorized checks if the tool is authorized to run based on the provided authentication services.
@@ -691,6 +682,22 @@ func (t Tool) extractIndexes(ctx context.Context, source compatibleSource) ([]ty
 		indexes = append(indexes, index)
 	}
 	return indexes, result.Err()
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
