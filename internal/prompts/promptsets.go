@@ -27,9 +27,8 @@ type PromptsetConfig struct {
 
 type Promptset struct {
 	PromptsetConfig
-	Prompts     []*Prompt         `yaml:",inline"`
-	Manifest    PromptsetManifest `yaml:",inline"`
-	McpManifest []McpManifest     `yaml:",inline"`
+	Prompts  []*Prompt         `yaml:",inline"`
+	Manifest PromptsetManifest `yaml:",inline"`
 }
 
 func (p Promptset) ToConfig() PromptsetConfig {
@@ -50,7 +49,6 @@ func (p PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 			ServerVersion:   serverVersion,
 			PromptsManifest: make(map[string]Manifest, len(p.PromptNames)),
 		},
-		McpManifest: make([]McpManifest, 0, len(p.PromptNames)),
 	}
 	if !tools.IsValidName(promptset.Name) {
 		return promptset, fmt.Errorf("invalid promptset name: %s", promptset.Name)
@@ -62,7 +60,6 @@ func (p PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 		}
 		promptset.Prompts = append(promptset.Prompts, &prompt)
 		promptset.Manifest.PromptsManifest[promptName] = prompt.Manifest()
-		promptset.McpManifest = append(promptset.McpManifest, prompt.McpManifest())
 	}
 
 	return promptset, nil

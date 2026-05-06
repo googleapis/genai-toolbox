@@ -117,7 +117,6 @@ type MockPrompt struct {
 	Description string
 	Args        prompts.Arguments
 	manifest    prompts.Manifest
-	mcpManifest prompts.McpManifest
 }
 
 func (p MockPrompt) SubstituteParams(vals parameters.ParamValues) (any, error) {
@@ -148,8 +147,12 @@ func (p MockPrompt) Manifest() prompts.Manifest {
 	}
 }
 
-func (p MockPrompt) McpManifest() prompts.McpManifest {
-	return prompts.GetMcpManifest(p.Name, p.Description, p.Args)
+func (p MockPrompt) GetDesc() string {
+	return p.Description
+}
+
+func (p MockPrompt) GetArguments() prompts.Arguments {
+	return p.Args
 }
 
 func (p MockPrompt) ToConfig() prompts.PromptConfig {
@@ -166,12 +169,10 @@ func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
 		Description: desc,
 		Arguments:   argManifests,
 	}
-	mcpManifest := prompts.GetMcpManifest(name, desc, args)
 	return MockPrompt{
 		Name:        name,
 		Description: desc,
 		Args:        args,
 		manifest:    manifest,
-		mcpManifest: mcpManifest,
 	}
 }
