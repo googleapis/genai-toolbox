@@ -50,7 +50,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.30.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.1.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -138,6 +138,33 @@ foward the requests to `http://localhost:5000/mcp` running in that environment.
 The details of the config are beyond the scope of this document, but will be
 familiar to your system administrators.
 
+{{< notice tip >}}
+Be sure to look at the [Toolbox CLI Reference](/reference/cli/),
+specifically the subsection on "Hardening Toolbox" for security recommendations.
+You may want to specify additional settings to improve security.
+{{< /notice >}}
+
 To use the shared service, just change the `localhost:5000` in the `httpUrl` in
 `~/.gemini/settings.json` to the host name and possibly the port of the shared
 service.
+
+## Configure Gemini-CLI When An OAuth PRM File Is Used
+
+If you have configured an OAuth Protected Resource Metadata (PRM) file, the
+configuration for Gemini-CLI is simpler. PRM samples can be found in the
+configuration for [Claude Desktop with OAuth](../looker_claude_oauth/) or
+[Looker Cloud Run with OAuth](../looker_cloud_run/).
+
+Skip **Step 2** and use the following in the `~/.gemini/settings.json` file in
+**Step 3**:
+
+```json
+"mcpServers": {
+    "looker": {
+        "httpUrl": "https://<your mcp server url>/mcp",
+        "oauth": {
+            "clientId": "gemini-cli"
+        }
+    }
+}
+```
