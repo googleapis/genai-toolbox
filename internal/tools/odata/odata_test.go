@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sapodataaction
+package odata
 
 import (
 	"context"
@@ -22,19 +22,19 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/sapodata"
+	"github.com/googleapis/mcp-toolbox/internal/sources/odata"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// mockSAPSource simulates an SAP OData source for testing tool initialization
+// mockSAPSource simulates an OData source for testing tool initialization
 type mockSAPSource struct {
 	baseURL  string
-	metadata *sapodata.ODataMetadata
+	metadata *odata.ODataMetadata
 }
 
 func (m *mockSAPSource) SourceType() string {
-	return "sap-odata"
+	return "odata"
 }
 
 func (m *mockSAPSource) ToConfig() sources.SourceConfig {
@@ -53,24 +53,28 @@ func (m *mockSAPSource) IsClientOauthEnabled() bool {
 	return false
 }
 
-func (m *mockSAPSource) Metadata() *sapodata.ODataMetadata {
+func (m *mockSAPSource) Metadata() *odata.ODataMetadata {
 	return m.metadata
+}
+
+func (m *mockSAPSource) Compatibility() odata.CompatibilityConfig {
+	return odata.CompatibilityConfig{}
 }
 
 func TestToolInitializationREAD(t *testing.T) {
 	// 1. Setup Mock Metadata
-	metadata := &sapodata.ODataMetadata{
+	metadata := &odata.ODataMetadata{
 		Version: "2.0",
-		EntityTypes: map[string]sapodata.EntityType{
+		EntityTypes: map[string]odata.EntityType{
 			"A_SalesOrderType": {
 				Name: "A_SalesOrderType",
-				Properties: []sapodata.Property{
+				Properties: []odata.Property{
 					{Name: "SalesOrder", Type: "Edm.String"},
 					{Name: "TotalNetAmount", Type: "Edm.Decimal"},
 				},
 			},
 		},
-		EntitySets: map[string]sapodata.EntitySet{
+		EntitySets: map[string]odata.EntitySet{
 			"A_SalesOrder": {Name: "A_SalesOrder", EntityType: "API_SALES_ORDER_SRV.A_SalesOrderType"},
 		},
 	}
@@ -86,7 +90,7 @@ func TestToolInitializationREAD(t *testing.T) {
 
 	yamlDef := []byte(`
 name: read_sales
-type: sap-odata-action
+type: odata
 source: my_mock_sap
 entitySet: A_SalesOrder
 operation: READ
@@ -141,37 +145,40 @@ description: Reads sales orders
 	}
 }
 
-func TestApplySAPFormatting(t *testing.T) {
+func TestApplyODataFormatting(t *testing.T) {
+	compat := odata.CompatibilityConfig{SapUrlQuoting: true}
+
 	// Test the heuristic auto-uppercasing
-	if applySAPFormatting("apple", "Currency", "string", "2.0", true) != "'APPLE'" {
+	if applyODataFormatting("apple", "Currency", "string", "2.0", true, compat) != "'APPLE'" {
 		t.Errorf("Expected uppercase 'APPLE' for Currency param")
 	}
-	if applySAPFormatting("apple", "Description", "string", "2.0", true) != "'apple'" {
+	if applyODataFormatting("apple", "Description", "string", "2.0", true, compat) != "'apple'" {
 		t.Errorf("Expected lowercase 'apple' for Description param")
 	}
-	if applySAPFormatting("apple", "SalesOrderID", "string", "2.0", true) != "'APPLE'" {
+	if applyODataFormatting("apple", "SalesOrderID", "string", "2.0", true, compat) != "'APPLE'" {
 		t.Errorf("Expected uppercase 'APPLE' for SalesOrderID param")
 	}
 	// Test quote escaping for OData v2
-	if applySAPFormatting("O'Brien", "LastName", "string", "2.0", true) != "'O''Brien'" {
-		t.Errorf("Expected escaped quotes ''O''''Brien'' for LastName param, got %s", applySAPFormatting("O'Brien", "LastName", "string", "2.0", true))
+	if applyODataFormatting("O'Brien", "LastName", "string", "2.0", true, compat) != "'O''Brien'" {
+		t.Errorf("Expected escaped quotes ''O''''Brien'' for LastName param, got %s", applyODataFormatting("O'Brien", "LastName", "string", "2.0", true, compat))
 	}
 }
 
 type mockSAPSourceWithResponse struct {
 	baseURL  string
-	metadata *sapodata.ODataMetadata
+	metadata *odata.ODataMetadata
 	response any
 }
 
-func (m *mockSAPSourceWithResponse) SourceType() string { return "sap-odata" }
+func (m *mockSAPSourceWithResponse) SourceType() string { return "odata" }
 func (m *mockSAPSourceWithResponse) ToConfig() sources.SourceConfig { return nil }
 func (m *mockSAPSourceWithResponse) HttpBaseURL() string { return m.baseURL }
 func (m *mockSAPSourceWithResponse) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	return m.response, nil
 }
 func (m *mockSAPSourceWithResponse) IsClientOauthEnabled() bool { return false }
-func (m *mockSAPSourceWithResponse) Metadata() *sapodata.ODataMetadata { return m.metadata }
+func (m *mockSAPSourceWithResponse) Metadata() *odata.ODataMetadata { return m.metadata }
+func (m *mockSAPSourceWithResponse) Compatibility() odata.CompatibilityConfig { return odata.CompatibilityConfig{} }
 
 type mockSourceProvider struct {
 	sources map[string]sources.Source

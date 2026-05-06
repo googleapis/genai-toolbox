@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sapodataaction
+package odata
 
 import (
 	"bytes"
@@ -26,13 +26,13 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/sapodata"
+	"github.com/googleapis/mcp-toolbox/internal/sources/odata"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "sap-odata"
+const resourceType string = "odata"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -48,14 +48,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-type sapSource interface {
+type odataSource interface {
 	HttpBaseURL() string
 	RunSAPRequest(*http.Request, tools.AccessToken) (any, error)
-	Metadata() *sapodata.ODataMetadata
+	Metadata() *odata.ODataMetadata
+	Compatibility() odata.CompatibilityConfig
 }
 
-type sapSourceOauth interface {
-	sapSource
+type odataSourceOauth interface {
+	odataSource
 	IsClientOauthEnabled() bool
 	GetAuthTokenHeaderName() string
 }
@@ -85,9 +86,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	s, ok := rawS.(sapSource)
+	s, ok := rawS.(odataSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be sap-odata", resourceType)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be odata", resourceType)
 	}
 
 	metadata := s.Metadata()
@@ -195,30 +196,38 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-// applySAPFormatting automatically applies v2/v4 syntax transformations to values based on SAP heuristics
-func applySAPFormatting(value string, paramName string, paramType string, mdVersion string, isUrlParam bool) string {
-	// Intelligent Casing Heuristic for SAP
-	upperNames := []string{"ID", "CODE", "CARRID", "CONNID", "KEY", "NUM", "CITY", "COUNTRY", "PLANT", "COMPANY", "CURRENCY"}
-	upper := strings.ToUpper(paramName)
-	shouldUpper := false
-	for _, n := range upperNames {
-		if strings.Contains(upper, n) {
-			shouldUpper = true
-			break
+// applyODataFormatting automatically applies OData syntax transformations to values, incorporating SAP-specific compatibility flags.
+func applyODataFormatting(value string, paramName string, paramType string, mdVersion string, isUrlParam bool, compat odata.CompatibilityConfig) string {
+	if compat.SapUrlQuoting {
+		// Intelligent Casing Heuristic for SAP
+		upperNames := []string{"ID", "CODE", "CARRID", "CONNID", "KEY", "NUM", "CITY", "COUNTRY", "PLANT", "COMPANY", "CURRENCY"}
+		upper := strings.ToUpper(paramName)
+		shouldUpper := false
+		for _, n := range upperNames {
+			if strings.Contains(upper, n) {
+				shouldUpper = true
+				break
+			}
 		}
-	}
-	if shouldUpper && !strings.Contains(upper, "DESCRIPTION") && !strings.Contains(upper, "NOTE") {
-		value = strings.ToUpper(value)
-	}
+		if shouldUpper && !strings.Contains(upper, "DESCRIPTION") && !strings.Contains(upper, "NOTE") {
+			value = strings.ToUpper(value)
+		}
 
-	// OData v2 vs v4 formatting logic can be expanded here based on EDm Type heuristics,
-	// but mostly depends on how the LLM maps those strings.
-	// OData v2 requires string literals in the URL to be single quoted.
-	if isUrlParam && mdVersion == "2.0" && paramType == "string" {
-		if !strings.HasPrefix(value, "'") && !strings.HasSuffix(value, "'") {
-			// Escape single quotes by doubling them for OData v2
-			escapedValue := strings.ReplaceAll(value, "'", "''")
-			value = fmt.Sprintf("'%s'", escapedValue)
+		// OData v2 requires string literals in the URL to be single quoted.
+		if isUrlParam && mdVersion == "2.0" && paramType == "string" {
+			if !strings.HasPrefix(value, "'") && !strings.HasSuffix(value, "'") {
+				// Escape single quotes by doubling them for OData v2
+				escapedValue := strings.ReplaceAll(value, "'", "''")
+				value = fmt.Sprintf("'%s'", escapedValue)
+			}
+		}
+	} else {
+		// Standard OData string quoting (single-quoted string literals in URLs)
+		if isUrlParam && paramType == "string" {
+			if !strings.HasPrefix(value, "'") && !strings.HasSuffix(value, "'") {
+				escapedValue := strings.ReplaceAll(value, "'", "''")
+				value = fmt.Sprintf("'%s'", escapedValue)
+			}
 		}
 	}
 
@@ -226,7 +235,7 @@ func applySAPFormatting(value string, paramName string, paramType string, mdVers
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[sapSource](resourceMgr, t.Source, t.Name, resourceType)
+	source, err := tools.GetCompatibleSource[odataSource](resourceMgr, t.Source, t.Name, resourceType)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -276,7 +285,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	} else if strings.ToUpper(t.Operation) == "FUNCTION_IMPORT" {
 		for _, p := range t.QueryParams {
 			if v, ok := paramsMap[p.GetName()]; ok && v != nil {
-				formattedVal := applySAPFormatting(fmt.Sprintf("%v", v), p.GetName(), p.GetType(), version, true)
+				formattedVal := applyODataFormatting(fmt.Sprintf("%v", v), p.GetName(), p.GetType(), version, true, source.Compatibility())
 				query.Set(p.GetName(), formattedVal)
 			}
 		}
@@ -285,7 +294,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Map generic explicitly defined query params
 	for _, p := range t.QueryParams {
 		if v, ok := paramsMap[p.GetName()]; ok && v != nil {
-			formattedVal := applySAPFormatting(fmt.Sprintf("%v", v), p.GetName(), p.GetType(), version, true)
+			formattedVal := applyODataFormatting(fmt.Sprintf("%v", v), p.GetName(), p.GetType(), version, true, source.Compatibility())
 			query.Set(p.GetName(), formattedVal)
 		}
 	}
@@ -369,7 +378,7 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 		return false, fmt.Errorf("unable to retrieve source %q", t.Config.Source)
 	}
 
-	if oauthSource, ok := s.(sapSourceOauth); ok {
+	if oauthSource, ok := s.(odataSourceOauth); ok {
 		return oauthSource.IsClientOauthEnabled(), nil
 	}
 	return false, nil
@@ -381,7 +390,7 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		return "Authorization", fmt.Errorf("unable to retrieve source %q", t.Config.Source)
 	}
 
-	if oauthSource, ok := s.(sapSourceOauth); ok {
+	if oauthSource, ok := s.(odataSourceOauth); ok {
 		if oauthSource.IsClientOauthEnabled() {
 			return oauthSource.GetAuthTokenHeaderName(), nil
 		}

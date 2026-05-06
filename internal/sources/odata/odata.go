@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sapodata
+package odata
 
 import (
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
-
-	"container/list"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -40,7 +34,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceType string = "sap-odata"
+const SourceType string = "odata"
 
 func init() {
 	if !sources.Register(SourceType, newConfig) {
@@ -59,16 +53,23 @@ type AuthConfig struct {
 	CACert            string `yaml:"caCert"`            // For x509
 }
 
+type CompatibilityConfig struct {
+	SapUrlQuoting       bool `yaml:"sapUrlQuoting"`       // Double single-quotes in string URL parameters for OData v2
+	UseTunnelingHeaders bool `yaml:"useTunnelingHeaders"` // POST with X-HTTP-Method header for PATCH/MERGE
+}
+
 type Config struct {
-	Name                   string            `yaml:"name" validate:"required"`
-	Type                   string            `yaml:"type" validate:"required"`
-	BaseURL                string            `yaml:"baseUrl" validate:"required"`
-	Timeout                string            `yaml:"timeout"`
-	DefaultHeaders         map[string]string `yaml:"headers"`
-	QueryParams            map[string]string `yaml:"queryParams"`
-	DisableSslVerification bool              `yaml:"disableSslVerification"`
-	Auth                   AuthConfig        `yaml:"auth"` // SAP specific auth
-	UseClientOauth         string            `yaml:"useClientOauth"`
+	Name                   string              `yaml:"name" validate:"required"`
+	Type                   string              `yaml:"type" validate:"required"`
+	BaseURL                string              `yaml:"baseUrl" validate:"required"`
+	Timeout                string              `yaml:"timeout"`
+	DefaultHeaders         map[string]string   `yaml:"headers"`
+	QueryParams            map[string]string   `yaml:"queryParams"`
+	DisableSslVerification bool                `yaml:"disableSslVerification"`
+	Auth                   AuthConfig          `yaml:"auth"` // SAP specific auth
+	UseClientOauth         string              `yaml:"useClientOauth"`
+	AuthStrategy           string              `yaml:"authStrategy"`
+	Compatibility          CompatibilityConfig `yaml:"compatibility"`
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
@@ -140,18 +141,43 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	c.DefaultHeaders["Accept"] = "application/json"
 	c.DefaultHeaders["X-Requested-With"] = "XMLHttpRequest"
 
-	source := &Source{
-		Config:       c,
-		client:       &client,
-		sessionCache: newSessionCache(1000, 30*time.Minute),
+	var primary AuthStrategy
+	switch c.Auth.Type {
+	case "basic":
+		primary = &BasicAuthStrategy{Username: c.Auth.Username, Password: c.Auth.Password}
+	case "bearer":
+		primary = &BearerTokenStrategy{Token: c.Auth.Token}
+	case "x509":
+		primary = &TlsStrategy{}
+	default:
+		primary = &BasicAuthStrategy{}
 	}
 
+	var dynamic AuthStrategy
+	headerName := "Authorization"
 	if c.UseClientOauth != "" {
-		if c.UseClientOauth == "true" || c.UseClientOauth == "Authorization" {
-			source.authTokenHeaderName = "Authorization"
-		} else {
-			source.authTokenHeaderName = c.UseClientOauth
+		if c.UseClientOauth != "true" && c.UseClientOauth != "Authorization" {
+			headerName = c.UseClientOauth
 		}
+		dynamic = &DynamicUserOauthStrategy{AuthTokenHeaderName: headerName}
+	}
+
+	var authStrategy AuthStrategy
+	if c.AuthStrategy == "sap-gateway" {
+		authStrategy = NewSapGatewayStrategy(c.BaseURL, c.DefaultHeaders, primary, dynamic, headerName)
+	} else {
+		if dynamic != nil {
+			authStrategy = dynamic
+		} else {
+			authStrategy = primary
+		}
+	}
+
+	source := &Source{
+		Config:              c,
+		client:              &client,
+		authStrategy:        authStrategy,
+		authTokenHeaderName: headerName,
 	}
 
 	// Fetch metadata (schema) at initialization.
@@ -163,94 +189,13 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	return source, nil
 }
 
-type UserSession struct {
-	CsrfToken string
-	Jar       http.CookieJar
-	ExpiresAt time.Time
-}
 
-type lruItem struct {
-	key     string
-	session *UserSession
-}
-
-type sessionLRUCache struct {
-	maxItems int
-	ttl      time.Duration
-	ll       *list.List
-	cache    map[string]*list.Element
-	mu       sync.RWMutex
-}
-
-func newSessionCache(maxItems int, ttl time.Duration) *sessionLRUCache {
-	return &sessionLRUCache{
-		maxItems: maxItems,
-		ttl:      ttl,
-		ll:       list.New(),
-		cache:    make(map[string]*list.Element),
-	}
-}
-
-func (c *sessionLRUCache) Get(key string) *UserSession {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if ele, hit := c.cache[key]; hit {
-		item := ele.Value.(*lruItem)
-		if time.Now().After(item.session.ExpiresAt) {
-			c.ll.Remove(ele)
-			delete(c.cache, key)
-			return nil
-		}
-		c.ll.MoveToFront(ele)
-		return item.session
-	}
-	return nil
-}
-
-func (c *sessionLRUCache) Set(key string, session *UserSession) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	session.ExpiresAt = time.Now().Add(c.ttl)
-
-	if ele, hit := c.cache[key]; hit {
-		c.ll.MoveToFront(ele)
-		ele.Value.(*lruItem).session = session
-		return
-	}
-
-	ele := c.ll.PushFront(&lruItem{key: key, session: session})
-	c.cache[key] = ele
-
-	if c.maxItems != 0 && c.ll.Len() > c.maxItems {
-		c.removeOldest()
-	}
-}
-
-func (c *sessionLRUCache) removeOldest() {
-	ele := c.ll.Back()
-	if ele != nil {
-		c.ll.Remove(ele)
-		item := ele.Value.(*lruItem)
-		delete(c.cache, item.key)
-	}
-}
-
-func (c *sessionLRUCache) Remove(key string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if ele, hit := c.cache[key]; hit {
-		c.ll.Remove(ele)
-		delete(c.cache, key)
-	}
-}
 
 type Source struct {
 	Config
 	client              *http.Client
 	metadata            *ODataMetadata
-	sessionCache        *sessionLRUCache
+	authStrategy        AuthStrategy
 	authTokenHeaderName string
 }
 
@@ -283,46 +228,8 @@ func (s *Source) Metadata() *ODataMetadata {
 	return s.metadata
 }
 
-// injectAuth adds the configured auth to the HTTP request.
-// It prioritizes the provided accessToken (if useClientOauth is enabled)
-// over the source-level static credentials.
-func (s *Source) injectAuth(req *http.Request, accessToken tools.AccessToken) {
-	if s.IsClientOauthEnabled() && accessToken != "" {
-		// Identity B: Use the pass-through token from the human user (OAuth)
-		tokenStr := string(accessToken)
-		if !strings.HasPrefix(strings.ToLower(tokenStr), "bearer ") {
-			tokenStr = "Bearer " + tokenStr
-		}
-		req.Header.Set("Authorization", tokenStr)
-		return
-	}
-
-	if req.Header.Get("Authorization") != "" {
-		return // Manual override already present
-	}
-
-	// Identity A: Fallback to Source-Level Technical Identity
-	switch s.Auth.Type {
-	case "x509":
-		// No-op at the HTTP header level.
-		// Authentication happens natively at the TLS layer via the specialized http.Client.
-		return
-	case "basic":
-		req.SetBasicAuth(s.Auth.Username, s.Auth.Password)
-	case "bearer":
-		if s.Auth.Token != "" {
-			req.Header.Set("Authorization", "Bearer "+s.Auth.Token)
-		}
-	}
-}
-
-// hashAuth creates a secure, anonymous key for the session cache
-func hashAuth(authHeader string) string {
-	if authHeader == "" {
-		return "anonymous"
-	}
-	hash := sha256.Sum256([]byte(authHeader))
-	return hex.EncodeToString(hash[:])
+func (s *Source) Compatibility() CompatibilityConfig {
+	return s.Config.Compatibility
 }
 
 // fetchMetadata performs a GET to $metadata to fetch and parse the schema
@@ -338,7 +245,10 @@ func (s *Source) fetchMetadata(ctx context.Context) error {
 	}
 	// Overwrite Accept header for metadata specifically, as OData $metadata is always XML
 	req.Header.Set("Accept", "application/xml")
-	s.injectAuth(req, "")
+	
+	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
+		return err
+	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {
@@ -366,78 +276,18 @@ func (s *Source) fetchMetadata(ctx context.Context) error {
 	return nil
 }
 
-// fetchUserCsrf preemptively fires a HEAD request for a specific user to grab their CSRF token & cookies
-func (s *Source) fetchUserCsrf(req *http.Request, authKey string) (*UserSession, error) {
-	fetchReq, err := http.NewRequest("HEAD", s.BaseURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Copy auth and default headers
-	s.injectAuth(fetchReq, tools.AccessToken(req.Header.Get("Authorization")))
-	for k, v := range s.DefaultHeaders {
-		fetchReq.Header.Set(k, v)
-	}
-	fetchReq.Header.Set("X-CSRF-Token", "Fetch")
-
-	jar, _ := cookiejar.New(nil)
-	fetchClient := &http.Client{
-		Timeout:   s.client.Timeout,
-		Transport: s.client.Transport,
-		Jar:       jar,
-	}
-
-	resp, err := fetchClient.Do(fetchReq)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	token := resp.Header.Get("X-CSRF-Token")
-	if token == "" || token == "Required" {
-		return nil, fmt.Errorf("failed to fetch valid CSRF token. status: %d", resp.StatusCode)
-	}
-
-	session := &UserSession{
-		CsrfToken: token,
-		Jar:       jar, // The jar automatically captured the Set-Cookie headers
-	}
-
-	s.sessionCache.Set(authKey, session)
-
-	return session, nil
-}
-
-// RunSAPRequest attaches auth and CSRF headers before executing
+// RunSAPRequest attaches auth and CSRF headers via AuthStrategy before executing.
 func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
-	// 1. Inject Authentication
-	s.injectAuth(req, accessToken)
+	ctx := req.Context()
 
-	authHeader := req.Header.Get("Authorization")
-	sessionKey := hashAuth(authHeader)
-
-	// 2. Multi-Tenant CSRF & Session Management
-	session := s.sessionCache.Get(sessionKey)
-
-	// If modifying data (POST/PUT/DELETE/etc.) and no session exists, fetch it dynamically
-	if req.Method != "GET" && req.Method != "HEAD" {
-		if session == nil {
-			var err error
-			session, err = s.fetchUserCsrf(req, sessionKey)
-			if err != nil {
-				return nil, fmt.Errorf("csrf setup failed: %v", err)
-			}
-		}
-		// Inject the user's specific CSRF token
-		req.Header.Set("X-CSRF-Token", session.CsrfToken)
+	// 1. Pass context token via header so DynamicUserOauthStrategy can read it
+	if accessToken != "" {
+		req.Header.Set(s.GetAuthTokenHeaderName(), string(accessToken))
 	}
 
-	// 3. Inject User's Cookies (if they have an active session)
-	if session != nil && session.Jar != nil {
-		cookies := session.Jar.Cookies(req.URL)
-		for _, c := range cookies {
-			req.AddCookie(c)
-		}
+	// 2. Delegate Authentication and Handshake to Strategy
+	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
+		return nil, fmt.Errorf("sap authorization failed: %w", err)
 	}
 
 	// Inject Default Headers
@@ -459,11 +309,10 @@ func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken)
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		// Clear session cache on 403 to force a new CSRF token fetch next time
+		// Evict cached session on 403 CSRF failure
 		if resp.StatusCode == 403 && req.Method != "GET" && req.Method != "HEAD" {
-			s.sessionCache.Remove(sessionKey)
+			s.authStrategy.Evict(ctx, req)
 		}
-		// Log response for debugging a 400 Bad Request
 		return nil, fmt.Errorf("sap http error %d: %s", resp.StatusCode, string(body))
 	}
 

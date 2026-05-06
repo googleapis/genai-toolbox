@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sapodata
+package odata
 
 import (
 	"testing"
@@ -25,7 +25,7 @@ func TestSourceRegistration(t *testing.T) {
 	// Verify it registers okay
 	yamlDef := []byte(`
 name: my_test_sap
-type: sap-odata
+type: odata
 baseUrl: https://example.com/sap/opu/odata
 timeout: 10s
 auth:

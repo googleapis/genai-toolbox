@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sapodata
+package odata
 
 import (
 	"bytes"
@@ -64,13 +64,14 @@ func TestMockSAPOData(t *testing.T) {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"mock-sap-source": map[string]any{
-				"type":    "sap-odata",
-				"baseUrl": ts.URL + "/sap/opu/odata/sap/API_SALES_ORDER_SRV",
+				"type":         "odata",
+				"baseUrl":      ts.URL + "/sap/opu/odata/sap/API_SALES_ORDER_SRV",
+				"authStrategy": "sap-gateway",
 			},
 		},
 		"tools": map[string]any{
 			"read-sales-order": map[string]any{
-				"type":        "sap-odata",
+				"type":        "odata",
 				"source":      "mock-sap-source",
 				"entitySet":   "A_SalesOrder",
 				"operation":   "READ",
@@ -144,8 +145,9 @@ func TestLiveSAPOData(t *testing.T) {
 	defer cancel()
 
 	sourceConfig := map[string]any{
-		"type":    "sap-odata",
-		"baseUrl": SAPTestBaseURL,
+		"type":         "odata",
+		"baseUrl":      SAPTestBaseURL,
+		"authStrategy": "sap-gateway",
 		"disableSslVerification": true,
 	}
 
@@ -171,7 +173,7 @@ func TestLiveSAPOData(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"read-sales-order-live": map[string]any{
-				"type":        "sap-odata",
+				"type":        "odata",
 				"source":      "live-sap-source",
 				"entitySet":   "A_SalesOrder",
 				"operation":   "READ",
