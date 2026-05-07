@@ -24,8 +24,9 @@ enableRobotsTXT = true
 
 ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quickstart/go"]
 
-[security.exec.node]
-  disable = true
+[security.node]
+  [security.node.permissions]
+    disable = true
 
 [languages]
   [languages.en]
