@@ -72,13 +72,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
 	params := parameters.Parameters{agentIdParameter}
 
-	annotations := &tools.ToolAnnotations{}
-	if cfg.Annotations != nil {
-		*annotations = *cfg.Annotations
-	}
-	readOnlyHint := true
-	annotations.ReadOnlyHint = &readOnlyHint
-
 	return Tool{
 		Config:     cfg,
 		Parameters: params,
@@ -112,7 +105,14 @@ func (t Tool) GetAuthRequired() []string {
 }
 
 func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
+
+	annotations := &tools.ToolAnnotations{}
+	if t.Annotations != nil {
+		*annotations = *t.Annotations
+	}
+	readOnlyHint := true
+	annotations.ReadOnlyHint = &readOnlyHint
+	return annotations
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
