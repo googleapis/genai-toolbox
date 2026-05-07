@@ -136,6 +136,35 @@ func InvokeMCPTool(t *testing.T, toolName string, arguments map[string]any, requ
 	return resp.StatusCode, &mcpResp, nil
 }
 
+// getMCPResultText safely extracts the text from content blocks, unmarshaling them if they are valid JSON.
+//
+// TODO: For tests that need to strictly validate the exact schema or structure of the output,
+// consider avoiding this helper and instead unmarshal the raw JSON directly into expected Go structs for comparison.
+func getMCPResultText(t *testing.T, resp *MCPCallToolResponse) []any {
+	if len(resp.Result.Content) == 0 {
+		return []any{}
+	}
+
+	var res []any
+	for _, content := range resp.Result.Content {
+		var item any
+		if err := json.Unmarshal([]byte(content.Text), &item); err != nil {
+			res = append(res, content.Text)
+		} else {
+			if slice, ok := item.([]any); ok {
+				res = append(res, slice...)
+			} else {
+				res = append(res, item)
+			}
+		}
+
+	}
+	if res == nil {
+		return []any{}
+	}
+	return res
+}
+
 // GetMCPToolsList is a JSON-RPC harness that fetches the tools/list registry.
 func GetMCPToolsList(t *testing.T, requestHeader map[string]string) (int, []any, error) {
 	headers := NewMCPRequestHeader(t, requestHeader)
@@ -251,12 +280,11 @@ func RunMCPCustomToolCallMethod(t *testing.T, toolName string, arguments map[str
 	if mcpResp.Result.IsError {
 		t.Fatalf("%s returned error result: %v", toolName, mcpResp.Result)
 	}
-	if len(mcpResp.Result.Content) == 0 {
-		t.Fatalf("%s returned empty content field", toolName)
-	}
-	got := mcpResp.Result.Content[0].Text
-	if !strings.Contains(got, want) {
-		t.Fatalf(`expected %q to contain %q`, got, want)
+	got := getMCPResultText(t, mcpResp)
+	gotBytes, _ := json.Marshal(got)
+	gotStr := string(gotBytes)
+	if !strings.Contains(gotStr, want) {
+		t.Fatalf(`expected %q to contain %q`, gotStr, want)
 	}
 }
 
@@ -268,7 +296,7 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTes
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
 		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
-		nullWant:                 "null",
+		nullWant:                 "[null]",
 		supportOptionalNullParam: true,
 		supportArrayParam:        true,
 		supportClientAuth:        false,
@@ -352,13 +380,194 @@ func RunMCPToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTes
 			if mcpResp.Result.IsError {
 				t.Fatalf("%s returned error result: %v", tc.toolName, mcpResp.Result)
 			}
-			if len(mcpResp.Result.Content) == 0 {
-				t.Fatalf("%s returned empty content field", tc.toolName)
-			}
-			got := mcpResp.Result.Content[0].Text
-			if !strings.Contains(got, tc.wantResult) {
-				t.Fatalf(`expected %q to contain %q`, got, tc.wantResult)
+			got := getMCPResultText(t, mcpResp)
+			gotBytes, _ := json.Marshal(got)
+			gotStr := string(gotBytes)
+			if !strings.Contains(gotStr, tc.wantResult) {
+				t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantResult)
 			}
 		})
+	}
+}
+
+// GetBaseMCPExpectedTools returns the MCP manifests for the base tools loaded by GetToolsConfig.
+func GetBaseMCPExpectedTools() []MCPToolManifest {
+	return []MCPToolManifest{
+		{
+			Name:        "my-simple-tool",
+			Description: "Simple tool to test end to end functionality.",
+			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
+		},
+		{
+			Name:        "my-tool",
+			Description: "Tool to test invocation with params.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id":   map[string]any{"type": "integer", "description": "user ID"},
+					"name": map[string]any{"type": "string", "description": "user name"},
+				},
+				"required": []any{"id", "name"},
+			},
+		},
+		{
+			Name:        "my-tool-by-id",
+			Description: "Tool to test invocation with params.",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"id": map[string]any{"type": "integer", "description": "user ID"}},
+				"required":   []any{"id"},
+			},
+		},
+		{
+			Name:        "my-tool-by-name",
+			Description: "Tool to test invocation with params.",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"name": map[string]any{"type": "string", "description": "user name"}},
+				"required":   []any{},
+			},
+		},
+		{
+			Name:        "my-array-tool",
+			Description: "Tool to test invocation with array params.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"idArray":   map[string]any{"type": "array", "description": "ID array", "items": map[string]any{"type": "integer", "description": "ID"}},
+					"nameArray": map[string]any{"type": "array", "description": "user name array", "items": map[string]any{"type": "string", "description": "user name"}},
+				},
+				"required": []any{"idArray", "nameArray"},
+			},
+		},
+		{
+			Name:        "my-auth-tool",
+			Description: "Tool to test authenticated parameters.",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"email": map[string]any{"type": "string", "description": "user email"}},
+				"required":   []any{"email"},
+			},
+		},
+		{
+			Name:        "my-auth-required-tool",
+			Description: "Tool to test auth required invocation.",
+			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
+		},
+		{
+			Name:        "my-fail-tool",
+			Description: "Tool to test statement with incorrect syntax.",
+			InputSchema: map[string]any{"type": "object", "properties": map[string]any{}, "required": []any{}},
+		},
+	}
+}
+
+// GetExecuteSQLMCPExpectedTools returns the MCP manifests for the tools loaded by AddExecuteSqlConfig.
+func GetExecuteSQLMCPExpectedTools() []MCPToolManifest {
+	return []MCPToolManifest{
+		{
+			Name:        "my-exec-sql-tool",
+			Description: "Tool to execute sql",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "The sql to execute."}},
+				"required":   []any{"sql"},
+			},
+		},
+		{
+			Name:        "my-auth-exec-sql-tool",
+			Description: "Tool to execute sql",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"sql": map[string]any{"type": "string", "description": "The sql to execute."}},
+				"required":   []any{"sql"},
+			},
+		},
+	}
+}
+
+// GetTemplateParamMCPExpectedTools returns the MCP manifests for the tools loaded by AddTemplateParamConfig.
+func GetTemplateParamMCPExpectedTools() []MCPToolManifest {
+	return []MCPToolManifest{
+		{
+			Name:        "create-table-templateParams-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+					"columns":   map[string]any{"type": "array", "description": "The columns to create", "items": map[string]any{"type": "string", "description": "A column name that will be created"}},
+				},
+				"required": []any{"tableName", "columns"},
+			},
+		},
+		{
+			Name:        "insert-table-templateParams-tool",
+			Description: "Insert tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+					"columns":   map[string]any{"type": "array", "description": "The columns to insert into", "items": map[string]any{"type": "string", "description": "A column name that will be returned from the query."}},
+					"values":    map[string]any{"type": "string", "description": "The values to insert as a comma separated string"},
+				},
+				"required": []any{"tableName", "columns", "values"},
+			},
+		},
+		{
+			Name:        "select-templateParams-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"tableName": map[string]any{"type": "string", "description": "some description"}},
+				"required":   []any{"tableName"},
+			},
+		},
+		{
+			Name:        "select-templateParams-combined-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id":        map[string]any{"type": "integer", "description": "the id of the user"},
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+				},
+				"required": []any{"id", "tableName"},
+			},
+		},
+		{
+			Name:        "select-fields-templateParams-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"tableName": map[string]any{"type": "string", "description": "some description"},
+					"fields":    map[string]any{"type": "array", "description": "The fields to select from", "items": map[string]any{"type": "string", "description": "A field that will be returned from the query."}},
+				},
+				"required": []any{"tableName", "fields"},
+			},
+		},
+		{
+			Name:        "select-filter-templateParams-combined-tool",
+			Description: "Create table tool with template parameters",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"name":         map[string]any{"type": "string", "description": "the name of the user"},
+					"tableName":    map[string]any{"type": "string", "description": "some description"},
+					"columnFilter": map[string]any{"type": "string", "description": "some description"},
+				},
+				"required": []any{"name", "tableName", "columnFilter"},
+			},
+		},
+		{
+			Name:        "drop-table-templateParams-tool",
+			Description: "Drop table tool with template parameters",
+			InputSchema: map[string]any{
+				"type":       "object",
+				"properties": map[string]any{"tableName": map[string]any{"type": "string", "description": "some description"}},
+				"required":   []any{"tableName"},
+			},
+		},
 	}
 }
