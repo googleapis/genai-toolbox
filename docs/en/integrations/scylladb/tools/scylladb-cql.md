@@ -16,7 +16,6 @@ The specified CQL statement is executed as a prepared
 statement, and expects parameters in the CQL query to be in
 the form of placeholders `?`.
 
-
 ## Compatible Sources
 
 {{< compatible-sources >}}

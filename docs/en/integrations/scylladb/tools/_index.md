@@ -1,4 +1,4 @@
 ---
-title: "ScyllaDB"
-weight: 1
+title: "Tools"
+weight: 2
 ---
