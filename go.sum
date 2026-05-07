@@ -564,6 +564,8 @@ github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.42.0 h1:TVYrn
 github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.42.0/go.mod h1:ZpdnHWcqGnDVm0KM7ugUG0wpYH6Cus07Gncy8qtxzhE=
 github.com/testcontainers/testcontainers-go/modules/couchbase v0.42.0 h1:95yS9biTzI8O1KWgLvNQ6dB7WgvZUn14HTKup/5/2Vw=
 github.com/testcontainers/testcontainers-go/modules/couchbase v0.42.0/go.mod h1:lAyyMk/tyM6AIKrFQs3lR36/BIf4i0Dr8pqv29G7H9M=
+github.com/testcontainers/testcontainers-go/modules/scylladb v0.42.0 h1:LnzRgvhCUYKZJBvQez76+iECSEGCRUeR5eqYzffj+vs=
+github.com/testcontainers/testcontainers-go/modules/scylladb v0.42.0/go.mod h1:c0AnMT/U4Ud5ibC5uwufDo4zqAzmj9WfKJxWwBRtVVY=
 github.com/thlib/go-timezone-local v0.0.7 h1:fX8zd3aJydqLlTs/TrROrIIdztzsdFV23OzOQx31jII=
 github.com/thlib/go-timezone-local v0.0.7/go.mod h1:/Tnicc6m/lsJE0irFMA0LfIwTBo4QP7A8IfyIv4zZKI=
 github.com/tidwall/gjson v1.17.1 h1:wlYEnwqAHgzmhNUFfw7Xalt2JzQvsMx2Se4PcoFCT/U=

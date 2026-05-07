@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build integration
-
 package scylladb
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -30,71 +27,53 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
+	tcscylladb "github.com/testcontainers/testcontainers-go/modules/scylladb"
 )
 
 var (
 	ScyllaDBSourceType = "scylladb"
 	ScyllaDBToolType   = "scylladb-cql"
-	Hosts              = os.Getenv("SCYLLADB_HOST")
 	Keyspace           = "example_keyspace"
-	Username           = os.Getenv("SCYLLADB_USER")
-	Password           = os.Getenv("SCYLLADB_PASS")
-	LocalDC            = os.Getenv("SCYLLADB_LOCAL_DC")
 )
 
-func getScyllaDBVars(t *testing.T) map[string]any {
+func setupScyllaDBContainer(ctx context.Context, t *testing.T) (string, func()) {
 	t.Helper()
-	if Hosts == "" {
-		t.Skip("SCYLLADB_HOST not set, skipping integration test")
-	}
-	cfg := map[string]any{
-		"type":     ScyllaDBSourceType,
-		"hosts":    strings.Split(Hosts, ","),
-		"keyspace": Keyspace,
-	}
-	if Username != "" {
-		cfg["username"] = Username
-		cfg["password"] = Password
-	}
-	if LocalDC != "" {
-		cfg["localDC"] = LocalDC
-	}
-	return cfg
-}
 
-func initScyllaDBTestSession() (*gocql.Session, error) {
-	hostStrings := strings.Split(Hosts, ",")
+	container, err := tcscylladb.Run(ctx, "scylladb/scylla:6.2")
+	if err != nil {
+		t.Fatalf("failed to start scylladb container: %s", err)
+	}
 
-	var hosts []string
-	for _, h := range hostStrings {
-		trimmedHost := strings.TrimSpace(h)
-		if trimmedHost != "" {
-			hosts = append(hosts, trimmedHost)
+	cleanup := func() {
+		if err := container.Terminate(ctx); err != nil {
+			t.Logf("failed to terminate scylladb container: %s", err)
 		}
 	}
-	if len(hosts) == 0 {
-		return nil, fmt.Errorf("no valid hosts found in SCYLLADB_HOST env var")
+
+	host, err := container.NonShardAwareConnectionHost(ctx)
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get scylladb connection host: %s", err)
 	}
 
-	cluster := gocql.NewCluster(hosts...)
+	return host, cleanup
+}
+
+func getScyllaDBVars(host string) map[string]any {
+	return map[string]any{
+		"type":     ScyllaDBSourceType,
+		"hosts":    []string{host},
+		"keyspace": Keyspace,
+	}
+}
+
+func initScyllaDBTestSession(host string) (*gocql.Session, error) {
+	cluster := gocql.NewCluster(host)
 	cluster.Consistency = gocql.Quorum
 	cluster.ProtoVersion = 4
 	cluster.DisableInitialHostLookup = true
 	cluster.ConnectTimeout = 10 * time.Second
 	cluster.NumConns = 2
-
-	if Username != "" {
-		cluster.Authenticator = gocql.PasswordAuthenticator{
-			Username: Username,
-			Password: Password,
-		}
-	}
-
-	if LocalDC != "" {
-		cluster.PoolConfig.HostSelectionPolicy = gocql.TokenAwareHostPolicy(
-			gocql.DCAwareRoundRobinPolicy(LocalDC),
-		)
-	}
 
 	cluster.RetryPolicy = &gocql.ExponentialBackoffRetryPolicy{
 		NumRetries: 3,
@@ -107,16 +86,9 @@ func initScyllaDBTestSession() (*gocql.Session, error) {
 		return nil, fmt.Errorf("failed to create session: %v", err)
 	}
 
-	var createKeyspaceStmt string
-	if LocalDC != "" { // ScyllaDB Cloud
-		createKeyspaceStmt = fmt.Sprintf(`
-		CREATE KEYSPACE IF NOT EXISTS %s
-		WITH REPLICATION = {'class': 'NetworkTopologyStrategy', '%s': 3}`, Keyspace, LocalDC)
-	} else { // Docker or local ScyllaDB
-		createKeyspaceStmt = fmt.Sprintf(`
+	createKeyspaceStmt := fmt.Sprintf(`
 		CREATE KEYSPACE IF NOT EXISTS %s
 		WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'replication_factor': 1}`, Keyspace)
-	}
 	err = session.Query(createKeyspaceStmt).Exec()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create keyspace: %v", err)
@@ -187,15 +159,19 @@ func dropTable(session *gocql.Session, tableName string) {
 }
 
 func TestScyllaDB(t *testing.T) {
-	session, err := initScyllaDBTestSession()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	host, containerCleanup := setupScyllaDBContainer(ctx, t)
+	defer containerCleanup()
+
+	session, err := initScyllaDBTestSession(host)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer session.Close()
 
-	sourceConfig := getScyllaDBVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+	sourceConfig := getScyllaDBVars(host)
 
 	args := []string{"--enable-api"}
 	paramTableName := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
