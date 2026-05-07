@@ -816,6 +816,55 @@ description: |
     - For dashboards and looks, use the numeric ID (e.g., "123").
     - For explores, use the format "model_name/explore_name".
 ---
+kind: tool
+name: create_project
+type: looker-create-project
+source: looker-source
+description: |
+  This tool creates a new Looker project.
+  
+  Required Parameters:
+  - name: The unique name of the new project.
+  
+  Optional Parameters:
+  - git_production_branch_name: Git production branch name. Defaults to master.
+  - pull_request_mode: The git pull request policy. Valid values: "off", "links", "recommended", "required".
+  - validation_required: If true, validation is required before committing.
+  - git_release_mgmt_enabled: If true, advanced git release management is enabled.
+  - allow_warnings: If true, allow committing with warnings when validation is required.
+---
+kind: tool
+name: create_git_deploy_key
+type: looker-create-git-deploy-key
+source: looker-source
+description: |
+  This tool generates a public/private key pair for authenticating ssh git requests
+  from Looker to a remote repository for a specific project.
+  It returns the public deploy key string.
+  
+  Required Parameters:
+  - project_id: The ID of the Looker project.
+---
+kind: tool
+name: update_project
+type: looker-update-project
+source: looker-source
+description: |
+  This tool updates the configuration of an existing Looker project.
+  It is particularly useful for configuring Git settings after creating a project.
+  
+  Required Parameters:
+  - project_id: The ID of the Looker project.
+  
+  Optional Parameters:
+  - git_remote_url: Git remote repository URL (SSH format).
+  - git_service_name: Name of the git service provider (e.g. "bare", "github").
+  - git_production_branch_name: Git production branch name.
+  - pull_request_mode: The git pull request policy. Valid values: "off", "links", "recommended", "required".
+  - validation_required: If true, validation is required.
+  - git_release_mgmt_enabled: If true, advanced git release management is enabled.
+  - allow_warnings: If true, allow committing with warnings.
+---
 kind: toolset
 name: looker_tools
 tools:
@@ -837,3 +886,6 @@ tools:
 - add_dashboard_element
 - add_dashboard_filter
 - generate_embed_url
+- create_project
+- create_git_deploy_key
+- update_project
