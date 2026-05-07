@@ -14,10 +14,10 @@ compliant identity provider (IDP). It discovers the JWKS (JSON Web Key Set) URL
 either through the provider's `/.well-known/openid-configuration` endpoint or
 directly via the provided `authorizationServer`.
 
-To configure this auth service, you need to provide the `audience` (typically
-your client ID or the intended audience for the token), the
-`authorizationServer` of your identity provider, and optionally a list of
-`scopesRequired` that must be present in the token's claims.
+To configure this auth service, you need to provide the `audience` (the expected `aud` claim in the token), the `authorizationServer` of your identity provider, and optionally a list of `scopesRequired` that must be present in the token's claims.
+
+> [!NOTE]
+> The only time the `aud` claim matches the `client_id` is inside an ID Token (a concept from OpenID Connect used to verify a user's identity). Because an ID token is intended to be consumed by the client application itself, the client is the audience.
 
 ## Usage Modes
 
@@ -104,10 +104,9 @@ When a request is received in this mode, the service will:
    - Verifies expiration (`exp`) and audience (`aud`).
    - Verifies required scopes in `scope` claim.
 4. For **Opaque Tokens**:
-   - Calls the introspection endpoint (as listed in the `authorizationServer`'s
-     OIDC configuration).
-   - Verifies that the token is `active`.
-   - Verifies expiration (`exp`) and audience (`aud`).
+   - Calls the introspection endpoint (either configured via `introspectionEndpoint`
+     or discovered from the `authorizationServer`'s OIDC configuration).
+   - Verifies expiration (`exp`) and audience (`aud` or `"audience"` fallback).
    - Verifies required scopes in `scope` field.
 
 #### Example
@@ -124,21 +123,58 @@ scopesRequired:
   - write
 ```
 
+#### Google Opaque Access Token Validation Example
+
+To use Google's `tokeninfo` endpoint for validating opaque access tokens, configure the service to use the `GET` method and `access_token` parameter name:
+
+```yaml
+kind: authServices
+name: google-auth
+type: generic
+audience: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+authorizationServer: https://accounts.google.com
+introspectionEndpoint: https://www.googleapis.com/oauth2/v3/tokeninfo
+introspectionMethod: GET
+introspectionParamName: access_token
+mcpEnabled: true
+```
+
+#### Okta OIDC Configuration Example
+
+To secure your MCP server or tools using Okta as the identity provider:
+
+```yaml
+kind: authServices
+name: okta-auth
+type: generic
+audience: api://default # Or your custom Okta audience
+authorizationServer: https://your-subdomain.okta.com/oauth2/default
+mcpEnabled: true
+scopesRequired:
+  - openid
+  - profile
+```
+
+> [!NOTE]
+> If you are using Okta's Org Authorization Server (instead of a Custom Authorization Server), your `authorizationServer` URL will be `https://your-subdomain.okta.com`.
+
 {{< notice tip >}} Use environment variable replacement with the format
 ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 [auth-invoke]: ../tools/_index.md#authorized-invocations
 [auth-params]: ../tools/_index.md#authenticated-parameters
-[mcp-auth]:
-  https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization
+[mcp-auth]: https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization
 
 ## Reference
 
-| **field**           | **type** | **required** | **description**                                                                                                                                               |
-| ------------------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| type                |  string  |     true     | Must be "generic".                                                                                                                                            |
-| audience            |  string  |     true     | The expected audience (`aud` claim) in the JWT token. This ensures the token was minted specifically for your application.                                    |
-| authorizationServer |  string  |     true     | The base URL of your OIDC provider. The service will append `/.well-known/openid-configuration` to discover the JWKS URI. HTTP is allowed but logs a warning. |
-| mcpEnabled          |   bool   |    false     | Indicates if MCP endpoint authentication should be applied. Defaults to false.                                                                                |
-| scopesRequired      | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid.                                                           |
+| **field**              | **type** | **required** | **description**                                                                                                                                                                                       |
+| ---------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type                   |  string  |     true     | Must be "generic".                                                                                                                                                                                    |
+| audience               |  string  |     true     | The expected audience (`aud` claim) in the token. This ensures the token was minted specifically for your application. See [Getting Started](#getting-started) for details on OIDC audience matching. |
+| authorizationServer    |  string  |     true     | The base URL of your OIDC provider. The service will append `/.well-known/openid-configuration` to discover the JWKS URI. HTTP is allowed but logs a warning.                                         |
+| mcpEnabled             |   bool   |    false     | Indicates if MCP endpoint authentication should be applied. Defaults to false.                                                                                                                        |
+| scopesRequired         | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid.                                                                                                   |
+| introspectionEndpoint  |  string  |    false     | Optional override for the token introspection URL. Useful if the provider does not list it in OIDC discovery (e.g., Google).                                                                          |
+| introspectionMethod    |  string  |    false     | HTTP method to use for introspection. Defaults to "POST". Set to "GET" for providers like Google.                                                                                                     |
+| introspectionParamName |  string  |    false     | Parameter name for the token in the introspection request. Defaults to "token". Set to "access_token" for Google.                                                                                     |

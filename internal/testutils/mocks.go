@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package testutils
 
 import (
 	"context"
@@ -27,12 +27,64 @@ import (
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
-	Name                        string
-	Description                 string
-	Params                      []parameters.Parameter
-	manifest                    tools.Manifest
-	unauthorized                bool
-	requiresClientAuthorization bool
+	Name                       string
+	Description                string
+	Params                     []parameters.Parameter
+	manifest                   tools.Manifest
+	mcpManifest                tools.McpManifest
+	unauthorized               bool
+	requireClientAuthorization bool
+}
+
+// NewMockTool creates a new mock prompt for testing.
+func NewMockTool(name, desc string, params []parameters.Parameter, unauthorized, requireClientAuthorization bool) MockTool {
+	pMs := make([]parameters.ParameterManifest, 0, len(params))
+	for _, p := range params {
+		pMs = append(pMs, p.Manifest())
+	}
+	manifest := tools.Manifest{Description: desc, Parameters: pMs}
+
+	properties := make(map[string]parameters.ParameterMcpManifest)
+	required := make([]string, 0)
+	authParams := make(map[string][]string)
+
+	for _, p := range params {
+		pName := p.GetName()
+		paramManifest, authParamList := p.McpManifest()
+		properties[pName] = paramManifest
+		required = append(required, pName)
+
+		if len(authParamList) > 0 {
+			authParams[pName] = authParamList
+		}
+	}
+
+	toolsSchema := parameters.McpToolsSchema{
+		Type:       "object",
+		Properties: properties,
+		Required:   required,
+	}
+
+	mcpManifest := tools.McpManifest{
+		Name:        name,
+		Description: desc,
+		InputSchema: toolsSchema,
+	}
+
+	if len(authParams) > 0 {
+		mcpManifest.Metadata = map[string]any{
+			"toolbox/authParams": authParams,
+		}
+	}
+	return MockTool{
+		Name:                       name,
+		Description:                desc,
+		Params:                     params,
+		manifest:                   manifest,
+		mcpManifest:                mcpManifest,
+		unauthorized:               unauthorized,
+		requireClientAuthorization: requireClientAuthorization,
+	}
 }
 
 func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, util.ToolboxError) {
@@ -54,11 +106,7 @@ func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamV
 }
 
 func (t MockTool) Manifest() tools.Manifest {
-	pMs := make([]parameters.ParameterManifest, 0, len(t.Params))
-	for _, p := range t.Params {
-		pMs = append(pMs, p.Manifest())
-	}
-	return tools.Manifest{Description: t.Description, Parameters: pMs}
+	return t.manifest
 }
 
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
@@ -68,7 +116,7 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 
 func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthorization, nil
+	return t.requireClientAuthorization, nil
 }
 
 func (t MockTool) GetParameters() parameters.Parameters {
@@ -76,40 +124,7 @@ func (t MockTool) GetParameters() parameters.Parameters {
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
-	properties := make(map[string]parameters.ParameterMcpManifest)
-	required := make([]string, 0)
-	authParams := make(map[string][]string)
-
-	for _, p := range t.Params {
-		name := p.GetName()
-		paramManifest, authParamList := p.McpManifest()
-		properties[name] = paramManifest
-		required = append(required, name)
-
-		if len(authParamList) > 0 {
-			authParams[name] = authParamList
-		}
-	}
-
-	toolsSchema := parameters.McpToolsSchema{
-		Type:       "object",
-		Properties: properties,
-		Required:   required,
-	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        t.Name,
-		Description: t.Description,
-		InputSchema: toolsSchema,
-	}
-
-	if len(authParams) > 0 {
-		mcpManifest.Metadata = map[string]any{
-			"toolbox/authParams": authParams,
-		}
-	}
-
-	return mcpManifest
+	return t.mcpManifest
 }
 
 func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
@@ -121,6 +136,8 @@ type MockPrompt struct {
 	Name        string
 	Description string
 	Args        prompts.Arguments
+	manifest    prompts.Manifest
+	mcpManifest prompts.McpManifest
 }
 
 func (p MockPrompt) SubstituteParams(vals parameters.ParamValues) (any, error) {
@@ -157,4 +174,24 @@ func (p MockPrompt) McpManifest() prompts.McpManifest {
 
 func (p MockPrompt) ToConfig() prompts.PromptConfig {
 	return nil
+}
+
+// NewMockPrompt creates a new mock prompt for testing.
+func NewMockPrompt(name, desc string, args prompts.Arguments) MockPrompt {
+	var argManifests []parameters.ParameterManifest
+	for _, arg := range args {
+		argManifests = append(argManifests, arg.Manifest())
+	}
+	manifest := prompts.Manifest{
+		Description: desc,
+		Arguments:   argManifests,
+	}
+	mcpManifest := prompts.GetMcpManifest(name, desc, args)
+	return MockPrompt{
+		Name:        name,
+		Description: desc,
+		Args:        args,
+		manifest:    manifest,
+		mcpManifest: mcpManifest,
+	}
 }
