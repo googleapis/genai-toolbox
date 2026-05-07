@@ -124,7 +124,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	projectId, ok := mapParams["project_id"].(string)
 	if !ok || projectId == "" {
-		return nil, util.NewClientServerError("project_id must be specified", http.StatusInternalServerError, nil)
+		return nil, util.NewClientServerError("project_id must be specified", http.StatusBadRequest, nil)
 	}
 
 	resp, err := sdk.CreateGitDeployKey(projectId, source.LookerApiSettings())

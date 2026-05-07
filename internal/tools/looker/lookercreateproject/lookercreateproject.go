@@ -134,7 +134,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	name, ok := mapParams["name"].(string)
 	if !ok || name == "" {
-		return nil, util.NewClientServerError("name must be specified", http.StatusInternalServerError, nil)
+		return nil, util.NewClientServerError("name must be specified", http.StatusBadRequest, nil)
 	}
 
 	body := v4.WriteProject{

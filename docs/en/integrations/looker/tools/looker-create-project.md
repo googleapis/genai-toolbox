@@ -1,5 +1,5 @@
 ---
-title: "Create Project Tool"
+title: "looker-create-project Tool"
 type: docs
 weight: 1
 description: >

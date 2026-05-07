@@ -1,5 +1,5 @@
 ---
-title: "Update Project Tool"
+title: "looker-update-project Tool"
 type: docs
 weight: 1
 description: >

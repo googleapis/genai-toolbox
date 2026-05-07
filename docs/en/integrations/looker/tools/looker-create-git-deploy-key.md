@@ -1,5 +1,5 @@
 ---
-title: "Create Git Deploy Key Tool"
+title: "looker-create-git-deploy-key Tool"
 type: docs
 weight: 1
 description: >
