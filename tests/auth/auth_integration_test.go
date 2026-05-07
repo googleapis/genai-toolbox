@@ -235,7 +235,7 @@ func TestGoogleTokenValidation(t *testing.T) {
 				"type":                   "generic",
 				"audience":               aud,
 				"authorizationServer":    "https://accounts.google.com",
-				"introspectionEndpoint":  "https://www.googleapis.com/oauth2/v1/tokeninfo",
+				"introspectionEndpoint":  "https://www.googleapis.com/oauth2/v3/tokeninfo",
 				"introspectionMethod":    "GET",
 				"introspectionParamName": "access_token",
 				"mcpEnabled":             true,
