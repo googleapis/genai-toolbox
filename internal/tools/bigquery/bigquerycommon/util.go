@@ -61,14 +61,16 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 // BQTypeStringFromToolType converts a tool parameter type string to a BigQuery standard SQL type string.
 func BQTypeStringFromToolType(toolType string) (string, error) {
 	switch toolType {
-	case "string":
+	case parameters.TypeString:
 		return "STRING", nil
-	case "integer":
+	case parameters.TypeInt:
 		return "INT64", nil
-	case "float":
+	case parameters.TypeFloat:
 		return "FLOAT64", nil
-	case "boolean":
+	case parameters.TypeBool:
 		return "BOOL", nil
+	case parameters.TypeMap:
+		return "STRUCT", nil
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}

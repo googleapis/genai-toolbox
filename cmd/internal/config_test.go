@@ -1455,6 +1455,7 @@ func TestPrebuiltTools(t *testing.T) {
 	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	cloudstorage_config, _ := prebuiltconfigs.Get("cloud-storage")
 	singlestore_config, _ := prebuiltconfigs.Get("singlestore")
 	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
@@ -1570,6 +1571,8 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
 	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
 	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
+
+	t.Setenv("CLOUD_STORAGE_PROJECT", "your_gcp_project_id")
 
 	t.Setenv("SNOWFLAKE_ACCOUNT", "your_account")
 	t.Setenv("SNOWFLAKE_USER", "your_username")
@@ -2052,6 +2055,20 @@ func TestPrebuiltTools(t *testing.T) {
 				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
 					Name:      "cloud_healthcare_dicom_tools",
 					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
+				},
+			},
+		},
+		{
+			name: "cloud storage prebuilt tools",
+			in:   cloudstorage_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-storage-buckets": tools.ToolsetConfig{
+					Name:      "cloud-storage-buckets",
+					ToolNames: []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
+				},
+				"cloud-storage-objects": tools.ToolsetConfig{
+					Name:      "cloud-storage-objects",
+					ToolNames: []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
 				},
 			},
 		},

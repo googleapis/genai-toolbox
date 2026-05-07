@@ -865,3 +865,78 @@ Trigger pull request tests for external contributors by:
 * .github/release-please.yml - Creates GitHub releases
 * .github/ISSUE_TEMPLATE - templates for GitHub issues
 
+### How-to Release an npm Package
+
+**Pre-requisites**
+
+- **npm Account**: Create an account at [npmjs.com](https://npmjs.com) if you haven't already.
+- **2FA Setup:** Ensure Two-Factor Authentication is enabled on your npm account (required for publishing).
+- **Permissions:** Request Editor access to the `@toolbox-sdk/` organization by pinging the current maintainers.
+
+**Preparation**
+
+- You will be publishing packages for the following OS/Architecture combinations:
+  - `darwin/arm64` -> `server-darwin-arm64`
+  - `darwin/x64` -> `server-darwin-x64`
+  - `linux/x64` -> `server-linux-x64`
+  - `win32/x64` -> `server-win32-x64`
+
+**Phase A: Release Platform-Specific Packages**
+
+_Repeat the following steps for each of the 4 combinations listed above._
+
+1. **Navigate to the package directory:**
+   ```bash
+   cd npm/server-<os>-<arch>
+   ```
+2. **Verify versioning:**
+   - Verify that the `version.txt` file reflects the version of the toolbox binary to be released.
+   - Open `package.json` and verify that the `"version"` field reflects the target version.
+3. **Sync Lockfile:**
+   ```bash
+   npm install --force
+   ```
+4. **Clean Artifacts:** Remove any pre-existing binaries to ensure a clean pack.
+   ```bash
+   rm -rf bin/
+   ```
+5. **Pack and Publish:**
+   ```bash
+   npm pack .
+   npm publish --access public
+   ```
+6. **Verify:** Check the npm registry to ensure the version is live at `https://www.npmjs.com/package/@toolbox-sdk/server-<os>-<arch>` before moving to the next package.
+
+**Phase B: Release Main Package (@toolbox-sdk/server)**
+
+Once all platform-specific packages are live, release the main wrapper package.
+
+1. **Navigate to the main directory:**
+   ```bash
+   cd ../server
+   ```
+2. **Verify Versioning:**
+   - Open `package.json` and verify the `"version"` field reflects the target version.
+   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 4 packages.
+3. **Sync Lockfile:** (Before this step, all 4 dep packages need to be published to npm)
+   ```bash
+   npm install --package-lock-only
+   ```
+   _Ensure that a node module entry for each package is present in `package-lock.json`._
+4. **Pack and Publish:**
+   ```bash
+   npm pack .
+   npm publish --access public
+   ```
+5. **Verify:** Confirm the main package is live with the correct version at `https://www.npmjs.com/package/@toolbox-sdk/server`.
+
+**Committing changes to the repo**
+
+Once all packages have been successfully published, please create a Pull Request containing the updated `package-lock.json` files from all `npm/` subdirectories. Ensure that any additional changes made during the release process are also included in this PR. Finally, set the title of the PR to: `chore(main): release npm vX.Y.Z`.
+
+**Troubleshooting**
+
+- **Access Token Expired or Need Auth:** Run `npm login`. If the registry is not `https://registry.npmjs.org/`, update it via `npm config set registry https://registry.npmjs.org/` or by modifying your `.npmrc`.
+- **Version Mismatches:** Do not re-publish the same version. Increment the patch version and release the new version following the steps above.
+- **Deprecation (Preferred):** If a specific version is broken, mark it as deprecated: `npm deprecate <package_name>@<version> "critical bug fixed in vX.Y.Z"`.
+- **Unpublishing (Nuclear Option):** Only possible if published within the last 72 hours using `npm unpublish <package-name>@<version>`. Note that this permanently burns the version number.

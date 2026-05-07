@@ -22,6 +22,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"sort"
 	"unicode/utf8"
 
 	"cloud.google.com/go/storage"
@@ -219,6 +220,78 @@ func (s *Source) ListBuckets(ctx context.Context, project, prefix string, maxRes
 	}, nil
 }
 
+// CreateBucket creates a Cloud Storage bucket in the source project and returns
+// its freshly-read metadata. When location is empty, Cloud Storage applies its
+// service default.
+func (s *Source) CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
+	attrs := &storage.BucketAttrs{Location: location}
+	if uniformBucketLevelAccess {
+		attrs.UniformBucketLevelAccess = storage.UniformBucketLevelAccess{Enabled: true}
+	}
+
+	bkt := s.client.Bucket(bucket)
+	if err := bkt.Create(ctx, s.Project, attrs); err != nil {
+		return nil, fmt.Errorf("failed to create bucket %q in project %q: %w", bucket, s.Project, err)
+	}
+
+	createdAttrs, err := bkt.Attrs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metadata for created bucket %q: %w", bucket, err)
+	}
+	return map[string]any{
+		"bucket":   bucket,
+		"created":  true,
+		"metadata": createdAttrs,
+	}, nil
+}
+
+// GetBucketMetadata returns raw bucket metadata from the Cloud Storage client.
+func (s *Source) GetBucketMetadata(ctx context.Context, bucket string) (*storage.BucketAttrs, error) {
+	attrs, err := s.client.Bucket(bucket).Attrs(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metadata for bucket %q: %w", bucket, err)
+	}
+	return attrs, nil
+}
+
+// GetBucketIAMPolicy returns bucket IAM bindings in a stable, agent-friendly
+// shape while preserving conditional bindings when present.
+func (s *Source) GetBucketIAMPolicy(ctx context.Context, bucket string) (map[string]any, error) {
+	policy, err := s.client.Bucket(bucket).IAM().Policy(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get IAM policy for bucket %q: %w", bucket, err)
+	}
+
+	bindings := make([]map[string]any, 0)
+	if policy != nil && policy.InternalProto != nil {
+		for _, binding := range policy.InternalProto.Bindings {
+			members := append([]string(nil), binding.Members...)
+			sort.Strings(members)
+
+			out := map[string]any{
+				"role":    binding.Role,
+				"members": members,
+			}
+			if binding.Condition != nil {
+				out["condition"] = map[string]any{
+					"title":       binding.Condition.Title,
+					"description": binding.Condition.Description,
+					"expression":  binding.Condition.Expression,
+				}
+			}
+			bindings = append(bindings, out)
+		}
+	}
+	sort.Slice(bindings, func(i, j int) bool {
+		return fmt.Sprint(bindings[i]["role"]) < fmt.Sprint(bindings[j]["role"])
+	})
+
+	return map[string]any{
+		"bucket":   bucket,
+		"bindings": bindings,
+	}, nil
+}
+
 // GetObjectMetadata returns the raw *storage.ObjectAttrs for an object, giving
 // callers the full field set the GCS client exposes (name, size, contentType,
 // hashes, timestamps, user metadata, etc.) without a curated subset.
@@ -396,6 +469,18 @@ func (s *Source) DeleteObject(ctx context.Context, bucket, object string) (map[s
 	return map[string]any{
 		"bucket":  bucket,
 		"object":  object,
+		"deleted": true,
+	}, nil
+}
+
+// DeleteBucket deletes an empty Cloud Storage bucket.
+func (s *Source) DeleteBucket(ctx context.Context, bucket string) (map[string]any, error) {
+	if err := s.client.Bucket(bucket).Delete(ctx); err != nil {
+		return nil, fmt.Errorf("failed to delete bucket %q: %w", bucket, err)
+	}
+
+	return map[string]any{
+		"bucket":  bucket,
 		"deleted": true,
 	}, nil
 }

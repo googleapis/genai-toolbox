@@ -43,15 +43,17 @@ type ToolsetManifest struct {
 func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool) (Toolset, error) {
 	// finish toolset setup
 	// Check each declared tool name exists
-	var toolset Toolset
-	toolset.Name = t.Name
+	toolset := Toolset{
+		ToolsetConfig: t,
+		Tools:         make([]*Tool, 0, len(t.ToolNames)),
+		Manifest: ToolsetManifest{
+			ServerVersion: serverVersion,
+			ToolsManifest: make(map[string]Manifest),
+		},
+		McpManifest: make([]McpManifest, 0, len(t.ToolNames)),
+	}
 	if !IsValidName(toolset.Name) {
 		return toolset, fmt.Errorf("invalid toolset name: %s", toolset.Name)
-	}
-	toolset.Tools = make([]*Tool, 0, len(t.ToolNames))
-	toolset.Manifest = ToolsetManifest{
-		ServerVersion: serverVersion,
-		ToolsManifest: make(map[string]Manifest),
 	}
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
@@ -62,7 +64,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
 		toolset.McpManifest = append(toolset.McpManifest, tool.McpManifest())
 	}
-
 	return toolset, nil
 }
 

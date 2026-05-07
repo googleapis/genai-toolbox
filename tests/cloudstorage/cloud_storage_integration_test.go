@@ -223,6 +223,89 @@ func TestCloudStorageToolEndpoints(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "my_create_bucket",
+		map[string]any{
+			"my_create_bucket": map[string]any{
+				"description":  "Create a Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Name of the Cloud Storage bucket to create.",
+						"name":         "bucket",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Location for the bucket, e.g. 'US', 'EU', or 'us-central1'. Omit to use the Cloud Storage service default.",
+						"name":         "location",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Whether to enable uniform bucket-level access on the bucket.",
+						"name":         "uniform_bucket_level_access",
+						"required":     false,
+						"type":         "boolean",
+						"default":      false,
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_get_bucket_metadata",
+		map[string]any{
+			"my_get_bucket_metadata": map[string]any{
+				"description":  "Get metadata for a Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Name of the Cloud Storage bucket to inspect.",
+						"name":         "bucket",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_get_bucket_iam_policy",
+		map[string]any{
+			"my_get_bucket_iam_policy": map[string]any{
+				"description":  "Get the IAM policy for a Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Name of the Cloud Storage bucket whose IAM policy should be returned.",
+						"name":         "bucket",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "my_delete_bucket",
+		map[string]any{
+			"my_delete_bucket": map[string]any{
+				"description":  "Delete an empty Cloud Storage bucket.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Name of the empty Cloud Storage bucket to delete.",
+						"name":         "bucket",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "my_get_object_metadata",
 		map[string]any{
 			"my_get_object_metadata": map[string]any{
@@ -462,6 +545,12 @@ func TestCloudStorageToolEndpoints(t *testing.T) {
 	runCloudStorageReadObjectTest(t, bucketName)
 	runCloudStorageListBucketsTest(t, bucketName)
 	runCloudStorageGetObjectMetadataTest(t, bucketName)
+	bucketToolName := "toolbox-it-bucket-" + strings.ReplaceAll(uuid.New().String(), "-", "")[:17]
+	defer cleanupGCSBucket(ctx, t, client, bucketToolName)
+	runCloudStorageCreateBucketTest(ctx, t, client, bucketToolName)
+	runCloudStorageGetBucketMetadataTest(t, bucketToolName)
+	runCloudStorageGetBucketIAMPolicyTest(t, bucketToolName)
+	runCloudStorageDeleteBucketTest(ctx, t, client, bucketToolName)
 	runCloudStorageDownloadObjectTest(t, bucketName)
 	runCloudStorageUploadObjectTest(ctx, t, client, bucketName)
 	runCloudStorageWriteObjectTest(ctx, t, client, bucketName)
@@ -490,6 +579,26 @@ func getCloudStorageToolsConfig(sourceConfig map[string]any) map[string]any {
 				"type":        "cloud-storage-list-buckets",
 				"source":      "my_instance",
 				"description": "List Cloud Storage buckets in the project.",
+			},
+			"my_create_bucket": map[string]any{
+				"type":        "cloud-storage-create-bucket",
+				"source":      "my_instance",
+				"description": "Create a Cloud Storage bucket.",
+			},
+			"my_get_bucket_metadata": map[string]any{
+				"type":        "cloud-storage-get-bucket-metadata",
+				"source":      "my_instance",
+				"description": "Get metadata for a Cloud Storage bucket.",
+			},
+			"my_get_bucket_iam_policy": map[string]any{
+				"type":        "cloud-storage-get-bucket-iam-policy",
+				"source":      "my_instance",
+				"description": "Get the IAM policy for a Cloud Storage bucket.",
+			},
+			"my_delete_bucket": map[string]any{
+				"type":        "cloud-storage-delete-bucket",
+				"source":      "my_instance",
+				"description": "Delete an empty Cloud Storage bucket.",
 			},
 			"my_get_object_metadata": map[string]any{
 				"type":        "cloud-storage-get-object-metadata",
@@ -863,6 +972,163 @@ func runCloudStorageListBucketsTest(t *testing.T, bucket string) {
 			for _, unwant := range tc.unwantSubstrings {
 				if strings.Contains(result, unwant) {
 					t.Errorf("did not expect result to contain %q, got %s", unwant, result)
+				}
+			}
+		})
+	}
+}
+
+func runCloudStorageCreateBucketTest(ctx context.Context, t *testing.T, client *storage.Client, bucket string) {
+	t.Run("create bucket with omitted location", func(t *testing.T) {
+		body := fmt.Sprintf(`{"bucket": %q, "uniform_bucket_level_access": true}`, bucket)
+		result, status := invokeTool(t, "my_create_bucket", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		for _, want := range []string{bucket, `"created":true`, `"metadata"`} {
+			if !strings.Contains(result, want) {
+				t.Errorf("expected result to contain %q, got %s", want, result)
+			}
+		}
+		attrs, err := client.Bucket(bucket).Attrs(ctx)
+		if err != nil {
+			t.Fatalf("expected created bucket to exist: %v", err)
+		}
+		if attrs.Location != "US" {
+			t.Errorf("bucket location = %q, want US", attrs.Location)
+		}
+		if !attrs.UniformBucketLevelAccess.Enabled {
+			t.Errorf("expected uniform bucket-level access to be enabled")
+		}
+	})
+
+	t.Run("missing bucket returns agent error", func(t *testing.T) {
+		result, status := invokeTool(t, "my_create_bucket", `{}`)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, "bucket") {
+			t.Errorf("expected result to contain bucket error, got %s", result)
+		}
+	})
+}
+
+func runCloudStorageGetBucketMetadataTest(t *testing.T, bucket string) {
+	fakeBucket := "toolbox-it-does-not-exist-" + strings.ReplaceAll(uuid.New().String(), "-", "")[:12]
+	tcs := []struct {
+		name           string
+		body           string
+		wantSubstrings []string
+	}{
+		{
+			name:           "metadata for created bucket",
+			body:           fmt.Sprintf(`{"bucket": %q}`, bucket),
+			wantSubstrings: []string{`"Name":"` + bucket + `"`, `"Location":"US"`, `"Enabled":true`},
+		},
+		{
+			name:           "missing bucket returns agent error",
+			body:           `{}`,
+			wantSubstrings: []string{"bucket"},
+		},
+		{
+			name:           "nonexistent bucket returns error",
+			body:           fmt.Sprintf(`{"bucket": %q}`, fakeBucket),
+			wantSubstrings: []string{fakeBucket},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			result, status := invokeTool(t, "my_get_bucket_metadata", tc.body)
+			if status != http.StatusOK {
+				t.Fatalf("unexpected status %d: %s", status, result)
+			}
+			for _, want := range tc.wantSubstrings {
+				if !strings.Contains(result, want) {
+					t.Errorf("expected result to contain %q, got %s", want, result)
+				}
+			}
+		})
+	}
+}
+
+func runCloudStorageGetBucketIAMPolicyTest(t *testing.T, bucket string) {
+	fakeBucket := "toolbox-it-does-not-exist-" + strings.ReplaceAll(uuid.New().String(), "-", "")[:12]
+	tcs := []struct {
+		name           string
+		body           string
+		wantSubstrings []string
+	}{
+		{
+			name:           "IAM policy for created bucket",
+			body:           fmt.Sprintf(`{"bucket": %q}`, bucket),
+			wantSubstrings: []string{`"bucket":"` + bucket + `"`, `"bindings"`},
+		},
+		{
+			name:           "missing bucket returns agent error",
+			body:           `{}`,
+			wantSubstrings: []string{"bucket"},
+		},
+		{
+			name:           "nonexistent bucket returns error",
+			body:           fmt.Sprintf(`{"bucket": %q}`, fakeBucket),
+			wantSubstrings: []string{fakeBucket},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			result, status := invokeTool(t, "my_get_bucket_iam_policy", tc.body)
+			if status != http.StatusOK {
+				t.Fatalf("unexpected status %d: %s", status, result)
+			}
+			for _, want := range tc.wantSubstrings {
+				if !strings.Contains(result, want) {
+					t.Errorf("expected result to contain %q, got %s", want, result)
+				}
+			}
+		})
+	}
+}
+
+func runCloudStorageDeleteBucketTest(ctx context.Context, t *testing.T, client *storage.Client, bucket string) {
+	t.Run("delete empty bucket", func(t *testing.T) {
+		body := fmt.Sprintf(`{"bucket": %q}`, bucket)
+		result, status := invokeTool(t, "my_delete_bucket", body)
+		if status != http.StatusOK {
+			t.Fatalf("unexpected status %d: %s", status, result)
+		}
+		if !strings.Contains(result, `"deleted":true`) {
+			t.Errorf("expected deleted confirmation, got %s", result)
+		}
+		if gcsBucketExists(t, ctx, client, bucket) {
+			t.Errorf("expected bucket %q to be deleted", bucket)
+		}
+	})
+
+	tcs := []struct {
+		name           string
+		body           string
+		wantSubstrings []string
+	}{
+		{
+			name:           "missing bucket returns agent error",
+			body:           `{}`,
+			wantSubstrings: []string{"bucket"},
+		},
+		{
+			name:           "missing bucket in storage returns agent-visible error",
+			body:           fmt.Sprintf(`{"bucket": %q}`, bucket),
+			wantSubstrings: []string{"bucket"},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			result, status := invokeTool(t, "my_delete_bucket", tc.body)
+			if status != http.StatusOK {
+				t.Fatalf("unexpected status %d: %s", status, result)
+			}
+			for _, want := range tc.wantSubstrings {
+				if !strings.Contains(result, want) {
+					t.Errorf("expected result to contain %q, got %s", want, result)
 				}
 			}
 		})
@@ -1415,4 +1681,45 @@ func gcsObjectExists(t *testing.T, ctx context.Context, client *storage.Client, 
 	}
 	t.Fatalf("failed checking object %q existence: %v", object, err)
 	return false
+}
+
+func gcsBucketExists(t *testing.T, ctx context.Context, client *storage.Client, bucket string) bool {
+	t.Helper()
+	_, err := client.Bucket(bucket).Attrs(ctx)
+	if err == nil {
+		return true
+	}
+	if errors.Is(err, storage.ErrBucketNotExist) {
+		return false
+	}
+	t.Fatalf("failed checking bucket %q existence: %v", bucket, err)
+	return false
+}
+
+func cleanupGCSBucket(ctx context.Context, t *testing.T, client *storage.Client, bucket string) {
+	t.Helper()
+	cleanupCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
+	bkt := client.Bucket(bucket)
+	it := bkt.Objects(cleanupCtx, nil)
+	for {
+		attrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if errors.Is(err, storage.ErrBucketNotExist) {
+				return
+			}
+			t.Logf("cleanup: failed listing bucket %q: %v", bucket, err)
+			break
+		}
+		if delErr := bkt.Object(attrs.Name).Delete(cleanupCtx); delErr != nil {
+			t.Logf("cleanup: failed deleting object %q from bucket %q: %v", attrs.Name, bucket, delErr)
+		}
+	}
+	if err := bkt.Delete(cleanupCtx); err != nil && !errors.Is(err, storage.ErrBucketNotExist) {
+		t.Logf("cleanup: failed deleting bucket %q: %v", bucket, err)
+	}
 }

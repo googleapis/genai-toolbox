@@ -41,7 +41,8 @@ In addition to [setting the ADC for your server][set-adc], ensure the IAM
 identity has the appropriate role for the tools being exposed. Common roles:
 
 - `roles/storage.bucketViewer` — read-only access to bucket metadata, including
-  listing buckets with `cloud-storage-list-buckets`.
+  listing buckets with `cloud-storage-list-buckets` and reading bucket metadata
+  with `cloud-storage-get-bucket-metadata`.
 - `roles/storage.objectViewer` — read-only access to objects and object
   metadata, sufficient for `cloud-storage-list-objects`,
   `cloud-storage-get-object-metadata`, `cloud-storage-read-object`, and
@@ -60,6 +61,12 @@ Object mutation tools require the corresponding object permissions:
   `storage.objects.create` in the same bucket. If the destination object
   already exists, `storage.objects.delete` is also required.
 - `cloud-storage-delete-object` requires object delete permission.
+- `cloud-storage-create-bucket` requires bucket create permission in the
+  configured project.
+- `cloud-storage-get-bucket-iam-policy` requires permission to read bucket IAM
+  policy.
+- `cloud-storage-delete-bucket` requires bucket delete permission, and the
+  target bucket must be empty.
 
 See [Cloud Storage IAM roles][gcs-iam] for the full list.
 
