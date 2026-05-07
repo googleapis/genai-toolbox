@@ -78,3 +78,7 @@ instead of hardcoding your secrets into the configuration file.
 | username               |  string  |    false     | Name of the ScyllaDB user to connect as (e.g., "scylla").                                                                                               |
 | password               |  string  |    false     | Password of the ScyllaDB user.                                                                                                                          |
 | localDC                |  string  |    false     | Datacenter name for DC-aware load balancing (e.g., "AWS_US_EAST_1"). Required for ScyllaDB Cloud connections.                                           |
+| caPath                 |  string  |    false     | Path to a CA certificate file. Use when connecting to a self-hosted ScyllaDB cluster with a private/custom CA. Not needed for ScyllaDB Cloud.           |
+| certPath               |  string  |    false     | Path to the client certificate file for mutual TLS (mTLS). Required only when the server demands client certificate authentication.                     |
+| keyPath                |  string  |    false     | Path to the client private key file for mutual TLS (mTLS). Required together with `certPath`.                                                           |
+| enableHostVerification |   bool   |    false     | Whether to verify the server's hostname against its TLS certificate. Defaults to `false`.                                                               |
