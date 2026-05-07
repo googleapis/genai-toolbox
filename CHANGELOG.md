@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0](https://github.com/googleapis/mcp-toolbox/compare/v1.1.0...v1.2.0) (2026-05-04)
+## [1.2.0](https://github.com/googleapis/mcp-toolbox/compare/v1.1.0...v1.2.0) (2026-05-07)
 
 
 ### Features
