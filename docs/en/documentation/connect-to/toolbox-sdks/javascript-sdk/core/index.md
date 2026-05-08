@@ -487,7 +487,7 @@ workflows](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflo
 ```javascript
 import {ToolboxClient} from "@toolbox-sdk/core"
 import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from 'genkit-ai/google-genai';
 
 
 let client = ToolboxClient(URL)
