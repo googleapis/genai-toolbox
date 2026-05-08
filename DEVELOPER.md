@@ -936,7 +936,8 @@ Once all platform-specific packages are live, release the main wrapper package.
 
 Once all packages have been successfully published, please create a Pull Request containing the updated `package-lock.json` files from all `npm/` subdirectories. Ensure that any additional changes made during the release process are also included in this PR. Finally, set the title of the PR to: `chore(main): release npm vX.Y.Z`.
 
-Note: Please do not commit the binaries to the repo.
+> [!IMPORTANT]
+> Do not commit the binaries to the repo.
 
 **Troubleshooting**
 
