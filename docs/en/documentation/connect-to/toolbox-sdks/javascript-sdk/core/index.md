@@ -3,7 +3,7 @@ title: "Core"
 type: docs
 weight: 2
 description: >
-   MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
+  MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
 ---
 
 ## Overview
@@ -26,7 +26,6 @@ npm install @toolbox-sdk/core
 
 ## Quickstart
 
-
 1. **Start the Toolbox Service**
    - Make sure the MCP Toolbox service is running. See the [Toolbox Getting Started Guide](../../../../introduction/_index.md#getting-started).
 
@@ -35,24 +34,23 @@ npm install @toolbox-sdk/core
 Here's a minimal example to get you started. Ensure your Toolbox service is running and accessible.
 
 ```javascript
-
-import { ToolboxClient } from '@toolbox-sdk/core';  
-const URL = 'http://127.0.0.1:5000'; // Replace with your Toolbox service URL
+import { ToolboxClient } from "@toolbox-sdk/core";
+const URL = "http://127.0.0.1:5000"; // Replace with your Toolbox service URL
 const client = new ToolboxClient(URL);
 
-async function quickstart() {  
-  try {  
-      const tools = await client.loadToolset();  
-      // Use tools  
-  } catch (error) {  
-      console.error("unable to load toolset:", error.message);  
-  }  
-}  
-quickstart();  
+async function quickstart() {
+  try {
+    const tools = await client.loadToolset();
+    // Use tools
+  } catch (error) {
+    console.error("unable to load toolset:", error.message);
+  }
+}
+quickstart();
 ```
 
 {{< notice note>}}
- This guide uses modern ES Module (`import`) syntax. If your project uses CommonJS, you can import the library using require: `const { ToolboxClient } = require('@toolbox-sdk/core')`;.
+This guide uses modern ES Module (`import`) syntax. If your project uses CommonJS, you can import the library using require: `const { ToolboxClient } = require('@toolbox-sdk/core')`;.
 {{< /notice >}}
 
 ## Usage
@@ -60,10 +58,10 @@ quickstart();
 Import and initialize a Toolbox client, pointing it to the URL of your running Toolbox service.
 
 ```javascript
-import { ToolboxClient } from '@toolbox-sdk/core';
+import { ToolboxClient } from "@toolbox-sdk/core";
 
 // Replace with the actual URL where your Toolbox service is running
-const URL = 'http://127.0.0.1:5000';
+const URL = "http://127.0.0.1:5000";
 
 let client = new ToolboxClient(URL);
 const tools = await client.loadToolset();
@@ -100,9 +98,9 @@ We currently support different versions of the MCP protocol.
 You can explicitly set the protocol by passing the `protocol` argument to the `ToolboxClient` constructor.
 
 ```javascript
-import { ToolboxClient, Protocol } from '@toolbox-sdk/core';
+import { ToolboxClient, Protocol } from "@toolbox-sdk/core";
 
-const URL = 'http://127.0.0.1:5000';
+const URL = "http://127.0.0.1:5000";
 
 // Initialize with a specific protocol version
 const client = new ToolboxClient(URL, null, null, Protocol.MCP_v20241105);
@@ -120,10 +118,10 @@ A toolset is a collection of related tools. You can load all tools in a toolset 
 
 ```javascript
 // Load all tools
-const tools = await client.loadToolset()
+const tools = await client.loadToolset();
 
 // Load a specific toolset
-const tools = await client.loadToolset("my-toolset")
+const tools = await client.loadToolset("my-toolset");
 ```
 
 ### Load a single tool
@@ -131,7 +129,7 @@ const tools = await client.loadToolset("my-toolset")
 Loads a specific tool by its unique name. This provides fine-grained control.
 
 ```javascript
-const tool = await client.loadTool("my-tool")
+const tool = await client.loadTool("my-tool");
 ```
 
 ## Invoking Tools
@@ -139,8 +137,8 @@ const tool = await client.loadTool("my-tool")
 Once loaded, tools behave like awaitable JS functions. You invoke them using `await` and pass arguments corresponding to the parameters defined in the tool's configuration within the Toolbox service.
 
 ```javascript
-const tool = await client.loadTool("my-tool")
-const result = await tool({a: 5, b: 2})
+const tool = await client.loadTool("my-tool");
+const result = await tool({ a: 5, b: 2 });
 ```
 
 {{< notice tip>}}
@@ -152,7 +150,7 @@ For a more comprehensive guide on setting up the Toolbox service itself, which y
 This section describes how to authenticate the ToolboxClient itself when
 connecting to a Toolbox server instance that requires authentication. This is
 crucial for securing your Toolbox server endpoint, especially when deployed on
-platforms like Cloud Run, GKE,  or any environment where unauthenticated access is restricted.
+platforms like Cloud Run, GKE, or any environment where unauthenticated access is restricted.
 
 This client-to-server authentication ensures that the Toolbox server can verify
 the identity of the client making the request before any tool is loaded or
@@ -187,12 +185,14 @@ These header-generating functions are called just before each request, ensuring 
 You can configure these dynamic headers as seen below:
 
 ```javascript
-import { ToolboxClient } from '@toolbox-sdk/core';
-import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
+import { ToolboxClient } from "@toolbox-sdk/core";
+import { getGoogleIdToken } from "@toolbox-sdk/core/auth";
 
-const URL = 'http://127.0.0.1:5000';
+const URL = "http://127.0.0.1:5000";
 const getGoogleIdTokenGetter = () => getGoogleIdToken(URL);
-const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGetter});
+const client = new ToolboxClient(URL, null, {
+  Authorization: getGoogleIdTokenGetter,
+});
 
 // Use the client as usual
 ```
@@ -209,23 +209,25 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
    Run service to the principal. This could be your `user account email` or a
    `service account`.
 2. **Configure Credentials**
-    - Local Development: Set up
-   [ADC](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment).
-    - Google Cloud Environments: When running within Google Cloud (e.g., Compute
-      Engine, GKE, another Cloud Run service, Cloud Functions), ADC is typically
-      configured automatically, using the environment's default service account.
+   - Local Development: Set up
+     [ADC](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment).
+   - Google Cloud Environments: When running within Google Cloud (e.g., Compute
+     Engine, GKE, another Cloud Run service, Cloud Functions), ADC is typically
+     configured automatically, using the environment's default service account.
 3. **Connect to the Toolbox Server**
 
-    ```javascript
-    import { ToolboxClient } from '@toolbox-sdk/core';
-    import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
+   ```javascript
+   import { ToolboxClient } from "@toolbox-sdk/core";
+   import { getGoogleIdToken } from "@toolbox-sdk/core/auth";
 
-    const URL = 'http://127.0.0.1:5000';
-    const getGoogleIdTokenGetter = () => getGoogleIdToken(URL);
-    const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGetter});
+   const URL = "http://127.0.0.1:5000";
+   const getGoogleIdTokenGetter = () => getGoogleIdToken(URL);
+   const client = new ToolboxClient(URL, null, {
+     Authorization: getGoogleIdTokenGetter,
+   });
 
-    // Use the client as usual
-    ```
+   // Use the client as usual
+   ```
 
 ## Authenticating Tools
 
@@ -260,7 +262,7 @@ for instructions.
 
 Your application needs a way to obtain the required Oauth2 token for the
 authenticated user. The SDK requires you to provide a function capable of
-retrieving this token *when the tool is invoked*.
+retrieving this token _when the tool is invoked_.
 
 #### Provide an ID Token Retriever Function
 
@@ -273,35 +275,35 @@ The name used when registering the getter function with the SDK (e.g., `"my_api_
 {{< /notice >}}
 
 ```javascript
-
 async function getAuthToken() {
-    // ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
-    // This example just returns a placeholder. Replace with your actual token retrieval.
-    return "YOUR_ID_TOKEN" // Placeholder
-}    
+  // ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+  // This example just returns a placeholder. Replace with your actual token retrieval.
+  return "YOUR_ID_TOKEN"; // Placeholder
+}
 ```
+
 {{< notice tip>}}
 Your token retriever function is invoked every time an authenticated parameter requires a token for a tool call. Consider implementing caching logic within this function to avoid redundant token fetching or generation, especially for tokens with longer validity periods or if the retrieval process is resource-intensive.
 {{< /notice >}}
 
 #### Option A: Add Authentication to a Loaded Tool
 
-You can add the token retriever function to a tool object *after* it has been
+You can add the token retriever function to a tool object _after_ it has been
 loaded. This modifies the specific tool instance.
 
 ```javascript
-const URL = 'http://127.0.0.1:5000';
+const URL = "http://127.0.0.1:5000";
 let client = new ToolboxClient(URL);
-let tool = await client.loadTool("my-tool")
+let tool = await client.loadTool("my-tool");
 
-const authTool = tool.addAuthTokenGetter("my_auth", get_auth_token)  // Single token
+const authTool = tool.addAuthTokenGetter("my_auth", get_auth_token); // Single token
 
 // OR
 
 const multiAuthTool = tool.addAuthTokenGetters({
-    "my_auth_1": getAuthToken1,
-    "my_auth_2": getAuthToken2,
-})  // Multiple tokens
+  my_auth_1: getAuthToken1,
+  my_auth_2: getAuthToken2,
+}); // Multiple tokens
 ```
 
 #### Option B: Add Authentication While Loading Tools
@@ -312,11 +314,11 @@ tools loaded in that specific call, without modifying the original tool objects
 if they were loaded previously.
 
 ```javascript
-const authTool = await client.loadTool("toolName", {"myAuth": getAuthToken})
+const authTool = await client.loadTool("toolName", { myAuth: getAuthToken });
 
 // OR
 
-const authTools = await client.loadToolset({"myAuth": getAuthToken})
+const authTools = await client.loadToolset({ myAuth: getAuthToken });
 ```
 
 {{< notice note>}}
@@ -326,19 +328,19 @@ Adding auth tokens during loading only affect the tools loaded within that call.
 ### Complete Authentication Example
 
 ```javascript
-import { ToolboxClient } from '@toolbox-sdk/core';
+import { ToolboxClient } from "@toolbox-sdk/core";
 
 async function getAuthToken() {
-    // ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
-    // This example just returns a placeholder. Replace with your actual token retrieval.
-    return "YOUR_ID_TOKEN" // Placeholder
+  // ... Logic to retrieve ID token (e.g., from local storage, OAuth flow)
+  // This example just returns a placeholder. Replace with your actual token retrieval.
+  return "YOUR_ID_TOKEN"; // Placeholder
 }
 
-const URL = 'http://127.0.0.1:5000';
+const URL = "http://127.0.0.1:5000";
 let client = new ToolboxClient(URL);
 const tool = await client.loadTool("my-tool");
-const authTool = tool.addAuthTokenGetters({"my_auth": getAuthToken});
-const result = await authTool({input:"some input"});
+const authTool = tool.addAuthTokenGetters({ my_auth: getAuthToken });
+const result = await authTool({ input: "some input" });
 console.log(result);
 ```
 
@@ -350,9 +352,9 @@ fixed and will not be requested or modified by the LLM during tool use.
 
 ### Why Bind Parameters?
 
-- **Protecting sensitive information:**  API keys, secrets, etc.
+- **Protecting sensitive information:** API keys, secrets, etc.
 - **Enforcing consistency:** Ensuring specific values for certain parameters.
-- **Pre-filling known data:**  Providing defaults or context.
+- **Pre-filling known data:** Providing defaults or context.
 
 {{< notice note>}}
 The parameter names used for binding (e.g., `"api_key"`) must exactly match the parameter names defined in the tool's configuration within the Toolbox service.
@@ -364,14 +366,13 @@ You do not need to modify the tool's configuration in the Toolbox service to bin
 
 ### Option A: Binding Parameters to a Loaded Tool
 
-Bind values to a tool object *after* it has been loaded. This modifies the
+Bind values to a tool object _after_ it has been loaded. This modifies the
 specific tool instance.
 
 ```javascript
+import { ToolboxClient } from "@toolbox-sdk/core";
 
-import { ToolboxClient } from '@toolbox-sdk/core';
-
-const URL = 'http://127.0.0.1:5000';
+const URL = "http://127.0.0.1:5000";
 let client = new ToolboxClient(URL);
 const tool = await client.loadTool("my-tool");
 
@@ -379,7 +380,7 @@ const boundTool = tool.bindParam("param", "value");
 
 // OR
 
-const boundTool = tool.bindParams({"param": "value"});
+const boundTool = tool.bindParams({ param: "value" });
 ```
 
 ### Option B: Binding Parameters While Loading Tools
@@ -388,11 +389,11 @@ Specify bound parameters directly when loading tools. This applies the binding
 only to the tools loaded in that specific call.
 
 ```javascript
-const boundTool = await client.loadTool("my-tool", null, {"param": "value"})
+const boundTool = await client.loadTool("my-tool", null, { param: "value" });
 
 // OR
 
-const boundTools = await client.loadToolset(null, {"param": "value"})
+const boundTools = await client.loadToolset(null, { param: "value" });
 ```
 
 {{< notice note>}}
@@ -402,18 +403,16 @@ Bound values during loading only affect the tools loaded in that call.
 ### Binding Dynamic Values
 
 Instead of a static value, you can bind a parameter to a synchronous or
-asynchronous function. This function will be called *each time* the tool is
+asynchronous function. This function will be called _each time_ the tool is
 invoked to dynamically determine the parameter's value at runtime.
 
-
 ```javascript
-
 async function getDynamicValue() {
-    // Logic to determine the value
-    return "dynamicValue";
+  // Logic to determine the value
+  return "dynamicValue";
 }
 
-const dynamicBoundTool = tool.bindParam("param", getDynamicValue)
+const dynamicBoundTool = tool.bindParam("param", getDynamicValue);
 ```
 
 {{< notice note>}}
@@ -429,16 +428,16 @@ You don't need to modify tool configurations to bind parameter values.
 [LangchainJS](https://js.langchain.com/docs/introduction/)
 
 ```javascript
-import {ToolboxClient} from "@toolbox-sdk/core"
+import { ToolboxClient } from "@toolbox-sdk/core";
 import { tool } from "@langchain/core/tools";
 
-let client = ToolboxClient(URL)
-multiplyTool = await client.loadTool("multiply")
+let client = ToolboxClient(URL);
+multiplyTool = await client.loadTool("multiply");
 
 const multiplyNumbers = tool(multiplyTool, {
-    name: multiplyTool.getName(),
-    description: multiplyTool.getDescription(),
-    schema: multiplyTool.getParamSchema()
+  name: multiplyTool.getName(),
+  description: multiplyTool.getDescription(),
+  schema: multiplyTool.getParamSchema(),
 });
 
 await multiplyNumbers.invoke({ a: 2, b: 3 });
@@ -456,17 +455,17 @@ agents](http://js.langchain.com/docs/concepts/agents/).
 [LlamaindexTS](https://ts.llamaindex.ai/)
 
 ```javascript
-import {ToolboxClient} from "@toolbox-sdk/core"
+import { ToolboxClient } from "@toolbox-sdk/core";
 import { tool } from "llamaindex";
 
-let client = ToolboxClient(URL)
-multiplyTool = await client.loadTool("multiply")
+let client = ToolboxClient(URL);
+multiplyTool = await client.loadTool("multiply");
 
 const multiplyNumbers = tool({
-    name: multiplyTool.getName(),
-    description: multiplyTool.getDescription(),
-    parameters: multiplyTool.getParamSchema(),
-    execute: multiplyTool
+  name: multiplyTool.getName(),
+  description: multiplyTool.getDescription(),
+  parameters: multiplyTool.getParamSchema(),
+  execute: multiplyTool,
 });
 
 await multiplyNumbers.call({ a: 2, b: 3 });
@@ -484,21 +483,22 @@ workflows](https://ts.llamaindex.ai/docs/llamaindex/modules/agents/agent_workflo
 <summary>Genkit</summary>
 
 [GenkitJS](https://genkit.dev/docs/get-started/#_top)
+
 ```javascript
-import {ToolboxClient} from "@toolbox-sdk/core"
-import { genkit, z } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import { ToolboxClient } from "@toolbox-sdk/core";
+import { genkit, z } from "genkit";
+import { googleAI } from "genkit-ai/google-genai";
 
-
-let client = ToolboxClient(URL)
-multiplyTool = await client.loadTool("multiply")
+let client = ToolboxClient(URL);
+multiplyTool = await client.loadTool("multiply");
 
 const ai = genkit({
   plugins: [googleAI()],
-  model: googleAI.model('gemini-3-flash-preview'),
+  model: googleAI.model("gemini-3-flash-preview"),
 });
 
-const multiplyNumbers = ai.defineTool({
+const multiplyNumbers = ai.defineTool(
+  {
     name: multiplyTool.getName(),
     description: multiplyTool.getDescription(),
     inputSchema: multiplyTool.getParamSchema(),
@@ -507,7 +507,7 @@ const multiplyNumbers = ai.defineTool({
 );
 
 await ai.generate({
-  prompt: 'Can you multiply 5 and 7?',
+  prompt: "Can you multiply 5 and 7?",
   tools: [multiplyNumbers],
 });
 ```
