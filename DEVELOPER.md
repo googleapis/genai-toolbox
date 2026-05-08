@@ -865,7 +865,9 @@ Trigger pull request tests for external contributors by:
 * .github/release-please.yml - Creates GitHub releases
 * .github/ISSUE_TEMPLATE - templates for GitHub issues
 
-### How-to Release an npm Package
+### How-to Release the npm Package
+
+Toolbox is available as an npm package: https://www.npmjs.com/package/@toolbox-sdk/server. To release it for each version, follow the steps:
 
 **Pre-requisites**
 
@@ -933,6 +935,8 @@ Once all platform-specific packages are live, release the main wrapper package.
 **Committing changes to the repo**
 
 Once all packages have been successfully published, please create a Pull Request containing the updated `package-lock.json` files from all `npm/` subdirectories. Ensure that any additional changes made during the release process are also included in this PR. Finally, set the title of the PR to: `chore(main): release npm vX.Y.Z`.
+
+Note: Please do not commit the binaries to the repo.
 
 **Troubleshooting**
 
