@@ -105,7 +105,7 @@ async def main():
     tools = await toolset.get_tools()
     root_agent = Agent(
         name="root_agent",
-        model="gemini-2.5-flash",
+        model="gemini-3-flash-preview",
         instruction=SYSTEM_PROMPT,
         tools=tools,
         # add any pre and post processing callbacks

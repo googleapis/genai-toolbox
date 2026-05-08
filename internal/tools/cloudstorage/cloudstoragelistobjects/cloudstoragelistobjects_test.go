@@ -114,39 +114,53 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 }
 
 func TestInvokeMaxResultsValidation(t *testing.T) {
-	cfg := cloudstoragelistobjects.Config{
-		Name:        "list_objects_tool",
-		Type:        "cloud-storage-list-objects",
-		Source:      "my-gcs",
-		Description: "List objects",
+	tcs := []struct {
+		desc        string
+		maxResults  int
+		wantSubstrs []string
+	}{
+		{desc: "above limit", maxResults: 1001, wantSubstrs: []string{"max_results", "1000"}},
+		{desc: "negative", maxResults: -1, wantSubstrs: []string{"max_results", ">= 0"}},
 	}
-	tool, err := cfg.Initialize(nil)
-	if err != nil {
-		t.Fatalf("failed to initialize tool: %v", err)
-	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := cloudstoragelistobjects.Config{
+				Name:        "list_objects_tool",
+				Type:        "cloud-storage-list-objects",
+				Source:      "my-gcs",
+				Description: "List objects",
+			}
+			tool, err := cfg.Initialize(nil)
+			if err != nil {
+				t.Fatalf("failed to initialize tool: %v", err)
+			}
 
-	src := &mockSource{}
-	resourceMgr := &mockSourceProvider{source: src}
+			src := &mockSource{}
+			resourceMgr := &mockSourceProvider{source: src}
 
-	params := parameters.ParamValues{
-		{Name: "bucket", Value: "my-bucket"},
-		{Name: "prefix", Value: ""},
-		{Name: "delimiter", Value: ""},
-		{Name: "max_results", Value: 1001},
-		{Name: "page_token", Value: ""},
-	}
+			params := parameters.ParamValues{
+				{Name: "bucket", Value: "my-bucket"},
+				{Name: "prefix", Value: ""},
+				{Name: "delimiter", Value: ""},
+				{Name: "max_results", Value: tc.maxResults},
+				{Name: "page_token", Value: ""},
+			}
 
-	_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
-	if toolErr == nil {
-		t.Fatalf("expected error for max_results=1001, got nil")
-	}
-	if _, ok := toolErr.(*util.AgentError); !ok {
-		t.Fatalf("expected *util.AgentError, got %T: %v", toolErr, toolErr)
-	}
-	if !strings.Contains(toolErr.Error(), "max_results") || !strings.Contains(toolErr.Error(), "1000") {
-		t.Fatalf("expected error to reference max_results and the 1000 limit, got: %v", toolErr)
-	}
-	if src.listCalled {
-		t.Errorf("expected ListObjects not to be called when validation fails")
+			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			if toolErr == nil {
+				t.Fatalf("expected error for max_results=%d, got nil", tc.maxResults)
+			}
+			if _, ok := toolErr.(*util.AgentError); !ok {
+				t.Fatalf("expected *util.AgentError, got %T: %v", toolErr, toolErr)
+			}
+			for _, s := range tc.wantSubstrs {
+				if !strings.Contains(toolErr.Error(), s) {
+					t.Fatalf("expected error to contain %q, got: %v", s, toolErr)
+				}
+			}
+			if src.listCalled {
+				t.Errorf("expected ListObjects not to be called when validation fails")
+			}
+		})
 	}
 }

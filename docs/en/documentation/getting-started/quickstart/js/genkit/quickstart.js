@@ -1,6 +1,6 @@
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { genkit } from "genkit";
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai'; 
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
@@ -30,7 +30,7 @@ export async function main() {
         apiKey: process.env.GEMINI_API_KEY || GOOGLE_API_KEY
       })
     ],
-    model: googleAI.model('gemini-2.5-flash'),
+    model: googleAI.model('gemini-3-flash-preview'),
   });
 
   const toolboxTools = await toolboxClient.loadToolset("my-toolset");
