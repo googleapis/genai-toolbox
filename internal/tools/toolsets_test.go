@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -190,7 +191,7 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 					t.Errorf("Initialize() error mismatch:\n  want to contain: %q\n  got: %q", tc.wantErr, err.Error())
 				}
 				// Also check that the partially populated struct matches
-				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockTool{})); diff != "" {
+				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockTool{}), cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
 					t.Errorf("Initialize() partial result on error mismatch (-want +got):\n%s", diff)
 				}
 			} else {
@@ -198,10 +199,74 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 					t.Fatalf("Initialize() returned unexpected error: %v", err)
 				}
 				// Using cmp.AllowUnexported because MockTool is unexported
-				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockTool{})); diff != "" {
+				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockTool{}), cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
 					t.Errorf("Initialize() result mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
+	}
+}
+
+func TestToolset_ContainsTool(t *testing.T) {
+	t.Parallel()
+
+	toolset := tools.Toolset{
+		ToolsetConfig: tools.ToolsetConfig{
+			Name:      "test-toolset",
+			ToolNames: []string{"echo", "list_tables"},
+		},
+	}
+
+	tests := []struct {
+		name     string
+		toolName string
+		want     bool
+	}{
+		{
+			name:     "tool exists in toolset",
+			toolName: "echo",
+			want:     true,
+		},
+		{
+			name:     "another tool exists in toolset",
+			toolName: "list_tables",
+			want:     true,
+		},
+		{
+			name:     "tool not in toolset",
+			toolName: "admin_delete",
+			want:     false,
+		},
+		{
+			name:     "empty tool name",
+			toolName: "",
+			want:     false,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := toolset.ContainsTool(tc.toolName)
+			if got != tc.want {
+				t.Errorf("ContainsTool(%q) = %v, want %v", tc.toolName, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestToolset_ContainsTool_EmptyToolset(t *testing.T) {
+	t.Parallel()
+
+	toolset := tools.Toolset{
+		ToolsetConfig: tools.ToolsetConfig{
+			Name:      "empty-toolset",
+			ToolNames: []string{},
+		},
+	}
+
+	if toolset.ContainsTool("anything") {
+		t.Error("ContainsTool should return false for empty toolset")
 	}
 }
