@@ -924,7 +924,8 @@ Once all platform-specific packages are live, release the main wrapper package.
    ```bash
    npm install --package-lock-only
    ```
-   _Ensure that a node module entry for each package is present in `package-lock.json`._
+   1. Ensure that a node module entry for each package is present in `package-lock.json`.
+   2. Ensure that the integrity hashes for all packages are updated. If not, delete the file and use the `Sync Lockfile` command to generate a new lockfile.
 4. **Pack and Publish:**
    ```bash
    npm pack .
