@@ -39,7 +39,7 @@ export async function main() {
 
   // Initialize LLM
   const llm = gemini({
-    model: GEMINI_MODEL.GEMINI_3_FLASH_LATEST,
+    model: GEMINI_MODEL.GEMINI_3_FLASH_PREVIEW,
     apiKey: GOOGLE_API_KEY,
   });
 
