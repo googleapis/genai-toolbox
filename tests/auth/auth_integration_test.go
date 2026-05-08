@@ -292,6 +292,7 @@ func TestMcpAuth(t *testing.T) {
 		})
 	}
 }
+
 // TestGoogleTokenValidation tests validation of Google access token
 func TestGoogleTokenValidation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)

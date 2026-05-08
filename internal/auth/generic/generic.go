@@ -59,7 +59,7 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 	httpClient := newSecureHTTPClient()
 
 	// Discover OIDC endpoints
-	jwksURL, introspectionURL, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
+	jwksURL, introspectionURL, issuer, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover OIDC config: %w", err)
 	}
@@ -80,6 +80,7 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 		kf:               kf,
 		client:           httpClient,
 		introspectionURL: introspectionURL,
+		issuer:           issuer,
 	}
 	return a, nil
 }
@@ -100,10 +101,10 @@ func newSecureHTTPClient() *http.Client {
 	}
 }
 
-func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksURI string, introspectionEndpoint string, err error) {
+func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksURI string, introspectionEndpoint string, issuer string, err error) {
 	u, err := url.Parse(AuthorizationServer)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid auth URL")
+		return "", "", "", fmt.Errorf("invalid auth URL")
 	}
 	if u.Scheme != "https" {
 		log.Printf("WARNING: HTTP instead of HTTPS is being used for AuthorizationServer: %s", AuthorizationServer)
@@ -111,47 +112,48 @@ func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksUR
 
 	oidcConfigURL, err := url.JoinPath(AuthorizationServer, ".well-known/openid-configuration")
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	resp, err := client.Get(oidcConfigURL)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to fetch OIDC config: %w", err)
+		return "", "", "", fmt.Errorf("failed to fetch OIDC config: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return "", "", "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
 	// Limit read size to 1MB to prevent memory exhaustion
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	var config struct {
+		Issuer                string `json:"issuer"`
 		JwksUri               string `json:"jwks_uri"`
 		IntrospectionEndpoint string `json:"introspection_endpoint"`
 	}
 	if err := json.Unmarshal(body, &config); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	if config.JwksUri == "" {
-		return "", "", fmt.Errorf("jwks_uri not found in config")
+		return "", "", "", fmt.Errorf("jwks_uri not found in config")
 	}
 
 	// Sanitize the resulting JWKS URI before returning it
 	parsedJWKS, err := url.Parse(config.JwksUri)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid jwks_uri detected")
+		return "", "", "", fmt.Errorf("invalid jwks_uri detected")
 	}
 	if parsedJWKS.Scheme != "https" {
 		log.Printf("WARNING: HTTP instead of HTTPS is being used for JWKS URI: %s", config.JwksUri)
 	}
 
-	return config.JwksUri, config.IntrospectionEndpoint, nil
+	return config.JwksUri, config.IntrospectionEndpoint, config.Issuer, nil
 }
 
 var _ auth.AuthService = AuthService{}
@@ -162,6 +164,7 @@ type AuthService struct {
 	kf               keyfunc.Keyfunc
 	client           *http.Client
 	introspectionURL string
+	issuer           string
 }
 
 // Returns the auth service type
@@ -270,6 +273,15 @@ func (a AuthService) validateJwtToken(ctx context.Context, tokenStr string) (map
 		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid JWT claims format", ScopesRequired: a.ScopesRequired}
 	}
 
+	// Validate issuer
+	iss, err := claims.GetIssuer()
+	if err != nil {
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "could not parse issuer from token", ScopesRequired: a.ScopesRequired}
+	}
+	if iss == "" {
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer claim in token", ScopesRequired: a.ScopesRequired}
+	}
+
 	// Validate audience
 	aud, err := claims.GetAudience()
 	if err != nil {
@@ -278,7 +290,7 @@ func (a AuthService) validateJwtToken(ctx context.Context, tokenStr string) (map
 
 	scopeClaim, _ := claims["scope"].(string)
 
-	err = a.validateClaims(ctx, aud, scopeClaim)
+	err = a.validateClaims(ctx, iss, aud, scopeClaim)
 	if err != nil {
 		return nil, err
 	}
@@ -353,6 +365,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		Aud      json.RawMessage `json:"aud"`
 		Audience json.RawMessage `json:"audience"`
 		Exp      int64           `json:"exp"`
+		Iss      string          `json:"iss"`
 	}
 
 	if err := json.Unmarshal(body, &introspectResp); err != nil {
@@ -393,7 +406,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		}
 	}
 
-	err = a.validateClaims(ctx, aud, introspectResp.Scope)
+	err = a.validateClaims(ctx, introspectResp.Iss, aud, introspectResp.Scope)
 	if err != nil {
 		return nil, err
 	}
@@ -402,15 +415,24 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		"scope":  introspectResp.Scope,
 		"aud":    aud,
 		"exp":    introspectResp.Exp,
+		"iss":    introspectResp.Iss,
 	}
 	return claims, nil
 }
 
 // validateClaims validates the audience and scopes of a token
-func (a AuthService) validateClaims(ctx context.Context, aud []string, scopeStr string) error {
+func (a AuthService) validateClaims(ctx context.Context, iss string, aud []string, scopeStr string) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get logger from context: %w", err)
+	}
+
+	// Validate issuer
+	if a.issuer != "" && iss != "" {
+		if iss != a.issuer {
+			logger.WarnContext(ctx, "issuer validation failed: expected %s, got %s", a.issuer, iss)
+			return &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
+		}
 	}
 
 	// Validate audience
