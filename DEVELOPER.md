@@ -867,7 +867,7 @@ Trigger pull request tests for external contributors by:
 
 ### How-to Release the npm Package
 
-toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server). To release a new version, follow these steps:
+MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server). To release a new version, follow these steps:
 
 **Pre-requisites**
 
