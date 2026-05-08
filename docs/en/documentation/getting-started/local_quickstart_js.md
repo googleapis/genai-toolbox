@@ -3,8 +3,8 @@ title: "JS Quickstart (Local)"
 type: docs
 weight: 3
 description: >
-  How to get started running MCP Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/),  [LlamaIndex](https://ts.llamaindex.ai/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
-sample_filters: ["JavaScript", "Quickstart", "Local", "ADK", "LangChain", "LlamaIndex", "Genkit", "Google GenAI"]
+  How to get started running MCP Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/) and [GoogleGenAI](https://github.com/googleapis/js-genai).
+sample_filters: ["JavaScript", "Quickstart", "Local", "ADK", "LangChain", "Genkit", "Google GenAI"]
 is_sample: true
 ---
 
@@ -50,9 +50,6 @@ npm install @toolbox-sdk/core
 {{< tab header="GenkitJS" lang="bash" >}}
 npm install @toolbox-sdk/core
 {{< /tab >}}
-{{< tab header="LlamaIndex" lang="bash" >}}
-npm install @toolbox-sdk/core
-{{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @toolbox-sdk/core
 {{< /tab >}}
@@ -68,10 +65,7 @@ npm install @toolbox-sdk/adk
 npm install langchain @langchain/google-genai
 {{< /tab >}}
 {{< tab header="GenkitJS" lang="bash" >}}
-npm install genkit @genkit-ai/googleai
-{{< /tab >}}
-{{< tab header="LlamaIndex" lang="bash" >}}
-npm install llamaindex @llamaindex/google @llamaindex/workflow
+npm install genkit genkit-ai/google-genai
 {{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @google/genai
@@ -94,12 +88,6 @@ npm install @google/adk
 {{< tab header="GenkitJS" lang="js" >}}
 
 {{< include "quickstart/js/genkit/quickstart.js" >}}
-
-{{< /tab >}}
-
-{{< tab header="LlamaIndex" lang="js" >}}
-
-{{< include "quickstart/js/llamaindex/quickstart.js" >}}
 
 {{< /tab >}}
 
