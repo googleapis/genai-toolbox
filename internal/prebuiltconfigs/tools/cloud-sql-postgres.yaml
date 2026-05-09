@@ -437,6 +437,26 @@ name: generate_query
 type: vector-assist-generate-query
 source: cloudsql-pg-source
 ---
+kind: tool
+name: delete_spec
+type: vector-assist-delete-spec
+source: cloudsql-pg-source
+---
+kind: tool
+name: list_specs
+type: vector-assist-list-specs
+source: cloudsql-pg-source
+---
+kind: tool
+name: get_spec
+type: vector-assist-get-spec
+source: cloudsql-pg-source
+---
+kind: tool
+name: improve_query_recall
+type: vector-assist-improve-query-recall
+source: cloudsql-pg-source
+---
 kind: toolset
 name: admin
 tools:
@@ -524,3 +544,8 @@ tools:
 - modify_spec
 - apply_spec
 - generate_query
+- improve_query_recall
+- list_specs
+- get_spec
+- delete_spec
+

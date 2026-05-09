@@ -76,6 +76,10 @@ The Cloud SQL for PostgreSQL MCP server provides the following tools:
 | `modify_spec`                    | Modifies an existing vector specification.                     |
 | `apply_spec`                     | Executes SQL recommendations for a vector specification.       | 
 | `generate_query`                 | Generates optimized SQL queries for vector searches.           |
+| `list_specs`                     | Lists all vector specifications for a given table and column.  |
+| `get_spec`                       | Retrieves a vector specification using its unique ID.          |
+| `delete_spec`                    | Deletes a vector specification using its unique ID.            |
+| `improve_query_recall`           | Improves query recall for vector search workloads.             |
 
 
 ## Custom MCP Server Configuration

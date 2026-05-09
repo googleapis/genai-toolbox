@@ -54,6 +54,7 @@ func setupVectorAssistTable(t *testing.T, ctx context.Context, pool *pgxpool.Poo
 	dropExtensionFunc := createPostgresExtension(t, ctx, pool, "vector_assist")
 
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	uniqueID = uniqueID[:10]
 	tableName := "vector_assist_test_" + uniqueID
 
 	// Create a table with vector data for defining/modifying/applying specs
@@ -166,6 +167,10 @@ func TestVectorAssistIntegration(t *testing.T) {
 	RunVectorAssistModifySpecToolInvokeTest(t, ctx, pool, specID)
 	RunVectorAssistApplySpecToolInvokeTest(t, ctx, pool, specID)
 	RunVectorAssistGenerateQueryToolInvokeTest(t, ctx, pool, specID)
+	RunVectorAssistImproveQueryRecallToolInvokeTest(t, ctx, pool, vectorAssistTableName)
+	RunVectorAssistListSpecsToolInvokeTest(t, ctx, pool, vectorAssistTableName)
+	RunVectorAssistGetSpecToolInvokeTest(t, ctx, pool, specID)
+	RunVectorAssistDeleteSpecToolInvokeTest(t, ctx, pool, specID)
 }
 
 // AddVectorAssistConfig appends the vector assist tool configurations to the given tools file.
@@ -191,8 +196,181 @@ func AddVectorAssistConfig(t *testing.T, config map[string]any, sourceName strin
 		"type":   "vector-assist-generate-query",
 		"source": sourceName,
 	}
+	tools["improve_query_recall"] = map[string]any{
+		"type":   "vector-assist-improve-query-recall",
+		"source": sourceName,
+	}
+	tools["list_specs"] = map[string]any{
+		"type":   "vector-assist-list-specs",
+		"source": sourceName,
+	}
+	tools["get_spec"] = map[string]any{
+		"type":   "vector-assist-get-spec",
+		"source": sourceName,
+	}
+	tools["delete_spec"] = map[string]any{
+		"type":   "vector-assist-delete-spec",
+		"source": sourceName,
+	}
 	config["tools"] = tools
 	return config
+}
+
+func RunVectorAssistImproveQueryRecallToolInvokeTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string) {
+	validPayload := fmt.Sprintf(`{
+    "schema_name": "public",
+		"table_name": "%s",
+    "vector_column_name": "embedding",
+    "index_name":  "%s_embedding_idx",
+    "top_k": 10,
+    "target_recall": 0.95,
+    "distance_func": "cosine"
+  }`,
+		tableName, tableName)
+
+	tcs := []struct {
+		name           string
+		requestBody    io.Reader
+		api            string
+		wantStatusCode int
+		wantContains   []string
+	}{
+		{
+			name:           "improve query recall valid parameters",
+			requestBody:    bytes.NewBuffer([]byte(validPayload)),
+			api:            "http://127.0.0.1:5000/api/tool/improve_query_recall/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{},
+		},
+		{
+			name:           "improve query recall missing required table_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "public"}`)),
+			api:            "http://127.0.0.1:5000/api/tool/improve_query_recall/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				`"error"`,
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		runVectorAssistToolInvokeTest(t, tc)
+	}
+}
+
+func RunVectorAssistListSpecsToolInvokeTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string) {
+	validPayload := fmt.Sprintf(`{
+    "table_name": "%s",
+    "column_name": "content"
+  }`,
+		tableName)
+
+	tcs := []struct {
+		name           string
+		requestBody    io.Reader
+		api            string
+		wantStatusCode int
+		wantContains   []string
+	}{
+		{
+			name:           "list specs valid parameters",
+			requestBody:    bytes.NewBuffer([]byte(validPayload)),
+			api:            "http://127.0.0.1:5000/api/tool/list_specs/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				`va_spec_001`,
+			},
+		},
+		{
+			name:           "list specs missing required table_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"column_name": "content"}`)),
+			api:            "http://127.0.0.1:5000/api/tool/list_specs/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				`"error"`,
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		runVectorAssistToolInvokeTest(t, tc)
+	}
+}
+
+func RunVectorAssistGetSpecToolInvokeTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, specID string) {
+	validPayload := fmt.Sprintf(`{
+    "spec_id": "%s"
+  }`,
+		specID)
+
+	tcs := []struct {
+		name           string
+		requestBody    io.Reader
+		api            string
+		wantStatusCode int
+		wantContains   []string
+	}{
+		{
+			name:           "get spec valid parameters",
+			requestBody:    bytes.NewBuffer([]byte(validPayload)),
+			api:            "http://127.0.0.1:5000/api/tool/get_spec/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				specID,
+			},
+		},
+		{
+			name:           "get spec missing spec_id",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			api:            "http://127.0.0.1:5000/api/tool/get_spec/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				`"error"`,
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		runVectorAssistToolInvokeTest(t, tc)
+	}
+}
+
+func RunVectorAssistDeleteSpecToolInvokeTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, specID string) {
+	validPayload := fmt.Sprintf(`{
+    "spec_id": "%s"
+  }`,
+		specID)
+
+	tcs := []struct {
+		name           string
+		requestBody    io.Reader
+		api            string
+		wantStatusCode int
+		wantContains   []string
+	}{
+		{
+			name:           "delete spec valid parameters",
+			requestBody:    bytes.NewBuffer([]byte(validPayload)),
+			api:            "http://127.0.0.1:5000/api/tool/delete_spec/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				`delete_spec`,
+			},
+		},
+		{
+			name:           "delete spec missing spec_id",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			api:            "http://127.0.0.1:5000/api/tool/delete_spec/invoke",
+			wantStatusCode: http.StatusOK,
+			wantContains: []string{
+				`"error"`,
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		runVectorAssistToolInvokeTest(t, tc)
+	}
 }
 
 func RunVectorAssistDefineSpecToolInvokeTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string, specID string) {
