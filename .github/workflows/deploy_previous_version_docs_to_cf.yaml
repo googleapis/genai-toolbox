@@ -29,56 +29,36 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout Tag (Code + Content)
+      - name: Checkout main branch (for latest templates and theme)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          ref: ${{ github.event.inputs.version_tag }}
+          ref: 'main'
           submodules: 'recursive'
           fetch-depth: 0
 
-      - name: Apply Backports and Fixes
+      - name: Checkout old content from tag into a temporary directory
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.inputs.version_tag }}
+          path: 'old_version_source'
+          sparse-checkout: |
+            docs
+
+      - name: Replace content with old version
         run: |
-          # 1. Fetch main to get the compressed GIF
-          git fetch origin main
-          
-          git show origin/main:docs/en/documentation/configuration/toolbox-ui/edit-headers.gif > docs/en/how-to/toolbox-ui/edit-headers.gif
-          
-          sed -i 's|/genai-toolbox/|/|g' .hugo/layouts/partials/navbar-version-selector.html
+          # Remove the current content directory from the main branch checkout
+          rm -rf docs/
+          # Move the old content directory into place
+          mv ./old_version_source/docs docs
 
-          sed -i 's|https://googleapis.github.io/genai-toolbox|https://mcp-toolbox.dev|g' .hugo/hugo.toml
-
-          git show origin/main:.hugo/hugo.cloudflare.toml > modern_config.toml
-          
-          # Graft the future version list into the old config using Node.js!
-          node -e "
-          const fs = require('fs');
-          const modern = fs.readFileSync('modern_config.toml', 'utf8');
-          let old = fs.readFileSync('.hugo/hugo.toml', 'utf8');
-          
-          // Convert any old GitHub URLs to Cloudflare in the rest of the config
-          old = old.replace(/https:\/\/googleapis\.github\.io\/genai-toolbox/g, 'https://mcp-toolbox.dev');
-          
-          // Erase the outdated version list from the old config
-          old = old.replace(/\[\[params\.versions\]\][\s\S]*?(?=\n\[\[|\n\[|$)/g, '');
-          
-          // Extract the fully updated version list from the modern config
-          const modernVersions = modern.match(/\[\[params\.versions\]\][\s\S]*?(?=\n\[\[|\n\[|$)/g);
-          
-          // Inject the modern versions into the old config
-          if (modernVersions) {
-            fs.writeFileSync('.hugo/hugo.toml', old + '\n\n' + modernVersions.join('\n'));
-          } else {
-            fs.writeFileSync('.hugo/hugo.toml', old);
-          }
-          "
-
-
-      - name: Setup Hugo and Node
+      - name: Setup Hugo
         uses: peaceiris/actions-hugo@75d2e84710de30f6ff7268e08f310b60ef14033f # v3
         with:
           hugo-version: "0.161.1"
           extended: true
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "22"
 
