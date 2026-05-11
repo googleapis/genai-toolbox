@@ -131,6 +131,10 @@ func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
 	return "Authorization", nil
 }
 
+func (t MockTool) GetScopesRequired() []string {
+	return nil
+}
+
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
 	Name        string

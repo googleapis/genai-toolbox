@@ -123,6 +123,7 @@ type Tool interface {
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName(SourceProvider) (string, error)
 	GetParameters() parameters.Parameters
+	GetScopesRequired() []string
 }
 
 // SourceProvider defines the minimal view of the server.ResourceManager

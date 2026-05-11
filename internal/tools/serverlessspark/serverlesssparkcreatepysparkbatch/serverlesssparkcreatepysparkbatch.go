@@ -39,7 +39,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	if err != nil {
 		return nil, err
 	}
-	return Config{baseCfg}, nil
+	return Config{Config: baseCfg}, nil
 }
 
 type Config struct {

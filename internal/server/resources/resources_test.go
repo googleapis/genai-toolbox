@@ -74,7 +74,7 @@ func TestUpdateServer(t *testing.T) {
 	}
 
 	gotToolset, _ := resMgr.GetToolset("example-toolset")
-	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"]); diff != "" {
+	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
@@ -84,7 +84,7 @@ func TestUpdateServer(t *testing.T) {
 	}
 
 	gotPromptset, _ := resMgr.GetPromptset("example-promptset")
-	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"]); diff != "" {
+	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 

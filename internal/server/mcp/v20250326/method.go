@@ -42,11 +42,11 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
-		return toolsCallHandler(ctx, id, resourceMgr, body, header)
+		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
 		return promptsListHandler(ctx, id, promptset, body)
 	case PROMPTS_GET:
-		return promptsGetHandler(ctx, id, resourceMgr, body)
+		return promptsGetHandler(ctx, id, promptset, resourceMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -87,7 +87,7 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.Toolset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	authServices := resourceMgr.GetAuthServiceMap()
 
 	// retrieve logger from context
@@ -113,6 +113,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 		attribute.String("gen_ai.tool.name", toolName),
 		attribute.String("gen_ai.operation.name", "execute_tool"),
 	)
+
+	// Verify tool belongs to the current toolset before resolving globally.
+	if !toolset.ContainsTool(toolName) {
+		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
 
 	tool, ok := resourceMgr.GetTool(toolName)
 	if !ok {
@@ -338,7 +344,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset pro
 }
 
 // promptsGetHandler handles the "prompts/get" method.
-func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -359,6 +365,12 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 	span := trace.SpanFromContext(ctx)
 	span.SetName(fmt.Sprintf("%s %s", PROMPTS_GET, promptName))
 	span.SetAttributes(attribute.String("gen_ai.prompt.name", promptName))
+
+	// Verify prompt belongs to the current promptset before resolving globally.
+	if !promptset.ContainsPrompt(promptName) {
+		err := fmt.Errorf("prompt with name %q does not exist", promptName)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
 
 	prompt, ok := resourceMgr.GetPrompt(promptName)
 	if !ok {

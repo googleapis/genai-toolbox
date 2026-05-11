@@ -58,6 +58,8 @@ type Config struct {
 	AuthRequired []string               `yaml:"authRequired"`
 	BaseURL      string                 `yaml:"baseURL"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -180,4 +182,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.AllParams
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }
