@@ -19,7 +19,7 @@ It determines the optimal tuning parameter (such as `hnsw.ef_search`) for an act
 ## Requirements
 
 {{< notice tip >}} 
-Ensure that your target PostgreSQL database has the required `vector_assist` extension installed. This tool requires an existing HNSW index to function properly; if the table lacks an existing vector setup, use the `define-spec` tool instead.
+Ensure that your target PostgreSQL database has the required `vector_assist` extension installed. This tool requires an existing HNSW index to function properly; if the table lacks an existing vector setup, use the `define_spec` tool instead.
 {{< /notice >}}
 
 ## Parameters

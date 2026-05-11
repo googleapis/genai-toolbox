@@ -165,7 +165,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	
 	indexPresent, _ := row["index_present"].(bool)
 	if !indexPresent {
-		return nil, util.NewClientServerError("Index not found for the given table and vector column. If the table lacks an existing vector setup, use the 'define-spec' tool to configure the database.", http.StatusBadRequest, nil)
+		return nil, util.NewClientServerError("Index not found for the given table and vector column. If the table lacks an existing vector setup, use the 'define_spec' tool to configure the database.", http.StatusBadRequest, nil)
 	}
 
 	isHnsw, _ := row["is_hnsw"].(bool)
