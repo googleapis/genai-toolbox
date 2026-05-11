@@ -240,7 +240,9 @@ func RunVectorAssistImproveQueryRecallToolInvokeTest(t *testing.T, ctx context.C
 			requestBody:    bytes.NewBuffer([]byte(validPayload)),
 			api:            "http://127.0.0.1:5000/api/tool/improve_query_recall/invoke",
 			wantStatusCode: http.StatusOK,
-			wantContains: []string{},
+			wantContains: []string{
+				`ef_search`,
+			},
 		},
 		{
 			name:           "improve query recall missing required table_name",

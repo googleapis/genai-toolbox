@@ -1,7 +1,7 @@
 ---
 title: "vector-assist-list-specs"
 type: docs
-weight: 2
+weight: 1
 description: >
   The "vector-assist-list-specs" tool retrieves a list of all defined vector specifications for a given table and column.
 ---
@@ -44,3 +44,12 @@ name: list_specs
 type: vector-assist-list-specs
 source: my-database-source
 description: "This tool lists all defined vector specifications for a given table and column name. Use this tool to list vector specifications which were created in the context of the vector assist tools."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "vector-assist-list-specs".                  |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -32,12 +32,6 @@ import (
 
 const resourceType string = "vector-assist-improve-query-recall"
 
-const listAllIndexesQuery =  `
-SELECT indexname, indexdef
-FROM pg_indexes
-WHERE tablename = @table_name;
-`
-
 // Query to check if the index exists and if it is an HNSW index.
 const checkIndexQuery = `
 	SELECT 
@@ -149,26 +143,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	namedArgs := pgx.NamedArgs{}
 	for key, value := range paramsMap {
 		namedArgs[key] = value
-		fmt.Println("key", key, "value", value)
-	}
-
-	listAllIndexesResp, err := source.RunSQL(ctx, listAllIndexesQuery, []any{namedArgs})
-	
-	fmt.Println("listAllIndexesResp", listAllIndexesResp)
-	// print all indexes
-
-	listAllIndexesBytes, marshalErr := json.Marshal(listAllIndexesResp)
-	if marshalErr != nil {
-		return nil, util.NewClientServerError("failed to process index check response", http.StatusInternalServerError, marshalErr)
-	}
-
-	var listAllIndexesRows []map[string]interface{}
-	if unmarshalErr := json.Unmarshal(listAllIndexesBytes, &listAllIndexesRows); unmarshalErr != nil || len(listAllIndexesRows) == 0 {
-		return nil, util.NewClientServerError("unexpected empty response from database", http.StatusInternalServerError, unmarshalErr)
-	}
-
-	for _, index := range listAllIndexesRows {
-		fmt.Println("index", index)
 	}
 
 	// Check if the index exists and if it is an HNSW index.

@@ -1,7 +1,7 @@
 ---
 title: "vector-assist-delete-spec"
 type: docs
-weight: 3
+weight: 1
 description: >
   The "vector-assist-delete-spec" tool deletes an existing vector specification and its associated metadata using its spec_id.
 ---
@@ -43,3 +43,12 @@ name: delete_spec
 type: vector-assist-delete-spec
 source: my-database-source
 description: "This tool deletes an existing vector specification using its spec_id. Use this tool when a user explicitly requests to delete, remove, or clean up an existing vector specification which was created in the context of the vector assist tools."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "vector-assist-delete-spec".                 |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |
