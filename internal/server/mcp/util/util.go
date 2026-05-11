@@ -19,11 +19,12 @@ const (
 	VERSION_20250326 = "2025-03-26"
 	VERSION_20250618 = "2025-06-18"
 	VERSION_20251125 = "2025-11-25"
+	VERSION_DRAFT    = "DRAFT-2026-v1"
 )
 
 // LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.
 // Update the version used in InitializeResponse when this value is updated.
-const LATEST_PROTOCOL_VERSION = VERSION_20251125
+const LATEST_PROTOCOL_VERSION = VERSION_DRAFT
 
 // SUPPORTED_PROTOCOL_VERSIONS is the MCP protocol versions that are supported.
 var SUPPORTED_PROTOCOL_VERSIONS = []string{
@@ -31,4 +32,5 @@ var SUPPORTED_PROTOCOL_VERSIONS = []string{
 	VERSION_20250326,
 	VERSION_20250618,
 	VERSION_20251125,
+	VERSION_DRAFT,
 }
