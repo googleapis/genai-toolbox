@@ -152,23 +152,6 @@ func TestToolManifest(t *testing.T) {
 	}
 }
 
-func TestToolMcpManifest(t *testing.T) {
-	tool := Tool{
-		mcpManifest: tools.McpManifest{
-			Name:        "test-tool",
-			Description: "Test description",
-		},
-	}
-
-	manifest := tool.McpManifest()
-	if manifest.Name != "test-tool" {
-		t.Errorf("Expected name 'test-tool', got %s", manifest.Name)
-	}
-	if manifest.Description != "Test description" {
-		t.Errorf("Expected description 'Test description', got %s", manifest.Description)
-	}
-}
-
 func TestToolAuthorized(t *testing.T) {
 	tests := []struct {
 		name                 string
