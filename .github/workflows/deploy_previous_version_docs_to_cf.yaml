@@ -68,7 +68,7 @@ jobs:
 
       - name: Build Hugo Site for Archived Version
         run: |
-          hugo --minify 
+          hugo --minify --config hugo.cloudflare.toml
           rm -f public/releases.releases
         working-directory: .hugo
         env:
@@ -95,7 +95,7 @@ jobs:
         run: rm -rf .hugo/public
 
       - name: Build Hugo Site
-        run: hugo --minify 
+        run: hugo --minify --config hugo.cloudflare.toml
         working-directory: .hugo
         env:
           HUGO_BASEURL: https://mcp-toolbox.dev/
