@@ -6,6 +6,7 @@
 #              allowed tags in filters.yaml.
 # ==============================================================================
 
+
 FILTERS_FILE=".hugo/data/filters.yaml"
 DOCS_DIR="docs/en/"
 FAILED=0
