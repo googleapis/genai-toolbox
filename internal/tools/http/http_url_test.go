@@ -175,3 +175,27 @@ func TestGetURLPathValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestGetURLCustomFuncs(t *testing.T) {
+	baseURL := "https://api.good.com/v1/"
+	path := "users/{{pathescape .name}}/details?q={{queryescape .query}}"
+	pathParams := parameters.Parameters{
+		parameters.NewStringParameter("name", "user name"),
+		parameters.NewStringParameter("query", "search query"),
+	}
+
+	paramsMap := map[string]any{
+		"name":  "john/doe",
+		"query": "hello world",
+	}
+
+	urlString, err := getURL(baseURL, path, pathParams, nil, nil, paramsMap)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := "https://api.good.com/v1/users/john%2Fdoe/details?q=hello+world"
+	if urlString != expected {
+		t.Fatalf("expected %q, got %q", expected, urlString)
+	}
+}

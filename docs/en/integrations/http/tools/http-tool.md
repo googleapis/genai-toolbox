@@ -217,6 +217,26 @@ will send the following output:
 }
 ```
 
+##### Path Escape
+
+The `pathescape` keyword escapes strings so they can be safely placed inside a URL path segment, replacing special characters like slashes `/` with `%2F`.
+
+Example:
+
+```yaml
+path: /users/{{pathescape .username}}/records
+```
+
+##### Query Escape
+
+The `queryescape` keyword escapes strings to be safely placed inside a URL query string, encoding spaces into `+` and special characters into percent-encoded values.
+
+Example:
+
+```yaml
+path: /search?q={{queryescape .query}}
+```
+
 ## Example
 
 ```yaml

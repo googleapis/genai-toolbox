@@ -169,7 +169,28 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 	}
 	pathParamsMap := pathParamValues.AsMap()
 
-	templ, err := template.New("url").Parse(path)
+	funcMap := template.FuncMap{
+		"pathescape": func(v any) string {
+			if s, ok := v.(string); ok {
+				return url.PathEscape(s)
+			}
+			if v == nil {
+				return ""
+			}
+			return url.PathEscape(fmt.Sprintf("%v", v))
+		},
+		"queryescape": func(v any) string {
+			if s, ok := v.(string); ok {
+				return url.QueryEscape(s)
+			}
+			if v == nil {
+				return ""
+			}
+			return url.QueryEscape(fmt.Sprintf("%v", v))
+		},
+	}
+
+	templ, err := template.New("url").Funcs(funcMap).Parse(path)
 	if err != nil {
 		return "", fmt.Errorf("error parsing URL: %s", err)
 	}
