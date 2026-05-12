@@ -170,7 +170,7 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 	pathParamsMap := pathParamValues.AsMap()
 
 	funcMap := template.FuncMap{
-		"pathescape": func(v any) string {
+		"pathEscape": func(v any) string {
 			if s, ok := v.(string); ok {
 				return url.PathEscape(s)
 			}
@@ -179,7 +179,7 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 			}
 			return url.PathEscape(fmt.Sprintf("%v", v))
 		},
-		"queryescape": func(v any) string {
+		"queryEscape": func(v any) string {
 			if s, ok := v.(string); ok {
 				return url.QueryEscape(s)
 			}

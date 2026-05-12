@@ -178,7 +178,7 @@ func TestGetURLPathValidation(t *testing.T) {
 
 func TestGetURLCustomFuncs(t *testing.T) {
 	baseURL := "https://api.good.com/v1/"
-	path := "users/{{pathescape .name}}/details?q={{queryescape .query}}"
+	path := "users/{{pathEscape .name}}/details?q={{queryEscape .query}}"
 	pathParams := parameters.Parameters{
 		parameters.NewStringParameter("name", "user name"),
 		parameters.NewStringParameter("query", "search query"),
