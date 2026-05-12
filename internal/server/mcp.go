@@ -724,6 +724,29 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		attribute.String("network.protocol.name", networkProtocolName),
 	)
 
+	// Set client telemetry attributes from _meta["dev.mcp-toolbox/telemetry"]
+	if ta := util.TelemetryAttributesFromContext(ctx); ta != nil {
+		telemetryAttrs := make([]attribute.KeyValue, 0, 5)
+		if ta.ClientName != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.name", ta.ClientName))
+		}
+		if ta.ClientVersion != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.version", ta.ClientVersion))
+		}
+		if ta.ClientModel != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.model", ta.ClientModel))
+		}
+		if ta.ClientUserID != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.user.id", ta.ClientUserID))
+		}
+		if ta.ClientAgentID != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.agent.id", ta.ClientAgentID))
+		}
+		if len(telemetryAttrs) > 0 {
+			span.SetAttributes(telemetryAttrs...)
+		}
+	}
+
 	// Set network protocol version if available
 	if networkProtocolVersion != "" {
 		span.SetAttributes(attribute.String("network.protocol.version", networkProtocolVersion))
