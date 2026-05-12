@@ -197,8 +197,10 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 	}
 
 	// Reject dot segments before resolution
-	if strings.Contains(relativePath, "..") || strings.Contains(relParsedURL.Path, "..") {
-		return "", fmt.Errorf("path cannot contain dot segments (..)")
+	for _, segment := range strings.Split(relParsedURL.Path, "/") {
+		if segment == ".." {
+			return "", fmt.Errorf("path cannot contain dot segments (..)")
+		}
 	}
 
 	// Create URL based on BaseURL and Path

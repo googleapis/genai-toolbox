@@ -130,6 +130,20 @@ func TestGetURLPathValidation(t *testing.T) {
 			expectError:  false,
 			expectedPath: "/base",
 		},
+		{
+			name:         "double dots in query parameters are allowed",
+			baseURL:      "https://api.good.com/base/",
+			pathParam:    "v1?date=2023-01-01..2023-01-31",
+			expectError:  false,
+			expectedPath: "/base/v1",
+		},
+		{
+			name:         "double dots in non-dot segments are allowed",
+			baseURL:      "https://api.good.com/base/",
+			pathParam:    "file..txt",
+			expectError:  false,
+			expectedPath: "/base/file..txt",
+		},
 	}
 
 	path := "{{.pathParam}}"
