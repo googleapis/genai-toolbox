@@ -196,9 +196,24 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 		return "", fmt.Errorf("path must be relative and cannot override base host")
 	}
 
+	// Reject dot segments before resolution
+	if strings.Contains(relativePath, "..") || strings.Contains(relParsedURL.Path, "..") {
+		return "", fmt.Errorf("path cannot contain dot segments (..)")
+	}
+
 	// Create URL based on BaseURL and Path
 	// Attach query parameters
 	parsedURL := baseParsedURL.ResolveReference(relParsedURL)
+
+	// Verify final path stays within base path scope
+	basePath := baseParsedURL.Path
+	finalPath := parsedURL.Path
+	if basePath != "/" {
+		requiredPrefix := strings.TrimSuffix(basePath, "/") + "/"
+		if finalPath != basePath && !strings.HasPrefix(finalPath, requiredPrefix) {
+			return "", fmt.Errorf("resolved path %q escapes base path %q", finalPath, basePath)
+		}
+	}
 
 	// Get existing query parameters from the URL
 	queryParameters := parsedURL.Query()

@@ -76,3 +76,88 @@ func TestGetURLHostOverride(t *testing.T) {
 		})
 	}
 }
+
+func TestGetURLPathValidation(t *testing.T) {
+	testCases := []struct {
+		name         string
+		baseURL      string
+		pathParam    string
+		expectError  bool
+		expectedPath string
+	}{
+		{
+			name:         "valid subpath stays within base path",
+			baseURL:      "https://api.good.com/base/",
+			pathParam:    "v1",
+			expectError:  false,
+			expectedPath: "/base/v1",
+		},
+		{
+			name:        "path with dot segments is rejected",
+			baseURL:     "https://api.good.com/base/",
+			pathParam:   "../v1",
+			expectError: true,
+		},
+		{
+			name:        "absolute path escaping base path scope is rejected",
+			baseURL:     "https://api.good.com/base/",
+			pathParam:   "/v1",
+			expectError: true,
+		},
+		{
+			name:         "absolute path for root base path is allowed",
+			baseURL:      "https://api.good.com/",
+			pathParam:    "/v1",
+			expectError:  false,
+			expectedPath: "/v1",
+		},
+		{
+			name:        "path with url-encoded dot segments is rejected",
+			baseURL:     "https://api.good.com/base/",
+			pathParam:   "%2e%2e/v1",
+			expectError: true,
+		},
+		{
+			name:        "sibling path traversal via simple prefix matching is rejected",
+			baseURL:     "https://api.good.com/base",
+			pathParam:   "/base-private",
+			expectError: true,
+		},
+		{
+			name:         "exact match of base path without trailing slash is allowed",
+			baseURL:      "https://api.good.com/base",
+			pathParam:    "",
+			expectError:  false,
+			expectedPath: "/base",
+		},
+	}
+
+	path := "{{.pathParam}}"
+	pathParams := parameters.Parameters{parameters.NewStringParameter("pathParam", "path")}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			paramsMap := map[string]any{"pathParam": tc.pathParam}
+
+			urlString, err := getURL(tc.baseURL, path, pathParams, nil, nil, paramsMap)
+			if tc.expectError {
+				if err == nil {
+					t.Fatalf("expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			parsed, err := url.Parse(urlString)
+			if err != nil {
+				t.Fatalf("failed to parse URL: %v", err)
+			}
+
+			if parsed.Path != tc.expectedPath {
+				t.Fatalf("expected path to be %q, got %q", tc.expectedPath, parsed.Path)
+			}
+		})
+	}
+}
