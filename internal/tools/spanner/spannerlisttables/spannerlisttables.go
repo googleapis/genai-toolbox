@@ -58,6 +58,8 @@ type Config struct {
 	Description  string                 `yaml:"description"`
 	AuthRequired []string               `yaml:"authRequired"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -569,3 +571,7 @@ LEFT JOIN constraints_info_cte AS CONSI
 LEFT JOIN indexes_info_cte AS II
   ON TI.TABLE_SCHEMA = II.TABLE_SCHEMA AND TI.TABLE_NAME = II.TABLE_NAME
 ORDER BY TI.TABLE_SCHEMA, TI.TABLE_NAME`
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
+}

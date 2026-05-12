@@ -29,6 +29,7 @@ import (
 
 	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 )
@@ -189,5 +190,88 @@ func TestMcpAuth(t *testing.T) {
 				tc.checkWWWAuth(t, authHeader)
 			}
 		})
+	}
+}
+
+// TestGoogleTokenValidation tests validation of Google access token
+func TestGoogleTokenValidation(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(ctx)
+	if err != nil {
+		t.Errorf("error getting access token from ADC: %s", err)
+	}
+
+	// Call tokeninfo to get audience
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + accessToken)
+	if err != nil {
+		t.Fatalf("failed to call tokeninfo: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("tokeninfo returned non-200 status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var tokenInfo struct {
+		Audience string `json:"audience"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenInfo); err != nil {
+		t.Fatalf("failed to decode tokeninfo response: %v", err)
+	}
+
+	aud := tokenInfo.Audience
+	if aud == "" {
+		t.Fatalf("audience is empty in tokeninfo response")
+	}
+
+	toolsFile := map[string]any{
+		"sources": map[string]any{},
+		"authServices": map[string]any{
+			"google-auth": map[string]any{
+				"type":                   "generic",
+				"audience":               aud,
+				"authorizationServer":    "https://accounts.google.com",
+				"introspectionEndpoint":  "https://www.googleapis.com/oauth2/v3/tokeninfo",
+				"introspectionMethod":    "GET",
+				"introspectionParamName": "access_token",
+				"mcpEnabled":             true,
+			},
+		},
+		"tools": map[string]any{},
+	}
+
+	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5005", "--port=5005"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	api := "http://127.0.0.1:5005/mcp/sse"
+
+	req, _ := http.NewRequest(http.MethodGet, api, nil)
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 }

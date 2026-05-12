@@ -38,12 +38,15 @@ var _ auth.AuthServiceConfig = Config{}
 
 // Auth service configuration
 type Config struct {
-	Name                string   `yaml:"name" validate:"required"`
-	Type                string   `yaml:"type" validate:"required"`
-	Audience            string   `yaml:"audience" validate:"required"`
-	McpEnabled          bool     `yaml:"mcpEnabled"`
-	AuthorizationServer string   `yaml:"authorizationServer" validate:"required"`
-	ScopesRequired      []string `yaml:"scopesRequired"`
+	Name                   string   `yaml:"name" validate:"required"`
+	Type                   string   `yaml:"type" validate:"required"`
+	Audience               string   `yaml:"audience" validate:"required"`
+	McpEnabled             bool     `yaml:"mcpEnabled"`
+	AuthorizationServer    string   `yaml:"authorizationServer" validate:"required"`
+	ScopesRequired         []string `yaml:"scopesRequired"`
+	IntrospectionEndpoint  string   `yaml:"introspectionEndpoint"`
+	IntrospectionMethod    string   `yaml:"introspectionMethod"`
+	IntrospectionParamName string   `yaml:"introspectionParamName"`
 }
 
 // Returns the auth service type
@@ -59,6 +62,11 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 	jwksURL, introspectionURL, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover OIDC config: %w", err)
+	}
+
+	// Override introspection URL if configured
+	if cfg.IntrospectionEndpoint != "" {
+		introspectionURL = cfg.IntrospectionEndpoint
 	}
 
 	// Create the keyfunc to fetch and cache the JWKS in the background
@@ -288,14 +296,33 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 		}
 	}
 
-	data := url.Values{}
-	data.Set("token", tokenStr)
-
-	req, err := http.NewRequestWithContext(ctx, "POST", introspectionURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("failed to create introspection request: %w", err)
+	paramName := a.IntrospectionParamName
+	if paramName == "" {
+		paramName = "token"
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	var req *http.Request
+	if a.IntrospectionMethod == "GET" {
+		u, err := url.Parse(introspectionURL)
+		if err != nil {
+			return fmt.Errorf("failed to parse introspection URL: %w", err)
+		}
+		q := u.Query()
+		q.Set(paramName, tokenStr)
+		u.RawQuery = q.Encode()
+		req, err = http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+		if err != nil {
+			return fmt.Errorf("failed to create introspection request: %w", err)
+		}
+	} else {
+		data := url.Values{}
+		data.Set(paramName, tokenStr)
+		req, err = http.NewRequestWithContext(ctx, "POST", introspectionURL, strings.NewReader(data.Encode()))
+		if err != nil {
+			return fmt.Errorf("failed to create introspection request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
 	req.Header.Set("Accept", "application/json")
 
 	// Send request to auth server's introspection endpoint
@@ -317,17 +344,18 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 	}
 
 	var introspectResp struct {
-		Active bool            `json:"active"`
-		Scope  string          `json:"scope"`
-		Aud    json.RawMessage `json:"aud"`
-		Exp    int64           `json:"exp"`
+		Active   *bool           `json:"active"`
+		Scope    string          `json:"scope"`
+		Aud      json.RawMessage `json:"aud"`
+		Audience json.RawMessage `json:"audience"`
+		Exp      int64           `json:"exp"`
 	}
 
 	if err := json.Unmarshal(body, &introspectResp); err != nil {
 		return fmt.Errorf("failed to parse introspection response: %w", err)
 	}
 
-	if !introspectResp.Active {
+	if introspectResp.Active != nil && !*introspectResp.Active {
 		logger.InfoContext(ctx, "token is not active")
 		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
 	}
@@ -341,16 +369,22 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) e
 
 	// Extract audience
 	// According to RFC 7662, the aud claim can be a string or an array of strings
+	// Fallback to "audience" for Google tokeninfo
+	audData := introspectResp.Aud
+	if len(audData) == 0 {
+		audData = introspectResp.Audience
+	}
+
 	var aud []string
-	if len(introspectResp.Aud) > 0 {
+	if len(audData) > 0 {
 		var audStr string
 		var audArr []string
-		if err := json.Unmarshal(introspectResp.Aud, &audStr); err == nil {
+		if err := json.Unmarshal(audData, &audStr); err == nil {
 			aud = []string{audStr}
-		} else if err := json.Unmarshal(introspectResp.Aud, &audArr); err == nil {
+		} else if err := json.Unmarshal(audData, &audArr); err == nil {
 			aud = audArr
 		} else {
-			logger.WarnContext(ctx, "failed to parse aud claim in introspection response")
+			logger.WarnContext(ctx, "failed to parse aud or audience claim in introspection response")
 			return &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid aud claim", ScopesRequired: a.ScopesRequired}
 		}
 	}

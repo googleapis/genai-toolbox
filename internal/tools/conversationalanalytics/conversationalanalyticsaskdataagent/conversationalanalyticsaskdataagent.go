@@ -94,6 +94,8 @@ type Config struct {
 	Location     string   `yaml:"location"`
 	MaxResults   int      `yaml:"maxResults"`
 	AuthRequired []string `yaml:"authRequired"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -415,4 +417,8 @@ func formatDataRetrieved(result map[string]any, maxRows int) map[string]any {
 			"summary": summary,
 		},
 	}
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }
