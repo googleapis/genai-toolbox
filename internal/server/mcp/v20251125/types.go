@@ -241,7 +241,7 @@ type Prompt struct {
 	Description string `json:"description,omitempty"`
 	// A list of arguments to use for templating the prompt.
 	Arguments []PromptArgument `json:"arguments,omitempty"`
-	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#meta) for notes on `_meta` usage.
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
 	Metadata map[string]any `json:"_meta,omitempty"`
 }
 
