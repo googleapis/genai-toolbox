@@ -75,7 +75,7 @@ type ListToolsResult struct {
 
 type Tool struct {
 	// The name of the tool.
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"` 
 	// A human-readable description of the tool.
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
