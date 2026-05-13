@@ -40,7 +40,7 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
-		return toolsListHandler(id, toolset, body)
+		return toolsListHandler(id, resourceMgr, toolset, body)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, resourceMgr, body, header)
 	case PROMPTS_LIST:
@@ -62,27 +62,24 @@ func pingHandler(id jsonrpc.RequestId) (any, error) {
 	}, nil
 }
 
-func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	// exclude annotations from this version
-	manifests := make([]tools.McpManifest, len(toolset.McpManifest))
-	for i, m := range toolset.McpManifest {
-		m.Annotations = nil
-		manifests[i] = m
+	toolsMap := resourceMgr.GetToolsMap()
+	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	if err != nil {
+		err = fmt.Errorf("error generating manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	result := ListToolsResult{
-		Tools: manifests,
-	}
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  listToolsResult,
 	}, nil
 }
 

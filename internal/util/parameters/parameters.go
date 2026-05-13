@@ -330,13 +330,6 @@ type Parameter interface {
 	McpManifest() (ParameterMcpManifest, []string)
 }
 
-// McpToolsSchema is the representation of input schema for McpManifest.
-type McpToolsSchema struct {
-	Type       string                          `json:"type"`
-	Properties map[string]ParameterMcpManifest `json:"properties"`
-	Required   []string                        `json:"required"`
-}
-
 // Parameters is a type used to allow unmarshal a list of parameters
 type Parameters []Parameter
 
@@ -444,39 +437,6 @@ func (ps Parameters) Manifest() []ParameterManifest {
 		rtn = append(rtn, p.Manifest())
 	}
 	return rtn
-}
-
-func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
-	properties := make(map[string]ParameterMcpManifest)
-	required := make([]string, 0)
-	authParam := make(map[string][]string)
-
-	for _, p := range ps {
-		// If the parameter is sourced from another param, skip it in the MCP manifest
-		if p.GetValueFromParam() != "" {
-			continue
-		}
-
-		name := p.GetName()
-		paramManifest, authParamList := p.McpManifest()
-		defaultV := p.GetDefault()
-		if defaultV != nil {
-			paramManifest.Default = defaultV
-		}
-		properties[name] = paramManifest
-		// parameters that doesn't have a default value are added to the required field
-		if CheckParamRequired(p.GetRequired(), defaultV) {
-			required = append(required, name)
-		}
-		if len(authParamList) > 0 {
-			authParam[name] = authParamList
-		}
-	}
-	return McpToolsSchema{
-		Type:       "object",
-		Properties: properties,
-		Required:   required,
-	}, authParam
 }
 
 // ParameterManifest represents parameters when served as part of a ToolManifest.
