@@ -245,7 +245,7 @@ tools.
 * **Implement Vector Search** if your new tool supports it. You must:
   1. Validate that the vector embedding format can be injected successfully into your Tool's statement. If not, update `Tool.EmbedParams()` to pass in a vector formatter into `parameters.EmbedParams`.
   1. Feel free to reuse existing vector [formatters](internal/embeddingmodels/embeddingmodels.go) or create new ones.
-  1. Add tests and documentation for vector injection and vector search. See the [BigQuery Source](docs/en/integrations/bigquery/tools/bigquery-sql.md) for an example.
+  1. Add tests and documentation for vector injection and vector search. See the [BigQuery SQL tool](docs/en/integrations/bigquery/tools/bigquery-sql.md) for an example.
 
 #### Adding Integration Tests
 
