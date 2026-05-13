@@ -42,7 +42,7 @@ func generateToolManifest(name, desc string, params parameters.Parameters, annot
 	return mcpManifest
 }
 
-// generateToolManifest generates the input schema and get authParam
+// generateParamManifest generates the input schema and get authParam
 func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]string) {
 	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)
