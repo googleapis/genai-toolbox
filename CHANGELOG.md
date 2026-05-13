@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.2.0](https://github.com/googleapis/mcp-toolbox/compare/v1.1.0...v1.2.0) (2026-05-07)
+
+
+### Features
+
+* Add support for HTTPS/TLS listener ([#3126](https://github.com/googleapis/mcp-toolbox/issues/3126)) ([8bc385d](https://github.com/googleapis/mcp-toolbox/commit/8bc385d7d6fd9ed2ad13503d9feb503de0b512b1))
+* **source/bigquery:** Add maximumBytesBilled source config ([#2724](https://github.com/googleapis/mcp-toolbox/issues/2724)) ([42f2d07](https://github.com/googleapis/mcp-toolbox/commit/42f2d07c83c6302feaff04ae34050d6045c71204))
+* **source/cloud-storage:** Add bucket and object management tools ([#3129](https://github.com/googleapis/mcp-toolbox/issues/3129)) ([8de9bcf](https://github.com/googleapis/mcp-toolbox/commit/8de9bcf1e2521762f46459f2a55ae934aa1c5c07))
+* **source/cloud-storage:** Add Cloud Storage source with list_objects and read_object tools ([#3081](https://github.com/googleapis/mcp-toolbox/issues/3081)) ([da27b37](https://github.com/googleapis/mcp-toolbox/commit/da27b3754df836132b835e5afd5d04830ee8af42))
+* **source/cloud-storage:** Add write/copy/move/delete object tools ([#3139](https://github.com/googleapis/mcp-toolbox/issues/3139)) ([b225fc4](https://github.com/googleapis/mcp-toolbox/commit/b225fc44cc6df033c7fe2fdca308ad0a1e0af2ba))
+* **tools/knowledge-catalog:** Search Data Quality Scans ([#2444](https://github.com/googleapis/mcp-toolbox/issues/2444)) ([1c63551](https://github.com/googleapis/mcp-toolbox/commit/1c635513a17df61fff725bf23deaffa92170057c))
+
+
+### Bug Fixes
+
+* Allow converting string literal block with list ([#3050](https://github.com/googleapis/mcp-toolbox/issues/3050)) ([36ab2a9](https://github.com/googleapis/mcp-toolbox/commit/36ab2a98f9f2d03c27eea389d2281bfc4581ffa1)), closes [#3023](https://github.com/googleapis/mcp-toolbox/issues/3023)
+* **mcp:** Implement router-level logger injection for MCP auth ([#3067](https://github.com/googleapis/mcp-toolbox/issues/3067)) ([ccc7cf5](https://github.com/googleapis/mcp-toolbox/commit/ccc7cf5ee8a1bacb6b57faf41ae5a1cc3da5299e))
+* Prevent test.db from being created during unit tests ([#3042](https://github.com/googleapis/mcp-toolbox/issues/3042)) ([d10d2ca](https://github.com/googleapis/mcp-toolbox/commit/d10d2caeb7c9eda7d17d6dbd9f63363b2bc23a7a))
+* Remove hardcoded * allowed origin for sse ([#3054](https://github.com/googleapis/mcp-toolbox/issues/3054)) ([c4c7bd9](https://github.com/googleapis/mcp-toolbox/commit/c4c7bd917e686de68e2be866cfe3872c3439efae))
+* **sources/postgres:** Apply URL encoding to query string params ([#3020](https://github.com/googleapis/mcp-toolbox/issues/3020)) ([6b860f4](https://github.com/googleapis/mcp-toolbox/commit/6b860f4486ff5b024090a8945bc6bce63547860b))
+* **tool/looker-conversational-analytics:** OAuth token in GDA payload fix ([#3058](https://github.com/googleapis/mcp-toolbox/issues/3058)) ([6632d96](https://github.com/googleapis/mcp-toolbox/commit/6632d96724c5076ee44eb248d7de5c7d2d80d7b1))
+* **tools/bigquery-execute-sql:** Avoid surfacing invalid queries as MCP 500s ([#3056](https://github.com/googleapis/mcp-toolbox/issues/3056)) ([7ed92c8](https://github.com/googleapis/mcp-toolbox/commit/7ed92c802313fc1b10daaa8a02457ba178ea2e22))
+* **tools/looker:** Fix OAuth for Converational Analytics ([#3044](https://github.com/googleapis/mcp-toolbox/issues/3044)) ([f9e3e55](https://github.com/googleapis/mcp-toolbox/commit/f9e3e55d42ae9f5d1ecbda4fb7c9a4f3d42451b1))
+
 ## [1.1.0](https://github.com/googleapis/mcp-toolbox/compare/v1.0.0...v1.1.0) (2026-04-13)
 
 

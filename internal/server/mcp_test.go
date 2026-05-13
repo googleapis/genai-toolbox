@@ -31,6 +31,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 const jsonrpcVersion = "2.0"
@@ -76,8 +78,8 @@ var prompt2Args = []any{
 }
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
@@ -421,8 +423,8 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
@@ -1088,8 +1090,8 @@ func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mockTools := []MockTool{tool1, tool2, tool3}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()

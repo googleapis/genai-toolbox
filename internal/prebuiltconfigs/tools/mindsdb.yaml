@@ -22,7 +22,7 @@ user: ${MINDSDB_USER}
 password: ${MINDSDB_PASS}
 ---
 kind: tool
-name: mindsdb-execute-sql
+name: execute_sql
 type: mindsdb-execute-sql
 source: mindsdb
 description: |
@@ -31,7 +31,7 @@ description: |
   Example: SELECT * FROM my_table LIMIT 10
 ---
 kind: tool
-name: mindsdb-sql
+name: parameterized_sql
 type: mindsdb-sql
 source: mindsdb
 statement: |
@@ -60,5 +60,5 @@ parameters:
 kind: toolset
 name: mindsdb-tools
 tools:
-- mindsdb-execute-sql
-- mindsdb-sql
+- execute_sql
+- parameterized_sql

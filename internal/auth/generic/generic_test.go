@@ -126,6 +126,7 @@ func TestGetClaimsFromHeader(t *testing.T) {
 			name: "valid token",
 			setupHeader: func() http.Header {
 				token := generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+					"iss":   "https://example.com",
 					"aud":   "my-audience",
 					"scope": "read:files write:files",
 					"sub":   "test-user",
@@ -158,6 +159,7 @@ func TestGetClaimsFromHeader(t *testing.T) {
 			name: "wrong audience",
 			setupHeader: func() http.Header {
 				token := generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+					"iss":   "https://example.com",
 					"aud":   "wrong-audience",
 					"scope": "read:files",
 					"exp":   time.Now().Add(time.Hour).Unix(),
@@ -173,6 +175,7 @@ func TestGetClaimsFromHeader(t *testing.T) {
 			name: "expired token",
 			setupHeader: func() http.Header {
 				token := generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+					"iss":   "https://example.com",
 					"aud":   "my-audience",
 					"scope": "read:files",
 					"exp":   time.Now().Add(-1 * time.Hour).Unix(),
@@ -394,7 +397,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			header := http.Header{}
 			header.Set("Authorization", "Bearer "+tc.token)
 
-			err = genericAuth.ValidateMCPAuth(ctx, header)
+			_, err = genericAuth.ValidateMCPAuth(ctx, header)
 
 			if tc.wantError {
 				if err == nil {
@@ -445,6 +448,7 @@ func TestValidateJwtToken(t *testing.T) {
 		{
 			name: "valid jwt",
 			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"iss":   "https://example.com",
 				"aud":   "my-audience",
 				"scope": "read:files",
 				"exp":   time.Now().Add(time.Hour).Unix(),
@@ -460,6 +464,7 @@ func TestValidateJwtToken(t *testing.T) {
 		{
 			name: "audience mismatch",
 			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"iss":   "https://example.com",
 				"aud":   "wrong-audience",
 				"scope": "read:files",
 				"exp":   time.Now().Add(time.Hour).Unix(),
@@ -470,12 +475,34 @@ func TestValidateJwtToken(t *testing.T) {
 		{
 			name: "insufficient scopes",
 			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"iss":   "https://example.com",
 				"aud":   "my-audience",
 				"scope": "wrong:scope",
 				"exp":   time.Now().Add(time.Hour).Unix(),
 			}),
 			wantError:   true,
 			errContains: "insufficient scopes",
+		},
+		{
+			name: "missing issuer",
+			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"aud":   "my-audience",
+				"scope": "read:files",
+				"exp":   time.Now().Add(time.Hour).Unix(),
+			}),
+			wantError:   true,
+			errContains: "missing issuer claim in token",
+		},
+		{
+			name: "issuer mismatch",
+			token: generateValidToken(t, privateKey, keyID, jwt.MapClaims{
+				"iss":   "https://wrong-issuer.com",
+				"aud":   "my-audience",
+				"scope": "read:files",
+				"exp":   time.Now().Add(time.Hour).Unix(),
+			}),
+			wantError:   true,
+			errContains: "issuer validation failed",
 		},
 	}
 
@@ -486,7 +513,7 @@ func TestValidateJwtToken(t *testing.T) {
 				t.Fatalf("failed to create logger: %v", err)
 			}
 			ctx := util.WithLogger(context.Background(), logger)
-			err = genericAuth.validateJwtToken(ctx, tc.token)
+			_, err = genericAuth.validateJwtToken(ctx, tc.token)
 			if tc.wantError {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -649,7 +676,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 			}
 			ctx := util.WithLogger(context.Background(), logger)
 
-			err = genericAuth.validateOpaqueToken(ctx, tc.token)
+			_, err = genericAuth.validateOpaqueToken(ctx, tc.token)
 
 			if tc.wantError {
 				if err == nil {

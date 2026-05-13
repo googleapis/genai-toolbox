@@ -39,6 +39,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
@@ -510,7 +511,8 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				return
 			}
 
-			if err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header); err != nil {
+			claims, err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header)
+			if err != nil {
 				var mcpErr *generic.MCPAuthError
 				if errors.As(err, &mcpErr) {
 					switch mcpErr.Code {
@@ -520,15 +522,25 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 						}
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
-						http.Error(w, mcpErr.Message, http.StatusUnauthorized)
+						render.Status(r, http.StatusUnauthorized)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
-						http.Error(w, mcpErr.Message, http.StatusForbidden)
+						render.Status(r, http.StatusForbidden)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return
 					}
 				}
+				// Fail closed on unexpected errors
+				s.logger.ErrorContext(r.Context(), "unexpected error during MCP auth validation", "error", err)
+				render.Status(r, http.StatusInternalServerError)
+				render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INTERNAL_ERROR, "Internal Server Error", nil))
+				return
 			}
+
+			ctx := util.WithAuthTokenClaims(r.Context(), claims)
+			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
 		})

@@ -30,67 +30,49 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 // fakeVersionString is used as a temporary version string in tests
 const fakeVersionString = "0.0.0"
 
 var (
-	_ tools.Tool     = MockTool{}
-	_ prompts.Prompt = MockPrompt{}
+	_ tools.Tool     = testutils.MockTool{}
+	_ prompts.Prompt = testutils.MockPrompt{}
 )
 
-var tool1 = MockTool{
-	Name:   "no_params",
-	Params: []parameters.Parameter{},
-}
+var tool1 = testutils.NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
 
-var tool2 = MockTool{
-	Name: "some_params",
-	Params: parameters.Parameters{
+var tool2 = testutils.NewMockTool(
+	"some_params",
+	"",
+	parameters.Parameters{
 		parameters.NewIntParameter("param1", "This is the first parameter."),
 		parameters.NewIntParameter("param2", "This is the second parameter."),
-	},
-}
+	}, false, false)
 
-var tool3 = MockTool{
-	Name:        "array_param",
-	Description: "some description",
-	Params: parameters.Parameters{
+var tool3 = testutils.NewMockTool(
+	"array_param", "some description",
+	parameters.Parameters{
 		parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
-	},
-}
+	}, false, false)
 
-var tool4 = MockTool{
-	Name:         "unauthorized_tool",
-	Params:       []parameters.Parameter{},
-	unauthorized: true,
-}
+var tool4 = testutils.NewMockTool("unauthorized_tool", "", []parameters.Parameter{}, true, false)
 
-var tool5 = MockTool{
-	Name:                        "require_client_auth_tool",
-	Params:                      []parameters.Parameter{},
-	requiresClientAuthorization: true,
-}
+var tool5 = testutils.NewMockTool("require_client_auth_tool", "", []parameters.Parameter{}, false, true)
 
-var prompt1 = MockPrompt{
-	Name: "prompt1",
-	Args: prompts.Arguments{},
-}
+var prompt1 = testutils.NewMockPrompt("prompt1", "", prompts.Arguments{})
 
-var prompt2 = MockPrompt{
-	Name: "prompt2",
-	Args: prompts.Arguments{
-		{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
-	},
-}
+var prompt2 = testutils.NewMockPrompt("prompt2", "", prompts.Arguments{
+	{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
+})
 
 // setUpResources setups resources to test against
-func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
+func setUpResources(t *testing.T, mockTools []testutils.MockTool, mockPrompts []testutils.MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
-		tool.manifest = tool.Manifest()
 		toolsMap[tool.Name] = tool
 		allTools = append(allTools, tool.Name)
 	}

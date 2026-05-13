@@ -49,6 +49,8 @@ type Config struct {
 	RuntimeConfig     *dataprocpb.RuntimeConfig     `yaml:"runtimeConfig"`
 	EnvironmentConfig *dataprocpb.EnvironmentConfig `yaml:"environmentConfig"`
 	AuthRequired      []string                      `yaml:"authRequired"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config, error) {
