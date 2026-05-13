@@ -82,7 +82,7 @@ type Tool struct {
 	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
 	// Optional additional tool information.
 	Annotations *ToolAnnotations `json:"annotations,omitempty"`
-	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#meta) for notes on `_meta` usage.
+	// See [General fields: `_meta`](/specification/2025-06-18/basic/index#_meta) for notes on `_meta` usage.
 	Metadata map[string]any `json:"_meta,omitempty"`
 }
 

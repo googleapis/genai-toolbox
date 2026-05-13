@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// // generateToolManifest generates Tool for list tools result
+// generateToolManifest generates Tool for list tools result
 func generateToolManifest(name, desc string, params parameters.Parameters) Tool {
 	inputSchema, _ := generateParamManifest(params)
 	mcpManifest := Tool{
@@ -33,7 +33,7 @@ func generateToolManifest(name, desc string, params parameters.Parameters) Tool 
 	return mcpManifest
 }
 
-// generateToolManifest generates the input schema and get authParam
+// generateParamManifest generates the input schema and get authParam
 func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]string) {
 	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)
