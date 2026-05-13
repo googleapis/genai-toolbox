@@ -6,19 +6,18 @@ description: >
   AuthServices represent services that handle authentication and authorization.
 ---
 
-AuthServices represent services that handle authentication and authorization. It
-can primarily be used by [Tools](../tools/_index.md) in two different ways:
+AuthServices represent services that handle authentication and authorization. They support two distinct modes of operation:
 
-- [**Authorized Invocation**][auth-invoke] is when a tool
-  is validated by the auth service before the call can be invoked. Toolbox
-  will reject any calls that fail to validate or have an invalid token.
-- [**Authenticated Parameters**][auth-params] replace the value of a parameter
-  with a field from an [OIDC][openid-claims] claim. Toolbox will automatically
-  resolve the ID token provided by the client and replace the parameter in the
-  tool call.
+### 1. Toolbox Native Authorization
+Used for specific tools to enforce authorization or resolve parameters:
+- [**Authorized Invocation**][auth-invoke]: A tool is validated by the auth service before it can be invoked. Toolbox will reject any calls that fail to validate or have an invalid token.
+- [**Authenticated Parameters**][auth-params]: Replaces the value of a parameter with a field from an [OIDC][openid-claims] claim. Toolbox will automatically resolve the ID token provided by the client and replace the parameter in the tool call.
+
+### 2. MCP Authorization
+Used to secure the entire MCP server. The Model Context Protocol supports [MCP Authorization](https://modelcontextprotocol.io/docs/tutorials/security/authorization) to secure interactions between clients and servers. When enabled, all MCP endpoints require a valid token, and you can enforce granular tool-level scope authorization. **Note that this mode is currently only supported when using the `generic` auth service type.**
 
 [openid-claims]: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
-[auth-invoke]: ../tools/_index.md#authorized-invocations
+[auth-invoke]: ../tools/_index.md#authorized-invocations-toolbox-native-authorization
 [auth-params]: ../tools/_index.md#authenticated-parameters
 
 ## Example
@@ -48,13 +47,9 @@ Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
-After you've configured an `authService` you'll, need to reference it in the
-configuration for each tool that should use it:
-
-- **Authorized Invocations** for authorizing a tool call, [use the
-  `authRequired` field in a tool config][auth-invoke]
-- **Authenticated Parameters** for using the value from a OIDC claim, [use the
-  `authService` field in a parameter config][auth-params]
+After you've configured an `authService`, you can use it:
+- For **Toolbox Native Authorization** by referencing it in your tool configuration (using `authRequired` or `authService` in parameters).
+- For **MCP Authorization** by setting `mcpEnabled: true` in the auth service configuration to secure the entire server.
 
 ## Specifying ID Tokens from Clients
 
