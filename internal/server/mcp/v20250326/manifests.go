@@ -17,6 +17,7 @@ package v20250326
 import (
 	"fmt"
 
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -88,4 +89,36 @@ func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (L
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
+}
+
+// generatePromptManifest generates a version-specific Prompt manifest for list/prompts
+func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
+	mcpArgs := make([]PromptArgument, 0, len(args))
+	for _, arg := range args {
+		promptArg := PromptArgument{
+			Name:        arg.GetName(),
+			Description: arg.GetDesc(),
+			Required:    parameters.CheckParamRequired(arg.GetRequired(), arg.GetDefault()),
+		}
+		mcpArgs = append(mcpArgs, promptArg)
+	}
+	return Prompt{
+		Name:        name,
+		Description: desc,
+		Arguments:   mcpArgs,
+	}
+}
+
+// GenerateListPromptsResult generates the list/prompts result
+func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
+	for _, promptName := range p.PromptNames {
+		prompt, ok := promptsMap[promptName]
+		if !ok {
+			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
+		}
+		promptManifest := generatePromptManifest(promptName, prompt.GetDesc(), prompt.GetArguments())
+		mcpManifest = append(mcpManifest, promptManifest)
+	}
+	return ListPromptsResult{Prompts: mcpManifest}, nil
 }

@@ -28,9 +28,8 @@ import (
 
 // Test type aliases for convenience.
 type (
-	Argument       = prompts.Argument
-	ArgMcpManifest = prompts.ArgMcpManifest
-	Arguments      = prompts.Arguments
+	Argument  = prompts.Argument
+	Arguments = prompts.Arguments
 )
 
 // Ptr is a helper function to create a pointer to a value.
@@ -40,46 +39,6 @@ func Ptr[T any](v T) *T {
 
 func makeArrayArg(name, desc string, items parameters.Parameter) Argument {
 	return Argument{Parameter: parameters.NewArrayParameter(name, desc, items)}
-}
-
-func TestArgMcpManifest(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		name     string
-		arg      Argument
-		expected ArgMcpManifest
-	}{
-		{
-			name: "Required with no default",
-			arg:  Argument{Parameter: parameters.NewStringParameterWithRequired("name1", "desc1", true)},
-			expected: ArgMcpManifest{
-				Name: "name1", Description: "desc1", Required: true,
-			},
-		},
-		{
-			name: "Not required with no default",
-			arg:  Argument{Parameter: parameters.NewStringParameterWithRequired("name2", "desc2", false)},
-			expected: ArgMcpManifest{
-				Name: "name2", Description: "desc2", Required: false,
-			},
-		},
-		{
-			name: "Implicitly required with default",
-			arg:  Argument{Parameter: parameters.NewStringParameterWithDefault("name3", "defaultVal", "desc3")},
-			expected: ArgMcpManifest{
-				Name: "name3", Description: "desc3", Required: false,
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := tc.arg.McpManifest()
-			if diff := cmp.Diff(tc.expected, got); diff != "" {
-				t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
 }
 
 // TestArguments_UnmarshalYAML tests all unmarshaling logic for the Arguments type.

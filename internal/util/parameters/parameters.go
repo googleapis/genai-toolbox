@@ -319,6 +319,7 @@ type Parameter interface {
 	// Note: It's typically not idiomatic to include "Get" in the function name,
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
+	GetDesc() string
 	GetType() string
 	GetDefault() any
 	GetRequired() bool
@@ -478,6 +479,11 @@ type CommonParameter struct {
 // GetName returns the name specified for the Parameter.
 func (p *CommonParameter) GetName() string {
 	return p.Name
+}
+
+// GetDesc returns the description specified for the Parameter.
+func (p *CommonParameter) GetDesc() string {
+	return p.Desc
 }
 
 // GetType returns the type specified for the Parameter.

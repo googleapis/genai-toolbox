@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -165,6 +166,102 @@ func TestGenerateListToolsResult(t *testing.T) {
 						},
 					},
 					Required: []string{"param1", "param2"},
+				},
+			},
+		},
+	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
+	}
+}
+
+func TestGeneratePromptManifest(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		name        string
+		promptName  string
+		description string
+		args        prompts.Arguments
+		want        Prompt
+	}{
+		{
+			name:        "No arguments",
+			promptName:  "test-prompt",
+			description: "A test prompt.",
+			args:        prompts.Arguments{},
+			want: Prompt{
+				Name:        "test-prompt",
+				Description: "A test prompt.",
+				Arguments:   []PromptArgument{},
+			},
+		},
+		{
+			name:        "With arguments",
+			promptName:  "arg-prompt",
+			description: "Prompt with args.",
+			args: prompts.Arguments{
+				{Parameter: parameters.NewStringParameter("param1", "First param")},
+				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
+			},
+			want: Prompt{
+				Name:        "arg-prompt",
+				Description: "Prompt with args.",
+				Arguments: []PromptArgument{
+					{Name: "param1", Description: "First param", Required: true},
+					{Name: "param2", Description: "Second param", Required: false},
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := generatePromptManifest(tc.promptName, tc.description, tc.args)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("generatePromptManifest() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGenerateListPromptsResult(t *testing.T) {
+	args := prompts.Arguments{
+		{Parameter: parameters.NewStringParameter("arg1", "Test argument")},
+	}
+	prompt1 := testutils.NewMockPrompt("prompt1", "First test prompt", prompts.Arguments{})
+	prompt2 := testutils.NewMockPrompt("prompt2", "Second test prompt", args)
+
+	promptsMap := make(map[string]prompts.Prompt)
+	promptsMap[prompt1.Name] = prompt1
+	promptsMap[prompt2.Name] = prompt2
+	pc := prompts.PromptsetConfig{
+		Name:        "test-promptset",
+		PromptNames: []string{"prompt1", "prompt2"},
+	}
+	promptset, err := pc.Initialize("test-version", promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize promptset %q: %s", "test-promptset", err)
+	}
+
+	got, err := GenerateListPromptsResult(promptset, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to generate list prompt result: %s", err)
+	}
+	want := ListPromptsResult{
+		Prompts: []Prompt{
+			Prompt{
+				Name:        "prompt1",
+				Description: "First test prompt",
+				Arguments:   []PromptArgument{},
+			},
+			Prompt{
+				Name:        "prompt2",
+				Description: "Second test prompt",
+				Arguments: []PromptArgument{
+					PromptArgument{
+						Name:        "arg1",
+						Description: "Test argument",
+						Required:    true,
+					},
 				},
 			},
 		},

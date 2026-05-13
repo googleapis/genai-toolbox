@@ -15,7 +15,6 @@
 package v20251125
 
 import (
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -216,7 +215,7 @@ type ListPromptsRequest struct {
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
 	PaginatedResult
-	Prompts []prompts.McpManifest `json:"prompts"`
+	Prompts []Prompt `json:"prompts"`
 }
 
 // Used by the client to get a prompt provided by the server.
@@ -233,6 +232,26 @@ type GetPromptResult struct {
 	jsonrpc.Result
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
+}
+
+// A prompt or prompt template that the server offers.
+type Prompt struct {
+	util.BaseMetadata
+	// An optional description of what this prompt provides
+	Description string `json:"description,omitempty"`
+	// A list of arguments to use for templating the prompt.
+	Arguments []PromptArgument `json:"arguments,omitempty"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
+	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// Describes an argument that a prompt can accept.
+type PromptArgument struct {
+	util.BaseMetadata
+	// A human-readable description of the argument.
+	Description string `json:"description,omitempty"`
+	// Whether this argument must be provided.
+	Required bool `json:"required,omitempty"`
 }
 
 // Describes a message returned as part of a prompt.
