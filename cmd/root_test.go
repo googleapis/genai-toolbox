@@ -412,6 +412,11 @@ func TestPrebuiltFlag(t *testing.T) {
 			args: []string{"--prebuilt", "alloydb,bigquery"},
 			want: []string{"alloydb", "bigquery"},
 		},
+		{
+			desc: "prebuilt toolset flag",
+			args: []string{"--prebuilt", "alloydb-postgres/monitor"},
+			want: []string{"alloydb-postgres/monitor"},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -856,6 +861,35 @@ tools:
 			args:      []string{"--prebuilt", "sqlite", "--config", toolsetConflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
+		},
+		{
+			desc:    "success toolset filtering",
+			args:    []string{"--prebuilt", "sqlite/sqlite_database_tools"},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.ToolConfigs["execute_sql"]; !ok {
+					return fmt.Errorf("expected tool 'execute_sql' not found")
+				}
+				if _, ok := cfg.ToolConfigs["list_tables"]; !ok {
+					return fmt.Errorf("expected tool 'list_tables' not found")
+				}
+				if len(cfg.ToolConfigs) != 2 {
+					return fmt.Errorf("expected exactly 2 tools, got %d", len(cfg.ToolConfigs))
+				}
+				if _, ok := cfg.ToolsetConfigs["sqlite_database_tools"]; !ok {
+					return fmt.Errorf("expected toolset 'sqlite_database_tools' not found")
+				}
+				if len(cfg.ToolsetConfigs) != 1 {
+					return fmt.Errorf("expected exactly 1 toolset, got %d", len(cfg.ToolsetConfigs))
+				}
+				return nil
+			},
+		},
+		{
+			desc:      "toolset not found error",
+			args:      []string{"--prebuilt", "sqlite/nonexistent"},
+			wantErr:   true,
+			errString: "toolset 'nonexistent' not found in prebuilt configuration 'sqlite'",
 		},
 	}
 

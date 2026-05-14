@@ -206,7 +206,15 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		logger.InfoContext(ctx, logMsg)
 
 		for _, configName := range opts.PrebuiltConfigs {
-			buf, err := prebuiltconfigs.Get(configName)
+			sourceName := configName
+			toolsetName := ""
+			if strings.Contains(configName, "/") {
+				parts := strings.SplitN(configName, "/", 2)
+				sourceName = parts[0]
+				toolsetName = parts[1]
+			}
+
+			buf, err := prebuiltconfigs.Get(sourceName)
 			if err != nil {
 				logger.ErrorContext(ctx, err.Error())
 				return isCustomConfigured, err
@@ -219,6 +227,30 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 				logger.ErrorContext(ctx, errMsg.Error())
 				return isCustomConfigured, errMsg
 			}
+
+			if toolsetName != "" {
+				targetToolset, exists := parsed.Toolsets[toolsetName]
+				if !exists {
+					errMsg := fmt.Errorf("toolset '%s' not found in prebuilt configuration '%s'", toolsetName, sourceName)
+					logger.ErrorContext(ctx, errMsg.Error())
+					return isCustomConfigured, errMsg
+				}
+
+				// Filter tools to only include those in the target toolset
+				filteredTools := make(server.ToolConfigs)
+				for _, tName := range targetToolset.ToolNames {
+					if tCfg, tExists := parsed.Tools[tName]; tExists {
+						filteredTools[tName] = tCfg
+					}
+				}
+				parsed.Tools = filteredTools
+
+				// Filter toolsets to only include the target toolset
+				filteredToolsets := make(server.ToolsetConfigs)
+				filteredToolsets[toolsetName] = targetToolset
+				parsed.Toolsets = filteredToolsets
+			}
+
 			allConfigs = append(allConfigs, parsed)
 		}
 	}
