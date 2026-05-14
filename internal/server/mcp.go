@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -582,6 +583,21 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			var clientServerErr *util.ClientServerError
 			if errors.As(err, &clientServerErr) {
 				w.WriteHeader(clientServerErr.Code)
+			}
+			var mcpErr *generic.MCPAuthError
+			if errors.As(err, &mcpErr) {
+				switch mcpErr.Code {
+				case http.StatusForbidden:
+					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+					w.WriteHeader(http.StatusForbidden)
+				case http.StatusUnauthorized:
+					scopesArg := ""
+					if len(mcpErr.ScopesRequired) > 0 {
+						scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
+					}
+					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+					w.WriteHeader(http.StatusUnauthorized)
+				}
 			}
 		}
 	}

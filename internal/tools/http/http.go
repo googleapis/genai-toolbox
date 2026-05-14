@@ -169,7 +169,28 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 	}
 	pathParamsMap := pathParamValues.AsMap()
 
-	templ, err := template.New("url").Parse(path)
+	funcMap := template.FuncMap{
+		"pathEscape": func(v any) string {
+			if s, ok := v.(string); ok {
+				return url.PathEscape(s)
+			}
+			if v == nil {
+				return ""
+			}
+			return url.PathEscape(fmt.Sprintf("%v", v))
+		},
+		"queryEscape": func(v any) string {
+			if s, ok := v.(string); ok {
+				return url.QueryEscape(s)
+			}
+			if v == nil {
+				return ""
+			}
+			return url.QueryEscape(fmt.Sprintf("%v", v))
+		},
+	}
+
+	templ, err := template.New("url").Funcs(funcMap).Parse(path)
 	if err != nil {
 		return "", fmt.Errorf("error parsing URL: %s", err)
 	}
@@ -196,9 +217,26 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 		return "", fmt.Errorf("path must be relative and cannot override base host")
 	}
 
+	// Reject dot segments before resolution
+	for _, segment := range strings.Split(relParsedURL.Path, "/") {
+		if segment == ".." {
+			return "", fmt.Errorf("path cannot contain dot segments (..)")
+		}
+	}
+
 	// Create URL based on BaseURL and Path
 	// Attach query parameters
 	parsedURL := baseParsedURL.ResolveReference(relParsedURL)
+
+	// Verify final path stays within base path scope
+	basePath := baseParsedURL.Path
+	finalPath := parsedURL.Path
+	if basePath != "/" {
+		requiredPrefix := strings.TrimSuffix(basePath, "/") + "/"
+		if finalPath != basePath && !strings.HasPrefix(finalPath, requiredPrefix) {
+			return "", fmt.Errorf("resolved path %q escapes base path %q", finalPath, basePath)
+		}
+	}
 
 	// Get existing query parameters from the URL
 	queryParameters := parsedURL.Query()
