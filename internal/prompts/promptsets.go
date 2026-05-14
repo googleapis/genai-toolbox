@@ -29,7 +29,7 @@ type Promptset struct {
 	PromptsetConfig
 	Prompts       []*Prompt         `yaml:",inline"`
 	Manifest      PromptsetManifest `yaml:",inline"`
-	promptNameSet map[string]struct{}
+	PromptNameSet map[string]struct{}
 }
 
 func (p Promptset) ToConfig() PromptsetConfig {
@@ -40,14 +40,9 @@ func (p Promptset) ToConfig() PromptsetConfig {
 // When built via Initialize, lookups are O(1) via promptNameSet; for Promptsets
 // constructed directly (e.g., in tests), falls back to a linear scan of PromptNames.
 func (p Promptset) ContainsPrompt(name string) bool {
-	if p.promptNameSet != nil {
-		_, ok := p.promptNameSet[name]
+	if p.PromptNameSet != nil {
+		_, ok := p.PromptNameSet[name]
 		return ok
-	}
-	for _, n := range p.PromptNames {
-		if n == name {
-			return true
-		}
 	}
 	return false
 }
@@ -66,7 +61,7 @@ func (p PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 			ServerVersion:   serverVersion,
 			PromptsManifest: make(map[string]Manifest, len(p.PromptNames)),
 		},
-		promptNameSet: make(map[string]struct{}, len(p.PromptNames)),
+		PromptNameSet: make(map[string]struct{}, len(p.PromptNames)),
 	}
 	if !tools.IsValidName(promptset.Name) {
 		return promptset, fmt.Errorf("invalid promptset name: %s", promptset.Name)
@@ -78,7 +73,7 @@ func (p PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 		}
 		promptset.Prompts = append(promptset.Prompts, &prompt)
 		promptset.Manifest.PromptsManifest[promptName] = prompt.Manifest()
-		promptset.promptNameSet[promptName] = struct{}{}
+		promptset.PromptNameSet[promptName] = struct{}{}
 	}
 
 	return promptset, nil

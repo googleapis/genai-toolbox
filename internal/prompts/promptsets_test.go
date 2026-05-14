@@ -33,6 +33,7 @@ func TestPromptset_ContainsPrompt(t *testing.T) {
 			Name:        "test-promptset",
 			PromptNames: []string{"greet", "summarize"},
 		},
+		PromptNameSet: map[string]struct{}{"greet": struct{}{}, "summarize": struct{}{}},
 	}
 
 	tests := []struct {
@@ -135,6 +136,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 						"prompt2": promptsMap["prompt2"].Manifest(),
 					},
 				},
+				PromptNameSet: map[string]struct{}{"prompt1": struct{}{}, "prompt2": struct{}{}},
 			},
 			wantErr: "",
 		},
@@ -158,6 +160,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 						"prompt1": promptsMap["prompt1"].Manifest(),
 					},
 				},
+				PromptNameSet: map[string]struct{}{"prompt1": struct{}{}},
 			},
 			wantErr: "",
 		},
@@ -177,6 +180,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 					ServerVersion:   serverVersion,
 					PromptsManifest: map[string]prompts.Manifest{},
 				},
+				PromptNameSet: map[string]struct{}{},
 			},
 			wantErr: "invalid promptset name",
 		},
@@ -201,6 +205,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 						"prompt1": promptsMap["prompt1"].Manifest(),
 					},
 				},
+				PromptNameSet: map[string]struct{}{"prompt1": struct{}{}},
 			},
 			wantErr: "prompt does not exist",
 		},
@@ -220,6 +225,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 					ServerVersion:   serverVersion,
 					PromptsManifest: map[string]prompts.Manifest{},
 				},
+				PromptNameSet: map[string]struct{}{},
 			},
 			wantErr: "",
 		},
@@ -247,6 +253,11 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				// Using cmp.AllowUnexported because MockPrompt is unexported
 				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockPrompt{}), cmpopts.IgnoreUnexported(prompts.Promptset{})); diff != "" {
 					t.Errorf("Initialize() result mismatch (-want +got):\n%s", diff)
+				}
+
+				gotConfig := got.ToConfig()
+				if diff := cmp.Diff(tc.config, gotConfig); diff != "" {
+					t.Errorf("ToConfig() result mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
