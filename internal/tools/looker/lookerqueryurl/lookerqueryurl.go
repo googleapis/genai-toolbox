@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -148,6 +149,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	respFields := "id,slug,share_url,expanded_share_url"
 	resp, err := sdk.CreateQuery(*wq, respFields, source.LookerApiSettings())
 	if err != nil {
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
 		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = ", resp)

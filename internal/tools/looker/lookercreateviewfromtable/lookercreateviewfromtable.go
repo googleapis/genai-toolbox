@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -228,7 +229,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	err = lookercommon.CreateViewsFromTables(ctx, sdk, projectId, queryParams, reqBody, source.LookerApiSettings())
 	if err != nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("error generating views: %s", err), http.StatusInternalServerError, err)
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	return map[string]string{

@@ -170,7 +170,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		projectId, _ := paramsMap["project"].(string)
 		result, err := analyzeTool.projects(ctx, projectId)
 		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing projects: %v", err), http.StatusInternalServerError, err)
+			if strings.Contains(err.Error(), "status=401") {
+				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+			}
+			return nil, util.ProcessGeneralError(err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -179,7 +182,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		modelName, _ := paramsMap["model"].(string)
 		result, err := analyzeTool.models(ctx, projectName, modelName)
 		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing models: %v", err), http.StatusInternalServerError, err)
+			if strings.Contains(err.Error(), "status=401") {
+				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+			}
+			return nil, util.ProcessGeneralError(err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -188,7 +194,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		exploreName, _ := paramsMap["explore"].(string)
 		result, err := analyzeTool.explores(ctx, modelName, exploreName)
 		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing explores: %v", err), http.StatusInternalServerError, err)
+			if strings.Contains(err.Error(), "status=401") {
+				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+			}
+			return nil, util.ProcessGeneralError(err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
