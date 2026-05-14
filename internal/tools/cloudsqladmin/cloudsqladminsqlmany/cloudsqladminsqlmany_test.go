@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpgsqlmany_test
+package cloudsqladminsqlmany_test
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/cloudsqlpgsqlmany"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqladmin/cloudsqladminsqlmany"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -39,7 +39,7 @@ func TestParseFromYamlSqlMany(t *testing.T) {
 			in: `
             kind: tool
             name: example_tool
-            type: postgres-sql-many
+            type: cloud-sql-admin-sql-many
             source: my-instance
             description: some description
             statement: "SELECT * FROM users WHERE id = {{.id}}"
@@ -47,9 +47,9 @@ func TestParseFromYamlSqlMany(t *testing.T) {
                 - my-google-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": cloudsqlpgsqlmany.Config{
+				"example_tool": cloudsqladminsqlmany.Config{
 					Name:         "example_tool",
-					Type:         "postgres-sql-many",
+					Type:         "cloud-sql-admin-sql-many",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM users WHERE id = {{.id}}",
@@ -62,7 +62,7 @@ func TestParseFromYamlSqlMany(t *testing.T) {
 			in: `
             kind: tool
             name: example_tool_params
-            type: postgres-sql-many
+            type: cloud-sql-admin-sql-many
             source: my-instance
             description: some description
             statement: "SELECT * FROM users WHERE id = {{.id}} AND status = {{.status}}"
@@ -76,9 +76,9 @@ func TestParseFromYamlSqlMany(t *testing.T) {
                   description: User ID
 			`,
 			want: server.ToolConfigs{
-				"example_tool_params": cloudsqlpgsqlmany.Config{
+				"example_tool_params": cloudsqladminsqlmany.Config{
 					Name:         "example_tool_params",
-					Type:         "postgres-sql-many",
+					Type:         "cloud-sql-admin-sql-many",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM users WHERE id = {{.id}} AND status = {{.status}}",

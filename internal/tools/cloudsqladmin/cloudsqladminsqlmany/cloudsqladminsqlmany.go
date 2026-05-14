@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpgexecutesqlmany
+package cloudsqladminsqlmany
 
 import (
 	"context"
@@ -27,7 +27,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "postgres-execute-sql-many"
+const resourceType string = "cloud-sql-admin-sql-many"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -49,12 +49,15 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Name               string                 `yaml:"name" validate:"required"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Description        string                 `yaml:"description" validate:"required"`
+	Statement          string                 `yaml:"statement" validate:"required"`
+	AuthRequired       []string               `yaml:"authRequired"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -63,27 +66,28 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-// Initialize creates a new Postgres ExecuteSqlMany tool.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	params := parameters.Parameters{
+	infraParams := parameters.Parameters{
 		parameters.NewStringParameter("project", "The GCP project ID."),
 		parameters.NewStringParameter("instance", "The Cloud SQL instance ID."),
 		parameters.NewStringParameter("database", "The database name."),
-		parameters.NewStringParameter("sql", "The SQL statement to execute."),
 	}
 
-	description := cfg.Description
-	if description == "" {
-		description = "Executes multiple SQL statements on a Postgres database."
+	allParams, _, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	if err != nil {
+		return nil, err
 	}
+
+	finalParams := append(infraParams, allParams...)
+	paramManifest := finalParams.Manifest()
 
 	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, params, annotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, finalParams, annotations)
 
 	t := Tool{
 		Config:      cfg,
-		Parameters:  params,
-		manifest:    tools.Manifest{Description: description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		allParams:   finalParams,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
 	return t, nil
@@ -93,12 +97,11 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
+	allParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-// Invoke executes the SQL statement on the given database.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	// Check source compatibility
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
@@ -111,7 +114,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	project, _ := paramsMap["project"].(string)
 	instance, _ := paramsMap["instance"].(string)
 	database, _ := paramsMap["database"].(string)
-	sql, _ := paramsMap["sql"].(string)
+
+	newStatement, err := parameters.ResolveTemplateParams(t.allParams, t.Statement, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("unable to extract template params", err)
+	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -120,7 +127,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query on %s/%s/%s", resourceType, project, instance, database))
 
 	// Execute the SQL statement on the given database.
-	resp, err := source.ExecuteSql(ctx, project, instance, database, sql, string(accessToken))
+	resp, err := source.ExecuteSql(ctx, project, instance, database, newStatement, string(accessToken))
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
@@ -128,7 +135,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+	return parameters.EmbedParams(ctx, t.allParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -160,5 +167,5 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 }
 
 func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
+	return t.allParams
 }

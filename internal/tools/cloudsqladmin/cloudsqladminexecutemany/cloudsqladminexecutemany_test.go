@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpgexecutesqlmany_test
+package cloudsqladminexecutemany_test
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/cloudsqlpgexecutesqlmany"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqladmin/cloudsqladminexecutemany"
 )
 
 func TestParseFromYamlExecuteSqlMany(t *testing.T) {
@@ -38,16 +38,16 @@ func TestParseFromYamlExecuteSqlMany(t *testing.T) {
 			in: `
             kind: tool
             name: example_tool
-            type: postgres-execute-sql-many
+            type: cloud-sql-admin-execute-many
             source: my-instance
             description: some description
             authRequired:
                 - my-google-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": cloudsqlpgexecutesqlmany.Config{
+				"example_tool": cloudsqladminexecutemany.Config{
 					Name:         "example_tool",
-					Type:         "postgres-execute-sql-many",
+					Type:         "cloud-sql-admin-execute-many",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service"},

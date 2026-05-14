@@ -34,8 +34,8 @@ import (
 )
 
 var (
-	executeSqlManyToolType = "postgres-execute-sql-many"
-	sqlManyToolType        = "postgres-sql-many"
+	executeSqlManyToolType = "cloud-sql-admin-execute-many"
+	sqlManyToolType        = "cloud-sql-admin-sql-many"
 )
 
 type executeSqlTransport struct {
