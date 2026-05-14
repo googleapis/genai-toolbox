@@ -1138,3 +1138,53 @@ func TestClickHouseListTablesTool(t *testing.T) {
 
 	t.Logf("✅ clickhouse-list-tables tool tests completed successfully")
 }
+
+// TestClickHouseSQLToolWithEmbedding verifies that the clickhouse-sql tool can
+// embed a string parameter via an embedding model and store/query an
+// Array(Float32) column. Gated on API_KEY (gemini) and the standard
+// CLICKHOUSE_* env vars.
+func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
+	if os.Getenv("API_KEY") == "" {
+		t.Skip("'API_KEY' not set; skipping embedding integration test")
+	}
+	sourceConfig := getClickHouseVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	args := []string{"--enable-api"}
+
+	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
+	if err != nil {
+		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
+	}
+	defer pool.Close()
+
+	vectorTableName, tearDownVectorTable := tests.SetupClickHouseVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"tools": map[string]any{},
+	}
+
+	insertStmt, searchStmt := tests.GetClickHouseVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, ClickHouseToolType, insertStmt, searchStmt)
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+}
