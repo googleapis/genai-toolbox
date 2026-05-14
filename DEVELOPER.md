@@ -821,6 +821,7 @@ releases:
 * darwin/arm64
 * darwin/amd64
 * windows/amd64
+* windows/arm64
 
 #### Supported Container Images
 
@@ -891,11 +892,12 @@ MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.np
   - `darwin/arm64` -> `server-darwin-arm64`
   - `darwin/x64` -> `server-darwin-x64`
   - `linux/x64` -> `server-linux-x64`
+  - `win32/arm64` -> `server-win32-arm64`
   - `win32/x64` -> `server-win32-x64`
 
 **Phase A: Release Platform-Specific Packages**
 
-_Repeat the following steps for each of the 4 combinations listed above._
+_Repeat the following steps for each of the 5 combinations listed above._
 
 1. **Navigate to the package directory:**
    ```bash
@@ -929,8 +931,8 @@ Once all platform-specific packages are live, release the main wrapper package.
    ```
 2. **Verify Versioning:**
    - Open `package.json` and verify the `"version"` field reflects the target version.
-   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 4 packages.
-3. **Sync Lockfile:** (Before this step, all 4 dep packages need to be published to npm)
+   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 5 packages.
+3. **Sync Lockfile:** (Before this step, all 5 dep packages need to be published to npm)
    ```bash
    npm install --package-lock-only
    ```
