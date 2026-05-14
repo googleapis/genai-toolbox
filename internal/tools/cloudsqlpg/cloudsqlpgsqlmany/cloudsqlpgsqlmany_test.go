@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgressqlmany_test
+package cloudsqlpgsqlmany_test
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressqlmany"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/cloudsqlpgsqlmany"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -47,7 +47,7 @@ func TestParseFromYamlSqlMany(t *testing.T) {
                 - my-google-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": postgressqlmany.Config{
+				"example_tool": cloudsqlpgsqlmany.Config{
 					Name:         "example_tool",
 					Type:         "postgres-sql-many",
 					Source:       "my-instance",
@@ -76,7 +76,7 @@ func TestParseFromYamlSqlMany(t *testing.T) {
                   description: User ID
 			`,
 			want: server.ToolConfigs{
-				"example_tool_params": postgressqlmany.Config{
+				"example_tool_params": cloudsqlpgsqlmany.Config{
 					Name:         "example_tool_params",
 					Type:         "postgres-sql-many",
 					Source:       "my-instance",
