@@ -21,8 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
@@ -202,6 +205,50 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
+
+	// Find MCP enabled auth service
+	var mcpSvcName string
+	for _, aS := range authServices {
+		cfg := aS.ToConfig()
+		if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+			mcpSvcName = aS.GetName()
+			break
+		}
+	}
+
+	toolScopes := tool.GetScopesRequired()
+	if mcpSvcName != "" && len(toolScopes) > 0 {
+		claims := util.AuthTokenClaimsFromContext(ctx)
+		if claims == nil {
+			err = &generic.MCPAuthError{
+				Code:           http.StatusForbidden,
+				Message:        "missing claims for MCP authorization",
+				ScopesRequired: toolScopes,
+			}
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+
+		scopeClaim, _ := claims["scope"].(string)
+		tokenScopes := strings.Split(scopeClaim, " ")
+
+		// Check if all required scopes are present in the token
+		missing := false
+		for _, ts := range toolScopes {
+			if !slices.Contains(tokenScopes, ts) {
+				missing = true
+				break
+			}
+		}
+
+		if missing {
+			err = &generic.MCPAuthError{
+				Code:           http.StatusForbidden,
+				Message:        "insufficient scopes for this tool",
+				ScopesRequired: toolScopes,
+			}
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+	}
 
 	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
 	if err != nil {
