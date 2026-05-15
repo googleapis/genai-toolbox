@@ -75,7 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParams, _, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to process parameters: %v", err)
 	}
 
 	finalParams := append(infraParams, allParams...)
