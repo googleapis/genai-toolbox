@@ -155,19 +155,19 @@ func TestExecuteSqlManyToolEndpoints(t *testing.T) {
 		{
 			name:     "successful execute-sql-many",
 			toolName: "execute-sql-many",
-			body:     `{"project": "p1", "instance": "i1", "database": "db1", "sql": "SELECT 1"}`,
+			body:     `{"project": "p1", "instanceId": "i1", "database": "db1", "sql": "SELECT 1"}`,
 			want:     `{"results":[{"columns":[{"name":"result","type":"STRING"}],"rows":[{"values":[{"value":"success"}]}]}]}`,
 		},
 		{
 			name:     "successful sql-many",
 			toolName: "sql-many",
-			body:     `{"project": "p1", "instance": "i1", "database": "db1", "user_id": "123"}`,
+			body:     `{"project": "p1", "instanceId": "i1", "database": "db1", "user_id": "123"}`,
 			want:     `{"results":[{"columns":[{"name":"result","type":"STRING"}],"rows":[{"values":[{"value":"success"}]}]}]}`,
 		},
 		{
 			name:     "missing required param in execute-sql-many",
 			toolName: "execute-sql-many",
-			body:     `{"project": "p1", "instance": "i1", "database": "db1"}`,
+			body:     `{"project": "p1", "instanceId": "i1", "database": "db1"}`,
 			want:     `{"error":"parameter \"sql\" is required"}`,
 		},
 	}

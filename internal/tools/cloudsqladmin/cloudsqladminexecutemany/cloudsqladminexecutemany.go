@@ -67,7 +67,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	params := parameters.Parameters{
 		parameters.NewStringParameter("project", "The GCP project ID."),
-		parameters.NewStringParameter("instance", "The Cloud SQL instance ID."),
+		parameters.NewStringParameter("instanceId", "The Cloud SQL instance ID."),
 		parameters.NewStringParameter("database", "The database name."),
 		parameters.NewStringParameter("sql", "The SQL statement to execute."),
 	}
@@ -109,7 +109,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Extract parameters from the parameter values map.
 	paramsMap := params.AsMap()
 	project, _ := paramsMap["project"].(string)
-	instance, _ := paramsMap["instance"].(string)
+	instanceId, _ := paramsMap["instanceId"].(string)
 	database, _ := paramsMap["database"].(string)
 	sql, _ := paramsMap["sql"].(string)
 
@@ -117,10 +117,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query on %s/%s/%s", resourceType, project, instance, database))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query on %s/%s/%s", resourceType, project, instanceId, database))
 
 	// Execute the SQL statement on the given database.
-	resp, err := source.ExecuteSql(ctx, project, instance, database, sql, string(accessToken))
+	resp, err := source.ExecuteSql(ctx, project, instanceId, database, sql, string(accessToken))
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

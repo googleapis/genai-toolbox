@@ -8,7 +8,7 @@ description: >
 
 ## About
 
-The `cloud-sql-admin-sql-many` tool executes a predefined SQL statement against a specific Cloud SQL instance identified by project, instance, and database parameters provided at runtime.
+The `cloud-sql-admin-sql-many` tool executes a predefined SQL statement against a specific Cloud SQL instance identified by project, instanceId, and database parameters provided at runtime.
 
 It supports `templateParameters` to allow dynamic values to be injected into the query at runtime.
 
@@ -25,7 +25,7 @@ The following parameters are required at runtime when invoking the tool:
 | **Parameter** | **Type** | **Description**            |
 | :------------ | :------- | :------------------------- |
 | `project`     | string   | The GCP project ID.        |
-| `instance`    | string   | The Cloud SQL instance ID. |
+| `instanceId`  | string   | The Cloud SQL instance ID. |
 | `database`    | string   | The database name.         |
 
 Additional parameters may be required based on the `templateParameters` configured in the tool definition.

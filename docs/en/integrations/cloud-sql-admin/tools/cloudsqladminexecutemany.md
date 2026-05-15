@@ -8,7 +8,7 @@ description: >
 
 ## About
 
-The `cloud-sql-admin-execute-many` tool executes multiple SQL statements against a specific Cloud SQL instance identified by project, instance, and database parameters provided at runtime.
+The `cloud-sql-admin-execute-many` tool executes multiple SQL statements against a specific Cloud SQL instance identified by project, instanceId, and database parameters provided at runtime.
 
 This tool is useful for executing arbitrary SQL queries across multiple database instances without needing to configure a separate tool for each instance.
 
@@ -25,7 +25,7 @@ The following parameters are required at runtime when invoking the tool:
 | **Parameter** | **Type** | **Description**               |
 | :------------ | :------- | :---------------------------- |
 | `project`     | string   | The GCP project ID.           |
-| `instance`    | string   | The Cloud SQL instance ID.    |
+| `instanceId`  | string   | The Cloud SQL instance ID.    |
 | `database`    | string   | The database name.            |
 | `sql`         | string   | The SQL statement to execute. |
 
