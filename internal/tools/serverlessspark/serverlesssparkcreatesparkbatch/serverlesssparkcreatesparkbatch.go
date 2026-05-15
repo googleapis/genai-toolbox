@@ -44,6 +44,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	createbatch.Config
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface

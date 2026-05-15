@@ -257,6 +257,10 @@ tools.
     run based on the provided authentication services.
 * **Implement `init()`** to register the new Tool.
 * **Implement Unit Tests** in a file named `newdbtool_test.go`.
+* **Implement Vector Search** if your new tool supports it. You must:
+  1. Validate that the vector embedding format can be injected successfully into your Tool's statement. If not, update `Tool.EmbedParams()` to pass in a vector formatter into `parameters.EmbedParams`.
+  1. Feel free to reuse existing vector [formatters](internal/embeddingmodels/embeddingmodels.go) or create new ones.
+  1. Add tests and documentation for vector injection and vector search. See the [BigQuery SQL tool](docs/en/integrations/bigquery/tools/bigquery-sql.md) for an example.
 
 #### Adding Integration Tests
 
@@ -323,8 +327,10 @@ When updating documentation, you must adhere to the structural constraints enfor
     2. **Integration-Specific:** `docs/en/integrations/<db>/samples/`. Must include an `_index.md` with strictly only frontmatter.
     3. **General:** `docs/en/samples/`.
   * **Frontmatter Requirements (Maintenance):** To ensure samples appear correctly in the Samples Section, you must provide the following tags:
-    * `is_sample: true` - Required for indexing.
-    * `sample_filters:` - A YAML array used for UI filtering (e.g., `[postgres, go, sql]`).
+    1. `is_sample: true` - Required for indexing.
+    2. **Filtering (`sample_filters`):** Always include `sample_filters` in the frontmatter. You MUST use strict enums for filtering.
+        * **Source of Truth:** Always refer to `.hugo/data/filters.yaml` for the permitted list of Data Sources, Languages, Frameworks, and Categories. All tags are validated via CI (`.ci/lint-docs-sample-filters.sh`).
+        * **Adding New Filters:** If your sample requires a new filter that is not currently listed, add it directly to `.hugo/data/filters.yaml`. You must use **Title Case** (capitalize the first letter of every word, with words separated by spaces). Never use snake_case or lowercase.
 * **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `documentation`), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, update the "Diátaxis Narrative Framework" preamble so AI models understand the purpose of your new section.
 
 #### Adding Prebuilt Tools
@@ -378,6 +384,12 @@ Run the **tool page** linter to validate:
 # From the repository root
 ./.ci/lint-docs-tool-page.sh
 ```
+
+Run the **sample filters** linter to validate frontmatter tags:
+
+```bash
+# From the repository root
+bash .ci/lint-docs-sample-filters.sh
 
 ### Unit Tests
 
@@ -865,7 +877,9 @@ Trigger pull request tests for external contributors by:
 * .github/release-please.yml - Creates GitHub releases
 * .github/ISSUE_TEMPLATE - templates for GitHub issues
 
-### How-to Release an npm Package
+### How-to Release the npm Package
+
+MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server). To release a new version, follow these steps:
 
 **Pre-requisites**
 
@@ -922,7 +936,8 @@ Once all platform-specific packages are live, release the main wrapper package.
    ```bash
    npm install --package-lock-only
    ```
-   _Ensure that a node module entry for each package is present in `package-lock.json`._
+   1. Ensure that a node module entry for each package is present in `package-lock.json`.
+   2. Ensure that the integrity hashes for all packages are updated. If not, delete the file and use the `Sync Lockfile` command to generate a new lockfile.
 4. **Pack and Publish:**
    ```bash
    npm pack .
@@ -933,6 +948,9 @@ Once all platform-specific packages are live, release the main wrapper package.
 **Committing changes to the repo**
 
 Once all packages have been successfully published, please create a Pull Request containing the updated `package-lock.json` files from all `npm/` subdirectories. Ensure that any additional changes made during the release process are also included in this PR. Finally, set the title of the PR to: `chore(main): release npm vX.Y.Z`.
+
+> [!IMPORTANT]
+> Do not commit the binaries to the repo.
 
 **Troubleshooting**
 

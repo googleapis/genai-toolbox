@@ -23,6 +23,7 @@ on:
       - 'docs/**'
       - '.github/workflows/docs**'
       - '.ci/lint-docs-*.sh'
+      - '.hugo/data/filters.yaml'
 
 jobs:
   lint-source-pages:
@@ -54,3 +55,6 @@ jobs:
 
       - name: Run Structure Linter for Tool Pages
         run: bash .ci/lint-docs-tool-page.sh
+
+      - name: Run Sample Filters Linter
+        run: bash .ci/lint-docs-sample-filters.sh

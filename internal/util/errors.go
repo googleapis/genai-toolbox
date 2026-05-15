@@ -118,7 +118,7 @@ func ProcessGeneralError(err error) ToolboxError {
 	errStr := err.Error()
 
 	// Check for Unauthorized
-	if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "status 401") {
+	if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "status 401") || strings.Contains(errStr, "status=401") {
 		return NewClientServerError(
 			"failed to access resource",
 			http.StatusUnauthorized,
@@ -127,10 +127,19 @@ func ProcessGeneralError(err error) ToolboxError {
 	}
 
 	// Check for Forbidden
-	if strings.Contains(errStr, "Error 403") || strings.Contains(errStr, "status 403") {
+	if strings.Contains(errStr, "Error 403") || strings.Contains(errStr, "status 403") || strings.Contains(errStr, "status=403") {
 		return NewClientServerError(
 			"failed to access resource",
 			http.StatusForbidden,
+			err,
+		)
+	}
+
+	// Check for StatusTooManyRequests
+	if strings.Contains(errStr, "Error 429") || strings.Contains(errStr, "status 429") || strings.Contains(errStr, "status=429") {
+		return NewClientServerError(
+			"rate limited - too many requests",
+			http.StatusTooManyRequests,
 			err,
 		)
 	}
