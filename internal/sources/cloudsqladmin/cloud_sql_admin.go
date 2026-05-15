@@ -127,7 +127,6 @@ func (s *Source) GetDefaultProject() string {
 }
 
 // GetService returns a new Cloud SQL Admin service for the given access token.
-
 func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.Service, error) {
 	if s.UseClientOAuth {
 		token := &oauth2.Token{AccessToken: accessToken}
