@@ -53,8 +53,9 @@ type Config struct {
 	Type         string                 `yaml:"type" validate:"required"`
 	Source       string                 `yaml:"source" validate:"required"`
 	Description  string                 `yaml:"description"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	AuthRequired   []string               `yaml:"authRequired"`
+	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	ScopesRequired []string               `yaml:"scopesRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -161,4 +162,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }
