@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -135,7 +136,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	resp, err := sdk.ValidateProject(projectId, "", source.LookerApiSettings())
 	if err != nil {
-		return nil, util.ProcessGeneralError(fmt.Errorf("error making validate_project request: %w", err))
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	logger.DebugContext(ctx, "Got response of %v\n", resp)

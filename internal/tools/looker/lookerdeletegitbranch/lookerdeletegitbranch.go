@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -133,7 +134,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	_, err = sdk.DeleteGitBranch(projectId, branch, source.LookerApiSettings())
 	if err != nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("error making delete_git_branch request: %s", err), http.StatusInternalServerError, err)
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
+		return nil, util.ProcessGeneralError(err)
 	}
 	return fmt.Sprintf("Deleted branch %s", branch), nil
 }

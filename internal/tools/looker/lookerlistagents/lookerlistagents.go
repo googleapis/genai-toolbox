@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -129,7 +130,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	resp, err := sdk.SearchAgents(v4.RequestSearchAgents{}, source.LookerApiSettings())
 	if err != nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("error making search_agents request: %s", err), http.StatusInternalServerError, err)
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
+		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
 

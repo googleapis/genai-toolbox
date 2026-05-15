@@ -320,6 +320,21 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 		r["authRequired"] = []string{}
 	}
 
+	// Parse scopesRequired if present
+	if rawScopes, ok := r["scopesRequired"]; ok {
+		if scopesList, ok := rawScopes.([]any); ok {
+			var scopes []string
+			for _, s := range scopesList {
+				if str, ok := s.(string); ok {
+					scopes = append(scopes, str)
+				}
+			}
+			r["scopesRequired"] = scopes
+		} else {
+			return nil, fmt.Errorf("scopesRequired must be a list of strings")
+		}
+	}
+
 	// validify parameter references
 	if rawParams, ok := r["parameters"]; ok {
 		if paramsList, ok := rawParams.([]any); ok {
