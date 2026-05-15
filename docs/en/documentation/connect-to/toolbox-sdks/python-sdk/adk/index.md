@@ -121,7 +121,7 @@ toolset = ToolboxToolset(
 Configures the ADK-native interactive 3-legged OAuth flow to get consent and credentials from the end-user at runtime. This strategy is passed to the `ToolboxToolset` just like any other credential strategy.
 
 {{< notice note >}}
-The `"openid"` scope is **required** for the `user_identity` strategy to generate a valid OIDC ID Token. Only add other scopes (like `"email"`) if explicitly required by your server-side [**Authorized Invocations**](../../../../configuration/tools/_index.md#authorized-invocations) or [**Authenticated Parameters**](../../../../configuration/tools/_index.md#authenticated-parameters) configurations.
+The `"openid"` scope is **required** for the `user_identity` strategy to generate a valid OIDC ID Token. Only add other scopes (like `"email"`) if explicitly required by your server-side [**Authorized Invocations**](../../../../configuration/tools/#authorized-invocations-toolbox-native-authorization) or [**Authenticated Parameters**](../../../../configuration/tools/#authenticated-parameters) configurations.
 {{< /notice >}}
 
 ```python
