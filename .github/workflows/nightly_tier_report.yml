@@ -77,7 +77,7 @@ jobs:
                 await github.rest.issues.createComment({
                   ...context.repo,
                   issue_number: existingIssue.number,
-                  body: "🎉 The nightly Server Tier Assessment confirms we are now **Tier 1**! Closing this issue."
+                  body: "The nightly Server Tier Assessment confirms we are now **Tier 1**! Closing this issue."
                 });
                 await github.rest.issues.update({
                   ...context.repo,

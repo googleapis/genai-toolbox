@@ -69,7 +69,7 @@ jobs:
           sleep 5 # Give the server a moment to bind to port 5000
 
       - name: Run Conformance Tests
-        uses: modelcontextprotocol/conformance@main
+        uses: modelcontextprotocol/conformance@v0.1.16
         with:
           mode: server
           url: 'http://localhost:5000/mcp'
