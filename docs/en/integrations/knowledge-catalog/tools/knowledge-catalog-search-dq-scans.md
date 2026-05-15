@@ -6,6 +6,7 @@ description: >
   A "dataplex-search-dq-scans" tool allows to search for data quality scans based on the provided parameters.
 aliases:
 - /resources/tools/dataplex-search-dq-scans
+- /integrations/dataplex/tools/dataplex-search-dq-scans/
 ---
 
 ## About
