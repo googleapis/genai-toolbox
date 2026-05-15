@@ -15,10 +15,8 @@
 package cloudsql
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -150,7 +148,6 @@ func TestExecuteSqlManyToolEndpoints(t *testing.T) {
 		body        string
 		want        string
 		expectError bool
-		errorStatus int
 	}{
 		{
 			name:     "successful execute-sql-many",
@@ -165,68 +162,51 @@ func TestExecuteSqlManyToolEndpoints(t *testing.T) {
 			want:     `{"results":[{"columns":[{"name":"result","type":"STRING"}],"rows":[{"values":[{"value":"success"}]}]}]}`,
 		},
 		{
-			name:     "missing required param in execute-sql-many",
-			toolName: "execute-sql-many",
-			body:     `{"project": "p1", "instanceId": "i1", "database": "db1"}`,
-			want:     `{"error":"parameter \"sql\" is required"}`,
+			name:        "missing required param in execute-sql-many",
+			toolName:    "execute-sql-many",
+			body:        `{"project": "p1", "instanceId": "i1", "database": "db1"}`,
+			want:        `parameter "sql" is required`,
+			expectError: true,
 		},
 	}
 
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
-			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
+			var args map[string]any
+			if err := json.Unmarshal([]byte(tc.body), &args); err != nil {
+				t.Fatalf("failed to unmarshal body: %v", err)
 			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
+
+			statusCode, mcpResp, err := tests.InvokeMCPTool(t, tc.toolName, args, nil)
 			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
+				t.Fatalf("native error executing %s: %s", tc.toolName, err)
 			}
-			defer resp.Body.Close()
+
+			if statusCode != http.StatusOK {
+				t.Fatalf("expected status 200, got %d", statusCode)
+			}
 
 			if tc.expectError {
-				if resp.StatusCode != tc.errorStatus {
-					bodyBytes, _ := io.ReadAll(resp.Body)
-					t.Fatalf("expected status %d but got %d: %s", tc.errorStatus, resp.StatusCode, string(bodyBytes))
-				}
+				tests.AssertMCPError(t, mcpResp, tc.want)
 				return
 			}
 
-			if resp.StatusCode != http.StatusOK {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			if mcpResp.Result.IsError {
+				t.Fatalf("expected success result, got error: %v", mcpResp.Result)
 			}
 
-			var result struct {
-				Result string `json:"result"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-				t.Fatalf("failed to decode response: %v", err)
+			if len(mcpResp.Result.Content) == 0 {
+				t.Fatalf("expected at least one content item, got none")
 			}
 
-			if strings.Contains(result.Result, `"error":`) {
-				var gotMap, wantMap map[string]any
-				if err := json.Unmarshal([]byte(result.Result), &gotMap); err != nil {
-					t.Fatalf("failed to unmarshal result error object: %v", err)
-				}
-				if err := json.Unmarshal([]byte(tc.want), &wantMap); err != nil {
-					t.Fatalf("failed to unmarshal want error object: %v", err)
-				}
-				if !reflect.DeepEqual(gotMap, wantMap) {
-					t.Fatalf("unexpected error result: got %+v, want %+v", gotMap, wantMap)
-				}
-				return
-			}
-
+			gotText := mcpResp.Result.Content[0].Text
 			var got, want map[string]any
-			if err := json.Unmarshal([]byte(result.Result), &got); err != nil {
-				t.Fatalf("failed to unmarshal result object: %v. Result was: %s", err, result.Result)
+			if err := json.Unmarshal([]byte(gotText), &got); err != nil {
+				t.Fatalf("failed to unmarshal gotText: %v\ngotText was: %s", err, gotText)
 			}
 			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
-				t.Fatalf("failed to unmarshal want object: %v", err)
+				t.Fatalf("failed to unmarshal want: %v", err)
 			}
 
 			if !reflect.DeepEqual(got, want) {
