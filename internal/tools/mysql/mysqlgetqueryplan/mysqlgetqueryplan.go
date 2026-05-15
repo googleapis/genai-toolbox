@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -96,6 +97,40 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
+// explainableStatements is the set of SQL statement types that MySQL's EXPLAIN
+// accepts. Crucially this excludes ANALYZE, which causes EXPLAIN ANALYZE to
+// actually execute the query rather than merely planning it.
+var explainableStatements = map[string]bool{
+	"SELECT":  true,
+	"DELETE":  true,
+	"INSERT":  true,
+	"REPLACE": true,
+	"UPDATE":  true,
+	"TABLE":   true,
+	"WITH":    true,
+	"VALUES":  true,
+	"FOR":     true,
+}
+
+// ValidateSQLStatement rejects inputs that could turn EXPLAIN into an
+// execution primitive (ANALYZE keyword) or enable multi-statement attacks
+// (semicolons). Only the DML statement types that MySQL's EXPLAIN legitimately
+// supports are accepted.
+func ValidateSQLStatement(sqlStr string) error {
+	if strings.ContainsRune(sqlStr, ';') {
+		return fmt.Errorf("sql_statement must not contain semicolons")
+	}
+	fields := strings.Fields(sqlStr)
+	if len(fields) == 0 {
+		return fmt.Errorf("sql_statement must not be empty")
+	}
+	firstToken := strings.ToUpper(fields[0])
+	if !explainableStatements[firstToken] {
+		return fmt.Errorf("sql_statement must begin with a DML keyword (SELECT, INSERT, UPDATE, DELETE, REPLACE, TABLE, WITH, VALUES, FOR); got %q", firstToken)
+	}
+	return nil
+}
+
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
@@ -106,6 +141,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	sqlStr, ok := paramsMap["sql_statement"].(string)
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("unable to get cast %s", paramsMap["sql_statement"]), nil)
+	}
+
+	if err := ValidateSQLStatement(sqlStr); err != nil {
+		return nil, util.NewAgentError(err.Error(), nil)
 	}
 
 	// Log the query executed for debugging.
