@@ -174,7 +174,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 		return []any{}, nil
 	}
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		values := make([]any, len(cols))
 		for i, colType := range colTypes {
