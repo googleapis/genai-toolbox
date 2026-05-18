@@ -22,26 +22,10 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// ArgMcpManifest is the simplified manifest structure for an argument required for prompts.
-type ArgMcpManifest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Required    bool   `json:"required"`
-}
-
 // Argument is a wrapper around a parameters.Parameter that provides prompt-specific functionality.
 // If the 'type' field is not specified in a YAML definition, it defaults to 'string'.
 type Argument struct {
 	parameters.Parameter
-}
-
-// McpManifest returns the simplified manifest structure required for prompts.
-func (a Argument) McpManifest() ArgMcpManifest {
-	return ArgMcpManifest{
-		Name:        a.GetName(),
-		Description: a.Manifest().Description,
-		Required:    parameters.CheckParamRequired(a.GetRequired(), a.GetDefault()),
-	}
 }
 
 // Arguments is a slice of Argument.

@@ -12,39 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  spanner-source:
-    kind: spanner
-    project: ${SPANNER_PROJECT}
-    instance: ${SPANNER_INSTANCE}
-    database: ${SPANNER_DATABASE}
-    dialect: ${SPANNER_DIALECT:googlesql}
-
+kind: source
+name: spanner-source
+type: spanner
+project: ${SPANNER_PROJECT}
+instance: ${SPANNER_INSTANCE}
+database: ${SPANNER_DATABASE}
+dialect: ${SPANNER_DIALECT:googlesql}
+---
+kind: tool
+name: execute_sql
+type: spanner-execute-sql
+source: spanner-source
+description: Use this tool to execute DML SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+---
+kind: tool
+name: execute_sql_dql
+type: spanner-execute-sql
+source: spanner-source
+description: Use this tool to execute DQL SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+readOnly: true
+---
+kind: tool
+name: list_tables
+type: spanner-list-tables
+source: spanner-source
+description: Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas. The output can be 'simple' (table names only) or 'detailed' (full schema).
+---
+kind: tool
+name: list_graphs
+type: spanner-list-graphs
+source: spanner-source
+description: Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema).
+---
+kind: toolset
+name: data
 tools:
-  execute_sql:
-    kind: spanner-execute-sql
-    source: spanner-source
-    description: Use this tool to execute DML SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
-
-  execute_sql_dql:
-    kind: spanner-execute-sql
-    source: spanner-source
-    description: Use this tool to execute DQL SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
-    readOnly: true
-
-  list_tables:
-    kind: spanner-list-tables
-    source: spanner-source
-    description: "Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas. The output can be 'simple' (table names only) or 'detailed' (full schema)."
-
-  list_graphs:
-    kind: spanner-list-graphs
-    source: spanner-source
-    description: "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema)."
-
-toolsets:
-  data:
-    - execute_sql
-    - execute_sql_dql
-    - list_tables
-    - list_graphs
+- execute_sql
+- execute_sql_dql
+- list_tables
+- list_graphs

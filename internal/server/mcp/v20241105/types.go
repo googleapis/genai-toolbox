@@ -15,9 +15,8 @@
 package v20241105
 
 import (
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // SERVER_NAME is the server name used in Implementation.
@@ -71,7 +70,22 @@ type ListToolsRequest struct {
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
 	PaginatedResult
-	Tools []tools.McpManifest `json:"tools"`
+	Tools []Tool `json:"tools"`
+}
+
+type Tool struct {
+	// The name of the tool.
+	Name string `json:"name"`
+	// A human-readable description of the tool.
+	Description string `json:"description,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+}
+
+type InputSchema struct {
+	Type       string                                     `json:"type"`
+	Properties map[string]parameters.ParameterMcpManifest `json:"properties"`
+	Required   []string                                   `json:"required"`
 }
 
 // Used by the client to invoke a tool provided by the server.
@@ -150,7 +164,7 @@ type ListPromptsRequest struct {
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
 	PaginatedResult
-	Prompts []prompts.McpManifest `json:"prompts"`
+	Prompts []Prompt `json:"prompts"`
 }
 
 // Used by the client to get a prompt provided by the server.
@@ -167,6 +181,26 @@ type GetPromptResult struct {
 	jsonrpc.Result
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
+}
+
+// A prompt or prompt template that the server offers.
+type Prompt struct {
+	// The name of the prompt or prompt template.
+	Name string `json:"name"`
+	// An optional description of what this prompt provides
+	Description string `json:"description,omitempty"`
+	// A list of arguments to use for templating the prompt.
+	Arguments []PromptArgument `json:"arguments,omitempty"`
+}
+
+// Describes an argument that a prompt can accept.
+type PromptArgument struct {
+	// The name of the argument.
+	Name string `json:"name"`
+	// A human-readable description of the argument.
+	Description string `json:"description,omitempty"`
+	// Whether this argument must be provided.
+	Required bool `json:"required,omitempty"`
 }
 
 // Describes a message returned as part of a prompt.

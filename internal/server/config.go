@@ -40,6 +40,10 @@ type ServerConfig struct {
 	Address string
 	// Port is the port the server will listen on.
 	Port int
+	// CertFile is the path to tls certificate file
+	CertFile string
+	// KeyFile is the path to TLS key file
+	KeyFile string
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
 	// AuthServiceConfigs defines what sources of authentication are available for tools.
@@ -64,6 +68,8 @@ type ServerConfig struct {
 	TelemetryOTLP string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
+	// SQLCommenter enables appending SQLCommenter-format comments to SQL statements.
+	SQLCommenter bool
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
@@ -314,6 +320,21 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 	// Make `authRequired` an empty list instead of nil for Tool manifest
 	if r["authRequired"] == nil {
 		r["authRequired"] = []string{}
+	}
+
+	// Parse scopesRequired if present
+	if rawScopes, ok := r["scopesRequired"]; ok {
+		if scopesList, ok := rawScopes.([]any); ok {
+			var scopes []string
+			for _, s := range scopesList {
+				if str, ok := s.(string); ok {
+					scopes = append(scopes, str)
+				}
+			}
+			r["scopesRequired"] = scopes
+		} else {
+			return nil, fmt.Errorf("scopesRequired must be a list of strings")
+		}
 	}
 
 	// validify parameter references

@@ -15,9 +15,9 @@
 package v20251125
 
 import (
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // SERVER_NAME is the server name used in Implementation.
@@ -71,7 +71,29 @@ type ListToolsRequest struct {
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
 	PaginatedResult
-	Tools []tools.McpManifest `json:"tools"`
+	Tools []Tool `json:"tools"`
+}
+
+type Tool struct {
+	util.BaseMetadata
+	/**
+	 * A human-readable description of the tool.
+	 *
+	 * This can be used by clients to improve the LLM's understanding of available tools. It can be thought of like a "hint" to the model.
+	 */
+	Description string `json:"description,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+	// Optional additional tool information.
+	Annotations *ToolAnnotations `json:"annotations,omitempty"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
+	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+type InputSchema struct {
+	Type       string                                     `json:"type"`
+	Properties map[string]parameters.ParameterMcpManifest `json:"properties"`
+	Required   []string                                   `json:"required"`
 }
 
 // Used by the client to invoke a tool provided by the server.
@@ -164,23 +186,23 @@ type ToolAnnotations struct {
 	Title string `json:"title,omitempty"`
 	// If true, the tool does not modify its environment.
 	// Default: false
-	ReadOnlyHint bool `json:"readOnlyHint,omitempty"`
+	ReadOnlyHint *bool `json:"readOnlyHint,omitempty"`
 	// If true, the tool may perform destructive updates to its environment.
 	// If false, the tool performs only additive updates.
 	// (This property is meaningful only when `readOnlyHint == false`)
 	// Default: true
-	DestructiveHint bool `json:"destructiveHint,omitempty"`
+	DestructiveHint *bool `json:"destructiveHint,omitempty"`
 	// If true, calling the tool repeatedly with the same arguments
 	// will have no additional effect on the its environment.
 	// (This property is meaningful only when `readOnlyHint == false`)
 	// Default: false
-	IdempotentHint bool `json:"idempotentHint,omitempty"`
+	IdempotentHint *bool `json:"idempotentHint,omitempty"`
 	// If true, this tool may interact with an "open world" of external
 	// entities. If false, the tool's domain of interaction is closed.
 	// For example, the world of a web search tool is open, whereas that
 	// of a memory tool is not.
 	// Default: true
-	OpenWorldHint bool `json:"openWorldHint,omitempty"`
+	OpenWorldHint *bool `json:"openWorldHint,omitempty"`
 }
 
 /* Prompts */
@@ -193,7 +215,7 @@ type ListPromptsRequest struct {
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
 	PaginatedResult
-	Prompts []prompts.McpManifest `json:"prompts"`
+	Prompts []Prompt `json:"prompts"`
 }
 
 // Used by the client to get a prompt provided by the server.
@@ -210,6 +232,26 @@ type GetPromptResult struct {
 	jsonrpc.Result
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
+}
+
+// A prompt or prompt template that the server offers.
+type Prompt struct {
+	util.BaseMetadata
+	// An optional description of what this prompt provides
+	Description string `json:"description,omitempty"`
+	// A list of arguments to use for templating the prompt.
+	Arguments []PromptArgument `json:"arguments,omitempty"`
+	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
+	Metadata map[string]any `json:"_meta,omitempty"`
+}
+
+// Describes an argument that a prompt can accept.
+type PromptArgument struct {
+	util.BaseMetadata
+	// A human-readable description of the argument.
+	Description string `json:"description,omitempty"`
+	// Whether this argument must be provided.
+	Required bool `json:"required,omitempty"`
 }
 
 // Describes a message returned as part of a prompt.

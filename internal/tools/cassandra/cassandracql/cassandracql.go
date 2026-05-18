@@ -59,6 +59,8 @@ type Config struct {
 	Parameters         parameters.Parameters  `yaml:"parameters"`
 	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
 	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -75,14 +77,10 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, err
 	}
 
-	annotations := tools.GetAnnotationsOrDefault(c.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, annotations)
-
 	t := Tool{
-		Config:      c,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:    c,
+		AllParams: allParameters,
+		manifest:  tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
 	}
 	return t, nil
 }
@@ -91,9 +89,24 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	AllParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -139,11 +152,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-// McpManifest implements tools.Tool.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
@@ -156,4 +164,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.AllParams
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

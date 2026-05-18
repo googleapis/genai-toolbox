@@ -78,6 +78,8 @@ type Config struct {
 	// Parameters for template substitution
 	Parameters  parameters.Parameters  `yaml:"parameters"`
 	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -95,15 +97,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		cfg.Limit = fmt.Sprintf("%d", defaultLimit)
 	}
 
-	// Create MCP manifest
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters, annotations)
-
 	// finish tool setup
 	t := Tool{
-		Config:      cfg,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:   cfg,
+		manifest: tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -116,8 +113,23 @@ type Tool struct {
 	Config
 	Client *firestoreapi.Client
 
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	manifest tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -392,11 +404,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-// McpManifest returns the MCP manifest
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 // Authorized checks if the tool is authorized based on verified auth services
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
@@ -412,4 +419,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

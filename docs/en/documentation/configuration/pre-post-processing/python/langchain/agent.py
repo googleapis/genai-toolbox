@@ -84,7 +84,7 @@ async def enrich_response(request, handler):
 async def main():
     async with ToolboxClient("http://127.0.0.1:5000") as client:
         tools = await client.aload_toolset("my-toolset")
-        model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+        model = ChatGoogleGenerativeAI(model="gemini-3-flash-preview")
         agent = create_agent(
             system_prompt=system_prompt,
             model=model,
