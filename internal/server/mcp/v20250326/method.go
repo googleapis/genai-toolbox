@@ -40,11 +40,11 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
-		return toolsListHandler(id, toolset, body)
+		return toolsListHandler(id, resourceMgr, toolset, body)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
-		return promptsListHandler(ctx, id, promptset, body)
+		return promptsListHandler(ctx, id, resourceMgr, promptset, body)
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, promptset, resourceMgr, body)
 	default:
@@ -62,27 +62,24 @@ func pingHandler(id jsonrpc.RequestId) (any, error) {
 	}, nil
 }
 
-func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	// exclude annotations from this version
-	manifests := make([]tools.McpManifest, len(toolset.McpManifest))
-	for i, m := range toolset.McpManifest {
-		m.Annotations = nil
-		manifests[i] = m
+	toolsMap := resourceMgr.GetToolsMap()
+	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	if err != nil {
+		err = fmt.Errorf("error generating manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	result := ListToolsResult{
-		Tools: manifests,
-	}
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  listToolsResult,
 	}, nil
 }
 
@@ -318,7 +315,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 }
 
 // promptsListHandler handles the "prompts/list" method.
-func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset prompts.Promptset, body []byte) (any, error) {
+func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, promptset prompts.Promptset, body []byte) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -332,14 +329,17 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset pro
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	result := ListPromptsResult{
-		Prompts: promptset.McpManifest,
+	promptsMap := resourceMgr.GetPromptsMap()
+	listPromptsResult, err := GenerateListPromptsResult(promptset, promptsMap)
+	if err != nil {
+		err = fmt.Errorf("error generating manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("returning %d prompts", len(promptset.McpManifest)))
+	logger.DebugContext(ctx, fmt.Sprintf("returning %d prompts", len(listPromptsResult.Prompts)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  listPromptsResult,
 	}, nil
 }
 

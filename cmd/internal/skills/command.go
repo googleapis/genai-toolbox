@@ -242,7 +242,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		for _, t := range ts.Tools {
 			if t != nil {
 				tool := *t
-				toolsetTools[tool.McpManifest().Name] = tool
+				toolsetTools[tool.GetName()] = tool
 			}
 		}
 		return toolsetTools

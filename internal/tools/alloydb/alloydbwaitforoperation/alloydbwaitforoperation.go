@@ -146,13 +146,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	description := cfg.Description
-	if description == "" {
-		description = "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+	if cfg.Description == "" {
+		cfg.Description = "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
 	}
-
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, annotations)
 
 	var delay time.Duration
 	if cfg.Delay == "" {
@@ -187,30 +183,44 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
-		Delay:       delay,
-		MaxDelay:    maxDelay,
-		Multiplier:  multiplier,
-		MaxRetries:  maxRetries,
+		Config:     cfg,
+		AllParams:  allParameters,
+		manifest:   tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		Delay:      delay,
+		MaxDelay:   maxDelay,
+		Multiplier: multiplier,
+		MaxRetries: maxRetries,
 	}, nil
 }
 
 // Tool represents the wait-for-operation tool.
 type Tool struct {
 	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	Client      *http.Client
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	AllParams parameters.Parameters `yaml:"allParams"`
+	Client    *http.Client
+	manifest  tools.Manifest
 
 	// Polling configuration
 	Delay      time.Duration
 	MaxDelay   time.Duration
 	Multiplier float64
 	MaxRetries int
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -280,11 +290,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 // Manifest returns the tool's manifest.
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-// McpManifest returns the tool's MCP manifest.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 // Authorized checks if the tool is authorized.
