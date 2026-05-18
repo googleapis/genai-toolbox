@@ -116,14 +116,14 @@ type CAPayload struct {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-	ScopesRequired []string             `yaml:"scopesRequired"`
-	DataAgent    string                 `yaml:"dataAgent,omitempty"`
+	Name           string                 `yaml:"name" validate:"required"`
+	Type           string                 `yaml:"type" validate:"required"`
+	Source         string                 `yaml:"source" validate:"required"`
+	Description    string                 `yaml:"description" validate:"required"`
+	AuthRequired   []string               `yaml:"authRequired"`
+	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	ScopesRequired []string               `yaml:"scopesRequired"`
+	DataAgent      string                 `yaml:"dataAgent,omitempty"`
 }
 
 // validate interface
