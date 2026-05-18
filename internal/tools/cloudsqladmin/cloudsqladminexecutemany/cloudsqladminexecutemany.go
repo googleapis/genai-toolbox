@@ -49,10 +49,10 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description"`
+	Name           string                 `yaml:"name" validate:"required"`
+	Type           string                 `yaml:"type" validate:"required"`
+	Source         string                 `yaml:"source" validate:"required"`
+	Description    string                 `yaml:"description"`
 	AuthRequired   []string               `yaml:"authRequired"`
 	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 	ScopesRequired []string               `yaml:"scopesRequired"`
