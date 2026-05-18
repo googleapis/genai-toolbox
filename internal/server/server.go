@@ -51,16 +51,17 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version         string
-	toolboxUrl      string
-	srv             *http.Server
-	listener        net.Listener
-	root            chi.Router
-	logger          log.Logger
-	instrumentation *telemetry.Instrumentation
-	sseManager      *sseManager
-	ResourceMgr     *resources.ResourceManager
-	mcpPrmFile      string
+	version             string
+	sqlCommenterEnabled bool
+	toolboxUrl          string
+	srv                 *http.Server
+	listener            net.Listener
+	root                chi.Router
+	logger              log.Logger
+	instrumentation     *telemetry.Instrumentation
+	sseManager          *sseManager
+	ResourceMgr         *resources.ResourceManager
+	mcpPrmFile          string
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -380,15 +381,16 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
-		version:         cfg.Version,
-		srv:             srv,
-		root:            r,
-		logger:          l,
-		instrumentation: instrumentation,
-		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
-		toolboxUrl:      cfg.ToolboxUrl,
-		mcpPrmFile:      cfg.McpPrmFile,
+		version:             cfg.Version,
+		sqlCommenterEnabled: cfg.SQLCommenter,
+		srv:                 srv,
+		root:                r,
+		logger:              l,
+		instrumentation:     instrumentation,
+		sseManager:          sseManager,
+		ResourceMgr:         resourceManager,
+		toolboxUrl:          cfg.ToolboxUrl,
+		mcpPrmFile:          cfg.McpPrmFile,
 	}
 
 	// cors
