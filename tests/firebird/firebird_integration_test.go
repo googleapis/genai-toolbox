@@ -129,7 +129,7 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := getFirebirdWants()
 	nullWant := `[{"id":4,"name":null}]`
-	select1Statement := `"SELECT 1 AS \"constant\" FROM RDB$DATABASE;"`
+	select1Statement := `SELECT 1 AS "constant" FROM RDB$DATABASE;`
 	templateParamCreateColArray := `["id INTEGER","name VARCHAR(255)","age INTEGER"]`
 
 	// Run tests

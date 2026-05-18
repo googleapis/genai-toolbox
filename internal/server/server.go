@@ -51,16 +51,17 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version         string
-	toolboxUrl      string
-	srv             *http.Server
-	listener        net.Listener
-	root            chi.Router
-	logger          log.Logger
-	instrumentation *telemetry.Instrumentation
-	sseManager      *sseManager
-	ResourceMgr     *resources.ResourceManager
-	mcpPrmFile      string
+	version             string
+	sqlCommenterEnabled bool
+	toolboxUrl          string
+	srv                 *http.Server
+	listener            net.Listener
+	root                chi.Router
+	logger              log.Logger
+	instrumentation     *telemetry.Instrumentation
+	sseManager          *sseManager
+	ResourceMgr         *resources.ResourceManager
+	mcpPrmFile          string
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -380,15 +381,16 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
-		version:         cfg.Version,
-		srv:             srv,
-		root:            r,
-		logger:          l,
-		instrumentation: instrumentation,
-		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
-		toolboxUrl:      cfg.ToolboxUrl,
-		mcpPrmFile:      cfg.McpPrmFile,
+		version:             cfg.Version,
+		sqlCommenterEnabled: cfg.SQLCommenter,
+		srv:                 srv,
+		root:                r,
+		logger:              l,
+		instrumentation:     instrumentation,
+		sseManager:          sseManager,
+		ResourceMgr:         resourceManager,
+		toolboxUrl:          cfg.ToolboxUrl,
+		mcpPrmFile:          cfg.McpPrmFile,
 	}
 
 	// cors
@@ -511,7 +513,8 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				return
 			}
 
-			if err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header); err != nil {
+			claims, err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header)
+			if err != nil {
 				var mcpErr *generic.MCPAuthError
 				if errors.As(err, &mcpErr) {
 					switch mcpErr.Code {
@@ -537,6 +540,9 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INTERNAL_ERROR, "Internal Server Error", nil))
 				return
 			}
+
+			ctx := util.WithAuthTokenClaims(r.Context(), claims)
+			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
 		})

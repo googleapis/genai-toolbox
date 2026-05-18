@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -60,6 +61,8 @@ type Config struct {
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -79,16 +82,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	)
 	params = append(params, vizParameter)
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		readOnlyHint := true
-		annotations = &tools.ToolAnnotations{
-			ReadOnlyHint: &readOnlyHint,
-		}
-	}
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
-
 	// finish tool setup
 	return Tool{
 		Config:     cfg,
@@ -98,7 +91,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -107,9 +99,31 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	annotations := t.Annotations
+	if annotations == nil {
+		readOnlyHint := true
+		annotations = &tools.ToolAnnotations{
+			ReadOnlyHint: &readOnlyHint,
+		}
+	}
+	return annotations
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -146,6 +160,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	respFields := "id,slug,share_url,expanded_share_url"
 	resp, err := sdk.CreateQuery(*wq, respFields, source.LookerApiSettings())
 	if err != nil {
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
 		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = ", resp)
@@ -176,10 +193,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
@@ -202,4 +215,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

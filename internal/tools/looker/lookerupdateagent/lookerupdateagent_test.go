@@ -227,33 +227,6 @@ func TestManifest(t *testing.T) {
 	}
 }
 
-func TestMcpManifest(t *testing.T) {
-	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
-	}
-
-	tool, err := cfg.Initialize(nil)
-	if err != nil {
-		t.Fatalf("failed to initialize tool: %v", err)
-	}
-
-	mcp := tool.McpManifest()
-	if mcp.Name != cfg.Name {
-		t.Errorf("mcp manifest name mismatch: got %q, want %q", mcp.Name, cfg.Name)
-	}
-
-	properties := mcp.InputSchema.Properties
-	expectedParams := []string{"agent_id", "name", "instructions", "sources", "code_interpreter"}
-	for _, p := range expectedParams {
-		if _, ok := properties[p]; !ok {
-			t.Errorf("parameter %q not found in MCP properties", p)
-		}
-	}
-}
-
 func TestAnnotations(t *testing.T) {
 	readOnlyTrue := true
 	cfg := lkr.Config{
@@ -271,14 +244,14 @@ func TestAnnotations(t *testing.T) {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	mcp := tool.McpManifest()
-	if mcp.Annotations == nil {
+	annotations := tool.GetAnnotations()
+	if annotations == nil {
 		t.Fatal("mcp manifest annotations is nil")
 	}
-	if mcp.Annotations.ReadOnlyHint == nil {
+	if annotations.ReadOnlyHint == nil {
 		t.Fatal("mcp manifest ReadOnlyHint is nil")
 	}
-	if *mcp.Annotations.ReadOnlyHint != false {
-		t.Errorf("ReadOnlyHint should be false, got %v", *mcp.Annotations.ReadOnlyHint)
+	if *annotations.ReadOnlyHint != false {
+		t.Errorf("ReadOnlyHint should be false, got %v", *annotations.ReadOnlyHint)
 	}
 }

@@ -38,12 +38,15 @@ var _ auth.AuthServiceConfig = Config{}
 
 // Auth service configuration
 type Config struct {
-	Name                string   `yaml:"name" validate:"required"`
-	Type                string   `yaml:"type" validate:"required"`
-	Audience            string   `yaml:"audience" validate:"required"`
-	McpEnabled          bool     `yaml:"mcpEnabled"`
-	AuthorizationServer string   `yaml:"authorizationServer" validate:"required"`
-	ScopesRequired      []string `yaml:"scopesRequired"`
+	Name                   string   `yaml:"name" validate:"required"`
+	Type                   string   `yaml:"type" validate:"required"`
+	Audience               string   `yaml:"audience" validate:"required"`
+	McpEnabled             bool     `yaml:"mcpEnabled"`
+	AuthorizationServer    string   `yaml:"authorizationServer" validate:"required"`
+	ScopesRequired         []string `yaml:"scopesRequired"`
+	IntrospectionEndpoint  string   `yaml:"introspectionEndpoint"`
+	IntrospectionMethod    string   `yaml:"introspectionMethod"`
+	IntrospectionParamName string   `yaml:"introspectionParamName"`
 }
 
 // Returns the auth service type
@@ -56,9 +59,14 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 	httpClient := newSecureHTTPClient()
 
 	// Discover OIDC endpoints
-	jwksURL, introspectionURL, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
+	jwksURL, introspectionURL, issuer, err := discoverOIDCConfig(httpClient, cfg.AuthorizationServer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover OIDC config: %w", err)
+	}
+
+	// Override introspection URL if configured
+	if cfg.IntrospectionEndpoint != "" {
+		introspectionURL = cfg.IntrospectionEndpoint
 	}
 
 	// Create the keyfunc to fetch and cache the JWKS in the background
@@ -72,6 +80,7 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 		kf:               kf,
 		client:           httpClient,
 		introspectionURL: introspectionURL,
+		issuer:           issuer,
 	}
 	return a, nil
 }
@@ -92,10 +101,10 @@ func newSecureHTTPClient() *http.Client {
 	}
 }
 
-func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksURI string, introspectionEndpoint string, err error) {
+func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksURI string, introspectionEndpoint string, issuer string, err error) {
 	u, err := url.Parse(AuthorizationServer)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid auth URL")
+		return "", "", "", fmt.Errorf("invalid auth URL")
 	}
 	if u.Scheme != "https" {
 		log.Printf("WARNING: HTTP instead of HTTPS is being used for AuthorizationServer: %s", AuthorizationServer)
@@ -103,47 +112,48 @@ func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksUR
 
 	oidcConfigURL, err := url.JoinPath(AuthorizationServer, ".well-known/openid-configuration")
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	resp, err := client.Get(oidcConfigURL)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to fetch OIDC config: %w", err)
+		return "", "", "", fmt.Errorf("failed to fetch OIDC config: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return "", "", "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
 	// Limit read size to 1MB to prevent memory exhaustion
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	var config struct {
+		Issuer                string `json:"issuer"`
 		JwksUri               string `json:"jwks_uri"`
 		IntrospectionEndpoint string `json:"introspection_endpoint"`
 	}
 	if err := json.Unmarshal(body, &config); err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	if config.JwksUri == "" {
-		return "", "", fmt.Errorf("jwks_uri not found in config")
+		return "", "", "", fmt.Errorf("jwks_uri not found in config")
 	}
 
 	// Sanitize the resulting JWKS URI before returning it
 	parsedJWKS, err := url.Parse(config.JwksUri)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid jwks_uri detected")
+		return "", "", "", fmt.Errorf("invalid jwks_uri detected")
 	}
 	if parsedJWKS.Scheme != "https" {
 		log.Printf("WARNING: HTTP instead of HTTPS is being used for JWKS URI: %s", config.JwksUri)
 	}
 
-	return config.JwksUri, config.IntrospectionEndpoint, nil
+	return config.JwksUri, config.IntrospectionEndpoint, config.Issuer, nil
 }
 
 var _ auth.AuthService = AuthService{}
@@ -154,6 +164,7 @@ type AuthService struct {
 	kf               keyfunc.Keyfunc
 	client           *http.Client
 	introspectionURL string
+	issuer           string
 }
 
 // Returns the auth service type
@@ -227,15 +238,15 @@ type MCPAuthError struct {
 func (e *MCPAuthError) Error() string { return e.Message }
 
 // ValidateMCPAuth handles MCP auth token validation
-func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) error {
+func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[string]any, error) {
 	tokenString := h.Get("Authorization")
 	if tokenString == "" {
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing access token", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing access token", ScopesRequired: a.ScopesRequired}
 	}
 
 	headerParts := strings.Split(tokenString, " ")
 	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "authorization header must be in the format 'Bearer <token>'", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "authorization header must be in the format 'Bearer <token>'", ScopesRequired: a.ScopesRequired}
 	}
 
 	tokenStr := headerParts[1]
@@ -251,118 +262,177 @@ func isJWTFormat(token string) bool {
 }
 
 // validateJwtToken validates a JWT token locally
-func (a AuthService) validateJwtToken(ctx context.Context, tokenStr string) error {
+func (a AuthService) validateJwtToken(ctx context.Context, tokenStr string) (map[string]any, error) {
 	token, err := jwt.Parse(tokenStr, a.kf.Keyfunc)
 	if err != nil || !token.Valid {
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid or expired token", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid or expired token", ScopesRequired: a.ScopesRequired}
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid JWT claims format", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid JWT claims format", ScopesRequired: a.ScopesRequired}
+	}
+
+	// Validate issuer
+	iss, err := claims.GetIssuer()
+	if err != nil {
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "could not parse issuer from token", ScopesRequired: a.ScopesRequired}
+	}
+	if iss == "" {
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer claim in token", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Validate audience
 	aud, err := claims.GetAudience()
 	if err != nil {
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "could not parse audience from token", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "could not parse audience from token", ScopesRequired: a.ScopesRequired}
 	}
 
 	scopeClaim, _ := claims["scope"].(string)
 
-	return a.validateClaims(ctx, aud, scopeClaim)
+	err = a.validateClaims(ctx, iss, aud, scopeClaim)
+	if err != nil {
+		return nil, err
+	}
+	return claims, nil
 }
 
 // validateOpaqueToken validates an opaque token by calling the introspection endpoint
-func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) error {
+func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (map[string]any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to get logger from context: %w", err)
+		return nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	introspectionURL := a.introspectionURL
 	if introspectionURL == "" {
 		introspectionURL, err = url.JoinPath(a.AuthorizationServer, "introspect")
 		if err != nil {
-			return fmt.Errorf("failed to construct introspection URL: %w", err)
+			return nil, fmt.Errorf("failed to construct introspection URL: %w", err)
 		}
 	}
 
-	data := url.Values{}
-	data.Set("token", tokenStr)
-
-	req, err := http.NewRequestWithContext(ctx, "POST", introspectionURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		return fmt.Errorf("failed to create introspection request: %w", err)
+	paramName := a.IntrospectionParamName
+	if paramName == "" {
+		paramName = "token"
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	var req *http.Request
+	if a.IntrospectionMethod == "GET" {
+		u, err := url.Parse(introspectionURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse introspection URL: %w", err)
+		}
+		q := u.Query()
+		q.Set(paramName, tokenStr)
+		u.RawQuery = q.Encode()
+		req, err = http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create introspection request: %w", err)
+		}
+	} else {
+		data := url.Values{}
+		data.Set(paramName, tokenStr)
+		req, err = http.NewRequestWithContext(ctx, "POST", introspectionURL, strings.NewReader(data.Encode()))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create introspection request: %w", err)
+		}
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
 	req.Header.Set("Accept", "application/json")
 
 	// Send request to auth server's introspection endpoint
 	resp, err := a.client.Do(req)
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to call introspection endpoint: %v", err)
-		return &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to call introspection endpoint: %v", err), ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusInternalServerError, Message: fmt.Sprintf("failed to call introspection endpoint: %v", err), ScopesRequired: a.ScopesRequired}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		logger.WarnContext(ctx, "introspection failed with status: %d", resp.StatusCode)
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("introspection failed with status: %d", resp.StatusCode), ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("introspection failed with status: %d", resp.StatusCode), ScopesRequired: a.ScopesRequired}
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return fmt.Errorf("failed to read introspection response: %w", err)
+		return nil, fmt.Errorf("failed to read introspection response: %w", err)
 	}
 
 	var introspectResp struct {
-		Active bool            `json:"active"`
-		Scope  string          `json:"scope"`
-		Aud    json.RawMessage `json:"aud"`
-		Exp    int64           `json:"exp"`
+		Active   *bool           `json:"active"`
+		Scope    string          `json:"scope"`
+		Aud      json.RawMessage `json:"aud"`
+		Audience json.RawMessage `json:"audience"`
+		Exp      int64           `json:"exp"`
+		Iss      string          `json:"iss"`
 	}
 
 	if err := json.Unmarshal(body, &introspectResp); err != nil {
-		return fmt.Errorf("failed to parse introspection response: %w", err)
+		return nil, fmt.Errorf("failed to parse introspection response: %w", err)
 	}
 
-	if !introspectResp.Active {
+	if introspectResp.Active != nil && !*introspectResp.Active {
 		logger.InfoContext(ctx, "token is not active")
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Verify expiration (with 1 minute leeway)
 	const leeway = 60
 	if introspectResp.Exp > 0 && time.Now().Unix() > (introspectResp.Exp+leeway) {
 		logger.WarnContext(ctx, "token has expired: exp=%d, now=%d", introspectResp.Exp, time.Now().Unix())
-		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "token has expired", ScopesRequired: a.ScopesRequired}
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "token has expired", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Extract audience
 	// According to RFC 7662, the aud claim can be a string or an array of strings
+	// Fallback to "audience" for Google tokeninfo
+	audData := introspectResp.Aud
+	if len(audData) == 0 {
+		audData = introspectResp.Audience
+	}
+
 	var aud []string
-	if len(introspectResp.Aud) > 0 {
+	if len(audData) > 0 {
 		var audStr string
 		var audArr []string
-		if err := json.Unmarshal(introspectResp.Aud, &audStr); err == nil {
+		if err := json.Unmarshal(audData, &audStr); err == nil {
 			aud = []string{audStr}
-		} else if err := json.Unmarshal(introspectResp.Aud, &audArr); err == nil {
+		} else if err := json.Unmarshal(audData, &audArr); err == nil {
 			aud = audArr
 		} else {
-			logger.WarnContext(ctx, "failed to parse aud claim in introspection response")
-			return &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid aud claim", ScopesRequired: a.ScopesRequired}
+			logger.WarnContext(ctx, "failed to parse aud or audience claim in introspection response")
+			return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid aud claim", ScopesRequired: a.ScopesRequired}
 		}
 	}
 
-	return a.validateClaims(ctx, aud, introspectResp.Scope)
+	err = a.validateClaims(ctx, introspectResp.Iss, aud, introspectResp.Scope)
+	if err != nil {
+		return nil, err
+	}
+	claims := map[string]any{
+		"active": introspectResp.Active,
+		"scope":  introspectResp.Scope,
+		"aud":    aud,
+		"exp":    introspectResp.Exp,
+		"iss":    introspectResp.Iss,
+	}
+	return claims, nil
 }
 
 // validateClaims validates the audience and scopes of a token
-func (a AuthService) validateClaims(ctx context.Context, aud []string, scopeStr string) error {
+func (a AuthService) validateClaims(ctx context.Context, iss string, aud []string, scopeStr string) error {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get logger from context: %w", err)
+	}
+
+	// Validate issuer
+	if a.issuer != "" && iss != "" {
+		if iss != a.issuer {
+			logger.WarnContext(ctx, "issuer validation failed: expected %s, got %s", a.issuer, iss)
+			return &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
+		}
 	}
 
 	// Validate audience

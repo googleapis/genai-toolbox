@@ -70,6 +70,8 @@ type Config struct {
 	BodyParams   parameters.Parameters  `yaml:"bodyParams"`
 	HeaderParams parameters.Parameters  `yaml:"headerParams"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -115,16 +117,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
 
 	// finish tool setup
 	return Tool{
-		Config:      cfg,
-		Headers:     combinedHeaders,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:    cfg,
+		Headers:   combinedHeaders,
+		AllParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 	}, nil
 }
 
@@ -133,10 +132,25 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Headers     map[string]string     `yaml:"headers"`
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Headers   map[string]string     `yaml:"headers"`
+	AllParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -167,7 +181,28 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 	}
 	pathParamsMap := pathParamValues.AsMap()
 
-	templ, err := template.New("url").Parse(path)
+	funcMap := template.FuncMap{
+		"pathEscape": func(v any) string {
+			if s, ok := v.(string); ok {
+				return url.PathEscape(s)
+			}
+			if v == nil {
+				return ""
+			}
+			return url.PathEscape(fmt.Sprintf("%v", v))
+		},
+		"queryEscape": func(v any) string {
+			if s, ok := v.(string); ok {
+				return url.QueryEscape(s)
+			}
+			if v == nil {
+				return ""
+			}
+			return url.QueryEscape(fmt.Sprintf("%v", v))
+		},
+	}
+
+	templ, err := template.New("url").Funcs(funcMap).Parse(path)
 	if err != nil {
 		return "", fmt.Errorf("error parsing URL: %s", err)
 	}
@@ -194,9 +229,26 @@ func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters,
 		return "", fmt.Errorf("path must be relative and cannot override base host")
 	}
 
+	// Reject dot segments before resolution
+	for _, segment := range strings.Split(relParsedURL.Path, "/") {
+		if segment == ".." {
+			return "", fmt.Errorf("path cannot contain dot segments (..)")
+		}
+	}
+
 	// Create URL based on BaseURL and Path
 	// Attach query parameters
 	parsedURL := baseParsedURL.ResolveReference(relParsedURL)
+
+	// Verify final path stays within base path scope
+	basePath := baseParsedURL.Path
+	finalPath := parsedURL.Path
+	if basePath != "/" {
+		requiredPrefix := strings.TrimSuffix(basePath, "/") + "/"
+		if finalPath != basePath && !strings.HasPrefix(finalPath, requiredPrefix) {
+			return "", fmt.Errorf("resolved path %q escapes base path %q", finalPath, basePath)
+		}
+	}
 
 	// Get existing query parameters from the URL
 	queryParameters := parsedURL.Query()
@@ -292,10 +344,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
@@ -310,4 +358,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.AllParams
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

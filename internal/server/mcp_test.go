@@ -31,6 +31,12 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 const jsonrpcVersion = "2.0"
@@ -76,8 +82,8 @@ var prompt2Args = []any{
 }
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
@@ -421,8 +427,8 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
@@ -1088,8 +1094,8 @@ func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mockTools := []MockTool{tool1, tool2, tool3}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
@@ -1194,5 +1200,88 @@ func TestSseManagerGetNilSessionValue(t *testing.T) {
 	}
 	if session != nil {
 		t.Error("expected nil session for nil session value")
+	}
+}
+
+// withTraceContextPropagator registers the W3C trace-context propagator globally
+// for the duration of the test. extractMeta delegates to otel.GetTextMapPropagator,
+// and the default global propagator is a no-op — so without this helper the
+// "extracted" trace context would always be invalid.
+func withTraceContextPropagator(t *testing.T) {
+	t.Helper()
+	prev := otel.GetTextMapPropagator()
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+	t.Cleanup(func() { otel.SetTextMapPropagator(prev) })
+}
+
+func TestExtractMeta_EmptyOrInvalidBody(t *testing.T) {
+	cases := map[string][]byte{
+		"empty":      []byte(""),
+		"not json":   []byte("not json"),
+		"no _meta":   []byte(`{"params":{}}`),
+		"no params":  []byte(`{"method":"tools/call"}`),
+		"empty meta": []byte(`{"params":{"_meta":{}}}`),
+	}
+	for name, body := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := extractMeta(context.Background(), body)
+			if util.TelemetryAttributesFromContext(ctx) != nil {
+				t.Error("expected no telemetry attributes")
+			}
+		})
+	}
+}
+
+func TestExtractMeta_TraceparentOnly(t *testing.T) {
+	withTraceContextPropagator(t)
+	body := []byte(`{"params":{"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}`)
+	ctx := extractMeta(context.Background(), body)
+
+	sc := trace.SpanContextFromContext(ctx)
+	if !sc.IsValid() {
+		t.Fatal("expected valid span context from extracted traceparent")
+	}
+	if got := sc.TraceID().String(); got != "0af7651916cd43dd8448eb211c80319c" {
+		t.Errorf("trace id mismatch: got %s", got)
+	}
+	if util.TelemetryAttributesFromContext(ctx) != nil {
+		t.Error("expected no telemetry attributes when only traceparent is sent")
+	}
+}
+
+func TestExtractMeta_TelemetryAttrsOnly(t *testing.T) {
+	body := []byte(`{"params":{"_meta":{"dev.mcp-toolbox/telemetry":{` +
+		`"client.name":"toolbox-langchain-python",` +
+		`"client.version":"v0.1.0",` +
+		`"client.model":"gemini-2.5-flash",` +
+		`"client.user.id":"user-123",` +
+		`"client.agent.id":"agent-456"}}}}`)
+
+	ta := util.TelemetryAttributesFromContext(extractMeta(context.Background(), body))
+	if ta == nil {
+		t.Fatal("expected TelemetryAttributes in context")
+	}
+	want := util.TelemetryAttributes{
+		ClientName: "toolbox-langchain-python", ClientVersion: "v0.1.0",
+		ClientModel: "gemini-2.5-flash", ClientUserID: "user-123", ClientAgentID: "agent-456",
+	}
+	if *ta != want {
+		t.Errorf("got %+v, want %+v", *ta, want)
+	}
+}
+
+func TestExtractMeta_TraceparentAndTelemetryBoth(t *testing.T) {
+	withTraceContextPropagator(t)
+	body := []byte(`{"params":{"_meta":{` +
+		`"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",` +
+		`"dev.mcp-toolbox/telemetry":{"client.name":"foo","client.version":"v1"}}}}`)
+	ctx := extractMeta(context.Background(), body)
+
+	if !trace.SpanContextFromContext(ctx).IsValid() {
+		t.Error("expected valid span context")
+	}
+	ta := util.TelemetryAttributesFromContext(ctx)
+	if ta == nil || ta.ClientName != "foo" || ta.ClientVersion != "v1" {
+		t.Errorf("expected telemetry attrs alongside traceparent, got %+v", ta)
 	}
 }

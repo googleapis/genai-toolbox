@@ -214,3 +214,57 @@ func GenAIMetricAttrsFromContext(ctx context.Context) *GenAIMetricAttrs {
 	}
 	return nil
 }
+
+const authTokenClaimsKey contextKey = "authTokenClaims"
+
+// WithAuthTokenClaims adds auth token claims into the context as a value
+func WithAuthTokenClaims(ctx context.Context, claims map[string]any) context.Context {
+	return context.WithValue(ctx, authTokenClaimsKey, claims)
+}
+
+// AuthTokenClaimsFromContext retrieves the auth token claims from context
+func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
+	if claims, ok := ctx.Value(authTokenClaimsKey).(map[string]any); ok {
+		return claims
+	}
+	return nil
+}
+
+// TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
+type TelemetryAttributes struct {
+	ClientName    string
+	ClientVersion string
+	ClientModel   string
+	ClientUserID  string
+	ClientAgentID string
+}
+
+const telemetryAttrsKey contextKey = "telemetryAttrs"
+
+// WithTelemetryAttributes adds TelemetryAttributes to the context
+func WithTelemetryAttributes(ctx context.Context, attrs *TelemetryAttributes) context.Context {
+	return context.WithValue(ctx, telemetryAttrsKey, attrs)
+}
+
+// TelemetryAttributesFromContext retrieves TelemetryAttributes from context
+func TelemetryAttributesFromContext(ctx context.Context) *TelemetryAttributes {
+	if attrs, ok := ctx.Value(telemetryAttrsKey).(*TelemetryAttributes); ok {
+		return attrs
+	}
+	return nil
+}
+
+const sqlCommenterEnabledKey contextKey = "sqlCommenterEnabled"
+
+// WithSQLCommenterEnabled adds the sql-commenter-enabled flag to the context
+func WithSQLCommenterEnabled(ctx context.Context, enabled bool) context.Context {
+	return context.WithValue(ctx, sqlCommenterEnabledKey, enabled)
+}
+
+// SQLCommenterEnabledFromContext retrieves the sql-commenter-enabled flag from context
+func SQLCommenterEnabledFromContext(ctx context.Context) bool {
+	if enabled, ok := ctx.Value(sqlCommenterEnabledKey).(bool); ok {
+		return enabled
+	}
+	return false
+}

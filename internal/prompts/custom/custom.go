@@ -62,17 +62,23 @@ func (c Config) PromptConfigType() string {
 
 func (c Config) Initialize() (prompts.Prompt, error) {
 	p := Prompt{
-		Config:      c,
-		manifest:    prompts.GetManifest(c.Description, c.Arguments),
-		mcpManifest: prompts.GetMcpManifest(c.Name, c.Description, c.Arguments),
+		Config:   c,
+		manifest: prompts.GetManifest(c.Description, c.Arguments),
 	}
 	return p, nil
 }
 
 type Prompt struct {
 	Config
-	manifest    prompts.Manifest
-	mcpManifest prompts.McpManifest
+	manifest prompts.Manifest
+}
+
+func (p Prompt) GetDesc() string {
+	return p.Description
+}
+
+func (p Prompt) GetArguments() prompts.Arguments {
+	return p.Arguments
 }
 
 func (p Prompt) ToConfig() prompts.PromptConfig {
@@ -81,10 +87,6 @@ func (p Prompt) ToConfig() prompts.PromptConfig {
 
 func (p Prompt) Manifest() prompts.Manifest {
 	return p.manifest
-}
-
-func (p Prompt) McpManifest() prompts.McpManifest {
-	return p.mcpManifest
 }
 
 func (p Prompt) SubstituteParams(argValues parameters.ParamValues) (any, error) {
