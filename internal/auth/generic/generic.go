@@ -364,7 +364,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		Scope    string          `json:"scope"`
 		Aud      json.RawMessage `json:"aud"`
 		Audience json.RawMessage `json:"audience"`
-		Exp      int64           `json:"exp"`
+		Exp      json.Number     `json:"exp"`
 		Iss      string          `json:"iss"`
 	}
 
@@ -377,10 +377,19 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
 	}
 
+	var expVal int64
+	if introspectResp.Exp != "" {
+		expVal, err = introspectResp.Exp.Int64()
+		if err != nil {
+			logger.WarnContext(ctx, "failed to parse exp claim in introspection response: %v", err)
+			return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid exp claim", ScopesRequired: a.ScopesRequired}
+		}
+	}
+
 	// Verify expiration (with 1 minute leeway)
 	const leeway = 60
-	if introspectResp.Exp > 0 && time.Now().Unix() > (introspectResp.Exp+leeway) {
-		logger.WarnContext(ctx, "token has expired: exp=%d, now=%d", introspectResp.Exp, time.Now().Unix())
+	if expVal > 0 && time.Now().Unix() > (expVal+leeway) {
+		logger.WarnContext(ctx, "token has expired: exp=%d, now=%d", expVal, time.Now().Unix())
 		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "token has expired", ScopesRequired: a.ScopesRequired}
 	}
 
@@ -414,7 +423,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		"active": introspectResp.Active,
 		"scope":  introspectResp.Scope,
 		"aud":    aud,
-		"exp":    introspectResp.Exp,
+		"exp":    expVal,
 		"iss":    introspectResp.Iss,
 	}
 	return claims, nil

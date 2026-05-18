@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -174,11 +175,20 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	// if using stdio, header will be nil and auth will not be supported
 	if header != nil {
 		for _, aS := range authServices {
-			claims, err := aS.GetClaimsFromHeader(ctx, header)
-			if err != nil {
-				logger.DebugContext(ctx, err.Error())
-				continue
+			var claims map[string]any
+			var err error
+
+			cfg := aS.ToConfig()
+			if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+				claims = util.AuthTokenClaimsFromContext(ctx)
+			} else {
+				claims, err = aS.GetClaimsFromHeader(ctx, header)
+				if err != nil {
+					logger.DebugContext(ctx, err.Error())
+					continue
+				}
 			}
+
 			if claims == nil {
 				// authService not present in header
 				continue
