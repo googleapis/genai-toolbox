@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Nightly Server Tier Assessment
+name: Weekly Server Tier Assessment
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Runs at 6 AM every morning
+    - cron: '0 6 * * 0'  # Runs at 6 AM every Sunday
   workflow_dispatch:
 
 permissions:
@@ -61,7 +61,7 @@ jobs:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('tier_report.txt', 'utf8');
-            const title = '[Dashboard: Conformance] Nightly Server Tier Assessment Failure';
+            const title = '[Dashboard: Conformance] Weekly Server Tier Assessment Failure';
             
             const prevIssues = await github.rest.issues.listForRepo({
               ...context.repo,
@@ -77,7 +77,7 @@ jobs:
                 await github.rest.issues.createComment({
                   ...context.repo,
                   issue_number: existingIssue.number,
-                  body: "The nightly Server Tier Assessment confirms we are now **Tier 1**! Closing this issue."
+                  body: "The weekly Server Tier Assessment confirms we are now **Tier 1**! Closing this issue."
                 });
                 await github.rest.issues.update({
                   ...context.repo,
@@ -88,7 +88,7 @@ jobs:
               return;
             }
             
-            const body = `The nightly Server Tier Assessment found gaps preventing Tier 1 status:\n\n${report}\n\nPlease fix these operational gaps.`;
+            const body = `The weekly Server Tier Assessment found gaps preventing Tier 1 status:\n\n${report}\n\nPlease fix these operational gaps.`;
             
             if (existingIssue) {
               console.log(`Found previous issue ${existingIssue.html_url}, updating body`);
