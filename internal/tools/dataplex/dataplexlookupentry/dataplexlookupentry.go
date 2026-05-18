@@ -89,9 +89,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	entry := parameters.NewStringParameter("entry", "Required. The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
 	params := parameters.Parameters{entry, view, aspectTypes}
 
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
-
 	t := Tool{
 		Config:     cfg,
 		Parameters: params,
@@ -100,16 +97,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -150,11 +161,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 func (t Tool) Manifest() tools.Manifest {
 	// Returns the tool manifest
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	// Returns the tool MCP manifest
-	return t.mcpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {

@@ -28,7 +28,6 @@ type Toolset struct {
 	ToolsetConfig
 	Tools       []*Tool         `yaml:",inline"`
 	Manifest    ToolsetManifest `yaml:",inline"`
-	McpManifest []McpManifest   `yaml:",inline"`
 	toolNameSet map[string]struct{}
 }
 
@@ -67,7 +66,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 			ServerVersion: serverVersion,
 			ToolsManifest: make(map[string]Manifest),
 		},
-		McpManifest: make([]McpManifest, 0, len(t.ToolNames)),
 		toolNameSet: make(map[string]struct{}, len(t.ToolNames)),
 	}
 	if !IsValidName(toolset.Name) {
@@ -80,7 +78,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 		}
 		toolset.Tools = append(toolset.Tools, &tool)
 		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
-		toolset.McpManifest = append(toolset.McpManifest, tool.McpManifest())
 		toolset.toolNameSet[toolName] = struct{}{}
 	}
 	return toolset, nil

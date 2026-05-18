@@ -75,17 +75,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
 	params := parameters.Parameters{agentIdParameter}
 
-	annotations := &tools.ToolAnnotations{}
-	if cfg.Annotations != nil {
-		*annotations = *cfg.Annotations
-	}
-	readOnlyHint := false
-	destructiveHint := true
-	annotations.ReadOnlyHint = &readOnlyHint
-	annotations.DestructiveHint = &destructiveHint
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
-
 	return Tool{
 		Config:     cfg,
 		Parameters: params,
@@ -94,7 +83,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -103,9 +91,32 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	annotations := &tools.ToolAnnotations{}
+	if t.Annotations != nil {
+		*annotations = *t.Annotations
+	}
+	readOnlyHint := false
+	destructiveHint := true
+	annotations.ReadOnlyHint = &readOnlyHint
+	annotations.DestructiveHint = &destructiveHint
+	return annotations
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -156,10 +167,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
