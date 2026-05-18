@@ -305,7 +305,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:              "invoke my-tool-by-name with nil response",
+			name:              "invoke my-tool-by-name with empty slice response",
 			toolName:          "my-tool-by-name",
 			enabled:           configs.supportOptionalNullParam,
 			requestHeader:     map[string]string{},
