@@ -78,14 +78,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		description = "Executes multiple SQL statements on a Cloud SQL instance."
 	}
 
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, params, annotations)
-
 	t := Tool{
-		Config:      cfg,
-		Parameters:  params,
-		manifest:    tools.Manifest{Description: description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:     cfg,
+		Parameters: params,
+		manifest:   tools.Manifest{Description: description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -94,9 +90,8 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
 }
 
 // Invoke executes the SQL statement on the given database.
@@ -128,16 +123,32 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	description := t.Description
+	if description == "" {
+		description = "Executes multiple SQL statements on a Cloud SQL instance."
+	}
+	return description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
+}
+
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
