@@ -1,16 +1,22 @@
 {{- /* Fetch and sort samples */ -}}
 {{- $samples := (where .Site.Pages "Params.is_sample" true).ByTitle -}}
 
-{{- /* Extract unique filters */ -}}
-{{- $allFilters := slice -}}
-{{- range $samples -}}
-  {{- if .Params.sample_filters -}}
-    {{- range .Params.sample_filters -}}
-      {{- $allFilters = $allFilters | append . -}}
+{{- /* Extract unique filters from the Source of Truth (.hugo/data/filters.yaml) */ -}}
+{{- $uniqueFilters := slice -}}
+{{- if .Site.Data.filters -}}
+  {{- /* Loop through all categories in filters.yaml and flatten them into one list */ -}}
+  {{- range $category, $tags := .Site.Data.filters -}}
+    {{- $uniqueFilters = $uniqueFilters | append $tags -}}
+  {{- end -}}
+{{- else -}}
+  {{- /* Fallback to scraping pages if the YAML file is missing */ -}}
+  {{- range $samples -}}
+    {{- range default slice .Params.sample_filters -}}
+      {{- $uniqueFilters = $uniqueFilters | append . -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- $uniqueFilters := $allFilters | uniq | sort -}}
+{{- $uniqueFilters = $uniqueFilters | uniq | sort -}}
 
 {{- /* Render UI */ -}}
 <div class="samples-wrapper">

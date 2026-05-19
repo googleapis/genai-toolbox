@@ -290,36 +290,6 @@ func TestTool_Manifest(t *testing.T) {
 	}
 }
 
-func TestTool_McpManifest(t *testing.T) {
-	tool := Tool{
-		mcpManifest: tools.McpManifest{
-			Name:        "test-update-document",
-			Description: "Test description",
-			InputSchema: parameters.McpToolsSchema{
-				Type: "object",
-				Properties: map[string]parameters.ParameterMcpManifest{
-					"documentPath": {
-						Type:        "string",
-						Description: "Document path",
-					},
-				},
-				Required: []string{"documentPath"},
-			},
-		},
-	}
-
-	mcpManifest := tool.McpManifest()
-	if mcpManifest.Name != "test-update-document" {
-		t.Fatalf("mcpManifest.Name = %v, want %v", mcpManifest.Name, "test-update-document")
-	}
-	if mcpManifest.Description != "Test description" {
-		t.Fatalf("mcpManifest.Description = %v, want %v", mcpManifest.Description, "Test description")
-	}
-	if mcpManifest.InputSchema.Type == "" {
-		t.Fatalf("expected InputSchema to be non-empty")
-	}
-}
-
 func TestTool_Authorized(t *testing.T) {
 	tests := []struct {
 		name                 string

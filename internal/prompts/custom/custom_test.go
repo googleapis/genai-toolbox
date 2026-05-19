@@ -68,21 +68,6 @@ func TestConfig(t *testing.T) {
 		}
 	})
 
-	t.Run("McpManifest", func(t *testing.T) {
-		want := prompts.McpManifest{
-			Name:        "TestConfig",
-			Description: "A test config.",
-			Arguments: []prompts.ArgMcpManifest{
-				{Name: "name", Description: "The name to use.", Required: true},
-				{Name: "location", Description: "The location.", Required: false},
-			},
-		}
-		got := p.McpManifest()
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
-		}
-	})
-
 	t.Run("SubstituteParams", func(t *testing.T) {
 		argValues := parameters.ParamValues{
 			{Name: "name", Value: "Alice"},

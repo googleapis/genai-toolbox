@@ -319,6 +319,7 @@ type Parameter interface {
 	// Note: It's typically not idiomatic to include "Get" in the function name,
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
+	GetDesc() string
 	GetType() string
 	GetDefault() any
 	GetRequired() bool
@@ -328,13 +329,6 @@ type Parameter interface {
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
-}
-
-// McpToolsSchema is the representation of input schema for McpManifest.
-type McpToolsSchema struct {
-	Type       string                          `json:"type"`
-	Properties map[string]ParameterMcpManifest `json:"properties"`
-	Required   []string                        `json:"required"`
 }
 
 // Parameters is a type used to allow unmarshal a list of parameters
@@ -446,39 +440,6 @@ func (ps Parameters) Manifest() []ParameterManifest {
 	return rtn
 }
 
-func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
-	properties := make(map[string]ParameterMcpManifest)
-	required := make([]string, 0)
-	authParam := make(map[string][]string)
-
-	for _, p := range ps {
-		// If the parameter is sourced from another param, skip it in the MCP manifest
-		if p.GetValueFromParam() != "" {
-			continue
-		}
-
-		name := p.GetName()
-		paramManifest, authParamList := p.McpManifest()
-		defaultV := p.GetDefault()
-		if defaultV != nil {
-			paramManifest.Default = defaultV
-		}
-		properties[name] = paramManifest
-		// parameters that doesn't have a default value are added to the required field
-		if CheckParamRequired(p.GetRequired(), defaultV) {
-			required = append(required, name)
-		}
-		if len(authParamList) > 0 {
-			authParam[name] = authParamList
-		}
-	}
-	return McpToolsSchema{
-		Type:       "object",
-		Properties: properties,
-		Required:   required,
-	}, authParam
-}
-
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
 	Name                 string             `json:"name"`
@@ -518,6 +479,11 @@ type CommonParameter struct {
 // GetName returns the name specified for the Parameter.
 func (p *CommonParameter) GetName() string {
 	return p.Name
+}
+
+// GetDesc returns the description specified for the Parameter.
+func (p *CommonParameter) GetDesc() string {
+	return p.Desc
 }
 
 // GetType returns the type specified for the Parameter.
