@@ -15,6 +15,22 @@ database.
 `mysql-get-query-plan` takes one input parameter `sql_statement` and gets the execution plan for the SQL
 statement against the `source`.
 
+## Input Validation
+
+To prevent query execution and statement injection through `EXPLAIN`, the
+`sql_statement` is validated before it is run:
+
+- It must be a **single** statement. Multiple statements separated by a
+  top-level `;` are rejected. A single trailing `;`, and `;` characters inside
+  string literals or comments, are allowed.
+- It must begin with one of the statement types that `EXPLAIN FORMAT=JSON`
+  supports: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `REPLACE`, `TABLE`, `WITH`,
+  or `VALUES`. Leading parentheses (e.g. parenthesized `UNION`) and leading
+  comments are permitted.
+- The `ANALYZE` keyword is rejected because `EXPLAIN ANALYZE` executes the
+  statement instead of only planning it. Other forms such as `FOR CONNECTION`,
+  DDL, and `CALL` are rejected as they are not supported with `FORMAT=JSON`.
+
 ## Compatible Sources
 
 {{< compatible-sources others="integrations/cloud-sql-mysql">}}

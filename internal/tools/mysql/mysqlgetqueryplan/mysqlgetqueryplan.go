@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"unicode"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -97,9 +98,9 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-// explainableStatements is the set of SQL statement types that MySQL's EXPLAIN
-// accepts. Crucially this excludes ANALYZE, which causes EXPLAIN ANALYZE to
-// actually execute the query rather than merely planning it.
+// explainableStatements is the set of statement types MySQL's EXPLAIN
+// FORMAT=JSON accepts. It excludes ANALYZE (which executes the query) and
+// FOR (EXPLAIN FOR CONNECTION does not support FORMAT=JSON).
 var explainableStatements = map[string]bool{
 	"SELECT":  true,
 	"DELETE":  true,
@@ -109,26 +110,86 @@ var explainableStatements = map[string]bool{
 	"TABLE":   true,
 	"WITH":    true,
 	"VALUES":  true,
-	"FOR":     true,
 }
 
-// ValidateSQLStatement rejects inputs that could turn EXPLAIN into an
-// execution primitive (ANALYZE keyword) or enable multi-statement attacks
-// (semicolons). Only the DML statement types that MySQL's EXPLAIN legitimately
-// supports are accepted.
+// ValidateSQLStatement allows a single explainable statement. It rejects
+// multi-statement input while tolerating string literals, comments, leading
+// parentheses (e.g. parenthesized UNION) and a single trailing semicolon.
 func ValidateSQLStatement(sqlStr string) error {
-	if strings.ContainsRune(sqlStr, ';') {
-		return fmt.Errorf("sql_statement must not contain semicolons")
+	keyword, multiStatement := scanStatement(sqlStr)
+	if multiStatement {
+		return fmt.Errorf("sql_statement must be a single statement")
 	}
-	fields := strings.Fields(sqlStr)
-	if len(fields) == 0 {
+	if keyword == "" {
 		return fmt.Errorf("sql_statement must not be empty")
 	}
-	firstToken := strings.ToUpper(fields[0])
-	if !explainableStatements[firstToken] {
-		return fmt.Errorf("sql_statement must begin with a DML keyword (SELECT, INSERT, UPDATE, DELETE, REPLACE, TABLE, WITH, VALUES, FOR); got %q", firstToken)
+	if !explainableStatements[strings.ToUpper(keyword)] {
+		return fmt.Errorf("sql_statement must begin with a DML keyword (SELECT, INSERT, UPDATE, DELETE, REPLACE, TABLE, WITH, VALUES); got %q", strings.ToUpper(keyword))
 	}
 	return nil
+}
+
+// scanStatement walks sqlStr while tracking string-literal and comment state.
+// It returns the first statement keyword and whether content follows a
+// top-level semicolon (i.e. a second statement).
+func scanStatement(sqlStr string) (keyword string, multiStatement bool) {
+	r := []rune(sqlStr)
+	n := len(r)
+	terminated := false
+	for i := 0; i < n; {
+		c := r[i]
+		switch {
+		case unicode.IsSpace(c):
+			i++
+		case c == '-' && i+1 < n && r[i+1] == '-', c == '#':
+			for i < n && r[i] != '\n' {
+				i++
+			}
+		case c == '/' && i+1 < n && r[i+1] == '*':
+			i += 2
+			for i+1 < n && !(r[i] == '*' && r[i+1] == '/') {
+				i++
+			}
+			i += 2
+		case c == '\'' || c == '"' || c == '`':
+			q := c
+			i++
+			for i < n {
+				if r[i] == '\\' && q != '`' {
+					i += 2
+					continue
+				}
+				if r[i] == q {
+					if i+1 < n && r[i+1] == q {
+						i += 2
+						continue
+					}
+					i++
+					break
+				}
+				i++
+			}
+		case c == '(':
+			i++
+		case c == ';':
+			terminated = true
+			i++
+		default:
+			if terminated {
+				return keyword, true
+			}
+			if keyword == "" && (unicode.IsLetter(c) || c == '_') {
+				start := i
+				for i < n && (unicode.IsLetter(r[i]) || unicode.IsDigit(r[i]) || r[i] == '_') {
+					i++
+				}
+				keyword = string(r[start:i])
+				continue
+			}
+			i++
+		}
+	}
+	return keyword, false
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {

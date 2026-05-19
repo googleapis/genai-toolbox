@@ -35,16 +35,22 @@ func TestValidateSQLStatement(t *testing.T) {
 		{desc: "insert ok", input: "INSERT INTO t VALUES (1)", wantErr: false},
 		{desc: "delete ok", input: "DELETE FROM t WHERE id=1", wantErr: false},
 		{desc: "with cte ok", input: "WITH cte AS (SELECT 1) SELECT * FROM cte", wantErr: false},
-		// ANALYZE turns EXPLAIN into an execution primitive — must be rejected.
+		{desc: "parenthesized union ok", input: "(SELECT 1) UNION (SELECT 2)", wantErr: false},
+		{desc: "leading block comment ok", input: "/* hint */ SELECT 1", wantErr: false},
+		{desc: "leading line comment ok", input: "-- note\nSELECT 1", wantErr: false},
+		{desc: "trailing semicolon ok", input: "SELECT 1;", wantErr: false},
+		{desc: "trailing semicolon with comment ok", input: "SELECT 1; -- done", wantErr: false},
+		{desc: "semicolon in string literal ok", input: "SELECT 'a;b' FROM t", wantErr: false},
 		{desc: "ANALYZE rejected", input: "ANALYZE SELECT * FROM mysql.user", wantErr: true},
 		{desc: "analyze lowercase rejected", input: "analyze select 1", wantErr: true},
-		// Semicolons enable multi-statement injection.
-		{desc: "semicolon rejected", input: "SELECT 1; DROP TABLE users", wantErr: true},
-		{desc: "trailing semicolon rejected", input: "SELECT 1;", wantErr: true},
-		// Arbitrary DDL/DCL must not be explainable.
+		{desc: "parenthesized analyze rejected", input: "(ANALYZE SELECT 1)", wantErr: true},
+		{desc: "multi statement rejected", input: "SELECT 1; DROP TABLE users", wantErr: true},
+		{desc: "multi statement after string rejected", input: "SELECT 'x'; DROP TABLE t", wantErr: true},
+		{desc: "FOR rejected", input: "FOR CONNECTION 1", wantErr: true},
 		{desc: "DROP rejected", input: "DROP TABLE users", wantErr: true},
 		{desc: "CREATE rejected", input: "CREATE TABLE t (id INT)", wantErr: true},
 		{desc: "CALL rejected", input: "CALL stored_proc()", wantErr: true},
+		{desc: "empty rejected", input: "   ", wantErr: true},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
