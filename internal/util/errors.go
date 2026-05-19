@@ -138,7 +138,7 @@ func ProcessGeneralError(err error) ToolboxError {
 	// Check for NotFound
 	if strings.Contains(errStr, "Error 404") || strings.Contains(errStr, "status 404") || strings.Contains(errStr, "status=404") {
 		return NewClientServerError(
-			"entity Not Found",
+			"resource not found",
 			http.StatusNotFound,
 			err,
 		)
