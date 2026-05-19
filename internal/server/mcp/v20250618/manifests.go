@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -36,7 +35,7 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 		}
 	}
 	mcpManifest := Tool{
-		BaseMetadata: util.BaseMetadata{
+		BaseMetadata: BaseMetadata{
 			Name: name,
 		},
 		Description:     desc,
@@ -109,14 +108,14 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 	mcpArgs := make([]PromptArgument, 0, len(args))
 	for _, arg := range args {
 		promptArg := PromptArgument{
-			BaseMetadata: util.BaseMetadata{Name: arg.GetName()},
+			BaseMetadata: BaseMetadata{Name: arg.GetName()},
 			Description:  arg.GetDesc(),
 			Required:     parameters.CheckParamRequired(arg.GetRequired(), arg.GetDefault()),
 		}
 		mcpArgs = append(mcpArgs, promptArg)
 	}
 	return Prompt{
-		BaseMetadata: util.BaseMetadata{Name: name},
+		BaseMetadata: BaseMetadata{Name: name},
 		Description:  desc,
 		Arguments:    mcpArgs,
 	}
