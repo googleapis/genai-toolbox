@@ -28,6 +28,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -39,44 +40,83 @@ import (
 
 // ProcessMethod returns a response for the request.
 func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	stdio := header == nil
 	switch method {
-	case INITIALIZE:
-		return initializeHandler(ctx, id, body)
-	case PING:
-		return pingHandler(id)
+	case SERVER_DISCOVER:
+		return serverDiscoverHandler(ctx, id, body, stdio)
 	case TOOLS_LIST:
-		return toolsListHandler(id, resourceMgr, toolset, body)
+		return toolsListHandler(id, resourceMgr, toolset, body, stdio)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
-		return promptsListHandler(ctx, id, resourceMgr, promptset, body)
+		return promptsListHandler(ctx, id, resourceMgr, promptset, body, stdio)
 	case PROMPTS_GET:
-		return promptsGetHandler(ctx, id, promptset, resourceMgr, body)
+		return promptsGetHandler(ctx, id, promptset, resourceMgr, body, stdio)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
 }
 
-// InitializeResponse runs capability negotiation and protocol version agreement.
-// This is the Initialization phase of the lifecycle for MCP client-server connections.
-// Always start with the latest protocol version supported.
-func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (any, error) {
+// validateMetadata checks the metadata of every requests
+func validateMetadata(id jsonrpc.RequestId, params RequestParams, stdio bool) (any, error) {
+	// Check _meta field for protocol version
+	if params.Meta != nil {
+		// check for protocol version metadata
+		v := params.Meta.ProtocolVersion
+		if v == "" {
+			metaErr := fmt.Errorf("missing io.modelcontextprotocol/protocolVersion")
+			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
+		}
+		// do not have to verify header for stdio; already verified during stdio
+		// message processing
+		if !stdio {
+			if PROTOCOL_VERSION != v {
+				metaErr := fmt.Errorf("header mismatch: MCP-Protocol-Version header value '%s' does not match body value '%s'", PROTOCOL_VERSION, v)
+				return jsonrpc.NewHeaderMismatchedError(id, metaErr), metaErr
+			}
+		}
+
+		// check for clientInfo
+		clientInfo := params.Meta.ClientInfo
+		if clientInfo.Version == "" || clientInfo.Name == "" {
+			metaErr := fmt.Errorf("missing field from io.modelcontextprotocol/clientInfo")
+			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
+		}
+		// check for clientCapabilities
+		clientCapabilities := params.Meta.MetaClientCapabilities
+		if clientCapabilities == nil {
+			metaErr := fmt.Errorf("missing field from io.modelcontextprotocol/clientCapabilities")
+			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
+		}
+		// skip checking clientCapabilities since Toolbox do not utilize any of those
+	} else {
+		metaErr := fmt.Errorf("missing required fields in request metadata")
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
+	}
+	return nil, nil
+}
+
+func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byte, stdio bool) (any, error) {
 	v, err := util.ToolboxVersionFromContext(ctx)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	var req InitializeRequest
+	var req DiscoverRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		err = fmt.Errorf("invalid mcp initialize request: %w", err)
+		err = fmt.Errorf("invalid server discover request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateErr, err := validateMetadata(id, req.Params, stdio)
+	if err != nil {
+		return validateErr, err
 	}
 
 	toolsListChanged := false
 	promptsListChanged := false
-	result := InitializeResult{
-		ProtocolVersion: PROTOCOL_VERSION,
+	result := DiscoverResult{
+		SupportedVersions: mcputil.SUPPORTED_PROTOCOL_VERSIONS,
 		Capabilities: ServerCapabilities{
 			Tools: &ListChanged{
 				ListChanged: &toolsListChanged,
@@ -97,24 +137,18 @@ func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (
 		Id:      id,
 		Result:  result,
 	}
-
 	return res, nil
 }
 
-// pingHandler handles the "ping" method by returning an empty response.
-func pingHandler(id jsonrpc.RequestId) (any, error) {
-	return jsonrpc.JSONRPCResponse{
-		Jsonrpc: jsonrpc.JSONRPC_VERSION,
-		Id:      id,
-		Result:  struct{}{},
-	}, nil
-}
-
-func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte, stdio bool) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateErr, err := validateMetadata(id, req.Params.RequestParams, stdio)
+	if err != nil {
+		return validateErr, err
 	}
 
 	toolsMap := resourceMgr.GetToolsMap()
@@ -144,6 +178,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	if err = json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools call request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateErr, err := validateMetadata(id, req.Params.RequestParams, header == nil)
+	if err != nil {
+		return validateErr, err
 	}
 
 	toolName := req.Params.Name
@@ -407,7 +445,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 }
 
 // promptsListHandler handles the "prompts/list" method.
-func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, promptset prompts.Promptset, body []byte) (any, error) {
+func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, promptset prompts.Promptset, body []byte, stdio bool) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -419,6 +457,10 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp prompts list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateErr, err := validateMetadata(id, req.Params.RequestParams, stdio)
+	if err != nil {
+		return validateErr, err
 	}
 
 	promptsMap := resourceMgr.GetPromptsMap()
@@ -436,7 +478,7 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *
 }
 
 // promptsGetHandler handles the "prompts/get" method.
-func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, stdio bool) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -448,6 +490,10 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prom
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp prompts/get request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateErr, err := validateMetadata(id, req.Params.RequestParams, stdio)
+	if err != nil {
+		return validateErr, err
 	}
 
 	promptName := req.Params.Name
