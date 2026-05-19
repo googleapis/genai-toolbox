@@ -35,7 +35,7 @@ const listAllLocksStatement8plus = `
 SELECT
   dl.thread_id AS thread_id,
   it.TRX_MYSQL_THREAD_ID AS process_id,
-  dl.object_schema AS db,
+  dl.object_schema AS table_schema,
   dl.object_name AS table_name,
   dl.lock_type AS lock_type,
   dl.lock_mode AS lock_mode,
@@ -58,7 +58,7 @@ const listAllLocksStatement57 = `
 SELECT  
   th.THREAD_ID AS thread_id,
   it.TRX_MYSQL_THREAD_ID AS process_id,
-  REPLACE(SUBSTRING_INDEX(il.lock_table, '.', 1), '` + "`" + `', '') AS db,
+  REPLACE(SUBSTRING_INDEX(il.lock_table, '.', 1), '` + "`" + `', '') AS table_schema,
   REPLACE(SUBSTRING_INDEX(il.lock_table, '.', -1), '` + "`" + `', '') AS table_name,
   il.lock_type AS lock_type, 
   il.lock_mode AS lock_mode,

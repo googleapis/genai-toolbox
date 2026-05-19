@@ -68,13 +68,13 @@ description: List table fragmentation in MySQL, by calculating the size of the d
 kind: tool
 name: list_all_locks
 type: mysql-list-all-locks
-source: cloud-sql-mysql-source
+source: mysql-source
 description: Lists top N (default 10) locks on the specified database ordered by query execution time in descending order.
 ---
 kind: tool
 name: show_query_stats
 type: mysql-show-query-stats
-source: cloud-sql-mysql-source
+source: mysql-source
 description: Displays query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage.
 ---
 kind: toolset

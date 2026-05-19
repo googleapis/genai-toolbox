@@ -4173,10 +4173,27 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 	}
 
 	// Generating stats for query
-	selectStmt := fmt.Sprintf("SELECT * FROM %s WHERE id = 1 FOR UPDATE", testTableName)
-	if _, err := pool.ExecContext(ctx, selectStmt); err != nil {
-		t.Logf("warning: unable to execute select: %v", err)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		tx, err := pool.BeginTx(ctx, nil)
+		if err != nil {
+			t.Logf("warning: unable to begin transaction: %v", err)
+			return
+		}
+		defer tx.Rollback()
+
+		selectStmt := fmt.Sprintf("SELECT * FROM %s WHERE id = 1 FOR UPDATE", testTableName)
+		if _, err := tx.ExecContext(ctx, selectStmt); err != nil {
+			t.Logf("warning: unable to execute select: %v", err)
+			return
+		}
+		// Hold the lock for a while to allow tests to run
+		time.Sleep(10 * time.Second)
+	}()
+	// Give it a moment to actually acquire the lock
+	time.Sleep(1 * time.Second)
 
 	invokeTcs := []struct {
 		name           string
@@ -4245,6 +4262,7 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 
 		})
 	}
+	wg.Wait()
 }
 
 // RunMSSQLListTablesTest run tests againsts the mssql-list-tables tools.
