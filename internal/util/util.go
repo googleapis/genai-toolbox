@@ -268,3 +268,20 @@ func SQLCommenterEnabledFromContext(ctx context.Context) bool {
 	}
 	return false
 }
+
+// toolboxVersionKey is the key used to store toolbox version within context
+const toolboxVersionKey contextKey = "toolboxVersion"
+
+// WithToolboxVersionKey adds a toolbox version into the context as a value
+func WithToolboxVersionKey(ctx context.Context, versionString string) context.Context {
+	return context.WithValue(ctx, toolboxVersionKey, versionString)
+}
+
+// ToolboxVersionFromContext retrieves the toolbox version or return an error
+func ToolboxVersionFromContext(ctx context.Context) (string, error) {
+	if v, ok := ctx.Value(toolboxVersionKey).(string); ok && v != "" {
+		return v, nil
+	} else {
+		return "", fmt.Errorf("unable to retrieve toolbox version")
+	}
+}

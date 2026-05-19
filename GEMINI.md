@@ -164,7 +164,7 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/tools/<newdb>/<toolname>`.
 2.  Define `Config` and `Tool` structs.
 3.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`).
-4.  Implement `Tool` interface (`Invoke`, `ParseParams`, `Manifest`, `McpManifest`, `Authorized`).
+4.  Implement `Tool` interface (`Invoke`, `ParseParams`, `Manifest`, `Authorized`).
 5.  Implement `init()` to register the tool.
 6.  Add unit tests.
 

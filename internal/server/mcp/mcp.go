@@ -32,64 +32,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
-// LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.
-// Update the version used in InitializeResponse when this value is updated.
-const LATEST_PROTOCOL_VERSION = v20251125.PROTOCOL_VERSION
-
-// SUPPORTED_PROTOCOL_VERSIONS is the MCP protocol versions that are supported.
-var SUPPORTED_PROTOCOL_VERSIONS = []string{
-	v20241105.PROTOCOL_VERSION,
-	v20250326.PROTOCOL_VERSION,
-	v20250618.PROTOCOL_VERSION,
-	v20251125.PROTOCOL_VERSION,
-}
-
-// InitializeResponse runs capability negotiation and protocol version agreement.
-// This is the Initialization phase of the lifecycle for MCP client-server connections.
-// Always start with the latest protocol version supported.
-func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, toolboxVersion string) (any, string, error) {
-	var req mcputil.InitializeRequest
-	if err := json.Unmarshal(body, &req); err != nil {
-		err = fmt.Errorf("invalid mcp initialize request: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), "", err
-	}
-
-	var protocolVersion string
-	v := req.Params.ProtocolVersion
-	if slices.Contains(SUPPORTED_PROTOCOL_VERSIONS, v) {
-		protocolVersion = v
-	} else {
-		protocolVersion = LATEST_PROTOCOL_VERSION
-	}
-
-	toolsListChanged := false
-	promptsListChanged := false
-	result := mcputil.InitializeResult{
-		ProtocolVersion: protocolVersion,
-		Capabilities: mcputil.ServerCapabilities{
-			Tools: &mcputil.ListChanged{
-				ListChanged: &toolsListChanged,
-			},
-			Prompts: &mcputil.ListChanged{
-				ListChanged: &promptsListChanged,
-			},
-		},
-		ServerInfo: mcputil.Implementation{
-			BaseMetadata: mcputil.BaseMetadata{
-				Name: mcputil.SERVER_NAME,
-			},
-			Version: toolboxVersion,
-		},
-	}
-	res := jsonrpc.JSONRPCResponse{
-		Jsonrpc: jsonrpc.JSONRPC_VERSION,
-		Id:      id,
-		Result:  result,
-	}
-
-	return res, protocolVersion, nil
-}
-
 // NotificationHandler process notifications request. It MUST NOT send a response.
 // Currently Toolbox does not process any notifications.
 func NotificationHandler(ctx context.Context, body []byte) error {
@@ -117,5 +59,5 @@ func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId,
 
 // VerifyProtocolVersion verifies if the version string is valid.
 func VerifyProtocolVersion(version string) bool {
-	return slices.Contains(SUPPORTED_PROTOCOL_VERSIONS, version)
+	return slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, version)
 }

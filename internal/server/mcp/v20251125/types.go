@@ -24,16 +24,104 @@ import (
 const SERVER_NAME = "Toolbox"
 
 // PROTOCOL_VERSION is the version of the MCP protocol in this package.
-const PROTOCOL_VERSION = "2025-11-25"
+const PROTOCOL_VERSION = util.VERSION_20251125
 
 // methods that are supported.
 const (
+	INITIALIZE   = "initialize"
 	PING         = "ping"
 	TOOLS_LIST   = "tools/list"
 	TOOLS_CALL   = "tools/call"
 	PROMPTS_LIST = "prompts/list"
 	PROMPTS_GET  = "prompts/get"
 )
+
+/* Initialization */
+
+// Params to define MCP Client during initialize request.
+type InitializeParams struct {
+	// The latest version of the Model Context Protocol that the client supports.
+	// The client MAY decide to support older versions as well.
+	ProtocolVersion string             `json:"protocolVersion"`
+	Capabilities    ClientCapabilities `json:"capabilities"`
+	ClientInfo      Implementation     `json:"clientInfo"`
+}
+
+// InitializeRequest is sent from the client to the server when it first
+// connects, asking it to begin initialization.
+type InitializeRequest struct {
+	jsonrpc.Request
+	Params InitializeParams `json:"params"`
+}
+
+// InitializeResult is sent after receiving an initialize request from the
+// client.
+type InitializeResult struct {
+	jsonrpc.Result
+	// The version of the Model Context Protocol that the server wants to use.
+	// This may not match the version that the client requested. If the client cannot
+	// support this version, it MUST disconnect.
+	ProtocolVersion string             `json:"protocolVersion"`
+	Capabilities    ServerCapabilities `json:"capabilities"`
+	ServerInfo      Implementation     `json:"serverInfo"`
+	// Instructions describing how to use the server and its features.
+	//
+	// This can be used by clients to improve the LLM's understanding of
+	// available tools, resources, etc. It can be thought of like a "hint" to the model.
+	// For example, this information MAY be added to the system prompt.
+	Instructions string `json:"instructions,omitempty"`
+}
+
+// InitializedNotification is sent from the client to the server after
+// initialization has finished.
+type InitializedNotification struct {
+	jsonrpc.Notification
+}
+
+// ListChange represents whether the server supports notification for changes to the capabilities.
+type ListChanged struct {
+	ListChanged *bool `json:"listChanged,omitempty"`
+}
+
+// ClientCapabilities represents capabilities a client may support. Known
+// capabilities are defined here, in this schema, but this is not a closed set: any
+// client can define its own, additional capabilities.
+type ClientCapabilities struct {
+	// Experimental, non-standard capabilities that the client supports.
+	Experimental map[string]interface{} `json:"experimental,omitempty"`
+	// Present if the client supports listing roots.
+	Roots *ListChanged `json:"roots,omitempty"`
+	// Present if the client supports sampling from an LLM.
+	Sampling struct{} `json:"sampling,omitempty"`
+}
+
+// ServerCapabilities represents capabilities that a server may support. Known
+// capabilities are defined here, in this schema, but this is not a closed set: any
+// server can define its own, additional capabilities.
+type ServerCapabilities struct {
+	Tools   *ListChanged `json:"tools,omitempty"`
+	Prompts *ListChanged `json:"prompts,omitempty"`
+}
+
+// Base interface for metadata with name (identifier) and title (display name) properties.
+type BaseMetadata struct {
+	// Intended for programmatic or logical use, but used as a display name in past specs
+	// or fallback (if title isn't present).
+	Name string `json:"name"`
+	// Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+	//even by those unfamiliar with domain-specific terminology.
+	//
+	// If not provided, the name should be used for display (except for Tool,
+	// where `annotations.title` should be given precedence over using `name`,
+	// if present).
+	Title string `json:"title,omitempty"`
+}
+
+// Implementation describes the name and version of an MCP implementation.
+type Implementation struct {
+	BaseMetadata
+	Version string `json:"version"`
+}
 
 /* Empty result */
 
@@ -75,7 +163,7 @@ type ListToolsResult struct {
 }
 
 type Tool struct {
-	util.BaseMetadata
+	BaseMetadata
 	/**
 	 * A human-readable description of the tool.
 	 *
@@ -236,7 +324,7 @@ type GetPromptResult struct {
 
 // A prompt or prompt template that the server offers.
 type Prompt struct {
-	util.BaseMetadata
+	BaseMetadata
 	// An optional description of what this prompt provides
 	Description string `json:"description,omitempty"`
 	// A list of arguments to use for templating the prompt.
@@ -247,7 +335,7 @@ type Prompt struct {
 
 // Describes an argument that a prompt can accept.
 type PromptArgument struct {
-	util.BaseMetadata
+	BaseMetadata
 	// A human-readable description of the argument.
 	Description string `json:"description,omitempty"`
 	// Whether this argument must be provided.
