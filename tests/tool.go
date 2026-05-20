@@ -2591,7 +2591,7 @@ func RunPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *pgxp
 			name:           "invoke list_pg_settings with non-existent setting",
 			requestBody:    bytes.NewBuffer([]byte(`{"setting_name": "non_existent_config_xyz"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           `null`,
+			want:           `[]`,
 		},
 	}
 
