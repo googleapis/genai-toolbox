@@ -1521,7 +1521,7 @@ func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 			name:           "invoke list_views with non-existent_view",
 			requestBody:    bytes.NewBuffer([]byte(`{"view_name": "non_existent_view"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           `null`,
+			want:           `[]`,
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -1601,7 +1601,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			name:           "invoke list_schemas with non-existent schema",
 			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -1851,19 +1851,19 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 			name:           "filter by non-existent trigger_name",
 			requestBody:    bytes.NewBuffer([]byte(`{"trigger_name": "non_existent_trigger"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "filter by non-existent schema_name",
 			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "filter by non-existent table_name",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_name": "non_existent_table"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2027,13 +2027,13 @@ func RunPostgresListPublicationTablesTest(t *testing.T, ctx context.Context, poo
 			name:           "invoke list_publication_tables with non-existent table",
 			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "invoke list_publication_tables with non-existent publication",
 			requestBody:    bytes.NewBufferString(`{"publication_names": "non_existent_pub"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2362,13 +2362,13 @@ func RunPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxpool
 			name:           "list_indexes with non-existent schema",
 			requestBody:    bytes.NewBufferString(`{"schema_name": "non_existent_schema"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "list_indexes with non-existent table in existing schema",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "non_existent_table"}`, schemaName)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "list_indexes filter by index name",
@@ -2380,7 +2380,7 @@ func RunPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxpool
 			name:           "list_indexes filter by non-existent index name",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "index_name": "non_existent_idx"}`, schemaName, tableName)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2475,7 +2475,7 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 			name:           "invoke list_sequences with non-existent sequence",
 			requestBody:    bytes.NewBufferString(`{"sequence_name": "non_existent_sequence"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2881,7 +2881,7 @@ func RunPostgresListRolesTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 			name:           "list_roles non-existent role",
 			requestBody:    bytes.NewBufferString(`{"role_name": "non_existent_role_xyz"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 
