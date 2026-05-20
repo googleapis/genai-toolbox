@@ -59,7 +59,6 @@ func newBaseTool() tools.BaseTool {
 		StaticParameters: parameters.Parameters{
 			parameters.NewStringParameter("p1", "first param"),
 		},
-		AuthRequired:   []string{"google"},
 		ScopesRequired: []string{"scope-a", "scope-b"},
 		Annotations:    tools.NewReadOnlyAnnotations(),
 	}
@@ -107,7 +106,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			b := tools.BaseTool{AuthRequired: tc.authRequired}
+			b := tools.BaseTool{Metadata: tools.Manifest{AuthRequired: tc.authRequired}}
 			if got := b.Authorized(tc.verified); got != tc.want {
 				t.Errorf("Authorized(%v) = %v, want %v", tc.verified, got, tc.want)
 			}

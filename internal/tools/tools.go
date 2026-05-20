@@ -188,7 +188,6 @@ type BaseTool struct {
 	Description      string
 	Metadata         Manifest
 	StaticParameters parameters.Parameters
-	AuthRequired     []string
 	ScopesRequired   []string
 	Annotations      *ToolAnnotations
 }
@@ -202,7 +201,7 @@ func (b BaseTool) GetDescription() string {
 }
 
 func (b BaseTool) GetAuthRequired() []string {
-	return b.AuthRequired
+	return b.Metadata.AuthRequired
 }
 
 func (b BaseTool) GetAnnotations() *ToolAnnotations {
@@ -218,7 +217,7 @@ func (b BaseTool) GetParameters() parameters.Parameters {
 }
 
 func (b BaseTool) Authorized(verifiedAuthServices []string) bool {
-	return IsAuthorized(b.AuthRequired, verifiedAuthServices)
+	return IsAuthorized(b.Metadata.AuthRequired, verifiedAuthServices)
 }
 
 func (b BaseTool) GetScopesRequired() []string {
