@@ -155,7 +155,7 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/sources/<newdb>`.
 2.  Define `Config` and `Source` structs in `internal/sources/<newdb>/<newdb>.go`.
 3.  Implement `SourceConfig` interface (`SourceConfigType`, `Initialize`).
-4.  Implement `Source` interface (`SourceType`).
+4.  Implement `Source` interface (`SourceType`, `ToConfig`).
 5.  Implement `init()` to register the source.
 6.  Add unit tests in `internal/sources/<newdb>/<newdb>_test.go`.
 
@@ -164,7 +164,7 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/tools/<newdb>/<toolname>`.
 2.  Define `Config` and `Tool` structs.
 3.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`).
-4.  Implement `Tool` interface (`Invoke`, `ParseParams`, `Manifest`, `Authorized`).
+4.  Implement `Tool` interface (defined in `internal/tools/tools.go`, including `Invoke`, `Manifest`, `Authorized`, etc.).
 5.  Implement `init()` to register the tool.
 6.  Add unit tests.
 
