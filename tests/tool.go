@@ -540,12 +540,12 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	// Resolve options
 	// Default values for TemplateParameterTestConfig
 	configs := &TemplateParameterTestConfig{
-		ddlWant:         "null",
+		ddlWant:         "[]",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
 		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		selectNameWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
-		selectEmptyWant: "null",
-		insert1Want:     "null",
+		selectEmptyWant: "[]",
+		insert1Want:     "[]",
 
 		nameFieldArray: `["name"]`,
 		nameColFilter:  "name",
@@ -763,8 +763,8 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	// Default values for ExecuteSqlTestConfig
 	configs := &ExecuteSqlTestConfig{
 		select1Statement: `"SELECT 1"`,
-		createWant:       "null",
-		dropWant:         "null",
+		createWant:       "[]",
+		dropWant:         "[]",
 		selectEmptyWant:  "[]",
 	}
 
