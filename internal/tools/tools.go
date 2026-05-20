@@ -169,3 +169,70 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 	}
 	return source, nil
 }
+
+// BaseTool provides default implementations of the metadata, parameter, and
+// authorization methods on the Tool interface. Concrete tools embed BaseTool
+// to drop their boilerplate and override only methods that need custom
+// behavior.
+//
+// BaseTool does NOT implement Invoke or ToConfig; concrete tools must provide
+// those. The default EmbedParams passes a nil vector formatter — tools that
+// write embeddings into pgvector (or similar) must override EmbedParams to
+// supply the right formatter.
+//
+// Annotations should be pre-resolved by the concrete tool's Initialize using
+// GetAnnotationsOrDefault, since the appropriate default (read-only vs
+// destructive) depends on the tool.
+type BaseTool struct {
+	Name             string
+	Description      string
+	Metadata         Manifest
+	StaticParameters parameters.Parameters
+	AuthRequired     []string
+	ScopesRequired   []string
+	Annotations      *ToolAnnotations
+}
+
+func (b BaseTool) GetName() string {
+	return b.Name
+}
+
+func (b BaseTool) GetDescription() string {
+	return b.Description
+}
+
+func (b BaseTool) GetAuthRequired() []string {
+	return b.AuthRequired
+}
+
+func (b BaseTool) GetAnnotations() *ToolAnnotations {
+	return b.Annotations
+}
+
+func (b BaseTool) Manifest() Manifest {
+	return b.Metadata
+}
+
+func (b BaseTool) GetParameters() parameters.Parameters {
+	return b.StaticParameters
+}
+
+func (b BaseTool) Authorized(verifiedAuthServices []string) bool {
+	return IsAuthorized(b.AuthRequired, verifiedAuthServices)
+}
+
+func (b BaseTool) GetScopesRequired() []string {
+	return b.ScopesRequired
+}
+
+func (b BaseTool) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
+	return false, nil
+}
+
+func (b BaseTool) GetAuthTokenHeaderName(_ SourceProvider) (string, error) {
+	return "Authorization", nil
+}
+
+func (b BaseTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, embeddingModelsMap, nil)
+}
