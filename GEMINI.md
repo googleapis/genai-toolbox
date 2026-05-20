@@ -214,6 +214,7 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
 4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+5.  **Title Convention:** The YAML frontmatter `title` must always be exactly the kebab-case name of the tool (e.g., `title: "arcadedb-execute-sql"`). Do **NOT** append the word "Tool" to the title (unlike source pages, which end with "Source").
 
 ##### Samples Architecture Constraints
 Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope.
