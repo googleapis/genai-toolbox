@@ -218,7 +218,7 @@ func TestHealthz(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	addr, port := "127.0.0.1", 5004
+	addr, port := "127.0.0.1", 0
 	cfg := server.ServerConfig{
 		Version:      "0.0.0",
 		Address:      addr,
@@ -254,7 +254,7 @@ func TestHealthz(t *testing.T) {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
 
-	err = s.Listen(ctx)
+	err = s.Listen(ctx, "", "")
 	if err != nil {
 		t.Fatalf("unable to start server: %v", err)
 	}
@@ -267,7 +267,7 @@ func TestHealthz(t *testing.T) {
 		}
 	}()
 
-	url := fmt.Sprintf("http://%s:%d/healthz", addr, port)
+	url := fmt.Sprintf("http://%s/healthz", s.Addr())
 	resp, err := http.Get(url)
 	if err != nil {
 		t.Fatalf("error when sending a request: %s", err)
@@ -304,7 +304,7 @@ func TestHealthzBypassesHostCheck(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	addr, port := "127.0.0.1", 5005
+	addr, port := "127.0.0.1", 0
 	cfg := server.ServerConfig{
 		Version:      "0.0.0",
 		Address:      addr,
@@ -340,7 +340,7 @@ func TestHealthzBypassesHostCheck(t *testing.T) {
 		t.Fatalf("unable to initialize server: %v", err)
 	}
 
-	err = s.Listen(ctx)
+	err = s.Listen(ctx, "", "")
 	if err != nil {
 		t.Fatalf("unable to start server: %v", err)
 	}
@@ -354,7 +354,7 @@ func TestHealthzBypassesHostCheck(t *testing.T) {
 	}()
 
 	// Hit /healthz via the pod IP (127.0.0.1), which is not in AllowedHosts.
-	url := fmt.Sprintf("http://%s:%d/healthz", addr, port)
+	url := fmt.Sprintf("http://%s/healthz", s.Addr())
 	resp, err := http.Get(url)
 	if err != nil {
 		t.Fatalf("error when sending a request: %s", err)
@@ -366,7 +366,7 @@ func TestHealthzBypassesHostCheck(t *testing.T) {
 	}
 
 	// Sanity check: confirm the host check is still active for other paths.
-	rootURL := fmt.Sprintf("http://%s:%d/", addr, port)
+	rootURL := fmt.Sprintf("http://%s/", s.Addr())
 	rootResp, err := http.Get(rootURL)
 	if err != nil {
 		t.Fatalf("error when sending root request: %s", err)
