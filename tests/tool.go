@@ -2122,7 +2122,7 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
@@ -2131,7 +2131,7 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 			clientSleepSecs:     1,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
@@ -3223,7 +3223,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
@@ -3231,7 +3231,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
@@ -3382,7 +3382,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    false,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes pk table will not show",
@@ -3392,7 +3392,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    false,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes uk table will not show",
@@ -3402,7 +3402,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    true,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes non-unique key only table will show",
@@ -3462,7 +3462,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    false,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes with the right database, show everything",
@@ -3661,7 +3661,7 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			name:           "invoke list_table_stats with schema other than connected to, expected log error and nil results",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "somerandomdb_xyx")),
 			wantStatusCode: http.StatusInternalServerError,
-			want:           []tableStatsDetails(nil),
+			want:           []tableStatsDetails{},
 		},
 		{
 			name:           "invoke list_table_stats on 1 database and all tables, expected to have 2 result",
@@ -3679,7 +3679,7 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			name:           "invoke list_table_stats on 1 non-exist table on 1 database, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           []tableStatsDetails(nil),
+			want:           []tableStatsDetails{},
 		},
 	}
 
@@ -3839,19 +3839,19 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, high data_free threshold, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 1000000000}`, databaseName, tableNameParam)),
 			wantStatusCode: http.StatusOK,
-			want:           []tableFragmentationDetails(nil),
+			want:           []tableFragmentationDetails{},
 		},
 		{
 			name:           "invoke list_table_fragmentation on 1 non-exist database, no data_free threshold, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(`{"table_schema": "non_existent_database", "data_free_threshold_bytes": 0}`),
 			wantStatusCode: http.StatusOK,
-			want:           []tableFragmentationDetails(nil),
+			want:           []tableFragmentationDetails{},
 		},
 		{
 			name:           "invoke list_table_fragmentation on 1 non-exist table, no data_free threshold, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table", "data_free_threshold_bytes": 0}`),
 			wantStatusCode: http.StatusOK,
-			want:           []tableFragmentationDetails(nil),
+			want:           []tableFragmentationDetails{},
 		},
 	}
 	for _, tc := range invokeTcs {
