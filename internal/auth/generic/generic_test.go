@@ -729,12 +729,27 @@ func TestIsJWTFormat(t *testing.T) {
 		want  bool
 	}{
 		{
-			name:  "valid JWT format",
+			name:  "valid JWT format with alg",
 			token: "eyJhbGciOiJSUzI1NiJ9.payload.signature",
 			want:  true,
 		},
 		{
-			name:  "opaque token",
+			name:  "invalid base64 in header",
+			token: "invalid_base64!@#.payload.signature",
+			want:  false,
+		},
+		{
+			name:  "valid base64 but invalid JSON",
+			token: "aGVsbG8.payload.signature",
+			want:  false,
+		},
+		{
+			name:  "valid JSON but missing alg parameter",
+			token: "eyJmb28iOiJiYXIifQ.payload.signature",
+			want:  false,
+		},
+		{
+			name:  "opaque token without dots",
 			token: "opaque-token",
 			want:  false,
 		},
