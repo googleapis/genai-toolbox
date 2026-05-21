@@ -107,7 +107,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest(), tests.DisableSelect1AuthTest(), tests.WithNullWant("null"))
+	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest(), tests.DisableSelect1AuthTest())
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
 	runGenericAuthInvokeTest(t, privateKey)
