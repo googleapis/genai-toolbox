@@ -155,7 +155,7 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/sources/<newdb>`.
 2.  Define `Config` and `Source` structs in `internal/sources/<newdb>/<newdb>.go`.
 3.  Implement `SourceConfig` interface (`SourceConfigType`, `Initialize`).
-4.  Implement `Source` interface (`SourceType`).
+4.  Implement `Source` interface (`SourceType`, `ToConfig`).
 5.  Implement `init()` to register the source.
 6.  Add unit tests in `internal/sources/<newdb>/<newdb>_test.go`.
 
@@ -164,7 +164,7 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/tools/<newdb>/<toolname>`.
 2.  Define `Config` and `Tool` structs.
 3.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`).
-4.  Implement `Tool` interface (`Invoke`, `ParseParams`, `Manifest`, `Authorized`).
+4.  Implement `Tool` interface (defined in `internal/tools/tools.go`, including `Invoke`, `Manifest`, `Authorized`, etc.).
 5.  Implement `init()` to register the tool.
 6.  Add unit tests.
 
@@ -214,6 +214,7 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
 4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+5.  **Title Convention:** The YAML frontmatter `title` must always be exactly the kebab-case name of the tool (e.g., `title: "arcadedb-execute-sql"`). Do **NOT** append the word "Tool" to the title (unlike source pages, which end with "Source").
 
 ##### Samples Architecture Constraints
 Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope.

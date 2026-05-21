@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: > 
   A "dataplex-lookup-context" tool provides rich metadata of one or more data assets along with their relationships.
+aliases:
+  - /integrations/dataplex/tools/dataplex-lookup-context/
 ---
 
 ## About

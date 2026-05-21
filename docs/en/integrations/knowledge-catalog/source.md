@@ -3,6 +3,8 @@ title: "Knowledge Catalog (formerly known as Dataplex) Source"
 type: docs
 linkTitle: "Source"
 weight: 1
+aliases:
+  - /integrations/dataplex/source/
 description: >
   Knowledge Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Knowledge Catalog powers AI, analytics, and business intelligence at scale.
 no_list: true
