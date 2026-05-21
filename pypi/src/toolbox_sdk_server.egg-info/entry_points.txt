@@ -1,2 +1,0 @@
-[console_scripts]
-toolbox-sdk-server = toolbox_sdk_server.main:run

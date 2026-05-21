@@ -11,12 +11,19 @@ def get_binary_path():
     bin_name = "toolbox.exe" if system == "Windows" else "toolbox"
 
     try:
-        binary_resource = resources.files(toolbox_server) / "bin" / bin_name
-
-        with resources.as_file(binary_resource) as executable_path:
-            if not executable_path.exists():
+        if hasattr(resources, "files"):
+            binary_resource = resources.files(toolbox_server) / "bin" / bin_name
+            with resources.as_file(binary_resource) as executable_path:
+                if not executable_path.exists():
+                     raise FileNotFoundError(f"Binary not found at {executable_path}")
+                return str(executable_path)
+        else:
+            # Fallback for Python 3.8 without importlib.resources.files
+            pkg_path = os.path.dirname(toolbox_server.__file__)
+            executable_path = os.path.join(pkg_path, "bin", bin_name)
+            if not os.path.exists(executable_path):
                  raise FileNotFoundError(f"Binary not found at {executable_path}")
-            return str(executable_path)
+            return executable_path
 
     except Exception as e:
         raise FileNotFoundError(f"Could not locate binary {bin_name} for {system}: {e}")
@@ -33,9 +40,10 @@ def run():
          os.chmod(binary_path, 0o755)
 
     try:
-        process = subprocess.Popen([binary_path] + sys.argv[1:])
-        process.wait()
-        sys.exit(process.returncode)
+        # Run the binary and pass through all command-line arguments.
+        # We use subprocess.run since it is simpler and handles process wait automatically.
+        result = subprocess.run([binary_path] + sys.argv[1:])
+        sys.exit(result.returncode)
     except KeyboardInterrupt:
         print("Toolbox execution interrupted.", file=sys.stderr)
         sys.exit(1)

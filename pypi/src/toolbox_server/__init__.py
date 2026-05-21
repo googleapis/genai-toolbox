@@ -1,2 +1,2 @@
 # Version will be managed by release-please
-__version__ = "0.32.0"
+__version__ = "1.2.0"

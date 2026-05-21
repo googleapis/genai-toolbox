@@ -34,8 +34,42 @@ def get_platform_details():
         raise OSError(f"Unsupported platform: {system}-{machine}")
     return os_part, arch_part
 
+def get_version():
+    # 1. Try to read from ../server.json
+    server_json_path = os.path.join(os.path.dirname(__file__), "..", "server.json")
+    if os.path.exists(server_json_path):
+        import json
+        try:
+            with open(server_json_path, "r") as f:
+                data = json.load(f)
+                ver = data.get("version")
+                if ver:
+                    return ver
+        except Exception:
+            pass
+
+    # 2. Try to read from src/toolbox_server/__init__.py
+    init_py = os.path.join(os.path.dirname(__file__), "src", "toolbox_server", "__init__.py")
+    if os.path.exists(init_py):
+        with open(init_py, "r") as f:
+            for line in f:
+                if line.startswith("__version__"):
+                    return line.split("=")[1].strip().strip('"').strip("'")
+    return "0.0.0"
+
+# Ensure LICENSE is present in the package directory (inherent from root repo)
+setup_dir = os.path.dirname(os.path.abspath(__file__))
+parent_license = os.path.join(setup_dir, "..", "LICENSE")
+local_license = os.path.join(setup_dir, "LICENSE")
+if os.path.exists(parent_license):
+    shutil.copy2(parent_license, local_license)
+
 def download_binary():
-    version = os.environ.get("TOOLBOX_VERSION", "v0.32.0")
+    version = os.environ.get("TOOLBOX_VERSION")
+    if not version:
+        ver = get_version()
+        version = f"v{ver}" if not ver.startswith("v") else ver
+
     os_part, arch_part = get_platform_details()
     bin_name = "toolbox.exe" if os_part == "windows" else "toolbox"
 
