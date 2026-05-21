@@ -209,6 +209,11 @@ func TestMcpAuth(t *testing.T) {
 			wantStatusCode: http.StatusOK,
 		},
 		{
+			name:           "200 OK with valid opaque token containing two dots",
+			token:          "this.is.opaque",
+			wantStatusCode: http.StatusOK,
+		},
+		{
 			name:   "403 Forbidden with insufficient tool scopes",
 			token:  tokenOnlyReadStr,
 			method: http.MethodPost,
