@@ -23,6 +23,8 @@ cloud.google.com/go/datacatalog v1.30.0 h1:pqUd8jOITsa+zQ85j2Uij7WuD3T5nVQ/PdH+t
 cloud.google.com/go/datacatalog v1.30.0/go.mod h1:MP8V3kNuESnwMk4mB6zdWmw/4KQ5xZ8dyUNVsggqN5I=
 cloud.google.com/go/dataplex v1.33.0 h1:e2FI+kPCDPCn9FUMNFntKrA1p960LQuJMeyIzDwDoUM=
 cloud.google.com/go/dataplex v1.33.0/go.mod h1:sOazL+Bs/PTxiMHQ5yBboBvEW9qPrpGogx3+RAgfIt8=
+cloud.google.com/go/dataplex v1.34.0 h1:WXf+qC/Qhrq6B91HoXYcZJEv1nrLkFpM0HV+JX2SdPs=
+cloud.google.com/go/dataplex v1.34.0/go.mod h1:sOazL+Bs/PTxiMHQ5yBboBvEW9qPrpGogx3+RAgfIt8=
 cloud.google.com/go/dataproc/v2 v2.20.0 h1:hO6p3EMG5mYJyk8FASPvUSBf+HfCNGdvG1ILBFNN0kY=
 cloud.google.com/go/dataproc/v2 v2.20.0/go.mod h1:oARVSa38kAHvSuG+cozsrY2sE6UajGuvOOf9vS+ADHI=
 cloud.google.com/go/firestore v1.22.0 h1:avooeboIq37vKXobrbPUFhFBxS/c3FqmWoX0xs8dO6E=
