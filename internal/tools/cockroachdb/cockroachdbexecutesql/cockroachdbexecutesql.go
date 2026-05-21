@@ -126,7 +126,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	fields := results.FieldDescriptions()
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		v, err := results.Values()
 		if err != nil {

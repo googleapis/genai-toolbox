@@ -40,6 +40,8 @@ import (
 // ProcessMethod returns a response for the request.
 func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch method {
+	case INITIALIZE:
+		return initializeHandler(ctx, id, body)
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
@@ -54,6 +56,49 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
+}
+
+// InitializeResponse runs capability negotiation and protocol version agreement.
+// This is the Initialization phase of the lifecycle for MCP client-server connections.
+// Always start with the latest protocol version supported.
+func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (any, error) {
+	v, err := util.ToolboxVersionFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	var req InitializeRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid mcp initialize request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	toolsListChanged := false
+	promptsListChanged := false
+	result := InitializeResult{
+		ProtocolVersion: PROTOCOL_VERSION,
+		Capabilities: ServerCapabilities{
+			Tools: &ListChanged{
+				ListChanged: &toolsListChanged,
+			},
+			Prompts: &ListChanged{
+				ListChanged: &promptsListChanged,
+			},
+		},
+		ServerInfo: Implementation{
+			BaseMetadata: BaseMetadata{
+				Name: SERVER_NAME,
+			},
+			Version: v,
+		},
+	}
+	res := jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  result,
+	}
+
+	return res, nil
 }
 
 // pingHandler handles the "ping" method by returning an empty response.

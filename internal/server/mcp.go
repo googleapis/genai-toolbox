@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -32,11 +33,13 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -779,8 +782,27 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 	// Process the method
 	switch baseMessage.Method {
-	case mcputil.INITIALIZE:
-		result, version, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+	case "initialize":
+		var initReq struct {
+			Params struct {
+				ProtocolVersion string `json:"protocolVersion"`
+			} `json:"params,omitempty"`
+		}
+		if err := json.Unmarshal(body, &initReq); err != nil {
+			err = fmt.Errorf("fail to parse protocolVersion from initialize request")
+			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+
+		var version string
+		v := initReq.Params.ProtocolVersion
+		if slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, v) {
+			version = v
+		} else {
+			version = mcputil.LATEST_PROTOCOL_VERSION
+		}
+
+		ctx = util.WithToolboxVersionKey(ctx, s.version)
+		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
