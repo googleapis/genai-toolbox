@@ -730,7 +730,7 @@ func TestIsJWTFormat(t *testing.T) {
 	}{
 		{
 			name:  "valid JWT format",
-			token: "header.payload.signature",
+			token: "eyJhbGciOiJSUzI1NiJ9.payload.signature",
 			want:  true,
 		},
 		{

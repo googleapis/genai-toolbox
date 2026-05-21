@@ -16,6 +16,7 @@ package generic
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -258,7 +259,20 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 }
 
 func isJWTFormat(token string) bool {
-	return strings.Count(token, ".") == 2
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return false
+	}
+	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return false
+	}
+	var header map[string]any
+	if err := json.Unmarshal(headerBytes, &header); err != nil {
+		return false
+	}
+	_, hasAlg := header["alg"]
+	return hasAlg
 }
 
 // validateJwtToken validates a JWT token locally
