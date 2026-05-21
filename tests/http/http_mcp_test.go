@@ -621,6 +621,7 @@ func TestHTTPCallTool(t *testing.T) {
 		tests.RunMCPToolInvokeTest(t, `"hello world"`,
 			tests.WithMyToolId3NameAliceWant(`{"id":1,"name":"Alice"}`),
 			tests.WithMyToolById4Want(`{"id":4,"name":null}`),
+			tests.WithNullWant("[]"),
 		)
 	})
 }
