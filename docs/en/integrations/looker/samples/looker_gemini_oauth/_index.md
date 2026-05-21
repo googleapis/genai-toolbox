@@ -102,6 +102,7 @@ In this section, we will download Toolbox and run the Toolbox server.
             "oauth": {
                 "enabled": true,
                 "clientId": "gemini-cli",
+                "redirectUri": "http://localhost:7777/oauth/callback",
                 "authorizationUrl": "https://looker.example.com/auth",
                 "tokenUrl": "https://looker.example.com/api/token",
                 "scopes": ["cors_api"]
@@ -163,7 +164,8 @@ Skip **Step 2** and use the following in the `~/.gemini/settings.json` file in
     "looker": {
         "httpUrl": "https://<your mcp server url>/mcp",
         "oauth": {
-            "clientId": "gemini-cli"
+            "clientId": "gemini-cli",
+            "redirectUri": "http://localhost:7777/oauth/callback"
         }
     }
 }
