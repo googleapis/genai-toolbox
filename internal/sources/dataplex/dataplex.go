@@ -16,15 +16,20 @@ package dataplex
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"regexp"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"cloud.google.com/go/longrunning/autogen/longrunningpb"
 	"github.com/cenkalti/backoff/v5"
 	"github.com/goccy/go-yaml"
+	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -32,6 +37,8 @@ import (
 )
 
 const SourceType string = "dataplex"
+
+var operationNameRegex = regexp.MustCompile(`^projects/[^/]+/locations/[^/]+/operations/[^/]+$`)
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -64,7 +71,7 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, dataScanClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
+	client, dataScanClient, tokenSource, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +79,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Config:         r,
 		Client:         client,
 		DataScanClient: dataScanClient,
+		tokenSource:    tokenSource,
 	}
 
 	return s, nil
@@ -83,6 +91,7 @@ type Source struct {
 	Config
 	Client         *dataplexapi.CatalogClient
 	DataScanClient *dataplexapi.DataScanClient
+	tokenSource    oauth2.TokenSource
 }
 
 func (s *Source) SourceType() string {
@@ -111,29 +120,29 @@ func initDataplexConnection(
 	tracer trace.Tracer,
 	name string,
 	project string,
-) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, error) {
+) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 
 	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
 	}
-	return client, dataScanClient, nil
+	return client, dataScanClient, cred.TokenSource, nil
 }
 
 func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectTypes []string, entry string) (*dataplexpb.Entry, error) {
@@ -301,4 +310,121 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 		results = append(results, scan)
 	}
 	return results, nil
+}
+
+func (s *Source) GenerateDataInsights(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanId := fmt.Sprintf("nq-doc-%s", uuid.New().String())
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanId,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataDocumentationSpec{
+				DataDocumentationSpec: &dataplexpb.DataDocumentationSpec{
+					CatalogPublishingEnabled: publish,
+				},
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_DOCUMENTATION,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
+}
+
+func (s *Source) GetDataInsights(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", projectID, location, scanID)
+	req := &dataplexpb.GetDataScanRequest{
+		Name: name,
+		View: dataplexpb.GetDataScanRequest_FULL,
+	}
+	return s.DataScanClient.GetDataScan(ctx, req)
+}
+
+func (s *Source) GetOperation(ctx context.Context, opName string) (map[string]any, error) {
+	if !operationNameRegex.MatchString(opName) {
+		return nil, fmt.Errorf("invalid operation name format: %q (expected projects/*/locations/*/operations/*)", opName)
+	}
+
+	req := &longrunningpb.GetOperationRequest{
+		Name: opName,
+	}
+	op, err := s.DataScanClient.LROClient.GetOperation(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	bytes, err := protojson.Marshal(op)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal operation to JSON: %w", err)
+	}
+
+	var opData map[string]any
+	if err := json.Unmarshal(bytes, &opData); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal operation JSON to map: %w", err)
+	}
+
+	return opData, nil
+}
+
+func (s *Source) GetJobStatus(ctx context.Context, projectID, location, scanID, jobID string) (*dataplexpb.DataScanJob, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+
+	// If jobID is provided, fetch that specific job directly!
+	if jobID != "" {
+		name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s/jobs/%s", projectID, location, scanID, jobID)
+		req := &dataplexpb.GetDataScanJobRequest{
+			Name: name,
+		}
+		return s.DataScanClient.GetDataScanJob(ctx, req)
+	}
+
+	// Fallback to listing and returning the latest job (PageSize: 1)
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", projectID, location, scanID)
+	req := &dataplexpb.ListDataScanJobsRequest{
+		Parent:   parent,
+		PageSize: 1,
+	}
+
+	it := s.DataScanClient.ListDataScanJobs(ctx, req)
+	if it == nil {
+		return nil, fmt.Errorf("failed to list data scan jobs for scan %q", scanID)
+	}
+
+	job, err := it.Next()
+	if err == iterator.Done {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return job, nil
 }
