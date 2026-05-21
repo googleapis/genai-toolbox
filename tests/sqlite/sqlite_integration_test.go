@@ -233,7 +233,7 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 			name:       "select no rows",
 			sql:        fmt.Sprintf("SELECT name FROM %s WHERE id = 999", tableName),
 			wantStatus: 200,
-			wantBody:   "null",
+			wantBody:   "[]",
 		},
 		{
 			name:       "invalid SQL",

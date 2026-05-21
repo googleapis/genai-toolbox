@@ -104,7 +104,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	}
 	defer rows.Close()
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		cols, err := rows.Columns()
 		if err != nil {

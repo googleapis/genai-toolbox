@@ -162,7 +162,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 
 	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
 	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
+	// 'out' will remain an empty slice if cols is empty or err is not nil here.
 	cols, _ := rows.Columns()
 
 	// Get Column types
@@ -174,7 +174,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 		return []any{}, nil
 	}
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		values := make([]any, len(cols))
 		for i, colType := range colTypes {

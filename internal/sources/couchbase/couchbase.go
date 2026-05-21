@@ -121,7 +121,7 @@ func (s *Source) RunSQL(statement string, params parameters.ParamValues) (any, e
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		var result json.RawMessage
 		err := results.Row(&result)
