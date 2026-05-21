@@ -15,25 +15,113 @@
 package v20241105
 
 import (
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // SERVER_NAME is the server name used in Implementation.
 const SERVER_NAME = "Toolbox"
 
 // PROTOCOL_VERSION is the version of the MCP protocol in this package.
-const PROTOCOL_VERSION = "2024-11-05"
+const PROTOCOL_VERSION = mcputil.VERSION_20241105
 
 // methods that are supported.
 const (
+	INITIALIZE   = "initialize"
 	PING         = "ping"
 	TOOLS_LIST   = "tools/list"
 	TOOLS_CALL   = "tools/call"
 	PROMPTS_LIST = "prompts/list"
 	PROMPTS_GET  = "prompts/get"
 )
+
+/* Initialization */
+
+// Params to define MCP Client during initialize request.
+type InitializeParams struct {
+	// The latest version of the Model Context Protocol that the client supports.
+	// The client MAY decide to support older versions as well.
+	ProtocolVersion string             `json:"protocolVersion"`
+	Capabilities    ClientCapabilities `json:"capabilities"`
+	ClientInfo      Implementation     `json:"clientInfo"`
+}
+
+// InitializeRequest is sent from the client to the server when it first
+// connects, asking it to begin initialization.
+type InitializeRequest struct {
+	jsonrpc.Request
+	Params InitializeParams `json:"params"`
+}
+
+// InitializeResult is sent after receiving an initialize request from the
+// client.
+type InitializeResult struct {
+	jsonrpc.Result
+	// The version of the Model Context Protocol that the server wants to use.
+	// This may not match the version that the client requested. If the client cannot
+	// support this version, it MUST disconnect.
+	ProtocolVersion string             `json:"protocolVersion"`
+	Capabilities    ServerCapabilities `json:"capabilities"`
+	ServerInfo      Implementation     `json:"serverInfo"`
+	// Instructions describing how to use the server and its features.
+	//
+	// This can be used by clients to improve the LLM's understanding of
+	// available tools, resources, etc. It can be thought of like a "hint" to the model.
+	// For example, this information MAY be added to the system prompt.
+	Instructions string `json:"instructions,omitempty"`
+}
+
+// InitializedNotification is sent from the client to the server after
+// initialization has finished.
+type InitializedNotification struct {
+	jsonrpc.Notification
+}
+
+// ListChange represents whether the server supports notification for changes to the capabilities.
+type ListChanged struct {
+	ListChanged *bool `json:"listChanged,omitempty"`
+}
+
+// ClientCapabilities represents capabilities a client may support. Known
+// capabilities are defined here, in this schema, but this is not a closed set: any
+// client can define its own, additional capabilities.
+type ClientCapabilities struct {
+	// Experimental, non-standard capabilities that the client supports.
+	Experimental map[string]interface{} `json:"experimental,omitempty"`
+	// Present if the client supports listing roots.
+	Roots *ListChanged `json:"roots,omitempty"`
+	// Present if the client supports sampling from an LLM.
+	Sampling struct{} `json:"sampling,omitempty"`
+}
+
+// ServerCapabilities represents capabilities that a server may support. Known
+// capabilities are defined here, in this schema, but this is not a closed set: any
+// server can define its own, additional capabilities.
+type ServerCapabilities struct {
+	Tools   *ListChanged `json:"tools,omitempty"`
+	Prompts *ListChanged `json:"prompts,omitempty"`
+}
+
+// Base interface for metadata with name (identifier) and title (display name) properties.
+type BaseMetadata struct {
+	// Intended for programmatic or logical use, but used as a display name in past specs
+	// or fallback (if title isn't present).
+	Name string `json:"name"`
+	// Intended for UI and end-user contexts — optimized to be human-readable and easily understood,
+	//even by those unfamiliar with domain-specific terminology.
+	//
+	// If not provided, the name should be used for display (except for Tool,
+	// where `annotations.title` should be given precedence over using `name`,
+	// if present).
+	Title string `json:"title,omitempty"`
+}
+
+// Implementation describes the name and version of an MCP implementation.
+type Implementation struct {
+	BaseMetadata
+	Version string `json:"version"`
+}
 
 /* Empty result */
 
@@ -71,7 +159,22 @@ type ListToolsRequest struct {
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
 	PaginatedResult
-	Tools []tools.McpManifest `json:"tools"`
+	Tools []Tool `json:"tools"`
+}
+
+type Tool struct {
+	// The name of the tool.
+	Name string `json:"name"`
+	// A human-readable description of the tool.
+	Description string `json:"description,omitempty"`
+	// A JSON Schema object defining the expected parameters for the tool.
+	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+}
+
+type InputSchema struct {
+	Type       string                                     `json:"type"`
+	Properties map[string]parameters.ParameterMcpManifest `json:"properties"`
+	Required   []string                                   `json:"required"`
 }
 
 // Used by the client to invoke a tool provided by the server.
@@ -150,7 +253,7 @@ type ListPromptsRequest struct {
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
 	PaginatedResult
-	Prompts []prompts.McpManifest `json:"prompts"`
+	Prompts []Prompt `json:"prompts"`
 }
 
 // Used by the client to get a prompt provided by the server.
@@ -167,6 +270,26 @@ type GetPromptResult struct {
 	jsonrpc.Result
 	Description string          `json:"description,omitempty"`
 	Messages    []PromptMessage `json:"messages"`
+}
+
+// A prompt or prompt template that the server offers.
+type Prompt struct {
+	// The name of the prompt or prompt template.
+	Name string `json:"name"`
+	// An optional description of what this prompt provides
+	Description string `json:"description,omitempty"`
+	// A list of arguments to use for templating the prompt.
+	Arguments []PromptArgument `json:"arguments,omitempty"`
+}
+
+// Describes an argument that a prompt can accept.
+type PromptArgument struct {
+	// The name of the argument.
+	Name string `json:"name"`
+	// A human-readable description of the argument.
+	Description string `json:"description,omitempty"`
+	// Whether this argument must be provided.
+	Required bool `json:"required,omitempty"`
 }
 
 // Describes a message returned as part of a prompt.

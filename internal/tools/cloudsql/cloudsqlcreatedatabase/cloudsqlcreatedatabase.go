@@ -95,27 +95,38 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	description := cfg.Description
-	if description == "" {
-		description = "Creates a new database in a Cloud SQL instance."
+	if cfg.Description == "" {
+		cfg.Description = "Creates a new database in a Cloud SQL instance."
 	}
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, annotations)
 
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:    cfg,
+		AllParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 	}, nil
 }
 
 // Tool represents the create-database tool.
 type Tool struct {
 	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	AllParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -157,11 +168,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 // Manifest returns the tool's manifest.
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-// McpManifest returns the tool's MCP manifest.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 // Authorized checks if the tool is authorized.

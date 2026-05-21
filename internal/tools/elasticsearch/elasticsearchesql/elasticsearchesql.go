@@ -74,21 +74,32 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Tool struct {
 	Config
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	manifest tools.Manifest
 }
 
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	annotations := tools.GetAnnotationsOrDefault(c.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, annotations)
-
 	return Tool{
-		Config:      c,
-		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:   c,
+		manifest: tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
 	}, nil
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -138,10 +149,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {

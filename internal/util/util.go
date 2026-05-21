@@ -229,3 +229,59 @@ func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
 	}
 	return nil
 }
+
+// TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
+type TelemetryAttributes struct {
+	ClientName    string
+	ClientVersion string
+	ClientModel   string
+	ClientUserID  string
+	ClientAgentID string
+}
+
+const telemetryAttrsKey contextKey = "telemetryAttrs"
+
+// WithTelemetryAttributes adds TelemetryAttributes to the context
+func WithTelemetryAttributes(ctx context.Context, attrs *TelemetryAttributes) context.Context {
+	return context.WithValue(ctx, telemetryAttrsKey, attrs)
+}
+
+// TelemetryAttributesFromContext retrieves TelemetryAttributes from context
+func TelemetryAttributesFromContext(ctx context.Context) *TelemetryAttributes {
+	if attrs, ok := ctx.Value(telemetryAttrsKey).(*TelemetryAttributes); ok {
+		return attrs
+	}
+	return nil
+}
+
+const sqlCommenterEnabledKey contextKey = "sqlCommenterEnabled"
+
+// WithSQLCommenterEnabled adds the sql-commenter-enabled flag to the context
+func WithSQLCommenterEnabled(ctx context.Context, enabled bool) context.Context {
+	return context.WithValue(ctx, sqlCommenterEnabledKey, enabled)
+}
+
+// SQLCommenterEnabledFromContext retrieves the sql-commenter-enabled flag from context
+func SQLCommenterEnabledFromContext(ctx context.Context) bool {
+	if enabled, ok := ctx.Value(sqlCommenterEnabledKey).(bool); ok {
+		return enabled
+	}
+	return false
+}
+
+// toolboxVersionKey is the key used to store toolbox version within context
+const toolboxVersionKey contextKey = "toolboxVersion"
+
+// WithToolboxVersionKey adds a toolbox version into the context as a value
+func WithToolboxVersionKey(ctx context.Context, versionString string) context.Context {
+	return context.WithValue(ctx, toolboxVersionKey, versionString)
+}
+
+// ToolboxVersionFromContext retrieves the toolbox version or return an error
+func ToolboxVersionFromContext(ctx context.Context) (string, error) {
+	if v, ok := ctx.Value(toolboxVersionKey).(string); ok && v != "" {
+		return v, nil
+	} else {
+		return "", fmt.Errorf("unable to retrieve toolbox version")
+	}
+}
