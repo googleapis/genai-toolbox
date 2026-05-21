@@ -9,5 +9,5 @@ This is part of the Crema project to enable Claude Code integration.
 Install using `uv`:
 
 ```bash
-uv pip install toolbox-sdk-server
-
+uv pip install toolbox-server
+```
