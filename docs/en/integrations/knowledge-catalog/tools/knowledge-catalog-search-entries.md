@@ -4,6 +4,8 @@ type: docs
 weight: 1
 description: >
   A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+aliases:
+  - /integrations/dataplex/tools/dataplex-search-entries/
 ---
 
 ## About
