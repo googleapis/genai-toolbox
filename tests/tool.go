@@ -3326,9 +3326,11 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			}
 
 			var got any
-			var details []queryListDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
-				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+			details := []queryListDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+				}
 			}
 			got = details
 
@@ -3577,9 +3579,11 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			}
 
 			var got any
-			var details []listDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
-				t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
+			details := []listDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
+				}
 			}
 			got = details
 
@@ -3758,9 +3762,11 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			}
 
 			var got any
-			var details []tableStatsDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
-				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			details := []tableStatsDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+				}
 			}
 			got = details
 
@@ -3906,9 +3912,11 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 			}
 
 			var got any
-			var details []tableFragmentationDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
-				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			details := []tableFragmentationDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+				}
 			}
 			got = details
 
