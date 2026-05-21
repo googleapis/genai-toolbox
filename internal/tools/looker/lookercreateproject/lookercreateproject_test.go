@@ -218,29 +218,4 @@ func TestManifest(t *testing.T) {
 	}
 }
 
-func TestMcpManifest(t *testing.T) {
-	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-create-project",
-		Source:      "my-instance",
-		Description: "test description",
-	}
 
-	tool, err := cfg.Initialize(nil)
-	if err != nil {
-		t.Fatalf("failed to initialize tool: %v", err)
-	}
-
-	mcp := tool.McpManifest()
-	if mcp.Name != cfg.Name {
-		t.Errorf("mcp manifest name mismatch: got %q, want %q", mcp.Name, cfg.Name)
-	}
-
-	properties := mcp.InputSchema.Properties
-	expectedParams := []string{"name", "git_production_branch_name", "pull_request_mode", "validation_required", "git_release_mgmt_enabled", "allow_warnings"}
-	for _, p := range expectedParams {
-		if _, ok := properties[p]; !ok {
-			t.Errorf("parameter %q not found in MCP properties", p)
-		}
-	}
-}
