@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools>=70.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "toolbox-sdk-server"
-dynamic = ["version"] # Version is set in src/toolbox_sdk_server/__init__.py
+name = "toolbox-server"
+dynamic = ["version"] # Version is set in src/toolbox_server/__init__.py
 requires-python = ">=3.8"
 description = "MCP Toolbox Server for Database Operations"
 readme = "README.md"
@@ -21,9 +21,11 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
-toolbox-sdk-server = "toolbox_sdk_server.main:run"
+toolbox-server = "toolbox_server.main:run"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["toolbox_sdk_server*"]
+include = ["toolbox_server*"]
 
+[tool.setuptools.dynamic]
+version = {attr = "toolbox_server.__version__"}
