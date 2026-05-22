@@ -217,5 +217,3 @@ func TestManifest(t *testing.T) {
 		}
 	}
 }
-
-
