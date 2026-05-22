@@ -107,7 +107,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("unable to extract template params", err)
 	}
 
-	newParams, err := parameters.GetParams(t.cfg.Parameters, paramsMap)
+newParams, err := parameters.GetParams(t.StaticParameters, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
