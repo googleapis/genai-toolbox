@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
@@ -168,6 +169,90 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 	want := []any{}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect result: diff %v", diff)
+	}
+}
+
+func TestProcessQueryArgsStripsWrappingQuotes(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	tcs := []struct {
+		desc       string
+		filtersIn  map[string]any
+		filtersOut map[string]any
+	}{
+		{
+			desc:       "bare string value passed through unchanged",
+			filtersIn:  map[string]any{"view.attribution_model": "first_touch"},
+			filtersOut: map[string]any{"view.attribution_model": "first_touch"},
+		},
+		{
+			desc:       "double-quoted value has wrapping quotes stripped",
+			filtersIn:  map[string]any{"view.attribution_model": `"first_touch"`},
+			filtersOut: map[string]any{"view.attribution_model": "first_touch"},
+		},
+		{
+			desc:       "single-quoted value has wrapping quotes stripped",
+			filtersIn:  map[string]any{"view.attribution_model": "'first_touch'"},
+			filtersOut: map[string]any{"view.attribution_model": "first_touch"},
+		},
+		{
+			desc:       "single-quoted key has wrapping quotes stripped",
+			filtersIn:  map[string]any{"'view.field'": "value"},
+			filtersOut: map[string]any{"view.field": "value"},
+		},
+		{
+			desc:       "quoted key and quoted value are both stripped",
+			filtersIn:  map[string]any{`"view.field"`: `"value"`},
+			filtersOut: map[string]any{"view.field": "value"},
+		},
+		{
+			desc:       "non-string values are not touched",
+			filtersIn:  map[string]any{"view.threshold": 42, "view.enabled": true},
+			filtersOut: map[string]any{"view.threshold": 42, "view.enabled": true},
+		},
+		{
+			desc:       "non-comparable values are passed through without panic",
+			filtersIn:  map[string]any{"view.ids": []any{"a", "b"}, "view.meta": map[string]any{"k": "v"}},
+			filtersOut: map[string]any{"view.ids": []any{"a", "b"}, "view.meta": map[string]any{"k": "v"}},
+		},
+		{
+			desc:       "single-character string is not mangled by the length check",
+			filtersIn:  map[string]any{"view.code": "x"},
+			filtersOut: map[string]any{"view.code": "x"},
+		},
+		{
+			desc:       "mismatched wrapping characters are left alone",
+			filtersIn:  map[string]any{"view.f": `"value'`},
+			filtersOut: map[string]any{"view.f": `"value'`},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			params := parameters.ParamValues{
+				{Name: "model", Value: "marketing"},
+				{Name: "explore", Value: "cohort_marketing_performance"},
+				{Name: "fields", Value: []any{"view.channel"}},
+				{Name: "filters", Value: tc.filtersIn},
+				{Name: "pivots", Value: []any{}},
+				{Name: "sorts", Value: []any{}},
+				{Name: "limit", Value: 10},
+				{Name: "tz", Value: "Etc/UTC"},
+			}
+			wq, err := lookercommon.ProcessQueryArgs(ctx, params)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if wq.Filters == nil {
+				t.Fatalf("expected non-nil Filters")
+			}
+			if diff := cmp.Diff(tc.filtersOut, *wq.Filters); diff != "" {
+				t.Fatalf("incorrect filters: diff %v", diff)
+			}
+		})
 	}
 }
 

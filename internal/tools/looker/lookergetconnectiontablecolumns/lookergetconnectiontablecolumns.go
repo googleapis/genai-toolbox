@@ -50,7 +50,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
-	GetLookerSDK(string) (*v4.LookerSDK, error)
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
 }
 
 type Config struct {
@@ -151,7 +151,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError(fmt.Sprintf("'tables' must be a string, got %T", mapParams["tables"]), nil)
 	}
 
-	sdk, err := source.GetLookerSDK(string(accessToken))
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
 	if err != nil {
 		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
