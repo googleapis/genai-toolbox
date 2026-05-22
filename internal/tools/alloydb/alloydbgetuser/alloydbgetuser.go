@@ -155,6 +155,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+// Authorized checks if the tool is authorized.
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return true
+}
+
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
@@ -162,8 +167,4 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	}
 
 	return source.UseClientAuthorization(), nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
 }
