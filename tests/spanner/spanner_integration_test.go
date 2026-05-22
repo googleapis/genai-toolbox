@@ -214,7 +214,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runSpannerListTablesTest(t, tableNameParam, tableNameAuth, tableNameTemplateParam)
 	runSpannerListGraphsTest(t, graphName)
-	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }
 
 // getSpannerToolInfo returns statements and param for my-tool for spanner-sql type
@@ -560,7 +560,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (5, 'test_name')\"}", tableNameParam))),
-			want:          "null",
+			want:          "[]",
 			isErr:         false,
 		},
 		{
@@ -1073,5 +1073,5 @@ func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
 	}
 
 	// Run semantic search test
-	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }

@@ -178,5 +178,5 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
-	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }

@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0](https://github.com/googleapis/mcp-toolbox/compare/v1.2.0...v1.3.0) (2026-05-21)
+
+
+### Features
+
+* **auth:** Implement MCP auth tool-level scopes validation ([#3049](https://github.com/googleapis/mcp-toolbox/issues/3049)) ([c528985](https://github.com/googleapis/mcp-toolbox/commit/c528985149060adb648f85b5486391bd72d6727e))
+* **looker:** Propagate client IP from incoming MCP requests to downstream SDK calls ([#3253](https://github.com/googleapis/mcp-toolbox/issues/3253)) ([75da6c2](https://github.com/googleapis/mcp-toolbox/commit/75da6c21dd29d7e8e70eac1b747e3946097e7459))
+* Setup SQLCommenter and allow client metadata  ([#3064](https://github.com/googleapis/mcp-toolbox/issues/3064)) ([9f1f9b3](https://github.com/googleapis/mcp-toolbox/commit/9f1f9b321dcd05cce55dbff1bbaebfc44a4c9907))
+* **tool/cloudsqladmin:** Add `cloud-sql-admin-execute-sql-many` and `cloud-sql-admin-sql-many` ([#3083](https://github.com/googleapis/mcp-toolbox/issues/3083)) ([ef300a8](https://github.com/googleapis/mcp-toolbox/commit/ef300a8401e5d5458bc08186fe4d3529e4bab15a))
+
+
+### Bug Fixes
+
+* **auth/generic:** Fix generic auth expiration field and integration with `authRequired` ([#3251](https://github.com/googleapis/mcp-toolbox/issues/3251)) ([f4d16c0](https://github.com/googleapis/mcp-toolbox/commit/f4d16c09b12c4d3297a9aedca706c9830382a4e3))
+* Enforce toolset/promptset boundary on tools/call and prompts/get ([#3036](https://github.com/googleapis/mcp-toolbox/issues/3036)) ([c739b80](https://github.com/googleapis/mcp-toolbox/commit/c739b805ba5ab0e156016fe7c8ce67bc1c138e5a))
+* **tools/http:** Prevent path traversal and base path scope escape ([#3218](https://github.com/googleapis/mcp-toolbox/issues/3218)) ([80a6602](https://github.com/googleapis/mcp-toolbox/commit/80a66021205e032a424fff87b3dc6d92da58aa77))
+* **tools/looker:** Return a 401 error to MCP client when Looker returns a 401 ([#3233](https://github.com/googleapis/mcp-toolbox/issues/3233)) ([4f409a3](https://github.com/googleapis/mcp-toolbox/commit/4f409a3283d533bddcf4756a1d58c228744b3931))
+* **tools/looker:** Strip wrapping quotes from filter values for unquoted parameters ([#3273](https://github.com/googleapis/mcp-toolbox/issues/3273)) ([1e3de96](https://github.com/googleapis/mcp-toolbox/commit/1e3de96daa9bc06253d05b0caf63d499878fb70e))
+* **tools:** Initialize query result slices to empty array ([#3250](https://github.com/googleapis/mcp-toolbox/issues/3250)) ([60ddf48](https://github.com/googleapis/mcp-toolbox/commit/60ddf487468bfd11c7f9346f16a33a8986f89f84))
+
 ## [1.2.0](https://github.com/googleapis/mcp-toolbox/compare/v1.1.0...v1.2.0) (2026-05-07)
 
 

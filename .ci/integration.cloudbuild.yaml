@@ -141,7 +141,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="alloydb|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|.ci/"
+        PATTERN="alloydb|internal/sources/postgres|tests/postgres|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Starting AlloyDB tests..."
@@ -266,7 +266,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="bigtable|internal/server/|.ci/"
+        PATTERN="bigtable|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Bigtable tests..."
@@ -294,7 +294,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="bigquery|internal/server/|.ci/"
+        PATTERN="bigquery|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running BigQuery tests..."
@@ -322,7 +322,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cloudgda|internal/server/|.ci/"
+        PATTERN="cloudgda|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Cloud Gemini Data Analytics tests..."
@@ -350,7 +350,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="dataplex|internal/server/|.ci/"
+        PATTERN="dataplex|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Dataplex tests..."
@@ -408,7 +408,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cloudhealthcare|internal/server/|.ci/"
+        PATTERN="cloudhealthcare|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Cloud Healthcare API tests..."
@@ -435,7 +435,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cloudloggingadmin|internal/server/|.ci/"
+        PATTERN="cloudloggingadmin|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Cloud Logging Admin tests..."
@@ -463,7 +463,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cloudstorage|internal/server/|.ci/"
+        PATTERN="cloudstorage|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running Cloud Storage tests..."
@@ -554,7 +554,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="spanner|internal/server/|.ci/"
+        PATTERN="spanner|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Spanner tests..."
@@ -582,7 +582,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="neo4j|internal/server/|.ci/"
+        PATTERN="neo4j|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Neo4j tests..."
@@ -749,7 +749,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="http|internal/server/|.ci/"
+        PATTERN="http|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running HTTP tests..."
@@ -776,7 +776,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="sqlite|internal/server/|.ci/"
+        PATTERN="sqlite|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running SQLite tests..."
@@ -803,7 +803,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="couchbase|internal/server/|.ci/"
+        PATTERN="couchbase|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Couchbase tests..."
@@ -888,7 +888,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="oceanbase|internal/server/|.ci/"
+        PATTERN="oceanbase|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running OceanBase tests..."
@@ -916,7 +916,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="firestore|internal/server/|.ci/"
+        PATTERN="firestore|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running Firestore tests..."
@@ -944,7 +944,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="mongodb|internal/server/|.ci/"
+        PATTERN="mongodb|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running MongoDB tests..."
@@ -981,7 +981,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="looker|internal/server/|.ci/"
+        PATTERN="looker|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running Looker tests..."
@@ -1010,7 +1010,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="mindsdb|internal/server/|.ci/"
+        PATTERN="mindsdb|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running MindsDB tests..."
@@ -1058,7 +1058,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="tidb|internal/server/|.ci/"
+        PATTERN="tidb|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running TiDB tests..."
@@ -1088,7 +1088,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="firebird|internal/server/|.ci/"
+        PATTERN="firebird|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running Firebird tests..."
@@ -1118,7 +1118,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="clickhouse|internal/server/|.ci/"
+        PATTERN="clickhouse|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Relevant changes detected. Running ClickHouse tests..."
@@ -1149,7 +1149,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="trino|internal/server/|.ci/"
+        PATTERN="trino|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Trino tests..."
@@ -1180,7 +1180,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="yugabytedb|internal/server/|.ci/"
+        PATTERN="yugabytedb|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running YugabyteDB tests..."
@@ -1204,7 +1204,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="elasticsearch|internal/server/|.ci/"
+        PATTERN="elasticsearch|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Elasticsearch tests..."
@@ -1234,7 +1234,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="snowflake|internal/server/|.ci/"
+        PATTERN="snowflake|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Snowflake tests..."
@@ -1262,7 +1262,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="cassandra|internal/server/|.ci/"
+        PATTERN="cassandra|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Cassandra tests..."
@@ -1291,7 +1291,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="oracle|internal/server/|.ci/"
+        PATTERN="oracle|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Oracle tests..."
@@ -1336,7 +1336,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="serverlessspark|internal/server/|.ci/"
+        PATTERN="serverlessspark|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Serverless Spark tests..."
@@ -1385,7 +1385,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="singlestore|internal/server/|.ci/"
+        PATTERN="singlestore|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running SingleStore tests..."
@@ -1424,6 +1424,30 @@ steps:
           go test ./tests/mariadb
         else
           echo "No relevant changes for MariaDB. Skipping shard."
+          exit 0
+        fi
+
+  - id: "auth"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="auth/|tests/auth/|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          # skip coverage check for auth framework
+          ./auth.test -test.v
+        else
+          echo "No relevant changes for Auth. Skipping shard."
           exit 0
         fi
 
