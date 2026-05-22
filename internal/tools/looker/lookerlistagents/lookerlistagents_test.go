@@ -15,6 +15,7 @@
 package lookerlistagents_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -124,7 +125,7 @@ func (m MockSource) LookerApiSettings() *rtl.ApiSettings {
 	return &rtl.ApiSettings{}
 }
 
-func (m MockSource) GetLookerSDK(string) (*v4.LookerSDK, error) {
+func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, error) {
 	return &v4.LookerSDK{}, nil
 }
 

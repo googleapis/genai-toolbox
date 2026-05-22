@@ -166,7 +166,7 @@ func handleTool1Name(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !r.URL.Query().Has("name") {
-		response := "null"
+		response := "[]"
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			http.Error(w, "Failed to write response", http.StatusInternalServerError)
@@ -621,6 +621,7 @@ func TestHTTPCallTool(t *testing.T) {
 		tests.RunMCPToolInvokeTest(t, `"hello world"`,
 			tests.WithMyToolId3NameAliceWant(`{"id":1,"name":"Alice"}`),
 			tests.WithMyToolById4Want(`{"id":4,"name":null}`),
+			tests.WithNullWant("[]"),
 		)
 	})
 }
