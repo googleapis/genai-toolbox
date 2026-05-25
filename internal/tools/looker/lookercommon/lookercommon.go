@@ -163,6 +163,92 @@ func ProcessFieldArgs(ctx context.Context, params parameters.ParamValues) (*stri
 	return &model, &explore, nil
 }
 
+// escapeUnquotedParameterValue escapes Looker filter-expression metacharacters
+// so the value reaches a type: unquoted parameter without being interpreted as
+// a wildcard pattern. Looker treats `_` as a single-character wildcard and `%`
+// as a multi-character wildcard, and rejects either inside unquoted-parameter
+// values; `,` is the filter-expression value separator. If the value already
+// contains a `^` we assume it was hand-escaped by the caller and leave it
+// alone, which keeps this idempotent for callers that pass pre-escaped forms
+// (e.g. round-tripping `default_filter_value` from the explore metadata).
+func escapeUnquotedParameterValue(value string) string {
+	if strings.ContainsRune(value, '^') {
+		return value
+	}
+	return unquotedParameterEscaper.Replace(value)
+}
+
+var unquotedParameterEscaper = strings.NewReplacer("_", "^_", "%", "^%", ",", "^,")
+
+// EscapeFiltersForUnquotedParameters mutates wq.Filters so every string value
+// keyed to a fully-qualified parameter name listed in unquotedNames is escaped
+// per Looker filter-expression syntax. Non-string values and filters targeting
+// other fields are left untouched.
+func EscapeFiltersForUnquotedParameters(wq *v4.WriteQuery, unquotedNames map[string]bool) {
+	if wq == nil || wq.Filters == nil || len(unquotedNames) == 0 {
+		return
+	}
+	for k, v := range *wq.Filters {
+		if !unquotedNames[k] {
+			continue
+		}
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		(*wq.Filters)[k] = escapeUnquotedParameterValue(s)
+	}
+}
+
+// resolveUnquotedParameterNames fetches the parameter metadata for the explore
+// targeted by wq and returns the set of fully-qualified parameter names whose
+// LookML type is `unquoted`. Returns an empty map (and no error) when the
+// WriteQuery has no model/view set or no filters at all — the caller has
+// nothing to escape in either case.
+func resolveUnquotedParameterNames(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, opts *rtl.ApiSettings) (map[string]bool, error) {
+	if wq == nil || wq.Filters == nil || len(*wq.Filters) == 0 || wq.Model == "" || wq.View == "" {
+		return map[string]bool{}, nil
+	}
+	fields := ParametersFields
+	req := v4.RequestLookmlModelExplore{
+		LookmlModelName: wq.Model,
+		ExploreName:     wq.View,
+		Fields:          &fields,
+	}
+	resp, err := sdk.LookmlModelExplore(req, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]bool{}
+	if resp.Fields == nil || resp.Fields.Parameters == nil {
+		return out, nil
+	}
+	for _, p := range *resp.Fields.Parameters {
+		if p.Name != nil && p.Type != nil && *p.Type == "unquoted" {
+			out[*p.Name] = true
+		}
+	}
+	return out, nil
+}
+
+// EscapeUnquotedParameterFilters looks up the explore's parameter metadata and
+// escapes filter-expression metacharacters in any filter value that targets a
+// type: unquoted parameter. Looker's filter parser interprets `_` and `%` as
+// wildcards and rejects them for unquoted parameters, so an unescaped value
+// like `first_touch` is parsed as `first<single-char-wildcard>touch` and 400s
+// with "The filter \"first_touch\" is not allowed." This is a no-op when no
+// filters target unquoted parameters. Metadata-lookup failures are returned to
+// the caller, which should log and proceed: callers without explore-read
+// permission still need their non-parameter queries to succeed.
+func EscapeUnquotedParameterFilters(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, opts *rtl.ApiSettings) error {
+	unquoted, err := resolveUnquotedParameterNames(ctx, sdk, wq, opts)
+	if err != nil {
+		return err
+	}
+	EscapeFiltersForUnquotedParameters(wq, unquoted)
+	return nil
+}
+
 func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.WriteQuery, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
