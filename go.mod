@@ -9,6 +9,7 @@ require (
 	cloud.google.com/go/bigquery v1.76.0
 	cloud.google.com/go/bigtable v1.47.0
 	cloud.google.com/go/cloudsqlconn v1.21.0
+	cloud.google.com/go/datacatalog v1.32.0
 	cloud.google.com/go/dataplex v1.33.0
 	cloud.google.com/go/dataproc/v2 v2.20.0
 	cloud.google.com/go/firestore v1.22.0
