@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,12 +32,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
-	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
-	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
+	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
+	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -144,14 +149,15 @@ func (c traceContextCarrier) Keys() []string {
 	return keys
 }
 
-// extractTraceContext extracts W3C Trace Context from params._meta
-func extractTraceContext(ctx context.Context, body []byte) context.Context {
-	// Try to parse the request to extract _meta
+// extractMeta parses params._meta from the request body in a single pass,
+// extracting both W3C Trace Context and client telemetry attributes.
+func extractMeta(ctx context.Context, body []byte) context.Context {
 	var req struct {
 		Params struct {
 			Meta struct {
-				Traceparent string `json:"traceparent,omitempty"`
-				Tracestate  string `json:"tracestate,omitempty"`
+				Traceparent    string            `json:"traceparent,omitempty"`
+				Tracestate     string            `json:"tracestate,omitempty"`
+				TelemetryAttrs map[string]string `json:"dev.mcp-toolbox/telemetry,omitempty"`
 			} `json:"_meta,omitempty"`
 		} `json:"params,omitempty"`
 	}
@@ -160,7 +166,7 @@ func extractTraceContext(ctx context.Context, body []byte) context.Context {
 		return ctx
 	}
 
-	// If traceparent is present, extract the context
+	// Extract W3C Trace Context
 	if req.Params.Meta.Traceparent != "" {
 		carrier := traceContextCarrier{
 			"traceparent": req.Params.Meta.Traceparent,
@@ -168,7 +174,19 @@ func extractTraceContext(ctx context.Context, body []byte) context.Context {
 		if req.Params.Meta.Tracestate != "" {
 			carrier["tracestate"] = req.Params.Meta.Tracestate
 		}
-		return otel.GetTextMapPropagator().Extract(ctx, carrier)
+		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+	}
+
+	// Extract client telemetry attributes
+	if attrs := req.Params.Meta.TelemetryAttrs; len(attrs) > 0 {
+		ta := &util.TelemetryAttributes{
+			ClientName:    attrs["client.name"],
+			ClientVersion: attrs["client.version"],
+			ClientModel:   attrs["client.model"],
+			ClientUserID:  attrs["client.user.id"],
+			ClientAgentID: attrs["client.agent.id"],
+		}
+		ctx = util.WithTelemetryAttributes(ctx, ta)
 	}
 
 	return ctx
@@ -190,6 +208,8 @@ func (s *stdioSession) Start(ctx context.Context) error {
 // readInputStream reads requests/notifications from MCP clients through stdin
 func (s *stdioSession) readInputStream(ctx context.Context) error {
 	sessionStart := time.Now()
+	ctx = util.WithUserAgent(ctx, s.server.version)
+	ctx = util.WithSQLCommenterEnabled(ctx, s.server.sqlCommenterEnabled)
 
 	// Define attributes for session metrics
 	// Note: mcp.protocol.version is added dynamically after protocol negotiation
@@ -237,7 +257,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 
 		if err := func() error {
 			// This ensures the transport span becomes a child of the client span
-			msgCtx := extractTraceContext(ctx, []byte(line))
+			msgCtx := extractMeta(ctx, []byte(line))
 
 			// Create span for STDIO transport
 			msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
@@ -332,6 +352,14 @@ func mcpRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.AllowContentType("application/json", "application/json-rpc", "application/jsonrequest"))
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
+	// Inject logger into ctx
+	r.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := util.WithLogger(r.Context(), s.logger)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	})
+	r.Use(mcpAuthMiddleware(s))
 
 	r.Get("/sse", func(w http.ResponseWriter, r *http.Request) { sseHandler(s, w, r) })
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { methodNotAllowed(s, w, r) })
@@ -365,7 +393,6 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// Define attributes for session metrics
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
@@ -462,6 +489,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 	ctx = util.WithLogger(ctx, s.logger)
+	ctx = util.WithUserAgent(ctx, s.version)
+	ctx = util.WithSQLCommenterEnabled(ctx, s.sqlCommenterEnabled)
 
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
@@ -474,7 +503,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// This ensures the transport span becomes a child of the client span
-	ctx = extractTraceContext(ctx, body)
+	ctx = extractMeta(ctx, body)
 
 	// Create span for HTTP transport
 	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/http",
@@ -575,6 +604,21 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			var clientServerErr *util.ClientServerError
 			if errors.As(err, &clientServerErr) {
 				w.WriteHeader(clientServerErr.Code)
+			}
+			var mcpErr *generic.MCPAuthError
+			if errors.As(err, &mcpErr) {
+				switch mcpErr.Code {
+				case http.StatusForbidden:
+					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+					w.WriteHeader(http.StatusForbidden)
+				case http.StatusUnauthorized:
+					scopesArg := ""
+					if len(mcpErr.ScopesRequired) > 0 {
+						scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
+					}
+					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+					w.WriteHeader(http.StatusUnauthorized)
+				}
 			}
 		}
 	}
@@ -683,6 +727,29 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		attribute.String("network.protocol.name", networkProtocolName),
 	)
 
+	// Set client telemetry attributes from _meta["dev.mcp-toolbox/telemetry"]
+	if ta := util.TelemetryAttributesFromContext(ctx); ta != nil {
+		telemetryAttrs := make([]attribute.KeyValue, 0, 5)
+		if ta.ClientName != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.name", ta.ClientName))
+		}
+		if ta.ClientVersion != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.version", ta.ClientVersion))
+		}
+		if ta.ClientModel != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.model", ta.ClientModel))
+		}
+		if ta.ClientUserID != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.user.id", ta.ClientUserID))
+		}
+		if ta.ClientAgentID != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.agent.id", ta.ClientAgentID))
+		}
+		if len(telemetryAttrs) > 0 {
+			span.SetAttributes(telemetryAttrs...)
+		}
+	}
+
 	// Set network protocol version if available
 	if networkProtocolVersion != "" {
 		span.SetAttributes(attribute.String("network.protocol.version", networkProtocolVersion))
@@ -715,8 +782,27 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 	// Process the method
 	switch baseMessage.Method {
-	case mcputil.INITIALIZE:
-		result, version, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+	case "initialize":
+		var initReq struct {
+			Params struct {
+				ProtocolVersion string `json:"protocolVersion"`
+			} `json:"params,omitempty"`
+		}
+		if err := json.Unmarshal(body, &initReq); err != nil {
+			err = fmt.Errorf("fail to parse protocolVersion from initialize request")
+			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+
+		var version string
+		v := initReq.Params.ProtocolVersion
+		if slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, v) {
+			version = v
+		} else {
+			version = mcputil.LATEST_PROTOCOL_VERSION
+		}
+
+		ctx = util.WithToolboxVersionKey(ctx, s.version)
+		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
@@ -757,5 +843,43 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			}
 		}
 		return "", result, err
+	}
+}
+
+type prmResponse struct {
+	Resource               string   `json:"resource"`
+	AuthorizationServers   []string `json:"authorization_servers"`
+	ScopesSupported        []string `json:"scopes_supported,omitempty"`
+	BearerMethodsSupported []string `json:"bearer_methods_supported"`
+}
+
+// prmHandler generates the Protected Resource Metadata (PRM) file for MCP Authorization.
+func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	var server string
+	scopes := []string{}
+	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+		cfg := authSvc.ToConfig()
+		if genCfg, ok := cfg.(generic.Config); ok {
+			if genCfg.McpEnabled {
+				server = genCfg.AuthorizationServer
+				if genCfg.ScopesRequired != nil {
+					scopes = genCfg.ScopesRequired
+				}
+				break
+			}
+		}
+	}
+
+	res := prmResponse{
+		Resource:               s.toolboxUrl,
+		AuthorizationServers:   []string{server},
+		ScopesSupported:        scopes,
+		BearerMethodsSupported: []string{"header"},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		s.logger.ErrorContext(r.Context(), fmt.Sprintf("Failed to encode PRM response: %v", err))
+		http.Error(w, "Failed to encode PRM response", http.StatusInternalServerError)
 	}
 }

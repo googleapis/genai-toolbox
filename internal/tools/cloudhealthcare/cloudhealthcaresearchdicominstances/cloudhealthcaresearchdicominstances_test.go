@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	searchdicominstances "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicominstances"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	searchdicominstances "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicominstances"
 )
 
 func TestParseFromYamlHealthcareSearchDICOMInstances(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareSearchDICOMInstances(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-search-dicom-instances
             source: my-instance

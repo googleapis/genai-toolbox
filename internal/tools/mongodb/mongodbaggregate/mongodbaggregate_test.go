@@ -18,13 +18,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mongodb/mongodbaggregate"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlMongoQuery(t *testing.T) {
@@ -40,7 +40,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-aggregate
             source: my-instance
@@ -130,7 +130,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mongodb-aggregate
             source: my-instance

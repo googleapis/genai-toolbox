@@ -25,9 +25,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/tests"
 	_ "github.com/nakagami/firebirdsql"
 )
 
@@ -86,7 +86,7 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	db, err := initFirebirdConnection(FirebirdHost, FirebirdPort, FirebirdUser, FirebirdPass, FirebirdDatabase)
 	if err != nil {
@@ -129,7 +129,7 @@ func TestFirebirdToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := getFirebirdWants()
 	nullWant := `[{"id":4,"name":null}]`
-	select1Statement := `"SELECT 1 AS \"constant\" FROM RDB$DATABASE;"`
+	select1Statement := `SELECT 1 AS "constant" FROM RDB$DATABASE;`
 	templateParamCreateColArray := `["id INTEGER","name VARCHAR(255)","age INTEGER"]`
 
 	// Run tests

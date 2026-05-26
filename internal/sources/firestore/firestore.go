@@ -23,8 +23,8 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/api/firebaserules/v1"
 	"google.golang.org/api/option"

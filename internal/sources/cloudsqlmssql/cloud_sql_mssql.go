@@ -23,9 +23,10 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn/sqlserver/mssql"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -50,16 +51,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// Cloud SQL MSSQL configs
-	Name      string         `yaml:"name" validate:"required"`
-	Type      string         `yaml:"type" validate:"required"`
-	Project   string         `yaml:"project" validate:"required"`
-	Region    string         `yaml:"region" validate:"required"`
-	Instance  string         `yaml:"instance" validate:"required"`
-	IPAddress string         `yaml:"ipAddress"` // Deprecated: kept for backwards compatibility
-	IPType    sources.IPType `yaml:"ipType" validate:"required"`
-	User      string         `yaml:"user" validate:"required"`
-	Password  string         `yaml:"password" validate:"required"`
-	Database  string         `yaml:"database" validate:"required"`
+	Name     string         `yaml:"name" validate:"required"`
+	Type     string         `yaml:"type" validate:"required"`
+	Project  string         `yaml:"project" validate:"required"`
+	Region   string         `yaml:"region" validate:"required"`
+	Instance string         `yaml:"instance" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	User     string         `yaml:"user" validate:"required"`
+	Password string         `yaml:"password" validate:"required"`
+	Database string         `yaml:"database" validate:"required"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -109,6 +109,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
 	results, err := s.MSSQLDB().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -118,8 +119,8 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	cols, err := results.Columns()
 	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
 	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
-	var out []any
+	// 'out' will remain an empty slice if cols is empty or err is not nil here.
+	out := []any{}
 	if err == nil && len(cols) > 0 {
 		// create an array of values for each column, which can be re-used to scan each row
 		rawValues := make([]any, len(cols))

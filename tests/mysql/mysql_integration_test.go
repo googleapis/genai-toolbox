@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -80,7 +80,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initMySQLConnectionPool(MySQLHost, MySQLPort, MySQLUser, MySQLPass, MySQLDatabase)
 	if err != nil {
@@ -144,4 +144,5 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, MySQLDatabase)
 	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
 	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, MySQLDatabase, tableNameParam)
+	tests.RunMySQLListTableStatsTest(t, ctx, pool, MySQLDatabase, tableNameParam, tableNameAuth)
 }

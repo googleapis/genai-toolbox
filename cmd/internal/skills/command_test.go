@@ -21,9 +21,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +59,7 @@ func TestGenerateSkill(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
@@ -70,12 +70,12 @@ tools:
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	args := []string{
 		"skills-generate",
-		"--tools-file", toolsFilePath,
+		"--config", toolsFilePath,
 		"--output-dir", outputDir,
 		"--name", "hello-sqlite",
 		"--description", "hello tool",
@@ -158,7 +158,7 @@ func TestGenerateSkill_Toolsets(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
@@ -247,7 +247,7 @@ func TestGenerateSkill_SpecificToolset(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
@@ -339,7 +339,7 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	tmpDir := t.TempDir()
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
 	if err := os.WriteFile(toolsFilePath, []byte("tools: {}"), 0644); err != nil {
-		t.Fatalf("failed to write tools file: %v", err)
+		t.Fatalf("failed to write config: %v", err)
 	}
 
 	tests := []struct {
@@ -348,11 +348,11 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 	}{
 		{
 			name: "missing name",
-			args: []string{"skills-generate", "--tools-file", toolsFilePath, "--description", "test"},
+			args: []string{"skills-generate", "--config", toolsFilePath, "--description", "test"},
 		},
 		{
 			name: "missing description",
-			args: []string{"skills-generate", "--tools-file", toolsFilePath, "--name", "test"},
+			args: []string{"skills-generate", "--config", toolsFilePath, "--name", "test"},
 		},
 	}
 

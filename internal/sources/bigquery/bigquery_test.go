@@ -21,11 +21,11 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
@@ -38,7 +38,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -56,7 +56,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "all fields specified",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -77,7 +77,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -97,7 +97,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with custom auth header name example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -117,7 +117,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth with unquoted true",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -137,7 +137,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "use client auth with unquoted false",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -157,7 +157,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with allowed datasets example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -178,7 +178,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with service account impersonation example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -198,7 +198,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with custom scopes example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -220,7 +220,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with max query result rows example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
@@ -234,6 +234,26 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					Project:            "my-project",
 					Location:           "us",
 					MaxQueryResultRows: 10,
+				},
+			},
+		},
+		{
+			desc: "with maximum bytes billed example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			maximumBytesBilled: 10737418240
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					MaximumBytesBilled: 10737418240,
 				},
 			},
 		},
@@ -260,24 +280,35 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			project: my-project
 			location: us
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: us\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: us\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-instance
 			type: bigquery
 			location: us
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+		},
+		{
+			desc: "negative maximum bytes billed",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			maximumBytesBilled: -1
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:21] Key: 'Config.MaximumBytesBilled' Error:Field validation for 'MaximumBytesBilled' failed on the 'gte' tag\n>  1 | maximumBytesBilled: -1\n                           ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: bigquery",
 		},
 	}
 	for _, tc := range tcs {
@@ -342,6 +373,59 @@ func TestInitialize_MaxQueryResultRows(t *testing.T) {
 			}
 			if bqSrc.MaxQueryResultRows != tc.want {
 				t.Errorf("MaxQueryResultRows = %d, want %d", bqSrc.MaxQueryResultRows, tc.want)
+			}
+		})
+	}
+}
+
+func TestInitialize_MaximumBytesBilled(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithUserAgent(ctx, "test-agent")
+	tracer := noop.NewTracerProvider().Tracer("")
+
+	tcs := []struct {
+		desc string
+		cfg  bigquery.Config
+		want int64
+	}{
+		{
+			desc: "default value",
+			cfg: bigquery.Config{
+				Name:           "test-default",
+				Type:           bigquery.SourceType,
+				Project:        "test-project",
+				UseClientOAuth: "true",
+			},
+			want: 0,
+		},
+		{
+			desc: "configured value",
+			cfg: bigquery.Config{
+				Name:               "test-configured",
+				Type:               bigquery.SourceType,
+				Project:            "test-project",
+				UseClientOAuth:     "true",
+				MaximumBytesBilled: 10737418240,
+			},
+			want: 10737418240,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			src, err := tc.cfg.Initialize(ctx, tracer)
+			if err != nil {
+				t.Fatalf("Initialize failed: %v", err)
+			}
+			bqSrc, ok := src.(*bigquery.Source)
+			if !ok {
+				t.Fatalf("Expected *bigquery.Source, got %T", src)
+			}
+			if bqSrc.MaximumBytesBilled != tc.want {
+				t.Errorf("MaximumBytesBilled = %d, want %d", bqSrc.MaximumBytesBilled, tc.want)
 			}
 		})
 	}

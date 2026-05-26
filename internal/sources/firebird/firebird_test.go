@@ -19,10 +19,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/firebird"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/firebird"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlFirebird(t *testing.T) {
@@ -34,7 +34,7 @@ func TestParseFromYamlFirebird(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-fdb-instance
 			type: firebird
 			host: my-host
@@ -79,7 +79,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-fdb-instance
 			type: firebird
 			host: my-host
@@ -89,12 +89,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-fdb-instance\" as \"firebird\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | name: my-fdb-instance\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-fdb-instance\" as \"firebird\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | name: my-fdb-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-fdb-instance
 			type: firebird
 			host: my-host
@@ -102,7 +102,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			database: my_db
 			user: my_user
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-fdb-instance\" as \"firebird\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-fdb-instance\" as \"firebird\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

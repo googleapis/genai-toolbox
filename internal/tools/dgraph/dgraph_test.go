@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dgraph"
 )
 
 func TestParseFromYamlDgraph(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic query example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: dgraph-dql
 			source: my-dgraph-instance
@@ -62,7 +62,7 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic mutation example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: dgraph-dql
 			source: my-dgraph-instance

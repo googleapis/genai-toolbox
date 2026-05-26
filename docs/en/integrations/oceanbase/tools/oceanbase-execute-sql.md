@@ -1,0 +1,40 @@
+---
+title: "oceanbase-execute-sql"
+type: docs
+weight: 1
+description: > 
+  An "oceanbase-execute-sql" tool executes a SQL statement against an OceanBase database.
+---
+
+## About
+
+An `oceanbase-execute-sql` tool executes a SQL statement against an OceanBase
+database.
+
+`oceanbase-execute-sql` takes one input parameter `sql` and runs the sql
+statement against the `source`.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: execute_sql_tool
+type: oceanbase-execute-sql
+source: my-oceanbase-instance
+description: Use this tool to execute sql statement.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "oceanbase-execute-sql".                   |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

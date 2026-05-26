@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lha "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	lha "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerhealthanalyze"
 )
 
 func TestParseFromYamlLookerHealthAnalyze(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParseFromYamlLookerHealthAnalyze(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-health-analyze
 			source: my-instance
@@ -80,7 +80,7 @@ func TestFailParseFromYamlLookerHealthAnalyze(t *testing.T) {
 		{
 			desc: "Invalid field",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-health-analyze
 			source: my-instance

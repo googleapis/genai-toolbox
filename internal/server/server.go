@@ -16,10 +16,14 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -29,29 +33,35 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog/v3"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/server/resources"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/go-chi/render"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version         string
-	srv             *http.Server
-	listener        net.Listener
-	root            chi.Router
-	logger          log.Logger
-	instrumentation *telemetry.Instrumentation
-	sseManager      *sseManager
-	ResourceMgr     *resources.ResourceManager
+	version             string
+	sqlCommenterEnabled bool
+	toolboxUrl          string
+	srv                 *http.Server
+	listener            net.Listener
+	root                chi.Router
+	logger              log.Logger
+	instrumentation     *telemetry.Instrumentation
+	sseManager          *sseManager
+	ResourceMgr         *resources.ResourceManager
+	mcpPrmFile          string
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -371,18 +381,21 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
-		version:         cfg.Version,
-		srv:             srv,
-		root:            r,
-		logger:          l,
-		instrumentation: instrumentation,
-		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
+		version:             cfg.Version,
+		sqlCommenterEnabled: cfg.SQLCommenter,
+		srv:                 srv,
+		root:                r,
+		logger:              l,
+		instrumentation:     instrumentation,
+		sseManager:          sseManager,
+		ResourceMgr:         resourceManager,
+		toolboxUrl:          cfg.ToolboxUrl,
+		mcpPrmFile:          cfg.McpPrmFile,
 	}
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
+		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -395,7 +408,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Use(cors.Handler(corsOpts))
 	// validate hosts for DNS rebinding attacks
 	if slices.Contains(cfg.AllowedHosts, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
+		s.logger.WarnContext(ctx, "wildcard (*) hosts allow any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of whether you are in a production or local development environment. For improved security, use the --allowed-hosts flag to specify trusted domains.")
 	}
 	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
 	for _, h := range cfg.AllowedHosts {
@@ -407,17 +420,66 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 	r.Use(hostCheck(allowedHostsMap))
 
-	// control plane
-	apiR, err := apiRouter(s)
-	if err != nil {
-		return nil, err
+	// Host OAuth Protected Resource Metadata endpoint
+	mcpAuthEnabled := false
+	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+		if genCfg, ok := authSvc.ToConfig().(generic.Config); ok && genCfg.McpEnabled {
+			mcpAuthEnabled = true
+			break
+		}
 	}
-	r.Mount("/api", apiR)
+
+	// Manual PRM override
+	var cachedPrmBytes []byte
+	var prmConfig ProtectedResourceMetadata
+	if s.mcpPrmFile != "" {
+		var err error
+		cachedPrmBytes, err = os.ReadFile(s.mcpPrmFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read manual PRM file at startup: %w", err)
+		}
+		// Unmarshal into the struct to strictly validate the schema
+		if err := json.Unmarshal(cachedPrmBytes, &prmConfig); err != nil {
+			return nil, fmt.Errorf("manual PRM file does not match expected schema: %w", err)
+		}
+	}
+
+	// Register route if auth is enabled or a manual file is provided
+	if mcpAuthEnabled || s.mcpPrmFile != "" {
+		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, req *http.Request) {
+			// Serve from memory if file was loaded
+			if s.mcpPrmFile != "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				if _, err := w.Write(cachedPrmBytes); err != nil {
+					s.logger.ErrorContext(req.Context(), "failed to write manual PRM file response", "error", err)
+				}
+				return
+			}
+
+			prmHandler(s, w, req)
+		})
+	}
+
+	// control plane
 	mcpR, err := mcpRouter(s)
 	if err != nil {
 		return nil, err
 	}
+
 	r.Mount("/mcp", mcpR)
+	if cfg.EnableAPI {
+		apiR, err := apiRouter(s)
+		if err != nil {
+			return nil, err
+		}
+		r.Mount("/api", apiR)
+	} else {
+		r.Handle("/api/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			err := errors.New("/api native endpoints are disabled by default. Please use the standard /mcp JSON-RPC endpoint")
+			_ = render.Render(w, r, newErrResponse(err, http.StatusGone))
+		}))
+	}
 	if cfg.UI {
 		webR, err := webRouter()
 		if err != nil {
@@ -433,8 +495,62 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	return s, nil
 }
 
+func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Find McpEnabled auth service
+			var mcpSvc *generic.AuthService
+			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+				if genSvc, ok := authSvc.(*generic.AuthService); ok && genSvc.McpEnabled {
+					mcpSvc = genSvc
+					break
+				}
+			}
+
+			// MCP Auth not enabled
+			if mcpSvc == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			claims, err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header)
+			if err != nil {
+				var mcpErr *generic.MCPAuthError
+				if errors.As(err, &mcpErr) {
+					switch mcpErr.Code {
+					case http.StatusUnauthorized:
+						scopesArg := ""
+						if len(mcpErr.ScopesRequired) > 0 {
+							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
+						}
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+						render.Status(r, http.StatusUnauthorized)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
+						return
+					case http.StatusForbidden:
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+						render.Status(r, http.StatusForbidden)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
+						return
+					}
+				}
+				// Fail closed on unexpected errors
+				s.logger.ErrorContext(r.Context(), "unexpected error during MCP auth validation", "error", err)
+				render.Status(r, http.StatusInternalServerError)
+				render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INTERNAL_ERROR, "Internal Server Error", nil))
+				return
+			}
+
+			ctx := util.WithAuthTokenClaims(r.Context(), claims)
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // Listen starts a listener for the given Server instance.
-func (s *Server) Listen(ctx context.Context) error {
+func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -442,11 +558,26 @@ func (s *Server) Listen(ctx context.Context) error {
 		return fmt.Errorf("server is already listening: %s", s.listener.Addr().String())
 	}
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
-	var err error
-	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
+	if err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
-	s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+
+	if certFile != "" || keyFile != "" {
+		// Load the certificates
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			ln.Close()
+			return fmt.Errorf("failed to load TLS key pair (cert: %q, key: %q): %w", certFile, keyFile, err)
+		}
+		// Wrap the listener with TLS
+		config := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+		s.listener = tls.NewListener(ln, config)
+		s.logger.DebugContext(ctx, fmt.Sprintf("secure server listening on %s", s.srv.Addr))
+	} else {
+		s.listener = ln
+		s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+	}
 	return nil
 }
 
@@ -467,4 +598,8 @@ func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writ
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
 	return s.srv.Shutdown(ctx)
+}
+
+func (s *Server) Addr() string {
+	return s.listener.Addr().String()
 }

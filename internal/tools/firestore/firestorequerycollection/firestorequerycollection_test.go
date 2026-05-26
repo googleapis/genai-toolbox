@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequerycollection"
 )
 
 func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: query_users_tool
             type: firestore-query-collection
             source: my-firestore-instance
@@ -55,7 +55,7 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-            kind: tools
+            kind: tool
             name: secure_query_tool
             type: firestore-query-collection
             source: prod-firestore
@@ -95,7 +95,7 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	kind: tools
+	kind: tool
 	name: query_users
 	type: firestore-query-collection
 	source: users-firestore
@@ -103,13 +103,13 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	authRequired:
 		- user-auth
 ---
-	kind: tools
+	kind: tool
 	name: query_products
 	type: firestore-query-collection
 	source: products-firestore
 	description: Query product catalog
 ---
-	kind: tools
+	kind: tool
 	name: query_orders
 	type: firestore-query-collection
 	source: orders-firestore

@@ -23,12 +23,12 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // Constants for tool configuration
@@ -97,11 +97,14 @@ type compatibleSource interface {
 
 // Config represents the configuration for the Firestore query collection tool
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -117,16 +120,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Create parameters
 	params := createParameters()
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
-
 	// finish tool setup
 	t := Tool{
-		Config:      cfg,
-		Parameters:  params,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:     cfg,
+		Parameters: params,
+		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -184,9 +200,8 @@ var _ tools.Tool = Tool{}
 // Tool represents the Firestore query collection tool
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
 }
 
 // FilterConfig represents a filter for the query
@@ -403,11 +418,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-// McpManifest returns the MCP manifest
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 // Authorized checks if the tool is authorized based on verified auth services
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
@@ -423,4 +433,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetlookmltests"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookergetlookmltests"
 )
 
 func TestParseFromYamlLookerGetLookmlTests(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGetLookmlTests(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-lookml-tests
             source: my-instance
@@ -82,14 +82,14 @@ func TestFailParseFromYamlLookerGetAllLookmlTests(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: looker-get-lookml-tests
             source: my-instance
             method: GOT
             description: some description
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"example_tool\" as type \"looker-get-lookml-tests\": [3:1] unknown field \"method\"",
+			err: "error unmarshaling tool: unable to parse tool \"example_tool\" as type \"looker-get-lookml-tests\": [3:1] unknown field \"method\"",
 		},
 	}
 	for _, tc := range tcs {

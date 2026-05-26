@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -52,7 +52,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{

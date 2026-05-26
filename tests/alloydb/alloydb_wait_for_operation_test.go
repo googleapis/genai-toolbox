@@ -29,10 +29,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 
-	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 )
 
 var (
@@ -75,7 +75,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
 		h.t.Errorf("User-Agent header not found")
 	}
-
 	// The format is projects/{project}/locations/{location}/operations/{operation}
 	// The tool will call something like /v1/projects/p1/locations/l1/operations/op1
 	if match, _ := regexp.MatchString("/v1/projects/.*/locations/.*/operations/.*", r.URL.Path); match {
@@ -135,7 +134,7 @@ func TestWaitToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getWaitToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)

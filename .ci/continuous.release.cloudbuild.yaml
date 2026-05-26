@@ -47,7 +47,7 @@ steps:
         tar -xf zig.tar.xz -C /zig-tools --strip-components=1
 
   - id: "install-macos-sdk"
-    name: golang:1
+    name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor: ['-']
     volumes:
       - name: 'macos-sdk'
@@ -57,8 +57,8 @@ steps:
         set -e
         apt-get update && apt-get install -y xz-utils
         echo "Downloading macOS 14.5 SDK..."
-        curl -fL -o sdk.tar.xz https://github.com/alexey-lysiuk/macos-sdk/releases/download/14.5/MacOSX14.5.tar.xz
-        
+        gcloud storage cp gs://${_ASSETS_BUCKET}/MacOSX14.5.tar.xz sdk.tar.xz
+
         mkdir -p /macos-sdk/MacOSX14.5.sdk
         echo "Unpacking macOS 14.5 SDK..."
         tar -xf sdk.tar.xz -C /macos-sdk/MacOSX14.5.sdk --strip-components=1
@@ -82,7 +82,7 @@ steps:
         path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
 
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -112,7 +112,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -140,7 +140,7 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
 
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -176,7 +176,7 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
 
   - id: "build-darwin-amd64"
     name: golang:1
@@ -204,7 +204,7 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
 
   - id: "store-darwin-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -240,7 +240,7 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
 
   - id: "build-windows-amd64"
     name: golang:1
@@ -261,7 +261,7 @@ steps:
         path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
 
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -291,7 +291,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
 
 options:
   automapSubstitutions: true
@@ -304,5 +304,6 @@ substitutions:
   _REGION: us-central1
   _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
   _AR_REPO_NAME: toolbox-dev
-  _BUCKET_NAME: genai-toolbox-dev
+  _BUCKET_NAME: mcp-toolbox-for-databases-dev
+  _ASSETS_BUCKET: toolbox-build-assets
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox

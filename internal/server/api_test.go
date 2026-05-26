@@ -23,11 +23,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestToolsetEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2}
+	mockTools := []testutils.MockTool{tool1, tool2}
 	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()
@@ -124,7 +125,7 @@ func TestToolsetEndpoint(t *testing.T) {
 }
 
 func TestToolGetEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2}
+	mockTools := []testutils.MockTool{tool1, tool2}
 	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()
@@ -212,7 +213,7 @@ func TestToolGetEndpoint(t *testing.T) {
 }
 
 func TestToolInvokeEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool4, tool5}
+	mockTools := []testutils.MockTool{tool1, tool2, tool4, tool5}
 	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()

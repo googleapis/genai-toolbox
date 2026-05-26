@@ -27,10 +27,10 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -90,6 +90,7 @@ type Config struct {
 	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
 	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
+	MaximumBytesBilled        int64               `yaml:"maximumBytesBilled" validate:"gte=0"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -157,6 +158,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		RestService:         restService,
 		TokenSource:         tokenSource,
 		MaxQueryResultRows:  r.MaxQueryResultRows,
+		MaximumBytesBilled:  r.MaximumBytesBilled,
 		ClientCreator:       clientCreator,
 		AuthTokenHeaderName: "Authorization",
 	}
@@ -291,6 +293,7 @@ type Source struct {
 	TokenSource               oauth2.TokenSource
 	AuthTokenHeaderName       string
 	MaxQueryResultRows        int
+	MaximumBytesBilled        int64
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	sessionMutex              sync.Mutex
@@ -472,6 +475,10 @@ func (s *Source) GetMaxQueryResultRows() int {
 	return s.MaxQueryResultRows
 }
 
+func (s *Source) GetMaximumBytesBilled() int64 {
+	return s.MaximumBytesBilled
+}
+
 func (s *Source) BigQueryClientCreator() BigqueryClientCreator {
 	return s.ClientCreator
 }
@@ -572,6 +579,9 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	if connProps != nil {
 		query.ConnectionProperties = connProps
 	}
+	if s.MaximumBytesBilled > 0 {
+		query.MaxBytesBilled = s.MaximumBytesBilled
+	}
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
@@ -585,7 +595,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
 		var val []bigqueryapi.Value
 		err = it.Next(&val)

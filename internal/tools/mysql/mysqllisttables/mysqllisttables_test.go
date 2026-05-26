@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	mysqllisttables "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	mysqllisttables "github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqllisttables"
 )
 
 func TestParseFromYamlMySQLListTables(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlMySQLListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mysql-list-tables
             source: my-mysql-instance

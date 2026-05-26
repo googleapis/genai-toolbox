@@ -23,10 +23,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/server/resources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 
 	"github.com/spf13/cobra"
 )
@@ -40,6 +40,8 @@ type skillsCmd struct {
 	outputDir       string
 	licenseHeader   string
 	additionalNotes string
+	invocationMode  string
+	toolboxVersion  string
 }
 
 // NewCommand creates a new Command.
@@ -62,6 +64,8 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	flags.StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
 	flags.StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
 	flags.StringVar(&cmd.additionalNotes, "additional-notes", "", "Additional notes to add under the Usage section of the generated SKILL.md")
+	flags.StringVar(&cmd.invocationMode, "invocation-mode", "npx", "Invocation mode for the generated scripts: 'binary' or 'npx'")
+	flags.StringVar(&cmd.toolboxVersion, "toolbox-version", opts.VersionNum, "Version of @toolbox-sdk/server to use for npx approach")
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("description")
 	return cmd.Command
@@ -79,7 +83,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	parser := internal.ToolsFileParser{}
+	parser := internal.ConfigParser{}
 	_, err = opts.LoadConfig(ctx, &parser)
 	if err != nil {
 		return err
@@ -151,29 +155,29 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 			}
 		}
 
-		if opts.ToolsFolder != "" {
-			folderName := filepath.Base(opts.ToolsFolder)
+		if opts.ConfigFolder != "" {
+			folderName := filepath.Base(opts.ConfigFolder)
 			destFolder := filepath.Join(assetsPath, folderName)
-			if err := copyDir(opts.ToolsFolder, destFolder); err != nil {
+			if err := copyDir(opts.ConfigFolder, destFolder); err != nil {
 				return err
 			}
-			jsConfigArgs = append(jsConfigArgs, `"--tools-folder"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, folderName))
-		} else if len(opts.ToolsFiles) > 0 {
-			for _, f := range opts.ToolsFiles {
+			jsConfigArgs = append(jsConfigArgs, `"--config-folder"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, folderName))
+		} else if len(opts.Configs) > 0 {
+			for _, f := range opts.Configs {
 				baseName := filepath.Base(f)
 				destPath := filepath.Join(assetsPath, baseName)
 				if err := copyFile(f, destPath); err != nil {
 					return err
 				}
-				jsConfigArgs = append(jsConfigArgs, `"--tools-files"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
+				jsConfigArgs = append(jsConfigArgs, `"--configs"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
 			}
-		} else if opts.ToolsFile != "" {
-			baseName := filepath.Base(opts.ToolsFile)
+		} else if opts.Config != "" {
+			baseName := filepath.Base(opts.Config)
 			destPath := filepath.Join(assetsPath, baseName)
-			if err := copyFile(opts.ToolsFile, destPath); err != nil {
+			if err := copyFile(opts.Config, destPath); err != nil {
 				return err
 			}
-			jsConfigArgs = append(jsConfigArgs, `"--tools-file"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
+			jsConfigArgs = append(jsConfigArgs, `"--config"`, fmt.Sprintf(`path.join(__dirname, "..", "assets", %q)`, baseName))
 		}
 
 		configArgsStr := strings.Join(jsConfigArgs, ", ")
@@ -187,7 +191,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 
 		for _, toolName := range toolNames {
 			// Generate wrapper script in scripts directory
-			scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader)
+			scriptContent, err := generateScriptContent(toolName, configArgsStr, cmd.licenseHeader, cmd.invocationMode, cmd.toolboxVersion, parser.OptionalEnvVars)
 			if err != nil {
 				errMsg := fmt.Errorf("error generating script content for %s: %w", toolName, err)
 				opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -238,7 +242,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		for _, t := range ts.Tools {
 			if t != nil {
 				tool := *t
-				toolsetTools[tool.McpManifest().Name] = tool
+				toolsetTools[tool.GetName()] = tool
 			}
 		}
 		return toolsetTools

@@ -26,8 +26,8 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -107,7 +107,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initCloudSQLPgConnectionPool(CloudSQLPostgresProject, CloudSQLPostgresRegion, CloudSQLPostgresInstance, "public", CloudSQLPostgresUser, CloudSQLPostgresPass, CloudSQLPostgresDatabase)
 	if err != nil {
@@ -199,7 +199,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
-	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }
 
 // Test connection with different IP type

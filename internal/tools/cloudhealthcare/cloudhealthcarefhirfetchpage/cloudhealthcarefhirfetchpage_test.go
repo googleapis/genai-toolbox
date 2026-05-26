@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	fhirfetchpage "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirfetchpage"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	fhirfetchpage "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirfetchpage"
 )
 
 func TestParseFromYamlHealthcareFHIRFetchPage(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareFHIRFetchPage(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-fhir-fetch-page
             source: my-instance

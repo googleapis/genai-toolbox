@@ -18,10 +18,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannersql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlSpanner(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-sql
             source: my-pg-instance
@@ -66,7 +66,7 @@ func TestParseFromYamlSpanner(t *testing.T) {
 		{
 			desc: "read only set to true",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-sql
             source: my-pg-instance
@@ -123,7 +123,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-sql
             source: my-pg-instance
@@ -167,7 +167,7 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 		{
 			desc: "read only set to true",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: spanner-sql
             source: my-pg-instance

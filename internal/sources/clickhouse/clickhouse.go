@@ -23,8 +23,8 @@ import (
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -128,7 +128,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params parameters
 		return nil, fmt.Errorf("unable to get column types: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

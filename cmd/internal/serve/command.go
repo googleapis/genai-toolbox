@@ -22,8 +22,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/spf13/cobra"
 )
 
@@ -79,6 +79,12 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
+	useTLS := opts.Cfg.CertFile != "" || opts.Cfg.KeyFile != ""
+	protocol := "http"
+	if useTLS {
+		protocol = "https"
+	}
+
 	// run server in background
 	srvErr := make(chan error, 1)
 	if opts.Cfg.Stdio {
@@ -90,7 +96,7 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 			}
 		}()
 	} else {
-		err = s.Listen(ctx)
+		err = s.Listen(ctx, opts.Cfg.CertFile, opts.Cfg.KeyFile)
 		if err != nil {
 			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -98,7 +104,7 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		}
 		opts.Logger.InfoContext(ctx, "Server ready to serve!")
 		if opts.Cfg.UI {
-			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://%s:%d/ui", opts.Cfg.Address, opts.Cfg.Port))
+			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: %s://%s:%d/ui", protocol, opts.Cfg.Address, opts.Cfg.Port))
 		}
 
 		go func() {

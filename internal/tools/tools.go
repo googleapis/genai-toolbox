@@ -22,10 +22,10 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // ToolConfigFactory defines the signature for a function that creates and
@@ -114,15 +114,19 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 }
 
 type Tool interface {
+	GetName() string
+	GetDescription() string
+	GetAuthRequired() []string
+	GetAnnotations() *ToolAnnotations
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest() Manifest
-	McpManifest() McpManifest
 	Authorized([]string) bool
 	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName(SourceProvider) (string, error)
 	GetParameters() parameters.Parameters
+	GetScopesRequired() []string
 }
 
 // SourceProvider defines the minimal view of the server.ResourceManager
@@ -137,41 +141,6 @@ type Manifest struct {
 	Description  string                         `json:"description"`
 	Parameters   []parameters.ParameterManifest `json:"parameters"`
 	AuthRequired []string                       `json:"authRequired"`
-}
-
-// Definition for a tool the MCP client can call.
-type McpManifest struct {
-	// The name of the tool.
-	Name string `json:"name"`
-	// A human-readable description of the tool.
-	Description string           `json:"description,omitempty"`
-	Annotations *ToolAnnotations `json:"annotations,omitempty"`
-	// A JSON Schema object defining the expected parameters for the tool.
-	InputSchema parameters.McpToolsSchema `json:"inputSchema,omitempty"`
-	Metadata    map[string]any            `json:"_meta,omitempty"`
-}
-
-func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *ToolAnnotations) McpManifest {
-	inputSchema, authParams := params.McpManifest()
-	mcpManifest := McpManifest{
-		Name:        name,
-		Description: desc,
-		InputSchema: inputSchema,
-		Annotations: annotations,
-	}
-
-	// construct metadata, if applicable
-	metadata := make(map[string]any)
-	if len(authInvoke) > 0 {
-		metadata["toolbox/authInvoke"] = authInvoke
-	}
-	if len(authParams) > 0 {
-		metadata["toolbox/authParam"] = authParams
-	}
-	if len(metadata) > 0 {
-		mcpManifest.Metadata = metadata
-	}
-	return mcpManifest
 }
 
 // Helper function that returns if a tool invocation request is authorized

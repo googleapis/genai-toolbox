@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	retrieverendereddicominstance "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcareretrieverendereddicominstance"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	retrieverendereddicominstance "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcareretrieverendereddicominstance"
 )
 
 func TestParseFromYamlHealthcareRetrieveRenderedDICOMInstance(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareRetrieveRenderedDICOMInstance(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-retrieve-rendered-dicom-instance
             source: my-instance

@@ -21,11 +21,11 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const resourceType string = "bigtable-sql"
@@ -50,14 +50,17 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name               string                `yaml:"name" validate:"required"`
-	Type               string                `yaml:"type" validate:"required"`
-	Source             string                `yaml:"source" validate:"required"`
-	Description        string                `yaml:"description" validate:"required"`
-	Statement          string                `yaml:"statement" validate:"required"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
+	Name               string                 `yaml:"name" validate:"required"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Description        string                 `yaml:"description" validate:"required"`
+	Statement          string                 `yaml:"statement" validate:"required"`
+	AuthRequired       []string               `yaml:"authRequired"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -73,14 +76,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
-
 	// finish tool setup
 	t := Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:    cfg,
+		AllParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -90,9 +90,24 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	AllParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -130,10 +145,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
@@ -148,4 +159,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.AllParams
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

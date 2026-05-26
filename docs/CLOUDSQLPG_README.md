@@ -72,6 +72,10 @@ The Cloud SQL for PostgreSQL MCP server provides the following tools:
 | `list_triggers`                  | Lists all non-internal triggers in a database.                 |
 | `list_indexes`                   | Lists available user indexes in the database.                  |
 | `list_sequences`                 | Lists sequences in the database.                               |
+| `define_spec`                    | Defines a new vector specification for search workloads.       |
+| `modify_spec`                    | Modifies an existing vector specification.                     |
+| `apply_spec`                     | Executes SQL recommendations for a vector specification.       | 
+| `generate_query`                 | Generates optimized SQL queries for vector searches.           |
 
 
 ## Custom MCP Server Configuration

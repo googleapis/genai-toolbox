@@ -15,10 +15,10 @@
 import { renderToolInterface } from "./toolDisplay.js";
 import { escapeHtml } from "./sanitize.js";
 
-let toolDetailsAbortController = null;
+let currentToolsList = [];
 
 /**
- * Fetches a toolset from the /api/toolset endpoint and initiates creating the tool list.
+ * Fetches a toolset from the /mcp endpoint and initiates creating the tool list.
  * @param {!HTMLElement} secondNavContent The HTML element where the tool list will be rendered.
  * @param {!HTMLElement} toolDisplayArea The HTML element where the details of a selected tool will be displayed.
  * @param {string} toolsetName The name of the toolset to load (empty string loads all tools).
@@ -27,10 +27,24 @@ let toolDetailsAbortController = null;
 export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) {
     secondNavContent.innerHTML = '<p>Fetching tools...</p>';
     try {
-        const response = await fetch(`/api/toolset/${toolsetName}`);
+        const url = toolsetName ? `/mcp/${toolsetName}` : `/mcp`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'MCP-Protocol-Version': '2025-11-25'
+            },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: "1",
+                method: "tools/list",
+            })
+        });
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const apiResponse = await response.json();
         renderToolList(apiResponse, secondNavContent, toolDisplayArea);
     } catch (error) {
@@ -41,33 +55,38 @@ export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) 
 
 /**
  * Renders the list of tools as buttons within the provided HTML element.
- * @param {?{tools: ?Object<string,*>} } apiResponse The API response object containing the tools.
+ * @param {Object} apiResponse The API response object containing the tools.
  * @param {!HTMLElement} secondNavContent The HTML element to render the tool list into.
  * @param {!HTMLElement} toolDisplayArea The HTML element for displaying tool details (passed to event handlers).
  */
 function renderToolList(apiResponse, secondNavContent, toolDisplayArea) {
     secondNavContent.innerHTML = '';
 
-    if (!apiResponse || typeof apiResponse.tools !== 'object' || apiResponse.tools === null) {
-        console.error('Error: Expected an object with a "tools" property, but received:', apiResponse);
+    if (apiResponse && apiResponse.error) {
+        console.error('MCP API Error:', apiResponse.error);
+        secondNavContent.textContent = `Error: ${apiResponse.error.message || 'Unknown MCP error'}`;
+        return;
+    }
+
+    if (!apiResponse || !apiResponse.result || !Array.isArray(apiResponse.result.tools)) {
+        console.error('Error: Expected a valid MCP response with "result.tools" array, but received:', apiResponse);
         secondNavContent.textContent = 'Error: Invalid response format from toolset API.';
         return;
     }
 
-    const toolsObject = apiResponse.tools;
-    const toolNames = Object.keys(toolsObject);
+    currentToolsList = apiResponse.result.tools;
 
-    if (toolNames.length === 0) {
+    if (currentToolsList.length === 0) {
         secondNavContent.textContent = 'No tools found.';
         return;
     }
 
     const ul = document.createElement('ul');
-    toolNames.forEach(toolName => {
+    currentToolsList.forEach(toolObj => {
         const li = document.createElement('li');
         const button = document.createElement('button');
-        button.textContent = toolName;
-        button.dataset.toolname = toolName;
+        button.textContent = toolObj.name;
+        button.dataset.toolname = toolObj.name;
         button.classList.add('tool-button');
         button.addEventListener('click', (event) => handleToolClick(event, secondNavContent, toolDisplayArea));
         li.appendChild(button);
@@ -90,86 +109,81 @@ function handleToolClick(event, secondNavContent, toolDisplayArea) {
             currentActive.classList.remove('active');
         }
         event.target.classList.add('active');
-        fetchToolDetails(toolName, toolDisplayArea);
+        renderToolDetails(toolName, toolDisplayArea);
     }
 }
 
 /**
- * Fetches details for a specific tool /api/tool endpoint.
- * It aborts any previous in-flight request for tool details to stop race condition.
- * @param {string} toolName The name of the tool to fetch details for.
+ * Renders details for a specific tool from the cached MCP tools list.
+ * @param {string} toolName The name of the tool to render details for.
  * @param {!HTMLElement} toolDisplayArea The HTML element to display the tool interface in.
- * @returns {!Promise<void>} A promise that resolves when the tool details are fetched and rendered, or rejects on error.
  */
-async function fetchToolDetails(toolName, toolDisplayArea) {
-    if (toolDetailsAbortController) {
-        toolDetailsAbortController.abort();
-        console.debug("Aborted previous tool fetch.");
+function renderToolDetails(toolName, toolDisplayArea) {
+    const toolObject = currentToolsList.find(t => t.name === toolName);
+
+    if (!toolObject) {
+        toolDisplayArea.innerHTML = `<p class="error">Tool "${escapeHtml(toolName)}" data not found.</p>`;
+        return;
     }
 
-    toolDetailsAbortController = new AbortController();
-    const signal = toolDetailsAbortController.signal;
+    console.debug("Rendering tool object: ", toolObject);
 
-    toolDisplayArea.innerHTML = '<p>Loading tool details...</p>';
-
-    try {
-        const response = await fetch(`/api/tool/${encodeURIComponent(toolName)}`, { signal });
-        if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+    let toolAuthRequired = [];
+    let toolAuthParams = {};
+    if (toolObject._meta) {
+        if (toolObject._meta["toolbox/authInvoke"]) {
+            toolAuthRequired = toolObject._meta["toolbox/authInvoke"];
         }
-        const apiResponse = await response.json();
-
-        if (!apiResponse.tools || !apiResponse.tools[toolName]) {
-            throw new Error(`Tool "${toolName}" data not found in API response.`);
-        }
-        const toolObject = apiResponse.tools[toolName];
-        console.debug("Received tool object: ", toolObject)
-
-        const toolInterfaceData = {
-            id: toolName,
-            name: toolName,
-            description: toolObject.description || "No description provided.",
-            authRequired: toolObject.authRequired || [],
-            parameters: (toolObject.parameters || []).map(param => {
-                let inputType = 'text'; 
-                const apiType = param.type ? param.type.toLowerCase() : 'string';
-                let valueType = 'string'; 
-                let label = param.description || param.name;
-
-                if (apiType === 'integer' || apiType === 'float') {
-                    inputType = 'number';
-                    valueType = 'number';
-                } else if (apiType === 'boolean') {
-                    inputType = 'checkbox';
-                    valueType = 'boolean';
-                } else if (apiType === 'array') {
-                    inputType = 'textarea'; 
-                    const itemType = param.items && param.items.type ? param.items.type.toLowerCase() : 'string';
-                    valueType = `array<${itemType}>`;
-                    label += ' (Array)';
-                }
-
-                return {
-                    name: param.name,
-                    type: inputType,    
-                    valueType: valueType, 
-                    label: label,
-                    authServices: param.authSources,
-                    required: param.required || false,
-                    // defaultValue: param.default, can't do this yet bc tool manifest doesn't have default
-                };
-            })
-        };
-
-        console.debug("Transformed toolInterfaceData:", toolInterfaceData);
-
-        renderToolInterface(toolInterfaceData, toolDisplayArea);
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.debug("Previous fetch was aborted, expected behavior.");
-        } else {
-            console.error(`Failed to load details for tool "${toolName}":`, error);
-            toolDisplayArea.innerHTML = `<p class="error">Failed to load details for ${escapeHtml(toolName)}. ${escapeHtml(error.message)}</p>`;
+        if (toolObject._meta["toolbox/authParam"]) {
+            toolAuthParams = toolObject._meta["toolbox/authParam"];
         }
     }
+
+    // Default processing if inputSchema properties are not present
+    let toolParameters = [];
+    if (toolObject.inputSchema && toolObject.inputSchema.properties) {
+        const props = toolObject.inputSchema.properties;
+        const requiredFields = toolObject.inputSchema.required || [];
+
+        toolParameters = Object.keys(props).map(paramName => {
+            const param = props[paramName];
+            let inputType = 'text'; 
+            const apiType = param.type ? param.type.toLowerCase() : 'string';
+            let valueType = 'string'; 
+            let label = param.description || paramName;
+
+            if (apiType === 'integer' || apiType === 'number') {
+                inputType = 'number';
+                valueType = 'number';
+            } else if (apiType === 'boolean') {
+                inputType = 'checkbox';
+                valueType = 'boolean';
+            } else if (apiType === 'array') {
+                inputType = 'textarea'; 
+                const itemType = param.items && param.items.type ? param.items.type.toLowerCase() : 'string';
+                valueType = `array<${itemType}>`;
+                label += ' (Array)';
+            }
+
+            return {
+                name: paramName,
+                type: inputType,    
+                valueType: valueType, 
+                label: label,
+                required: requiredFields.includes(paramName),
+                authServices: toolAuthParams[paramName] || []
+            };
+        });
+    }
+
+    const toolInterfaceData = {
+        id: toolName,
+        name: toolName,
+        description: toolObject.description || "No description provided.",
+        authRequired: toolAuthRequired,
+        parameters: toolParameters
+    };
+
+    console.debug("Transformed toolInterfaceData:", toolInterfaceData);
+    renderToolInterface(toolInterfaceData, toolDisplayArea);
 }

@@ -20,12 +20,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	firestoreds "github.com/googleapis/mcp-toolbox/internal/sources/firestore"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -38,7 +38,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "valid config",
 			yaml: `
-			kind: tools
+			kind: tool
 			name: test-update-document
 			type: firestore-update-document
 			source: test-firestore
@@ -60,7 +60,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "minimal config",
 			yaml: `
-			kind: tools
+			kind: tool
 			name: test-update-document
 			type: firestore-update-document
 			source: test-firestore
@@ -80,7 +80,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "invalid yaml",
 			yaml: `
-			kind: tools
+			kind: tool
 			name: test-update-document
 			type: [invalid
 			`,
@@ -287,36 +287,6 @@ func TestTool_Manifest(t *testing.T) {
 	}
 	if diff := cmp.Diff([]string{"google-oauth"}, manifest.AuthRequired); diff != "" {
 		t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestTool_McpManifest(t *testing.T) {
-	tool := Tool{
-		mcpManifest: tools.McpManifest{
-			Name:        "test-update-document",
-			Description: "Test description",
-			InputSchema: parameters.McpToolsSchema{
-				Type: "object",
-				Properties: map[string]parameters.ParameterMcpManifest{
-					"documentPath": {
-						Type:        "string",
-						Description: "Document path",
-					},
-				},
-				Required: []string{"documentPath"},
-			},
-		},
-	}
-
-	mcpManifest := tool.McpManifest()
-	if mcpManifest.Name != "test-update-document" {
-		t.Fatalf("mcpManifest.Name = %v, want %v", mcpManifest.Name, "test-update-document")
-	}
-	if mcpManifest.Description != "Test description" {
-		t.Fatalf("mcpManifest.Description = %v, want %v", mcpManifest.Description, "Test description")
-	}
-	if mcpManifest.InputSchema.Type == "" {
-		t.Fatalf("expected InputSchema to be non-empty")
 	}
 }
 

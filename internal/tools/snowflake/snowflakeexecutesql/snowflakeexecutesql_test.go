@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakeexecutesql"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/snowflake/snowflakeexecutesql"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: my-snowflake-tool
 			type: snowflake-execute-sql
 			source: my-snowflake-source
@@ -80,12 +80,12 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-			kind: tools
+			kind: tool
 			name: my-snowflake-tool
 			type: snowflake-execute-sql
 			source: my-snowflake-source
 			`,
-			err: "error unmarshaling tools: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-execute-sql\": Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag",
+			err: "error unmarshaling tool: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-execute-sql\": Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

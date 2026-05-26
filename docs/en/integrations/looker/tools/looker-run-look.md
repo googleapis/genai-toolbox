@@ -1,0 +1,45 @@
+---
+title: "looker-run-look"
+type: docs
+weight: 1
+description: >
+  "looker-run-look" runs the query associated with a saved Look.
+---
+
+## About
+
+The `looker-run-look` tool runs the query associated with a
+saved Look.
+
+`looker-run-look` takes one parameter, the `look_id`.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: run_look
+type: looker-run-look
+source: looker-source
+description: |
+  This tool executes the query associated with a saved Look and
+  returns the resulting data in a JSON structure.
+
+  Parameters:
+  - look_id (required): The unique identifier of the Look to run,
+    typically obtained from the `get_looks` tool.
+
+  Output:
+  The query results are returned as a JSON object.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "looker-run-look"                          |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

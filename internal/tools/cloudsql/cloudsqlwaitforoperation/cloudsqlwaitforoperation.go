@@ -21,11 +21,11 @@ import (
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"google.golang.org/api/sqladmin/v1"
 )
 
@@ -68,8 +68,8 @@ CLOUD_SQL_{{.DBTypeUpper}}_PASSWORD=<your-password>
 ` + "```" + `
 
 Please refer to the official documentation for guidance on deploying the toolbox:
-- Deploying the Toolbox: https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/
-- Deploying on GKE: https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/
+- Deploying the Toolbox: https://mcp-toolbox.dev/documentation/deploy-to/
+- Deploying on GKE: https://mcp-toolbox.dev/documentation/deploy-to/kubernetes/
 `
 
 func init() {
@@ -103,10 +103,13 @@ type Config struct {
 	BaseURL      string   `yaml:"baseURL"`
 
 	// Polling configuration
-	Delay      string  `yaml:"delay"`
-	MaxDelay   string  `yaml:"maxDelay"`
-	Multiplier float64 `yaml:"multiplier"`
-	MaxRetries int     `yaml:"maxRetries"`
+	Delay       string                 `yaml:"delay"`
+	MaxDelay    string                 `yaml:"maxDelay"`
+	Multiplier  float64                `yaml:"multiplier"`
+	MaxRetries  int                    `yaml:"maxRetries"`
+	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -143,11 +146,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	description := cfg.Description
-	if description == "" {
-		description = "This will poll on operations API until the operation is done. For checking operation status we need projectId and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+	if cfg.Description == "" {
+		cfg.Description = "This will poll on operations API until the operation is done. For checking operation status we need projectId and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	var delay time.Duration
 	if cfg.Delay == "" {
@@ -182,29 +183,44 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
-		Delay:       delay,
-		MaxDelay:    maxDelay,
-		Multiplier:  multiplier,
-		MaxRetries:  maxRetries,
+		Config:    cfg,
+		AllParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+
+		Delay:      delay,
+		MaxDelay:   maxDelay,
+		Multiplier: multiplier,
+		MaxRetries: maxRetries,
 	}, nil
 }
 
 // Tool represents the wait-for-operation tool.
 type Tool struct {
 	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	AllParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
 
 	// Polling configuration
 	Delay      time.Duration
 	MaxDelay   time.Duration
 	Multiplier float64
 	MaxRetries int
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -276,11 +292,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-// McpManifest returns the tool's MCP manifest.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 // Authorized checks if the tool is authorized.
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
@@ -300,4 +311,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.AllParams
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

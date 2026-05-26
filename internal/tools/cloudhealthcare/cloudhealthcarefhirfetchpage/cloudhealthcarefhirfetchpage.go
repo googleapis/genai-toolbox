@@ -20,11 +20,11 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const resourceType string = "cloud-healthcare-fhir-fetch-page"
@@ -52,11 +52,14 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -69,14 +72,12 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	urlParameter := parameters.NewStringParameter(pageURLKey, "The full URL of the FHIR page to fetch. This would be the value of `Bundle.entry.link.url` field within the response returned from FHIR search or FHIR patient everything operations.")
 	params := parameters.Parameters{urlParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
-		Config:      cfg,
-		Parameters:  params,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:     cfg,
+		Parameters: params,
+		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -86,9 +87,24 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -130,10 +146,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
@@ -152,4 +164,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

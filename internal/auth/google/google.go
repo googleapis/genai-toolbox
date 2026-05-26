@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"google.golang.org/api/idtoken"
 )
 

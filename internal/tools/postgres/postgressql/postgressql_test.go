@@ -18,10 +18,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-sql
             source: my-pg-instance
@@ -102,7 +102,7 @@ func TestParseFromYamlWithTemplateParamsPostgres(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-sql
             source: my-pg-instance

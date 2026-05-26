@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	trinogo "github.com/trinodb/trino-go-client/trino"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -127,7 +127,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		values[i] = &rawValues[i]
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

@@ -14,8 +14,8 @@ import (
 	_ "github.com/godror/godror"   // OCI driver
 	_ "github.com/sijms/go-ora/v2" // Pure Go driver
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -162,7 +162,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 
 	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
 	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
+	// 'out' will remain an empty slice if cols is empty or err is not nil here.
 	cols, _ := rows.Columns()
 
 	// Get Column types
@@ -174,7 +174,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any, rea
 		return []any{}, nil
 	}
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		values := make([]any, len(cols))
 		for i, colType := range colTypes {

@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablefragmentation"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqllisttablefragmentation"
 )
 
 func TestParseFromYamlExecuteSql(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: mysql-list-table-fragmentation
             source: my-instance

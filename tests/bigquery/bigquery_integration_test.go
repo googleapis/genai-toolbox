@@ -31,9 +31,9 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
@@ -75,10 +75,13 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	t.Logf("Starting test with uniqueID: %s", uniqueID)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initBigQueryConnection(BigqueryProject)
 	if err != nil {
@@ -86,8 +89,8 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	}
 
 	// create table name with UUID
-	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
-	tableName := fmt.Sprintf("param_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	datasetName := fmt.Sprintf("temp_toolbox_test_%s", uniqueID)
+	tableName := fmt.Sprintf("param_table_%s", uniqueID)
 	tableNameParam := fmt.Sprintf("`%s.%s.%s`",
 		BigqueryProject,
 		datasetName,
@@ -96,54 +99,54 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	tableNameAuth := fmt.Sprintf("`%s.%s.auth_table_%s`",
 		BigqueryProject,
 		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
+		uniqueID,
 	)
 	tableNameTemplateParam := fmt.Sprintf("`%s.%s.template_param_table_%s`",
 		BigqueryProject,
 		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
+		uniqueID,
 	)
 	tableNameDataType := fmt.Sprintf("`%s.%s.datatype_table_%s`",
 		BigqueryProject,
 		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
+		uniqueID,
 	)
 	tableNameForecast := fmt.Sprintf("`%s.%s.forecast_table_%s`",
 		BigqueryProject,
 		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
+		uniqueID,
 	)
 
 	tableNameAnalyzeContribution := fmt.Sprintf("`%s.%s.analyze_contribution_table_%s`",
 		BigqueryProject,
 		datasetName,
-		strings.ReplaceAll(uuid.New().String(), "-", ""),
+		uniqueID,
 	)
+
+	// global cleanup for this test run
+	t.Cleanup(func() {
+		tests.CleanupBigQueryDatasets(t, context.Background(), client, []string{datasetName})
+	})
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
-	teardownTable1 := setupBigQueryTable(t, ctx, client, createParamTableStmt, insertParamTableStmt, datasetName, tableNameParam, paramTestParams)
-	defer teardownTable1(t)
+	setupBigQueryTable(t, ctx, client, createParamTableStmt, insertParamTableStmt, datasetName, tableNameParam, paramTestParams)
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getBigQueryAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupBigQueryTable(t, ctx, client, createAuthTableStmt, insertAuthTableStmt, datasetName, tableNameAuth, authTestParams)
-	defer teardownTable2(t)
+	setupBigQueryTable(t, ctx, client, createAuthTableStmt, insertAuthTableStmt, datasetName, tableNameAuth, authTestParams)
 
 	// set up data for data type test tool
 	createDataTypeTableStmt, insertDataTypeTableStmt, dataTypeToolStmt, arrayDataTypeToolStmt, dataTypeTestParams := getBigQueryDataTypeTestInfo(tableNameDataType)
-	teardownTable3 := setupBigQueryTable(t, ctx, client, createDataTypeTableStmt, insertDataTypeTableStmt, datasetName, tableNameDataType, dataTypeTestParams)
-	defer teardownTable3(t)
+	setupBigQueryTable(t, ctx, client, createDataTypeTableStmt, insertDataTypeTableStmt, datasetName, tableNameDataType, dataTypeTestParams)
 
 	// set up data for forecast tool
 	createForecastTableStmt, insertForecastTableStmt, forecastTestParams := getBigQueryForecastToolInfo(tableNameForecast)
-	teardownTable4 := setupBigQueryTable(t, ctx, client, createForecastTableStmt, insertForecastTableStmt, datasetName, tableNameForecast, forecastTestParams)
-	defer teardownTable4(t)
+	setupBigQueryTable(t, ctx, client, createForecastTableStmt, insertForecastTableStmt, datasetName, tableNameForecast, forecastTestParams)
 
 	// set up data for analyze contribution tool
 	createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, analyzeContributionTestParams := getBigQueryAnalyzeContributionToolInfo(tableNameAnalyzeContribution)
-	teardownTable5 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, datasetName, tableNameAnalyzeContribution, analyzeContributionTestParams)
-	defer teardownTable5(t)
+	setupBigQueryTable(t, ctx, client, createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, datasetName, tableNameAnalyzeContribution, analyzeContributionTestParams)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
@@ -152,6 +155,14 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+	// Set up table for semantic search
+	vectorTableName, teardownVectorTable := setupBigQueryVectorTable(t, ctx, client, datasetName)
+	defer teardownVectorTable(t)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := getBigQueryVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, BigqueryToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -202,9 +213,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
 	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
+	tests.RunSemanticSearchToolInvokeTest(t, ddlWant, "", "The quick brown fox")
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	t.Logf("Starting restriction test with uniqueID: %s", uniqueID)
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()
 
@@ -213,11 +227,9 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 		t.Fatalf("unable to create BigQuery client: %s", err)
 	}
 
-	// Create two datasets, one allowed, one not.
-	baseName := strings.ReplaceAll(uuid.New().String(), "-", "")
-	allowedDatasetName1 := fmt.Sprintf("allowed_dataset_1_%s", baseName)
-	allowedDatasetName2 := fmt.Sprintf("allowed_dataset_2_%s", baseName)
-	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", baseName)
+	allowedDatasetName1 := fmt.Sprintf("allowed_dataset_1_%s", uniqueID)
+	allowedDatasetName2 := fmt.Sprintf("allowed_dataset_2_%s", uniqueID)
+	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", uniqueID)
 	allowedTableName1 := "allowed_table_1"
 	allowedTableName2 := "allowed_table_2"
 	disallowedTableName := "disallowed_table"
@@ -228,56 +240,53 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	allowedAnalyzeContributionTableName1 := "allowed_analyze_contribution_table_1"
 	allowedAnalyzeContributionTableName2 := "allowed_analyze_contribution_table_2"
 	disallowedAnalyzeContributionTableName := "disallowed_analyze_contribution_table"
+
+	// global cleanup for this test run
+	t.Cleanup(func() {
+		tests.CleanupBigQueryDatasets(t, context.Background(), client, []string{allowedDatasetName1, allowedDatasetName2, disallowedDatasetName})
+	})
+
 	// Setup allowed table
 	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
 	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
-	teardownAllowed1 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
-	defer teardownAllowed1(t)
+	setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
 
 	allowedTableNameParam2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedTableName2)
 	createAllowedTableStmt2 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam2)
-	teardownAllowed2 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
-	defer teardownAllowed2(t)
+	setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
 
 	// Setup allowed forecast table
 	allowedForecastTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedForecastTableName1)
 	createForecastStmt1, insertForecastStmt1, forecastParams1 := getBigQueryForecastToolInfo(allowedForecastTableFullName1)
-	teardownAllowedForecast1 := setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
-	defer teardownAllowedForecast1(t)
+	setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
 
 	allowedForecastTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedForecastTableName2)
 	createForecastStmt2, insertForecastStmt2, forecastParams2 := getBigQueryForecastToolInfo(allowedForecastTableFullName2)
-	teardownAllowedForecast2 := setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
-	defer teardownAllowedForecast2(t)
+	setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
 
 	// Setup disallowed table
 	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
 	createDisallowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", disallowedTableNameParam)
-	teardownDisallowed := setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
-	defer teardownDisallowed(t)
+	setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
 
 	// Setup disallowed forecast table
 	disallowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedForecastTableName)
 	createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedForecastParams := getBigQueryForecastToolInfo(disallowedForecastTableFullName)
-	teardownDisallowedForecast := setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
-	defer teardownDisallowedForecast(t)
+	setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
 
 	// Setup allowed analyze contribution table
 	allowedAnalyzeContributionTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedAnalyzeContributionTableName1)
 	createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, analyzeContributionParams1 := getBigQueryAnalyzeContributionToolInfo(allowedAnalyzeContributionTableFullName1)
-	teardownAllowedAnalyzeContribution1 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, allowedDatasetName1, allowedAnalyzeContributionTableFullName1, analyzeContributionParams1)
-	defer teardownAllowedAnalyzeContribution1(t)
+	setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, allowedDatasetName1, allowedAnalyzeContributionTableFullName1, analyzeContributionParams1)
 
 	allowedAnalyzeContributionTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedAnalyzeContributionTableName2)
 	createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, analyzeContributionParams2 := getBigQueryAnalyzeContributionToolInfo(allowedAnalyzeContributionTableFullName2)
-	teardownAllowedAnalyzeContribution2 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, allowedDatasetName2, allowedAnalyzeContributionTableFullName2, analyzeContributionParams2)
-	defer teardownAllowedAnalyzeContribution2(t)
+	setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, allowedDatasetName2, allowedAnalyzeContributionTableFullName2, analyzeContributionParams2)
 
 	// Setup disallowed analyze contribution table
 	disallowedAnalyzeContributionTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedAnalyzeContributionTableName)
 	createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedAnalyzeContributionParams := getBigQueryAnalyzeContributionToolInfo(disallowedAnalyzeContributionTableFullName)
-	teardownDisallowedAnalyzeContribution := setupBigQueryTable(t, ctx, client, createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedDatasetName, disallowedAnalyzeContributionTableFullName, disallowedAnalyzeContributionParams)
-	defer teardownDisallowedAnalyzeContribution(t)
+	setupBigQueryTable(t, ctx, client, createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedDatasetName, disallowedAnalyzeContributionTableFullName, disallowedAnalyzeContributionParams)
 
 	// Configure source with dataset restriction.
 	sourceConfig := getBigQueryVars(t)
@@ -336,11 +345,13 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Start server
-	cmd, cleanup, err := tests.StartCmd(ctx, config)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, config, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
+	defer cmd.Close()
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -349,6 +360,11 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
+
+	// FIX: Background goroutine to drain server logs and prevent pipe buffer deadlock.
+	go func() {
+		_, _ = io.Copy(io.Discard, cmd.Out)
+	}()
 
 	// Run tests
 	runListDatasetIdsWithRestriction(t, allowedDatasetName1, allowedDatasetName2)
@@ -405,11 +421,13 @@ func TestBigQueryWriteModeAllowed(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
+	defer cmd.Close()
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -448,11 +466,13 @@ func TestBigQueryWriteModeBlocked(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
+	defer cmd.Close()
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -510,11 +530,13 @@ func TestBigQueryWriteModeProtected(t *testing.T) {
 		},
 	}
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
+	defer cmd.Close()
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -939,7 +961,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 
 func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam, ddlWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -981,8 +1003,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"CREATE TABLE t (id SERIAL PRIMARY KEY, name TEXT)"}`)),
-			want:          ddlWant,
-			isErr:         true,
+			want:          `{"error":"error processing GCP request: failed to insert dry run job: googleapi: Error 400: Table \"t\" must be qualified with a dataset (e.g. dataset.table)., invalid"}`,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with data present in table",
@@ -1005,8 +1026,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
-			want:          ddlWant,
-			isErr:         true,
+			want:          `{"error":"error processing GCP request: failed to insert dry run job: googleapi: Error 400: Table \"t\" must be qualified with a dataset (e.g. dataset.table)., invalid"}`,
 		},
 		{
 			name:          "invoke my-exec-sql-tool insert entry",
@@ -1323,7 +1343,7 @@ func runBigQueryWriteModeProtectedTest(t *testing.T, permanentDatasetName string
 
 func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1431,7 +1451,7 @@ func runBigQueryExecuteSqlToolInvokeDryRunTest(t *testing.T, datasetName string)
 }
 
 func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1569,7 +1589,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 }
 
 func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1770,7 +1790,7 @@ func runBigQueryDataTypeTests(t *testing.T) {
 
 func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -1892,7 +1912,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 
 func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetInfoWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2042,7 +2062,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 
 func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_want string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2192,7 +2212,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 
 func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName, tableInfoWant string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2345,7 +2365,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	const maxRetries = 3
 	const requestTimeout = 340 * time.Second
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -2908,7 +2928,7 @@ func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName,
 
 func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, tableName string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -3249,4 +3269,25 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			}
 		})
 	}
+}
+
+// setupBigQueryVectorTable creates a vector table in BigQuery for semantic search testing
+func setupBigQueryVectorTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string) (string, func(*testing.T)) {
+	tableName := fmt.Sprintf("vector_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	fullTableName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, datasetName, tableName)
+	createStatement := fmt.Sprintf(`CREATE TABLE %s (
+		id INT64,
+		content STRING,
+		embedding ARRAY<FLOAT64>
+	)`, fullTableName)
+
+	teardownTable := setupBigQueryTable(t, ctx, client, createStatement, "", datasetName, fullTableName, nil)
+	return fullTableName, teardownTable
+}
+
+// getBigQueryVectorSearchStmts returns statements for bigquery semantic search
+func getBigQueryVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, @content, @text_to_embed)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, ML.DISTANCE(embedding, @query, 'COSINE') AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
 }

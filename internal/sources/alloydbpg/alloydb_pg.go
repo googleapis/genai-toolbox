@@ -22,9 +22,10 @@ import (
 
 	"cloud.google.com/go/alloydbconn"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -103,6 +104,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
 	results, err := s.Pool.Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -110,7 +112,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	defer results.Close()
 
 	fields := results.FieldDescriptions()
-	var out []any
+	out := []any{}
 	for results.Next() {
 		v, err := results.Values()
 		if err != nil {

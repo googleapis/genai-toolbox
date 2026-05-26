@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	fhirpatientsearch "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirpatientsearch"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	fhirpatientsearch "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirpatientsearch"
 )
 
 func TestParseFromYamlHealthcareFHIRPatientSearch(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlHealthcareFHIRPatientSearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: cloud-healthcare-fhir-patient-search
             source: my-instance

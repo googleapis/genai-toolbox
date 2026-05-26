@@ -19,9 +19,9 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/snowflakedb/gosnowflake"
+	_ "github.com/snowflakedb/gosnowflake/v2"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -104,7 +104,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	}
 	defer rows.Close()
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		cols, err := rows.Columns()
 		if err != nil {

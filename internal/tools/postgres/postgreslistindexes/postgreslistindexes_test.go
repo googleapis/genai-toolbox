@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistindexes"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgreslistindexes"
 )
 
 func TestParseFromYamlPostgresListIndexes(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYamlPostgresListIndexes(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-indexes
             source: my-postgres-instance
@@ -58,7 +58,7 @@ func TestParseFromYamlPostgresListIndexes(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: postgres-list-indexes
             source: my-postgres-instance

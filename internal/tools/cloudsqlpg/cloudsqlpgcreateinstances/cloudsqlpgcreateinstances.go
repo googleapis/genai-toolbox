@@ -21,11 +21,11 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
@@ -53,11 +53,14 @@ type compatibleSource interface {
 
 // Config defines the configuration for the create-instances tool.
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Description  string   `yaml:"description"`
-	Source       string   `yaml:"source" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Description  string                 `yaml:"description"`
+	Source       string                 `yaml:"source" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -96,26 +99,38 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	description := cfg.Description
-	if description == "" {
-		description = "Creates a Postgres instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `POSTGRES_17`. The agent should ask the user if they want to use a different version."
+	if cfg.Description == "" {
+		cfg.Description = "Creates a Postgres instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `POSTGRES_17`. The agent should ask the user if they want to use a different version."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:    cfg,
+		AllParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 	}, nil
 }
 
 // Tool represents the create-instances tool.
 type Tool struct {
 	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	AllParams parameters.Parameters `yaml:"allParams"`
+	manifest  tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -185,11 +200,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-// McpManifest returns the tool's MCP manifest.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 // Authorized checks if the tool is authorized.
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
@@ -209,4 +219,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.AllParams
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

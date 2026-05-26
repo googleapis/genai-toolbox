@@ -17,29 +17,25 @@ package http
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/googleapis/genai-toolbox/tests"
-)
-
-var (
-	HttpSourceType = "http"
-	HttpToolType   = "http"
+	"github.com/MicahParks/jwkset"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 func getHTTPSourceConfig(t *testing.T) map[string]any {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting ID token: %s", err)
 	}
@@ -48,252 +44,6 @@ func getHTTPSourceConfig(t *testing.T) map[string]any {
 	return map[string]any{
 		"type":    HttpSourceType,
 		"headers": map[string]string{"Authorization": idToken},
-	}
-}
-
-// handler function for the test server
-func multiTool(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	path = strings.TrimPrefix(path, "/") // Remove leading slash
-
-	switch path {
-	case "tool0":
-		handleTool0(w, r)
-	case "tool1":
-		handleTool1(w, r)
-	case "tool1id":
-		handleTool1Id(w, r)
-	case "tool1name":
-		handleTool1Name(w, r)
-	case "tool2":
-		handleTool2(w, r)
-	case "tool3":
-		handleTool3(w, r)
-	case "toolQueryTest":
-		handleQueryTest(w, r)
-	default:
-		http.NotFound(w, r) // Return 404 for unknown paths
-	}
-}
-
-// handleQueryTest simply returns the raw query string it received so the test
-// can verify it's formatted correctly.
-func handleQueryTest(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	enc := json.NewEncoder(w)
-	enc.SetEscapeHTML(false)
-
-	err := enc.Encode(r.URL.RawQuery)
-	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		return
-	}
-}
-
-// handler function for the test server
-func handleTool0(w http.ResponseWriter, r *http.Request) {
-	// expect POST method
-	if r.Method != http.MethodPost {
-		errorMessage := fmt.Sprintf("expected POST method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	response := "hello world"
-	err := json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
-		return
-	}
-}
-
-// handler function for the test server
-func handleTool1(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-	// Parse request body
-	var requestBody map[string]interface{}
-	bodyBytes, readErr := io.ReadAll(r.Body)
-	if readErr != nil {
-		http.Error(w, "Bad Request: Failed to read request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-	err := json.Unmarshal(bodyBytes, &requestBody)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Bad Request: Error unmarshalling request body: %s, Raw body: %s", err, string(bodyBytes))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	// Extract name
-	name, ok := requestBody["name"].(string)
-	if !ok || name == "" {
-		http.Error(w, "Bad Request: Missing or invalid name", http.StatusBadRequest)
-		return
-	}
-
-	if name == "Alice" {
-		response := `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`
-		_, err := w.Write([]byte(response))
-		if err != nil {
-			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-}
-
-// handler function for the test server
-func handleTool1Id(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	id := r.URL.Query().Get("id")
-	if id == "4" {
-		response := `[{"id":4,"name":null}]`
-		_, err := w.Write([]byte(response))
-		if err != nil {
-			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		}
-		return
-	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-}
-
-// handler function for the test server
-func handleTool1Name(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	if !r.URL.Query().Has("name") {
-		response := "null"
-		_, err := w.Write([]byte(response))
-		if err != nil {
-			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		}
-		return
-	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-}
-
-// handler function for the test server
-func handleTool2(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-	email := r.URL.Query().Get("email")
-	if email != "" {
-		response := `[{"name":"Alice"}]`
-		_, err := w.Write([]byte(response))
-		if err != nil {
-			http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-}
-
-// handler function for the test server
-func handleTool3(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	// Check request headers
-	expectedHeaders := map[string]string{
-		"Content-Type":    "application/json",
-		"X-Custom-Header": "example",
-		"X-Other-Header":  "test",
-	}
-	for header, expectedValue := range expectedHeaders {
-		if r.Header.Get(header) != expectedValue {
-			errorMessage := fmt.Sprintf("Bad Request: Missing or incorrect header: %s", header)
-			http.Error(w, errorMessage, http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Check query parameters
-	expectedQueryParams := map[string][]string{
-		"id":      []string{"2", "1", "3"},
-		"country": []string{"US"},
-	}
-	query := r.URL.Query()
-	for param, expectedValueSlice := range expectedQueryParams {
-		values, ok := query[param]
-		if ok {
-			if !reflect.DeepEqual(expectedValueSlice, values) {
-				errorMessage := fmt.Sprintf("Bad Request: Incorrect query parameter: %s, actual: %s", param, query[param])
-				http.Error(w, errorMessage, http.StatusBadRequest)
-				return
-			}
-		} else {
-			errorMessage := fmt.Sprintf("Bad Request: Missing query parameter: %s, actual: %s", param, query[param])
-			http.Error(w, errorMessage, http.StatusBadRequest)
-			return
-		}
-	}
-
-	// Parse request body
-	var requestBody map[string]interface{}
-	bodyBytes, readErr := io.ReadAll(r.Body)
-	if readErr != nil {
-		http.Error(w, "Bad Request: Failed to read request body", http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-	err := json.Unmarshal(bodyBytes, &requestBody)
-	if err != nil {
-		errorMessage := fmt.Sprintf("Bad Request: Error unmarshalling request body: %s, Raw body: %s", err, string(bodyBytes))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	// Check request body
-	expectedBody := map[string]interface{}{
-		"place":   "zoo",
-		"animals": []any{"rabbit", "ostrich", "whale"},
-	}
-
-	if !reflect.DeepEqual(requestBody, expectedBody) {
-		errorMessage := fmt.Sprintf("Bad Request: Incorrect request body. Expected: %v, Got: %v", expectedBody, requestBody)
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-
-	response := "hello world"
-	err = json.NewEncoder(w).Encode(response)
-	if err != nil {
-		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -307,9 +57,40 @@ func TestHttpToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	// Set up generic auth mock server
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("failed to create RSA private key: %v", err)
+	}
+	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/.well-known/openid-configuration" {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"issuer":   "https://example.com",
+				"jwks_uri": "http://" + r.Host + "/jwks",
+			})
+			return
+		}
+		if r.URL.Path == "/jwks" {
+			options := jwkset.JWKOptions{
+				Metadata: jwkset.JWKMetadataOptions{
+					KID: "test-key-id",
+				},
+			}
+			jwk, _ := jwkset.NewJWKFromKey(privateKey.Public(), options)
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"keys": []jwkset.JWKMarshal{jwk.Marshal()},
+			})
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer jwksServer.Close()
 
-	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolType)
+	args := []string{"--enable-api"}
+
+	toolsFile := getHTTPToolsConfig(sourceConfig, HttpToolType, jwksServer.URL)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -329,6 +110,70 @@ func TestHttpToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
+	runGenericAuthInvokeTest(t, privateKey)
+}
+
+func runGenericAuthInvokeTest(t *testing.T, privateKey *rsa.PrivateKey) {
+	// Generate valid token
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"aud":   "test-audience",
+		"scope": "read:files",
+		"sub":   "test-user",
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
+	token.Header["kid"] = "test-key-id"
+	signedString, err := token.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("failed to sign token: %v", err)
+	}
+
+	api := "http://127.0.0.1:5000/api/tool/my-auth-required-generic-tool/invoke"
+
+	// Test without auth header (should fail)
+	t.Run("invoke generic auth tool without token", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)))
+		req.Header.Add("Content-type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("unable to send request: %s", err)
+		}
+		defer resp.Body.Close()
+
+		var body map[string]interface{}
+		_ = json.NewDecoder(resp.Body).Decode(&body)
+		errorStr, _ := body["error"].(string)
+		statusStr, _ := body["status"].(string)
+		if !strings.Contains(strings.ToLower(errorStr), "not authorized") && !strings.Contains(strings.ToLower(statusStr), "unauthorized") {
+			bodyBytes, _ := json.Marshal(body)
+			t.Fatalf("expected unauthorized error, got: %s", string(bodyBytes))
+		}
+	})
+
+	// Test with valid token
+	t.Run("invoke generic auth tool with valid token", func(t *testing.T) {
+		req, _ := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)))
+		req.Header.Add("Content-type", "application/json")
+		req.Header.Add("my-generic-auth_token", signedString)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("unable to send request: %s", err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected status 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+		}
+
+		var body map[string]interface{}
+		_ = json.NewDecoder(resp.Body).Decode(&body)
+		got, ok := body["result"].(string)
+		if !ok || got != `"hello world"` {
+			bodyBytes, _ := json.Marshal(body)
+			t.Fatalf("unexpected result: %s", string(bodyBytes))
+		}
+	})
 }
 
 // runQueryParamInvokeTest runs the tool invoke endpoint for the query param test tool
@@ -431,7 +276,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
 			},
-			want:       "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
+			want:       "error processing request: unexpected status code: 400 (Bad Request)",
 			isAgentErr: true,
 		},
 	}
@@ -497,133 +342,4 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			}
 		})
 	}
-}
-
-// getHTTPToolsConfig returns a mock HTTP tool's config file
-func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string]any {
-	// Write config into a file and pass it to command
-	otherSourceConfig := make(map[string]any)
-	for k, v := range sourceConfig {
-		otherSourceConfig[k] = v
-	}
-	otherSourceConfig["headers"] = map[string]string{"X-Custom-Header": "unexpected", "Content-Type": "application/json"}
-	otherSourceConfig["queryParams"] = map[string]any{"id": 1, "name": "Sid"}
-
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance":    sourceConfig,
-			"other-instance": otherSourceConfig,
-		},
-		"authServices": map[string]any{
-			"my-google-auth": map[string]any{
-				"type":     "google",
-				"clientId": tests.ClientId,
-			},
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"type":        toolType,
-				"path":        "/tool0",
-				"method":      "POST",
-				"source":      "my-instance",
-				"requestBody": "{}",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"my-tool": map[string]any{
-				"type":        toolType,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool1",
-				"description": "some description",
-				"queryParams": []parameters.Parameter{
-					parameters.NewIntParameter("id", "user ID")},
-				"bodyParams": []parameters.Parameter{parameters.NewStringParameter("name", "user name")},
-				"requestBody": `{
-"age": 36,
-"name": "{{.name}}"
-}
-`,
-				"headers": map[string]string{"Content-Type": "application/json"},
-			},
-			"my-tool-by-id": map[string]any{
-				"type":        toolType,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool1id",
-				"description": "some description",
-				"queryParams": []parameters.Parameter{
-					parameters.NewIntParameter("id", "user ID")},
-				"headers": map[string]string{"Content-Type": "application/json"},
-			},
-			"my-tool-by-name": map[string]any{
-				"type":        toolType,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool1name",
-				"description": "some description",
-				"queryParams": []parameters.Parameter{
-					parameters.NewStringParameterWithRequired("name", "user name", false)},
-				"headers": map[string]string{"Content-Type": "application/json"},
-			},
-			"my-query-param-tool": map[string]any{
-				"type":        toolType,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/toolQueryTest",
-				"description": "Tool to test optional query parameters.",
-				"queryParams": []parameters.Parameter{
-					parameters.NewStringParameterWithRequired("reqId", "required ID", true),
-					parameters.NewStringParameterWithRequired("page", "optional page number", false),
-					parameters.NewStringParameterWithRequired("filter", "optional filter string", false),
-				},
-			},
-			"my-auth-tool": map[string]any{
-				"type":        toolType,
-				"source":      "my-instance",
-				"method":      "GET",
-				"path":        "/tool2",
-				"description": "some description",
-				"requestBody": "{}",
-				"queryParams": []parameters.Parameter{
-					parameters.NewStringParameterWithAuth("email", "some description",
-						[]parameters.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
-				},
-			},
-			"my-auth-required-tool": map[string]any{
-				"type":         toolType,
-				"source":       "my-instance",
-				"method":       "POST",
-				"path":         "/tool0",
-				"description":  "some description",
-				"requestBody":  "{}",
-				"authRequired": []string{"my-google-auth"},
-			},
-			"my-advanced-tool": map[string]any{
-				"type":        toolType,
-				"source":      "other-instance",
-				"method":      "get",
-				"path":        "/{{.path}}?id=2",
-				"description": "some description",
-				"headers": map[string]string{
-					"X-Custom-Header": "example",
-				},
-				"pathParams": []parameters.Parameter{
-					&parameters.StringParameter{
-						CommonParameter: parameters.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
-					},
-				},
-				"queryParams": []parameters.Parameter{
-					parameters.NewIntParameter("id", "user ID"), parameters.NewStringParameter("country", "country"),
-				},
-				"requestBody": `{
-					"place": "zoo",
-					"animals": {{json .animalArray }}
-					}
-					`,
-				"bodyParams":   []parameters.Parameter{parameters.NewArrayParameter("animalArray", "animals in the zoo", parameters.NewStringParameter("animals", "desc"))},
-				"headerParams": []parameters.Parameter{parameters.NewStringParameter("X-Other-Header", "custom header")},
-			},
-		},
-	}
-	return toolsFile
 }

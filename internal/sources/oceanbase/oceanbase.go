@@ -22,8 +22,8 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlcommon"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -122,7 +122,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		return nil, fmt.Errorf("unable to get column types: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

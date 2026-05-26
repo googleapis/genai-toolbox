@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	cloudsqlgetinstances "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlgetinstances"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	cloudsqlgetinstances "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlgetinstances"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: get-instances
 			type: cloud-sql-get-instance
 			description: "A tool to get cloud sql instances"

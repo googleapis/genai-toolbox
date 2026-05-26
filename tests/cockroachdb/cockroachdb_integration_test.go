@@ -23,8 +23,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	tccockroachdb "github.com/testcontainers/testcontainers-go/modules/cockroachdb"
@@ -90,7 +90,7 @@ func TestCockroachDB(t *testing.T) {
 	connString := fmt.Sprintf("postgres://root@%s:%s/defaultdb?sslmode=disable", host, port.Port())
 
 	sourceConfig := getCockroachDBVars(host, port.Port())
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initCockroachDBConnectionPool(connString)
 	if err != nil {

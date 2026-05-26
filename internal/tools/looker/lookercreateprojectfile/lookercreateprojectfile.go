@@ -17,14 +17,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -50,7 +51,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
-	GetLookerSDK(string) (*v4.LookerSDK, error)
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
 }
 
 type Config struct {
@@ -60,6 +61,8 @@ type Config struct {
 	Description  string                 `yaml:"description" validate:"required"`
 	AuthRequired []string               `yaml:"authRequired"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -75,16 +78,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	fileContentParameter := parameters.NewStringParameter("file_content", "The content of the file")
 	params := parameters.Parameters{projectIdParameter, filePathParameter, fileContentParameter}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		readOnlyHint := false
-		annotations = &tools.ToolAnnotations{
-			ReadOnlyHint: &readOnlyHint,
-		}
-	}
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
-
 	// finish tool setup
 	return Tool{
 		Config:     cfg,
@@ -94,7 +87,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -103,9 +95,31 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	annotations := t.Annotations
+	if annotations == nil {
+		readOnlyHint := false
+		annotations = &tools.ToolAnnotations{
+			ReadOnlyHint: &readOnlyHint,
+		}
+	}
+	return annotations
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -118,7 +132,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	sdk, err := source.GetLookerSDK(string(accessToken))
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
 	if err != nil {
 		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
@@ -144,6 +158,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	err = lookercommon.CreateProjectFile(sdk, projectId, req, source.LookerApiSettings())
 	if err != nil {
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
 		return nil, util.ProcessGeneralError(err)
 	}
 
@@ -160,10 +177,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
@@ -188,4 +201,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

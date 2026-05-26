@@ -26,8 +26,8 @@ import (
 	"strings"
 	"text/template"
 
-	embeddingmodels "github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	embeddingmodels "github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 const (
@@ -319,6 +319,7 @@ type Parameter interface {
 	// Note: It's typically not idiomatic to include "Get" in the function name,
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
+	GetDesc() string
 	GetType() string
 	GetDefault() any
 	GetRequired() bool
@@ -328,13 +329,6 @@ type Parameter interface {
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
-}
-
-// McpToolsSchema is the representation of input schema for McpManifest.
-type McpToolsSchema struct {
-	Type       string                          `json:"type"`
-	Properties map[string]ParameterMcpManifest `json:"properties"`
-	Required   []string                        `json:"required"`
 }
 
 // Parameters is a type used to allow unmarshal a list of parameters
@@ -379,20 +373,11 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)
 	}
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
 	switch paramType {
 	case TypeString:
 		a := &StringParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
-		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
 		}
 		return a, nil
 	case TypeInt:
@@ -403,11 +388,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
-		}
 		return a, nil
 	case TypeFloat:
 		a := &FloatParameter{}
@@ -416,11 +396,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		}
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
-		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
 		}
 		return a, nil
 	case TypeBool:
@@ -431,11 +406,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
-		}
 		return a, nil
 	case TypeArray:
 		a := &ArrayParameter{}
@@ -445,11 +415,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
-		}
 		return a, nil
 	case TypeMap:
 		a := &MapParameter{}
@@ -458,11 +423,6 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		}
 		if a.GetEmbeddedBy() != "" {
 			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
-		}
-		if a.AuthSources != nil {
-			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
-			a.AuthServices = append(a.AuthServices, a.AuthSources...)
-			a.AuthSources = nil
 		}
 		return a, nil
 	}
@@ -480,46 +440,13 @@ func (ps Parameters) Manifest() []ParameterManifest {
 	return rtn
 }
 
-func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
-	properties := make(map[string]ParameterMcpManifest)
-	required := make([]string, 0)
-	authParam := make(map[string][]string)
-
-	for _, p := range ps {
-		// If the parameter is sourced from another param, skip it in the MCP manifest
-		if p.GetValueFromParam() != "" {
-			continue
-		}
-
-		name := p.GetName()
-		paramManifest, authParamList := p.McpManifest()
-		defaultV := p.GetDefault()
-		if defaultV != nil {
-			paramManifest.Default = defaultV
-		}
-		properties[name] = paramManifest
-		// parameters that doesn't have a default value are added to the required field
-		if CheckParamRequired(p.GetRequired(), defaultV) {
-			required = append(required, name)
-		}
-		if len(authParamList) > 0 {
-			authParam[name] = authParamList
-		}
-	}
-	return McpToolsSchema{
-		Type:       "object",
-		Properties: properties,
-		Required:   required,
-	}, authParam
-}
-
 // ParameterManifest represents parameters when served as part of a ToolManifest.
 type ParameterManifest struct {
 	Name                 string             `json:"name"`
 	Type                 string             `json:"type"`
 	Required             bool               `json:"required"`
 	Description          string             `json:"description"`
-	AuthServices         []string           `json:"authSources"`
+	AuthServices         []string           `json:"authServices"`
 	Items                *ParameterManifest `json:"items,omitempty"`
 	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
@@ -545,7 +472,6 @@ type CommonParameter struct {
 	AllowedValues  []any              `yaml:"allowedValues"`
 	ExcludedValues []any              `yaml:"excludedValues"`
 	AuthServices   []ParamAuthService `yaml:"authServices"`
-	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	EmbeddedBy     string             `yaml:"embeddedBy"`
 	ValueFromParam string             `yaml:"valueFromParam"`
 }
@@ -553,6 +479,11 @@ type CommonParameter struct {
 // GetName returns the name specified for the Parameter.
 func (p *CommonParameter) GetName() string {
 	return p.Name
+}
+
+// GetDesc returns the description specified for the Parameter.
+func (p *CommonParameter) GetDesc() string {
+	return p.Desc
 }
 
 // GetType returns the type specified for the Parameter.

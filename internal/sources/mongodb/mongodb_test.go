@@ -19,10 +19,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/mongodb"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlMongoDB(t *testing.T) {
@@ -34,7 +34,7 @@ func TestParseFromYamlMongoDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: mongo-db
 			type: "mongodb"
 			uri: "mongodb+srv://username:password@host/dbname"
@@ -71,22 +71,22 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: mongo-db
 			type: mongodb
 			uri: "mongodb+srv://username:password@host/dbname"
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: mongo-db\n   3 | type: mongodb\n   4 | uri: mongodb+srv://username:password@host/dbname",
+			err: "error unmarshaling source: unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: mongo-db\n   3 | type: mongodb\n   4 | uri: mongodb+srv://username:password@host/dbname",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: mongo-db
 			type: mongodb
 			`,
-			err: "error unmarshaling sources: unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

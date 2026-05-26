@@ -19,10 +19,10 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cassandra"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/cassandra"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlCassandra(t *testing.T) {
@@ -34,7 +34,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "basic example (without optional fields)",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			hosts:
@@ -60,7 +60,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "with optional fields",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			hosts:
@@ -115,23 +115,23 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			hosts:
 				- "my-host"
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | name: my-cassandra-instance\n   5 | ",
+			err: "error unmarshaling source: unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | name: my-cassandra-instance\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-cassandra-instance
 			type: cassandra
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-cassandra-instance\" as \"cassandra\": Key: 'Config.Hosts' Error:Field validation for 'Hosts' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-cassandra-instance\" as \"cassandra\": Key: 'Config.Hosts' Error:Field validation for 'Hosts' failed on the 'required' tag",
 		},
 	}
 

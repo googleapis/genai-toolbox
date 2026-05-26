@@ -21,8 +21,8 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
 )
@@ -117,7 +117,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	}
 
 	// Prepare the result slice
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		if err := rows.Scan(values...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)

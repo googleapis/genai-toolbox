@@ -16,13 +16,15 @@ package singlestore_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/singlestore"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/singlestore"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -34,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -58,7 +60,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with query timeout",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -78,6 +80,66 @@ func TestParseFromYaml(t *testing.T) {
 					User:         "my_user",
 					Password:     "my_pass",
 					QueryTimeout: "45s",
+				},
+			},
+		},
+		{
+			desc: "with connection params",
+			in: `
+			kind: source
+			name: my-s2-instance
+			type: singlestore
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			connectionParams:
+				tls: preferred
+				compress: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-s2-instance": singlestore.Config{
+					Name:     "my-s2-instance",
+					Type:     singlestore.SourceType,
+					Host:     "0.0.0.0",
+					Port:     "my-port",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+					ConnectionParams: map[string]string{
+						"tls":      "preferred",
+						"compress": "true",
+					},
+				},
+			},
+		},
+		{
+			desc: "with tls via connection params",
+			in: `
+			kind: source
+			name: my-s2-instance
+			type: singlestore
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			connectionParams:
+				tls: skip-verify
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-s2-instance": singlestore.Config{
+					Name:     "my-s2-instance",
+					Type:     singlestore.SourceType,
+					Host:     "0.0.0.0",
+					Port:     "my-port",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+					ConnectionParams: map[string]string{
+						"tls": "skip-verify",
+					},
 				},
 			},
 		},
@@ -105,7 +167,7 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			host: 0.0.0.0
@@ -115,12 +177,12 @@ func TestFailParseFromYaml(t *testing.T) {
 			password: my_pass
 			foo: bar
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-s2-instance\" as \"singlestore\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-s2-instance\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-s2-instance\" as \"singlestore\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-s2-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			kind: sources
+			kind: source
 			name: my-s2-instance
 			type: singlestore
 			port: my-port
@@ -128,7 +190,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			user: my_user
 			password: my_pass
 			`,
-			err: "error unmarshaling sources: unable to parse source \"my-s2-instance\" as \"singlestore\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-s2-instance\" as \"singlestore\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
@@ -142,5 +204,27 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
+	}
+}
+
+func TestFailInitialization(t *testing.T) {
+	t.Parallel()
+
+	cfg := singlestore.Config{
+		Name:         "instance",
+		Type:         "singlestore",
+		Host:         "localhost",
+		Port:         "3306",
+		Database:     "db",
+		User:         "user",
+		Password:     "pass",
+		QueryTimeout: "abc", // invalid duration
+	}
+	_, err := cfg.Initialize(context.Background(), noop.NewTracerProvider().Tracer("test"))
+	if err == nil {
+		t.Fatalf("expected error for invalid queryTimeout, got nil")
+	}
+	if !strings.Contains(err.Error(), "invalid queryTimeout") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

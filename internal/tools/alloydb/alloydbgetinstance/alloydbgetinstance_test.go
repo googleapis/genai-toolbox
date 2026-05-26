@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbgetinstance "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	alloydbgetinstance "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbgetinstance"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -36,7 +36,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            kind: tools
+            kind: tool
             name: get-my-instance
             type: alloydb-get-instance
             source: my-alloydb-admin-source
@@ -55,7 +55,7 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "with auth required",
 			in: `
-            kind: tools
+            kind: tool
             name: get-my-instance-auth
             type: alloydb-get-instance
             source: my-alloydb-admin-source

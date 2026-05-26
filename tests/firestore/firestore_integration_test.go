@@ -30,9 +30,9 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"google.golang.org/api/option"
 )
 
@@ -80,7 +80,7 @@ func TestFirestoreToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initFirestoreConnection(FirestoreProject, FirestoreDatabase)
 	if err != nil {
@@ -161,13 +161,13 @@ func runFirestoreToolGetTest(t *testing.T) {
 							"required":    true,
 							"description": "Array of document paths to retrieve from Firestore.",
 							"items": map[string]any{
-								"name":        "item",
-								"type":        "string",
-								"required":    true,
-								"description": "Document path",
-								"authSources": []any{},
+								"name":         "item",
+								"type":         "string",
+								"required":     true,
+								"description":  "Document path",
+								"authServices": []any{},
 							},
-							"authSources": []any{},
+							"authServices": []any{},
 						},
 					},
 					"authRequired": []any{},

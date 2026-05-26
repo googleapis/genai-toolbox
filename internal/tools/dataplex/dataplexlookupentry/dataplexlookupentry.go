@@ -18,14 +18,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 const resourceType string = "dataplex-lookup-entry"
@@ -49,12 +50,15 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                `yaml:"name" validate:"required"`
-	Type         string                `yaml:"type" validate:"required"`
-	Source       string                `yaml:"source" validate:"required"`
-	Description  string                `yaml:"description"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Parameters   parameters.Parameters  `yaml:"parameters"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -70,7 +74,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 				**Type:** Integer
 
-				**Description:** Specifies the parts of the entry and its aspects to return.
+				**Description:** Optional. Specifies the parts of the entry and its aspects to return.
 
 				**Possible Values:**
 
@@ -80,13 +84,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 				*   4 (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
 				`
 
-	name := parameters.NewStringParameter("name", "The project to which the request should be attributed in the following form: projects/{project}/locations/{location}.")
 	view := parameters.NewIntParameterWithDefault("view", 2, viewDesc)
-	aspectTypes := parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", parameters.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
-	entry := parameters.NewStringParameter("entry", "The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
-	params := parameters.Parameters{name, view, aspectTypes, entry}
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
+	aspectTypes := parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "Optional. Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", parameters.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
+	entry := parameters.NewStringParameter("entry", "Required. The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
+	params := parameters.Parameters{entry, view, aspectTypes}
 
 	t := Tool{
 		Config:     cfg,
@@ -96,16 +97,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -119,13 +134,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	name, _ := paramsMap["name"].(string)
 	entry, _ := paramsMap["entry"].(string)
 	view, _ := paramsMap["view"].(int)
 	aspectTypeSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["aspectTypes"].([]any), "string")
 	if err != nil {
 		return nil, util.NewAgentError(fmt.Sprintf("can't convert aspectTypes to array of strings: %s", err), err)
 	}
+	parts := strings.Split(entry, "/")
+	if len(parts) < 4 || parts[0] != "projects" || parts[2] != "locations" {
+		err = fmt.Errorf("invalid entry format: must be in the form projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}")
+		return nil, util.NewAgentError(err.Error(), err)
+	}
+	name := strings.Join(parts[:4], "/")
 	aspectTypes := aspectTypeSlice.([]string)
 	resp, err := source.LookupEntry(ctx, name, view, aspectTypes, entry)
 	if err != nil {
@@ -143,11 +163,6 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	// Returns the tool MCP manifest
-	return t.mcpManifest
-}
-
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
@@ -162,4 +177,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

@@ -22,12 +22,12 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
@@ -55,7 +55,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 	LookerApiSettings() *rtl.ApiSettings
-	GetLookerSDK(string) (*v4.LookerSDK, error)
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
 }
 
 type Config struct {
@@ -66,6 +66,8 @@ type Config struct {
 	AuthRequired []string               `yaml:"authRequired"`
 	Parameters   map[string]any         `yaml:"parameters"`
 	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -91,16 +93,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		minQueriesParameter,
 	}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		readOnlyHint := true
-		annotations = &tools.ToolAnnotations{
-			ReadOnlyHint: &readOnlyHint,
-		}
-	}
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
-
 	return Tool{
 		Config:     cfg,
 		Parameters: params,
@@ -109,7 +101,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -117,9 +108,31 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters  parameters.Parameters
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Parameters parameters.Parameters
+	manifest   tools.Manifest
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	annotations := t.Annotations
+	if annotations == nil {
+		readOnlyHint := true
+		annotations = &tools.ToolAnnotations{
+			ReadOnlyHint: &readOnlyHint,
+		}
+	}
+	return annotations
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -137,7 +150,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 
-	sdk, err := source.GetLookerSDK(string(accessToken))
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
 	if err != nil {
 		return nil, util.NewClientServerError(fmt.Sprintf("error getting sdk: %v", err), http.StatusInternalServerError, err)
 	}
@@ -168,7 +181,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		projectId, _ := paramsMap["project"].(string)
 		result, err := analyzeTool.projects(ctx, projectId)
 		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing projects: %v", err), http.StatusInternalServerError, err)
+			if strings.Contains(err.Error(), "status=401") {
+				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+			}
+			return nil, util.ProcessGeneralError(err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -177,7 +193,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		modelName, _ := paramsMap["model"].(string)
 		result, err := analyzeTool.models(ctx, projectName, modelName)
 		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing models: %v", err), http.StatusInternalServerError, err)
+			if strings.Contains(err.Error(), "status=401") {
+				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+			}
+			return nil, util.ProcessGeneralError(err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -186,7 +205,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		exploreName, _ := paramsMap["explore"].(string)
 		result, err := analyzeTool.explores(ctx, modelName, exploreName)
 		if err != nil {
-			return nil, util.NewClientServerError(fmt.Sprintf("error analyzing explores: %v", err), http.StatusInternalServerError, err)
+			if strings.Contains(err.Error(), "status=401") {
+				return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+			}
+			return nil, util.ProcessGeneralError(err)
 		}
 		logger.DebugContext(ctx, "result = ", result)
 		return result, nil
@@ -201,10 +223,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
@@ -576,4 +594,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

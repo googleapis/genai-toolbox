@@ -21,12 +21,12 @@ import (
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
 // DryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (*bigqueryrestapi.Job, error) {
+func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, maximumBytesBilled int64) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
 
 	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
@@ -46,6 +46,7 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 				UseLegacySql:         &useLegacySql,
 				ConnectionProperties: restConnProps,
 				QueryParameters:      params,
+				MaximumBytesBilled:   maximumBytesBilled,
 			},
 		},
 	}
@@ -60,14 +61,16 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 // BQTypeStringFromToolType converts a tool parameter type string to a BigQuery standard SQL type string.
 func BQTypeStringFromToolType(toolType string) (string, error) {
 	switch toolType {
-	case "string":
+	case parameters.TypeString:
 		return "STRING", nil
-	case "integer":
+	case parameters.TypeInt:
 		return "INT64", nil
-	case "float":
+	case parameters.TypeFloat:
 		return "FLOAT64", nil
-	case "boolean":
+	case parameters.TypeBool:
 		return "BOOL", nil
+	case parameters.TypeMap:
+		return "STRUCT", nil
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}

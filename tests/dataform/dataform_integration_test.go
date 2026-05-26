@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 // setupTestProject creates a minimal dataform project using the 'dataform init' CLI.
@@ -78,7 +78,8 @@ func TestDataformCompileTool(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}

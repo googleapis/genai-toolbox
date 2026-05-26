@@ -19,8 +19,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -38,7 +38,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "basic example with default cache expiration",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: neo4j-schema
             source: my-neo4j-instance
@@ -61,7 +61,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "cache expire minutes set explicitly",
 			in: `
-            kind: tools
+            kind: tool
             name: example_tool
             type: neo4j-schema
             source: my-neo4j-instance

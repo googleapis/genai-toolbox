@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergenerateembedurl"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookergenerateembedurl"
 )
 
 func TestParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-generate-embed-url
 			source: my-instance
@@ -80,7 +80,7 @@ func TestFailParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 		{
 			desc: "Invalid field",
 			in: `
-			kind: tools
+			kind: tool
 			name: example_tool
 			type: looker-generate-embed-url
 			source: my-instance
