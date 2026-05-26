@@ -133,16 +133,18 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 		t.Fatalf("Expected Tool type, got %T", tool)
 	}
 
-	if clickhouseTool.Name != "test-tool" {
-		t.Errorf("Expected name 'test-tool', got %s", clickhouseTool.Name)
+	if clickhouseTool.GetName() != "test-tool" {
+		t.Errorf("Expected name 'test-tool', got %s", clickhouseTool.GetName())
 	}
 }
 
 func TestToolManifest(t *testing.T) {
 	tool := Tool{
-		manifest: tools.Manifest{
-			Description: "Test description",
-			Parameters:  []parameters.ParameterManifest{},
+		BaseTool: tools.BaseTool{
+			Metadata: tools.Manifest{
+				Description: "Test description",
+				Parameters:  []parameters.ParameterManifest{},
+			},
 		},
 	}
 
@@ -188,8 +190,10 @@ func TestToolAuthorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				Config: Config{
-					AuthRequired: tt.authRequired,
+				BaseTool: tools.BaseTool{
+					Metadata: tools.Manifest{
+						AuthRequired: tt.authRequired,
+					},
 				},
 			}
 
