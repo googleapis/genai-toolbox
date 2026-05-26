@@ -35,7 +35,7 @@ jobs:
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -51,14 +51,14 @@ jobs:
             }
             
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.23'
           
@@ -69,7 +69,7 @@ jobs:
           sleep 5 # Give the server a moment to bind to port 5000
 
       - name: Run Conformance Tests
-        uses: modelcontextprotocol/conformance@v0.1.16
+        uses: modelcontextprotocol/conformance@21a9a2febd7100d7c17ac1021ee7f2ed9f66a1e0 # v0.1.16
         with:
           mode: server
           url: 'http://localhost:5000/mcp'

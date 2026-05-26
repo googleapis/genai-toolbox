@@ -595,7 +595,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
 		var val []bigqueryapi.Value
 		err = it.Next(&val)
