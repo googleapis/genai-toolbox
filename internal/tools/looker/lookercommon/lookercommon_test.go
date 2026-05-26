@@ -279,9 +279,29 @@ func TestEscapeFiltersForUnquotedParameters(t *testing.T) {
 			out:  map[string]any{"v.attribution_model_selector": "a^_b^%c^,d"},
 		},
 		{
-			desc: "value containing ^ is treated as pre-escaped and left alone",
+			desc: "already-escaped value passes through unchanged (idempotence)",
 			in:   map[string]any{"v.cohort_anchor_selector": "signup^_date"},
 			out:  map[string]any{"v.cohort_anchor_selector": "signup^_date"},
+		},
+		{
+			desc: "mixed pre-escaped and unescaped metacharacters",
+			in:   map[string]any{"v.attribution_model_selector": "first^_touch_v2"},
+			out:  map[string]any{"v.attribution_model_selector": "first^_touch^_v2"},
+		},
+		{
+			desc: "all four escape sequences pass through unchanged",
+			in:   map[string]any{"v.attribution_model_selector": "a^_b^%c^,d^^e"},
+			out:  map[string]any{"v.attribution_model_selector": "a^_b^%c^,d^^e"},
+		},
+		{
+			desc: "lone caret followed by non-metachar is doubled",
+			in:   map[string]any{"v.cohort_anchor_selector": "a^b"},
+			out:  map[string]any{"v.cohort_anchor_selector": "a^^b"},
+		},
+		{
+			desc: "trailing lone caret is doubled",
+			in:   map[string]any{"v.cohort_anchor_selector": "tail^"},
+			out:  map[string]any{"v.cohort_anchor_selector": "tail^^"},
 		},
 		{
 			desc: "value with no metacharacters is unchanged",

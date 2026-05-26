@@ -167,18 +167,40 @@ func ProcessFieldArgs(ctx context.Context, params parameters.ParamValues) (*stri
 // so the value reaches a type: unquoted parameter without being interpreted as
 // a wildcard pattern. Looker treats `_` as a single-character wildcard and `%`
 // as a multi-character wildcard, and rejects either inside unquoted-parameter
-// values; `,` is the filter-expression value separator. If the value already
-// contains a `^` we assume it was hand-escaped by the caller and leave it
-// alone, which keeps this idempotent for callers that pass pre-escaped forms
-// (e.g. round-tripping `default_filter_value` from the explore metadata).
+// values; `,` is the filter-expression value separator; `^` is the escape
+// character itself. Already-escaped sequences (`^_`, `^%`, `^,`, `^^`) pass
+// through unchanged, which keeps the function idempotent for callers that pass
+// pre-escaped forms (e.g. round-tripping `default_filter_value` from the
+// explore metadata). Lone metacharacters get a `^` prefix; lone `^` is doubled
+// to `^^`. Walking rune-by-rune (not whole-string scanning) means a value with
+// both an already-escaped sequence and an unescaped metacharacter gets each
+// half handled correctly — e.g. `first^_touch_v2` becomes `first^_touch^_v2`.
 func escapeUnquotedParameterValue(value string) string {
-	if strings.ContainsRune(value, '^') {
-		return value
+	var sb strings.Builder
+	sb.Grow(len(value))
+	runes := []rune(value)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+		if r == '^' {
+			if i+1 < len(runes) {
+				next := runes[i+1]
+				if next == '_' || next == '%' || next == ',' || next == '^' {
+					sb.WriteRune('^')
+					sb.WriteRune(next)
+					i++
+					continue
+				}
+			}
+			sb.WriteString("^^")
+			continue
+		}
+		if r == '_' || r == '%' || r == ',' {
+			sb.WriteRune('^')
+		}
+		sb.WriteRune(r)
 	}
-	return unquotedParameterEscaper.Replace(value)
+	return sb.String()
 }
-
-var unquotedParameterEscaper = strings.NewReplacer("_", "^_", "%", "^%", ",", "^,")
 
 // EscapeFiltersForUnquotedParameters mutates wq.Filters so every string value
 // keyed to a fully-qualified parameter name listed in unquotedNames is escaped
