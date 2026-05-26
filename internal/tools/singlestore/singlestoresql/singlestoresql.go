@@ -113,6 +113,19 @@ type Tool struct {
 }
 
 // Invoke executes the SQL statement defined in the Tool using the provided context and parameter values.
+// It resolves template parameters and standard parameters, executes the query, and processes the result rows.
+// Each row is returned as a map with column names as keys and their corresponding values, handling special
+// cases for JSON and string types. Returns a slice of maps representing the result set, or an error if any
+// step fails.
+//
+// Parameters:
+//
+//	ctx    - The context for controlling cancellation and timeouts.
+//	params - The parameter values to be used for the SQL statement.
+//
+// Returns:
+//   - A slice of maps, where each map represents a row with column names as keys.
+//   - An error if template resolution, parameter extraction, query execution, or result processing fails.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
