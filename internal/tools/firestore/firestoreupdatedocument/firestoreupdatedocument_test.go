@@ -168,17 +168,17 @@ func TestConfig_Initialize(t *testing.T) {
 			if actualTool.Name != tt.config.Name {
 				t.Fatalf("tool.Name = %v, want %v", actualTool.Name, tt.config.Name)
 			}
-			if actualTool.Type != "firestore-update-document" {
-				t.Fatalf("tool.Type = %v, want %v", actualTool.Type, "firestore-update-document")
+			if actualTool.cfg.Type != "firestore-update-document" {
+				t.Fatalf("tool.Type = %v, want %v", actualTool.cfg.Type, "firestore-update-document")
 			}
-			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.AuthRequired); diff != "" {
+			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.Metadata.AuthRequired); diff != "" {
 				t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
 			}
-			if actualTool.Parameters == nil {
+			if actualTool.StaticParameters == nil {
 				t.Fatalf("expected Parameters to be non-nil")
 			}
-			if len(actualTool.Parameters) != 4 {
-				t.Fatalf("len(Parameters) = %v, want 4", len(actualTool.Parameters))
+			if len(actualTool.StaticParameters) != 4 {
+				t.Fatalf("len(Parameters) = %v, want 4", len(actualTool.StaticParameters))
 			}
 		})
 	}
@@ -186,11 +186,13 @@ func TestConfig_Initialize(t *testing.T) {
 
 func TestTool_ParseParams(t *testing.T) {
 	tool := Tool{
-		Parameters: parameters.Parameters{
-			parameters.NewStringParameter("documentPath", "Document path"),
-			parameters.NewMapParameter("documentData", "Document data", ""),
-			parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
-			parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+		BaseTool: tools.BaseTool{
+			StaticParameters: parameters.Parameters{
+				parameters.NewStringParameter("documentPath", "Document path"),
+				parameters.NewMapParameter("documentData", "Document data", ""),
+				parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
+				parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+			},
 		},
 	}
 
@@ -264,17 +266,19 @@ func TestTool_ParseParams(t *testing.T) {
 
 func TestTool_Manifest(t *testing.T) {
 	tool := Tool{
-		manifest: tools.Manifest{
-			Description: "Test description",
-			Parameters: []parameters.ParameterManifest{
-				{
-					Name:        "documentPath",
-					Type:        "string",
-					Description: "Document path",
-					Required:    true,
+		BaseTool: tools.BaseTool{
+			Metadata: tools.Manifest{
+				Description: "Test description",
+				Parameters: []parameters.ParameterManifest{
+					{
+						Name:        "documentPath",
+						Type:        "string",
+						Description: "Document path",
+						Required:    true,
+					},
 				},
+				AuthRequired: []string{"google-oauth"},
 			},
-			AuthRequired: []string{"google-oauth"},
 		},
 	}
 
@@ -326,8 +330,8 @@ func TestTool_Authorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				Config: Config{
-					AuthRequired: tt.authRequired,
+				BaseTool: tools.BaseTool{
+					Metadata: tools.Manifest{AuthRequired: tt.authRequired},
 				},
 			}
 			got := tool.Authorized(tt.verifiedAuthServices)

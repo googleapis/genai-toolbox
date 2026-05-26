@@ -24,7 +24,6 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
@@ -97,12 +96,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		cfg.Limit = fmt.Sprintf("%d", defaultLimit)
 	}
 
-	// finish tool setup
-	t := Tool{
-		Config:   cfg,
-		manifest: tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.BaseTool{
+			Name:             cfg.Name,
+			Description:      cfg.Description,
+			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			StaticParameters: cfg.Parameters,
+			ScopesRequired:   cfg.ScopesRequired,
+			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+		},
+		cfg: cfg,
+	}, nil
 }
 
 // validate interface
@@ -110,30 +114,12 @@ var _ tools.Tool = Tool{}
 
 // Tool represents the Firestore query tool
 type Tool struct {
-	Config
-	Client *firestoreapi.Client
-
-	manifest tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool
+	cfg Config
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.cfg
 }
 
 // OrderByConfig represents ordering configuration
@@ -175,22 +161,22 @@ var validOperators = map[string]bool{
 
 // Invoke executes the Firestore query based on the provided parameters
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 	// Process collection path with template substitution
-	collectionPath, err := parameters.PopulateTemplate("collectionPath", t.CollectionPath, paramsMap)
+	collectionPath, err := parameters.PopulateTemplate("collectionPath", t.cfg.CollectionPath, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError(fmt.Sprintf("failed to process collection path: %v", err), err)
 	}
 
 	var filter firestoreapi.EntityFilter
 	// Process and apply filters if template is provided
-	if t.Filters != "" {
+	if t.cfg.Filters != "" {
 		// Apply template substitution to filters
-		filtersJSON, err := parameters.PopulateTemplateWithJSON("filters", t.Filters, paramsMap)
+		filtersJSON, err := parameters.PopulateTemplateWithJSON("filters", t.cfg.Filters, paramsMap)
 		if err != nil {
 			return nil, util.NewAgentError(fmt.Sprintf("failed to process filters template: %v", err), err)
 		}
@@ -229,12 +215,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Build the query
-	query, err := source.BuildQuery(collectionPath, filter, selectFields, orderByField, orderByDirection, limit, t.AnalyzeQuery)
+	query, err := source.BuildQuery(collectionPath, filter, selectFields, orderByField, orderByDirection, limit, t.cfg.AnalyzeQuery)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 	// Execute the query and return results
-	resp, err := source.ExecuteQuery(ctx, query, t.AnalyzeQuery)
+	resp, err := source.ExecuteQuery(ctx, query, t.cfg.AnalyzeQuery)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
@@ -297,7 +283,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	var selectFields []string
 
 	// Process configured select fields with template substitution
-	for _, field := range t.Select {
+	for _, field := range t.cfg.Select {
 		// Check if it's a template
 		if strings.Contains(field, "{{") {
 			processed, err := parameters.PopulateTemplate("selectField", field, params)
@@ -333,7 +319,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 
 // getOrderBy processes the orderBy configuration with parameter substitution
 func (t Tool) getOrderBy(params map[string]any) (*OrderByConfig, error) {
-	if t.OrderBy == nil {
+	if t.cfg.OrderBy == nil {
 		return nil, nil
 	}
 
@@ -361,7 +347,7 @@ func (t Tool) getOrderBy(params map[string]any) (*OrderByConfig, error) {
 }
 
 func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error) {
-	value, ok := t.OrderBy[key].(string)
+	value, ok := t.cfg.OrderBy[key].(string)
 	if !ok {
 		return "", nil
 	}
@@ -377,8 +363,8 @@ func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error
 // processLimit processes the limit field with parameter substitution
 func (t Tool) getLimit(params map[string]any) (int, error) {
 	limit := defaultLimit
-	if t.Limit != "" {
-		processedValue, err := parameters.PopulateTemplate("limit", t.Limit, params)
+	if t.cfg.Limit != "" {
+		processedValue, err := parameters.PopulateTemplate("limit", t.cfg.Limit, params)
 		if err != nil {
 			return 0, err
 		}
@@ -393,34 +379,4 @@ func (t Tool) getLimit(params map[string]any) (int, error) {
 		}
 	}
 	return limit, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-// Manifest returns the tool manifest
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-// Authorized checks if the tool is authorized based on verified auth services
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }
