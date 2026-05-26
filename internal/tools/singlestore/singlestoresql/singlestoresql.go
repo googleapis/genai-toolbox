@@ -73,6 +73,17 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize sets up and returns a new Tool instance based on the provided configuration and available sources.
+// It verifies that the specified source exists and is compatible, processes tool parameters, and constructs
+// the necessary manifests for tool operation. Returns an initialized Tool or an error if setup fails.
+//
+// Parameters:
+//
+//	srcs - a map of available sources, keyed by source name.
+//
+// Returns:
+//
+//	tools.Tool - the initialized tool instance.
+//	error      - an error if the source is missing, incompatible, or setup fails.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
