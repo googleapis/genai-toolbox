@@ -21,7 +21,6 @@ import (
 
 	"github.com/couchbase/gocb/v2"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -75,55 +74,43 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, err
 	}
 
-	t := Tool{
-		Config:    cfg,
-		AllParams: allParameters,
-		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.BaseTool{
+			Name:             cfg.Name,
+			Description:      cfg.Description,
+			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			StaticParameters: allParameters,
+			ScopesRequired:   cfg.ScopesRequired,
+			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+		},
+		cfg: cfg,
+	}, nil
 }
 
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-	manifest  tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
+	tools.BaseTool
+	cfg Config
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	namedParamsMap := params.AsMap()
-	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, namedParamsMap)
+	newStatement, err := parameters.ResolveTemplateParams(t.cfg.TemplateParameters, t.cfg.Statement, namedParamsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract template params", err)
 	}
 
-	newParams, err := parameters.GetParams(t.Parameters, namedParamsMap)
+	newParams, err := parameters.GetParams(t.cfg.Parameters, namedParamsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
@@ -133,32 +120,4 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

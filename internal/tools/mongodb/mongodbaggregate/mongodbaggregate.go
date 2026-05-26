@@ -20,7 +20,6 @@ import (
 	"slices"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -75,21 +74,23 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.PipelineParams)
 
-	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
-
 	if paramManifest == nil {
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// finish tool setup
 	return Tool{
-		Config:    cfg,
-		AllParams: allParameters,
-		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		BaseTool: tools.BaseTool{
+			Name:             cfg.Name,
+			Description:      cfg.Description,
+			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			StaticParameters: allParameters,
+			ScopesRequired:   cfg.ScopesRequired,
+			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+		},
+		cfg: cfg,
 	}, nil
 }
 
@@ -97,73 +98,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-	manifest  tools.Manifest
+	tools.BaseTool
+	cfg Config
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	pipelineString, err := parameters.PopulateTemplateWithJSON("MongoDBAggregatePipeline", t.PipelinePayload, paramsMap)
+	pipelineString, err := parameters.PopulateTemplateWithJSON("MongoDBAggregatePipeline", t.cfg.PipelinePayload, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating pipeline", err)
 	}
-	resp, err := source.Aggregate(ctx, pipelineString, t.Canonical, t.ReadOnly, t.Database, t.Collection)
+	resp, err := source.Aggregate(ctx, pipelineString, t.cfg.Canonical, t.cfg.ReadOnly, t.cfg.Database, t.cfg.Collection)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }
