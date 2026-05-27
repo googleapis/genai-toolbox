@@ -1,0 +1,128 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Release to PyPI
+
+on:
+  push:
+    tags: ["v*"]  # Triggers on version tags like v1.0.0
+  # allow manual triggering
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wait-for-binaries:
+    name: Wait for GCS Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+
+      - name: Wait for GCS Binaries
+        shell: bash
+        run: |
+          VERSION="v$(cat cmd/version.txt)"
+          echo "Waiting for binaries for version ${VERSION} to be available in GCS..."
+          
+          URLS=(
+            "https://storage.googleapis.com/mcp-toolbox-for-databases/${VERSION}/linux/amd64/toolbox"
+            "https://storage.googleapis.com/mcp-toolbox-for-databases/${VERSION}/darwin/amd64/toolbox"
+            "https://storage.googleapis.com/mcp-toolbox-for-databases/${VERSION}/darwin/arm64/toolbox"
+            "https://storage.googleapis.com/mcp-toolbox-for-databases/${VERSION}/windows/amd64/toolbox.exe"
+          )
+          
+          MAX_ATTEMPTS=15
+          # Wait initially to allow Cloud Build to start/progress
+          sleep 1m
+          
+          for i in $(seq 1 ${MAX_ATTEMPTS}); do
+            all_exist=true
+            for url in "${URLS[@]}"; do
+              echo "Checking ${url}..."
+              if ! curl -Isf "${url}" > /dev/null; then
+                echo "❌ ${url} not found."
+                all_exist=false
+                break
+              fi
+            done
+            
+            if [ "$all_exist" = true ]; then
+              echo "✅ All binaries are available in GCS!"
+              exit 0
+            fi
+            
+            echo "Attempt $i failed. Some binaries are not yet uploaded."
+            if [ $i -lt ${MAX_ATTEMPTS} ]; then
+              echo "Sleeping for 2 minutes..."
+              sleep 2m
+            fi
+          done
+          echo "❌ Timed out waiting for binaries in GCS."
+          exit 1
+
+  build-wheels:
+    name: Build Wheels
+    needs: wait-for-binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.2.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v5.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build
+
+      - name: Build wheel
+        working-directory: pypi
+        run: python -m build --wheel
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
+        with:
+          name: wheels-${{ matrix.os }}
+          path: pypi/dist/*.whl
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for trusted publishing (OIDC)
+      contents: read
+    steps:
+      - name: Download wheel artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372ec862e1e # v4.1.8
+        with:
+          path: dist
+          pattern: wheels-*
+          merge-multiple: true
+
+      - name: Display downloaded wheels
+        run: ls -R dist
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@76f52bc884231f64b9fc0321d2fc152918a15279 # v1.12.4
+        with:
+          packages-dir: dist
