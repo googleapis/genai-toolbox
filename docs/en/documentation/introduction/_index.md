@@ -9,8 +9,8 @@ description: >
 MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases.
 
 It serves a **dual purpose**:
-1. **Ready-to-use MCP Server (aka ['Build-Time'](/getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
-2. **Custom Tools Framework (aka ['Run-Time'](/getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
+1. **Ready-to-use MCP Server (aka ['Build-Time'](../getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+2. **Custom Tools Framework (aka ['Run-Time'](../getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice tip >}}
 **Repository Name Update:** The GitHub repository for this project has been officially renamed from `genai-toolbox` to `mcp-toolbox`. We recommend updating your local Git remote URL for consistency:
