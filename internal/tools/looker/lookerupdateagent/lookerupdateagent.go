@@ -88,6 +88,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	codeInterpreterParameter := parameters.NewBooleanParameterWithDefault("code_interpreter", false, "Optional. Enables Code Interpreter for this Agent.")
 	allParameters := parameters.Parameters{agentIdParameter, nameParameter, descriptionParameter, instructionsParameter, sourcesParameter, codeInterpreterParameter}
 
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
+	}
+	readOnlyHint := false
+	annotations.ReadOnlyHint = &readOnlyHint
+
 	return Tool{
 		BaseTool: tools.BaseTool{
 			Name:             cfg.Name,
@@ -95,7 +102,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			StaticParameters: allParameters,
 			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			Annotations:      annotations,
 		},
 		cfg: cfg,
 	}, nil
@@ -107,18 +114,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	tools.BaseTool
 	cfg Config
-}
-
-// GetAnnotations is overridden to always force this tool to be non-read-only,
-// regardless of user-provided annotations.
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	annotations := &tools.ToolAnnotations{}
-	if t.cfg.Annotations != nil {
-		*annotations = *t.cfg.Annotations
-	}
-	readOnlyHint := false
-	annotations.ReadOnlyHint = &readOnlyHint
-	return annotations
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {

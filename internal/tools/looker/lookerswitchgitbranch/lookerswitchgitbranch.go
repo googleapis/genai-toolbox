@@ -76,6 +76,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to switch the branch to using `reset --hard`.")
 	allParameters := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
+	}
+	readOnlyHint := false
+	destructiveHint := true
+	annotations.ReadOnlyHint = &readOnlyHint
+	annotations.DestructiveHint = &destructiveHint
+
 	// finish tool setup
 	return Tool{
 		BaseTool: tools.BaseTool{
@@ -84,7 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			StaticParameters: allParameters,
 			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			Annotations:      annotations,
 		},
 		cfg: cfg,
 	}, nil

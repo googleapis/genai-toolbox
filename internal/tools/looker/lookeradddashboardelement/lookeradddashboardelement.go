@@ -103,7 +103,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			StaticParameters: params,
 			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewWriteAnnotations),
 		},
 		cfg: cfg,
 	}, nil

@@ -94,6 +94,13 @@ func NewDestructiveAnnotations() *ToolAnnotations {
 	}
 }
 
+// NewWriteAnnotations creates default annotations for a non-destructive write
+// tool: ReadOnlyHint is false, DestructiveHint is left unset.
+func NewWriteAnnotations() *ToolAnnotations {
+	readOnly := false
+	return &ToolAnnotations{ReadOnlyHint: &readOnly}
+}
+
 // GetAnnotationsOrDefault returns the provided annotations if non-nil,
 // otherwise returns the result of calling defaultFn.
 func GetAnnotationsOrDefault(annotations *ToolAnnotations, defaultFn func() *ToolAnnotations) *ToolAnnotations {

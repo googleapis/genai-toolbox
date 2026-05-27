@@ -76,6 +76,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to use as the start of a new branch. Defaults to HEAD of current branch if not specified.")
 	params := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
+	annotations := cfg.Annotations
+	if annotations == nil {
+		annotations = &tools.ToolAnnotations{}
+	}
+	readOnlyHint := false
+	annotations.ReadOnlyHint = &readOnlyHint
+
 	// finish tool setup
 	return Tool{
 		BaseTool: tools.BaseTool{
@@ -84,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			StaticParameters: params,
 			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			Annotations:      annotations,
 		},
 		cfg: cfg,
 	}, nil

@@ -75,6 +75,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	branchParameter := parameters.NewStringParameter("branch", "The git branch to delete")
 	params := parameters.Parameters{projectIdParameter, branchParameter}
 
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
+	}
+	readOnlyHint := false
+	destructiveHint := true
+	annotations.ReadOnlyHint = &readOnlyHint
+	annotations.DestructiveHint = &destructiveHint
+
 	// finish tool setup
 	return Tool{
 		BaseTool: tools.BaseTool{
@@ -83,7 +92,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			StaticParameters: params,
 			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			Annotations:      annotations,
 		},
 		cfg: cfg,
 	}, nil

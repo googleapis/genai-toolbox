@@ -87,6 +87,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	codeInterpreterParameter := parameters.NewBooleanParameterWithDefault("code_interpreter", false, "Optional. Enables Code Interpreter for this Agent.")
 	params := parameters.Parameters{nameParameter, descriptionParameter, instructionsParameter, sourcesParameter, codeInterpreterParameter}
 
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
+	}
+	readOnlyHint := false
+	annotations.ReadOnlyHint = &readOnlyHint
+
 	return Tool{
 		BaseTool: tools.BaseTool{
 			Name:             cfg.Name,
@@ -94,7 +101,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			StaticParameters: params,
 			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			Annotations:      annotations,
 		},
 		cfg: cfg,
 	}, nil
@@ -110,16 +117,6 @@ type Tool struct {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.cfg
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	annotations := &tools.ToolAnnotations{}
-	if t.cfg.Annotations != nil {
-		*annotations = *t.cfg.Annotations
-	}
-	readOnlyHint := false
-	annotations.ReadOnlyHint = &readOnlyHint
-	return annotations
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
