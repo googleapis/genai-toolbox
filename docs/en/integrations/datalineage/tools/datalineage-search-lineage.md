@@ -78,6 +78,36 @@ source: my-lineage-source
 description: Use this tool to search data lineage links for BigQuery tables.
 ```
 
+## Output Format
+
+The tool returns a structured JSON object containing the following fields:
+
+-   `links` (Array of Objects): A list of accumulated lineage links. Each object represents a lineage link containing details like `name`, `source` entity, `target` entity, `endTime`, `startTime`, and optionally associated `processes` (if process details were requested).
+-   `unreachable` (Array of Strings, Optional): A list of GCP locations that failed to respond during the multi-location search (e.g., `projects/123456789/locations/us-east1`). This field is omitted if there are no unreachable locations.
+
+### Example Response
+
+```json
+{
+  "links": [
+    {
+      "name": "projects/my-project/locations/us/links/link-id",
+      "source": {
+        "fullyQualifiedName": "bigquery:project.dataset.source_table"
+      },
+      "target": {
+        "fullyQualifiedName": "bigquery:project.dataset.target_table"
+      },
+      "startTime": "2026-01-01T01:01:01.010Z",
+      "endTime": "2026-01-01T01:01:01.010Z"
+    }
+  ],
+  "unreachable": [
+    "projects/my-project/locations/us-east1"
+  ]
+}
+```
+
 ## Reference
 
 | **field** | **type** | **required** | **description** |
