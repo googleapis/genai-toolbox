@@ -127,7 +127,7 @@ func (s *Source) SearchLineageStreaming(
 	maxResults int32,
 	maxProcessPerLink int32,
 	requestProcessDetails bool,
-) ([]*lineagepb.LineageLink, error) {
+) ([]*lineagepb.LineageLink, []string, error) {
 	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), parentLocation)
 
 	req := &lineagepb.SearchLineageStreamingRequest{
@@ -157,20 +157,32 @@ func (s *Source) SearchLineageStreaming(
 
 	stream, err := s.Client.SearchLineageStreaming(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to start search lineage streaming: %w", err)
+		return nil, nil, fmt.Errorf("failed to start search lineage streaming: %w", err)
 	}
 
 	var links []*lineagepb.LineageLink
+	unreachableMap := make(map[string]bool)
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("error receiving from search lineage stream: %w", err)
+			return nil, nil, fmt.Errorf("error receiving from search lineage stream: %w", err)
 		}
 		links = append(links, resp.GetLinks()...)
+		for _, loc := range resp.GetUnreachable() {
+			unreachableMap[loc] = true
+		}
 	}
 
-	return links, nil
+	var unreachable []string
+	if len(unreachableMap) > 0 {
+		unreachable = make([]string, 0, len(unreachableMap))
+		for loc := range unreachableMap {
+			unreachable = append(unreachable, loc)
+		}
+	}
+
+	return links, unreachable, nil
 }

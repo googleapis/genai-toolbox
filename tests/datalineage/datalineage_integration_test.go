@@ -241,19 +241,27 @@ func pollSearchLineage(t *testing.T, toolName string, reqBody map[string]any, wa
 						t.Logf("  Tool returned error: %v", errVal)
 					} else {
 						resultStr, ok := result["result"].(string)
-						if ok && resultStr != "" && resultStr != "null" && resultStr != "[]" {
-							var links []map[string]any
-							if err := json.Unmarshal([]byte(resultStr), &links); err == nil {
+						if ok && resultStr != "" && resultStr != "null" {
+							var searchResp struct {
+								Links       []map[string]any `json:"links"`
+								Unreachable []string         `json:"unreachable"`
+							}
+							if err := json.Unmarshal([]byte(resultStr), &searchResp); err == nil {
+								if len(searchResp.Unreachable) > 0 {
+									t.Logf("  Unreachable locations detected: %v", searchResp.Unreachable)
+								}
 								// Check if our link is in the list
-								for _, link := range links {
+								for _, link := range searchResp.Links {
 									source, _ := link["source"].(map[string]any)
 									target, _ := link["target"].(map[string]any)
 									// Assert using snake_case as protobuf generates standard JSON tags in snake_case
 									if source["fully_qualified_name"] == wantSourceFQN && target["fully_qualified_name"] == wantTargetFQN {
 										t.Logf("Link successfully indexed after %s", time.Since(startTime).String())
-										return links, nil // Found!
+										return searchResp.Links, nil // Found!
 									}
 								}
+							} else {
+								t.Logf("  failed to unmarshal resultStr: %v", err)
 							}
 						}
 					}
@@ -401,18 +409,22 @@ func runDatalineageSearchWithProcessDetailsTest(t *testing.T, sourceFQN, targetF
 			}
 
 			resultStr, ok := result["result"].(string)
-			if !ok || resultStr == "" || resultStr == "null" || resultStr == "[]" {
+			if !ok || resultStr == "" || resultStr == "null" {
 				t.Log("  Empty result in process details query, retrying...")
 				time.Sleep(delay)
 				continue
 			}
 
-			var links []map[string]any
-			if err := json.Unmarshal([]byte(resultStr), &links); err != nil {
-				t.Logf("  failed to unmarshal links: %v", err)
+			var searchResp struct {
+				Links       []map[string]any `json:"links"`
+				Unreachable []string         `json:"unreachable"`
+			}
+			if err := json.Unmarshal([]byte(resultStr), &searchResp); err != nil {
+				t.Logf("  failed to unmarshal search response: %v", err)
 				time.Sleep(delay)
 				continue
 			}
+			links := searchResp.Links
 
 			for _, link := range links {
 				source, _ := link["source"].(map[string]any)

@@ -85,6 +85,11 @@ type mockSource struct {
 	maxResults            int32
 	maxProcessPerLink     int32
 	requestProcessDetails bool
+
+	// Configurable returns
+	retLinks       []*lineagepb.LineageLink
+	retUnreachable []string
+	retErr         error
 }
 
 func (m *mockSource) SearchLineageStreaming(
@@ -97,7 +102,7 @@ func (m *mockSource) SearchLineageStreaming(
 	maxResults int32,
 	maxProcessPerLink int32,
 	requestProcessDetails bool,
-) ([]*lineagepb.LineageLink, error) {
+) ([]*lineagepb.LineageLink, []string, error) {
 	m.called = true
 	m.parentLocation = parentLocation
 	m.locations = locations
@@ -107,7 +112,7 @@ func (m *mockSource) SearchLineageStreaming(
 	m.maxResults = maxResults
 	m.maxProcessPerLink = maxProcessPerLink
 	m.requestProcessDetails = requestProcessDetails
-	return []*lineagepb.LineageLink{}, nil
+	return m.retLinks, m.retUnreachable, m.retErr
 }
 
 type mockSourceProvider struct {
@@ -151,6 +156,11 @@ func TestInvoke(t *testing.T) {
 		wantMaxResults        int32
 		wantMaxProcess        int32
 		wantRequestDetails    bool
+		retLinks              []*lineagepb.LineageLink
+		retUnreachable        []string
+		retErr                error
+		wantLinks             []*lineagepb.LineageLink
+		wantUnreachable       []string
 	}{
 		{
 			desc:         "missing locations",
@@ -265,11 +275,48 @@ func TestInvoke(t *testing.T) {
 			wantMaxProcess:     25,
 			wantRequestDetails: true,
 		},
+		{
+			desc:      "happy path with unreachable locations",
+			locations: []any{"us", "eu"},
+			rootEntities: []any{
+				map[string]any{
+					"fully_qualified_name": "entity1",
+				},
+			},
+			direction: "UPSTREAM",
+			retLinks: []*lineagepb.LineageLink{
+				{
+					Source: &lineagepb.EntityReference{FullyQualifiedName: "source1"},
+					Target: &lineagepb.EntityReference{FullyQualifiedName: "target1"},
+				},
+			},
+			retUnreachable: []string{"eu"},
+			wantCalled:     true,
+			wantParentLoc:  "us",
+			wantLocations:  []string{"us", "eu"},
+			wantEntities: []*lineagepb.EntityReference{
+				{
+					FullyQualifiedName: "entity1",
+				},
+			},
+			wantDirection:   lineagepb.SearchLineageStreamingRequest_UPSTREAM,
+			wantLinks: []*lineagepb.LineageLink{
+				{
+					Source: &lineagepb.EntityReference{FullyQualifiedName: "source1"},
+					Target: &lineagepb.EntityReference{FullyQualifiedName: "target1"},
+				},
+			},
+			wantUnreachable: []string{"eu"},
+		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			src := &mockSource{}
+			src := &mockSource{
+				retLinks:       tc.retLinks,
+				retUnreachable: tc.retUnreachable,
+				retErr:         tc.retErr,
+			}
 			resourceMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
@@ -290,7 +337,7 @@ func TestInvoke(t *testing.T) {
 				params = append(params, parameters.ParamValue{Name: "request_process_details", Value: tc.requestProcessDetails})
 			}
 
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			gotResp, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")
@@ -309,6 +356,18 @@ func TestInvoke(t *testing.T) {
 			if toolErr != nil {
 				t.Fatalf("unexpected error: %v", toolErr)
 			}
+
+			resp, ok := gotResp.(datalineagesearchlineage.SearchLineageResponse)
+			if !ok {
+				t.Fatalf("expected SearchLineageResponse, got %T", gotResp)
+			}
+			if diff := cmp.Diff(tc.wantLinks, resp.Links, cmpopts.IgnoreUnexported(lineagepb.LineageLink{}, lineagepb.EntityReference{}, lineagepb.ProcessLinkInfo{})); diff != "" {
+				t.Errorf("links diff: %s", diff)
+			}
+			if diff := cmp.Diff(tc.wantUnreachable, resp.Unreachable); diff != "" {
+				t.Errorf("unreachable diff: %s", diff)
+			}
+
 			if src.called != tc.wantCalled {
 				t.Errorf("called = %v, want %v", src.called, tc.wantCalled)
 			}

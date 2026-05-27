@@ -56,7 +56,12 @@ type compatibleSource interface {
 		maxResults int32,
 		maxProcessPerLink int32,
 		requestProcessDetails bool,
-	) ([]*lineagepb.LineageLink, error)
+	) ([]*lineagepb.LineageLink, []string, error)
+}
+
+type SearchLineageResponse struct {
+	Links       []*lineagepb.LineageLink `json:"links"`
+	Unreachable []string                 `json:"unreachable,omitempty"`
 }
 
 type Config struct {
@@ -274,12 +279,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Use first location as parent location
 	parentLocation := locations[0]
 
-	resp, err := source.SearchLineageStreaming(ctx, parentLocation, locations, rootEntities, direction, maxDepth, maxResults, maxProcessPerLink, requestProcessDetails)
+	links, unreachable, err := source.SearchLineageStreaming(ctx, parentLocation, locations, rootEntities, direction, maxDepth, maxResults, maxProcessPerLink, requestProcessDetails)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 
-	return resp, nil
+	return SearchLineageResponse{
+		Links:       links,
+		Unreachable: unreachable,
+	}, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
