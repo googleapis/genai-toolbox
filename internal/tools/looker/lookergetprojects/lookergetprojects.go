@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -97,6 +98,10 @@ type Tool struct {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.cfg
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.ParamValues{}, nil
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {

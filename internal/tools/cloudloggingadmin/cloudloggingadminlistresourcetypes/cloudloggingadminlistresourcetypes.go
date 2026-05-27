@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -120,4 +121,8 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.cfg
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.ParamValues{}, nil
 }
