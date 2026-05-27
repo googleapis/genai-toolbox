@@ -36,27 +36,13 @@ def get_platform_details():
     return os_part, arch_part
 
 def get_version():
-    # 1. Try to read from ../server.json
-    server_json_path = os.path.join(os.path.dirname(__file__), "..", "server.json")
-    if os.path.exists(server_json_path):
-        import json
-        try:
-            with open(server_json_path, "r") as f:
-                data = json.load(f)
-                ver = data.get("version")
-                if ver:
-                    return ver
-        except Exception:
-            pass
-
-    # 2. Try to read from src/toolbox_server/__init__.py
     init_py = os.path.join(os.path.dirname(__file__), "src", "toolbox_server", "__init__.py")
     if os.path.exists(init_py):
         with open(init_py, "r") as f:
             for line in f:
                 if line.startswith("__version__"):
                     return line.split("=")[1].strip().strip('"').strip("'")
-    return "0.0.0"
+    raise RuntimeError(f"Could not find version in {init_py}")
 
 # Ensure LICENSE is present in the package directory (inherent from root repo)
 setup_dir = os.path.dirname(os.path.abspath(__file__))
