@@ -1,0 +1,13 @@
+{
+  "packages": {
+    ".": {
+      "component": "toolbox-server",
+      "package": "toolbox-server",
+      "release-type": "python",
+      "extra-files": [
+        "pypi/src/toolbox_server/__init__.py"
+      ],
+      "version-file": "pypi/src/toolbox_server/__init__.py"
+    }
+  }
+}
