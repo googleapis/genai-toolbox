@@ -12,6 +12,7 @@ try:
         def finalize_options(self):
             _bdist_wheel.finalize_options(self)
             self.root_is_pure = False
+            self.root_is_purelib = False
 except ImportError:
     print("Warning: wheel package not found, platform tag might be incorrect.")
     bdist_wheel = None
