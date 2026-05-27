@@ -23,6 +23,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -159,11 +160,20 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// claimsFromAuth maps the name of the authservice to the claims retrieved from it.
 	claimsFromAuth := make(map[string]map[string]any)
 	for _, aS := range s.ResourceMgr.GetAuthServiceMap() {
-		claims, err := aS.GetClaimsFromHeader(ctx, r.Header)
-		if err != nil {
-			s.logger.DebugContext(ctx, err.Error())
-			continue
+		var claims map[string]any
+		var err error
+
+		cfg := aS.ToConfig()
+		if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+			claims = util.AuthTokenClaimsFromContext(ctx)
+		} else {
+			claims, err = aS.GetClaimsFromHeader(ctx, r.Header)
+			if err != nil {
+				s.logger.DebugContext(ctx, err.Error())
+				continue
+			}
 		}
+
 		if claims == nil {
 			// authService not present in header
 			continue

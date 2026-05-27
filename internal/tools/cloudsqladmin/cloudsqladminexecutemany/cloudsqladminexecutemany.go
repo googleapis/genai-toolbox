@@ -1,0 +1,180 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package cloudsqladminexecutemany
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+
+	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+)
+
+const resourceType string = "cloud-sql-admin-execute-many"
+
+func init() {
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
+
+type compatibleSource interface {
+	ExecuteSql(ctx context.Context, project, instance, database, sql string, accessToken string) (any, error)
+	UseClientAuthorization() bool
+}
+
+type Config struct {
+	Name           string                 `yaml:"name" validate:"required"`
+	Type           string                 `yaml:"type" validate:"required"`
+	Source         string                 `yaml:"source" validate:"required"`
+	Description    string                 `yaml:"description"`
+	AuthRequired   []string               `yaml:"authRequired"`
+	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	ScopesRequired []string               `yaml:"scopesRequired"`
+}
+
+var _ tools.ToolConfig = Config{}
+
+func (cfg Config) ToolConfigType() string {
+	return resourceType
+}
+
+// Initialize creates a new Cloud SQL Admin ExecuteSqlMany tool.
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	params := parameters.Parameters{
+		parameters.NewStringParameter("project", "The GCP project ID."),
+		parameters.NewStringParameter("instanceId", "The Cloud SQL instance ID."),
+		parameters.NewStringParameter("database", "The database name."),
+		parameters.NewStringParameter("sql", "The SQL statement to execute."),
+	}
+
+	description := cfg.Description
+	if description == "" {
+		description = "Executes multiple SQL statements on a Cloud SQL instance."
+	}
+
+	t := Tool{
+		Config:     cfg,
+		Parameters: params,
+		manifest:   tools.Manifest{Description: description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+	}
+	return t, nil
+}
+
+var _ tools.Tool = Tool{}
+
+type Tool struct {
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
+	manifest   tools.Manifest
+}
+
+// Invoke executes the SQL statement on the given database.
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	// Check source compatibility
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	// Extract parameters from the parameter values map.
+	paramsMap := params.AsMap()
+	project, _ := paramsMap["project"].(string)
+	instanceId, _ := paramsMap["instanceId"].(string)
+	database, _ := paramsMap["database"].(string)
+	sql, _ := paramsMap["sql"].(string)
+
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
+	}
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query on %s/%s/%s", resourceType, project, instanceId, database))
+
+	// Execute the SQL statement on the given database.
+	resp, err := source.ExecuteSql(ctx, project, instanceId, database, sql, string(accessToken))
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	description := t.Description
+	if description == "" {
+		description = "Executes multiple SQL statements on a Cloud SQL instance."
+	}
+	return description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+}
+
+func (t Tool) Manifest() tools.Manifest {
+	return t.manifest
+}
+
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
+}

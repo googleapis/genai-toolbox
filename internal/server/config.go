@@ -68,6 +68,8 @@ type ServerConfig struct {
 	TelemetryOTLP string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
+	// SQLCommenter enables appending SQLCommenter-format comments to SQL statements.
+	SQLCommenter bool
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.

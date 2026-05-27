@@ -126,6 +126,7 @@ func (s *Source) GetDefaultProject() string {
 	return s.DefaultProject
 }
 
+// GetService returns a new Cloud SQL Admin service for the given access token.
 func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.Service, error) {
 	if s.UseClientOAuth {
 		token := &oauth2.Token{AccessToken: accessToken}
@@ -292,6 +293,24 @@ func (s *Source) ListInstance(ctx context.Context, project, accessToken string) 
 		})
 	}
 	return instances, nil
+}
+
+func (s *Source) ExecuteSql(ctx context.Context, project, instance, database, sql string, accessToken string) (any, error) {
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	req := &sqladmin.ExecuteSqlPayload{
+		Database:     database,
+		SqlStatement: sql,
+	}
+
+	resp, err := service.Instances.ExecuteSql(project, instance, req).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error executing sql: %w", err)
+	}
+	return resp, nil
 }
 
 func (s *Source) CreateInstance(ctx context.Context, project, name, dbVersion, rootPassword string, settings sqladmin.Settings, accessToken string) (any, error) {

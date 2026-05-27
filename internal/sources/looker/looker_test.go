@@ -16,13 +16,19 @@ package looker_test
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	toolboxlog "github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/looker"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/looker-open-source/sdk-codegen/go/rtl"
 )
 
 func TestParseFromYamlLooker(t *testing.T) {
@@ -114,5 +120,89 @@ func TestFailParseFromYaml(t *testing.T) {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
+	}
+}
+
+func TestGetLookerSDK_ClientIPPropagation(t *testing.T) {
+	// 1. Start a local test server
+	serverReceivedHeaders := make(http.Header)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for k, v := range r.Header {
+			serverReceivedHeaders[k] = v
+		}
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(`{"id": 123}`)); err != nil {
+			t.Errorf("failed to write response: %v", err)
+		}
+	}))
+	defer ts.Close()
+
+	// 2. Construct looker Config with UseClientOAuth = "true" pointing to the local test server
+	cfg := looker.Config{
+		Name:            "test-looker",
+		Type:            "looker",
+		BaseURL:         ts.URL,
+		UseClientOAuth:  "true",
+		Timeout:         "5s",
+		SslVerification: false,
+	}
+
+	// 3. Initialize the source
+	ctx := context.Background()
+	// Inject a logger so Initialize doesn't fail
+	logger, err := toolboxlog.NewStdLogger(io.Discard, io.Discard, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	ctx = util.WithLogger(ctx, logger)
+	ctx = util.WithUserAgent(ctx, "test-agent")
+
+	src, err := cfg.Initialize(ctx, nil)
+	if err != nil {
+		t.Fatalf("failed to initialize source: %v", err)
+	}
+
+	lookerSrc, ok := src.(*looker.Source)
+	if !ok {
+		t.Fatalf("source is not of type *looker.Source")
+	}
+
+	// 4. Inject Client IP into the context
+	testIP := "203.0.113.195"
+	ctxWithIP := util.WithClientIP(ctx, testIP)
+
+	// 5. Retrieve the Looker SDK using GetLookerSDK
+	sdk, err := lookerSrc.GetLookerSDK(ctxWithIP, "mock-token-123")
+	if err != nil {
+		t.Fatalf("GetLookerSDK failed: %v", err)
+	}
+
+	// 6. Retrieve session and request a call using the session client
+	authSession, ok := sdk.AuthSession.(*rtl.AuthSession)
+	if !ok {
+		t.Fatalf("SDK session is not *rtl.AuthSession")
+	}
+
+	client := authSession.Client
+	req, err := http.NewRequestWithContext(ctxWithIP, "GET", ts.URL+"/api/4.0/user", nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// 7. Assert headers are correctly propagated to the test server
+	if gotIP := serverReceivedHeaders.Get("X-Forwarded-For"); gotIP != testIP {
+		t.Errorf("expected X-Forwarded-For to be %q, got %q", testIP, gotIP)
+	}
+	if gotIP := serverReceivedHeaders.Get("X-Real-IP"); gotIP != testIP {
+		t.Errorf("expected X-Real-IP to be %q, got %q", testIP, gotIP)
+	}
+	if gotAuth := serverReceivedHeaders.Get("Authorization"); gotAuth != "mock-token-123" {
+		t.Errorf("expected Authorization header to be %q, got %q", "mock-token-123", gotAuth)
 	}
 }

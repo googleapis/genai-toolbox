@@ -2,6 +2,8 @@
 title: "Knowledge Catalog (formerly known as Dataplex)"
 type: docs
 description: "Details of the Knowledge Catalog prebuilt configuration."
+aliases:
+  - /integrations/dataplex/prebuilt-configs/dataplex/
 ---
 
 ## Knowledge Catalog

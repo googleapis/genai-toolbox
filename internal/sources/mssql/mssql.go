@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	_ "github.com/microsoft/go-mssqldb"
@@ -106,6 +107,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
 	results, err := s.MSSQLDB().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -115,8 +117,8 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	cols, err := results.Columns()
 	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
 	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
-	var out []any
+	// 'out' will remain an empty slice if cols is empty or err is not nil here.
+	out := []any{}
 	if err == nil && len(cols) > 0 {
 		// create an array of values for each column, which can be re-used to scan each row
 		rawValues := make([]any, len(cols))

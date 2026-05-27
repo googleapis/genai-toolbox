@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -32,11 +33,13 @@ import (
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -146,14 +149,15 @@ func (c traceContextCarrier) Keys() []string {
 	return keys
 }
 
-// extractTraceContext extracts W3C Trace Context from params._meta
-func extractTraceContext(ctx context.Context, body []byte) context.Context {
-	// Try to parse the request to extract _meta
+// extractMeta parses params._meta from the request body in a single pass,
+// extracting both W3C Trace Context and client telemetry attributes.
+func extractMeta(ctx context.Context, body []byte) context.Context {
 	var req struct {
 		Params struct {
 			Meta struct {
-				Traceparent string `json:"traceparent,omitempty"`
-				Tracestate  string `json:"tracestate,omitempty"`
+				Traceparent    string            `json:"traceparent,omitempty"`
+				Tracestate     string            `json:"tracestate,omitempty"`
+				TelemetryAttrs map[string]string `json:"dev.mcp-toolbox/telemetry,omitempty"`
 			} `json:"_meta,omitempty"`
 		} `json:"params,omitempty"`
 	}
@@ -162,7 +166,7 @@ func extractTraceContext(ctx context.Context, body []byte) context.Context {
 		return ctx
 	}
 
-	// If traceparent is present, extract the context
+	// Extract W3C Trace Context
 	if req.Params.Meta.Traceparent != "" {
 		carrier := traceContextCarrier{
 			"traceparent": req.Params.Meta.Traceparent,
@@ -170,7 +174,19 @@ func extractTraceContext(ctx context.Context, body []byte) context.Context {
 		if req.Params.Meta.Tracestate != "" {
 			carrier["tracestate"] = req.Params.Meta.Tracestate
 		}
-		return otel.GetTextMapPropagator().Extract(ctx, carrier)
+		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+	}
+
+	// Extract client telemetry attributes
+	if attrs := req.Params.Meta.TelemetryAttrs; len(attrs) > 0 {
+		ta := &util.TelemetryAttributes{
+			ClientName:    attrs["client.name"],
+			ClientVersion: attrs["client.version"],
+			ClientModel:   attrs["client.model"],
+			ClientUserID:  attrs["client.user.id"],
+			ClientAgentID: attrs["client.agent.id"],
+		}
+		ctx = util.WithTelemetryAttributes(ctx, ta)
 	}
 
 	return ctx
@@ -192,6 +208,8 @@ func (s *stdioSession) Start(ctx context.Context) error {
 // readInputStream reads requests/notifications from MCP clients through stdin
 func (s *stdioSession) readInputStream(ctx context.Context) error {
 	sessionStart := time.Now()
+	ctx = util.WithUserAgent(ctx, s.server.version)
+	ctx = util.WithSQLCommenterEnabled(ctx, s.server.sqlCommenterEnabled)
 
 	// Define attributes for session metrics
 	// Note: mcp.protocol.version is added dynamically after protocol negotiation
@@ -239,7 +257,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 
 		if err := func() error {
 			// This ensures the transport span becomes a child of the client span
-			msgCtx := extractTraceContext(ctx, []byte(line))
+			msgCtx := extractMeta(ctx, []byte(line))
 
 			// Create span for STDIO transport
 			msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
@@ -470,6 +488,9 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	ctx := r.Context()
+	ctx = util.WithLogger(ctx, s.logger)
+	ctx = util.WithUserAgent(ctx, s.version)
+	ctx = util.WithSQLCommenterEnabled(ctx, s.sqlCommenterEnabled)
 
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
@@ -482,7 +503,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// This ensures the transport span becomes a child of the client span
-	ctx = extractTraceContext(ctx, body)
+	ctx = extractMeta(ctx, body)
 
 	// Create span for HTTP transport
 	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/http",
@@ -706,6 +727,29 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		attribute.String("network.protocol.name", networkProtocolName),
 	)
 
+	// Set client telemetry attributes from _meta["dev.mcp-toolbox/telemetry"]
+	if ta := util.TelemetryAttributesFromContext(ctx); ta != nil {
+		telemetryAttrs := make([]attribute.KeyValue, 0, 5)
+		if ta.ClientName != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.name", ta.ClientName))
+		}
+		if ta.ClientVersion != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.version", ta.ClientVersion))
+		}
+		if ta.ClientModel != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.model", ta.ClientModel))
+		}
+		if ta.ClientUserID != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.user.id", ta.ClientUserID))
+		}
+		if ta.ClientAgentID != "" {
+			telemetryAttrs = append(telemetryAttrs, attribute.String("client.agent.id", ta.ClientAgentID))
+		}
+		if len(telemetryAttrs) > 0 {
+			span.SetAttributes(telemetryAttrs...)
+		}
+	}
+
 	// Set network protocol version if available
 	if networkProtocolVersion != "" {
 		span.SetAttributes(attribute.String("network.protocol.version", networkProtocolVersion))
@@ -738,8 +782,27 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 	// Process the method
 	switch baseMessage.Method {
-	case mcputil.INITIALIZE:
-		result, version, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+	case "initialize":
+		var initReq struct {
+			Params struct {
+				ProtocolVersion string `json:"protocolVersion"`
+			} `json:"params,omitempty"`
+		}
+		if err := json.Unmarshal(body, &initReq); err != nil {
+			err = fmt.Errorf("fail to parse protocolVersion from initialize request")
+			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+
+		var version string
+		v := initReq.Params.ProtocolVersion
+		if slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, v) {
+			version = v
+		} else {
+			version = mcputil.LATEST_PROTOCOL_VERSION
+		}
+
+		ctx = util.WithToolboxVersionKey(ctx, s.version)
+		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
