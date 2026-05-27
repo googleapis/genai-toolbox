@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/common"
@@ -91,51 +90,38 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	idParameter := parameters.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required")
 	typeFilterParameter := parameters.NewArrayParameterWithDefault(typeFilterKey, []any{}, "List of FHIR resource types. If provided, only resources of the specified resource type(s) are returned.", parameters.NewStringParameter("resourceType", "A FHIR resource type"))
 	sinceFilterParameter := parameters.NewStringParameterWithDefault(sinceFilterKey, "", "If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z")
-	params := parameters.Parameters{idParameter, typeFilterParameter, sinceFilterParameter}
+	allParameters := parameters.Parameters{idParameter, typeFilterParameter, sinceFilterParameter}
 	if len(s.AllowedFHIRStores()) != 1 {
-		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
 	}
 
-	// finish tool setup
-	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.BaseTool{
+			Name:             cfg.Name,
+			Description:      cfg.Description,
+			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			StaticParameters: allParameters,
+			ScopesRequired:   cfg.ScopesRequired,
+			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+		},
+		cfg: cfg,
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-	manifest   tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool
+	cfg Config
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -189,34 +175,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

@@ -26,6 +26,21 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
+func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
+	t.Helper()
+	cfg := cloudmonitoring.Config{
+		Name:        "test-cloudmonitoring",
+		Type:        toolType,
+		Source:      "test-source",
+		Description: "Test Cloudmonitoring Tool",
+	}
+	toolIface, err := cfg.Initialize(nil)
+	if err != nil {
+		t.Fatalf("Initialize() error = %v", err)
+	}
+	return toolIface.(cloudmonitoring.Tool)
+}
+
 func TestTool_Invoke(t *testing.T) {
 	t.Parallel()
 
@@ -46,14 +61,7 @@ func TestTool_Invoke(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := cloudmonitoring.Tool{
-		Config: cloudmonitoring.Config{
-			Name:        "test-cloudmonitoring",
-			Type:        "cloud-monitoring-query-prometheus",
-			Description: "Test Cloudmonitoring Tool",
-		},
-		AllParams: parameters.Parameters{},
-	}
+	tool := newTestTool(t, "cloud-monitoring-query-prometheus")
 
 	// Define the test parameters
 	params := parameters.ParamValues{
@@ -90,14 +98,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := cloudmonitoring.Tool{
-		Config: cloudmonitoring.Config{
-			Name:        "test-cloudmonitoring",
-			Type:        "clou-monitoring-query-prometheus",
-			Description: "Test Cloudmonitoring Tool",
-		},
-		AllParams: parameters.Parameters{},
-	}
+	tool := newTestTool(t, "clou-monitoring-query-prometheus")
 
 	// Define the test parameters
 	params := parameters.ParamValues{

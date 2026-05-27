@@ -22,7 +22,6 @@ import (
 
 	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -145,46 +144,33 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		cfg.Description = guidance
 	}
 
-	t := Tool{
-		Config:    cfg,
-		AllParams: allParameters,
-		manifest:  tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-	}
-
-	return t, nil
+	return Tool{
+		BaseTool: tools.BaseTool{
+			Name:             cfg.Name,
+			Description:      cfg.Description,
+			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			StaticParameters: allParameters,
+			ScopesRequired:   cfg.ScopesRequired,
+			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+		},
+		cfg: cfg,
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters
-	manifest  tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool
+	cfg Config
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -206,19 +192,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// The parent in the request payload uses the tool's configured location.
-	payloadParent := fmt.Sprintf("projects/%s/locations/%s", source.GetProjectID(), t.Location)
+	payloadParent := fmt.Sprintf("projects/%s/locations/%s", source.GetProjectID(), t.cfg.Location)
 
 	req := &geminidataanalyticspb.QueryDataRequest{
 		Parent: payloadParent,
 		Prompt: query,
 	}
 
-	if t.Context != nil {
-		req.Context = t.Context.QueryDataContext
+	if t.cfg.Context != nil {
+		req.Context = t.cfg.Context.QueryDataContext
 	}
 
-	if t.GenerationOptions != nil {
-		req.GenerationOptions = t.GenerationOptions.GenerationOptions
+	if t.cfg.GenerationOptions != nil {
+		req.GenerationOptions = t.cfg.GenerationOptions.GenerationOptions
 	}
 
 	resp, err := source.RunQuery(ctx, tokenStr, req)
@@ -228,34 +214,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(_ tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }
