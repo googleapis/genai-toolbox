@@ -107,20 +107,6 @@ type Tool struct {
 	cfg Config
 }
 
-// GetAnnotations is overridden to always force this tool to be destructive,
-// regardless of user-provided annotations.
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	annotations := &tools.ToolAnnotations{}
-	if t.cfg.Annotations != nil {
-		*annotations = *t.cfg.Annotations
-	}
-	readOnlyHint := false
-	annotations.ReadOnlyHint = &readOnlyHint
-	destructiveHint := true
-	annotations.DestructiveHint = &destructiveHint
-	return annotations
-}
-
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.cfg
 }
