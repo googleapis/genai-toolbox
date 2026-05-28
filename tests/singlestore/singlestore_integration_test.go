@@ -303,7 +303,7 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	}()
 
 	// Semantic search tests
-	httpSemanticInsertWant := `null`
+	httpSemanticInsertWant := `[]`
 	mcpSemanticInsertWant := ``
 	semanticSearchWant := `The quick brown fox jumps over the lazy dog`
 	tests.RunSemanticSearchToolInvokeTest(t, httpSemanticInsertWant, mcpSemanticInsertWant, semanticSearchWant)

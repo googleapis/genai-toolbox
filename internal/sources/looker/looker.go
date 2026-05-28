@@ -214,19 +214,26 @@ func (s *Source) LookerSessionLength() int64 {
 type transportWithAuthHeader struct {
 	Base      http.RoundTripper
 	AuthToken string
+	clientIP  string
 }
 
 func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("x-looker-appid", "go-sdk")
 	req.Header.Set("Authorization", t.AuthToken)
+	if t.clientIP != "" {
+		req.Header.Set("X-Forwarded-For", t.clientIP)
+		req.Header.Set("X-Real-IP", t.clientIP)
+	}
 	return t.Base.RoundTrip(req)
 }
 
-func (s *Source) GetLookerSDK(accessToken string) (*v4.LookerSDK, error) {
+func (s *Source) GetLookerSDK(ctx context.Context, accessToken string) (*v4.LookerSDK, error) {
 	if s.UseClientAuthorization() {
 		if accessToken == "" {
 			return nil, fmt.Errorf("no access token supplied with request")
 		}
+
+		clientIP, _ := util.ClientIPFromContext(ctx)
 
 		session := rtl.NewAuthSession(*s.LookerApiSettings())
 		// Configure base transport with TLS
@@ -241,6 +248,7 @@ func (s *Source) GetLookerSDK(accessToken string) (*v4.LookerSDK, error) {
 			Transport: &transportWithAuthHeader{
 				Base:      transport,
 				AuthToken: accessToken,
+				clientIP:  clientIP,
 			},
 		}
 		// return SDK with new Transport

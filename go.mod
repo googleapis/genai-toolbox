@@ -12,9 +12,9 @@ require (
 	cloud.google.com/go/dataplex v1.33.0
 	cloud.google.com/go/dataproc/v2 v2.20.0
 	cloud.google.com/go/firestore v1.22.0
-	cloud.google.com/go/geminidataanalytics v0.12.0
+	cloud.google.com/go/geminidataanalytics v1.1.0
 	cloud.google.com/go/logging v1.17.0
-	cloud.google.com/go/longrunning v0.12.0
+	cloud.google.com/go/longrunning v1.0.0
 	cloud.google.com/go/spanner v1.91.0
 	cloud.google.com/go/storage v1.62.1
 	github.com/ClickHouse/clickhouse-go/v2 v2.46.0

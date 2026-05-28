@@ -127,7 +127,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		values[i] = &rawValues[i]
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

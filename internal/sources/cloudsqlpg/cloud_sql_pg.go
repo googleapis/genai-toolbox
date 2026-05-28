@@ -118,7 +118,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	defer results.Close()
 
 	fields := results.FieldDescriptions()
-	var out []any
+	out := []any{}
 	for results.Next() {
 		values, err := results.Values()
 		if err != nil {

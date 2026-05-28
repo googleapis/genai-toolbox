@@ -514,7 +514,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -606,7 +606,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -698,7 +698,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -950,7 +950,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -1232,7 +1232,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
