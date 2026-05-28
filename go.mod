@@ -4,6 +4,8 @@ go 1.25.7
 
 toolchain go1.26.2
 
+replace github.com/apache/thrift v0.22.0 => github.com/apache/thrift v0.23.0
+
 require (
 	cloud.google.com/go/alloydbconn v1.18.2
 	cloud.google.com/go/bigquery v1.76.0
