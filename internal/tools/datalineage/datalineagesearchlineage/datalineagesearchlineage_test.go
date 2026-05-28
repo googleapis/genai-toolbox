@@ -299,7 +299,7 @@ func TestInvoke(t *testing.T) {
 					FullyQualifiedName: "entity1",
 				},
 			},
-			wantDirection:   lineagepb.SearchLineageStreamingRequest_UPSTREAM,
+			wantDirection: lineagepb.SearchLineageStreamingRequest_UPSTREAM,
 			wantLinks: []*lineagepb.LineageLink{
 				{
 					Source: &lineagepb.EntityReference{FullyQualifiedName: "source1"},
