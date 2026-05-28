@@ -28,7 +28,7 @@ require (
 	github.com/couchbase/gocb/v2 v2.12.2
 	github.com/couchbase/tools-common/http v1.0.11
 	github.com/elastic/elastic-transport-go/v8 v8.11.0
-	github.com/elastic/go-elasticsearch/v9 v9.4.1
+	github.com/elastic/go-elasticsearch/v9 v9.3.3
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
