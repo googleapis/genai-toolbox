@@ -16,7 +16,10 @@ package dataplex
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
@@ -29,6 +32,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	grpcstatus "google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const SourceType string = "dataplex"
@@ -292,4 +296,253 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 		results = append(results, scan)
 	}
 	return results, nil
+}
+
+func (s *Source) GenerateDataInsights(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanId := fmt.Sprintf("nq-doc-%d", time.Now().UnixNano())
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanId,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataDocumentationSpec{
+				DataDocumentationSpec: &dataplexpb.DataDocumentationSpec{
+					CatalogPublishingEnabled: publish,
+				},
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_DOCUMENTATION,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
+}
+
+func (s *Source) GetDataInsights(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", projectID, location, scanID)
+	req := &dataplexpb.GetDataScanRequest{
+		Name: name,
+		View: dataplexpb.GetDataScanRequest_FULL,
+	}
+	return s.DataScanClient.GetDataScan(ctx, req)
+}
+
+func (s *Source) GetOperation(ctx context.Context, opName string) (map[string]any, error) {
+	url := fmt.Sprintf("https://dataplex.googleapis.com/v1/%s", opName)
+
+	ts, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token source: %w", err)
+	}
+	tok, err := ts.Token()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get token: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+tok.AccessToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	var opData map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&opData); err != nil {
+		return nil, fmt.Errorf("failed to decode JSON response: %w", err)
+	}
+
+	return opData, nil
+}
+
+func (s *Source) GetLatestJobStatus(ctx context.Context, projectID, location, scanID string) (map[string]any, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", projectID, location, scanID)
+	req := &dataplexpb.ListDataScanJobsRequest{
+		Parent: parent,
+	}
+
+	it := s.DataScanClient.ListDataScanJobs(ctx, req)
+	if it == nil {
+		return nil, fmt.Errorf("failed to list data scan jobs for scan %q", scanID)
+	}
+
+	var latestJob *dataplexpb.DataScanJob
+	for {
+		job, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		if latestJob == nil || job.GetCreateTime().GetSeconds() > latestJob.GetCreateTime().GetSeconds() {
+			latestJob = job
+		}
+	}
+
+	if latestJob == nil {
+		return map[string]any{
+			"status": "NO_JOBS",
+		}, nil
+	}
+
+	jsonBytes, err := protojson.Marshal(latestJob)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal job to JSON: %w", err)
+	}
+
+	var jobMap map[string]any
+	if err := json.Unmarshal(jsonBytes, &jobMap); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal job JSON to map: %w", err)
+	}
+
+	return jobMap, nil
+}
+
+func (s *Source) GenerateDataProfile(ctx context.Context, projectID, location, resourcePath string) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanId := fmt.Sprintf("nq-dp-%d", time.Now().UnixNano())
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanId,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataProfileSpec{
+				DataProfileSpec: &dataplexpb.DataProfileSpec{},
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_PROFILE,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
+}
+
+func (s *Source) GetDataProfile(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
+	return s.GetDataInsights(ctx, projectID, location, scanID)
+}
+
+func (s *Source) GenerateDataQuality(ctx context.Context, projectID, location, resourcePath string, rulesJSON string) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanId := fmt.Sprintf("nq-dq-%d", time.Now().UnixNano())
+
+	var rules []*dataplexpb.DataQualityRule
+	if rulesJSON != "" {
+		var rawRules []map[string]any
+		if err := json.Unmarshal([]byte(rulesJSON), &rawRules); err != nil {
+			return "", fmt.Errorf("failed to parse rules JSON: %w", err)
+		}
+		for i, rawRule := range rawRules {
+			ruleBytes, err := json.Marshal(rawRule)
+			if err != nil {
+				return "", fmt.Errorf("failed to marshal rule %d back to JSON: %w", i, err)
+			}
+			var rule dataplexpb.DataQualityRule
+			if err := protojson.Unmarshal(ruleBytes, &rule); err != nil {
+				return "", fmt.Errorf("failed to parse rule %d as DataQualityRule: %w", i, err)
+			}
+			rules = append(rules, &rule)
+		}
+	} else {
+		return "", fmt.Errorf("at least one data quality rule is required")
+	}
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanId,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataQualitySpec{
+				DataQualitySpec: &dataplexpb.DataQualitySpec{
+					Rules: rules,
+				},
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_QUALITY,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
+}
+
+func (s *Source) GetDataQuality(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
+	return s.GetDataInsights(ctx, projectID, location, scanID)
 }

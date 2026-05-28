@@ -55,3 +55,105 @@ tools:
 - search_aspect_types
 - lookup_context
 - search_dq_scans
+---
+kind: tool
+name: generate_data_insights
+type: dataplex-generate-data-insights
+source: dataplex-source
+description: >-
+  Starts the asynchronous generation of data insights (descriptions, sample queries)
+  for a BigQuery table or dataset. Returns an Operation resource name (format:
+  projects/{project}/locations/{location}/operations/{operation_id}). You MUST use
+  get_operation to track this creation LRO, and then use get_run_status to track
+  the background execution job before calling get_data_insights.
+---
+kind: tool
+name: get_data_insights
+type: dataplex-get-data-insights
+source: dataplex-source
+description: >-
+  Retrieves the final generated data insights (descriptions, schema relationships,
+  sample SQL queries) for a completed scan. WARNING: You must verify the execution
+  run has succeeded (via get_run_status) before calling this tool, otherwise the
+  insights will be empty. CRITICAL: Access the results ONLY via the nested public GA
+  fields 'dataDocumentationResult.datasetResult' (for datasets) or
+  'dataDocumentationResult.tableResult' (for tables). The top-level fields (like
+  'dataDocumentationResult.queries') are restricted and will be empty.
+---
+kind: tool
+name: get_operation
+type: dataplex-get-operation
+source: dataplex-source
+description: >-
+  Retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
+  Poll this tool until 'done' is true. Once completed, the 'response' field will
+  contain the created DataScan resource, from which you can extract the 'scanId'
+  (the last part of the 'name' field, e.g. 'nq-doc-...') to pass to get_run_status
+  and get_data_insights. WARNING: This only tracks the creation of the scan, NOT
+  its execution.
+---
+kind: tool
+name: get_run_status
+type: dataplex-get-run-status
+source: dataplex-source
+description: >-
+  Retrieves the execution status of the latest background job run (DataScanJob)
+  for the specified Dataplex scan. Use this tool to poll the progress of the
+  insights generation. Wait until the returned 'state' is 'SUCCEEDED' before
+  calling get_data_insights. Typical execution takes 2-5 minutes. If the state
+  is 'FAILED', check the error details.
+---
+kind: tool
+name: generate_data_profile
+type: dataplex-generate-data-profile
+source: dataplex-source
+description: >-
+  Starts the asynchronous generation of a data profile (column statistics like null count,
+  distinct count, min/max, histograms, etc.) for a BigQuery table. Returns an Operation
+  resource name. You MUST use get_operation to track this creation LRO, and then use
+  get_run_status to track the background execution job before calling get_data_profile.
+---
+kind: tool
+name: get_data_profile
+type: dataplex-get-data-profile
+source: dataplex-source
+description: >-
+  Retrieves the final generated data profile statistics for a completed scan.
+  WARNING: You must verify the execution run has succeeded (via get_run_status) before
+  calling this tool, otherwise the profile will be empty. CRITICAL: Access the results
+  ONLY via the nested public GA fields 'dataProfileResult.profile.fields'. The top-level
+  fields are restricted and will be empty.
+---
+kind: tool
+name: generate_data_quality
+type: dataplex-generate-data-quality
+source: dataplex-source
+description: >-
+  Starts the asynchronous execution of data quality rules against a BigQuery dataset or table.
+  Requires 'rulesJSON' containing a JSON array of DataQualityRule protos. Returns an Operation
+  resource name. You MUST use get_operation to track this creation LRO, and then use
+  get_run_status to track the background execution job before calling get_data_quality.
+---
+kind: tool
+name: get_data_quality
+type: dataplex-get-data-quality
+source: dataplex-source
+description: >-
+  Retrieves the final data quality scan results (executed rules, pass/fail counts, quality scores).
+  WARNING: You must verify the execution run has succeeded (via get_run_status) before
+  calling this tool. CRITICAL: Access the results ONLY via the nested public GA fields
+  'dataQualityResult.rules' and 'dataQualityResult.passed'. The top-level fields are restricted.
+---
+kind: toolset
+name: enrich
+tools:
+- search_entries
+- lookup_entry
+- generate_data_insights
+- get_data_insights
+- generate_data_profile
+- get_data_profile
+- generate_data_quality
+- get_data_quality
+- get_operation
+- get_run_status
