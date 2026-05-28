@@ -118,7 +118,11 @@ func GetQueryParameters() parameters.Parameters {
 	)
 	filtersParameter := parameters.NewMapParameterWithDefault("filters",
 		map[string]any{},
-		"The filters for the query",
+		"The filters for the query. Keys are fully-qualified field names "+
+			"(e.g. \"view.field\") and values are filter expressions or "+
+			"parameter values. Pass values bare — do not wrap them in extra "+
+			"quote characters. For LookML `parameter` fields, use the raw "+
+			"allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 		"",
 	)
 	pivotsParameter := parameters.NewArrayParameterWithDefault("pivots",
@@ -174,13 +178,25 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 	}
 	fields := f.([]string)
 	filters := paramsMap["filters"].(map[string]any)
-	// Sometimes filters come as "'field.id'": "expression" so strip extra ''
+	// Strip a single layer of wrapping quotes from keys and string values.
+	// Values matter for LookML `type: unquoted` parameters, where Looker
+	// substitutes the value bare into SQL via {% parameter %}. Build a new map
+	// rather than mutating during iteration, and avoid comparing `any` values
+	// directly (non-comparable dynamic types like slices would panic).
+	processedFilters := make(map[string]any, len(filters))
 	for k, v := range filters {
-		if len(k) > 0 && k[0] == '\'' && k[len(k)-1] == '\'' {
-			delete(filters, k)
-			filters[k[1:len(k)-1]] = v
+		newKey := k
+		if len(k) >= 2 && (k[0] == '\'' || k[0] == '"') && k[0] == k[len(k)-1] {
+			newKey = k[1 : len(k)-1]
 		}
+		newVal := v
+		if s, ok := v.(string); ok && len(s) >= 2 &&
+			(s[0] == '\'' || s[0] == '"') && s[0] == s[len(s)-1] {
+			newVal = s[1 : len(s)-1]
+		}
+		processedFilters[newKey] = newVal
 	}
+	filters = processedFilters
 	p, err := parameters.ConvertAnySliceToTyped(paramsMap["pivots"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert pivots to array of strings: %s", err)
