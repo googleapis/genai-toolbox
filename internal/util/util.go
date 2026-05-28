@@ -230,6 +230,36 @@ func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
 	return nil
 }
 
+const clientIPKey contextKey = "clientIP"
+
+// WithClientIP adds a client IP address into the context as a value
+func WithClientIP(ctx context.Context, clientIP string) context.Context {
+	return context.WithValue(ctx, clientIPKey, clientIP)
+}
+
+// ClientIPFromContext retrieves the client IP address or returns false if not present
+func ClientIPFromContext(ctx context.Context) (string, bool) {
+	if ip, ok := ctx.Value(clientIPKey).(string); ok {
+		return ip, true
+	}
+	return "", false
+}
+
+// ExtractClientIP retrieves the leftmost client IP from X-Forwarded-For or X-Real-IP header
+func ExtractClientIP(header http.Header) string {
+	if xff := header.Get("X-Forwarded-For"); xff != "" {
+		for _, ip := range strings.Split(xff, ",") {
+			if trimmed := strings.TrimSpace(ip); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	if xri := header.Get("X-Real-IP"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+	return ""
+}
+
 // TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
 type TelemetryAttributes struct {
 	ClientName    string
