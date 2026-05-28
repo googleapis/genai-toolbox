@@ -157,6 +157,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
+	if escErr := lookercommon.EscapeUnquotedParameterFilters(ctx, sdk, wq, source.LookerApiSettings()); escErr != nil {
+		logger.WarnContext(ctx, "skipping unquoted-parameter escape, metadata lookup failed", "error", escErr)
+	}
 	respFields := "id,slug,share_url,expanded_share_url"
 	resp, err := sdk.CreateQuery(*wq, respFields, source.LookerApiSettings())
 	if err != nil {
