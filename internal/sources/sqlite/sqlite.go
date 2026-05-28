@@ -117,7 +117,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	}
 
 	// Prepare the result slice
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		if err := rows.Scan(values...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
