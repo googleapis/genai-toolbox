@@ -13,11 +13,31 @@ try:
             _bdist_wheel.finalize_options(self)
             self.root_is_pure = False
             self.root_is_purelib = False
+            
+            # Support cross-building platform-specific wheels on a single host
+            override_os = os.environ.get("TOOLBOX_OS")
+            override_arch = os.environ.get("TOOLBOX_ARCH")
+            if override_os and override_arch:
+                os_lower = override_os.lower()
+                arch_lower = override_arch.lower()
+                if os_lower == "linux" and arch_lower == "amd64":
+                    self.plat_name = "manylinux2014_x86_64"
+                elif os_lower == "darwin" and arch_lower == "amd64":
+                    self.plat_name = "macosx_10_14_x86_64"
+                elif os_lower == "darwin" and arch_lower == "arm64":
+                    self.plat_name = "macosx_11_0_arm64"
+                elif os_lower == "windows" and arch_lower == "amd64":
+                    self.plat_name = "win_amd64"
 except ImportError:
     print("Warning: wheel package not found, platform tag might be incorrect.")
     bdist_wheel = None
 
 def get_platform_details():
+    override_os = os.environ.get("TOOLBOX_OS")
+    override_arch = os.environ.get("TOOLBOX_ARCH")
+    if override_os and override_arch:
+        return override_os.lower(), override_arch.lower()
+
     system = platform.system()
     machine = platform.machine()
     os_part = system.lower()
