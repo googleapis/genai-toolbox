@@ -101,7 +101,7 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 	ctx = util.WithLogger(ctx, logger)
 	opts.Logger = logger
 
-	logger.InfoContext(ctx, fmt.Sprintf("Starting toolbox version %s", opts.Cfg.Version))
+	logger.InfoContext(ctx, fmt.Sprintf("Starting MCP Toolbox for Databases version %s", opts.Cfg.Version))
 
 	// Set up OpenTelemetry
 	otelShutdown, err := telemetry.SetupOTel(ctx, opts.Cfg.Version, opts.Cfg.TelemetryOTLP, opts.Cfg.TelemetryGCP, opts.Cfg.TelemetryServiceName)
