@@ -71,7 +71,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	projectIdParameter := parameters.NewStringParameterWithRequired("project_id", "The ID of the Looker project to create a deploy key for.", true)
+	projectIdParameter := parameters.NewStringParameter("project_id", "The ID of the Looker project to create a deploy key for.")
 
 	params := parameters.Parameters{
 		projectIdParameter,
@@ -115,7 +115,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	projectId, ok := mapParams["project_id"].(string)
 	if !ok || projectId == "" {
-		return nil, util.NewClientServerError("project_id must be specified", http.StatusBadRequest, nil)
+		return nil, util.NewAgentError("project_id must be specified", nil)
 	}
 
 	resp, err := sdk.CreateGitDeployKey(projectId, source.LookerApiSettings())

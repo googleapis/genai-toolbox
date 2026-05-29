@@ -71,7 +71,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	projectIdParameter := parameters.NewStringParameterWithRequired("project_id", "The ID of the Looker project to update.", true)
+	projectIdParameter := parameters.NewStringParameter("project_id", "The ID of the Looker project to update.")
 	gitRemoteUrlParameter := parameters.NewStringParameterWithRequired("git_remote_url", "Git remote repository URL.", false)
 	gitServiceNameParameter := parameters.NewStringParameterWithRequired("git_service_name", "Name of the git service provider (e.g., 'bare', 'github').", false)
 	gitProductionBranchNameParameter := parameters.NewStringParameterWithRequired("git_production_branch_name", "Git production branch name.", false)
@@ -129,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	projectId, ok := mapParams["project_id"].(string)
 	if !ok || projectId == "" {
-		return nil, util.NewClientServerError("project_id must be specified", http.StatusBadRequest, nil)
+		return nil, util.NewAgentError("project_id must be specified", nil)
 	}
 
 	body := v4.WriteProject{}

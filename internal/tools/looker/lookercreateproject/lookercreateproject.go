@@ -71,7 +71,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	nameParameter := parameters.NewStringParameterWithRequired("name", "The unique name of the new project", true)
+	nameParameter := parameters.NewStringParameter("name", "The unique name of the new project")
 	gitProductionBranchNameParameter := parameters.NewStringParameterWithRequired("git_production_branch_name", "Git production branch name. Defaults to master.", false)
 	pullRequestModeParameter := parameters.NewStringParameterWithRequired("pull_request_mode", "The git pull request policy for this project. Valid values are: 'off', 'links', 'recommended', 'required'.", false)
 	validationRequiredParameter := parameters.NewBooleanParameterWithRequired("validation_required", "Validation policy: If true, the project must pass validation checks before project changes can be committed.", false)
@@ -125,7 +125,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	mapParams := params.AsMap()
 	name, ok := mapParams["name"].(string)
 	if !ok || name == "" {
-		return nil, util.NewClientServerError("name must be specified", http.StatusBadRequest, nil)
+		return nil, util.NewAgentError("name must be specified", nil)
 	}
 
 	body := v4.WriteProject{
