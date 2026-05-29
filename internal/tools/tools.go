@@ -170,6 +170,34 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 	return source, nil
 }
 
+// ToolMeta is the read-only view BaseTool needs of any tool's Config. Tools
+// satisfy it for free by embedding ConfigBase.
+type ToolMeta interface {
+	GetName() string
+	GetDescription() string
+	GetAuthRequired() []string
+	GetScopesRequired() []string
+}
+
+// ConfigBase owns the YAML fields that every tool's Config shares and that
+// BaseTool reads through. Tools embed it into their Config with `yaml:",inline"`
+// so the on-disk YAML shape stays identical.
+//
+// Description is eagerly defaulted by the tool's Initialize (many prebuilt
+// configs omit description: and rely on a canned per-tool string), so
+// post-Initialize ConfigBase.Description holds the resolved value.
+type ConfigBase struct {
+	Name           string   `yaml:"name"           validate:"required"`
+	Description    string   `yaml:"description"`
+	AuthRequired   []string `yaml:"authRequired"`
+	ScopesRequired []string `yaml:"scopesRequired"`
+}
+
+func (c ConfigBase) GetName() string             { return c.Name }
+func (c ConfigBase) GetDescription() string      { return c.Description }
+func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
+func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
+
 // BaseTool provides default implementations of the metadata, parameter, and
 // authorization methods on the Tool interface. Concrete tools embed BaseTool
 // to drop their boilerplate and override only methods that need custom
@@ -180,48 +208,54 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 // write embeddings into pgvector (or similar) must override EmbedParams to
 // supply the right formatter.
 //
-// Annotations should be pre-resolved by the concrete tool's Initialize using
-// GetAnnotationsOrDefault, since the appropriate default (read-only vs
-// destructive) depends on the tool.
+// Fields are populated by Initialize and treated as read-only thereafter:
+//   - cfg is a read-through view of the tool's Config (Name, Description,
+//     AuthRequired, ScopesRequired).
+//   - annotations is the *resolved* value (per-tool Initialize calls
+//     GetAnnotationsOrDefault, since the appropriate default — read-only vs
+//     destructive — depends on the tool).
+//   - metadata is a snapshot built from cfg + StaticParameters at Initialize
+//     time and handed to MCP clients as-is. Do not read metadata.Description
+//     or metadata.AuthRequired directly — call GetDescription / GetAuthRequired
+//     (which read cfg) instead.
 type BaseTool struct {
-	Name             string
-	Description      string
-	Metadata         Manifest
+	cfg              ToolMeta
+	annotations      *ToolAnnotations
+	metadata         Manifest
 	StaticParameters parameters.Parameters
-	ScopesRequired   []string
-	Annotations      *ToolAnnotations
 }
 
-func (b BaseTool) GetName() string {
-	return b.Name
+// NewBaseTool builds a BaseTool from a fully-resolved Config view, the
+// resolved annotations, the precomputed manifest snapshot, and the tool's
+// runtime parameter list. Call this from the concrete tool's Initialize
+// after any defaulting has been applied.
+func NewBaseTool(
+	cfg ToolMeta,
+	annotations *ToolAnnotations,
+	metadata Manifest,
+	params parameters.Parameters,
+) BaseTool {
+	return BaseTool{
+		cfg:              cfg,
+		annotations:      annotations,
+		metadata:         metadata,
+		StaticParameters: params,
+	}
 }
 
-func (b BaseTool) GetDescription() string {
-	return b.Description
-}
-
-func (b BaseTool) GetAuthRequired() []string {
-	return b.Metadata.AuthRequired
-}
-
-func (b BaseTool) GetAnnotations() *ToolAnnotations {
-	return b.Annotations
-}
-
-func (b BaseTool) Manifest() Manifest {
-	return b.Metadata
-}
+func (b BaseTool) GetName() string                  { return b.cfg.GetName() }
+func (b BaseTool) GetDescription() string           { return b.cfg.GetDescription() }
+func (b BaseTool) GetAuthRequired() []string        { return b.cfg.GetAuthRequired() }
+func (b BaseTool) GetScopesRequired() []string      { return b.cfg.GetScopesRequired() }
+func (b BaseTool) GetAnnotations() *ToolAnnotations { return b.annotations }
+func (b BaseTool) Manifest() Manifest               { return b.metadata }
 
 func (b BaseTool) GetParameters() parameters.Parameters {
 	return b.StaticParameters
 }
 
 func (b BaseTool) Authorized(verifiedAuthServices []string) bool {
-	return IsAuthorized(b.Metadata.AuthRequired, verifiedAuthServices)
-}
-
-func (b BaseTool) GetScopesRequired() []string {
-	return b.ScopesRequired
+	return IsAuthorized(b.cfg.GetAuthRequired(), verifiedAuthServices)
 }
 
 func (b BaseTool) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
