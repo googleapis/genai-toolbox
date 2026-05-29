@@ -196,8 +196,8 @@ func (c ConfigBase) GetDescription() string      { return c.Description }
 func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
 func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
 
-// BaseTool provides default implementations various methods on the Tool 
-// interface. Tools embed BaseTool to drop their boilerplate and override 
+// BaseTool provides default implementations of various methods on the Tool
+// interface. Tools embed BaseTool to drop their boilerplate and override
 // only methods that need custom behavior.
 type BaseTool struct {
 	cfg              ToolMeta
