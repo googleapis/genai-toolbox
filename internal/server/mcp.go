@@ -621,10 +621,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 		case jsonrpc.UNSUPPORTED_PROTOCOL_VERSION:
 			w.WriteHeader(http.StatusBadRequest)
-		case jsonrpc.INVALID_PARAMS:
-			if strings.Contains(rpcResponse.Error.Message, "unsupported protocol version") {
-				w.WriteHeader(http.StatusBadRequest)
-			}
 		}
 	}
 
