@@ -32,6 +32,7 @@ const (
 	INTERNAL_ERROR                     = -32603
 	HEADER_MISMATCH                    = -32001
 	MISSING_REQUIRED_CLIENT_CAPABILITY = -32003
+	UNSUPPORTED_PROTOCOL_VERSION       = -32004
 
 	// Custom auth error codes
 	UNAUTHORIZED = -401
@@ -164,7 +165,7 @@ func NewUnsupportedProtocolVersionError(id RequestId, v string) (JSONRPCError, e
 		Jsonrpc: JSONRPC_VERSION,
 		Id:      id,
 		Error: Error{
-			Code:    INVALID_PARAMS,
+			Code:    UNSUPPORTED_PROTOCOL_VERSION,
 			Message: err.Error(),
 			Data: struct {
 				Supported []string `json:"supported"`
