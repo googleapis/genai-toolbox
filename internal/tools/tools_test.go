@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package tools_test
 
 import (
 	"context"
@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -30,47 +31,47 @@ import (
 // Real tools embed ConfigBase in their Config; the stub does too so it
 // satisfies ToolMeta if/when wired into BaseTool.
 type stubConfig struct {
-	ConfigBase
+	tools.ConfigBase
 }
 
 func (stubConfig) ToolConfigType() string { return "stub" }
-func (stubConfig) Initialize(map[string]sources.Source) (Tool, error) {
+func (stubConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
 	return nil, nil
 }
 
 type stubTool struct {
-	BaseTool
+	tools.BaseTool
 }
 
-func (stubTool) Invoke(_ context.Context, _ SourceProvider, _ parameters.ParamValues, _ AccessToken) (any, util.ToolboxError) {
+func (stubTool) Invoke(_ context.Context, _ tools.SourceProvider, _ parameters.ParamValues, _ tools.AccessToken) (any, util.ToolboxError) {
 	return nil, nil
 }
 
-func (stubTool) ToConfig() ToolConfig { return stubConfig{} }
+func (stubTool) ToConfig() tools.ToolConfig { return stubConfig{} }
 
 // Compile-time check: embedding BaseTool plus Invoke + ToConfig satisfies Tool.
-var _ Tool = stubTool{}
+var _ tools.Tool = stubTool{}
 
 // Compile-time check: ConfigBase satisfies ToolMeta on its own.
-var _ ToolMeta = ConfigBase{}
+var _ tools.ToolMeta = tools.ConfigBase{}
 
-func newBaseTool() (BaseTool, Manifest) {
-	cfg := ConfigBase{
+func newBaseTool() (tools.BaseTool, tools.Manifest) {
+	cfg := tools.ConfigBase{
 		Name:           "my-tool",
 		Description:    "my tool description",
 		AuthRequired:   []string{"google"},
 		ScopesRequired: []string{"scope-a", "scope-b"},
 	}
-	manifest := Manifest{
+	manifest := tools.Manifest{
 		Description:  "manifest description",
 		AuthRequired: []string{"google"},
 	}
-	b := BaseTool{
-		cfg:              cfg,
-		annotations:      NewReadOnlyAnnotations(),
-		metadata:         manifest,
-		StaticParameters: parameters.Parameters{parameters.NewStringParameter("p1", "first param")},
-	}
+	b := tools.NewBaseTool(
+		cfg,
+		tools.NewReadOnlyAnnotations(),
+		manifest,
+		parameters.Parameters{parameters.NewStringParameter("p1", "first param")},
+	)
 	return b, manifest
 }
 
@@ -116,7 +117,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			b := BaseTool{cfg: ConfigBase{AuthRequired: tc.authRequired}}
+			b := tools.NewBaseTool(tools.ConfigBase{AuthRequired: tc.authRequired}, nil, tools.Manifest{}, nil)
 			if got := b.Authorized(tc.verified); got != tc.want {
 				t.Errorf("Authorized(%v) = %v, want %v", tc.verified, got, tc.want)
 			}
@@ -125,7 +126,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 }
 
 func TestBaseToolRequiresClientAuthorization(t *testing.T) {
-	b := BaseTool{}
+	b := tools.NewBaseTool(tools.ConfigBase{}, nil, tools.Manifest{}, nil)
 	got, err := b.RequiresClientAuthorization(nil)
 	if err != nil {
 		t.Fatalf("RequiresClientAuthorization() error = %v", err)
@@ -136,7 +137,7 @@ func TestBaseToolRequiresClientAuthorization(t *testing.T) {
 }
 
 func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
-	b := BaseTool{}
+	b := tools.NewBaseTool(tools.ConfigBase{}, nil, tools.Manifest{}, nil)
 	got, err := b.GetAuthTokenHeaderName(nil)
 	if err != nil {
 		t.Fatalf("GetAuthTokenHeaderName() error = %v", err)
@@ -147,9 +148,12 @@ func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
 }
 
 func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
-	b := BaseTool{
-		StaticParameters: parameters.Parameters{parameters.NewStringParameter("p1", "first")},
-	}
+	b := tools.NewBaseTool(
+		tools.ConfigBase{},
+		nil,
+		tools.Manifest{},
+		parameters.Parameters{parameters.NewStringParameter("p1", "first")},
+	)
 	values := parameters.ParamValues{{Name: "p1", Value: "hello"}}
 	got, err := b.EmbedParams(context.Background(), values, map[string]embeddingmodels.EmbeddingModel{})
 	if err != nil {
