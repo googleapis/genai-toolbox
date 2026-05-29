@@ -180,9 +180,7 @@ type ToolMeta interface {
 }
 
 // ConfigBase owns the YAML fields that every tool's Config shares and that
-// BaseTool reads through. Tools embed it into their Config with `yaml:",inline"`
-// so the on-disk YAML shape stays identical.
-//
+// BaseTool reads through. 
 // Description is eagerly defaulted by the tool's Initialize (many prebuilt
 // configs omit description: and rely on a canned per-tool string), so
 // post-Initialize ConfigBase.Description holds the resolved value.
@@ -198,49 +196,14 @@ func (c ConfigBase) GetDescription() string      { return c.Description }
 func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
 func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
 
-// BaseTool provides default implementations of the metadata, parameter, and
-// authorization methods on the Tool interface. Concrete tools embed BaseTool
-// to drop their boilerplate and override only methods that need custom
-// behavior.
-//
-// BaseTool does NOT implement Invoke or ToConfig; concrete tools must provide
-// those. The default EmbedParams passes a nil vector formatter — tools that
-// write embeddings into pgvector (or similar) must override EmbedParams to
-// supply the right formatter.
-//
-// Fields are populated by Initialize and treated as read-only thereafter:
-//   - cfg is a read-through view of the tool's Config (Name, Description,
-//     AuthRequired, ScopesRequired).
-//   - annotations is the *resolved* value (per-tool Initialize calls
-//     GetAnnotationsOrDefault, since the appropriate default — read-only vs
-//     destructive — depends on the tool).
-//   - metadata is a snapshot built from cfg + StaticParameters at Initialize
-//     time and handed to MCP clients as-is. Do not read metadata.Description
-//     or metadata.AuthRequired directly — call GetDescription / GetAuthRequired
-//     (which read cfg) instead.
+// BaseTool provides default implementations various methods on the Tool 
+// interface. Tools embed BaseTool to drop their boilerplate and override 
+// only methods that need custom behavior.
 type BaseTool struct {
 	cfg              ToolMeta
 	annotations      *ToolAnnotations
 	metadata         Manifest
 	StaticParameters parameters.Parameters
-}
-
-// NewBaseTool builds a BaseTool from a fully-resolved Config view, the
-// resolved annotations, the precomputed manifest snapshot, and the tool's
-// runtime parameter list. Call this from the concrete tool's Initialize
-// after any defaulting has been applied.
-func NewBaseTool(
-	cfg ToolMeta,
-	annotations *ToolAnnotations,
-	metadata Manifest,
-	params parameters.Parameters,
-) BaseTool {
-	return BaseTool{
-		cfg:              cfg,
-		annotations:      annotations,
-		metadata:         metadata,
-		StaticParameters: params,
-	}
 }
 
 func (b BaseTool) GetName() string                  { return b.cfg.GetName() }
