@@ -85,6 +85,9 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("min_duration", "1 minute", "Optional: Only show queries running at least this long (e.g., '1 minute', '1 second', '2 seconds')."),
 		parameters.NewStringParameterWithDefault("exclude_application_names", "", "Optional: A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., 'psql', 'pgAdmin', 'DBeaver'). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded."),

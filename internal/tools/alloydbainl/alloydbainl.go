@@ -66,6 +66,9 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
 	numParams := len(cfg.NLConfigParameters)
 	quotedNameParts := make([]string, 0, numParams)
 	placeholderParts := make([]string, 0, numParams)
