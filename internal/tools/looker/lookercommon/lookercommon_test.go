@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
@@ -169,6 +170,198 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect result: diff %v", diff)
 	}
+}
+
+func TestProcessQueryArgsStripsWrappingQuotes(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	tcs := []struct {
+		desc       string
+		filtersIn  map[string]any
+		filtersOut map[string]any
+	}{
+		{
+			desc:       "bare string value passed through unchanged",
+			filtersIn:  map[string]any{"view.attribution_model": "first_touch"},
+			filtersOut: map[string]any{"view.attribution_model": "first_touch"},
+		},
+		{
+			desc:       "double-quoted value has wrapping quotes stripped",
+			filtersIn:  map[string]any{"view.attribution_model": `"first_touch"`},
+			filtersOut: map[string]any{"view.attribution_model": "first_touch"},
+		},
+		{
+			desc:       "single-quoted value has wrapping quotes stripped",
+			filtersIn:  map[string]any{"view.attribution_model": "'first_touch'"},
+			filtersOut: map[string]any{"view.attribution_model": "first_touch"},
+		},
+		{
+			desc:       "single-quoted key has wrapping quotes stripped",
+			filtersIn:  map[string]any{"'view.field'": "value"},
+			filtersOut: map[string]any{"view.field": "value"},
+		},
+		{
+			desc:       "quoted key and quoted value are both stripped",
+			filtersIn:  map[string]any{`"view.field"`: `"value"`},
+			filtersOut: map[string]any{"view.field": "value"},
+		},
+		{
+			desc:       "non-string values are not touched",
+			filtersIn:  map[string]any{"view.threshold": 42, "view.enabled": true},
+			filtersOut: map[string]any{"view.threshold": 42, "view.enabled": true},
+		},
+		{
+			desc:       "non-comparable values are passed through without panic",
+			filtersIn:  map[string]any{"view.ids": []any{"a", "b"}, "view.meta": map[string]any{"k": "v"}},
+			filtersOut: map[string]any{"view.ids": []any{"a", "b"}, "view.meta": map[string]any{"k": "v"}},
+		},
+		{
+			desc:       "single-character string is not mangled by the length check",
+			filtersIn:  map[string]any{"view.code": "x"},
+			filtersOut: map[string]any{"view.code": "x"},
+		},
+		{
+			desc:       "mismatched wrapping characters are left alone",
+			filtersIn:  map[string]any{"view.f": `"value'`},
+			filtersOut: map[string]any{"view.f": `"value'`},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			params := parameters.ParamValues{
+				{Name: "model", Value: "marketing"},
+				{Name: "explore", Value: "cohort_marketing_performance"},
+				{Name: "fields", Value: []any{"view.channel"}},
+				{Name: "filters", Value: tc.filtersIn},
+				{Name: "pivots", Value: []any{}},
+				{Name: "sorts", Value: []any{}},
+				{Name: "limit", Value: 10},
+				{Name: "tz", Value: "Etc/UTC"},
+			}
+			wq, err := lookercommon.ProcessQueryArgs(ctx, params)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if wq.Filters == nil {
+				t.Fatalf("expected non-nil Filters")
+			}
+			if diff := cmp.Diff(tc.filtersOut, *wq.Filters); diff != "" {
+				t.Fatalf("incorrect filters: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestEscapeFiltersForUnquotedParameters(t *testing.T) {
+	unquoted := map[string]bool{
+		"v.attribution_model_selector": true,
+		"v.cohort_anchor_selector":     true,
+		"v.period_type_selector":       true,
+	}
+
+	tcs := []struct {
+		desc string
+		in   map[string]any
+		out  map[string]any
+	}{
+		{
+			desc: "underscore in unquoted-parameter value is escaped",
+			in:   map[string]any{"v.attribution_model_selector": "first_touch"},
+			out:  map[string]any{"v.attribution_model_selector": "first^_touch"},
+		},
+		{
+			desc: "multiple metacharacters escaped in one value",
+			in:   map[string]any{"v.attribution_model_selector": "a_b%c,d"},
+			out:  map[string]any{"v.attribution_model_selector": "a^_b^%c^,d"},
+		},
+		{
+			desc: "already-escaped value passes through unchanged (idempotence)",
+			in:   map[string]any{"v.cohort_anchor_selector": "signup^_date"},
+			out:  map[string]any{"v.cohort_anchor_selector": "signup^_date"},
+		},
+		{
+			desc: "mixed pre-escaped and unescaped metacharacters",
+			in:   map[string]any{"v.attribution_model_selector": "first^_touch_v2"},
+			out:  map[string]any{"v.attribution_model_selector": "first^_touch^_v2"},
+		},
+		{
+			desc: "all four escape sequences pass through unchanged",
+			in:   map[string]any{"v.attribution_model_selector": "a^_b^%c^,d^^e"},
+			out:  map[string]any{"v.attribution_model_selector": "a^_b^%c^,d^^e"},
+		},
+		{
+			desc: "lone caret followed by non-metachar is doubled",
+			in:   map[string]any{"v.cohort_anchor_selector": "a^b"},
+			out:  map[string]any{"v.cohort_anchor_selector": "a^^b"},
+		},
+		{
+			desc: "trailing lone caret is doubled",
+			in:   map[string]any{"v.cohort_anchor_selector": "tail^"},
+			out:  map[string]any{"v.cohort_anchor_selector": "tail^^"},
+		},
+		{
+			desc: "value with no metacharacters is unchanged",
+			in:   map[string]any{"v.period_type_selector": "monthly"},
+			out:  map[string]any{"v.period_type_selector": "monthly"},
+		},
+		{
+			desc: "filter keyed to a non-parameter field is left alone",
+			in:   map[string]any{"v.signup_date": "after 2026-01-01"},
+			out:  map[string]any{"v.signup_date": "after 2026-01-01"},
+		},
+		{
+			desc: "non-string values are not touched",
+			in:   map[string]any{"v.attribution_model_selector": 42},
+			out:  map[string]any{"v.attribution_model_selector": 42},
+		},
+		{
+			desc: "mixed filters: unquoted is escaped, others pass through",
+			in: map[string]any{
+				"v.attribution_model_selector": "first_touch",
+				"v.signup_date":                "after 2026-01-01",
+				"v.user_count":                 ">= 100",
+			},
+			out: map[string]any{
+				"v.attribution_model_selector": "first^_touch",
+				"v.signup_date":                "after 2026-01-01",
+				"v.user_count":                 ">= 100",
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			filters := map[string]any{}
+			for k, v := range tc.in {
+				filters[k] = v
+			}
+			wq := &v4.WriteQuery{Model: "m", View: "v", Filters: &filters}
+			lookercommon.EscapeFiltersForUnquotedParameters(wq, unquoted)
+			if diff := cmp.Diff(tc.out, *wq.Filters); diff != "" {
+				t.Fatalf("incorrect filters: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestEscapeFiltersForUnquotedParameters_NoopGuards(t *testing.T) {
+	// Empty unquoted set: should not touch filters.
+	filters := map[string]any{"v.x": "a_b"}
+	wq := &v4.WriteQuery{Model: "m", View: "v", Filters: &filters}
+	lookercommon.EscapeFiltersForUnquotedParameters(wq, map[string]bool{})
+	if got := (*wq.Filters)["v.x"]; got != "a_b" {
+		t.Fatalf("expected empty unquoted set to be a no-op, got %v", got)
+	}
+
+	// nil Filters pointer: must not panic.
+	lookercommon.EscapeFiltersForUnquotedParameters(&v4.WriteQuery{}, map[string]bool{"v.x": true})
+
+	// nil WriteQuery: must not panic.
+	lookercommon.EscapeFiltersForUnquotedParameters(nil, map[string]bool{"v.x": true})
 }
 
 func TestRequestRunInlineQuery2(t *testing.T) {

@@ -240,6 +240,20 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			wantError:  false,
 		},
 		{
+			name:           "valid opaque token with string exp",
+			token:          "opaque-valid-string-exp",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files write:files",
+				"aud":    "my-audience",
+				"exp":    "2000000000",
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
 			name:           "valid opaque token with custom introspection endpoint",
 			token:          "opaque-valid-custom",
 			scopesRequired: []string{"read:files"},
@@ -557,6 +571,20 @@ func TestValidateOpaqueToken(t *testing.T) {
 			wantError:  false,
 		},
 		{
+			name:           "valid opaque token with string exp",
+			token:          "opaque-valid-string-exp",
+			scopesRequired: []string{"read:files"},
+			audience:       "my-audience",
+			mockResponse: map[string]any{
+				"active": true,
+				"scope":  "read:files write:files",
+				"aud":    "my-audience",
+				"exp":    "2000000000",
+			},
+			mockStatus: http.StatusOK,
+			wantError:  false,
+		},
+		{
 			name:           "valid opaque token with custom introspection endpoint",
 			token:          "opaque-valid-custom",
 			scopesRequired: []string{"read:files"},
@@ -701,12 +729,27 @@ func TestIsJWTFormat(t *testing.T) {
 		want  bool
 	}{
 		{
-			name:  "valid JWT format",
-			token: "header.payload.signature",
+			name:  "valid JWT format with alg",
+			token: "eyJhbGciOiJSUzI1NiJ9.payload.signature",
 			want:  true,
 		},
 		{
-			name:  "opaque token",
+			name:  "invalid base64 in header",
+			token: "invalid_base64!@#.payload.signature",
+			want:  false,
+		},
+		{
+			name:  "valid base64 but invalid JSON",
+			token: "aGVsbG8.payload.signature",
+			want:  false,
+		},
+		{
+			name:  "valid JSON but missing alg parameter",
+			token: "eyJmb28iOiJiYXIifQ.payload.signature",
+			want:  false,
+		},
+		{
+			name:  "opaque token without dots",
 			token: "opaque-token",
 			want:  false,
 		},

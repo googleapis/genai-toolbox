@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
@@ -129,6 +130,12 @@ func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManag
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.Toolset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	if header != nil {
+		if clientIP := util.ExtractClientIP(header); clientIP != "" {
+			ctx = util.WithClientIP(ctx, clientIP)
+		}
+	}
+
 	authServices := resourceMgr.GetAuthServiceMap()
 
 	// retrieve logger from context
@@ -218,11 +225,20 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	// if using stdio, header will be nil and auth will not be supported
 	if header != nil {
 		for _, aS := range authServices {
-			claims, err := aS.GetClaimsFromHeader(ctx, header)
-			if err != nil {
-				logger.DebugContext(ctx, err.Error())
-				continue
+			var claims map[string]any
+			var err error
+
+			cfg := aS.ToConfig()
+			if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+				claims = util.AuthTokenClaimsFromContext(ctx)
+			} else {
+				claims, err = aS.GetClaimsFromHeader(ctx, header)
+				if err != nil {
+					logger.DebugContext(ctx, err.Error())
+					continue
+				}
 			}
+
 			if claims == nil {
 				// authService not present in header
 				continue
