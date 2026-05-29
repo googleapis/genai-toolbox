@@ -206,6 +206,18 @@ type BaseTool struct {
 	StaticParameters parameters.Parameters
 }
 
+// NewBaseTool constructs a BaseTool from a resolved ToolMeta (typically the
+// per-tool Config after Initialize has filled in defaults), the resolved
+// annotations, the precomputed Manifest, and the tool's static parameters.
+func NewBaseTool(cfg ToolMeta, annotations *ToolAnnotations, metadata Manifest, staticParameters parameters.Parameters) BaseTool {
+	return BaseTool{
+		cfg:              cfg,
+		annotations:      annotations,
+		metadata:         metadata,
+		StaticParameters: staticParameters,
+	}
+}
+
 func (b BaseTool) GetName() string                  { return b.cfg.GetName() }
 func (b BaseTool) GetDescription() string           { return b.cfg.GetDescription() }
 func (b BaseTool) GetAuthRequired() []string        { return b.cfg.GetAuthRequired() }
