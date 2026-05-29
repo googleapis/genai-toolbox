@@ -37,7 +37,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -50,17 +50,13 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name               string                 `yaml:"name" validate:"required"`
+	tools.ConfigBase   `yaml:",inline"`
 	Type               string                 `yaml:"type" validate:"required"`
 	Source             string                 `yaml:"source" validate:"required"`
-	Description        string                 `yaml:"description" validate:"required"`
 	Statement          string                 `yaml:"statement" validate:"required"`
-	AuthRequired       []string               `yaml:"authRequired"`
 	Parameters         parameters.Parameters  `yaml:"parameters"`
 	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
 	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -76,14 +72,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		BaseTool: tools.BaseTool{
-			Name:             cfg.Name,
-			Description:      cfg.Description,
-			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-			StaticParameters: allParameters,
-			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
-		},
+		BaseTool: tools.NewBaseTool(
+			cfg.ConfigBase,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 		cfg: cfg,
 	}, nil
 }
