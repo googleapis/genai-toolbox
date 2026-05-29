@@ -60,7 +60,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
-          go-version: '1.23'
+          go-version-file: 'go.mod'
           
       - name: Start MCP Toolbox Server
         run: |
