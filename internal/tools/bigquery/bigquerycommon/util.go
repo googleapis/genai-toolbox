@@ -30,9 +30,8 @@ import (
 // 'project.dataset.table' form. Components are restricted to letters, digits,
 // and underscores — the character set that BigQuery allows for dataset and
 // table IDs and that is safe to interpolate inside a backtick-quoted SQL
-// identifier. Project IDs that include hyphens are not matched; use a SELECT
-// query as the input_data / history_data value for those cases.
-var validBQTableID = regexp.MustCompile(`^[a-zA-Z0-9_]+(\.([a-zA-Z0-9_]+)){1,2}$`)
+// identifier.
+var validBQTableID = regexp.MustCompile(`^[a-zA-Z0-9_-]+(\.([a-zA-Z0-9_]+)){1,2}$`)
 
 // validBQColumnName matches BigQuery column names: a letter or underscore
 // followed by letters, digits, or underscores.
