@@ -15,7 +15,7 @@
 title = 'MCP Toolbox for Databases'
 relativeURLs = false
 
-languageCode = 'en-us'
+locale = 'en-us'
 defaultContentLanguage = "en"
 defaultContentLanguageInSubdir = false
 
@@ -26,11 +26,11 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 
 [security.node]
   [security.node.permissions]
-    disable = true
+    allowChildProcess = ["tailwindcss", "postcss"]
 
 [languages]
   [languages.en]
-    languageName ="English"
+    label = "English"
     weight = 1
 
 [module]
