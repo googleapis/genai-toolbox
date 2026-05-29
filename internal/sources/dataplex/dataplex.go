@@ -33,6 +33,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/protobuf/encoding/protojson"
 	grpcstatus "google.golang.org/grpc/status"
 )
 
@@ -354,7 +355,7 @@ func (s *Source) GenerateDataInsights(ctx context.Context, projectID, location, 
 	return op.Name(), nil
 }
 
-func (s *Source) GetDataInsights(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
+func (s *Source) GetDataScan(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
 	if projectID == "" {
 		projectID = s.ProjectID()
 	}
@@ -427,4 +428,132 @@ func (s *Source) GetJobStatus(ctx context.Context, projectID, location, scanID, 
 	}
 
 	return job, nil
+}
+
+func (s *Source) GenerateDataProfile(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanID := fmt.Sprintf("nq-prof-%s", uuid.New().String())
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanID,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataProfileSpec{
+				DataProfileSpec: &dataplexpb.DataProfileSpec{
+					CatalogPublishingEnabled: publish,
+				},
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_PROFILE,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
+}
+
+func (s *Source) GenerateDataDiscovery(ctx context.Context, projectID, location, resourcePath string) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanID := fmt.Sprintf("nq-disc-%s", uuid.New().String())
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanID,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataDiscoverySpec{
+				DataDiscoverySpec: &dataplexpb.DataDiscoverySpec{},
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_DISCOVERY,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
+}
+
+func (s *Source) GenerateDataQuality(ctx context.Context, projectID, location, resourcePath string, specJSON string, publish bool) (string, error) {
+	if projectID == "" {
+		projectID = s.ProjectID()
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+	dataScanID := fmt.Sprintf("nq-dq-%s", uuid.New().String())
+
+	var dqSpec dataplexpb.DataQualitySpec
+	if err := protojson.Unmarshal([]byte(specJSON), &dqSpec); err != nil {
+		return "", fmt.Errorf("failed to parse data quality spec JSON: %w", err)
+	}
+	dqSpec.CatalogPublishingEnabled = publish
+
+	req := &dataplexpb.CreateDataScanRequest{
+		Parent:     parent,
+		DataScanId: dataScanID,
+		DataScan: &dataplexpb.DataScan{
+			Data: &dataplexpb.DataSource{
+				Source: &dataplexpb.DataSource_Resource{
+					Resource: resourcePath,
+				},
+			},
+			Spec: &dataplexpb.DataScan_DataQualitySpec{
+				DataQualitySpec: &dqSpec,
+			},
+			ExecutionSpec: &dataplexpb.DataScan_ExecutionSpec{
+				Trigger: &dataplexpb.Trigger{
+					Mode: &dataplexpb.Trigger_OneTime_{
+						OneTime: &dataplexpb.Trigger_OneTime{},
+					},
+				},
+			},
+			Type: dataplexpb.DataScanType_DATA_QUALITY,
+			Labels: map[string]string{
+				"onemcp-server": "true",
+			},
+		},
+	}
+
+	op, err := s.DataScanClient.CreateDataScan(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return op.Name(), nil
 }

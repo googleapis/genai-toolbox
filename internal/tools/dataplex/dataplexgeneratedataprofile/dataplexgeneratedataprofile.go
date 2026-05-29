@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexgetdatainsights
+package dataplexgeneratedataprofile
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
-	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const resourceType string = "dataplex-get-data-insights"
+const resourceType string = "dataplex-generate-data-profile"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -48,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ProjectID() string
-	GetDataScan(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error)
+	GenerateDataProfile(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error)
 }
 
 type Config struct {
@@ -78,10 +76,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	scanId := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-doc-12345...'). This is extracted from the target or name field of the creation operation.")
-	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
+	resourcePath := parameters.NewStringParameter("resourcePath", "Required. The BigQuery table to analyze. Accepts raw table name (e.g. 'my_table'), dataset.table (e.g. 'my_dataset.my_table'), or fully-qualified resource path (e.g. '//bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}').")
+	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource.")
+	publish := parameters.NewBooleanParameter("publish", "Required. Whether to publish the generated profile results to the Dataplex Universal Catalog.")
 
-	params := parameters.Parameters{scanId, location}
+	params := parameters.Parameters{resourcePath, location, publish}
 
 	t := Tool{
 		Config:     cfg,
@@ -114,7 +113,7 @@ func (t Tool) GetAuthRequired() []string {
 }
 
 func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -128,29 +127,41 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	scanId, _ := paramsMap["scanId"].(string)
+	resourcePath, _ := paramsMap["resourcePath"].(string)
 	location, _ := paramsMap["location"].(string)
+	publish, _ := paramsMap["publish"].(bool)
 
-	if scanId == "" {
-		return nil, util.NewAgentError("scanId parameter is required", nil)
+	if resourcePath == "" {
+		return nil, util.NewAgentError("resourcePath parameter is required", nil)
 	}
 	if location == "" {
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
 
 	projectId := source.ProjectID()
-	resp, err := source.GetDataScan(ctx, projectId, location, scanId)
+
+	// Smart BigQuery path normalization to prevent ResourceName errors in Dataplex
+	if !strings.HasPrefix(resourcePath, "//bigquery.googleapis.com/") {
+		if strings.HasPrefix(resourcePath, "projects/") {
+			resourcePath = "//bigquery.googleapis.com/" + resourcePath
+		} else {
+			parts := strings.Split(resourcePath, ".")
+			if len(parts) == 3 {
+				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", parts[0], parts[1], parts[2])
+			} else if len(parts) == 2 {
+				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", projectId, parts[0], parts[1])
+			}
+		}
+	}
+
+	opName, err := source.GenerateDataProfile(ctx, projectId, location, resourcePath, publish)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 
-	// Marshal proto response to JSON using protojson to preserve field names and types
-	jsonBytes, err := protojson.Marshal(resp)
-	if err != nil {
-		return nil, util.NewClientServerError("failed to marshal response to JSON", http.StatusInternalServerError, err)
-	}
-
-	return json.RawMessage(jsonBytes), nil
+	return map[string]string{
+		"operation_id": opName,
+	}, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

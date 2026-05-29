@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexgetdatainsights
+package dataplexgetdiscoveryresults
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const resourceType string = "dataplex-get-data-insights"
+const resourceType string = "dataplex-get-discovery-results"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -78,7 +78,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	scanId := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-doc-12345...'). This is extracted from the target or name field of the creation operation.")
+	scanId := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-disc-12345...'). This is extracted from the target or name field of the creation operation.")
 	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
 
 	params := parameters.Parameters{scanId, location}

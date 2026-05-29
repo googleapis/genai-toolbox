@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexgetdatainsights
+package dataplexcheckdataquality
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
-	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
-const resourceType string = "dataplex-get-data-insights"
+const resourceType string = "dataplex-check-data-quality"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -48,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ProjectID() string
-	GetDataScan(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error)
+	GenerateDataQuality(ctx context.Context, projectID, location, resourcePath string, specJSON string, publish bool) (string, error)
 }
 
 type Config struct {
@@ -78,10 +76,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	scanId := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-doc-12345...'). This is extracted from the target or name field of the creation operation.")
-	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
+	resourcePath := parameters.NewStringParameter("resourcePath", "Required. The BigQuery table or Cloud Storage path to check. For BigQuery: accepts raw table name (e.g. 'my_table'), dataset.table (e.g. 'my_dataset.my_table'), or fully-qualified path (e.g. '//bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}'). For Cloud Storage: accepts raw bucket name (e.g. 'my-bucket'), gs:// URI (e.g. 'gs://my-bucket'), or fully-qualified path (e.g. '//storage.googleapis.com/projects/{project}/buckets/{bucket}').")
+	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1').")
+	specJSON := parameters.NewStringParameter("specJSON", "Required. A JSON-serialized string of the Dataplex DataQualitySpec proto message containing the rules and optional configuration. Example format: {\"rules\": [{\"column\": \"my_col\", \"dimension\": \"COMPLETENESS\", \"nonNullExpectation\": {}}], \"catalogPublishingEnabled\": false}")
+	publish := parameters.NewBooleanParameter("publish", "Required. Whether to publish the generated quality scores/results to the Dataplex Universal Catalog.")
 
-	params := parameters.Parameters{scanId, location}
+	params := parameters.Parameters{resourcePath, location, specJSON, publish}
 
 	t := Tool{
 		Config:     cfg,
@@ -114,7 +114,7 @@ func (t Tool) GetAuthRequired() []string {
 }
 
 func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -128,29 +128,55 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	scanId, _ := paramsMap["scanId"].(string)
+	resourcePath, _ := paramsMap["resourcePath"].(string)
 	location, _ := paramsMap["location"].(string)
+	specJSON, _ := paramsMap["specJSON"].(string)
+	publish, _ := paramsMap["publish"].(bool)
 
-	if scanId == "" {
-		return nil, util.NewAgentError("scanId parameter is required", nil)
+	if resourcePath == "" {
+		return nil, util.NewAgentError("resourcePath parameter is required", nil)
 	}
 	if location == "" {
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
+	if specJSON == "" {
+		return nil, util.NewAgentError("specJSON parameter is required", nil)
+	}
 
 	projectId := source.ProjectID()
-	resp, err := source.GetDataScan(ctx, projectId, location, scanId)
+
+	// Smart path normalization for both Cloud Storage and BigQuery
+	if strings.HasPrefix(resourcePath, "gs://") {
+		bucketName := strings.TrimPrefix(resourcePath, "gs://")
+		bucketName = strings.Split(bucketName, "/")[0]
+		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, bucketName)
+	} else if strings.HasPrefix(resourcePath, "//storage.googleapis.com/buckets/") {
+		bucketName := strings.TrimPrefix(resourcePath, "//storage.googleapis.com/buckets/")
+		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, bucketName)
+	} else if strings.HasPrefix(resourcePath, "//storage.googleapis.com/projects/") {
+		// Keep GCS as is
+	} else if !strings.HasPrefix(resourcePath, "//bigquery.googleapis.com/") {
+		// Assume BigQuery table path
+		if strings.HasPrefix(resourcePath, "projects/") {
+			resourcePath = "//bigquery.googleapis.com/" + resourcePath
+		} else {
+			parts := strings.Split(resourcePath, ".")
+			if len(parts) == 3 {
+				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", parts[0], parts[1], parts[2])
+			} else if len(parts) == 2 {
+				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", projectId, parts[0], parts[1])
+			}
+		}
+	}
+
+	opName, err := source.GenerateDataQuality(ctx, projectId, location, resourcePath, specJSON, publish)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 
-	// Marshal proto response to JSON using protojson to preserve field names and types
-	jsonBytes, err := protojson.Marshal(resp)
-	if err != nil {
-		return nil, util.NewClientServerError("failed to marshal response to JSON", http.StatusInternalServerError, err)
-	}
-
-	return json.RawMessage(jsonBytes), nil
+	return map[string]string{
+		"operation_id": opName,
+	}, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
