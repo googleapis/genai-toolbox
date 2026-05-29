@@ -37,7 +37,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -50,16 +50,12 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name               string                 `yaml:"name" validate:"required"`
+	tools.ConfigBase   `yaml:",inline"`
 	Type               string                 `yaml:"type" validate:"required"`
 	Source             string                 `yaml:"source" validate:"required"`
-	Description        string                 `yaml:"description" validate:"required"`
 	NLConfig           string                 `yaml:"nlConfig" validate:"required"`
-	AuthRequired       []string               `yaml:"authRequired"`
 	NLConfigParameters parameters.Parameters  `yaml:"nlConfigParameters"`
 	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -104,14 +100,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	cfg.NLConfigParameters = append([]parameters.Parameter{newQuestionParam}, cfg.NLConfigParameters...)
 
 	return Tool{
-		BaseTool: tools.BaseTool{
-			Name:             cfg.Name,
-			Description:      cfg.Description,
-			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			StaticParameters: cfg.NLConfigParameters,
-			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-		},
+		BaseTool: tools.NewBaseTool(
+			cfg.ConfigBase,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			cfg.NLConfigParameters,
+		),
 		cfg:       cfg,
 		Statement: stmt,
 	}, nil
