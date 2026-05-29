@@ -177,13 +177,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	row := checkRows[0]
-	
-	indexPresent, _ := row["index_present"].(bool)
+	indexPresent, ok := row["index_present"].(bool)
+	if !ok {
+		// If the key is missing or isn't a boolean, it's likely a server-side/query issue.
+		return nil, util.NewClientServerError("Internal error: 'index_present' is missing or has an invalid type.", http.StatusInternalServerError, nil)
+	}
 	if !indexPresent {
 		return nil, util.NewClientServerError("Index not found for the given table and vector column. If the table lacks an existing vector setup, use the 'define_spec' tool to configure the database.", http.StatusBadRequest, nil)
 	}
 
-	isHnsw, _ := row["is_hnsw"].(bool)
+	isHnsw, ok := row["is_hnsw"].(bool)
+	if !ok {
+		return nil, util.NewClientServerError("Internal error: 'is_hnsw' is missing or has an invalid type.", http.StatusInternalServerError, nil)
+	}
 	if !isHnsw {
 		return nil, util.NewClientServerError("Unsupported index type for recall optimization. Only HNSW index is supported.", http.StatusBadRequest, nil)
 	}
