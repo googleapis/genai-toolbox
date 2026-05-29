@@ -180,7 +180,7 @@ type ToolMeta interface {
 }
 
 // ConfigBase owns the YAML fields that every tool's Config shares and that
-// BaseTool reads through. 
+// BaseTool reads through.
 // Description is eagerly defaulted by the tool's Initialize (many prebuilt
 // configs omit description: and rely on a canned per-tool string), so
 // post-Initialize ConfigBase.Description holds the resolved value.
