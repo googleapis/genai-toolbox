@@ -35,9 +35,10 @@ func TestValidTableID(t *testing.T) {
 		{"PROJ.DS.TBL", true},
 		{"my_project.my_dataset.my_table", true},
 
-		// Rejected: hyphens (not valid in dataset/table IDs; use SELECT for hyphenated projects).
-		{"my-project.my-dataset.my-table", false},
-		{"my-project-123.dataset.table", false},
+		// Rejected: hyphens (not valid in dataset/table IDs).
+		{"my-project.my-dataset.my_table", false},
+		{"my-project.my_dataset.my-table", false},
+		{"my-project-123.dataset.table", true},
 
 		// Rejected: only one component (no dot)
 		{"my_dataset", false},
