@@ -378,7 +378,7 @@ steps:
     args:
       - -c
       - |
-        PATTERN="datalineage|internal/server/|.ci/"
+        PATTERN="datalineage|internal/server/|tests/common.go|tests/tool.go|.ci/"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running Data Lineage tests..."
