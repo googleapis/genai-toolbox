@@ -71,7 +71,7 @@ parameters:
     description: Maximum number of results
 ```
 
-### Example with Vector Search
+### Vector Search Example
 
 The `clickhouse-sql` tool can transparently embed string parameters into vectors
 via Toolbox's native [embedding models](../../../documentation/configuration/embedding-models/_index.md).
