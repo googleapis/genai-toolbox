@@ -8,7 +8,7 @@ if [ -z "${VERSION}" ]; then
 fi
 
 
-FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64")
+FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64" "windows.arm64")
 output_string=""
 
 # Define the descriptions - ensure this array's order matches FILES
@@ -17,6 +17,7 @@ DESCRIPTIONS=(
     "For **macOS** systems running on **Apple Silicon** (M1, M2, M3, etc.) processors."
     "For **macOS** systems running on **Intel processors**."
     "For **Windows** systems running on **Intel/AMD 64-bit processors**."
+    "For **Windows** systems running on **ARM 64-bit processors**."
 )
 
 # Write the table header
@@ -35,12 +36,15 @@ do
     OS=$(echo "$file_key" | cut -d '.' -f 1)
     ARCH=$(echo "$file_key" | cut -d '.' -f 2)
 
+    # Determine the GCS bucket (default to the official production bucket if not overridden)
+    GCS_BUCKET="${BUCKET:-test-release-script}"
+
     # Get release URL
     if [ "$OS" = 'windows' ];
     then
-        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox.exe"
+        URL="https://storage.googleapis.com/$GCS_BUCKET/$VERSION/$OS/$ARCH/toolbox.exe"
     else
-        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox"
+        URL="https://storage.googleapis.com/$GCS_BUCKET/$VERSION/$OS/$ARCH/toolbox"
     fi
 
     curl "$URL" --fail --output toolbox || exit 1
