@@ -124,7 +124,6 @@ func initDataplexConnection(
 	if err != nil {
 		return nil, nil, err
 	}
-
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
@@ -189,6 +188,9 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 	// Iterate through the search results and call GetAspectType for each result using the resource name
 	var results []*dataplexpb.AspectType
 	for {
+		if pageSize > 0 && len(results) >= pageSize {
+			break
+		}
 		entry, err := it.Next()
 
 		if err == iterator.Done {
@@ -239,6 +241,9 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 
 	var results []*dataplexpb.SearchEntriesResult
 	for {
+		if pageSize > 0 && len(results) >= pageSize {
+			break
+		}
 		entry, err := it.Next()
 		if err == iterator.Done {
 			break
@@ -279,6 +284,9 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 	it := s.GetDataScanClient().ListDataScans(ctx, req)
 	var results []*dataplexpb.DataScan
 	for {
+		if pageSize > 0 && len(results) >= pageSize {
+			break
+		}
 		scan, err := it.Next()
 		if err == iterator.Done {
 			break
