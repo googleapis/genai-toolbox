@@ -30,6 +30,22 @@ to a database by following these instructions&lt;/a&gt;.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -61,8 +77,32 @@ to a database by following these instructions&lt;/a&gt;.&lt;/p&gt;
  &lt;/tr&gt;
  
  &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-delete-spec/"&gt;&lt;strong&gt;vector-assist-delete-spec&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;The &amp;#34;vector-assist-delete-spec&amp;#34; tool deletes an existing vector specification and its associated metadata using its spec_id.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-generate-query/"&gt;&lt;strong&gt;vector-assist-generate-query&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;The &amp;#34;vector-assist-generate-query&amp;#34; tool produces optimized SQL queries for vector search, leveraging metadata and specifications to enable semantic and similarity searches.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-get-spec/"&gt;&lt;strong&gt;vector-assist-get-spec&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;The &amp;#34;vector-assist-get-spec&amp;#34; tool retrieves the details of an existing vector specification using its unique spec_id.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-improve-query-recall/"&gt;&lt;strong&gt;vector-assist-improve-query-recall&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;The &amp;#34;vector-assist-improve-query-recall&amp;#34; tool generates SQL recommendations to improve search accuracy for users experiencing degraded recall.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-list-specs/"&gt;&lt;strong&gt;vector-assist-list-specs&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;The &amp;#34;vector-assist-list-specs&amp;#34; tool retrieves a list of all defined vector specifications for a given table and column.
 &lt;/td&gt;
  &lt;/tr&gt;
  

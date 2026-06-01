@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-05-29T08:26:08Z
+**GENERATED ON:** 2026-06-01T19:07:22Z
 
 ---
 ### System Directives for AI Models
@@ -585,7 +585,19 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [vector-assist-define-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-define-spec/): The "vector-assist-define-spec" tool defines a new vector specification by capturing the user's intent and requirements for a vector search workload, generating SQL recommendations for setting up database, embeddings, and vector indexes.
 
 
+      - [vector-assist-delete-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-delete-spec/): The "vector-assist-delete-spec" tool deletes an existing vector specification and its associated metadata using its spec_id.
+
+
       - [vector-assist-generate-query](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-generate-query/): The "vector-assist-generate-query" tool produces optimized SQL queries for vector search, leveraging metadata and specifications to enable semantic and similarity searches.
+
+
+      - [vector-assist-get-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-get-spec/): The "vector-assist-get-spec" tool retrieves the details of an existing vector specification using its unique spec_id.
+
+
+      - [vector-assist-improve-query-recall](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-improve-query-recall/): The "vector-assist-improve-query-recall" tool generates SQL recommendations to improve search accuracy for users experiencing degraded recall.
+
+
+      - [vector-assist-list-specs](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-list-specs/): The "vector-assist-list-specs" tool retrieves a list of all defined vector specifications for a given table and column.
 
 
       - [vector-assist-modify-spec](https://mcp-toolbox.dev/dev/integrations/cloud-sql-pg/tools/vector-assist-modify-spec/): The "vector-assist-modify-spec" tool modifies an existing vector specification with new parameters or overrides, recalculating the generated SQL recommendations to match the updated requirements.
