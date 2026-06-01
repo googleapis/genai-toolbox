@@ -3355,7 +3355,51 @@ project directory. The server process must have read access to this path.&lt;/li
 &lt;h3 id="dataform-cli"&gt;Dataform CLI&lt;/h3&gt;
 &lt;p&gt;This tool executes the &lt;code&gt;dataform&lt;/code&gt; command-line interface (CLI) via a system
 call. You must have the &lt;strong&gt;&lt;code&gt;dataform&lt;/code&gt; CLI&lt;/strong&gt; installed and available in the
-server&amp;rsquo;s system &lt;code&gt;PATH&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>dataplex-lookup-context</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+server&amp;rsquo;s system &lt;code&gt;PATH&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>datalineage-search-lineage</title><link>https://mcp-toolbox.dev/dev/integrations/datalineage/tools/datalineage-search-lineage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/datalineage/tools/datalineage-search-lineage/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;datalineage-search-lineage&lt;/code&gt; tool retrieves lineage links (representing data flow between source and target assets) by performing a breadth-first search in the given direction.&lt;/p&gt;
+&lt;p&gt;It supports both entity-level and column-level lineage (CLL).&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/datalineage/source/"&gt;Data Lineage Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;To retrieve lineage links, the authorized Google Cloud identity must have the following permissions:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;datalineage.events.get&lt;/code&gt; on the project where the link is stored (for entity-level lineage).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;datalineage.events.getFields&lt;/code&gt; on the project where the link is stored (for column-level lineage).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;datalineage.processes.get&lt;/code&gt; on the project where the process is stored (if retrieving process details).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
+&lt;h3 id="locations-array-of-strings-required"&gt;&lt;code&gt;locations&lt;/code&gt; (Array of Strings, Required)&lt;/h3&gt;
+&lt;p&gt;The locations to search in (e.g., &lt;code&gt;['us', 'eu', 'global']&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>dataplex-lookup-context</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-lookup-context&lt;/code&gt; tool provides rich metadata of one or more data assets along with their relationships.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;dataplex-lookup-context&lt;/code&gt; takes a required &lt;code&gt;name&lt;/code&gt; parameter which contains the
 project and location to which the request should be attributed in the following
@@ -8367,7 +8411,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode321s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode171s0hbhb"&gt;
 
 
 
@@ -11910,7 +11954,64 @@ allowing tools to execute SQL queries against it.&lt;/p&gt;
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>Dataproc Clusters Source</title><link>https://mcp-toolbox.dev/dev/integrations/dataproc/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/dataproc/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>Data Lineage Source</title><link>https://mcp-toolbox.dev/dev/integrations/datalineage/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/datalineage/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API. It enables large language models to query and analyze data lineage, representing the flow of data between source (upstream) and target (downstream) assets.&lt;/p&gt;
+&lt;p&gt;This integration supports:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Entity-Level Lineage:&lt;/strong&gt; Tracking data flow between entire assets (e.g., tables, files).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Column-Level Lineage (CLL):&lt;/strong&gt; Tracking data flow between specific fields or columns within assets.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="available-tools"&gt;Available Tools&lt;/h2&gt;
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+ &lt;h3&gt;Data Lineage Source Tools&lt;/h3&gt;
+ 
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Tool Name&lt;/th&gt;
+ &lt;th&gt;Description&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/datalineage/tools/datalineage-search-lineage/"&gt;&lt;strong&gt;datalineage-search-lineage&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;datalineage-search-lineage&amp;#34; tool allows to retrieve a streaming response of lineage links connected to the requested assets.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+
+
+
+
+
+
+
+
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;p&gt;Here is an example configuration for the Data Lineage source:&lt;/p&gt;</description></item><item><title>Dataproc Clusters Source</title><link>https://mcp-toolbox.dev/dev/integrations/dataproc/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/dataproc/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;a href="https://cloud.google.com/dataproc/docs/concepts/overview"&gt;Dataproc
 Clusters&lt;/a&gt; source
 allows Toolbox to interact with Dataproc Clusters hosted on Google Cloud.&lt;/p&gt;
