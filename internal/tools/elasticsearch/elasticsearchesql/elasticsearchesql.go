@@ -20,14 +20,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	es "github.com/googleapis/genai-toolbox/internal/sources/elasticsearch"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	es "github.com/googleapis/mcp-toolbox/internal/sources/elasticsearch"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 const resourceType string = "elasticsearch-esql"
@@ -44,15 +44,18 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                `yaml:"name" validate:"required"`
-	Type         string                `yaml:"type" validate:"required"`
-	Source       string                `yaml:"source" validate:"required"`
-	Description  string                `yaml:"description" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired" validate:"required"`
-	Query        string                `yaml:"query"`
-	Format       string                `yaml:"format"`
-	Timeout      int                   `yaml:"timeout"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Type         string                 `yaml:"type" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired" validate:"required"`
+	Query        string                 `yaml:"query" validate:"required"`
+	Format       string                 `yaml:"format"`
+	Timeout      int                    `yaml:"timeout"`
+	Parameters   parameters.Parameters  `yaml:"parameters"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -71,20 +74,32 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Tool struct {
 	Config
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	manifest tools.Manifest
 }
 
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, nil)
-
 	return Tool{
-		Config:      c,
-		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:   c,
+		manifest: tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
 	}, nil
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -107,25 +122,21 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	query := t.Query
-	sqlParams := make([]map[string]any, 0, len(params))
 	paramMap := params.AsMap()
-	// If a query is provided in the params and not already set in the tool, use it.
-	if queryVal, ok := paramMap["query"]; ok {
-		if str, ok := queryVal.(string); ok && t.Query == "" {
-			query = str
-		}
 
-		// Drop the query param if not a string or if the tool already has a query.
-		delete(paramMap, "query")
-	}
-
+	var paramsList []map[string]any
 	for _, param := range t.Parameters {
 		if param.GetType() == "array" {
 			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
-		sqlParams = append(sqlParams, map[string]any{param.GetName(): paramMap[param.GetName()]})
+
+		// ES|QL requires an array of single-key objects for named parameters
+		if val, ok := paramMap[param.GetName()]; ok {
+			paramsList = append(paramsList, map[string]any{param.GetName(): val})
+		}
 	}
-	resp, err := source.RunSQL(ctx, t.Format, query, sqlParams)
+
+	resp, err := source.RunSQL(ctx, t.Format, query, paramsList)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
@@ -138,10 +149,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
@@ -158,4 +165,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 
 func (t Tool) GetParameters() parameters.Parameters {
 	return t.Parameters
+}
+
+func (t Tool) GetScopesRequired() []string {
+	return t.ScopesRequired
 }

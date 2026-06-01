@@ -12,24 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  mssql-source:
-    kind: mssql
-    host: ${MSSQL_HOST:localhost}
-    port: ${MSSQL_PORT:1433}
-    database: ${MSSQL_DATABASE}
-    user: ${MSSQL_USER}
-    password: ${MSSQL_PASSWORD}
+kind: source
+name: mssql-source
+type: mssql
+host: ${MSSQL_HOST:localhost}
+port: ${MSSQL_PORT:1433}
+database: ${MSSQL_DATABASE}
+user: ${MSSQL_USER}
+password: ${MSSQL_PASSWORD}
+---
+kind: tool
+name: execute_sql
+type: mssql-execute-sql
+source: mssql-source
+description: Use this tool to execute SQL.
+---
+kind: tool
+name: list_tables
+type: mssql-list-tables
+source: mssql-source
+description: Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas.
+---
+kind: toolset
+name: data
 tools:
-  execute_sql:
-    kind: mssql-execute-sql
-    source: mssql-source
-    description: Use this tool to execute SQL.
-  list_tables:
-    kind: mssql-list-tables
-    source: mssql-source
-    description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
-toolsets:
-  data:
-    - execute_sql
-    - list_tables
+- execute_sql
+- list_tables

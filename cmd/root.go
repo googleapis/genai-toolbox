@@ -31,18 +31,19 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	// Importing the cmd/internal package also import packages for side effect of registration
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/cmd/internal/invoke"
-	"github.com/googleapis/genai-toolbox/cmd/internal/migrate"
-	"github.com/googleapis/genai-toolbox/cmd/internal/serve"
-	"github.com/googleapis/genai-toolbox/cmd/internal/skills"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/invoke"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/migrate"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/serve"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/skills"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -86,6 +87,7 @@ func Execute() {
 	opts := internal.NewToolboxOptions()
 
 	if err := NewCommand(opts).Execute(); err != nil {
+		fmt.Fprintf(opts.IOStreams.ErrOut, "Error: %v\n", err)
 		exit := 1
 		os.Exit(exit)
 	}
@@ -104,6 +106,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 
 	// Set server version
 	opts.Cfg.Version = versionString
+	opts.VersionNum = strings.TrimSpace(versionNum)
 
 	// set baseCmd in, out and err the same as cmd.
 	cmd.SetIn(opts.IOStreams.In)
@@ -450,12 +453,33 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		return err
 	}
 
+	// Validate ToolboxUrl if MCP Auth is enabled
+	for _, authSvc := range opts.Cfg.AuthServiceConfigs {
+		if genCfg, ok := authSvc.(generic.Config); ok && genCfg.McpEnabled {
+			if opts.Cfg.ToolboxUrl == "" {
+				opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
+			}
+			if opts.Cfg.ToolboxUrl == "" {
+				errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
+				opts.Logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			break
+		}
+	}
+
 	// start server
 	s, err := server.NewServer(ctx, opts.Cfg)
 	if err != nil {
 		errMsg := fmt.Errorf("toolbox failed to initialize: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
 		return errMsg
+	}
+
+	useTLS := opts.Cfg.CertFile != "" || opts.Cfg.KeyFile != ""
+	protocol := "http"
+	if useTLS {
+		protocol = "https"
 	}
 
 	// run server in background
@@ -469,7 +493,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 			}
 		}()
 	} else {
-		err = s.Listen(ctx)
+		err = s.Listen(ctx, opts.Cfg.CertFile, opts.Cfg.KeyFile)
 		if err != nil {
 			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -477,7 +501,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		}
 		opts.Logger.InfoContext(ctx, "Server ready to serve!")
 		if opts.Cfg.UI {
-			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://%s:%d/ui", opts.Cfg.Address, opts.Cfg.Port))
+			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: %s://%s:%d/ui", protocol, opts.Cfg.Address, opts.Cfg.Port))
 		}
 
 		go func() {

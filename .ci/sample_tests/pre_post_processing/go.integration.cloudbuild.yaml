@@ -36,7 +36,7 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/5
+    - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/8
       env: "TOOLS_YAML_CONTENT"
     - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
       env: "GOOGLE_API_KEY"
@@ -47,8 +47,8 @@ timeout: 1200s
 
 substitutions:
   _TARGET_LANG: "go"
-  _IMAGE: "golang:1.25.1"
-  _TARGET_ROOT: "docs/en/samples/pre_post_processing/go"
+  _IMAGE: "golang:1.25.7"
+  _TARGET_ROOT: "docs/en/documentation/configuration/pre-post-processing/go"
   _TABLE_NAME: "hotels_go_pre_post_processing"
   _SQL_FILE: ".ci/sample_tests/setup_hotels.sql"
   _AGENT_FILE_PATTERN: "agent.go"

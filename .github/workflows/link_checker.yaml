@@ -54,7 +54,7 @@ jobs:
 
       - name: Restore lychee cache
         if: steps.changed-files.outputs.HAS_CHANGES == 'true'
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: .lycheecache
           key: cache-lychee-${{ github.sha }}
@@ -87,7 +87,7 @@ jobs:
         run: |
           echo "## Link Resolution Note" > full-report.md
           echo "Local links and directory changes work differently on GitHub than on the docsite. You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> full-report.md
-          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md          
+          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/mcp-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> full-report.md          
           echo "" >> full-report.md 
           sed -E '/(Redirect|Redirects per input)/d' lychee-report.md >> full-report.md
 

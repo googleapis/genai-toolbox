@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -27,7 +28,8 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 )
 
 type Config struct {
@@ -40,7 +42,9 @@ type Config struct {
 }
 
 type ConfigParser struct {
-	EnvVars map[string]string
+	EnvVars         map[string]string
+	OptionalEnvVars []string
+	requiredEnvVars []string
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -58,6 +62,25 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 
 		// extract the variable name
 		variableName := parts[1]
+
+		isOptional := len(parts) >= 4 && parts[2] != ""
+		if isOptional {
+			// Add to optional list only if it hasn't been explicitly required
+			if !slices.Contains(p.requiredEnvVars, variableName) && !slices.Contains(p.OptionalEnvVars, variableName) {
+				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
+			}
+		} else {
+			// Mark as required
+			if !slices.Contains(p.requiredEnvVars, variableName) {
+				p.requiredEnvVars = append(p.requiredEnvVars, variableName)
+			}
+
+			// Remove from optional list if it's there
+			if i := slices.Index(p.OptionalEnvVars, variableName); i != -1 {
+				p.OptionalEnvVars = slices.Delete(p.OptionalEnvVars, i, i+1)
+			}
+		}
+
 		if value, found := os.LookupEnv(variableName); found {
 			p.EnvVars[variableName] = value
 			return value
@@ -98,14 +121,29 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 
 // ConvertConfig converts configuration file to flat format.
 func ConvertConfig(raw []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	// Manually copy top-level comments and empty lines from the source
+	scanner := bufio.NewScanner(bytes.NewReader(raw))
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmed := strings.TrimSpace(line)
+
+		// If the line is a comment or whitespace, preserve it
+		if strings.HasPrefix(trimmed, "#") || trimmed == "" {
+			buf.WriteString(line + "\n")
+		} else {
+			// Stop at the first line of actual data
+			break
+		}
+	}
+
+	// convert configuration file to flat format
 	var input yaml.MapSlice
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
+	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	// convert to config file v2
-	var buf bytes.Buffer
-	encoder := yaml.NewEncoder(&buf)
-
-	v1keys := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
 			if err == io.EOF {
@@ -113,66 +151,64 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 			}
 			return nil, err
 		}
+		docIndex++
 		for _, item := range input {
 			key, ok := item.Key.(string)
 			if !ok {
-				return nil, fmt.Errorf("unexpected non-string key in input: %v", item.Key)
+				return nil, fmt.Errorf("doc %d: unexpected non-string key in input: %v", docIndex, item.Key)
 			}
-			// check if the key is config file v1's key
-			if slices.Contains(v1keys, key) {
-				// check if value conversion to yaml.MapSlice successfully
-				// fields such as "tools" in toolsets might pass the first check but
-				// fail to convert to MapSlice
-				if slice, ok := item.Value.(yaml.MapSlice); ok {
-					// Deprecated: convert authSources to authServices
-					switch key {
-					case "authSources", "authServices":
-						key = "authService"
-					case "sources":
-						key = "source"
-					case "embeddingModels":
-						key = "embeddingModel"
-					case "tools":
-						key = "tool"
-					case "toolsets":
-						key = "toolset"
-					case "prompts":
-						key = "prompt"
-					}
-					transformed, err := transformDocs(key, slice)
-					if err != nil {
-						return nil, err
-					}
-					// encode per-doc
-					for _, doc := range transformed {
-						if err := encoder.Encode(doc); err != nil {
-							return nil, err
-						}
-					}
-				} else {
-					// invalid input will be ignored
-					// we don't want to throw error here since the config could
-					// be valid but with a different order such as:
-					// ---
-					// tools:
-					// - tool_a
-					// kind: toolset
-					// ---
-					continue
-				}
-			} else {
-				// this doc is already v2, encode to buf
+			if hasKindField(input) {
+				// this doc is already in flat format, encode to buf
 				if err := encoder.Encode(input); err != nil {
 					return nil, err
 				}
 				break
+			}
+			// check if value conversion to yaml.MapSlice successfully
+			if slice, ok := item.Value.(yaml.MapSlice); slices.Contains(nestedFormatKey, key) && ok {
+				switch key {
+				case "authServices":
+					key = "authService"
+				case "sources":
+					key = "source"
+				case "embeddingModels":
+					key = "embeddingModel"
+				case "tools":
+					key = "tool"
+				case "toolsets":
+					key = "toolset"
+				case "prompts":
+					key = "prompt"
+				}
+				transformed, err := transformDocs(key, slice)
+				if err != nil {
+					return nil, fmt.Errorf("doc %d: invalid config format at key %q: %w", docIndex, key, err)
+				}
+				// encode per-doc
+				for _, doc := range transformed {
+					if err := encoder.Encode(doc); err != nil {
+						return nil, err
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("doc %d: invalid config format at key %q: expected nested format keys and type map", docIndex, key)
 			}
 		}
 	}
 	return buf.Bytes(), nil
 }
 
-// transformDocs transforms the configuration file from v1 format to v2
+// hasKindField is a helper function to check if an input is in flat format
+func hasKindField(input yaml.MapSlice) bool {
+	for _, item := range input {
+		if key, ok := item.Key.(string); ok && key == "kind" {
+			return true
+		}
+	}
+	return false
+}
+
+// transformDocs transforms the configuration file from nested to flat format
 // yaml.MapSlice will preserve the order in a map
 func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
 	var transformed []yaml.MapSlice
@@ -307,6 +343,18 @@ func mergeConfigs(files ...Config) (Config, error) {
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
 		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+	}
+
+	// Ensure only one authService has mcpEnabled = true
+	var mcpEnabledAuthServers []string
+	for name, authService := range merged.AuthServices {
+		// Only generic type has McpEnabled right now
+		if genericService, ok := authService.(generic.Config); ok && genericService.McpEnabled {
+			mcpEnabledAuthServers = append(mcpEnabledAuthServers, name)
+		}
+	}
+	if len(mcpEnabledAuthServers) > 1 {
+		return Config{}, fmt.Errorf("multiple authServices with mcpEnabled=true detected: %s. Only one MCP authorization server is currently supported", strings.Join(mcpEnabledAuthServers, ", "))
 	}
 
 	return merged, nil

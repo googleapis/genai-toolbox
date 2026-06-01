@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -71,7 +71,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	database, err := initMongoDbDatabase(ctx, MongoDbUri, MongoDbDatabase)
 	if err != nil {
@@ -102,7 +102,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
-	myToolById4Want := `null`
+	myToolById4Want := `[]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
 	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
 	mcpAuthRequiredWant := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"_id\":3,\"id\":3,\"name\":\"Sid\"}"}]}}`

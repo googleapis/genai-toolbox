@@ -24,7 +24,7 @@ import (
 	_ "github.com/nakagami/firebirdsql"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 )
 
 const SourceType string = "firebird"
@@ -114,7 +114,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		scanArgs[i] = &values[i]
 	}
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 
 		err = rows.Scan(scanArgs...)

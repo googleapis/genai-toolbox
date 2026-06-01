@@ -31,12 +31,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/spf13/cobra"
 )
 
@@ -230,6 +230,20 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--user-agent-metadata", "foo,bar"},
 			want: withDefaults(server.ServerConfig{
 				UserAgentMetadata: []string{"foo", "bar"},
+			}),
+		},
+		{
+			desc: "cert file",
+			args: []string{"--tls-cert", "cert.pem"},
+			want: withDefaults(server.ServerConfig{
+				CertFile: "cert.pem",
+			}),
+		},
+		{
+			desc: "key file",
+			args: []string{"--tls-key", "key.pem"},
+			want: withDefaults(server.ServerConfig{
+				KeyFile: "key.pem",
 			}),
 		},
 	}
@@ -699,7 +713,7 @@ func TestFileLoadingErrors(t *testing.T) {
 }
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	// Setup custom config
 	customContent := `
 kind: tool
@@ -867,7 +881,7 @@ tools:
 }
 
 func TestDefaultConfigBehavior(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	testCases := []struct {
 		desc      string
 		args      []string

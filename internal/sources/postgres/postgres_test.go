@@ -16,15 +16,13 @@ package postgres_test
 
 import (
 	"context"
-	"sort"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/postgres"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -194,43 +192,67 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 }
 
-func TestConvertParamMapToRawQuery(t *testing.T) {
+func TestBuildPostgresURL(t *testing.T) {
 	tcs := []struct {
-		desc string
-		in   map[string]string
-		want string
+		desc        string
+		host        string
+		port        string
+		queryParams map[string]string
+		want        string
 	}{
 		{
-			desc: "nil param",
-			in:   nil,
-			want: "",
+			desc: "hostname",
+			host: "db.example.com",
+			port: "5432",
+			want: "postgres://u:p@db.example.com:5432/mydb",
 		},
 		{
-			desc: "single query param",
-			in: map[string]string{
-				"foo": "bar",
-			},
-			want: "foo=bar",
+			desc: "ipv4",
+			host: "127.0.0.1",
+			port: "5432",
+			want: "postgres://u:p@127.0.0.1:5432/mydb",
 		},
 		{
-			desc: "more than one query param",
-			in: map[string]string{
-				"foo":   "bar",
-				"hello": "world",
-			},
-			want: "foo=bar&hello=world",
+			desc: "ipv6 loopback",
+			host: "::1",
+			port: "5432",
+			want: "postgres://u:p@[::1]:5432/mydb",
+		},
+		{
+			desc: "ipv6 documentation",
+			host: "2001:db8::1",
+			port: "5432",
+			want: "postgres://u:p@[2001:db8::1]:5432/mydb",
+		},
+		{
+			desc: "ipv6 link-local with zone id",
+			host: "fe80::1%eth0",
+			port: "5432",
+			want: "postgres://u:p@[fe80::1%25eth0]:5432/mydb",
+		},
+		{
+			desc:        "query params sorted and encoded",
+			host:        "db.example.com",
+			port:        "5432",
+			queryParams: map[string]string{"sslmode": "verify-full", "application_name": "my app"},
+			want:        "postgres://u:p@db.example.com:5432/mydb?application_name=my+app&sslmode=verify-full",
+		},
+		{
+			desc:        "query param value with special characters",
+			host:        "db.example.com",
+			port:        "5432",
+			queryParams: map[string]string{"options": "-c statement_timeout=5s&key=val"},
+			want:        "postgres://u:p@db.example.com:5432/mydb?options=-c+statement_timeout%3D5s%26key%3Dval",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := postgres.ConvertParamMapToRawQuery(tc.in)
-			if strings.Contains(got, "&") {
-				splitGot := strings.Split(got, "&")
-				sort.Strings(splitGot)
-				got = strings.Join(splitGot, "&")
-			}
+			got := postgres.BuildPostgresURL(tc.host, tc.port, "u", "p", "mydb", tc.queryParams)
 			if got != tc.want {
-				t.Fatalf("incorrect conversion: got %s want %s", got, tc.want)
+				t.Fatalf("BuildPostgresURL(%q, %q, ...) = %q, want %q", tc.host, tc.port, got, tc.want)
+			}
+			if _, err := pgx.ParseConfig(got); err != nil {
+				t.Fatalf("pgx.ParseConfig(%q) returned error: %v", got, err)
 			}
 		})
 	}

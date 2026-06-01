@@ -2,11 +2,66 @@
 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
    {{ .Site.Params.version_menu }}
 </a>
-<div class="dropdown-menu" aria-labelledby="navbarDropdown">
-   <div w3-include-html="/genai-toolbox/releases.releases" w3-include-html-default='<a class="dropdown-item" href="/genai-toolbox/dev/">Dev</a>'></div>
+<div class="dropdown-menu" id="version-dropdown-menu" aria-labelledby="navbarDropdown">
+   <div w3-include-html="{{ .Site.Params.releases_url }}" w3-include-html-default='<a class="dropdown-item" href="{{ .Site.Params.global_logo_url }}dev/">dev</a>'></div>
+
    <script>
-     // This must run after the w3.js script has loaded.
-     w3.includeHTML();
+      w3.includeHTML(function() {
+      const basePath = "{{ site.BaseURL | relURL }}";
+
+      function stripBase(path) {
+          if (path.startsWith(basePath)) return path.substring(basePath.length);
+          if (basePath === "/" && path.startsWith("/")) return path.substring(1);
+          return path.replace(/^\//, '');
+      }
+
+      document.getElementById('version-dropdown-menu').addEventListener('click', function(e) {
+        const link = e.target.closest('a.dropdown-item');
+        if (!link) return;
+        e.preventDefault();
+
+        let targetPath = link.pathname;
+        if (!targetPath.endsWith('/')) targetPath += '/';
+
+        let cleanCurrentPath = stripBase(window.location.pathname);
+        const allLinks = document.querySelectorAll('#version-dropdown-menu a.dropdown-item');
+        let currentVersionPrefix = "";
+
+        allLinks.forEach(a => {
+            let cleanVPath = stripBase(a.pathname);
+            if (!cleanVPath.endsWith('/')) cleanVPath += '/';
+            if (cleanVPath !== "" && cleanVPath !== "/" && cleanCurrentPath.startsWith(cleanVPath)) {
+                if (cleanVPath.length > currentVersionPrefix.length) {
+                    currentVersionPrefix = cleanVPath;
+                }
+            }
+        });
+
+        let deepPath = cleanCurrentPath;
+        if (currentVersionPrefix !== "") {
+            deepPath = cleanCurrentPath.substring(currentVersionPrefix.length);
+        }
+        deepPath = deepPath.replace(/^\//, '');
+
+        const fullTargetPath = targetPath + deepPath;
+
+        // Perform a HEAD request to check if the deep route exists
+        fetch(fullTargetPath, { method: 'HEAD' })
+          .then(response => {
+            if (response.ok) {
+              // Page exists! Redirect to deep path
+              window.location.href = fullTargetPath;
+            } else {
+              // 404 or other error: Fallback to the version root
+              window.location.href = targetPath;
+            }
+          })
+          .catch(() => {
+            // If the fetch fails entirely, fallback to root
+            window.location.href = targetPath;
+          });
+      });
+    });
    </script>
 </div>
 {{ end -}}

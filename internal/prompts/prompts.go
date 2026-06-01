@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // PromptConfigFactory defines the signature for a function that creates and
@@ -68,10 +68,11 @@ type PromptConfig interface {
 }
 
 type Prompt interface {
+	GetDesc() string
+	GetArguments() Arguments
 	SubstituteParams(parameters.ParamValues) (any, error)
 	ParseArgs(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	Manifest() Manifest
-	McpManifest() McpManifest
 	ToConfig() PromptConfig
 }
 
@@ -79,25 +80,6 @@ type Prompt interface {
 type Manifest struct {
 	Description string                         `json:"description"`
 	Arguments   []parameters.ParameterManifest `json:"arguments"`
-}
-
-// McpManifest is the definition for a prompt the MCP client can get.
-type McpManifest struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description,omitempty"`
-	Arguments   []ArgMcpManifest `json:"arguments,omitempty"`
-}
-
-func GetMcpManifest(name, desc string, args Arguments) McpManifest {
-	mcpArgs := make([]ArgMcpManifest, 0, len(args))
-	for _, arg := range args {
-		mcpArgs = append(mcpArgs, arg.McpManifest())
-	}
-	return McpManifest{
-		Name:        name,
-		Description: desc,
-		Arguments:   mcpArgs,
-	}
 }
 
 func GetManifest(desc string, args Arguments) Manifest {

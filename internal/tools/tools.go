@@ -22,10 +22,10 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // ToolConfigFactory defines the signature for a function that creates and
@@ -114,15 +114,19 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 }
 
 type Tool interface {
+	GetName() string
+	GetDescription() string
+	GetAuthRequired() []string
+	GetAnnotations() *ToolAnnotations
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest() Manifest
-	McpManifest() McpManifest
 	Authorized([]string) bool
 	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName(SourceProvider) (string, error)
 	GetParameters() parameters.Parameters
+	GetScopesRequired() []string
 }
 
 // SourceProvider defines the minimal view of the server.ResourceManager
@@ -137,41 +141,6 @@ type Manifest struct {
 	Description  string                         `json:"description"`
 	Parameters   []parameters.ParameterManifest `json:"parameters"`
 	AuthRequired []string                       `json:"authRequired"`
-}
-
-// Definition for a tool the MCP client can call.
-type McpManifest struct {
-	// The name of the tool.
-	Name string `json:"name"`
-	// A human-readable description of the tool.
-	Description string           `json:"description,omitempty"`
-	Annotations *ToolAnnotations `json:"annotations,omitempty"`
-	// A JSON Schema object defining the expected parameters for the tool.
-	InputSchema parameters.McpToolsSchema `json:"inputSchema,omitempty"`
-	Metadata    map[string]any            `json:"_meta,omitempty"`
-}
-
-func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *ToolAnnotations) McpManifest {
-	inputSchema, authParams := params.McpManifest()
-	mcpManifest := McpManifest{
-		Name:        name,
-		Description: desc,
-		InputSchema: inputSchema,
-		Annotations: annotations,
-	}
-
-	// construct metadata, if applicable
-	metadata := make(map[string]any)
-	if len(authInvoke) > 0 {
-		metadata["toolbox/authInvoke"] = authInvoke
-	}
-	if len(authParams) > 0 {
-		metadata["toolbox/authParam"] = authParams
-	}
-	if len(metadata) > 0 {
-		mcpManifest.Metadata = metadata
-	}
-	return mcpManifest
 }
 
 // Helper function that returns if a tool invocation request is authorized
@@ -199,4 +168,79 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolType, sourceName)
 	}
 	return source, nil
+}
+
+// ToolMeta is the read-only view BaseTool needs of any tool's Config. Tools
+// satisfy it for free by embedding ConfigBase.
+type ToolMeta interface {
+	GetName() string
+	GetDescription() string
+	GetAuthRequired() []string
+	GetScopesRequired() []string
+}
+
+// ConfigBase owns the YAML fields that every tool's Config shares and that
+// BaseTool reads through.
+// Description is eagerly defaulted by the tool's Initialize (many prebuilt
+// configs omit description: and rely on a canned per-tool string), so
+// post-Initialize ConfigBase.Description holds the resolved value.
+type ConfigBase struct {
+	Name           string   `yaml:"name"           validate:"required"`
+	Description    string   `yaml:"description"`
+	AuthRequired   []string `yaml:"authRequired"`
+	ScopesRequired []string `yaml:"scopesRequired"`
+}
+
+func (c ConfigBase) GetName() string             { return c.Name }
+func (c ConfigBase) GetDescription() string      { return c.Description }
+func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
+func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
+
+// BaseTool provides default implementations of various methods on the Tool
+// interface. Tools embed BaseTool to drop their boilerplate and override
+// only methods that need custom behavior.
+type BaseTool struct {
+	cfg              ToolMeta
+	annotations      *ToolAnnotations
+	metadata         Manifest
+	StaticParameters parameters.Parameters
+}
+
+// NewBaseTool constructs a BaseTool from a resolved ToolMeta (typically the
+// per-tool Config after Initialize has filled in defaults), the resolved
+// annotations, the precomputed Manifest, and the tool's static parameters.
+func NewBaseTool(cfg ToolMeta, annotations *ToolAnnotations, metadata Manifest, staticParameters parameters.Parameters) BaseTool {
+	return BaseTool{
+		cfg:              cfg,
+		annotations:      annotations,
+		metadata:         metadata,
+		StaticParameters: staticParameters,
+	}
+}
+
+func (b BaseTool) GetName() string                  { return b.cfg.GetName() }
+func (b BaseTool) GetDescription() string           { return b.cfg.GetDescription() }
+func (b BaseTool) GetAuthRequired() []string        { return b.cfg.GetAuthRequired() }
+func (b BaseTool) GetScopesRequired() []string      { return b.cfg.GetScopesRequired() }
+func (b BaseTool) GetAnnotations() *ToolAnnotations { return b.annotations }
+func (b BaseTool) Manifest() Manifest               { return b.metadata }
+
+func (b BaseTool) GetParameters() parameters.Parameters {
+	return b.StaticParameters
+}
+
+func (b BaseTool) Authorized(verifiedAuthServices []string) bool {
+	return IsAuthorized(b.cfg.GetAuthRequired(), verifiedAuthServices)
+}
+
+func (b BaseTool) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
+	return false, nil
+}
+
+func (b BaseTool) GetAuthTokenHeaderName(_ SourceProvider) (string, error) {
+	return "Authorization", nil
+}
+
+func (b BaseTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, embeddingModelsMap, nil)
 }

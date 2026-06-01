@@ -1,0 +1,41 @@
+---
+title: "sqlite-execute-sql"
+type: docs
+weight: 1
+description: >
+  A "sqlite-execute-sql" tool executes a single SQL statement against a SQLite database.
+---
+
+## About
+
+A `sqlite-execute-sql` tool executes a single SQL statement against a SQLite
+database.
+
+This tool is designed for direct execution of SQL statements. It takes a single
+`sql` input parameter and runs the SQL statement against the configured SQLite
+`source`.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: execute_sql_tool
+type: sqlite-execute-sql
+source: my-sqlite-db
+description: Use this tool to execute a SQL statement.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "sqlite-execute-sql".                      |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

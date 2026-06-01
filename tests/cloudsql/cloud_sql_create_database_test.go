@@ -30,8 +30,8 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
@@ -124,7 +124,7 @@ func TestCreateDatabaseToolEndpoints(t *testing.T) {
 		http.DefaultClient.Transport = originalTransport
 	})
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getCreateDatabaseToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

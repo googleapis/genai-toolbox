@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lhp "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthpulse"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	lhp "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerhealthpulse"
 )
 
 func TestParseFromYamlLookerHealthPulse(t *testing.T) {

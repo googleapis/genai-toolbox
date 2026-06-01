@@ -1,4 +1,4 @@
-module github.com/googleapis/genai-toolbox
+module github.com/googleapis/mcp-toolbox
 
 go 1.23.2
 

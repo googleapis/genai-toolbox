@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestListTablesConfigToolConfigType(t *testing.T) {
@@ -95,5 +95,53 @@ func TestListTablesToolParseParams(t *testing.T) {
 	mapParams := params.AsMap()
 	if mapParams["database"] != "test_db" {
 		t.Errorf("expected database parameter to be 'test_db', got %v", mapParams["database"])
+	}
+}
+
+func TestValidIdentifierRegexp(t *testing.T) {
+	tcs := []struct {
+		in    string
+		valid bool
+	}{
+		// Allowed: plain identifiers.
+		{"default", true},
+		{"my_db", true},
+		{"DB1", true},
+		{"_internal", true},
+		{"a", true},
+
+		// Rejected: empty, whitespace, control characters.
+		{"", false},
+		{" ", false},
+		{"\t", false},
+		{"\n", false},
+
+		// Rejected: leading digit (ClickHouse identifier rule).
+		{"1db", false},
+
+		// Rejected: identifier-quoting characters that would let the value
+		// re-open the identifier and append clauses after it.
+		{"`default`", false},
+		{`"default"`, false},
+
+		// Rejected: separators / statement terminators / metacharacters.
+		{"default;DROP TABLE x", false},
+		{"default LIKE '%'", false},
+		{"default LIMIT 0 FORMAT JSON", false},
+		{"default INTO OUTFILE '/tmp/x'", false},
+		{"system.tables", false},
+		{"default--", false},
+		{"default/*", false},
+
+		// Rejected: unicode and surrounding spaces.
+		{"𝐝𝐞𝐟𝐚𝐮𝐥𝐭", false},
+		{"  default  ", false},
+		{"default ", false},
+		{" default", false},
+	}
+	for _, tc := range tcs {
+		if got := validIdentifier.MatchString(tc.in); got != tc.valid {
+			t.Errorf("validIdentifier.MatchString(%q) = %v, want %v", tc.in, got, tc.valid)
+		}
 	}
 }

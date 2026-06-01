@@ -18,12 +18,12 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/clickhouse"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestConfigToolConfigType(t *testing.T) {
@@ -147,23 +147,6 @@ func TestToolManifest(t *testing.T) {
 	}
 
 	manifest := tool.Manifest()
-	if manifest.Description != "Test description" {
-		t.Errorf("Expected description 'Test description', got %s", manifest.Description)
-	}
-}
-
-func TestToolMcpManifest(t *testing.T) {
-	tool := Tool{
-		mcpManifest: tools.McpManifest{
-			Name:        "test-tool",
-			Description: "Test description",
-		},
-	}
-
-	manifest := tool.McpManifest()
-	if manifest.Name != "test-tool" {
-		t.Errorf("Expected name 'test-tool', got %s", manifest.Name)
-	}
 	if manifest.Description != "Test description" {
 		t.Errorf("Expected description 'Test description', got %s", manifest.Description)
 	}

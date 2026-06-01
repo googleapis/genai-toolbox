@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/cmd/internal"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerysql"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ func TestInvokeTool(t *testing.T) {
 sources:
   my-sqlite:
     kind: sqlite
-    database: test.db
+    database: ":memory:"
 tools:
   hello-sqlite:
     kind: sqlite-sql
@@ -68,6 +68,15 @@ tools:
       - name: message
         type: string
         description: message to echo
+  int-tool:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "int tool"
+    statement: "SELECT ? as val"
+    parameters:
+      - name: value
+        type: integer
+        description: int value
 `
 
 	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
@@ -91,6 +100,11 @@ tools:
 			desc: "success - tool call with parameters",
 			args: []string{"invoke", "echo-tool", `{"message": "world"}`, "--config", toolsFilePath},
 			want: `"msg": "world"`,
+		},
+		{
+			desc: "success - tool call with integer parameters",
+			args: []string{"invoke", "int-tool", `{"value": 42}`, "--tools-file", toolsFilePath},
+			want: `"val": 42`,
 		},
 		{
 			desc:    "error - tool not found",

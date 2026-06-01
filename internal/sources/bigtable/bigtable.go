@@ -20,9 +20,9 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/api/option"
 )
@@ -148,7 +148,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, configParam param
 		return nil, fmt.Errorf("unable to bind: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	var rowErr error
 	err = bs.Execute(ctx, func(resultRow bigtable.ResultRow) bool {
 		vMap := make(map[string]any)

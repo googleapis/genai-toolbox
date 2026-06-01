@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/yugabyte/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -107,7 +107,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 
 	fields := results.FieldDescriptions()
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		v, err := results.Values()
 		if err != nil {

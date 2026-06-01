@@ -22,10 +22,11 @@ import (
 
 	driver "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlcommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -101,7 +102,12 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
+func (s *Source) MySQLDatabase() string {
+	return s.Database
+}
+
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
 	results, err := s.MySQLPool().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -125,7 +131,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		return nil, fmt.Errorf("unable to get column types: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

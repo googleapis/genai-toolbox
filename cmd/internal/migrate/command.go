@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/spf13/cobra"
 )
 
@@ -65,7 +65,7 @@ func runMigrate(cmd *migrateCmd, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
-	logger.InfoContext(ctx, "migration process will start; any comments present in the original configuration files will not be preserved in the migrated files")
+	logger.InfoContext(ctx, "migration process will start; any comments (except for top-level comments) presented in the original configuration files will not be preserved in the migrated files")
 	var errs []error
 	// process each files independently.
 	for _, filePath := range filePaths {
@@ -127,7 +127,7 @@ func runMigrate(cmd *migrateCmd, opts *internal.ToolboxOptions) error {
 		}
 	}
 
-	logger.InfoContext(ctx, "migration completed!")
+	logger.InfoContext(ctx, "migration ended!")
 	// If errs is empty, errors.Join returns nil
 	return errors.Join(errs...)
 }
