@@ -147,3 +147,11 @@ func InitializeDatasetParameters(
 
 	return projectParam, datasetParam
 }
+
+// StripSingleQuotes removes leading and trailing single quotes from a string if both are present.
+func StripSingleQuotes(s string) string {
+	if len(s) >= 2 && s[0] == '\'' && s[len(s)-1] == '\'' {
+		return s[1 : len(s)-1]
+	}
+	return s
+}

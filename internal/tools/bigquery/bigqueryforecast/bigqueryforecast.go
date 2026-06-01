@@ -101,13 +101,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
-	timestampColumnNameParameter := parameters.NewStringParameter("timestamp_col",
-		"The name of the time series timestamp column.")
-	dataColumnNameParameter := parameters.NewStringParameter("data_col",
-		"The name of the time series data column.")
+	timestampColumnNameParameter := parameters.NewStringParameterWithEscape("timestamp_col",
+		"The name of the time series timestamp column.", "single-quotes")
+	dataColumnNameParameter := parameters.NewStringParameterWithEscape("data_col",
+		"The name of the time series data column.", "single-quotes")
 	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
 		"An array of the time series id column names.",
-		parameters.NewStringParameter("id_col", "The name of time series id column."))
+		parameters.NewStringParameterWithEscape("id_col", "The name of time series id column.", "single-quotes"))
 	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
 	params := parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
@@ -173,15 +173,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	if !bqutil.ValidColumnName(dataCol) {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataCol), nil)
+	dataColRaw := bqutil.StripSingleQuotes(dataCol)
+	if !bqutil.ValidColumnName(dataColRaw) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataColRaw), nil)
 	}
-	if !bqutil.ValidColumnName(timestampCol) {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampCol), nil)
+	timestampColRaw := bqutil.StripSingleQuotes(timestampCol)
+	if !bqutil.ValidColumnName(timestampColRaw) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampColRaw), nil)
 	}
 	for _, col := range idCols {
-		if !bqutil.ValidColumnName(col) {
-			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", col), nil)
+		colRaw := bqutil.StripSingleQuotes(col)
+		if !bqutil.ValidColumnName(colRaw) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", colRaw), nil)
 		}
 	}
 
@@ -193,6 +196,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
+		historyDataSource = fmt.Sprintf("(%s)", historyData)
+
 		if len(source.BigQueryAllowedDatasets()) > 0 {
 			var connProps []*bigqueryapi.ConnectionProperty
 			session, err := source.BigQuerySession()(ctx)
@@ -213,8 +218,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				return nil, util.NewAgentError(fmt.Sprintf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType), nil)
 			}
 
-			queryStats := dryRunJob.Statistics.Query
-			if queryStats != nil {
+			if dryRunJob.Statistics != nil && dryRunJob.Statistics.Query != nil {
+				queryStats := dryRunJob.Statistics.Query
 				for _, tableRef := range queryStats.ReferencedTables {
 					if !source.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
 						return nil, util.NewAgentError(fmt.Sprintf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId), nil)
@@ -224,7 +229,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				return nil, util.NewAgentError("could not analyze query in history_data to validate against allowed datasets", nil)
 			}
 		}
-		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
 		if !bqutil.ValidTableID(historyData) {
 			return nil, util.NewAgentError(fmt.Sprintf("invalid table identifier for 'history_data': %q; expected 'dataset.table' or 'project.dataset.table'", historyData), nil)
@@ -253,14 +257,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	idColsArg := ""
 	if len(idCols) > 0 {
-		idColsFormatted := fmt.Sprintf("['%s']", strings.Join(idCols, "', '"))
+		idColsFormatted := fmt.Sprintf("[%s]", strings.Join(idCols, ", "))
 		idColsArg = fmt.Sprintf(", id_cols => %s", idColsFormatted)
 	}
 	sql := fmt.Sprintf(`SELECT * 
 		FROM AI.FORECAST(
             %s,
-            data_col => '%s',
-            timestamp_col => '%s',
+            data_col => %s,
+            timestamp_col => %s,
             horizon => %d%s)`,
 		historyDataSource, dataCol, timestampCol, horizon, idColsArg)
 
