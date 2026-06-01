@@ -20,7 +20,6 @@ package tests
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -253,37 +252,5 @@ func SetupPostgresVectorTable(t *testing.T, ctx context.Context, pool *pgxpool.P
 func GetPostgresVectorSearchStmts(vectorTableName string) (string, string) {
 	insertStmt := fmt.Sprintf("INSERT INTO %s (content, embedding) VALUES ($1, $2)", vectorTableName)
 	searchStmt := fmt.Sprintf("SELECT id, content, embedding <-> $1 AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
-	return insertStmt, searchStmt
-}
-
-// SetupClickHouseVectorTable creates a ClickHouse table with an Array(Float32)
-// embedding column for semantic search tests, and returns its name plus a
-// teardown helper.
-func SetupClickHouseVectorTable(t *testing.T, ctx context.Context, pool *sql.DB) (string, func(*testing.T)) {
-	t.Helper()
-
-	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-
-	createTableStmt := fmt.Sprintf(`CREATE TABLE %s (
-		content String,
-		embedding Array(Float32)
-	) ENGINE = MergeTree ORDER BY tuple()`, tableName)
-
-	if _, err := pool.ExecContext(ctx, createTableStmt); err != nil {
-		t.Fatalf("failed to create table %s: %v", tableName, err)
-	}
-
-	return tableName, func(t *testing.T) {
-		if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)); err != nil {
-			t.Errorf("failed to drop table %s: %v", tableName, err)
-		}
-	}
-}
-
-// GetClickHouseVectorSearchStmts returns the insert and cosine-distance search
-// statements used by the ClickHouse semantic-search integration test.
-func GetClickHouseVectorSearchStmts(vectorTableName string) (string, string) {
-	insertStmt := fmt.Sprintf("INSERT INTO %s (content, embedding) VALUES (?, ?)", vectorTableName)
-	searchStmt := fmt.Sprintf("SELECT content, cosineDistance(embedding, ?) AS distance FROM %s ORDER BY distance ASC LIMIT 1", vectorTableName)
 	return insertStmt, searchStmt
 }

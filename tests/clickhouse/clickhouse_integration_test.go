@@ -1141,13 +1141,16 @@ func TestClickHouseListTablesTool(t *testing.T) {
 
 // TestClickHouseSQLToolWithEmbedding verifies that the clickhouse-sql tool can
 // embed a string parameter via an embedding model and store/query an
-// Array(Float32) column. Gated on API_KEY (gemini) and the standard
-// CLICKHOUSE_* env vars.
+// Array(Float32) column. Skips when ClickHouse infra is not configured;
+// requires API_KEY (gemini) when it is.
 func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
-	if os.Getenv("API_KEY") == "" {
-		t.Skip("'API_KEY' not set; skipping embedding integration test")
-	}
+	// Skip if ClickHouse infra isn't configured (matches the rest of this
+	// suite). If it is, a missing API_KEY is a real misconfiguration (e.g. the
+	// CI secret was dropped) — fail loudly rather than skip silently.
 	sourceConfig := getClickHouseVars(t)
+	if os.Getenv("API_KEY") == "" {
+		t.Fatal("'API_KEY' not set; required for the embedding integration test")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -1159,7 +1162,7 @@ func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
 	}
 	defer pool.Close()
 
-	vectorTableName, tearDownVectorTable := tests.SetupClickHouseVectorTable(t, ctx, pool)
+	vectorTableName, tearDownVectorTable := setupClickHouseVectorTable(t, ctx, pool)
 	defer tearDownVectorTable(t)
 
 	toolsFile := map[string]any{
@@ -1169,7 +1172,7 @@ func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
 		"tools": map[string]any{},
 	}
 
-	insertStmt, searchStmt := tests.GetClickHouseVectorSearchStmts(vectorTableName)
+	insertStmt, searchStmt := getClickHouseVectorSearchStmts(vectorTableName)
 	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, ClickHouseToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -1187,4 +1190,36 @@ func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
 	}
 
 	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+}
+
+// setupClickHouseVectorTable creates a ClickHouse table with an Array(Float32)
+// embedding column for the semantic search test, and returns its name plus a
+// teardown helper.
+func setupClickHouseVectorTable(t *testing.T, ctx context.Context, pool *sql.DB) (string, func(*testing.T)) {
+	t.Helper()
+
+	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+
+	createTableStmt := fmt.Sprintf(`CREATE TABLE %s (
+		content String,
+		embedding Array(Float32)
+	) ENGINE = MergeTree ORDER BY tuple()`, tableName)
+
+	if _, err := pool.ExecContext(ctx, createTableStmt); err != nil {
+		t.Fatalf("failed to create table %s: %v", tableName, err)
+	}
+
+	return tableName, func(t *testing.T) {
+		if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)); err != nil {
+			t.Errorf("failed to drop table %s: %v", tableName, err)
+		}
+	}
+}
+
+// getClickHouseVectorSearchStmts returns the insert and cosine-distance search
+// statements used by the ClickHouse semantic-search integration test.
+func getClickHouseVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (content, embedding) VALUES (?, ?)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT content, cosineDistance(embedding, ?) AS distance FROM %s ORDER BY distance ASC LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
 }
