@@ -39,15 +39,20 @@ do
     # Determine the GCS bucket (default to the official production bucket if not overridden)
     GCS_BUCKET="${BUCKET:-test-release-script}"
 
-    # Get release URL
+    # Get release URL and GCS path
     if [ "$OS" = 'windows' ];
     then
         URL="https://storage.googleapis.com/$GCS_BUCKET/$VERSION/$OS/$ARCH/toolbox.exe"
+        GCS_PATH="gs://$GCS_BUCKET/$VERSION/$OS/$ARCH/toolbox.exe"
     else
         URL="https://storage.googleapis.com/$GCS_BUCKET/$VERSION/$OS/$ARCH/toolbox"
+        GCS_PATH="gs://$GCS_BUCKET/$VERSION/$OS/$ARCH/toolbox"
     fi
 
-    curl "$URL" --fail --output toolbox || exit 1
+    if ! curl "$URL" --fail --output toolbox 2>/dev/null; then
+        echo "Direct download failed (403/private bucket?). Trying gcloud storage cp..." >&2
+        gcloud storage cp "$GCS_PATH" toolbox || exit 1
+    fi
 
     # Calculate the SHA256 checksum of the file
     SHA256=$(shasum -a 256 toolbox | awk '{print $1}')
