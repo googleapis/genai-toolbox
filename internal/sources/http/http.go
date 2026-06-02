@@ -50,14 +50,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name                   string            `yaml:"name" validate:"required"`
-	Type                   string            `yaml:"type" validate:"required"`
-	BaseURL                string            `yaml:"baseUrl"`
-	Timeout                string            `yaml:"timeout"`
-	DefaultHeaders         map[string]string `yaml:"headers"`
-	QueryParams            map[string]string `yaml:"queryParams"`
-	ReturnFullError        bool              `yaml:"returnFullError"`
-	DisableSslVerification bool              `yaml:"disableSslVerification"`
+	Name                        string            `yaml:"name" validate:"required"`
+	Type                        string            `yaml:"type" validate:"required"`
+	BaseURL                     string            `yaml:"baseUrl"`
+	Timeout                     string            `yaml:"timeout"`
+	DefaultHeaders              map[string]string `yaml:"headers"`
+	QueryParams                 map[string]string `yaml:"queryParams"`
+	ReturnFullError             bool              `yaml:"returnFullError"`
+	DisableSslVerification      bool              `yaml:"disableSslVerification"`
+	ForwardAuthorizationHeader  bool              `yaml:"forwardAuthorizationHeader"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -142,6 +143,10 @@ func (s *Source) HttpBaseURL() string {
 
 func (s *Source) HttpQueryParams() map[string]string {
 	return s.QueryParams
+}
+
+func (s *Source) HttpForwardAuthorizationHeader() bool {
+	return s.ForwardAuthorizationHeader
 }
 
 func (s *Source) Client() *http.Client {

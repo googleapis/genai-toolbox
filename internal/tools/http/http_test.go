@@ -15,15 +15,34 @@
 package http_test
 
 import (
+	"bytes"
+	"context"
+	nethttp "net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	sourcehttp "github.com/googleapis/mcp-toolbox/internal/sources/http"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	http "github.com/googleapis/mcp-toolbox/internal/tools/http"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
+
+// mockSourceProvider implements tools.SourceProvider backed by a real Source.
+type mockSourceProvider struct {
+	sources map[string]sources.Source
+}
+
+func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
+	s, ok := m.sources[name]
+	return s, ok
+}
 
 func TestParseFromYamlHTTP(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
@@ -219,4 +238,112 @@ func TestFailParseFromYamlHTTP(t *testing.T) {
 		})
 	}
 
+}
+
+func newTestContext(t *testing.T) context.Context {
+	t.Helper()
+	logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	return util.WithLogger(context.Background(), logger)
+}
+
+func TestInvokeForwardAuthorizationHeader(t *testing.T) {
+	tcs := []struct {
+		desc                       string
+		forwardAuthorizationHeader bool
+		accessToken                tools.AccessToken
+		staticHeader               string // pre-configured Authorization header on the tool
+		wantAuthHeader             string // what the upstream server should receive
+	}{
+		{
+			desc:                       "forwards token when enabled and token present",
+			forwardAuthorizationHeader: true,
+			accessToken:                "Bearer caller-token",
+			wantAuthHeader:             "Bearer caller-token",
+		},
+		{
+			desc:                       "does not forward when disabled",
+			forwardAuthorizationHeader: false,
+			accessToken:                "Bearer caller-token",
+			wantAuthHeader:             "",
+		},
+		{
+			desc:                       "does not forward when token is empty",
+			forwardAuthorizationHeader: true,
+			accessToken:                "",
+			wantAuthHeader:             "",
+		},
+		{
+			desc:                       "forwarded token overrides static tool header",
+			forwardAuthorizationHeader: true,
+			accessToken:                "Bearer caller-token",
+			staticHeader:               "Bearer static-key",
+			wantAuthHeader:             "Bearer caller-token",
+		},
+		{
+			desc:                       "static header preserved when forwarding disabled",
+			forwardAuthorizationHeader: false,
+			accessToken:                "Bearer caller-token",
+			staticHeader:               "Bearer static-key",
+			wantAuthHeader:             "Bearer static-key",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			var receivedAuth string
+			upstream := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+				receivedAuth = r.Header.Get("Authorization")
+				w.WriteHeader(nethttp.StatusOK)
+				_, _ = w.Write([]byte(`"ok"`))
+			}))
+			defer upstream.Close()
+
+			ctx := newTestContext(t)
+
+			sourceCfg := sourcehttp.Config{
+				Name:                       "test-source",
+				Type:                       sourcehttp.SourceType,
+				BaseURL:                    upstream.URL + "/",
+				Timeout:                    "5s",
+				ForwardAuthorizationHeader: tc.forwardAuthorizationHeader,
+			}
+			initializedSource, err := sourceCfg.Initialize(ctx, nil)
+			if err != nil {
+				t.Fatalf("failed to initialize source: %v", err)
+			}
+
+			toolHeaders := map[string]string{}
+			if tc.staticHeader != "" {
+				toolHeaders["Authorization"] = tc.staticHeader
+			}
+
+			toolCfg := http.Config{
+				Name:        "test_tool",
+				Type:        "http",
+				Source:      "test-source",
+				Description: "test tool",
+				Method:      "GET",
+				Path:        "ping",
+				Headers:     toolHeaders,
+			}
+			srcs := map[string]sources.Source{"test-source": initializedSource}
+			tool, err := toolCfg.Initialize(srcs)
+			if err != nil {
+				t.Fatalf("failed to initialize tool: %v", err)
+			}
+
+			provider := &mockSourceProvider{sources: srcs}
+			_, toolboxErr := tool.Invoke(ctx, provider, parameters.ParamValues{}, tc.accessToken)
+			if toolboxErr != nil {
+				t.Fatalf("unexpected invoke error: %v", toolboxErr)
+			}
+
+			if receivedAuth != tc.wantAuthHeader {
+				t.Errorf("Authorization header: got %q, want %q", receivedAuth, tc.wantAuthHeader)
+			}
+		})
+	}
 }
