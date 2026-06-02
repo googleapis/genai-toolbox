@@ -64,14 +64,15 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, dataScanClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
+	client, dataScanClient, dataProductClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
 	if err != nil {
 		return nil, err
 	}
 	s := &Source{
-		Config:         r,
-		Client:         client,
-		DataScanClient: dataScanClient,
+		Config:            r,
+		Client:            client,
+		DataScanClient:    dataScanClient,
+		dataProductClient: dataProductClient,
 	}
 
 	return s, nil
@@ -81,8 +82,9 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client         *dataplexapi.CatalogClient
-	DataScanClient *dataplexapi.DataScanClient
+	Client            *dataplexapi.CatalogClient
+	DataScanClient    *dataplexapi.DataScanClient
+	dataProductClient *dataplexapi.DataProductClient
 }
 
 func (s *Source) SourceType() string {
@@ -111,30 +113,35 @@ func initDataplexConnection(
 	tracer trace.Tracer,
 	name string,
 	project string,
-) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, error) {
+) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, *dataplexapi.DataProductClient, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 
 	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
 	}
-	return client, dataScanClient, nil
+
+	dataProductClient, err := dataplexapi.NewDataProductClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataProduct client for project %q: %w", project, err)
+	}
+	return client, dataScanClient, dataProductClient, nil
 }
 
 func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectTypes []string, entry string) (*dataplexpb.Entry, error) {
@@ -290,6 +297,43 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 			return nil, fmt.Errorf("failed to list data scans: %w", err)
 		}
 		results = append(results, scan)
+	}
+	return results, nil
+}
+
+func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
+	return s.dataProductClient
+}
+
+func (s *Source) ListDataProducts(
+	ctx context.Context,
+	filter string,
+	pageSize int,
+	orderBy string,
+) ([]*dataplexpb.DataProduct, error) {
+	parent := fmt.Sprintf("projects/%s/locations/-", s.ProjectID())
+	req := &dataplexpb.ListDataProductsRequest{
+		Parent:   parent,
+		Filter:   filter,
+		PageSize: int32(pageSize),
+		OrderBy:  orderBy,
+	}
+
+	it := s.dataProductClient.ListDataProducts(ctx, req)
+	var results []*dataplexpb.DataProduct
+
+	for range pageSize {
+		dp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				return nil, fmt.Errorf("failed to list data products: code=%s message=%s", st.Code(), st.Message())
+			}
+			return nil, fmt.Errorf("failed to list data products: %w", err)
+		}
+		results = append(results, dp)
 	}
 	return results, nil
 }
