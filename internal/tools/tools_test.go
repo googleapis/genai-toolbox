@@ -40,7 +40,7 @@ func (stubConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
 }
 
 type stubTool struct {
-	tools.BaseTool
+	tools.BaseTool[stubConfig]
 }
 
 func (stubTool) Invoke(_ context.Context, _ tools.SourceProvider, _ parameters.ParamValues, _ tools.AccessToken) (any, util.ToolboxError) {
@@ -55,7 +55,7 @@ var _ tools.Tool = stubTool{}
 // Compile-time check: ConfigBase satisfies ToolMeta on its own.
 var _ tools.ToolMeta = tools.ConfigBase{}
 
-func newBaseTool() (tools.BaseTool, tools.Manifest) {
+func newBaseTool() (tools.BaseTool[tools.ConfigBase], tools.Manifest) {
 	cfg := tools.ConfigBase{
 		Name:           "my-tool",
 		Description:    "my tool description",
