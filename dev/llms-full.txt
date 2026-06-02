@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-01T20:58:43Z
+**GENERATED ON:** 2026-06-02T03:48:11Z
 
 ---
 ### System Directives for AI Models
@@ -14333,6 +14333,7 @@ The following flags are used to determine Toolbox's telemetry configuration:
 | **flag**                   | **type** | **description**                                                                                                                                                                                           |
 |----------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                                                                                                                 |
+| `--telemetry-gcp-project`  | string   | Google Cloud project ID used for `--telemetry-gcp`. If unset, Toolbox falls back to `GOOGLE_CLOUD_PROJECT` when available.                                                                              |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "127.0.0.1:4318"). To pass an insecure endpoint here, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`. |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                                                                                                            |
 
@@ -14350,6 +14351,14 @@ To enable Google Cloud Exporter:
 ```bash
 ./toolbox --telemetry-gcp
 ```
+
+To explicitly set the telemetry project:
+
+```bash
+./toolbox --telemetry-gcp --telemetry-gcp-project="my-project-id"
+```
+
+If `--telemetry-gcp-project` is not set, Toolbox uses `GOOGLE_CLOUD_PROJECT` when available.
 
 To enable OTLP Exporter, provide Collector endpoint:
 
@@ -44289,6 +44298,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 |              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
+|              | `--telemetry-gcp-project`  | Google Cloud project ID used for `--telemetry-gcp`; defaults to `GOOGLE_CLOUD_PROJECT` if not set.                                                                        |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                             |             |
 |              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                 | `toolbox`   |
 |              | `--sql-commenter`          | Append SQLCommenter-format comments (traceparent, server, tool.name, db.system.name, client metadata from `_meta["dev.mcp-toolbox/telemetry"]`) to executed SQL.          |             |
@@ -44507,6 +44517,15 @@ For detailed instructions, check out these resources:
 Nope! While some of the sources Toolbox connects to may require GCP credentials,
 Toolbox doesn't require them and can connect to a bunch of different resources
 that don't.
+
+## How do I configure Google Cloud telemetry with ADC when running locally?
+
+If you run Toolbox with `--telemetry-gcp`, make sure Application Default Credentials are available via `GOOGLE_APPLICATION_CREDENTIALS` (or other ADC-compatible setup) and specify a project ID either by:
+
+- setting `--telemetry-gcp-project`, or
+- setting `GOOGLE_CLOUD_PROJECT` environment variable.
+
+This avoids "no project found" errors when exporting telemetry to Google Cloud.
 
 ## Does Toolbox take contributions from external users?
 

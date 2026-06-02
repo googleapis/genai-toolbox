@@ -83,6 +83,12 @@
  &lt;/tr&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;--telemetry-gcp-project&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;Google Cloud project ID used for &lt;code&gt;--telemetry-gcp&lt;/code&gt;; defaults to &lt;code&gt;GOOGLE_CLOUD_PROJECT&lt;/code&gt; if not set.&lt;/td&gt;
+ &lt;td&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--telemetry-otlp&lt;/code&gt;&lt;/td&gt;
  &lt;td&gt;Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. &amp;lsquo;http://127.0.0.1:4318&amp;rsquo;)&lt;/td&gt;
  &lt;td&gt;&lt;/td&gt;
