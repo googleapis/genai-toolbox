@@ -28,16 +28,16 @@ import (
 // ValidateScopes validates if the claims contain all required scopes for a tool call.
 func ValidateScopes(ctx context.Context, toolScopes []string, authServices map[string]auth.AuthService) error {
 	// Find MCP enabled auth service
-	var mcpSvcName string
+	var mcpEnabled bool
 	for _, aS := range authServices {
 		cfg := aS.ToConfig()
 		if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
-			mcpSvcName = aS.GetName()
+			mcpEnabled = true
 			break
 		}
 	}
 
-	if mcpSvcName != "" && len(toolScopes) > 0 {
+	if mcpEnabled && len(toolScopes) > 0 {
 		claims := util.AuthTokenClaimsFromContext(ctx)
 		if claims == nil {
 			return &generic.MCPAuthError{
@@ -48,7 +48,7 @@ func ValidateScopes(ctx context.Context, toolScopes []string, authServices map[s
 		}
 
 		scopeClaim, _ := claims["scope"].(string)
-		tokenScopes := strings.Split(scopeClaim, " ")
+		tokenScopes := strings.Fields(scopeClaim)
 
 		// Check if all required scopes are present in the token
 		missing := false
