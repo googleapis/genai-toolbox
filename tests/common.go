@@ -32,6 +32,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 )
 
@@ -1093,16 +1094,27 @@ func CleanupBigQueryDatasets(t *testing.T, ctx context.Context, client *bigquery
 				break
 			}
 			if err != nil {
+				if apiErr, ok := err.(*googleapi.Error); ok && apiErr.Code == 404 {
+					t.Logf("INTEGRATION CLEANUP: Dataset %s already deleted (during table iteration)", id)
+					break
+				}
 				t.Errorf("INTEGRATION CLEANUP: Failed to iterate tables in %s: %v", id, err)
 				break
 			}
 			if err := table.Delete(ctx); err != nil {
+				if apiErr, ok := err.(*googleapi.Error); ok && apiErr.Code == 404 {
+					continue
+				}
 				t.Errorf("INTEGRATION CLEANUP: Failed to delete table %s: %v", table.TableID, err)
 			}
 		}
 		//delete empty dataset
 		if err := ds.Delete(ctx); err != nil {
-			t.Errorf("INTEGRATION CLEANUP: Failed to delete dataset %s: %v", id, err)
+			if apiErr, ok := err.(*googleapi.Error); ok && apiErr.Code == 404 {
+				t.Logf("INTEGRATION CLEANUP: Dataset %s already deleted", id)
+			} else {
+				t.Errorf("INTEGRATION CLEANUP: Failed to delete dataset %s: %v", id, err)
+			}
 		} else {
 			t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped dataset %s", id)
 		}
