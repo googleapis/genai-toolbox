@@ -363,6 +363,34 @@ steps:
           exit 0
         fi
 
+  - id: "datalineage"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "DATALINEAGE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="datalineage|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running Data Lineage tests..."
+          .ci/test_with_coverage.sh \
+            "Data Lineage" \
+            datalineage \
+            datalineage/datalineagesearchlineage
+        else
+          echo "No relevant changes for Data Lineage. Skipping shard."
+          exit 0
+        fi
+
   - id: "dataform"
     name: golang:1
     waitFor: ["compile-test-binary", "detect-changes"]
