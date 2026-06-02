@@ -197,10 +197,8 @@ func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
 func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
 
 // BaseTool provides default implementations of various methods on the Tool
-// interface. Tools embed BaseTool[Config] to drop their boilerplate and
-// override only methods that need custom behavior. The Cfg field holds the
-// resolved per-tool Config, giving Invoke and friends typed access to all
-// config fields without a duplicate Tool-level cfg.
+// interface. Tools embed BaseTool to drop their boilerplate and override
+// only methods that need custom behavior.
 type BaseTool[T ToolMeta] struct {
 	Cfg              T
 	annotations      *ToolAnnotations
