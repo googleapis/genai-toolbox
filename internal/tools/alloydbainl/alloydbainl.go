@@ -104,12 +104,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
-			cfg.ConfigBase,
+			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			cfg.NLConfigParameters,
 		),
-		cfg:       cfg,
 		Statement: stmt,
 	}, nil
 }
@@ -118,13 +117,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	tools.BaseTool
-	cfg       Config
+	tools.BaseTool[Config]
 	Statement string
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -132,7 +130,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	sliceParams := params.AsSlice()
 	allParamValues := make([]any, len(sliceParams)+1)
 	allParamValues[0] = fmt.Sprintf("%s", sliceParams[0]) // nl_question
-	allParamValues[1] = t.cfg.NLConfig                    // nl_config
+	allParamValues[1] = t.Cfg.NLConfig                    // nl_config
 	for i, param := range sliceParams[1:] {
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
@@ -145,5 +143,5 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.cfg
+	return t.Cfg
 }
