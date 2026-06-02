@@ -178,12 +178,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
-			cfg.ConfigBase,
+			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
-		cfg:        cfg,
 		Delay:      delay,
 		MaxDelay:   maxDelay,
 		Multiplier: multiplier,
@@ -193,8 +192,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 // Tool represents the wait-for-operation tool.
 type Tool struct {
-	tools.BaseTool
-	cfg    Config
+	tools.BaseTool[Config]
 	Client *http.Client
 
 	// Polling configuration
@@ -205,12 +203,12 @@ type Tool struct {
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.cfg
+	return t.Cfg
 }
 
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -270,7 +268,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}

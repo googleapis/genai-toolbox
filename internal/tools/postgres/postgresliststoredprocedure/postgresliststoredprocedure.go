@@ -116,12 +116,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
-			cfg.ConfigBase,
+			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
-		cfg:  cfg,
 		pool: s.PostgresPool(),
 	}, nil
 }
@@ -129,8 +128,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	tools.BaseTool
-	cfg  Config
+	tools.BaseTool[Config]
 	pool *pgxpool.Pool
 }
 
@@ -168,5 +166,5 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.cfg
+	return t.Cfg
 }
