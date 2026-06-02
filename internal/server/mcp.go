@@ -646,8 +646,10 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		var a []any
 		unmarshalErr := json.Unmarshal(body, &a)
 		if unmarshalErr == nil {
+			// A batch has no single request id to echo back. Per JSON-RPC 2.0,
+			// when the id cannot be determined the response id MUST be null.
 			err = fmt.Errorf("not supporting batch requests")
-			return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", jsonrpc.NewError(nil, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 
 		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
