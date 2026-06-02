@@ -116,7 +116,9 @@ func ValidateQueryAgainstAllowedDatasets(
 	queryStats := dryRunJob.Statistics.Query
 	if queryStats != nil {
 		for _, tableRef := range queryStats.ReferencedTables {
-			tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			if tableRef != nil {
+				tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}
+			}
 		}
 		if tableRef := queryStats.DdlTargetTable; tableRef != nil {
 			tableIDSet[fmt.Sprintf("%s.%s.%s", tableRef.ProjectId, tableRef.DatasetId, tableRef.TableId)] = struct{}{}

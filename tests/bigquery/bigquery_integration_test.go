@@ -685,8 +685,10 @@ func getBigQueryTmplToolStatement() (string, string) {
 
 func ensureTeardownDatasets(ctx context.Context, client *bigqueryapi.Client, datasetNames ...string) func(*testing.T) {
 	return func(t *testing.T) {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
 		for _, dsName := range datasetNames {
-			if err := client.Dataset(dsName).DeleteWithContents(ctx); err != nil {
+			if err := client.Dataset(dsName).DeleteWithContents(cleanupCtx); err != nil {
 				t.Logf("failed to cleanup dataset %s: %v", dsName, err)
 			}
 		}
@@ -700,7 +702,9 @@ func setupBigQueryView(t *testing.T, ctx context.Context, client *bigqueryapi.Cl
 		t.Fatalf("failed to create view %s in %s: %v", viewName, datasetName, err)
 	}
 	return func(t *testing.T) {
-		if err := client.Dataset(datasetName).Table(viewName).Delete(ctx); err != nil {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cancel()
+		if err := client.Dataset(datasetName).Table(viewName).Delete(cleanupCtx); err != nil {
 			t.Errorf("failed to delete view %s in %s: %v", viewName, datasetName, err)
 		}
 	}
@@ -754,14 +758,16 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	}
 
 	return func(t *testing.T) {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cancel()
 		// tear down table
 		dropSQL := fmt.Sprintf("drop table %s", tableName)
-		dropJob, err := client.Query(dropSQL).Run(ctx)
+		dropJob, err := client.Query(dropSQL).Run(cleanupCtx)
 		if err != nil {
 			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
 			return
 		}
-		dropStatus, err := dropJob.Wait(ctx)
+		dropStatus, err := dropJob.Wait(cleanupCtx)
 		if err != nil {
 			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
 			return

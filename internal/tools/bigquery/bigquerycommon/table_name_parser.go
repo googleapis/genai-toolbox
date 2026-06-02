@@ -488,7 +488,7 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 func findAndParseSQLString(runes []rune, defaultProjectID string, tableIDSet map[string]struct{}, visitedSQLs map[string]struct{}, aliases map[string]struct{}) (int, error) {
 	for i := 0; i < len(runes); {
 		if hasPrefix(runes, i, "'''") {
-			end := strings.Index(string(runes[i+3:]), "'''")
+			end := indexRunes(runes[i+3:], "'''")
 			if end != -1 {
 				sqlContent := string(runes[i+3 : i+3+end])
 				if _, err := parseSQL(sqlContent, defaultProjectID, tableIDSet, visitedSQLs, aliases, false); err != nil {
@@ -498,7 +498,7 @@ func findAndParseSQLString(runes []rune, defaultProjectID string, tableIDSet map
 			}
 		}
 		if hasPrefix(runes, i, `"""`) {
-			end := strings.Index(string(runes[i+3:]), `"""`)
+			end := indexRunes(runes[i+3:], `"""`)
 			if end != -1 {
 				sqlContent := string(runes[i+3 : i+3+end])
 				if _, err := parseSQL(sqlContent, defaultProjectID, tableIDSet, visitedSQLs, aliases, false); err != nil {
@@ -727,12 +727,12 @@ func parseIdentifierSequence(runes []rune) ([]string, int, error) {
 				totalConsumed++
 			}
 			if hasPrefix(runes, totalConsumed, "/*") {
-				endIdx := strings.Index(string(runes[totalConsumed:]), "*/")
+				endIdx := indexRunes(runes[totalConsumed:], "*/")
 				if endIdx != -1 {
 					totalConsumed += endIdx + 2
 				}
 			} else if hasPrefix(runes, totalConsumed, "--") || (totalConsumed < len(runes) && runes[totalConsumed] == '#') {
-				endIdx := strings.Index(string(runes[totalConsumed:]), "\n")
+				endIdx := indexRunes(runes[totalConsumed:], "\n")
 				if endIdx != -1 {
 					totalConsumed += endIdx + 1
 				} else {
@@ -751,7 +751,7 @@ func parseIdentifierSequence(runes []rune) ([]string, int, error) {
 		var consumed int
 
 		if runes[totalConsumed] == '`' {
-			end := strings.Index(string(runes[totalConsumed+1:]), "`")
+			end := indexRunes(runes[totalConsumed+1:], "`")
 			if end == -1 {
 				return nil, 0, fmt.Errorf("unclosed backtick identifier")
 			}
@@ -778,12 +778,12 @@ func parseIdentifierSequence(runes []rune) ([]string, int, error) {
 				totalConsumed++
 			}
 			if hasPrefix(runes, totalConsumed, "/*") {
-				endIdx := strings.Index(string(runes[totalConsumed:]), "*/")
+				endIdx := indexRunes(runes[totalConsumed:], "*/")
 				if endIdx != -1 {
 					totalConsumed += endIdx + 2
 				}
 			} else if hasPrefix(runes, totalConsumed, "--") || (totalConsumed < len(runes) && runes[totalConsumed] == '#') {
-				endIdx := strings.Index(string(runes[totalConsumed:]), "\n")
+				endIdx := indexRunes(runes[totalConsumed:], "\n")
 				if endIdx != -1 {
 					totalConsumed += endIdx + 1
 				} else {
@@ -805,6 +805,9 @@ func parseIdentifierSequence(runes []rune) ([]string, int, error) {
 }
 
 func formatTableID(parts []string, defaultProjectID string) (string, error) {
+	if len(parts) == 4 && strings.Contains(parts[1], ":") {
+		parts = []string{parts[0] + "." + parts[1], parts[2], parts[3]}
+	}
 	if len(parts) < 2 || len(parts) > 3 {
 		// Not a table identifier (could be a CTE, column, etc.).
 		return "", nil
@@ -819,4 +822,24 @@ func formatTableID(parts []string, defaultProjectID string) (string, error) {
 		return "", fmt.Errorf("query contains table '%s' without project ID, and no default project ID is provided", strings.Join(parts, "."))
 	}
 	return fmt.Sprintf("%s.%s", defaultProjectID, strings.Join(parts, ".")), nil
+}
+
+func indexRunes(r []rune, sub string) int {
+	subRunes := []rune(sub)
+	if len(subRunes) == 0 {
+		return 0
+	}
+	for i := 0; i <= len(r)-len(subRunes); i++ {
+		match := true
+		for j := 0; j < len(subRunes); j++ {
+			if r[i+j] != subRunes[j] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return i
+		}
+	}
+	return -1
 }
