@@ -148,7 +148,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, configParam param
 		return nil, fmt.Errorf("unable to bind: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	var rowErr error
 	err = bs.Execute(ctx, func(resultRow bigtable.ResultRow) bool {
 		vMap := make(map[string]any)

@@ -191,16 +191,39 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	modelID := fmt.Sprintf("contribution_analysis_model_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
+	contributionMetric, ok := paramsMap["contribution_metric"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast contribution_metric parameter %v", paramsMap["contribution_metric"]), nil)
+	}
+	if strings.ContainsRune(contributionMetric, '\'') {
+		return nil, util.NewAgentError("invalid 'contribution_metric': must not contain single quotes", nil)
+	}
+
+	isTestCol, ok := paramsMap["is_test_col"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast is_test_col parameter %v", paramsMap["is_test_col"]), nil)
+	}
+	if !bqutil.ValidColumnName(isTestCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'is_test_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", isTestCol), nil)
+	}
+
 	var options []string
 	options = append(options, "MODEL_TYPE = 'CONTRIBUTION_ANALYSIS'")
-	options = append(options, fmt.Sprintf("CONTRIBUTION_METRIC = '%s'", paramsMap["contribution_metric"]))
-	options = append(options, fmt.Sprintf("IS_TEST_COL = '%s'", paramsMap["is_test_col"]))
+	options = append(options, fmt.Sprintf("CONTRIBUTION_METRIC = '%s'", contributionMetric))
+	options = append(options, fmt.Sprintf("IS_TEST_COL = '%s'", isTestCol))
 
 	if val, ok := paramsMap["dimension_id_cols"]; ok {
 		if cols, ok := val.([]any); ok {
 			var strCols []string
 			for _, c := range cols {
-				strCols = append(strCols, fmt.Sprintf("'%s'", c))
+				colStr, ok := c.(string)
+				if !ok {
+					return nil, util.NewAgentError(fmt.Sprintf("dimension_id_cols contains non-string value: %v", c), nil)
+				}
+				if !bqutil.ValidColumnName(colStr) {
+					return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'dimension_id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", colStr), nil)
+				}
+				strCols = append(strCols, fmt.Sprintf("'%s'", colStr))
 			}
 			options = append(options, fmt.Sprintf("DIMENSION_ID_COLS = [%s]", strings.Join(strCols, ", ")))
 		} else {
@@ -254,6 +277,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		inputDataSource = fmt.Sprintf("(%s)", inputData)
 	} else {
+		if !bqutil.ValidTableID(inputData) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid table identifier for 'input_data': %q; expected 'dataset.table' or 'project.dataset.table'", inputData), nil)
+		}
 		if len(source.BigQueryAllowedDatasets()) > 0 {
 			parts := strings.Split(inputData, ".")
 			var projectID, datasetID string

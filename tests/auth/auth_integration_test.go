@@ -103,6 +103,7 @@ func TestMcpAuth(t *testing.T) {
 				"source":         "my-sqlite",
 				"description":    "Execute SQL on SQLite",
 				"scopesRequired": []string{"execute:sql"},
+				"authRequired":   []string{"my-generic-auth"},
 			},
 		},
 	}
@@ -126,6 +127,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate invalid token (wrong scopes)
 	invalidToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "wrong:scope",
 		"sub":   "test-user",
@@ -136,6 +138,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate valid token
 	validToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "read:files",
 		"sub":   "test-user",
@@ -146,6 +149,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate token with only read:files scope
 	tokenOnlyRead := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "read:files",
 		"sub":   "test-user",
@@ -156,6 +160,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate token with BOTH scopes
 	tokenBoth := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "read:files execute:sql",
 		"sub":   "test-user",
@@ -201,6 +206,11 @@ func TestMcpAuth(t *testing.T) {
 		{
 			name:           "200 OK with valid opaque token",
 			token:          "this-is-an-opaque-token",
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "200 OK with valid opaque token containing two dots",
+			token:          "this.is.opaque",
 			wantStatusCode: http.StatusOK,
 		},
 		{

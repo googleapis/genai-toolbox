@@ -109,7 +109,7 @@ func TestServe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -668,7 +668,7 @@ func TestPRMEndpoint(t *testing.T) {
 	defer cancel()
 
 	// Setup telemetry and logging
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -950,7 +950,7 @@ func TestMCPAuthMiddleware(t *testing.T) {
 	defer cancel()
 
 	// Setup telemetry and logging
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}

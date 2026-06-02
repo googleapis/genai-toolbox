@@ -98,7 +98,7 @@ func (s *Source) DatabaseDialect() string {
 
 // processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
 func processRows(iter *spanner.RowIterator) ([]any, error) {
-	var out []any
+	out := []any{}
 	defer iter.Stop()
 
 	for {

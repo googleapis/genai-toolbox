@@ -17,7 +17,7 @@ This guide details the specific configuration steps required to deploy Toolbox w
 Update your `tools.yaml` file to use a `generic` authorization service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authorizationServer`).
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-mcp-auth
 type: generic
 mcpEnabled: true

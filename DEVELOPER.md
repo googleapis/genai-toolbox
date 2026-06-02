@@ -251,8 +251,6 @@ tools.
     (ParamValues, error)`: Parses and validates the input parameters.
   * `Manifest() Manifest`: Returns a manifest describing the tool's capabilities
     and parameters.
-  * `McpManifest() McpManifest`: Returns an MCP manifest describing the tool for
-    use with the Model Context Protocol.
   * `Authorized(services []string) bool`: Checks if the tool is authorized to
     run based on the provided authentication services.
 * **Implement `init()`** to register the new Tool.
