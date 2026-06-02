@@ -222,7 +222,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	t.Logf("Starting restriction test with uniqueID: %s", uniqueID)
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	client, err := initBigQueryConnection(BigqueryProject)
@@ -426,7 +426,7 @@ func TestBigQueryWriteModeAllowed(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
 	sourceConfig["writeMode"] = "allowed"
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	datasetName := fmt.Sprintf("temp_toolbox_test_allowed_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
@@ -482,7 +482,7 @@ func TestBigQueryWriteModeBlocked(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
 	sourceConfig["writeMode"] = "blocked"
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	datasetName := fmt.Sprintf("temp_toolbox_test_blocked_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))

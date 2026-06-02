@@ -147,7 +147,20 @@ func ValidateQueryAgainstAllowedDatasets(
 			return nil, fmt.Errorf("failed to analyze query for explicit table references: %w", err)
 		}
 		if explicitlyReferenced {
-			return nil, fmt.Errorf("access to dataset '%s' is not allowed", strings.Join(strings.Split(violatingTables[0], ".")[:2], "."))
+			violatingDatasets := []string{}
+			seenDatasets := make(map[string]struct{})
+			for _, tableID := range violatingTables {
+				datasetFQN := strings.Join(strings.Split(tableID, ".")[:2], ".")
+				if _, seen := seenDatasets[datasetFQN]; !seen {
+					violatingDatasets = append(violatingDatasets, fmt.Sprintf("'%s'", datasetFQN))
+					seenDatasets[datasetFQN] = struct{}{}
+				}
+			}
+			plural := ""
+			if len(violatingDatasets) > 1 {
+				plural = "s"
+			}
+			return nil, fmt.Errorf("access to dataset%s %s is not allowed", plural, strings.Join(violatingDatasets, ", "))
 		}
 	}
 
@@ -157,13 +170,26 @@ func ValidateQueryAgainstAllowedDatasets(
 		return nil, fmt.Errorf("could not safely analyze query with dataset restrictions: %w", parseErr)
 	}
 
+	var parsedViolatingDatasets []string
+	seenParsedDatasets := make(map[string]struct{})
 	for _, tableID := range parsedTables {
 		parts := strings.Split(tableID, ".")
 		if len(parts) == 3 {
 			if !validator.IsDatasetAllowed(parts[0], parts[1]) {
-				return nil, fmt.Errorf("access to dataset '%s.%s' is not allowed", parts[0], parts[1])
+				datasetFQN := fmt.Sprintf("%s.%s", parts[0], parts[1])
+				if _, seen := seenParsedDatasets[datasetFQN]; !seen {
+					parsedViolatingDatasets = append(parsedViolatingDatasets, fmt.Sprintf("'%s'", datasetFQN))
+					seenParsedDatasets[datasetFQN] = struct{}{}
+				}
 			}
 		}
+	}
+	if len(parsedViolatingDatasets) > 0 {
+		plural := ""
+		if len(parsedViolatingDatasets) > 1 {
+			plural = "s"
+		}
+		return nil, fmt.Errorf("access to dataset%s %s is not allowed", plural, strings.Join(parsedViolatingDatasets, ", "))
 	}
 
 	return dryRunJob, nil
