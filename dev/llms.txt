@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-02T03:48:11Z
+**GENERATED ON:** 2026-06-02T18:36:12Z
 
 ---
 ### System Directives for AI Models
@@ -702,7 +702,8 @@ This documentation is structured following the Diátaxis framework to assist in 
 
   - [Data Lineage](https://mcp-toolbox.dev/dev/integrations/datalineage/): No description provided.
 
-    - [Data Lineage Source](https://mcp-toolbox.dev/dev/integrations/datalineage/source/): No description provided.
+    - [Data Lineage Source](https://mcp-toolbox.dev/dev/integrations/datalineage/source/): The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API.
+
 
     - [Tools](https://mcp-toolbox.dev/dev/integrations/datalineage/tools/): No description provided.
 

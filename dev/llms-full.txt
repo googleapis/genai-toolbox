@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-02T03:48:11Z
+**GENERATED ON:** 2026-06-02T18:36:12Z
 
 ---
 ### System Directives for AI Models
@@ -25315,7 +25315,8 @@ templateParameters:
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Data Lineage > Data Lineage Source
 **URL:** https://mcp-toolbox.dev/dev/integrations/datalineage/source/
-**Description:** None
+**Description:** The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API.
+
 
 
 ## About
