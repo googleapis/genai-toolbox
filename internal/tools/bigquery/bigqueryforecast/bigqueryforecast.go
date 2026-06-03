@@ -191,6 +191,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
+	if !bqutil.ValidColumnName(dataCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataCol), nil)
+	}
+	if !bqutil.ValidColumnName(timestampCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampCol), nil)
+	}
+	for _, col := range idCols {
+		if !bqutil.ValidColumnName(col) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", col), nil)
+		}
+	}
+
 	bqClient, restService, err := source.RetrieveClientAndService(accessToken)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
@@ -232,6 +244,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
+		if !bqutil.ValidTableID(historyData) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid table identifier for 'history_data': %q; expected 'dataset.table' or 'project.dataset.table'", historyData), nil)
+		}
 		if len(source.BigQueryAllowedDatasets()) > 0 {
 			parts := strings.Split(historyData, ".")
 			var projectID, datasetID string
