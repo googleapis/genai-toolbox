@@ -20,9 +20,9 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -54,13 +54,13 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "example_tool",
-	Description:  "some description",
-	AuthRequired: []string{},
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
 					},
-					Type:         "bigquery-sql",
-					Source:       "my-instance",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+					Type:      "bigquery-sql",
+					Source:    "my-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("country", "some description"),
 					},
@@ -121,13 +121,13 @@ func TestParseFromYamlWithTemplateBigQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "example_tool",
-	Description:  "some description",
-	AuthRequired: []string{},
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
 					},
-					Type:         "bigquery-sql",
-					Source:       "my-instance",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
+					Type:      "bigquery-sql",
+					Source:    "my-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("country", "some description"),
 					},

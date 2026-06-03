@@ -46,12 +46,12 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"get-instances": cloudsqlgetinstances.Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "get-instances",
-	Description:  "A tool to get cloud sql instances",
-	AuthRequired: []string{},
+						Name:         "get-instances",
+						Description:  "A tool to get cloud sql instances",
+						AuthRequired: []string{},
 					},
-					Type:         "cloud-sql-get-instance",
-					Source:       "my-gcp-source",
+					Type:   "cloud-sql-get-instance",
+					Source: "my-gcp-source",
 				},
 			},
 		},

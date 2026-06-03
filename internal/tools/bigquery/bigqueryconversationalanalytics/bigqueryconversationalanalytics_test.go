@@ -46,12 +46,12 @@ func TestParseFromYamlBigQueryConversationalAnalytics(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigqueryconversationalanalytics.Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "example_tool",
-	Description:  "some description",
-	AuthRequired: []string{},
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
 					},
-					Type:         "bigquery-conversational-analytics",
-					Source:       "my-instance",
+					Type:   "bigquery-conversational-analytics",
+					Source: "my-instance",
 				},
 			},
 		},

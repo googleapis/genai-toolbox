@@ -95,9 +95,9 @@ type compatibleSource interface {
 // Config defines the configuration for the wait-for-operation tool.
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	BaseURL      string   `yaml:"baseURL"`
+	Type             string `yaml:"type" validate:"required"`
+	Source           string `yaml:"source" validate:"required"`
+	BaseURL          string `yaml:"baseURL"`
 
 	// Polling configuration
 	Delay       string                 `yaml:"delay"`
@@ -105,7 +105,6 @@ type Config struct {
 	Multiplier  float64                `yaml:"multiplier"`
 	MaxRetries  int                    `yaml:"maxRetries"`
 	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
 }
 
 // validate interface

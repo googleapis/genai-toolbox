@@ -46,12 +46,12 @@ func TestParseFromYamlBigQueryListTableIds(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerylisttableids.Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "example_tool",
-	Description:  "some description",
-	AuthRequired: []string{},
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
 					},
-					Type:         "bigquery-list-table-ids",
-					Source:       "my-instance",
+					Type:   "bigquery-list-table-ids",
+					Source: "my-instance",
 				},
 			},
 		},

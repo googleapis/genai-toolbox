@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -45,12 +45,12 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"list-my-instances": Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "list-my-instances",
-	Description:  "some description",
-	AuthRequired: []string{},
+						Name:         "list-my-instances",
+						Description:  "some description",
+						AuthRequired: []string{},
 					},
-					Type:         "cloud-sql-list-instances",
-					Source:       "some-source",
+					Type:   "cloud-sql-list-instances",
+					Source: "some-source",
 				},
 			},
 		},

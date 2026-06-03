@@ -46,12 +46,12 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"create-backup-tool": cloudsqlcreatebackup.Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "create-backup-tool",
-	Description:  "a test description",
-	AuthRequired: []string{},
+						Name:         "create-backup-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
 					},
-					Type:         "cloud-sql-create-backup",
-					Source:       "a-source",
+					Type:   "cloud-sql-create-backup",
+					Source: "a-source",
 				},
 			},
 		},

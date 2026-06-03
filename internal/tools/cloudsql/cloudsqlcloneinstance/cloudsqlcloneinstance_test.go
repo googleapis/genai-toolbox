@@ -47,12 +47,12 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"clone-instance-tool": cloudsqlcloneinstance.Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "clone-instance-tool",
-	Description:  "a test description",
-	AuthRequired: []string{},
+						Name:         "clone-instance-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
 					},
-					Type:         "cloud-sql-clone-instance",
-					Source:       "a-source",
+					Type:   "cloud-sql-clone-instance",
+					Source: "a-source",
 				},
 			},
 		},

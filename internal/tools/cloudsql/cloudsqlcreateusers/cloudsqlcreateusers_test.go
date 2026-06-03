@@ -46,12 +46,12 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"create-user": cloudsqlcreateusers.Config{
 					ConfigBase: tools.ConfigBase{
-	Name:         "create-user",
-	Description:  "some description",
-	AuthRequired: []string{},
+						Name:         "create-user",
+						Description:  "some description",
+						AuthRequired: []string{},
 					},
-					Type:         "cloud-sql-create-users",
-					Source:       "my-source",
+					Type:   "cloud-sql-create-users",
+					Source: "my-source",
 				},
 			},
 		},
