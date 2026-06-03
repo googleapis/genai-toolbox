@@ -994,7 +994,14 @@ func TestMCPAuthMiddleware(t *testing.T) {
 			if mockRawResponse != "" {
 				_, _ = w.Write([]byte(mockRawResponse))
 			} else {
-				_ = json.NewEncoder(w).Encode(mockResponse)
+				respCopy := make(map[string]any)
+				for k, v := range mockResponse {
+					respCopy[k] = v
+				}
+				if _, hasIss := respCopy["iss"]; !hasIss {
+					respCopy["iss"] = "http://" + r.Host
+				}
+				_ = json.NewEncoder(w).Encode(respCopy)
 			}
 			return
 		}
