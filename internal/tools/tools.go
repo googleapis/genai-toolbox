@@ -199,48 +199,48 @@ func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
 // BaseTool provides default implementations of various methods on the Tool
 // interface. Tools embed BaseTool to drop their boilerplate and override
 // only methods that need custom behavior.
-type BaseTool struct {
-	cfg              ToolMeta
+type BaseTool[T ToolMeta] struct {
+	Cfg              T
 	annotations      *ToolAnnotations
 	metadata         Manifest
 	StaticParameters parameters.Parameters
 }
 
-// NewBaseTool constructs a BaseTool from a resolved ToolMeta (typically the
+// NewBaseTool constructs a BaseTool from a resolved Config (typically the
 // per-tool Config after Initialize has filled in defaults), the resolved
 // annotations, the precomputed Manifest, and the tool's static parameters.
-func NewBaseTool(cfg ToolMeta, annotations *ToolAnnotations, metadata Manifest, staticParameters parameters.Parameters) BaseTool {
-	return BaseTool{
-		cfg:              cfg,
+func NewBaseTool[T ToolMeta](cfg T, annotations *ToolAnnotations, metadata Manifest, staticParameters parameters.Parameters) BaseTool[T] {
+	return BaseTool[T]{
+		Cfg:              cfg,
 		annotations:      annotations,
 		metadata:         metadata,
 		StaticParameters: staticParameters,
 	}
 }
 
-func (b BaseTool) GetName() string                  { return b.cfg.GetName() }
-func (b BaseTool) GetDescription() string           { return b.cfg.GetDescription() }
-func (b BaseTool) GetAuthRequired() []string        { return b.cfg.GetAuthRequired() }
-func (b BaseTool) GetScopesRequired() []string      { return b.cfg.GetScopesRequired() }
-func (b BaseTool) GetAnnotations() *ToolAnnotations { return b.annotations }
-func (b BaseTool) Manifest() Manifest               { return b.metadata }
+func (b BaseTool[T]) GetName() string                  { return b.Cfg.GetName() }
+func (b BaseTool[T]) GetDescription() string           { return b.Cfg.GetDescription() }
+func (b BaseTool[T]) GetAuthRequired() []string        { return b.Cfg.GetAuthRequired() }
+func (b BaseTool[T]) GetScopesRequired() []string      { return b.Cfg.GetScopesRequired() }
+func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
+func (b BaseTool[T]) Manifest() Manifest               { return b.metadata }
 
-func (b BaseTool) GetParameters() parameters.Parameters {
+func (b BaseTool[T]) GetParameters() parameters.Parameters {
 	return b.StaticParameters
 }
 
-func (b BaseTool) Authorized(verifiedAuthServices []string) bool {
-	return IsAuthorized(b.cfg.GetAuthRequired(), verifiedAuthServices)
+func (b BaseTool[T]) Authorized(verifiedAuthServices []string) bool {
+	return IsAuthorized(b.Cfg.GetAuthRequired(), verifiedAuthServices)
 }
 
-func (b BaseTool) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
+func (b BaseTool[T]) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
 	return false, nil
 }
 
-func (b BaseTool) GetAuthTokenHeaderName(_ SourceProvider) (string, error) {
+func (b BaseTool[T]) GetAuthTokenHeaderName(_ SourceProvider) (string, error) {
 	return "Authorization", nil
 }
 
-func (b BaseTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+func (b BaseTool[T]) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, embeddingModelsMap, nil)
 }

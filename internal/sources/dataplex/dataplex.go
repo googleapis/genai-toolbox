@@ -126,7 +126,6 @@ func initDataplexConnection(
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
@@ -187,6 +186,9 @@ func (s *Source) searchRequest(ctx context.Context, query string, pageSize int, 
 }
 
 func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize int, orderBy string) ([]*dataplexpb.AspectType, error) {
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
 	q := query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype"
 	it, err := s.searchRequest(ctx, q, pageSize, orderBy, "")
 	if err != nil {
@@ -195,7 +197,7 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 
 	// Iterate through the search results and call GetAspectType for each result using the resource name
 	var results []*dataplexpb.AspectType
-	for {
+	for len(results) < pageSize {
 		entry, err := it.Next()
 
 		if err == iterator.Done {
@@ -239,13 +241,16 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 }
 
 func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, orderBy string, scope string) ([]*dataplexpb.SearchEntriesResult, error) {
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
 	it, err := s.searchRequest(ctx, query, pageSize, orderBy, scope)
 	if err != nil {
 		return nil, err
 	}
 
 	var results []*dataplexpb.SearchEntriesResult
-	for {
+	for len(results) < pageSize {
 		entry, err := it.Next()
 		if err == iterator.Done {
 			break
@@ -276,6 +281,9 @@ func (s *Source) LookupContext(ctx context.Context, name string, resources []str
 }
 
 func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, pageSize int, orderBy string) ([]*dataplexpb.DataScan, error) {
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
 	req := &dataplexpb.ListDataScansRequest{
 		Parent:   fmt.Sprintf("projects/%s/locations/-", s.ProjectID()),
 		Filter:   filter,
@@ -284,8 +292,9 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 	}
 
 	it := s.GetDataScanClient().ListDataScans(ctx, req)
+
 	var results []*dataplexpb.DataScan
-	for {
+	for len(results) < pageSize {
 		scan, err := it.Next()
 		if err == iterator.Done {
 			break
