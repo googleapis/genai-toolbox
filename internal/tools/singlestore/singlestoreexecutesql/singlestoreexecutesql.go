@@ -37,7 +37,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -51,14 +51,10 @@ type compatibleSource interface {
 
 // Config represents the configuration for the singlestore-execute-sql tool.
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -71,19 +67,20 @@ func (cfg Config) ToolConfigType() string {
 
 // Initialize sets up the Tool using the provided sources map.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
 	allParameters := parameters.Parameters{sqlParameter}
 
 	return Tool{
-		BaseTool: tools.BaseTool{
-			Name:             cfg.Name,
-			Description:      cfg.Description,
-			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			StaticParameters: allParameters,
-			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
-		},
-		cfg: cfg,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -92,13 +89,12 @@ var _ tools.Tool = Tool{}
 
 // Tool represents a tool for executing SQL queries on a SingleStore database.
 type Tool struct {
-	tools.BaseTool
-	cfg Config
+	tools.BaseTool[Config]
 }
 
 // Invoke executes the provided SQL query using the tool's database connection and returns the results.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -129,5 +125,5 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.cfg
+	return t.Cfg
 }
