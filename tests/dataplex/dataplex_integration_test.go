@@ -360,7 +360,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 	parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
 	ownerEmail := tests.ServiceAccountEmail
 	if ownerEmail == "" {
-		ownerEmail = "test-owner@google.com"
+		t.Errorf("Service account email is required, but tests.ServiceAccountEmail was empty")
 	}
 	createReq := &dataplexpb.CreateDataProductRequest{
 		Parent:        parent,
@@ -372,17 +372,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 		},
 	}
 
-	op, err := client.CreateDataProduct(ctx, createReq)
-	if err != nil {
-		t.Fatalf("Failed to initiate CreateDataProduct for %s: %v", dataProductId, err)
-	}
-
-	_, err = op.Wait(ctx)
-	if err != nil {
-		t.Fatalf("Failed to wait for CreateDataProduct for %s: %v", dataProductId, err)
-	}
-
-	return func(t *testing.T) {
+	teardown := func(t *testing.T) {
 		deleteReq := &dataplexpb.DeleteDataProductRequest{
 			Name: fmt.Sprintf("%s/dataProducts/%s", parent, dataProductId),
 		}
@@ -396,6 +386,19 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 			t.Logf("Warning: Failed to wait for DeleteDataProduct for %s: %v", dataProductId, err)
 		}
 	}
+
+	op, err := client.CreateDataProduct(ctx, createReq)
+	if err != nil {
+		t.Fatalf("Failed to initiate CreateDataProduct for %s: %v", dataProductId, err)
+	}
+
+	_, err = op.Wait(ctx)
+	if err != nil {
+		teardown(t)
+		t.Fatalf("Failed to wait for CreateDataProduct for %s: %v", dataProductId, err)
+	}
+
+	return teardown
 }
 
 func setupDataplexThirdPartyAspectType(t *testing.T, ctx context.Context, client *dataplex.CatalogClient, aspectTypeId string) func(*testing.T) {
