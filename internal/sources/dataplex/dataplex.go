@@ -320,6 +320,12 @@ func (s *Source) ListDataProducts(
 	pageSize int,
 	orderBy string,
 ) ([]*dataplexpb.DataProduct, error) {
+	if s.dataProductClient == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
 	parent := fmt.Sprintf("projects/%s/locations/-", s.ProjectID())
 	req := &dataplexpb.ListDataProductsRequest{
 		Parent:   parent,
@@ -331,7 +337,7 @@ func (s *Source) ListDataProducts(
 	it := s.dataProductClient.ListDataProducts(ctx, req)
 	var results []*dataplexpb.DataProduct
 
-	for range pageSize {
+	for len(results) < pageSize {
 		dp, err := it.Next()
 		if err == iterator.Done {
 			break
