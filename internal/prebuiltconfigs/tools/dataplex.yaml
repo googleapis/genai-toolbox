@@ -84,7 +84,7 @@ source: dataplex-source
 description: >-
   Retrieves the final generated data insights (descriptions, schema relationships,
   sample SQL queries) for a completed scan. WARNING: You must verify the execution
-  run has succeeded (via get_run_status) before calling this tool, otherwise the
+  run has succeeded (via get_run_status tool) before calling this tool, otherwise the
   insights will be empty. CRITICAL: Access the results ONLY via the nested public GA
   fields 'dataDocumentationResult.datasetResult' (for datasets) or
   'dataDocumentationResult.tableResult' (for tables). The top-level fields (like
