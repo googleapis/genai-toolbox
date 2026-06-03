@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannerlistgraphs"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlListGraphs(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannerlistgraphs.Config{
-					Name:         "example_tool",
-					Type:         "spanner-list-graphs",
-					Source:       "my-spanner-instance",
-					Description:  "Lists graphs in the database",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "Lists graphs in the database",
+						AuthRequired: []string{},
+					},
+					Type:   "spanner-list-graphs",
+					Source: "my-spanner-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlListGraphs(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannerlistgraphs.Config{
-					Name:         "example_tool",
-					Type:         "spanner-list-graphs",
-					Source:       "my-spanner-instance",
-					Description:  "Lists graphs in the database",
-					AuthRequired: []string{"auth1", "auth2"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "Lists graphs in the database",
+						AuthRequired: []string{"auth1", "auth2"},
+					},
+					Type:   "spanner-list-graphs",
+					Source: "my-spanner-instance",
 				},
 			},
 		},
@@ -84,11 +89,13 @@ func TestParseFromYamlListGraphs(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannerlistgraphs.Config{
-					Name:         "example_tool",
-					Type:         "spanner-list-graphs",
-					Source:       "my-spanner-instance",
-					Description:  "",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "",
+						AuthRequired: []string{},
+					},
+					Type:   "spanner-list-graphs",
+					Source: "my-spanner-instance",
 				},
 			},
 		},

@@ -48,11 +48,13 @@ func TestNewConfig(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"test-update-document": Config{
-					Name:         "test-update-document",
-					Type:         "firestore-update-document",
-					Source:       "test-firestore",
-					Description:  "Update a document in Firestore",
-					AuthRequired: []string{"google-oauth"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "test-update-document",
+						Description:  "Update a document in Firestore",
+						AuthRequired: []string{"google-oauth"},
+					},
+					Type:   "firestore-update-document",
+					Source: "test-firestore",
 				},
 			},
 			wantErr: false,
@@ -68,11 +70,13 @@ func TestNewConfig(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"test-update-document": Config{
-					Name:         "test-update-document",
-					Type:         "firestore-update-document",
-					Source:       "test-firestore",
-					Description:  "Update a document",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "test-update-document",
+						Description:  "Update a document",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-update-document",
+					Source: "test-firestore",
 				},
 			},
 			wantErr: false,
@@ -129,10 +133,12 @@ func TestConfig_Initialize(t *testing.T) {
 		{
 			name: "valid initialization",
 			config: Config{
-				Name:        "test-update-document",
-				Type:        "firestore-update-document",
-				Source:      "test-firestore",
-				Description: "Update a document",
+				ConfigBase: tools.ConfigBase{
+					Name:        "test-update-document",
+					Description: "Update a document",
+				},
+				Type:   "firestore-update-document",
+				Source: "test-firestore",
 			},
 			sources: map[string]sources.Source{
 				"test-firestore": &firestoreds.Source{},
@@ -165,13 +171,13 @@ func TestConfig_Initialize(t *testing.T) {
 
 			// Verify tool properties
 			actualTool := tool.(Tool)
-			if actualTool.Name != tt.config.Name {
-				t.Fatalf("tool.Name = %v, want %v", actualTool.Name, tt.config.Name)
+			if actualTool.GetName() != tt.config.Name {
+				t.Fatalf("tool.Name = %v, want %v", actualTool.GetName(), tt.config.Name)
 			}
-			if actualTool.cfg.Type != "firestore-update-document" {
-				t.Fatalf("tool.Type = %v, want %v", actualTool.cfg.Type, "firestore-update-document")
+			if actualTool.Cfg.Type != "firestore-update-document" {
+				t.Fatalf("tool.Type = %v, want %v", actualTool.Cfg.Type, "firestore-update-document")
 			}
-			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.Metadata.AuthRequired); diff != "" {
+			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.Manifest().AuthRequired); diff != "" {
 				t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
 			}
 			if actualTool.StaticParameters == nil {
@@ -186,7 +192,7 @@ func TestConfig_Initialize(t *testing.T) {
 
 func TestTool_ParseParams(t *testing.T) {
 	tool := Tool{
-		BaseTool: tools.BaseTool{
+		BaseTool: tools.BaseTool[Config]{
 			StaticParameters: parameters.Parameters{
 				parameters.NewStringParameter("documentPath", "Document path"),
 				parameters.NewMapParameter("documentData", "Document data", ""),
@@ -266,8 +272,10 @@ func TestTool_ParseParams(t *testing.T) {
 
 func TestTool_Manifest(t *testing.T) {
 	tool := Tool{
-		BaseTool: tools.BaseTool{
-			Metadata: tools.Manifest{
+		BaseTool: tools.NewBaseTool(
+			Config{},
+			nil,
+			tools.Manifest{
 				Description: "Test description",
 				Parameters: []parameters.ParameterManifest{
 					{
@@ -279,7 +287,8 @@ func TestTool_Manifest(t *testing.T) {
 				},
 				AuthRequired: []string{"google-oauth"},
 			},
-		},
+			nil,
+		),
 	}
 
 	manifest := tool.Manifest()
@@ -330,9 +339,12 @@ func TestTool_Authorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				BaseTool: tools.BaseTool{
-					Metadata: tools.Manifest{AuthRequired: tt.authRequired},
-				},
+				BaseTool: tools.NewBaseTool(
+					Config{ConfigBase: tools.ConfigBase{AuthRequired: tt.authRequired}},
+					nil,
+					tools.Manifest{AuthRequired: tt.authRequired},
+					nil,
+				),
 			}
 			got := tool.Authorized(tt.verifiedAuthServices)
 			if got != tt.want {
