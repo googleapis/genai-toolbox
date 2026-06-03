@@ -32,6 +32,10 @@ the Google Cloud console&lt;/a&gt;.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
 
 
 
@@ -53,6 +57,12 @@ the Google Cloud console&lt;/a&gt;.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/spanner/tools/spanner-execute-sql/"&gt;&lt;strong&gt;spanner-execute-sql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;spanner-execute-sql&amp;#34; tool executes a SQL statement against a Spanner database.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/spanner/tools/spanner-search-catalog/"&gt;&lt;strong&gt;spanner-search-catalog&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;spanner-search-catalog&amp;#34; tool allows to search for entries based on the provided query.
 &lt;/td&gt;
  &lt;/tr&gt;
  

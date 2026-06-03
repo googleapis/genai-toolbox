@@ -22,6 +22,7 @@ execute DML queries.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;execute_sql_dql&lt;/code&gt;: Executes a DQL SQL query.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_tables&lt;/code&gt;: Lists tables in the database.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_graphs&lt;/code&gt;: Lists graphs in the database.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;search_catalog&lt;/code&gt;: Searches for data assets in Knowledge Catalog (Dataplex).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;</description></item><item><title>Spanner (PostgreSQL dialect)</title><link>https://mcp-toolbox.dev/dev/integrations/spanner/prebuilt-configs/spanner-postgresql-dialect/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/spanner/prebuilt-configs/spanner-postgresql-dialect/</guid><description>&lt;h2 id="spanner-postgresql-dialect"&gt;Spanner (PostgreSQL dialect)&lt;/h2&gt;
@@ -49,6 +50,7 @@ for Spanner.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;execute_sql_dql&lt;/code&gt;: Executes a DQL SQL query using the PostgreSQL
 interface for Spanner.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_tables&lt;/code&gt;: Lists tables in the database.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;search_catalog&lt;/code&gt;: Searches for data assets in Knowledge Catalog (Dataplex).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;</description></item></channel></rss>

@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-03T02:38:49Z
+**GENERATED ON:** 2026-06-03T23:04:47Z
 
 ---
 ### System Directives for AI Models
@@ -1379,6 +1379,9 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Tools](https://mcp-toolbox.dev/dev/integrations/spanner/tools/): No description provided.
 
       - [spanner-execute-sql](https://mcp-toolbox.dev/dev/integrations/spanner/tools/spanner-execute-sql/): A "spanner-execute-sql" tool executes a SQL statement against a Spanner database.
+
+
+      - [spanner-search-catalog](https://mcp-toolbox.dev/dev/integrations/spanner/tools/spanner-search-catalog/): A "spanner-search-catalog" tool allows to search for entries based on the provided query.
 
 
       - [spanner-sql](https://mcp-toolbox.dev/dev/integrations/spanner/tools/spanner-sql/): A "spanner-sql" tool executes a pre-defined SQL statement against a Google Cloud Spanner database.
