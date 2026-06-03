@@ -137,12 +137,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	// The input and outputs are for tool guidance, usage guidance is for multi-turn interaction.
 	guidance := Guidance
-
-	if cfg.Description != "" {
-		cfg.Description += "\n\n" + guidance
-	} else {
-		cfg.Description = guidance
-	}
+	cfg.Description += "\n\n" + guidance
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
