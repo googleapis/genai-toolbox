@@ -76,9 +76,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to use as the start of a new branch. Defaults to HEAD of current branch if not specified.")
 	params := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
-	annotations := cfg.Annotations
-	if annotations == nil {
-		annotations = &tools.ToolAnnotations{}
+	annotations := &tools.ToolAnnotations{}
+	if cfg.Annotations != nil {
+		*annotations = *cfg.Annotations
 	}
 	readOnlyHint := false
 	annotations.ReadOnlyHint = &readOnlyHint
