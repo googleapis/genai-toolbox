@@ -22,3 +22,4 @@ description: "Details of the Spanner (PostgreSQL dialect) prebuilt configuration
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL
         interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).
