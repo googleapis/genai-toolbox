@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cockroachdb/cockroachdbsql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -51,12 +52,14 @@ func TestParseFromYamlCockroachDB(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cockroachdbsql.Config{
-					Name:         "example_tool",
-					Type:         "cockroachdb-sql",
-					Source:       "my-crdb-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "cockroachdb-sql",
+					Source:    "my-crdb-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("user_id", "user id parameter"),
 					},
@@ -80,11 +83,13 @@ func TestParseFromYamlCockroachDB(t *testing.T) {
 
 func TestCockroachDBSQLToolConfigType(t *testing.T) {
 	cfg := cockroachdbsql.Config{
-		Name:        "test-tool",
-		Type:        "cockroachdb-sql",
-		Source:      "test-source",
-		Description: "test description",
-		Statement:   "SELECT 1",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-tool",
+			Description: "test description",
+		},
+		Type:      "cockroachdb-sql",
+		Source:    "test-source",
+		Statement: "SELECT 1",
 	}
 
 	if cfg.ToolConfigType() != "cockroachdb-sql" {

@@ -52,11 +52,13 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "clickhouse-list-databases",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "clickhouse-list-databases",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -77,7 +79,7 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 
 func TestListDatabasesToolParseParams(t *testing.T) {
 	tool := Tool{
-		BaseTool: tools.BaseTool{
+		BaseTool: tools.BaseTool[Config]{
 			StaticParameters: parameters.Parameters{},
 		},
 	}

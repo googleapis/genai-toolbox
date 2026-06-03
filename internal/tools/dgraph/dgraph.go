@@ -36,7 +36,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -49,18 +49,14 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	Statement    string                 `yaml:"statement" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	IsQuery      bool                   `yaml:"isQuery"`
-	Timeout      string                 `yaml:"timeout"`
-	Parameters   parameters.Parameters  `yaml:"parameters"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Statement        string                 `yaml:"statement" validate:"required"`
+	IsQuery          bool                   `yaml:"isQuery"`
+	Timeout          string                 `yaml:"timeout"`
+	Parameters       parameters.Parameters  `yaml:"parameters"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -71,16 +67,17 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	return Tool{
-		BaseTool: tools.BaseTool{
-			Name:             cfg.Name,
-			Description:      cfg.Description,
-			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			StaticParameters: cfg.Parameters,
-			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-		},
-		cfg: cfg,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			cfg.Parameters,
+		),
 	}, nil
 }
 
@@ -88,20 +85,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	tools.BaseTool
-	cfg Config
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.cfg
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
-	resp, err := source.RunSQL(t.cfg.Statement, params, t.cfg.IsQuery, t.cfg.Timeout)
+	resp, err := source.RunSQL(t.Cfg.Statement, params, t.Cfg.IsQuery, t.Cfg.Timeout)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
