@@ -369,6 +369,7 @@ The following flags are used to determine Toolbox's telemetry configuration:
 | **flag**                   | **type** | **description**                                                                                                                                                                                           |
 |----------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                                                                                                                 |
+| `--telemetry-gcp-project`  | string   | Google Cloud project ID used for `--telemetry-gcp`. If unset, Toolbox falls back to `GOOGLE_CLOUD_PROJECT` when available.                                                                              |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "127.0.0.1:4318"). To pass an insecure endpoint here, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`. |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                                                                                                            |
 
@@ -386,6 +387,14 @@ To enable Google Cloud Exporter:
 ```bash
 ./toolbox --telemetry-gcp
 ```
+
+To explicitly set the telemetry project:
+
+```bash
+./toolbox --telemetry-gcp --telemetry-gcp-project="my-project-id"
+```
+
+If `--telemetry-gcp-project` is not set, Toolbox uses `GOOGLE_CLOUD_PROJECT` when available.
 
 To enable OTLP Exporter, provide Collector endpoint:
 
