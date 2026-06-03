@@ -39,7 +39,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -52,23 +52,19 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name           string                 `yaml:"name" validate:"required"`
-	Type           string                 `yaml:"type" validate:"required"`
-	Source         string                 `yaml:"source" validate:"required"`
-	AuthRequired   []string               `yaml:"authRequired" validate:"required"`
-	Description    string                 `yaml:"description" validate:"required"`
-	Database       string                 `yaml:"database" validate:"required"`
-	Collection     string                 `yaml:"collection" validate:"required"`
-	FilterPayload  string                 `yaml:"filterPayload" validate:"required"`
-	FilterParams   parameters.Parameters  `yaml:"filterParams"`
-	ProjectPayload string                 `yaml:"projectPayload"`
-	ProjectParams  parameters.Parameters  `yaml:"projectParams"`
-	SortPayload    string                 `yaml:"sortPayload"`
-	SortParams     parameters.Parameters  `yaml:"sortParams"`
-	Limit          int64                  `yaml:"limit"`
-	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Database         string                 `yaml:"database" validate:"required"`
+	Collection       string                 `yaml:"collection" validate:"required"`
+	FilterPayload    string                 `yaml:"filterPayload" validate:"required"`
+	FilterParams     parameters.Parameters  `yaml:"filterParams"`
+	ProjectPayload   string                 `yaml:"projectPayload"`
+	ProjectParams    parameters.Parameters  `yaml:"projectParams"`
+	SortPayload      string                 `yaml:"sortPayload"`
+	SortParams       parameters.Parameters  `yaml:"sortParams"`
+	Limit            int64                  `yaml:"limit"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -79,6 +75,10 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
 
 	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
@@ -95,15 +95,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		BaseTool: tools.BaseTool{
-			Name:             cfg.Name,
-			Description:      cfg.Description,
-			Metadata:         tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-			StaticParameters: allParameters,
-			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-		},
-		cfg: cfg,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -111,12 +108,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	tools.BaseTool
-	cfg Config
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.cfg
+	return t.Cfg
 }
 
 func getOptions(ctx context.Context, sortParameters parameters.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptionsBuilder, error) {
@@ -159,21 +155,21 @@ func getOptions(ctx context.Context, sortParameters parameters.Parameters, proje
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindFilterString", t.cfg.FilterPayload, paramsMap)
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindFilterString", t.Cfg.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating filter", err)
 	}
-	opts, err := getOptions(ctx, t.cfg.SortParams, t.cfg.ProjectPayload, t.cfg.Limit, paramsMap)
+	opts, err := getOptions(ctx, t.Cfg.SortParams, t.Cfg.ProjectPayload, t.Cfg.Limit, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating options", err)
 	}
-	resp, err := source.Find(ctx, filterString, t.cfg.Database, t.cfg.Collection, opts)
+	resp, err := source.Find(ctx, filterString, t.Cfg.Database, t.Cfg.Collection, opts)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

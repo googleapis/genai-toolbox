@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -49,11 +50,13 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:               "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
 					Type:               "neo4j-schema",
 					Source:             "my-neo4j-instance",
-					Description:        "some tool description",
-					AuthRequired:       []string{"my-google-auth-service", "other-auth-service"},
 					CacheExpireMinutes: nil,
 				},
 			},
@@ -70,11 +73,13 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:               "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{}, // Expect an empty slice, not nil.
+					},
 					Type:               "neo4j-schema",
 					Source:             "my-neo4j-instance",
-					Description:        "some tool description",
-					AuthRequired:       []string{}, // Expect an empty slice, not nil.
 					CacheExpireMinutes: &exp,
 				},
 			},
