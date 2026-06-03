@@ -42,29 +42,25 @@ func NewTool(cfg Config, originalCfg tools.ToolConfig, srcs map[string]sources.S
 	allParameters := builder.Parameters()
 
 	return &Tool{
-		BaseTool: tools.BaseTool{
-			Name:             cfg.Name,
-			Description:      desc,
-			Metadata:         tools.Manifest{Description: desc, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			StaticParameters: allParameters,
-			ScopesRequired:   cfg.ScopesRequired,
-			Annotations:      tools.GetAnnotationsOrDefault(nil, tools.NewDestructiveAnnotations),
-		},
-		cfg:            cfg,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(nil, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: desc, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 		originalConfig: originalCfg,
 		Builder:        builder,
 	}, nil
 }
 
 type Tool struct {
-	tools.BaseTool
-	cfg            Config
+	tools.BaseTool[Config]
 	originalConfig tools.ToolConfig
 	Builder        BatchBuilder
 }
 
 func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.cfg.Source, t.cfg.Name, t.cfg.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -77,12 +73,12 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 		return nil, util.NewAgentError("failed to build batch", err)
 	}
 
-	if t.cfg.RuntimeConfig != nil {
-		batch.RuntimeConfig = proto.Clone(t.cfg.RuntimeConfig).(*dataprocpb.RuntimeConfig)
+	if t.Cfg.RuntimeConfig != nil {
+		batch.RuntimeConfig = proto.Clone(t.Cfg.RuntimeConfig).(*dataprocpb.RuntimeConfig)
 	}
 
-	if t.cfg.EnvironmentConfig != nil {
-		batch.EnvironmentConfig = proto.Clone(t.cfg.EnvironmentConfig).(*dataprocpb.EnvironmentConfig)
+	if t.Cfg.EnvironmentConfig != nil {
+		batch.EnvironmentConfig = proto.Clone(t.Cfg.EnvironmentConfig).(*dataprocpb.EnvironmentConfig)
 	}
 
 	// Common override for version if present in params

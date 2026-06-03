@@ -51,11 +51,13 @@ func TestParseFromYamlCloudStorageDownloadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"download_tool": cloudstoragedownloadobject.Config{
-					Name:         "download_tool",
-					Type:         "cloud-storage-download-object",
-					Source:       "my-gcs",
-					Description:  "Download a Cloud Storage object",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "download_tool",
+						Description:  "Download a Cloud Storage object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-download-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -72,11 +74,13 @@ func TestParseFromYamlCloudStorageDownloadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_download": cloudstoragedownloadobject.Config{
-					Name:         "secure_download",
-					Type:         "cloud-storage-download-object",
-					Source:       "prod-gcs",
-					Description:  "Download with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_download",
+						Description:  "Download with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-download-object",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -119,10 +123,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragedownloadobject.Config{
-		Name:        "download_tool",
-		Type:        "cloud-storage-download-object",
-		Source:      "my-gcs",
-		Description: "Download",
+		ConfigBase: tools.ConfigBase{
+			Name:        "download_tool",
+			Description: "Download",
+		},
+		Type:   "cloud-storage-download-object",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {
