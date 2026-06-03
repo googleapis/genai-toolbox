@@ -185,8 +185,6 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 		return nil, fmt.Errorf("failed to read Google tokeninfo response: %w", err)
 	}
 
-	fmt.Printf("DEBUG tokeninfo response: %s\n", string(body))
-
 	var tokenInfo struct {
 		Aud   string `json:"aud"`
 		Azp   string `json:"azp"`
