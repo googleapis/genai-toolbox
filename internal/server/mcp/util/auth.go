@@ -51,19 +51,13 @@ func ValidateScopes(ctx context.Context, toolScopes []string, authServices map[s
 		tokenScopes := strings.Fields(scopeClaim)
 
 		// Check if all required scopes are present in the token
-		missing := false
 		for _, ts := range toolScopes {
 			if !slices.Contains(tokenScopes, ts) {
-				missing = true
-				break
-			}
-		}
-
-		if missing {
-			return &generic.MCPAuthError{
-				Code:           http.StatusForbidden,
-				Message:        "insufficient scopes for this tool",
-				ScopesRequired: toolScopes,
+				return &generic.MCPAuthError{
+					Code:           http.StatusForbidden,
+					Message:        "insufficient scopes for this tool",
+					ScopesRequired: toolScopes,
+				}
 			}
 		}
 	}
