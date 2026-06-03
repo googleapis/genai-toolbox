@@ -57,7 +57,26 @@ name: ask_data_insights
 type: bigquery-conversational-analytics
 source: my-bigquery-source
 description: |
-  Use this tool to perform data analysis, get insights, or answer complex 
+  Use this tool to perform data analysis, get insights, or answer complex
+  questions about the contents of specific BigQuery tables.
+```
+
+### Using a Data Agent
+
+You can optionally configure a
+[data agent](https://cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest/v1beta/projects.locations/chat#DataAgentContext)
+to provide additional context for the conversational analytics API. When a
+`dataAgent` is specified, the tool uses the data agent context instead of inline
+context.
+
+```yaml
+kind: tools
+name: ask_data_insights
+type: bigquery-conversational-analytics
+source: my-bigquery-source
+dataAgent: projects/my-project/locations/us/dataAgents/my-agent-id
+description: |
+  Use this tool to perform data analysis, get insights, or answer complex
   questions about the contents of specific BigQuery tables.
 ```
 
@@ -68,3 +87,4 @@ description: |
 | type        |  string  |     true     | Must be "bigquery-conversational-analytics".       |
 | source      |  string  |     true     | Name of the source for chat.                       |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| dataAgent   |  string  |    false     | Full resource name of a data agent (e.g. `projects/{project}/locations/{location}/dataAgents/{dataAgentId}`). When set, the tool uses data agent context instead of inline context. |

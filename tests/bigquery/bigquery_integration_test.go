@@ -152,7 +152,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 	toolsFile = addBigQuerySqlToolConfig(t, toolsFile, dataTypeToolStmt, arrayDataTypeToolStmt)
-	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
+	// Create Data Agent
+	dataAgentDisplayName := fmt.Sprintf("test-agent-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	dataAgentId, teardownDataAgent := setupDataAgent(t, ctx, BigqueryProject, datasetName, tableName, dataAgentDisplayName)
+	defer teardownDataAgent(t)
+
+	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile, dataAgentId)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -724,7 +729,133 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	}
 }
 
-func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[string]any {
+func setupDataAgent(t *testing.T, ctx context.Context, projectID, datasetID, tableID, dataAgentDisplayName string) (string, func(*testing.T)) {
+	t.Logf("Setting up data agent with ProjectID: %q, DatasetID: %q, TableID: %q, DisplayName: %q", projectID, datasetID, tableID, dataAgentDisplayName)
+
+	accessToken, err := sources.GetIAMAccessToken(ctx)
+	if err != nil {
+		t.Fatalf("failed to get access token: %v", err)
+	}
+
+	dataAgentId := "test" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
+	url := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/%s/dataAgents?dataAgentId=%s", parent, dataAgentId)
+
+	requestBody := map[string]any{
+		"displayName": dataAgentDisplayName,
+		"dataAnalyticsAgent": map[string]any{
+			"publishedContext": map[string]any{
+				"datasourceReferences": map[string]any{
+					"bq": map[string]any{
+						"tableReferences": []map[string]string{
+							{
+								"projectId": projectID,
+								"datasetId": datasetID,
+								"tableId":   tableID,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	bodyBytes, err := json.Marshal(requestBody)
+	if err != nil {
+		t.Fatalf("failed to marshal create data agent request: %v", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("failed to create data agent: %v", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("failed to create data agent, status: %d, body: %s", resp.StatusCode, string(respBody))
+	}
+
+	var op map[string]any
+	if err := json.Unmarshal(respBody, &op); err != nil {
+		t.Fatalf("failed to unmarshal operation: %v", err)
+	}
+
+	opName, ok := op["name"].(string)
+	if !ok {
+		t.Fatalf("operation response missing name: %s", string(respBody))
+	}
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	timeout := time.After(60 * time.Second)
+
+	done := false
+	for !done {
+		select {
+		case <-ctx.Done():
+			t.Fatalf("context cancelled while waiting for data agent creation")
+		case <-timeout:
+			t.Fatalf("timed out waiting for data agent creation")
+		case <-ticker.C:
+			opUrl := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/%s", opName)
+			opReq, _ := http.NewRequestWithContext(ctx, http.MethodGet, opUrl, nil)
+			opReq.Header.Set("Authorization", "Bearer "+accessToken)
+			opResp, err := client.Do(opReq)
+			if err != nil {
+				t.Logf("failed to poll operation: %v", err)
+				continue
+			}
+			opRespBody, _ := io.ReadAll(opResp.Body)
+			opResp.Body.Close()
+
+			var pollOp map[string]any
+			if err := json.Unmarshal(opRespBody, &pollOp); err != nil {
+				t.Logf("failed to unmarshal polling response: %v", err)
+				continue
+			}
+
+			if d, ok := pollOp["done"].(bool); ok && d {
+				if errVal, ok := pollOp["error"]; ok && errVal != nil {
+					t.Fatalf("data agent creation failed: %v", errVal)
+				}
+				done = true
+			}
+		}
+	}
+
+	teardown := func(t *testing.T) {
+		agentName := fmt.Sprintf("%s/dataAgents/%s", parent, dataAgentId)
+		deleteUrl := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/%s", agentName)
+		delReq, _ := http.NewRequest(http.MethodDelete, deleteUrl, nil)
+		delReq.Header.Set("Authorization", "Bearer "+accessToken)
+		delResp, err := client.Do(delReq)
+		if err != nil {
+			t.Errorf("failed to delete data agent %s: %v", agentName, err)
+			return
+		}
+		defer delResp.Body.Close()
+		if delResp.StatusCode != http.StatusOK {
+			t.Errorf("failed to delete data agent %s, status: %d", agentName, delResp.StatusCode)
+		}
+	}
+
+	return dataAgentId, teardown
+}
+
+func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any, dataAgentId string) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -872,6 +1003,12 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"type":        "bigquery-conversational-analytics",
 		"source":      "my-client-auth-source",
 		"description": "Tool to ask BigQuery conversational analytics",
+	}
+	tools["my-data-agent-conversational-analytics-tool"] = map[string]any{
+		"type":        "bigquery-conversational-analytics",
+		"source":      "my-instance",
+		"description": "Tool to ask BigQuery conversational analytics with data agent",
+		"dataAgent":   fmt.Sprintf("projects/%s/locations/global/dataAgents/%s", BigqueryProject, dataAgentId),
 	}
 	tools["my-search-catalog-tool"] = map[string]any{
 		"type":        "bigquery-search-catalog",
@@ -2397,6 +2534,14 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 			))),
 			want:  dataInsightsWant,
 			isErr: false,
+		},
+		{
+			name:          "invoke my-data-agent-conversational-analytics-tool successfully",
+			api:           "http://127.0.0.1:5000/api/tool/my-data-agent-conversational-analytics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"user_query_with_context": "What are the names in the table?"}`)),
+			want:          dataInsightsWant,
+			isErr:         false,
 		},
 		{
 			name:          "invoke my-auth-conversational-analytics-tool with auth token",
