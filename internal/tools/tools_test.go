@@ -28,7 +28,11 @@ import (
 
 // stubConfig and stubTool exercise the path of embedding BaseTool with only
 // the extra methods (Invoke, ToConfig) needed to satisfy the Tool interface.
-type stubConfig struct{}
+// Real tools embed ConfigBase in their Config; the stub does too so it
+// satisfies ToolMeta if/when wired into BaseTool.
+type stubConfig struct {
+	tools.ConfigBase
+}
 
 func (stubConfig) ToolConfigType() string { return "stub" }
 func (stubConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
@@ -36,7 +40,7 @@ func (stubConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
 }
 
 type stubTool struct {
-	tools.BaseTool
+	tools.BaseTool[stubConfig]
 }
 
 func (stubTool) Invoke(_ context.Context, _ tools.SourceProvider, _ parameters.ParamValues, _ tools.AccessToken) (any, util.ToolboxError) {
@@ -48,24 +52,31 @@ func (stubTool) ToConfig() tools.ToolConfig { return stubConfig{} }
 // Compile-time check: embedding BaseTool plus Invoke + ToConfig satisfies Tool.
 var _ tools.Tool = stubTool{}
 
-func newBaseTool() tools.BaseTool {
-	return tools.BaseTool{
-		Name:        "my-tool",
-		Description: "my tool description",
-		Metadata: tools.Manifest{
-			Description:  "manifest description",
-			AuthRequired: []string{"google"},
-		},
-		StaticParameters: parameters.Parameters{
-			parameters.NewStringParameter("p1", "first param"),
-		},
+// Compile-time check: ConfigBase satisfies ToolMeta on its own.
+var _ tools.ToolMeta = tools.ConfigBase{}
+
+func newBaseTool() (tools.BaseTool[tools.ConfigBase], tools.Manifest) {
+	cfg := tools.ConfigBase{
+		Name:           "my-tool",
+		Description:    "my tool description",
+		AuthRequired:   []string{"google"},
 		ScopesRequired: []string{"scope-a", "scope-b"},
-		Annotations:    tools.NewReadOnlyAnnotations(),
 	}
+	manifest := tools.Manifest{
+		Description:  "manifest description",
+		AuthRequired: []string{"google"},
+	}
+	b := tools.NewBaseTool(
+		cfg,
+		tools.NewReadOnlyAnnotations(),
+		manifest,
+		parameters.Parameters{parameters.NewStringParameter("p1", "first param")},
+	)
+	return b, manifest
 }
 
 func TestBaseToolGetters(t *testing.T) {
-	b := newBaseTool()
+	b, wantManifest := newBaseTool()
 
 	if got, want := b.GetName(), "my-tool"; got != want {
 		t.Errorf("GetName() = %q, want %q", got, want)
@@ -80,7 +91,7 @@ func TestBaseToolGetters(t *testing.T) {
 	if got == nil || got.ReadOnlyHint == nil || !*got.ReadOnlyHint {
 		t.Errorf("GetAnnotations() = %+v, want ReadOnlyHint=true", got)
 	}
-	if diff := cmp.Diff(b.Metadata, b.Manifest()); diff != "" {
+	if diff := cmp.Diff(wantManifest, b.Manifest()); diff != "" {
 		t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
 	}
 	if p := b.GetParameters(); len(p) != 1 || p[0].GetName() != "p1" {
@@ -106,7 +117,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			b := tools.BaseTool{Metadata: tools.Manifest{AuthRequired: tc.authRequired}}
+			b := tools.NewBaseTool(tools.ConfigBase{AuthRequired: tc.authRequired}, nil, tools.Manifest{}, nil)
 			if got := b.Authorized(tc.verified); got != tc.want {
 				t.Errorf("Authorized(%v) = %v, want %v", tc.verified, got, tc.want)
 			}
@@ -115,7 +126,7 @@ func TestBaseToolAuthorized(t *testing.T) {
 }
 
 func TestBaseToolRequiresClientAuthorization(t *testing.T) {
-	b := tools.BaseTool{}
+	b := tools.NewBaseTool(tools.ConfigBase{}, nil, tools.Manifest{}, nil)
 	got, err := b.RequiresClientAuthorization(nil)
 	if err != nil {
 		t.Fatalf("RequiresClientAuthorization() error = %v", err)
@@ -126,7 +137,7 @@ func TestBaseToolRequiresClientAuthorization(t *testing.T) {
 }
 
 func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
-	b := tools.BaseTool{}
+	b := tools.NewBaseTool(tools.ConfigBase{}, nil, tools.Manifest{}, nil)
 	got, err := b.GetAuthTokenHeaderName(nil)
 	if err != nil {
 		t.Fatalf("GetAuthTokenHeaderName() error = %v", err)
@@ -137,11 +148,12 @@ func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
 }
 
 func TestBaseToolEmbedParamsPassthrough(t *testing.T) {
-	b := tools.BaseTool{
-		StaticParameters: parameters.Parameters{
-			parameters.NewStringParameter("p1", "first"),
-		},
-	}
+	b := tools.NewBaseTool(
+		tools.ConfigBase{},
+		nil,
+		tools.Manifest{},
+		parameters.Parameters{parameters.NewStringParameter("p1", "first")},
+	)
 	values := parameters.ParamValues{{Name: "p1", Value: "hello"}}
 	got, err := b.EmbedParams(context.Background(), values, map[string]embeddingmodels.EmbeddingModel{})
 	if err != nil {
