@@ -119,8 +119,6 @@ tools:
 - search_entries
 - lookup_entry
 - generate_data_insights
-- get_operation
-- get_run_status
 - get_data_insights
 - generate_data_profile
 - get_data_profile
@@ -128,6 +126,8 @@ tools:
 - get_discovery_results
 - check_data_quality
 - get_data_quality_results
+- get_operation
+- get_run_status
 ---
 kind: tool
 name: generate_data_profile
