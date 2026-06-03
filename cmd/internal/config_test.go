@@ -1778,7 +1778,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"vectorassist": {
 					Name:      "vectorassist",
-					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query"},
+					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query", "improve_query_recall", "list_specs", "get_spec", "delete_spec"},
 				},
 			},
 		},

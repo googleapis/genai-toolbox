@@ -17,6 +17,7 @@ package bigquerycommon
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -24,6 +25,31 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
+
+// validBQTableID matches BigQuery table identifiers in 'dataset.table' or
+// 'project.dataset.table' form. Components are restricted to letters, digits,
+// and underscores — the character set that BigQuery allows for dataset and
+// table IDs and that is safe to interpolate inside a backtick-quoted SQL
+// identifier.
+var validBQTableID = regexp.MustCompile(`^[a-zA-Z0-9_-]+(\.([a-zA-Z0-9_]+)){1,2}$`)
+
+// validBQColumnName matches BigQuery column names: a letter or underscore
+// followed by letters, digits, or underscores.
+var validBQColumnName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// ValidTableID returns true if s is a safe BigQuery table identifier of the
+// form 'dataset.table' or 'project.dataset.table'. Values that fail this check
+// must not be interpolated into backtick-quoted SQL.
+func ValidTableID(s string) bool {
+	return validBQTableID.MatchString(s)
+}
+
+// ValidColumnName returns true if s is a safe BigQuery column name.
+// Values that fail this check must not be interpolated as SQL identifiers
+// or into single-quoted SQL string arguments that represent column references.
+func ValidColumnName(s string) bool {
+	return validBQColumnName.MatchString(s)
+}
 
 // DryRunQuery performs a dry run of the SQL query to validate it and get metadata.
 func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, maximumBytesBilled int64) (*bigqueryrestapi.Job, error) {
