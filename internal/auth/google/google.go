@@ -157,17 +157,13 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 	}
 
 	// Validate opaque Google access token via tokeninfo
-	u, err := url.Parse("https://oauth2.googleapis.com/tokeninfo")
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse Google tokeninfo URL: %w", err)
-	}
-	q := u.Query()
-	q.Set("access_token", tokenStr)
-	u.RawQuery = q.Encode()
-	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+	data := url.Values{}
+	data.Set("access_token", tokenStr)
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://oauth2.googleapis.com/tokeninfo", strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Google tokeninfo request: %w", err)
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := a.client
 	if client == nil {
@@ -231,5 +227,9 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 }
 
 func isJWTFormat(token string) bool {
-	return strings.Count(token, ".") == 2
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return false
+	}
+	return strings.HasPrefix(parts[0], "eyJ")
 }
