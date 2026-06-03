@@ -39,6 +39,7 @@ extraFiles: [
     "docs/en/documentation/connect-to/ides/sqlite_mcp.md",
     "docs/en/documentation/connect-to/ides/oracle_mcp.md",
     "gemini-extension.json",
+    "pypi/src/toolbox_server/__init__.py",
     "npm/server-darwin-arm64/version.txt",
     "npm/server-darwin-x64/version.txt",
     "npm/server-linux-x64/version.txt",

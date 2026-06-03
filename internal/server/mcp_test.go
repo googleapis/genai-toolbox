@@ -1108,7 +1108,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
