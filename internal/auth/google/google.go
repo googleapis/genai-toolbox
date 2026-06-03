@@ -111,9 +111,6 @@ func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (ma
 		if err != nil {
 			return nil, fmt.Errorf("google ID token verification failure: %w", err)
 		}
-		if payload.Issuer != "https://accounts.google.com" && payload.Issuer != "accounts.google.com" {
-			return nil, fmt.Errorf("google ID token issuer validation failure: expected accounts.google.com, got %s", payload.Issuer)
-		}
 		return payload.Claims, nil
 	}
 	return nil, nil
@@ -140,9 +137,6 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 		payload, err := idtoken.Validate(ctx, tokenStr, a.Audience)
 		if err != nil {
 			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("Google ID token verification failure: %v", err), ScopesRequired: a.ScopesRequired}
-		}
-		if payload.Issuer != "https://accounts.google.com" && payload.Issuer != "accounts.google.com" {
-			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
 		}
 
 		scopeClaim, _ := payload.Claims["scope"].(string)
