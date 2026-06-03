@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -29,10 +30,12 @@ import (
 func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
 	t.Helper()
 	cfg := cloudmonitoring.Config{
-		Name:        "test-cloudmonitoring",
-		Type:        toolType,
-		Source:      "test-source",
-		Description: "Test Cloudmonitoring Tool",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-cloudmonitoring",
+			Description: "Test Cloudmonitoring Tool",
+		},
+		Type:   toolType,
+		Source: "test-source",
 	}
 	toolIface, err := cfg.Initialize(nil)
 	if err != nil {
