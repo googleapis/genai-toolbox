@@ -256,6 +256,114 @@ func TestProcessQueryArgsStripsWrappingQuotes(t *testing.T) {
 	}
 }
 
+func TestEscapeFiltersForUnquotedParameters(t *testing.T) {
+	unquoted := map[string]bool{
+		"v.attribution_model_selector": true,
+		"v.cohort_anchor_selector":     true,
+		"v.period_type_selector":       true,
+	}
+
+	tcs := []struct {
+		desc string
+		in   map[string]any
+		out  map[string]any
+	}{
+		{
+			desc: "underscore in unquoted-parameter value is escaped",
+			in:   map[string]any{"v.attribution_model_selector": "first_touch"},
+			out:  map[string]any{"v.attribution_model_selector": "first^_touch"},
+		},
+		{
+			desc: "multiple metacharacters escaped in one value",
+			in:   map[string]any{"v.attribution_model_selector": "a_b%c,d"},
+			out:  map[string]any{"v.attribution_model_selector": "a^_b^%c^,d"},
+		},
+		{
+			desc: "already-escaped value passes through unchanged (idempotence)",
+			in:   map[string]any{"v.cohort_anchor_selector": "signup^_date"},
+			out:  map[string]any{"v.cohort_anchor_selector": "signup^_date"},
+		},
+		{
+			desc: "mixed pre-escaped and unescaped metacharacters",
+			in:   map[string]any{"v.attribution_model_selector": "first^_touch_v2"},
+			out:  map[string]any{"v.attribution_model_selector": "first^_touch^_v2"},
+		},
+		{
+			desc: "all four escape sequences pass through unchanged",
+			in:   map[string]any{"v.attribution_model_selector": "a^_b^%c^,d^^e"},
+			out:  map[string]any{"v.attribution_model_selector": "a^_b^%c^,d^^e"},
+		},
+		{
+			desc: "lone caret followed by non-metachar is doubled",
+			in:   map[string]any{"v.cohort_anchor_selector": "a^b"},
+			out:  map[string]any{"v.cohort_anchor_selector": "a^^b"},
+		},
+		{
+			desc: "trailing lone caret is doubled",
+			in:   map[string]any{"v.cohort_anchor_selector": "tail^"},
+			out:  map[string]any{"v.cohort_anchor_selector": "tail^^"},
+		},
+		{
+			desc: "value with no metacharacters is unchanged",
+			in:   map[string]any{"v.period_type_selector": "monthly"},
+			out:  map[string]any{"v.period_type_selector": "monthly"},
+		},
+		{
+			desc: "filter keyed to a non-parameter field is left alone",
+			in:   map[string]any{"v.signup_date": "after 2026-01-01"},
+			out:  map[string]any{"v.signup_date": "after 2026-01-01"},
+		},
+		{
+			desc: "non-string values are not touched",
+			in:   map[string]any{"v.attribution_model_selector": 42},
+			out:  map[string]any{"v.attribution_model_selector": 42},
+		},
+		{
+			desc: "mixed filters: unquoted is escaped, others pass through",
+			in: map[string]any{
+				"v.attribution_model_selector": "first_touch",
+				"v.signup_date":                "after 2026-01-01",
+				"v.user_count":                 ">= 100",
+			},
+			out: map[string]any{
+				"v.attribution_model_selector": "first^_touch",
+				"v.signup_date":                "after 2026-01-01",
+				"v.user_count":                 ">= 100",
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			filters := map[string]any{}
+			for k, v := range tc.in {
+				filters[k] = v
+			}
+			wq := &v4.WriteQuery{Model: "m", View: "v", Filters: &filters}
+			lookercommon.EscapeFiltersForUnquotedParameters(wq, unquoted)
+			if diff := cmp.Diff(tc.out, *wq.Filters); diff != "" {
+				t.Fatalf("incorrect filters: diff %v", diff)
+			}
+		})
+	}
+}
+
+func TestEscapeFiltersForUnquotedParameters_NoopGuards(t *testing.T) {
+	// Empty unquoted set: should not touch filters.
+	filters := map[string]any{"v.x": "a_b"}
+	wq := &v4.WriteQuery{Model: "m", View: "v", Filters: &filters}
+	lookercommon.EscapeFiltersForUnquotedParameters(wq, map[string]bool{})
+	if got := (*wq.Filters)["v.x"]; got != "a_b" {
+		t.Fatalf("expected empty unquoted set to be a no-op, got %v", got)
+	}
+
+	// nil Filters pointer: must not panic.
+	lookercommon.EscapeFiltersForUnquotedParameters(&v4.WriteQuery{}, map[string]bool{"v.x": true})
+
+	// nil WriteQuery: must not panic.
+	lookercommon.EscapeFiltersForUnquotedParameters(nil, map[string]bool{"v.x": true})
+}
+
 func TestRequestRunInlineQuery2(t *testing.T) {
 	fields := make([]string, 1)
 	fields[0] = "foo.bar"

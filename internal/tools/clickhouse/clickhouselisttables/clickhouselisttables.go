@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -29,6 +30,14 @@ import (
 
 const listTablesType string = "clickhouse-list-tables"
 const databaseKey string = "database"
+
+// validIdentifier matches the ClickHouse unquoted identifier grammar: a letter
+// or underscore followed by letters, digits, or underscores. The `database`
+// parameter is interpolated directly into a `SHOW TABLES FROM` statement and
+// cannot be bound as a positional value, so restricting it to this character
+// set is the only safe option short of refactoring to use ClickHouse's
+// `system.tables` view.
+var validIdentifier = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
 func init() {
 	if !tools.Register(listTablesType, newListTablesConfig) {
@@ -120,8 +129,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a string", databaseKey), nil)
 	}
 
-	// Query to list all tables in the specified database
-	// Note: formatting identifier directly is risky if input is untrusted, but standard for this tool structure.
+	// The database name is interpolated directly into the `SHOW TABLES FROM`
+	// statement. Reject anything that is not a plain identifier so that a
+	// caller cannot smuggle additional clauses (LIKE, LIMIT, FORMAT,
+	// INTO OUTFILE, ...), quoted identifiers, or other expressions through
+	// this parameter. Without this check, an MCP client (or a prompt-injected
+	// LLM) could escape the intended scope of the tool and read arbitrary
+	// system tables, switch the output format to one the calling layer cannot
+	// parse safely, or chain a SHOW with an `INTO OUTFILE` write.
+	if !validIdentifier.MatchString(database) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter %q: must be a plain identifier matching %s", databaseKey, database, validIdentifier.String()), nil)
+	}
 	query := fmt.Sprintf("SHOW TABLES FROM %s", database)
 
 	out, err := source.RunSQL(ctx, query, nil)
