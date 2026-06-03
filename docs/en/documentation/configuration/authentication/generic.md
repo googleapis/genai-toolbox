@@ -123,21 +123,12 @@ scopesRequired:
   - write
 ```
 
-#### Google Opaque Access Token Validation Example
+#### Google Authentication Note
 
-To use Google's `tokeninfo` endpoint for validating opaque access tokens, configure the service to use the `GET` method and `access_token` parameter name:
-
-```yaml
-kind: authServices
-name: google-auth
-type: generic
-audience: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-authorizationServer: https://accounts.google.com
-introspectionEndpoint: https://www.googleapis.com/oauth2/v3/tokeninfo
-introspectionMethod: GET
-introspectionParamName: access_token
-mcpEnabled: true
-```
+> [!WARNING]
+> Do not configure Google's tokeninfo endpoint (`https://oauth2.googleapis.com/tokeninfo`) using `type: generic`. Because the generic OIDC service strictly enforces the presence and validity of the `active` claim (RFC 7662), and Google's tokeninfo endpoint does not return this claim, validation will fail.
+>
+> To authenticate with Google tokens, use the native [Google Sign-In](./google.md) auth service (`type: google`) instead, which natively handles Google's endpoints and token formats.
 
 #### Okta OIDC Configuration Example
 
