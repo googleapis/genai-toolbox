@@ -163,6 +163,114 @@ func ProcessFieldArgs(ctx context.Context, params parameters.ParamValues) (*stri
 	return &model, &explore, nil
 }
 
+// escapeUnquotedParameterValue escapes Looker filter-expression metacharacters
+// so the value reaches a type: unquoted parameter without being interpreted as
+// a wildcard pattern. Looker treats `_` as a single-character wildcard and `%`
+// as a multi-character wildcard, and rejects either inside unquoted-parameter
+// values; `,` is the filter-expression value separator; `^` is the escape
+// character itself. Already-escaped sequences (`^_`, `^%`, `^,`, `^^`) pass
+// through unchanged, which keeps the function idempotent for callers that pass
+// pre-escaped forms (e.g. round-tripping `default_filter_value` from the
+// explore metadata). Lone metacharacters get a `^` prefix; lone `^` is doubled
+// to `^^`. Walking rune-by-rune (not whole-string scanning) means a value with
+// both an already-escaped sequence and an unescaped metacharacter gets each
+// half handled correctly — e.g. `first^_touch_v2` becomes `first^_touch^_v2`.
+func escapeUnquotedParameterValue(value string) string {
+	var sb strings.Builder
+	sb.Grow(len(value))
+	runes := []rune(value)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+		if r == '^' {
+			if i+1 < len(runes) {
+				next := runes[i+1]
+				if next == '_' || next == '%' || next == ',' || next == '^' {
+					sb.WriteRune('^')
+					sb.WriteRune(next)
+					i++
+					continue
+				}
+			}
+			sb.WriteString("^^")
+			continue
+		}
+		if r == '_' || r == '%' || r == ',' {
+			sb.WriteRune('^')
+		}
+		sb.WriteRune(r)
+	}
+	return sb.String()
+}
+
+// EscapeFiltersForUnquotedParameters mutates wq.Filters so every string value
+// keyed to a fully-qualified parameter name listed in unquotedNames is escaped
+// per Looker filter-expression syntax. Non-string values and filters targeting
+// other fields are left untouched.
+func EscapeFiltersForUnquotedParameters(wq *v4.WriteQuery, unquotedNames map[string]bool) {
+	if wq == nil || wq.Filters == nil || len(unquotedNames) == 0 {
+		return
+	}
+	for k, v := range *wq.Filters {
+		if !unquotedNames[k] {
+			continue
+		}
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		(*wq.Filters)[k] = escapeUnquotedParameterValue(s)
+	}
+}
+
+// resolveUnquotedParameterNames fetches the parameter metadata for the explore
+// targeted by wq and returns the set of fully-qualified parameter names whose
+// LookML type is `unquoted`. Returns an empty map (and no error) when the
+// WriteQuery has no model/view set or no filters at all — the caller has
+// nothing to escape in either case.
+func resolveUnquotedParameterNames(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, opts *rtl.ApiSettings) (map[string]bool, error) {
+	if wq == nil || wq.Filters == nil || len(*wq.Filters) == 0 || wq.Model == "" || wq.View == "" {
+		return map[string]bool{}, nil
+	}
+	fields := ParametersFields
+	req := v4.RequestLookmlModelExplore{
+		LookmlModelName: wq.Model,
+		ExploreName:     wq.View,
+		Fields:          &fields,
+	}
+	resp, err := sdk.LookmlModelExplore(req, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]bool{}
+	if resp.Fields == nil || resp.Fields.Parameters == nil {
+		return out, nil
+	}
+	for _, p := range *resp.Fields.Parameters {
+		if p.Name != nil && p.Type != nil && *p.Type == "unquoted" {
+			out[*p.Name] = true
+		}
+	}
+	return out, nil
+}
+
+// EscapeUnquotedParameterFilters looks up the explore's parameter metadata and
+// escapes filter-expression metacharacters in any filter value that targets a
+// type: unquoted parameter. Looker's filter parser interprets `_` and `%` as
+// wildcards and rejects them for unquoted parameters, so an unescaped value
+// like `first_touch` is parsed as `first<single-char-wildcard>touch` and 400s
+// with "The filter \"first_touch\" is not allowed." This is a no-op when no
+// filters target unquoted parameters. Metadata-lookup failures are returned to
+// the caller, which should log and proceed: callers without explore-read
+// permission still need their non-parameter queries to succeed.
+func EscapeUnquotedParameterFilters(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, opts *rtl.ApiSettings) error {
+	unquoted, err := resolveUnquotedParameterNames(ctx, sdk, wq, opts)
+	if err != nil {
+		return err
+	}
+	EscapeFiltersForUnquotedParameters(wq, unquoted)
+	return nil
+}
+
 func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.WriteQuery, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
