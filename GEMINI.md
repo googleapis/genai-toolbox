@@ -164,7 +164,7 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/tools/<newdb>/<toolname>`.
 2.  Define a `Config` struct that **embeds `tools.ConfigBase`** (with `yaml:",inline"`). This supplies the shared `name`, `description`, `authRequired`, and `scopesRequired` fields and their getters — add only tool-specific fields and do not redeclare the shared ones.
 3.  Define a `Tool` struct that **embeds `tools.BaseTool[Config]`**. Do *not* re-declare the boilerplate `Tool` methods (`GetName`, `GetDescription`, `Manifest`, `GetParameters`, `Authorized`, `RequiresClientAuthorization`, `GetAuthTokenHeaderName`, `EmbedParams`, etc.) — they are inherited from `BaseTool`.
-4.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`). In `Initialize`, construct the tool via `tools.NewBaseTool(cfg, annotations, manifest, params)`.
+4.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`). In `Initialize`, construct the tool via `tools.NewBaseTool(cfg, annotations, manifest, staticParameters)`.
 5.  Implement only the methods `BaseTool` does not provide: `Invoke` and `ToConfig`. Override an inherited method (e.g. `EmbedParams`, `RequiresClientAuthorization`, `GetAuthTokenHeaderName`) **only** when the tool's behavior differs from the default.
 6.  Implement `init()` to register the tool.
 7.  Add unit tests.
