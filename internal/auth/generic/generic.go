@@ -429,13 +429,8 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		}
 	}
 
-	if a.issuer != "" {
-		if introspectResp.Iss == "" {
-			return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer in introspection response", ScopesRequired: a.ScopesRequired}
-		}
-		if introspectResp.Iss != a.issuer {
-			return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
-		}
+	if a.issuer != "" && introspectResp.Iss == "" {
+		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer in introspection response", ScopesRequired: a.ScopesRequired}
 	}
 
 	err = a.validateClaims(ctx, introspectResp.Iss, aud, introspectResp.Scope)
