@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYamlCloudStorageReadObject(t *testing.T) {
@@ -43,11 +44,13 @@ func TestParseFromYamlCloudStorageReadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"read_object_tool": Config{
-					Name:         "read_object_tool",
-					Type:         "cloud-storage-read-object",
-					Source:       "my-gcs",
-					Description:  "Read a Cloud Storage object",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "read_object_tool",
+						Description:  "Read a Cloud Storage object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-read-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -64,11 +67,13 @@ func TestParseFromYamlCloudStorageReadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_read_object": Config{
-					Name:         "secure_read_object",
-					Type:         "cloud-storage-read-object",
-					Source:       "prod-gcs",
-					Description:  "Read object with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_read_object",
+						Description:  "Read object with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-read-object",
+					Source: "prod-gcs",
 				},
 			},
 		},

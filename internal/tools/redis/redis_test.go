@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/redis"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -52,12 +53,14 @@ func TestParseFromYamlRedis(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"redis_tool": redis.Config{
-					Name:         "redis_tool",
-					Type:         "redis",
-					Source:       "my-redis-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Commands:     [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
+					ConfigBase: tools.ConfigBase{
+						Name:         "redis_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:     "redis",
+					Source:   "my-redis-instance",
+					Commands: [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "user name"),
 					},

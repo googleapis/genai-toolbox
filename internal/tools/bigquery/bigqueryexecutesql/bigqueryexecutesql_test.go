@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryexecutesql"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": bigqueryexecutesql.Config{
-					Name:         "example_tool",
-					Type:         "bigquery-execute-sql",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "bigquery-execute-sql",
+					Source: "my-instance",
 				},
 			},
 		},

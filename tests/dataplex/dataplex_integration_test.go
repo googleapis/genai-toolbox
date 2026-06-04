@@ -529,6 +529,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 		wantStatusCode int
 		expectResult   bool
 		wantContentKey string
+		wantCount      int
 	}{
 		{
 			name:           "Success - Entry Found",
@@ -547,6 +548,16 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "dataplex_entry",
+		},
+		{
+			name:           "Success - Limit Results by PageSize",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte("{\"query\":\"system=bigquery\", \"pageSize\": 2}")),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "dataplex_entry",
+			wantCount:      2,
 		},
 		{
 			name:           "Success with Authorization - Entry Found",
@@ -626,8 +637,12 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			}
 
 			if tc.expectResult {
-				if len(entries) != 1 {
-					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				wantCount := tc.wantCount
+				if wantCount == 0 {
+					wantCount = 1
+				}
+				if len(entries) != wantCount {
+					t.Fatalf("expected exactly %d entries, but got %d", wantCount, len(entries))
 				}
 				entry, ok := entries[0].(map[string]interface{})
 				if !ok {
