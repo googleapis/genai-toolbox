@@ -136,7 +136,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
-			want:          "[{\"execute_nl_query\":{\"?column?\":1}}]",
+			want:          "[{\"execute_nl_query\":{\"number_one\":1}}]",
 			isErr:         false,
 		},
 		{
@@ -174,7 +174,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
 			isErr:         false,
-			want:          "[{\"execute_nl_query\":{\"?column?\":1}}]",
+			want:          "[{\"execute_nl_query\":{\"number_one\":1}}]",
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
@@ -267,7 +267,7 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 					},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"?column?\":1}}"}]}}`,
+			want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"number_one\":1}}"}]}}`,
 		},
 		{
 			name:          "MCP Invoke invalid tool",

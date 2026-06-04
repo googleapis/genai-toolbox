@@ -20,7 +20,6 @@ import (
 	"slices"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -37,7 +36,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -50,23 +49,19 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name          string                `yaml:"name" validate:"required"`
-	Type          string                `yaml:"type" validate:"required"`
-	Source        string                `yaml:"source" validate:"required"`
-	AuthRequired  []string              `yaml:"authRequired" validate:"required"`
-	Description   string                `yaml:"description" validate:"required"`
-	Database      string                `yaml:"database" validate:"required"`
-	Collection    string                `yaml:"collection" validate:"required"`
-	FilterPayload string                `yaml:"filterPayload" validate:"required"`
-	FilterParams  parameters.Parameters `yaml:"filterParams"`
-	UpdatePayload string                `yaml:"updatePayload" validate:"required"`
-	UpdateParams  parameters.Parameters `yaml:"updateParams" validate:"required"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                `yaml:"type" validate:"required"`
+	Source           string                `yaml:"source" validate:"required"`
+	Database         string                `yaml:"database" validate:"required"`
+	Collection       string                `yaml:"collection" validate:"required"`
+	FilterPayload    string                `yaml:"filterPayload" validate:"required"`
+	FilterParams     parameters.Parameters `yaml:"filterParams"`
+	UpdatePayload    string                `yaml:"updatePayload" validate:"required"`
+	UpdateParams     parameters.Parameters `yaml:"updateParams" validate:"required"`
 
 	Canonical   bool                   `yaml:"canonical"`
 	Upsert      bool                   `yaml:"upsert"`
 	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -77,29 +72,28 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Create a slice for all parameters
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	allParameters := slices.Concat(cfg.FilterParams, cfg.UpdateParams)
 
-	// Verify no duplicate parameter names
-	err := parameters.CheckDuplicateParameters(allParameters)
-	if err != nil {
+	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
 		return nil, err
 	}
 
-	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
-
 	if paramManifest == nil {
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
-
-	// finish tool setup
 	return Tool{
-		Config:    cfg,
-		AllParams: allParameters,
-		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -107,77 +101,31 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters
-	manifest  tools.Manifest
+	tools.BaseTool[Config]
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.FilterPayload, paramsMap)
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.Cfg.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating filter", err)
 	}
-	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOne", t.UpdatePayload, paramsMap)
+	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOne", t.Cfg.UpdatePayload, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to get update", err)
 	}
-	resp, err := source.UpdateOne(ctx, filterString, t.Canonical, updateString, t.Database, t.Collection, t.Upsert)
+	resp, err := source.UpdateOne(ctx, filterString, t.Cfg.Canonical, updateString, t.Cfg.Database, t.Cfg.Collection, t.Cfg.Upsert)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }
