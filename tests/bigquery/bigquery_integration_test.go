@@ -2977,14 +2977,14 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 			historyData:    allowedTableUnquoted,
 			timestampCol:   "ts', horizon => 5) --",
 			wantStatusCode: http.StatusOK,
-			wantInError:    `invalid column name for 'timestamp_col': "ts', horizon => 5) --"`,
+			wantInError:    `invalid column name for 'timestamp_col': "'ts', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:           "invoke with SQL injection in data_col",
 			historyData:    allowedTableUnquoted,
 			dataCol:        "data', horizon => 5) --",
 			wantStatusCode: http.StatusOK,
-			wantInError:    `invalid column name for 'data_col': "data', horizon => 5) --"`,
+			wantInError:    `invalid column name for 'data_col': "'data', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 	}
 
@@ -3089,21 +3089,21 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			name:           "invoke with query on disallowed table",
 			inputData:      fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
 			wantStatusCode: http.StatusOK,
-			wantInResult:   fmt.Sprintf("query in input_data accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
+			wantInResult:   fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
 		},
 		{
 			name:           "invoke with SQL injection in is_test_col",
 			inputData:      allowedTableUnquoted,
 			isTestCol:      "is_test; drop table x",
 			wantStatusCode: http.StatusOK,
-			wantInResult:   `invalid column name for 'is_test_col': "is_test; drop table x"`,
+			wantInResult:   `invalid column name for 'is_test_col': "'is_test; drop table x'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:            "invoke with SQL injection in dimension_id_cols",
 			inputData:       allowedTableUnquoted,
 			dimensionIdCols: []string{"dim1", "dim2; drop table x"},
 			wantStatusCode:  http.StatusOK,
-			wantInResult:    `invalid column name in 'dimension_id_cols': "dim2; drop table x"`,
+			wantInResult:    `invalid column name in 'dimension_id_cols': "'dim2; drop table x'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:               "invoke with single quote in contribution_metric",
