@@ -141,6 +141,10 @@ func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksUR
 		return "", "", "", err
 	}
 
+	if config.Issuer == "" {
+		return "", "", "", fmt.Errorf("issuer not found in config")
+	}
+
 	if config.JwksUri == "" {
 		return "", "", "", fmt.Errorf("jwks_uri not found in config")
 	}
@@ -429,10 +433,6 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		}
 	}
 
-	if a.issuer != "" && introspectResp.Iss == "" {
-		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer in introspection response", ScopesRequired: a.ScopesRequired}
-	}
-
 	err = a.validateClaims(ctx, introspectResp.Iss, aud, introspectResp.Scope)
 	if err != nil {
 		return nil, err
@@ -455,11 +455,13 @@ func (a AuthService) validateClaims(ctx context.Context, iss string, aud []strin
 	}
 
 	// Validate issuer
-	if a.issuer != "" && iss != "" {
-		if iss != a.issuer {
-			logger.WarnContext(ctx, "issuer validation failed: expected %s, got %s", a.issuer, iss)
-			return &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
-		}
+	if iss == "" {
+		logger.WarnContext(ctx, "issuer validation failed: missing issuer in token")
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer in token validation", ScopesRequired: a.ScopesRequired}
+	}
+	if iss != a.issuer {
+		logger.WarnContext(ctx, "issuer validation failed: expected %s, got %s", a.issuer, iss)
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Validate audience
