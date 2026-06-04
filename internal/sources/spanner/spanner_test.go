@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/sources/spanner"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
@@ -164,6 +165,59 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestExtractType(t *testing.T) {
+	typeMap := map[string]string{
+		"cloud-spanner-instance": "SERVICE",
+		"cloud-spanner-database": "DATABASE",
+		"cloud-spanner-table":    "TABLE",
+		"cloud-spanner-view":     "VIEW",
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		want string
+	}{
+		{
+			desc: "mapped type instance",
+			in:   "projects/my-project/locations/global/entryTypes/cloud-spanner-instance",
+			want: "SERVICE",
+		},
+		{
+			desc: "mapped type database",
+			in:   "projects/my-project/locations/global/entryTypes/cloud-spanner-database",
+			want: "DATABASE",
+		},
+		{
+			desc: "mapped type table",
+			in:   "projects/my-project/locations/global/entryTypes/cloud-spanner-table",
+			want: "TABLE",
+		},
+		{
+			desc: "mapped type view",
+			in:   "projects/my-project/locations/global/entryTypes/cloud-spanner-view",
+			want: "VIEW",
+		},
+		{
+			desc: "no slash returns input",
+			in:   "cloud-spanner-table",
+			want: "cloud-spanner-table",
+		},
+		{
+			desc: "unknown type with slash returns empty",
+			in:   "projects/my-project/locations/global/entryTypes/unknown-type",
+			want: "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := searchcatalog.ExtractType(tc.in, typeMap)
+			if got != tc.want {
+				t.Errorf("ExtractType(%q) = %q, want %q", tc.in, got, tc.want)
 			}
 		})
 	}
