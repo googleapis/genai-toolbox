@@ -78,7 +78,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	databaseParameter := parameters.NewStringParameter(databaseKey, "The database to list tables from.")
 	params := parameters.Parameters{databaseParameter}
 
-	allParameters, paramManifest, _ := parameters.ProcessParameters(nil, params)
+	allParameters, paramManifest, err := parameters.ProcessParameters(nil, params)
+	if err != nil {
+		return nil, err
+	}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
