@@ -2977,14 +2977,14 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 			historyData:    allowedTableUnquoted,
 			timestampCol:   "ts', horizon => 5) --",
 			wantStatusCode: http.StatusOK,
-			wantInError:    `invalid column name for 'timestamp_col': "'ts', horizon`,
+			wantInError:    `invalid column name for 'timestamp_col': "'ts', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:           "invoke with SQL injection in data_col",
 			historyData:    allowedTableUnquoted,
 			dataCol:        "data', horizon => 5) --",
 			wantStatusCode: http.StatusOK,
-			wantInError:    `invalid column name for 'data_col': "'data', horizon`,
+			wantInError:    `invalid column name for 'data_col': "'data', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 	}
 
@@ -3029,23 +3029,36 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
+			var respBody map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+			got, ok := respBody["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body. Body: %s", string(bodyBytes))
+			}
+
+			var gotError string
+			var innerMap map[string]any
+			if err := json.Unmarshal([]byte(got), &innerMap); err == nil {
+				if errMsg, ok := innerMap["error"].(string); ok {
+					gotError = errMsg
+				}
+			}
+
 			if tc.wantInResult != "" {
-				var respBody map[string]interface{}
-				if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
-					t.Fatalf("error parsing response body: %v", err)
-				}
-				got, ok := respBody["result"].(string)
-				if !ok {
-					t.Fatalf("unable to find result in response body. Body: %s", string(bodyBytes))
-				}
 				if !strings.Contains(got, tc.wantInResult) {
 					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
 				}
 			}
 
 			if tc.wantInError != "" {
-				if !strings.Contains(string(bodyBytes), tc.wantInError) {
-					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				checkStr := got
+				if gotError != "" {
+					checkStr = gotError
+				}
+				if !strings.Contains(checkStr, tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", checkStr, tc.wantInError)
 				}
 			}
 		})
@@ -3077,7 +3090,7 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			name:           "invoke with disallowed table name",
 			inputData:      disallowedTableUnquoted,
 			wantStatusCode: http.StatusOK,
-			wantInResult:   fmt.Sprintf("access to dataset '%s' (from table '%s') is not allowed", disallowedDatasetFQN, disallowedTableUnquoted),
+			wantInError:    fmt.Sprintf("access to dataset '%s' (from table '%s') is not allowed", disallowedDatasetFQN, disallowedTableUnquoted),
 		},
 		{
 			name:           "invoke with query on allowed table",
@@ -3089,28 +3102,28 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			name:           "invoke with query on disallowed table",
 			inputData:      fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
 			wantStatusCode: http.StatusOK,
-			wantInResult:   fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
+			wantInError:    fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
 		},
 		{
 			name:           "invoke with SQL injection in is_test_col",
 			inputData:      allowedTableUnquoted,
 			isTestCol:      "is_test; drop table x",
 			wantStatusCode: http.StatusOK,
-			wantInResult:   `invalid column name for 'is_test_col': "'is_test; drop table x'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
+			wantInError:    `invalid column name for 'is_test_col': "'is_test; drop table x'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:            "invoke with SQL injection in dimension_id_cols",
 			inputData:       allowedTableUnquoted,
 			dimensionIdCols: []string{"dim1", "dim2; drop table x"},
 			wantStatusCode:  http.StatusOK,
-			wantInResult:    `invalid column name in 'dimension_id_cols': "'dim2; drop table x'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
+			wantInError:     `invalid column name in 'dimension_id_cols': "'dim2; drop table x'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:               "invoke with single quote in contribution_metric",
 			inputData:          allowedTableUnquoted,
 			contributionMetric: "SUM('metric')",
 			wantStatusCode:     http.StatusOK,
-			wantInResult:       `invalid 'contribution_metric': must not contain single quotes`,
+			wantInError:        `invalid 'contribution_metric': must not contain single quotes`,
 		},
 	}
 
@@ -3151,21 +3164,32 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
+			got, ok := respBody["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body. Body: %s", string(bodyBytes))
+			}
+
+			var gotError string
+			var innerMap map[string]any
+			if err := json.Unmarshal([]byte(got), &innerMap); err == nil {
+				if errMsg, ok := innerMap["error"].(string); ok {
+					gotError = errMsg
+				}
+			}
 
 			if tc.wantInResult != "" {
-				got, ok := respBody["result"].(string)
-				if !ok {
-					t.Fatalf("unable to find result in response body. Body: %s", string(bodyBytes))
-				}
-
 				if !strings.Contains(got, tc.wantInResult) {
-					t.Errorf("unexpected result: got %q, want to contain %q", string(bodyBytes), tc.wantInResult)
+					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
 				}
 			}
 
 			if tc.wantInError != "" {
-				if !strings.Contains(string(bodyBytes), tc.wantInError) {
-					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				checkStr := got
+				if gotError != "" {
+					checkStr = gotError
+				}
+				if !strings.Contains(checkStr, tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", checkStr, tc.wantInError)
 				}
 			}
 		})
