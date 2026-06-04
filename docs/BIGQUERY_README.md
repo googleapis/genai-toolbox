@@ -78,7 +78,7 @@ export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional: true, false, or a custom he
 export BIGQUERY_SCOPES="<comma-separated-scopes>"  # Optional
 export BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT="<service-account-email>"  # Optional: Service account to impersonate
 export BIGQUERY_WRITE_MODE="<write-mode>" # Optional: allowed, blocked, protected. Defaults to allowed
-export BIGQUERY_ALLOWED_DATASETS="<comma-separated-datasets>" # Optional: list of datasets within $BIGQUERY_PROJECT where writing is allowed (requires BIGQUERY_WRITE_MODE="allowed")
+export BIGQUERY_ALLOWED_DATASETS="<comma-separated-datasets>" # Optional: list of datasets within $BIGQUERY_PROJECT to restrict tool access to
 ```
 
 Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):
