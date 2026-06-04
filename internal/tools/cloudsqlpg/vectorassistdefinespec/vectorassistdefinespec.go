@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -32,14 +31,14 @@ import (
 const resourceType string = "vector-assist-define-spec"
 
 const defineSpecQuery = `
-        SELECT recommendation_id, vector_spec_id, table_name, schema_name, query, recommendation, applied, modified, created_at 
-        FROM vector_assist.define_spec(table_name => @table_name::TEXT, schema_name => @schema_name::TEXT, spec_id => @spec_id::TEXT, 
-            vector_column_name => @vector_column_name::TEXT, text_column_name => @text_column_name::TEXT, 
-            vector_index_type => @vector_index_type::TEXT, embeddings_available => @embeddings_available::BOOLEAN, 
-            num_vectors => @num_vectors::INTEGER, dimensionality => @dimensionality::INTEGER, 
-            embedding_model => @embedding_model::TEXT, prefilter_column_names => @prefilter_column_names, 
-            distance_func => @distance_func::TEXT, quantization => @quantization::TEXT, 
-            memory_budget_kb => @memory_budget_kb::INTEGER, target_recall => @target_recall::FLOAT, 
+        SELECT recommendation_id, vector_spec_id, table_name, schema_name, query, recommendation, applied, modified, created_at
+        FROM vector_assist.define_spec(table_name => @table_name::TEXT, schema_name => @schema_name::TEXT, spec_id => @spec_id::TEXT,
+            vector_column_name => @vector_column_name::TEXT, text_column_name => @text_column_name::TEXT,
+            vector_index_type => @vector_index_type::TEXT, embeddings_available => @embeddings_available::BOOLEAN,
+            num_vectors => @num_vectors::INTEGER, dimensionality => @dimensionality::INTEGER,
+            embedding_model => @embedding_model::TEXT, prefilter_column_names => @prefilter_column_names,
+            distance_func => @distance_func::TEXT, quantization => @quantization::TEXT,
+            memory_budget_kb => @memory_budget_kb::INTEGER, target_recall => @target_recall::FLOAT,
             target_top_k => @target_top_k::INTEGER, tune_vector_index => @tune_vector_index::BOOLEAN);
 `
 
@@ -50,7 +49,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -63,13 +62,9 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string `yaml:"type" validate:"required"`
+	Source           string `yaml:"source" validate:"required"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -99,53 +94,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewIntParameterWithRequired("target_top_k", "The top-K values that need to be retrieved for the given query.", false),
 		parameters.NewBooleanParameterWithRequired("tune_vector_index", "Boolean parameter to specify if the auto tuning is required for the index.", false),
 	}
-	paramManifest := allParameters.Manifest()
 
 	if cfg.Description == "" {
 		cfg.Description = "This tool defines a new vector specification by capturing the user's intent and requirements for a vector search workload. This generates a complete, ordered set of SQL recommendations required to set up the database, embeddings, and vector indexes. While highly customizable, any optional parameters left unspecified will use internally determined defaults optimized for the specific workload. Use this tool at the very beginning of the vector setup process when a user first wants to configure a table for vector search, generate embeddings, or create a new vector index."
 	}
 
 	return Tool{
-		Config:    cfg,
-		allParams: allParameters,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   paramManifest,
-			AuthRequired: cfg.AuthRequired,
-		},
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	allParams parameters.Parameters `yaml:"allParams"`
-	manifest  tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return nil
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	tools.BaseTool[Config]
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -165,30 +136,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.allParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.allParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }
