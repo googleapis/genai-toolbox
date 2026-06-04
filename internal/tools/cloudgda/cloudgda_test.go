@@ -67,12 +67,14 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: map[string]tools.ToolConfig{
 				"my-gda-query-tool": cloudgdatool.Config{
-					Name:         "my-gda-query-tool",
-					Type:         "cloud-gemini-data-analytics-query",
-					Source:       "gda-api-source",
-					Description:  "Test Description",
-					Location:     "us-central1",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "my-gda-query-tool",
+						Description:  "Test Description",
+						AuthRequired: []string{},
+					},
+					Type:     "cloud-gemini-data-analytics-query",
+					Source:   "gda-api-source",
+					Location: "us-central1",
 					Context: &cloudgdatool.QueryDataContext{
 						QueryDataContext: &geminidataanalyticspb.QueryDataContext{
 							DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
@@ -176,11 +178,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "successful initialization",
 			cfg: cloudgdatool.Config{
-				Name:        "my-gda-query-tool",
-				Type:        "cloud-gemini-data-analytics-query",
-				Source:      "gda-api-source",
-				Description: "Test Description",
-				Location:    "us-central1",
+				ConfigBase: tools.ConfigBase{
+					Name:        "my-gda-query-tool",
+					Description: "Test Description",
+				},
+				Type:     "cloud-gemini-data-analytics-query",
+				Source:   "gda-api-source",
+				Location: "us-central1",
 			},
 		},
 	}
@@ -227,11 +231,13 @@ func TestInvoke(t *testing.T) {
 
 	// Initialize the tool config with context
 	toolCfg := cloudgdatool.Config{
-		Name:        "query-data-tool",
-		Type:        "cloud-gemini-data-analytics-query",
-		Source:      "mock-gda-source",
-		Description: "Query Gemini Data Analytics",
-		Location:    location,
+		ConfigBase: tools.ConfigBase{
+			Name:        "query-data-tool",
+			Description: "Query Gemini Data Analytics",
+		},
+		Type:     "cloud-gemini-data-analytics-query",
+		Source:   "mock-gda-source",
+		Location: location,
 		Context: &cloudgdatool.QueryDataContext{
 			QueryDataContext: &geminidataanalyticspb.QueryDataContext{
 				DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{

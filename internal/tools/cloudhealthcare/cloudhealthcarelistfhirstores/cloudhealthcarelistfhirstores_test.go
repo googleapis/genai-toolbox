@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	listfhirstores "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcarelistfhirstores"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlHealthcareListFHIRStores(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": listfhirstores.Config{
-					Name:         "example_tool",
-					Type:         "cloud-healthcare-list-fhir-stores",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-healthcare-list-fhir-stores",
+					Source: "my-instance",
 				},
 			},
 		},

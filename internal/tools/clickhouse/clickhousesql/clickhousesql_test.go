@@ -55,12 +55,14 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "clickhouse-sql",
-					Source:       "my-instance",
-					Description:  "some description",
-					Statement:    "SELECT 1",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "clickhouse-sql",
+					Source:    "my-instance",
+					Statement: "SELECT 1",
 				},
 			},
 		},
@@ -80,15 +82,17 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"param_tool": Config{
-					Name:        "param_tool",
-					Type:        "clickhouse-sql",
-					Source:      "test-source",
-					Description: "Test ClickHouse tool",
-					Statement:   "SELECT * FROM test_table WHERE id = $1",
+					ConfigBase: tools.ConfigBase{
+						Name:         "param_tool",
+						Description:  "Test ClickHouse tool",
+						AuthRequired: []string{},
+					},
+					Type:      "clickhouse-sql",
+					Source:    "test-source",
+					Statement: "SELECT * FROM test_table WHERE id = $1",
 					Parameters: parameters.Parameters{
 						parameters.NewStringParameter("id", "Test ID"),
 					},
-					AuthRequired: []string{},
 				},
 			},
 		},
@@ -108,12 +112,14 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 
 func TestSQLConfigInitializeValidSource(t *testing.T) {
 	config := Config{
-		Name:        "test-tool",
-		Type:        sqlType,
-		Source:      "test-clickhouse",
-		Description: "Test tool",
-		Statement:   "SELECT 1",
-		Parameters:  parameters.Parameters{},
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+		Type:       sqlType,
+		Source:     "test-clickhouse",
+		Statement:  "SELECT 1",
+		Parameters: parameters.Parameters{},
 	}
 
 	// Create a mock ClickHouse source
@@ -133,17 +139,22 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 		t.Fatalf("Expected Tool type, got %T", tool)
 	}
 
-	if clickhouseTool.Name != "test-tool" {
-		t.Errorf("Expected name 'test-tool', got %s", clickhouseTool.Name)
+	if clickhouseTool.GetName() != "test-tool" {
+		t.Errorf("Expected name 'test-tool', got %s", clickhouseTool.GetName())
 	}
 }
 
 func TestToolManifest(t *testing.T) {
 	tool := Tool{
-		manifest: tools.Manifest{
-			Description: "Test description",
-			Parameters:  []parameters.ParameterManifest{},
-		},
+		BaseTool: tools.NewBaseTool(
+			Config{},
+			nil,
+			tools.Manifest{
+				Description: "Test description",
+				Parameters:  []parameters.ParameterManifest{},
+			},
+			nil,
+		),
 	}
 
 	manifest := tool.Manifest()
@@ -188,9 +199,16 @@ func TestToolAuthorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				Config: Config{
-					AuthRequired: tt.authRequired,
-				},
+				BaseTool: tools.NewBaseTool(
+					Config{
+						ConfigBase: tools.ConfigBase{
+							AuthRequired: tt.authRequired,
+						},
+					},
+					nil,
+					tools.Manifest{},
+					nil,
+				),
 			}
 
 			authorized := tool.Authorized(tt.verifiedAuthServices)

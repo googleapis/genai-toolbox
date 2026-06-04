@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	postgreslisttables "github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgreslisttables"
 )
 
@@ -47,11 +48,13 @@ func TestParseFromYamlPostgresListTables(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgreslisttables.Config{
-					Name:         "example_tool",
-					Type:         "postgres-list-tables",
-					Source:       "my-postgres-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "postgres-list-tables",
+					Source: "my-postgres-instance",
 				},
 			},
 		},
