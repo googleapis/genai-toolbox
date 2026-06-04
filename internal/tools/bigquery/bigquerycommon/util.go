@@ -155,3 +155,13 @@ func StripSingleQuotes(s string) string {
 	}
 	return s
 }
+
+// ValidColumnParam returns true if s (stripped of leading/trailing single quotes) is a safe column name.
+func ValidColumnParam(s string) bool {
+	return ValidColumnName(StripSingleQuotes(s))
+}
+
+// ValidContributionMetricParam returns true if s (stripped of leading/trailing single quotes) is a safe contribution metric (does not contain single quotes).
+func ValidContributionMetricParam(s string) bool {
+	return !strings.ContainsRune(StripSingleQuotes(s), '\'')
+}

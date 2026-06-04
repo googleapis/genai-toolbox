@@ -173,18 +173,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	dataColRaw := bqutil.StripSingleQuotes(dataCol)
-	if !bqutil.ValidColumnName(dataColRaw) {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataColRaw), nil)
+	if !bqutil.ValidColumnParam(dataCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataCol), nil)
 	}
-	timestampColRaw := bqutil.StripSingleQuotes(timestampCol)
-	if !bqutil.ValidColumnName(timestampColRaw) {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampColRaw), nil)
+	if !bqutil.ValidColumnParam(timestampCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampCol), nil)
 	}
 	for _, col := range idCols {
-		colRaw := bqutil.StripSingleQuotes(col)
-		if !bqutil.ValidColumnName(colRaw) {
-			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", colRaw), nil)
+		if !bqutil.ValidColumnParam(col) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", col), nil)
 		}
 	}
 

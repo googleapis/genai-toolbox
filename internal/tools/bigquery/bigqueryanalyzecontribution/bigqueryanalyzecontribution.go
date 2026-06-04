@@ -177,8 +177,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("unable to cast contribution_metric parameter %v", paramsMap["contribution_metric"]), nil)
 	}
-	contributionMetricRaw := bqutil.StripSingleQuotes(contributionMetric)
-	if strings.ContainsRune(contributionMetricRaw, '\'') {
+	if !bqutil.ValidContributionMetricParam(contributionMetric) {
 		return nil, util.NewAgentError("invalid 'contribution_metric': must not contain single quotes", nil)
 	}
 
@@ -186,9 +185,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("unable to cast is_test_col parameter %v", paramsMap["is_test_col"]), nil)
 	}
-	isTestColRaw := bqutil.StripSingleQuotes(isTestCol)
-	if !bqutil.ValidColumnName(isTestColRaw) {
-		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'is_test_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", isTestColRaw), nil)
+	if !bqutil.ValidColumnParam(isTestCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'is_test_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", isTestCol), nil)
 	}
 
 	var options []string
@@ -204,9 +202,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				if !ok {
 					return nil, util.NewAgentError(fmt.Sprintf("dimension_id_cols contains non-string value: %v", c), nil)
 				}
-				colStrRaw := bqutil.StripSingleQuotes(colStr)
-				if !bqutil.ValidColumnName(colStrRaw) {
-					return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'dimension_id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", colStrRaw), nil)
+				if !bqutil.ValidColumnParam(colStr) {
+					return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'dimension_id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", colStr), nil)
 				}
 				strCols = append(strCols, colStr)
 			}
