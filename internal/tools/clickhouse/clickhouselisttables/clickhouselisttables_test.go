@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -51,11 +52,13 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "clickhouse-list-tables",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "clickhouse-list-tables",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -77,10 +80,9 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 func TestListTablesToolParseParams(t *testing.T) {
 	databaseParam := parameters.NewStringParameter("database", "The database to list tables from.")
 	tool := Tool{
-		Config: Config{
-			Parameters: parameters.Parameters{databaseParam},
+		BaseTool: tools.BaseTool[Config]{
+			StaticParameters: parameters.Parameters{databaseParam},
 		},
-		AllParams: parameters.Parameters{databaseParam},
 	}
 
 	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{"database": "test_db"}, map[string]map[string]any{})

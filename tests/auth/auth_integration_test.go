@@ -272,32 +272,48 @@ func TestMcpAuth(t *testing.T) {
 			if url == "" {
 				url = apiSSE
 			}
-			var body io.Reader
-			if tc.body != nil {
-				body = bytes.NewBuffer(tc.body)
+
+			runTest := func(t *testing.T, protocolVersion string) {
+				var body io.Reader
+				if tc.body != nil {
+					body = bytes.NewBuffer(tc.body)
+				}
+				req, _ := http.NewRequest(method, url, body)
+				if tc.token != "" {
+					req.Header.Add("Authorization", "Bearer "+tc.token)
+				}
+				if method == http.MethodPost {
+					req.Header.Set("Content-Type", "application/json")
+					if protocolVersion != "" {
+						req.Header.Set("MCP-Protocol-Version", protocolVersion)
+					}
+				}
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					t.Fatalf("unable to send request: %s", err)
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != tc.wantStatusCode {
+					bodyBytes, _ := io.ReadAll(resp.Body)
+					t.Fatalf("expected %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+				}
+
+				if tc.checkWWWAuth != nil {
+					authHeader := resp.Header.Get("WWW-Authenticate")
+					tc.checkWWWAuth(t, authHeader)
+				}
 			}
-			req, _ := http.NewRequest(method, url, body)
-			if tc.token != "" {
-				req.Header.Add("Authorization", "Bearer "+tc.token)
-			}
+
 			if method == http.MethodPost {
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("MCP-Protocol-Version", "2025-11-25")
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("expected %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
-			}
-
-			if tc.checkWWWAuth != nil {
-				authHeader := resp.Header.Get("WWW-Authenticate")
-				tc.checkWWWAuth(t, authHeader)
+				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"}
+				for _, v := range versions {
+					t.Run("version_"+v, func(t *testing.T) {
+						runTest(t, v)
+					})
+				}
+			} else {
+				runTest(t, "")
 			}
 		})
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlcreateusers"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"create-user": cloudsqlcreateusers.Config{
-					Name:         "create-user",
-					Type:         "cloud-sql-create-users",
-					Source:       "my-source",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "create-user",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-create-users",
+					Source: "my-source",
 				},
 			},
 		},
