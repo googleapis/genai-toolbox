@@ -92,6 +92,10 @@ type Config struct {
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
 	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
 	MaximumBytesBilled        int64               `yaml:"maximumBytesBilled" validate:"gte=0"`
+	// ApiEndpoint overrides the BigQuery API host (URL or host:port) for proxies
+	// and emulators. Empty uses the default Google endpoint; http endpoints are
+	// supported.
+	ApiEndpoint string `yaml:"apiEndpoint"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -166,7 +170,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	if strings.ToLower(r.UseClientOAuth) == "false" || r.UseClientOAuth == "" {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes, r.ApiEndpoint)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -183,7 +187,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			s.AuthTokenHeaderName = r.UseClientOAuth
 		}
 		// use client OAuth
-		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name, r.ApiEndpoint)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
@@ -689,6 +693,7 @@ func initBigQueryConnection(
 	location string,
 	impersonateServiceAccount string,
 	scopes []string,
+	apiEndpoint string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -721,10 +726,10 @@ func initBigQueryConnection(
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 		}
 		tokenSource = cloudPlatformTokenSource
-		opts = []option.ClientOption{
+		opts = appendAPIEndpointOption([]option.ClientOption{
 			option.WithUserAgent(userAgent),
 			option.WithTokenSource(cloudPlatformTokenSource),
-		}
+		}, apiEndpoint)
 	} else {
 		// Use default credentials
 		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
@@ -732,10 +737,10 @@ func initBigQueryConnection(
 			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
 		}
 		tokenSource = cred.TokenSource
-		opts = []option.ClientOption{
+		opts = appendAPIEndpointOption([]option.ClientOption{
 			option.WithUserAgent(userAgent),
 			option.WithCredentials(cred),
-		}
+		}, apiEndpoint)
 	}
 
 	// Initialize the high-level BigQuery client
@@ -765,6 +770,7 @@ func initBigQueryConnectionWithOAuthToken(
 	userAgent string,
 	tokenString string,
 	wantRestService bool,
+	apiEndpoint string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -774,8 +780,13 @@ func initBigQueryConnectionWithOAuthToken(
 	}
 	ts := oauth2.StaticTokenSource(token)
 
+	oauthOpts := appendAPIEndpointOption([]option.ClientOption{
+		option.WithUserAgent(userAgent),
+		option.WithTokenSource(ts),
+	}, apiEndpoint)
+
 	// Initialize the BigQuery client with tokenSource
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+	client, err := bigqueryapi.NewClient(ctx, project, oauthOpts...)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
@@ -783,7 +794,7 @@ func initBigQueryConnectionWithOAuthToken(
 
 	if wantRestService {
 		// Initialize the low-level BigQuery REST service using the same credentials
-		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		restService, err := bigqueryrestapi.NewService(ctx, oauthOpts...)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 		}
@@ -802,6 +813,7 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
+	apiEndpoint string,
 ) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -809,10 +821,12 @@ func newBigQueryClientCreator(
 	}
 
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService, apiEndpoint)
 	}, nil
 }
 
+// apiEndpoint is intentionally not applied here: Dataplex (catalog search) and
+// ask_data_insights use different API surfaces and are out of scope for this override.
 func initDataplexConnection(
 	ctx context.Context,
 	tracer trace.Tracer,

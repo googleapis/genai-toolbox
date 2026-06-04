@@ -18,6 +18,11 @@ description: "Details of the BigQuery prebuilt configuration."
         to impersonate when making BigQuery and Dataplex API calls. The
         authenticated principal must have `roles/iam.serviceAccountTokenCreator`
         on the target service account.
+    *   `BIGQUERY_ENDPOINT`: (Optional) Override the BigQuery API host (URL or
+        `host:port`) for proxies, alternate front-ends, or local emulators.
+        `http` endpoints are supported (e.g. `http://localhost:9050`). Unset or
+        empty uses the default Google endpoint. (For the official local emulator,
+        client libraries use the `BIGQUERY_EMULATOR_HOST` convention.)
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
         metadata.

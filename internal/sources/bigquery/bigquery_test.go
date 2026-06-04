@@ -257,6 +257,24 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with api endpoint example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			apiEndpoint: https://proxy.example.com
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:        "my-instance",
+					Type:        bigquery.SourceType,
+					Project:     "my-project",
+					ApiEndpoint: "https://proxy.example.com",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
