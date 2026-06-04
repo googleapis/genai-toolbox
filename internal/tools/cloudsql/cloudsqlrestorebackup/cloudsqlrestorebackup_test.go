@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlrestorebackup"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"restore-backup-tool": cloudsqlrestorebackup.Config{
-					Name:         "restore-backup-tool",
-					Type:         "cloud-sql-restore-backup",
-					Description:  "a test description",
-					Source:       "a-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "restore-backup-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-restore-backup",
+					Source: "a-source",
 				},
 			},
 		},
