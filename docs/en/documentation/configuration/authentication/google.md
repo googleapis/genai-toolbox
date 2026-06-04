@@ -27,7 +27,7 @@ If you are developing a web application using the Toolbox and need to retrieve u
 
 #### Example
 ```yaml
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 clientId: ${YOUR_GOOGLE_CLIENT_ID}
@@ -43,7 +43,7 @@ To secure all endpoints on your MCP server using Google OAuth tokens, enable `mc
 
 #### Example
 ```yaml
-kind: authServices
+kind: authService
 name: my-google-auth
 type: google
 audience: ${YOUR_GOOGLE_CLIENT_ID}
@@ -53,8 +53,8 @@ scopesRequired:
 ```
 
 > [!IMPORTANT]
-> - For **ID tokens (JWT)**: Local cryptographic signature verification is performed, which requires `audience` to be configured. If `audience` is not set, validation will fail.
-> - For **Opaque tokens**: The provider automatically queries Google's secure tokeninfo endpoint (`https://oauth2.googleapis.com/tokeninfo`) and validates the resulting audience against the configured `audience` field (if set).
+> - For **ID tokens (JWT)**: Local cryptographic signature verification is performed, which requires `audience` to be configured. If `audience` is not set, the provider will fall back to using `clientId`. If neither is configured, validation will fail.
+> - For **Opaque tokens**: The provider automatically queries Google's secure tokeninfo endpoint (`https://oauth2.googleapis.com/tokeninfo`) and validates the resulting audience against the configured `audience` field (falling back to `clientId` if `audience` is not set).
 
 ---
 
@@ -78,7 +78,7 @@ When using [Authenticated Parameters][auth-params], any [claim provided by the i
 | **field**      | **type** | **required** | **description**                                                                                                                              |
 |----------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------|
 | type           |  string  |     true     | Must be "google".                                                                                                                            |
-| clientId       |  string  |    false     | Client ID of your application. Required for validating ID tokens in non-MCP web apps (`GetClaimsFromHeader`).                                |
-| audience       |  string  |    false     | Expected audience. Required for validating ID tokens in MCP Auth mode. If specified, also validates opaque token audiences.                  |
+| clientId       |  string  |    false     | Client ID of your application. Required for validating ID tokens in non-MCP web apps (`GetClaimsFromHeader`), and acts as a fallback for `audience` in MCP auth mode if `audience` is not configured. |
+| audience       |  string  |    false     | Expected audience. Required for validating ID tokens in MCP Auth mode (unless `clientId` is configured as a fallback). If specified, also validates opaque token audiences. Disallowed if `mcpEnabled` is false. |
 | mcpEnabled     |   bool   |    false     | Enforces global MCP transport authentication using the `Authorization: Bearer` header. Defaults to false.                                    |
-| scopesRequired | []string |    false     | A list of required scopes that must be present in the token's claims/metadata to be considered valid.                                         |
+| scopesRequired | []string |    false     | A list of required scopes that must be present in the token's claims/metadata to be considered valid. Disallowed if `mcpEnabled` is false. |

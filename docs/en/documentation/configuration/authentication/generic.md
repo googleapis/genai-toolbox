@@ -48,7 +48,7 @@ When a request is received in this mode, the service will:
 #### Example
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-generic-auth
 type: generic
 audience: ${YOUR_OIDC_AUDIENCE}
@@ -112,7 +112,7 @@ When a request is received in this mode, the service will:
 #### Example
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-generic-auth
 type: generic
 audience: ${YOUR_TOKEN_AUDIENCE}
@@ -135,7 +135,7 @@ scopesRequired:
 To secure your MCP server or tools using Okta as the identity provider:
 
 ```yaml
-kind: authServices
+kind: authService
 name: okta-auth
 type: generic
 audience: api://default # Or your custom Okta audience
@@ -188,7 +188,7 @@ ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 | audience               |  string  |     true     | The expected audience (`aud` claim) in the token. This ensures the token was minted specifically for your application. See [Getting Started](#getting-started) for details on OIDC audience matching. |
 | authorizationServer    |  string  |     true     | The base URL of your OIDC provider. The service will append `/.well-known/openid-configuration` to discover the JWKS URI. HTTP is allowed but logs a warning.                                         |
 | mcpEnabled             |   bool   |    false     | Indicates if MCP endpoint authentication should be applied. Defaults to false.                                                                                                                        |
-| scopesRequired         | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid.                                                                                                   |
-| introspectionEndpoint  |  string  |    false     | Optional override for the token introspection URL. Useful if the provider does not list it in OIDC discovery (e.g., Google).                                                                          |
-| introspectionMethod    |  string  |    false     | HTTP method to use for introspection. Defaults to "POST". Set to "GET" for providers like Google.                                                                                                     |
-| introspectionParamName |  string  |    false     | Parameter name for the token in the introspection request. Defaults to "token". Set to "access_token" for Google.                                                                                     |
+| scopesRequired         | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid. Disallowed if `mcpEnabled` is false.                                                             |
+| introspectionEndpoint  |  string  |    false     | Optional override for the token introspection URL. Useful if the provider does not list it in OIDC discovery (e.g., Google). Disallowed if `mcpEnabled` is false.                                   |
+| introspectionMethod    |  string  |    false     | HTTP method to use for introspection. Defaults to "POST". Set to "GET" for providers like Google. Disallowed if `mcpEnabled` is false.                                                               |
+| introspectionParamName |  string  |    false     | Parameter name for the token in the introspection request. Defaults to "token". Set to "access_token" for Google. Disallowed if `mcpEnabled` is false.                                               |

@@ -57,6 +57,20 @@ func (cfg Config) AuthServiceConfigType() string {
 
 // Initialize a generic auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
+	if !cfg.McpEnabled {
+		if cfg.IntrospectionEndpoint != "" {
+			return nil, fmt.Errorf("`introspectionEndpoint` is not allowed when `mcpEnabled` is false")
+		}
+		if cfg.IntrospectionMethod != "" {
+			return nil, fmt.Errorf("`introspectionMethod` is not allowed when `mcpEnabled` is false")
+		}
+		if cfg.IntrospectionParamName != "" {
+			return nil, fmt.Errorf("`introspectionParamName` is not allowed when `mcpEnabled` is false")
+		}
+		if len(cfg.ScopesRequired) > 0 {
+			return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+		}
+	}
 	httpClient := newSecureHTTPClient()
 
 	// Discover OIDC endpoints
@@ -482,7 +496,7 @@ func (a AuthService) validateClaims(ctx context.Context, iss string, aud []strin
 
 	// Check scopes
 	if len(a.ScopesRequired) > 0 {
-		tokenScopes := strings.Split(scopeStr, " ")
+		tokenScopes := strings.Fields(scopeStr)
 		scopeMap := make(map[string]bool)
 		for _, s := range tokenScopes {
 			scopeMap[s] = true

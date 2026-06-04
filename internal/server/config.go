@@ -279,11 +279,33 @@ func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[stri
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
 		}
+		if !actual.McpEnabled {
+			if actual.Audience != "" {
+				return nil, fmt.Errorf("`audience` is not allowed when `mcpEnabled` is false")
+			}
+			if len(actual.ScopesRequired) > 0 {
+				return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+			}
+		}
 		return actual, nil
 	case generic.AuthServiceType:
 		actual := generic.Config{Name: name}
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+		}
+		if !actual.McpEnabled {
+			if actual.IntrospectionEndpoint != "" {
+				return nil, fmt.Errorf("`introspectionEndpoint` is not allowed when `mcpEnabled` is false")
+			}
+			if actual.IntrospectionMethod != "" {
+				return nil, fmt.Errorf("`introspectionMethod` is not allowed when `mcpEnabled` is false")
+			}
+			if actual.IntrospectionParamName != "" {
+				return nil, fmt.Errorf("`introspectionParamName` is not allowed when `mcpEnabled` is false")
+			}
+			if len(actual.ScopesRequired) > 0 {
+				return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+			}
 		}
 		return actual, nil
 	default:

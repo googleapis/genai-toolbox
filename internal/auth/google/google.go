@@ -50,6 +50,14 @@ func (cfg Config) AuthServiceConfigType() string {
 
 // Initialize a Google auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
+	if !cfg.McpEnabled {
+		if cfg.Audience != "" {
+			return nil, fmt.Errorf("`audience` is not allowed when `mcpEnabled` is false")
+		}
+		if len(cfg.ScopesRequired) > 0 {
+			return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+		}
+	}
 	httpClient := &http.Client{
 		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
@@ -131,17 +139,21 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 	tokenStr := headerParts[1]
 
 	if isJWTFormat(tokenStr) {
-		if a.Audience == "" {
-			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: "audience is required for ID token validation", ScopesRequired: a.ScopesRequired}
+		aud := a.Audience
+		if aud == "" {
+			aud = a.ClientID
 		}
-		payload, err := idtoken.Validate(ctx, tokenStr, a.Audience)
+		if aud == "" {
+			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: "audience or client ID is required for ID token validation", ScopesRequired: a.ScopesRequired}
+		}
+		payload, err := idtoken.Validate(ctx, tokenStr, aud)
 		if err != nil {
 			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("Google ID token verification failure: %v", err), ScopesRequired: a.ScopesRequired}
 		}
 
 		scopeClaim, _ := payload.Claims["scope"].(string)
 		if len(a.ScopesRequired) > 0 {
-			tokenScopes := strings.Split(scopeClaim, " ")
+			tokenScopes := strings.Fields(scopeClaim)
 			scopeMap := make(map[string]bool)
 			for _, s := range tokenScopes {
 				scopeMap[s] = true
@@ -199,12 +211,17 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 		aud = tokenInfo.Azp
 	}
 
-	if a.Audience != "" && aud != a.Audience {
+	audLimit := a.Audience
+	if audLimit == "" {
+		audLimit = a.ClientID
+	}
+
+	if audLimit != "" && aud != audLimit {
 		return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: "audience validation failed", ScopesRequired: a.ScopesRequired}
 	}
 
 	if len(a.ScopesRequired) > 0 {
-		tokenScopes := strings.Split(tokenInfo.Scope, " ")
+		tokenScopes := strings.Fields(tokenInfo.Scope)
 		scopeMap := make(map[string]bool)
 		for _, s := range tokenScopes {
 			scopeMap[s] = true
