@@ -139,7 +139,7 @@ func TestAlloyDBAINLCallTool(t *testing.T) {
 			name:     "invoke my-simple-tool",
 			toolName: "my-simple-tool",
 			args:     map[string]any{"question": "return the number 1"},
-			want:     "{\"execute_nl_query\":{\"?column?\":1}}",
+			want:     "{\"execute_nl_query\":{\"number_one\":1}}",
 			isErr:    false,
 		},
 		{
@@ -169,7 +169,7 @@ func TestAlloyDBAINLCallTool(t *testing.T) {
 			args:          map[string]any{"question": "return the number 1"},
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			isErr:         false,
-			want:          "{\"execute_nl_query\":{\"?column?\":1}}",
+			want:          "{\"execute_nl_query\":{\"number_one\":1}}",
 		},
 		{
 			name:           "Invoke my-auth-required-tool with invalid auth token",

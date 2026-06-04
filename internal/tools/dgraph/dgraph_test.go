@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/dgraph"
 )
 
@@ -48,14 +49,16 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
-					Name:         "example_tool",
-					Type:         "dgraph-dql",
-					Source:       "my-dgraph-instance",
-					AuthRequired: []string{},
-					Description:  "some tool description",
-					IsQuery:      true,
-					Timeout:      "20s",
-					Statement:    "query {q(func: eq(email, \"example@email.com\")) {email}}\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some tool description",
+					},
+					Type:      "dgraph-dql",
+					Source:    "my-dgraph-instance",
+					IsQuery:   true,
+					Timeout:   "20s",
+					Statement: "query {q(func: eq(email, \"example@email.com\")) {email}}\n",
 				},
 			},
 		},
@@ -72,12 +75,14 @@ func TestParseFromYamlDgraph(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
-					Name:         "example_tool",
-					Type:         "dgraph-dql",
-					Source:       "my-dgraph-instance",
-					Description:  "some tool description",
-					AuthRequired: []string{},
-					Statement:    "mutation {set { _:a <name> \"a@email.com\" . _:b <email> \"b@email.com\" .}}\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{},
+					},
+					Type:      "dgraph-dql",
+					Source:    "my-dgraph-instance",
+					Statement: "mutation {set { _:a <name> \"a@email.com\" . _:b <email> \"b@email.com\" .}}\n",
 				},
 			},
 		},

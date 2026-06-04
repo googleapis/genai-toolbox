@@ -63,10 +63,13 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdateone.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-update-one",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
 					Canonical:     false,
@@ -90,8 +93,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					Upsert:      true,
-					Description: "some description",
+					Upsert: true,
 				},
 			},
 		},
@@ -122,10 +124,13 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdateone.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-update-one",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
 					Canonical:     false,
@@ -149,8 +154,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					Upsert:      true,
-					Description: "some description",
+					Upsert: true,
 				},
 			},
 		},
@@ -181,10 +185,13 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdateone.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-update-one",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
 					Canonical:     true,
@@ -208,8 +215,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					Upsert:      true,
-					Description: "some description",
+					Upsert: true,
 				},
 			},
 		},
