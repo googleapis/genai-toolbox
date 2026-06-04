@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firebird/firebirdexecutesql"
 )
 
@@ -47,11 +48,13 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": firebirdexecutesql.Config{
-					Name:         "example_tool",
-					Type:         "firebird-execute-sql",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "firebird-execute-sql",
+					Source: "my-instance",
 				},
 			},
 		},

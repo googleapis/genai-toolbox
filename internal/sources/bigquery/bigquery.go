@@ -28,6 +28,7 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -904,4 +905,35 @@ func newDataplexClientCreator(
 	return func(tokenString string) (*dataplexapi.CatalogClient, error) {
 		return initDataplexConnectionWithOAuthToken(ctx, project, userAgent, tokenString)
 	}
+}
+
+func (s *Source) InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error) {
+	typeMap := map[string]string{
+		"bigquery-connection":  "CONNECTION",
+		"bigquery-data-policy": "POLICY",
+		"bigquery-dataset":     "DATASET",
+		"bigquery-model":       "MODEL",
+		"bigquery-routine":     "ROUTINE",
+		"bigquery-table":       "TABLE",
+		"bigquery-view":        "VIEW",
+	}
+	catalogClient, dataplexClientCreator, err := s.MakeDataplexCatalogClient()()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dataplex client: %w", err)
+	}
+	return searchcatalog.InvokeSearchCatalog(
+		ctx,
+		params,
+		tokenStr,
+		"bigquery",
+		"datasetIds",
+		typeMap,
+		s.BigQueryProject(),
+		func(ctx context.Context, token string) (*dataplexapi.CatalogClient, error) {
+			if token != "" {
+				return dataplexClientCreator(token)
+			}
+			return catalogClient, nil
+		},
+	)
 }

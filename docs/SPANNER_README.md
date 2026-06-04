@@ -8,6 +8,7 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 
 - **Query Data** - Execute DML and DQL SQL queries
 - **Explore Schema** - List tables and view schema details
+- **Search Catalog** - Search for data assets in Knowledge Catalog (Dataplex)
 
 ## Prerequisites
 
@@ -43,6 +44,7 @@ Once configured, the MCP server will automatically provide Cloud Spanner capabil
 *   "Execute a DML query to update customer names."
 *   "List all tables in the `my-database`."
 *   "Execute a DQL query to select data from `orders` table."
+*   "Search for tables related to customers in the catalog."
 
 ## Server Capabilities
 
@@ -54,6 +56,7 @@ The Cloud Spanner MCP server provides the following tools:
 | `execute_sql_dql` | Use this tool to execute DQL SQL.                                |
 | `list_tables`     | Lists detailed schema information for user-created tables.       |
 | `list_graphs`     | Lists detailed graph schema information for user-created graphs. |
+| `search_catalog`   | Searches for data assets in Knowledge Catalog (Dataplex).        |
 
 ## Custom MCP Server Configuration
 
