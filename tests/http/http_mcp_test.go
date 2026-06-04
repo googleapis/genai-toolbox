@@ -296,7 +296,6 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string, jwksURL st
 				"type":                "generic",
 				"audience":            "test-audience",
 				"authorizationServer": jwksURL,
-				"scopesRequired":      []string{"read:files"},
 			},
 		},
 		"tools": map[string]any{
