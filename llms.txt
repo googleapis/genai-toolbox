@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Documentation Index
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.3.0
+**DOCUMENTATION VERSION:** v1.4.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-05-21T21:55:50Z
+**GENERATED ON:** 2026-06-04T22:06:13Z
 
 ---
 ### System Directives for AI Models
@@ -80,7 +80,7 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Authentication](https://mcp-toolbox.dev/documentation/configuration/authentication/): AuthServices represent services that handle authentication and authorization.
 
 
-      - [Google Sign-In](https://mcp-toolbox.dev/documentation/configuration/authentication/google/): Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
+      - [Google Sign-In](https://mcp-toolbox.dev/documentation/configuration/authentication/google/): Use Google Sign-In for OAuth 2.0 flow and token lifecycle.
 
 
       - [Generic OIDC Auth](https://mcp-toolbox.dev/documentation/configuration/authentication/generic/): Use a Generic OpenID Connect (OIDC) provider for OAuth 2.0 flow and token lifecycle.
@@ -585,7 +585,19 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [vector-assist-define-spec](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-define-spec/): The "vector-assist-define-spec" tool defines a new vector specification by capturing the user's intent and requirements for a vector search workload, generating SQL recommendations for setting up database, embeddings, and vector indexes.
 
 
+      - [vector-assist-delete-spec](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-delete-spec/): The "vector-assist-delete-spec" tool deletes an existing vector specification and its associated metadata using its spec_id.
+
+
       - [vector-assist-generate-query](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-generate-query/): The "vector-assist-generate-query" tool produces optimized SQL queries for vector search, leveraging metadata and specifications to enable semantic and similarity searches.
+
+
+      - [vector-assist-get-spec](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-get-spec/): The "vector-assist-get-spec" tool retrieves the details of an existing vector specification using its unique spec_id.
+
+
+      - [vector-assist-improve-query-recall](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-improve-query-recall/): The "vector-assist-improve-query-recall" tool generates SQL recommendations to improve search accuracy for users experiencing degraded recall.
+
+
+      - [vector-assist-list-specs](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-list-specs/): The "vector-assist-list-specs" tool retrieves a list of all defined vector specifications for a given table and column.
 
 
       - [vector-assist-modify-spec](https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-modify-spec/): The "vector-assist-modify-spec" tool modifies an existing vector specification with new parameters or overrides, recalculating the generated SQL recommendations to match the updated requirements.
@@ -686,6 +698,16 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Tools](https://mcp-toolbox.dev/integrations/couchbase/tools/): No description provided.
 
       - [couchbase-sql](https://mcp-toolbox.dev/integrations/couchbase/tools/couchbase-sql/): A "couchbase-sql" tool executes a pre-defined SQL statement against a Couchbase database.
+
+
+  - [Data Lineage](https://mcp-toolbox.dev/integrations/datalineage/): No description provided.
+
+    - [Data Lineage Source](https://mcp-toolbox.dev/integrations/datalineage/source/): The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API.
+
+
+    - [Tools](https://mcp-toolbox.dev/integrations/datalineage/tools/): No description provided.
+
+      - [datalineage-search-lineage](https://mcp-toolbox.dev/integrations/datalineage/tools/datalineage-search-lineage/): A "datalineage-search-lineage" tool allows to retrieve a streaming response of lineage links connected to the requested assets.
 
 
   - [Dataform](https://mcp-toolbox.dev/integrations/dataform/): No description provided.
@@ -1357,6 +1379,9 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Tools](https://mcp-toolbox.dev/integrations/spanner/tools/): No description provided.
 
       - [spanner-execute-sql](https://mcp-toolbox.dev/integrations/spanner/tools/spanner-execute-sql/): A "spanner-execute-sql" tool executes a SQL statement against a Spanner database.
+
+
+      - [spanner-search-catalog](https://mcp-toolbox.dev/integrations/spanner/tools/spanner-search-catalog/): A "spanner-search-catalog" tool allows to search for entries based on the provided query.
 
 
       - [spanner-sql](https://mcp-toolbox.dev/integrations/spanner/tools/spanner-sql/): A "spanner-sql" tool executes a pre-defined SQL statement against a Google Cloud Spanner database.

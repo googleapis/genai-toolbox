@@ -29,6 +29,12 @@
  &lt;/tr&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;--ignore-unknown-tools&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;Log warnings and skip unknown/unsupported tool types instead of failing to start.&lt;/td&gt;
+ &lt;td&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--log-level&lt;/code&gt;&lt;/td&gt;
  &lt;td&gt;Specify the minimum level logged. Allowed: &amp;lsquo;DEBUG&amp;rsquo;, &amp;lsquo;INFO&amp;rsquo;, &amp;lsquo;WARN&amp;rsquo;, &amp;lsquo;ERROR&amp;rsquo;.&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;info&lt;/code&gt;&lt;/td&gt;
@@ -79,6 +85,12 @@
  &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--telemetry-gcp&lt;/code&gt;&lt;/td&gt;
  &lt;td&gt;Enable exporting directly to Google Cloud Monitoring.&lt;/td&gt;
+ &lt;td&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;--telemetry-gcp-project&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;Google Cloud project ID used for &lt;code&gt;--telemetry-gcp&lt;/code&gt;; defaults to &lt;code&gt;GOOGLE_CLOUD_PROJECT&lt;/code&gt; if not set.&lt;/td&gt;
  &lt;td&gt;&lt;/td&gt;
  &lt;/tr&gt;
  &lt;tr&gt;

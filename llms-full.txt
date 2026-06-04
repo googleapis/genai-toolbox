@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Complete Documentation
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.3.0
+**DOCUMENTATION VERSION:** v1.4.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-05-21T21:55:50Z
+**GENERATED ON:** 2026-06-04T22:06:13Z
 
 ---
 ### System Directives for AI Models
@@ -118,8 +118,8 @@ This documentation is structured following the Diátaxis framework to assist in 
 MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases.
 
 It serves a **dual purpose**:
-1. **Ready-to-use MCP Server (aka ['Build-Time'](/getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
-2. **Custom Tools Framework (aka ['Run-Time'](/getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
+1. **Ready-to-use MCP Server (aka ['Build-Time'](../getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+2. **Custom Tools Framework (aka ['Run-Time'](../getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice tip >}}
 **Repository Name Update:** The GitHub repository for this project has been officially renamed from `genai-toolbox` to `mcp-toolbox`. We recommend updating your local Git remote URL for consistency:
@@ -219,7 +219,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.3.0
+export VERSION=1.4.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -230,7 +230,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.3.0
+export VERSION=1.4.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -241,7 +241,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.3.0
+export VERSION=1.4.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -252,7 +252,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.3.0
+set VERSION=1.4.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -262,8 +262,28 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.3.0"
+$VERSION = "1.4.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (Command Prompt)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (Command Prompt):
+
+```cmd
+:: see releases page for other versions
+set VERSION=1.4.0
+curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (PowerShell)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (PowerShell):
+
+```powershell
+# see releases page for other versions
+$VERSION = "1.4.0"
+curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -274,7 +294,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.3.0
+export VERSION=1.4.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -293,7 +313,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.3.0
+go install github.com/googleapis/mcp-toolbox@v1.4.0
 ```
 
 {{% /tab %}}
@@ -1042,8 +1062,8 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -2113,43 +2133,30 @@ func main() {
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Documentation > Configuration > Authentication > Google Sign-In
 **URL:** https://mcp-toolbox.dev/documentation/configuration/authentication/google/
-**Description:** Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
+**Description:** Use Google Sign-In for OAuth 2.0 flow and token lifecycle.
 
 
 
 ## Getting Started
 
-Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the
-Google Sign-In workflow to your web app [follow this guide][gsi-setup].
+Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the Google Sign-In workflow to your web app, [follow this guide][gsi-setup].
 
-After setting up the Google Sign-In workflow, you should have registered your
-application and retrieved a [Client ID][client-id]. Configure your auth service
-in with the `Client ID`.
+After setting up Google Sign-In, configure your auth service in the toolbox. The Google auth provider supports two distinct validation modes:
+
+1. **Web App Claims (OIDC)**: Used to authenticate user requests in web applications.
+2. **MCP Authorization**: Used to secure the entire MCP server transport (SSE or Stdio).
 
 [gsi-setup]: https://developers.google.com/identity/sign-in/web/sign-in
-[client-id]: https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials
 
-## Behavior
+## Configuration Modes
 
-### Authorized Invocations
+### 1. Web App OIDC Authentication
+If you are developing a web application using the Toolbox and need to retrieve user claims from Google ID tokens sent in custom request headers, configure the `clientId` field.
 
-When using [Authorized Invocations][auth-invoke], a tool will be
-considered authorized if it has a valid Oauth 2.0 token that matches the Client
-ID.
+- **Header**: Expects the token in the `<name>_token` header (e.g. `my-google-auth_token`).
+- **Token Type**: Google OIDC ID tokens (JWT).
 
-[auth-invoke]: ../tools/_index.md#authorized-invocations
-
-### Authenticated Parameters
-
-When using [Authenticated Parameters][auth-params], any [claim provided by the
-id-token][provided-claims] can be used for the parameter.
-
-[auth-params]: ../tools/_index.md#authenticated-parameters
-[provided-claims]:
-    https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
-
-## Example
-
+#### Example
 ```yaml
 kind: authService
 name: my-google-auth
@@ -2157,17 +2164,55 @@ type: google
 clientId: ${YOUR_GOOGLE_CLIENT_ID}
 ```
 
-{{< notice tip >}}
-Use environment variable replacement with the format ${ENV_NAME}
-instead of hardcoding your secrets into the configuration file.
-{{< /notice >}}
+---
+
+### 2. MCP Authorization
+To secure all endpoints on your MCP server using Google OAuth tokens, enable `mcpEnabled` and specify the `audience` field.
+
+- **Header**: Expects the token in the standard `Authorization: Bearer <token>` header.
+- **Token Type**: Supports both Google **ID tokens (JWT)** and Google **opaque access tokens**.
+
+#### Example
+```yaml
+kind: authService
+name: my-google-auth
+type: google
+audience: ${YOUR_GOOGLE_CLIENT_ID}
+mcpEnabled: true
+scopesRequired:
+  - https://www.googleapis.com/auth/userinfo.email
+```
+
+> [!IMPORTANT]
+> - For **ID tokens (JWT)**: Local cryptographic signature verification is performed, which requires `audience` to be configured. If `audience` is not set, the provider will fall back to using `clientId`. If neither is configured, validation will fail.
+> - For **Opaque tokens**: The provider automatically queries Google's secure tokeninfo endpoint (`https://oauth2.googleapis.com/tokeninfo`) and validates the resulting audience against the configured `audience` field (falling back to `clientId` if `audience` is not set).
+
+---
+
+## Behavior
+
+### Authorized Invocations
+When using [Authorized Invocations][auth-invoke], a tool will be considered authorized if it has a valid OAuth 2.0 token that matches the Client ID or Audience.
+
+[auth-invoke]: ../tools/_index.md#authorized-invocations
+
+### Authenticated Parameters
+When using [Authenticated Parameters][auth-params], any [claim provided by the id-token][provided-claims] can be used for the parameter.
+
+[auth-params]: ../tools/_index.md#authenticated-parameters
+[provided-claims]: https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
+
+---
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                  |
-|-----------|:--------:|:------------:|------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "google".                                                |
-| clientId  |  string  |     true     | Client ID of your application from registering your application. |
+| **field**      | **type** | **required** | **description**                                                                                                                              |
+|----------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------|
+| type           |  string  |     true     | Must be "google".                                                                                                                            |
+| clientId       |  string  |    false     | Client ID of your application. Required for validating ID tokens in non-MCP web apps (`GetClaimsFromHeader`), and acts as a fallback for `audience` in MCP auth mode if `audience` is not configured. |
+| audience       |  string  |    false     | Expected audience. Required for validating ID tokens in MCP Auth mode (unless `clientId` is configured as a fallback). If specified, also validates opaque token audiences. Disallowed if `mcpEnabled` is false. |
+| mcpEnabled     |   bool   |    false     | Enforces global MCP transport authentication using the `Authorization: Bearer` header. Defaults to false.                                    |
+| scopesRequired | []string |    false     | A list of required scopes that must be present in the token's claims/metadata to be considered valid. Disallowed if `mcpEnabled` is false. |
 
 
 
@@ -2222,7 +2267,7 @@ When a request is received in this mode, the service will:
 #### Example
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-generic-auth
 type: generic
 audience: ${YOUR_OIDC_AUDIENCE}
@@ -2286,7 +2331,7 @@ When a request is received in this mode, the service will:
 #### Example
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-generic-auth
 type: generic
 audience: ${YOUR_TOKEN_AUDIENCE}
@@ -2297,28 +2342,19 @@ scopesRequired:
   - write
 ```
 
-#### Google Opaque Access Token Validation Example
+#### Google Authentication Note
 
-To use Google's `tokeninfo` endpoint for validating opaque access tokens, configure the service to use the `GET` method and `access_token` parameter name:
-
-```yaml
-kind: authServices
-name: google-auth
-type: generic
-audience: "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
-authorizationServer: https://accounts.google.com
-introspectionEndpoint: https://www.googleapis.com/oauth2/v3/tokeninfo
-introspectionMethod: GET
-introspectionParamName: access_token
-mcpEnabled: true
-```
+> [!WARNING]
+> Do not configure Google's tokeninfo endpoint (`https://oauth2.googleapis.com/tokeninfo`) using `type: generic`. Because the generic OIDC service strictly enforces the presence and validity of the `active` claim (RFC 7662), and Google's tokeninfo endpoint does not return this claim, validation will fail.
+>
+> To authenticate with Google tokens, use the native [Google Sign-In](./google.md) auth service (`type: google`) instead, which natively handles Google's endpoints and token formats.
 
 #### Okta OIDC Configuration Example
 
 To secure your MCP server or tools using Okta as the identity provider:
 
 ```yaml
-kind: authServices
+kind: authService
 name: okta-auth
 type: generic
 audience: api://default # Or your custom Okta audience
@@ -2371,10 +2407,10 @@ ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 | audience               |  string  |     true     | The expected audience (`aud` claim) in the token. This ensures the token was minted specifically for your application. See [Getting Started](#getting-started) for details on OIDC audience matching. |
 | authorizationServer    |  string  |     true     | The base URL of your OIDC provider. The service will append `/.well-known/openid-configuration` to discover the JWKS URI. HTTP is allowed but logs a warning.                                         |
 | mcpEnabled             |   bool   |    false     | Indicates if MCP endpoint authentication should be applied. Defaults to false.                                                                                                                        |
-| scopesRequired         | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid.                                                                                                   |
-| introspectionEndpoint  |  string  |    false     | Optional override for the token introspection URL. Useful if the provider does not list it in OIDC discovery (e.g., Google).                                                                          |
-| introspectionMethod    |  string  |    false     | HTTP method to use for introspection. Defaults to "POST". Set to "GET" for providers like Google.                                                                                                     |
-| introspectionParamName |  string  |    false     | Parameter name for the token in the introspection request. Defaults to "token". Set to "access_token" for Google.                                                                                     |
+| scopesRequired         | []string |    false     | A list of required scopes that must be present in the token's `scope` claim to be considered valid. Disallowed if `mcpEnabled` is false.                                                             |
+| introspectionEndpoint  |  string  |    false     | Optional override for the token introspection URL. Useful if the provider does not list it in OIDC discovery (e.g., Google). Disallowed if `mcpEnabled` is false.                                   |
+| introspectionMethod    |  string  |    false     | HTTP method to use for introspection. Defaults to "POST". Set to "GET" for providers like Google. Disallowed if `mcpEnabled` is false.                                                               |
+| introspectionParamName |  string  |    false     | Parameter name for the token in the introspection request. Defaults to "token". Set to "access_token" for Google. Disallowed if `mcpEnabled` is false.                                               |
 
 
 
@@ -2472,7 +2508,7 @@ This guide details the specific configuration steps required to deploy Toolbox w
 Update your `tools.yaml` file to use a `generic` authorization service with `mcpEnabled` set to `true`. This instructs Toolbox to intercept requests on the `/mcp` routes and validate Bearer tokens using the JWKS (JSON Web Key Set) fetched from your OIDC provider endpoint (`authorizationServer`).
 
 ```yaml
-kind: authServices
+kind: authService
 name: my-mcp-auth
 type: generic
 mcpEnabled: true
@@ -9852,19 +9888,23 @@ After you install Looker in the MCP Store, resources and tools from the server a
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -10354,19 +10394,23 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -10680,19 +10724,23 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11003,19 +11051,23 @@ to expose your developer assistant tools to an Oracle instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11348,19 +11400,23 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11701,19 +11757,23 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12027,19 +12087,23 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12357,6 +12421,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -12672,6 +12740,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -12986,6 +13058,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/
 
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -14333,6 +14409,7 @@ The following flags are used to determine Toolbox's telemetry configuration:
 | **flag**                   | **type** | **description**                                                                                                                                                                                           |
 |----------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                                                                                                                 |
+| `--telemetry-gcp-project`  | string   | Google Cloud project ID used for `--telemetry-gcp`. If unset, Toolbox falls back to `GOOGLE_CLOUD_PROJECT` when available.                                                                              |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "127.0.0.1:4318"). To pass an insecure endpoint here, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`. |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                                                                                                            |
 
@@ -14350,6 +14427,14 @@ To enable Google Cloud Exporter:
 ```bash
 ./toolbox --telemetry-gcp
 ```
+
+To explicitly set the telemetry project:
+
+```bash
+./toolbox --telemetry-gcp --telemetry-gcp-project="my-project-id"
+```
+
+If `--telemetry-gcp-project` is not set, Toolbox uses `GOOGLE_CLOUD_PROJECT` when available.
 
 To enable OTLP Exporter, provide Collector endpoint:
 
@@ -15619,7 +15704,7 @@ In this section, we will download and install the Toolbox binary.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     export VERSION="0.30.0"
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/$OS/toolbox
     ```
@@ -17148,7 +17233,7 @@ to use BigQuery, and then run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -17793,7 +17878,7 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -21866,6 +21951,64 @@ description: "This tool defines a new vector specification by capturing the user
 
 
 ========================================================================
+## vector-assist-delete-spec
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud SQL for PostgreSQL > Tools > vector-assist-delete-spec
+**URL:** https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-delete-spec/
+**Description:** The "vector-assist-delete-spec" tool deletes an existing vector specification and its associated metadata using its spec_id.
+
+
+
+## About
+
+The `vector-assist-delete-spec` tool deletes an existing vector specification using its `spec_id`. 
+
+Use this tool when a user explicitly requests to delete, remove, or clean up an existing vector specification which was created in the context of the vector assist tools. Under the hood, this tool connects to the target database and executes the `vector_assist.delete_spec` function.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+{{< notice tip >}} 
+Ensure that your target PostgreSQL database has the required `vector_assist` extension installed, in order for this tool to execute successfully.
+{{< /notice >}}
+
+## Parameters
+
+The tool takes the following input parameters:
+
+| Parameter | Type   | Description                                | Required |
+| :-------- | :----- | :----------------------------------------- | :------- |
+| `spec_id` | string | Unique ID for the vector spec to delete.   | Yes      |
+
+> Note :
+> Parameters are marked as required or optional based on the tool's parameter definitions. 
+> The underlying function may perform further validation on optional parameters to ensure 
+> all necessary data is available before returning a response.
+
+## Example
+
+```yaml
+kind: tool
+name: delete_spec
+type: vector-assist-delete-spec
+source: my-database-source
+description: "This tool deletes an existing vector specification using its spec_id. Use this tool when a user explicitly requests to delete, remove, or clean up an existing vector specification which was created in the context of the vector assist tools."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "vector-assist-delete-spec".                 |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |
+
+
+
+========================================================================
 ## vector-assist-generate-query
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud SQL for PostgreSQL > Tools > vector-assist-generate-query
@@ -21927,6 +22070,188 @@ description: "This tool generates optimized SQL queries for vector search by lev
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
 | type        |  string  |     true     | Must be "vector-assist-generate-query".                 |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |
+
+
+
+========================================================================
+## vector-assist-get-spec
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud SQL for PostgreSQL > Tools > vector-assist-get-spec
+**URL:** https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-get-spec/
+**Description:** The "vector-assist-get-spec" tool retrieves the details of an existing vector specification using its unique spec_id.
+
+
+
+## About
+
+The `vector-assist-get-spec` tool retrieves the details of an existing vector specification using its unique `spec_id`. 
+
+Use this tool to retrieve a vector specification which was created in the context of the vector assist tools. It allows users to inspect the detailed parameters and current state of a particular vector setup. Under the hood, this tool connects to the target database and executes the `vector_assist.get_spec` function.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+{{< notice tip >}} 
+Ensure that your target PostgreSQL database has the required `vector_assist` extension installed, in order for this tool to execute successfully.
+{{< /notice >}}
+
+## Parameters
+
+The tool takes the following input parameters:
+
+| Parameter | Type   | Description                      | Required |
+| :-------- | :----- | :------------------------------- | :------- |
+| `spec_id` | string | Unique ID for the vector spec.   | Yes      |
+
+> Note : 
+> Parameters are marked as required or optional based on the tool's parameter definitions. 
+> The underlying function may perform further validation on optional parameters to ensure 
+> all necessary data is available before returning a response.
+
+## Example
+
+```yaml
+kind: tool
+name: get_spec
+type: vector-assist-get-spec
+source: my-database-source
+description: "This tool retrieves the details of an existing vector specification using its unique 'spec_id'. Use this tool to retrieve a vector specification which was created in the context of the vector assist tools."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "vector-assist-get-spec".                    |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |
+
+
+
+
+========================================================================
+## vector-assist-improve-query-recall
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud SQL for PostgreSQL > Tools > vector-assist-improve-query-recall
+**URL:** https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-improve-query-recall/
+**Description:** The "vector-assist-improve-query-recall" tool generates SQL recommendations to improve search accuracy for users experiencing degraded recall.
+
+
+
+## About
+
+The `vector-assist-improve-query-recall` tool is designed to troubleshoot and optimize existing vector search workloads when a user reports irrelevant results, poor accuracy, or degraded recall. 
+
+It determines the optimal tuning parameter (such as `hnsw.ef_search`) for an active vector index to improve the search results. The tool evaluates the target recall and outputs an actionable SQL query recommendation (e.g., `SET hnsw.ef_search TO ...`) that must be executed as a next action using the `execute_sql` tool.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+{{< notice tip >}} 
+Ensure that your target PostgreSQL database has the required `vector_assist` extension installed. This tool requires an existing HNSW index to function properly; if the table lacks an existing vector setup, use the `define_spec` tool instead.
+{{< /notice >}}
+
+## Parameters
+
+The tool takes the following input parameters:
+
+| Parameter            | Type    | Description                                                                 | Required |
+| :------------------- | :------ | :-------------------------------------------------------------------------- | :------- |
+| `table_name`         | string  | Table name experiencing degraded vector search recall.                      | Yes      |
+| `vector_column_name` | string  | Column name containing the vector embeddings.                               | Yes      |
+| `index_name`         | string  | Name of the vector index to tune.                                           | Yes      |
+| `schema_name`        | string  | Schema name of the table (default is `public`).                             | No       |
+| `top_k`              | integer | Top k value for the vector search (default is `10`).                        | No       |
+| `target_recall`      | float   | Target recall value for search results (default is `0.95`).                 | No       |
+| `distance_func`      | string  | Distance function used for the vector search similarity (default is `cosine`).| No       |
+
+> Note : 
+> Parameters are marked as required or optional based on the tool's parameter definitions. 
+> The underlying function may perform further validation on optional parameters to ensure 
+> all necessary data is available before returning a response.
+
+## Example
+
+```yaml
+kind: tool
+name: improve_query_recall
+type: vector-assist-improve-query-recall
+source: my-database-source
+description: "Use this tool to troubleshoot and optimize existing vector search workloads when a user reports irrelevant results, poor accuracy, or degraded recall. It determines the optimal tuning parameter (such as ef_search) for an active vector index to improve the search results. The tool outputs an actionable SQL query recommendation to be executed as a next action using the 'execute_sql' tool."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "vector-assist-improve-query-recall".        |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |
+
+
+
+========================================================================
+## vector-assist-list-specs
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud SQL for PostgreSQL > Tools > vector-assist-list-specs
+**URL:** https://mcp-toolbox.dev/integrations/cloud-sql-pg/tools/vector-assist-list-specs/
+**Description:** The "vector-assist-list-specs" tool retrieves a list of all defined vector specifications for a given table and column.
+
+
+
+## About
+
+The `vector-assist-list-specs` tool lists all defined vector specifications for a given table and column name. 
+
+Use this tool to list vector specifications which were created in the context of the vector assist tools. It provides a high-level overview of existing vector setups. Under the hood, this tool connects to the target database and executes the `vector_assist.list_specs` function.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+{{< notice tip >}} 
+Ensure that your target PostgreSQL database has the required `vector_assist` extension installed, in order for this tool to execute successfully.
+{{< /notice >}}
+
+## Parameters
+
+The tool takes the following input parameters:
+
+| Parameter     | Type   | Description                                          | Required |
+| :------------ | :----- | :--------------------------------------------------- | :------- |
+| `table_name`  | string | Table name to list vector specifications for.        | Yes      |
+| `column_name` | string | Column name to list vector specifications for.       | No       |
+
+> Note : 
+> Parameters are marked as required or optional based on the tool's parameter definitions. 
+> The underlying function may perform further validation on optional parameters to ensure 
+> all necessary data is available before returning a response.
+
+## Example
+
+```yaml
+kind: tool
+name: list_specs
+type: vector-assist-list-specs
+source: my-database-source
+description: "This tool lists all defined vector specifications for a given table and column name. Use this tool to list vector specifications which were created in the context of the vector assist tools."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "vector-assist-list-specs".                  |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |
 
@@ -25046,6 +25371,207 @@ templateParameters:
 | parameters         |   [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters)    |    false     | List of [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) that will be used with the SQL statement.                                              |
 | templateParameters | [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters) |    false     | List of [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 | authRequired       |                array[string]                 |    false     | List of auth services that are required to use this tool.                                                                              |
+
+
+
+
+========================================================================
+## Data Lineage
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Data Lineage
+**URL:** https://mcp-toolbox.dev/integrations/datalineage/
+**Description:** None
+
+
+
+
+
+========================================================================
+## Data Lineage Source
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Data Lineage > Data Lineage Source
+**URL:** https://mcp-toolbox.dev/integrations/datalineage/source/
+**Description:** The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API.
+
+
+
+## About
+
+The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API. It enables large language models to query and analyze data lineage, representing the flow of data between source (upstream) and target (downstream) assets.
+
+This integration supports:
+
+- **Entity-Level Lineage:** Tracking data flow between entire assets (e.g., tables, files).
+- **Column-Level Lineage (CLL):** Tracking data flow between specific fields or columns within assets.
+
+## Available Tools
+
+{{< list-tools >}}
+
+## Example
+
+Here is an example configuration for the Data Lineage source:
+
+```yaml
+kind: source
+name: my-lineage-source
+type: datalineage
+project: my-gcp-project-id
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description**                                                  |
+| :-------- | :------: | :----------: | :--------------------------------------------------------------- |
+| name      |  string  |     true     | Unique name for this source instance.                            |
+| type      |  string  |     true     | Must be "datalineage".                                           |
+| project   |  string  |     true     | The Google Cloud Project ID where the lineage events are stored. |
+
+
+
+
+========================================================================
+## Tools
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Data Lineage > Tools
+**URL:** https://mcp-toolbox.dev/integrations/datalineage/tools/
+**Description:** None
+
+
+
+
+
+========================================================================
+## datalineage-search-lineage
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Data Lineage > Tools > datalineage-search-lineage
+**URL:** https://mcp-toolbox.dev/integrations/datalineage/tools/datalineage-search-lineage/
+**Description:** A "datalineage-search-lineage" tool allows to retrieve a streaming response of lineage links connected to the requested assets.
+
+
+
+## About
+
+A `datalineage-search-lineage` tool retrieves lineage links (representing data flow between source and target assets) by performing a breadth-first search in the given direction.
+
+It supports both entity-level and column-level lineage (CLL).
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+To retrieve lineage links, the authorized Google Cloud identity must have the following permissions:
+
+- `datalineage.events.get` on the project where the link is stored (for entity-level lineage).
+- `datalineage.events.getFields` on the project where the link is stored (for column-level lineage).
+- `datalineage.processes.get` on the project where the process is stored (if retrieving process details).
+
+## Parameters
+
+### `locations` (Array of Strings, Required)
+
+The locations to search in (e.g., `['us', 'eu', 'global']`).
+
+- Must contain at least **one** location.
+- The first location in the list is used as the **parent location** to initiate the search and for billing/quota.
+- The search will retrieve links from all valid locations provided in the list.
+
+### `root_entities` (Array of Objects, Required)
+
+The starting entities (roots) for the lineage graph traversal. The maximum number of entities is 20.
+Each object represents an entity reference and must contain:
+
+- `fully_qualified_name` (String, Required): The FQN of the entity (e.g., a BigQuery table FQN).
+- `fields` (Array of Strings, Optional): The fields/columns of the entity to search for **Column-Level Lineage (CLL)**. Supports wildcards.
+
+### `direction` (String, Required)
+
+The direction of the search. Supported values:
+
+- `UPSTREAM`: Search for assets that contribute to the root entities (sources).
+- `DOWNSTREAM`: Search for assets that are derived from the root entities (targets).
+
+### `max_depth` (Integer, Optional)
+
+The maximum depth of the search in the lineage graph.
+
+- **API Default:** `5`
+- **Maximum:** `100`
+- **Note:** If omitted, the GCP API default of `5` will be used.
+
+### `max_results` (Integer, Optional)
+
+The maximum number of links to return in the response.
+
+- **API Default:** `1000`
+- **Maximum:** `10000`
+- **Note:** If omitted, the GCP API default of `1000` will be used.
+
+### `max_process_per_link` (Integer, Optional)
+
+The maximum number of processes to return per link.
+
+- **API Default:** `0` (no processes returned).
+- **Maximum:** `100`
+- **Note:** If omitted, the GCP API default of `0` will be used. Must be greater than `0` if `request_process_details` is `true`.
+
+### `request_process_details` (Boolean, Optional)
+
+If set to `true`, instructs the tool to retrieve full process details (such as `displayName`, `attributes`, and `origin`) for the processes associated with the links.
+
+- **Default:** `false`
+- **Requirement:** Requires `max_process_per_link` to be explicitly set to a value greater than `0`. If `max_process_per_link` is `0` or omitted, a validation error will be returned.
+- **Behavior:** When `true`, it sets the system `x-goog-fieldmask` header to `"links,links.processes.process,unreachable"` to request full process details from the API.
+
+## Example
+
+```yaml
+kind: tool
+name: search_lineage
+type: datalineage-search-lineage
+source: my-lineage-source
+description: Use this tool to search data lineage links for BigQuery tables.
+```
+
+## Output Format
+
+The tool returns a structured JSON object containing the following fields:
+
+- `links` (Array of Objects): A list of accumulated lineage links. Each object represents a lineage link containing details like `name`, `source` entity, `target` entity, `endTime`, `startTime`, and optionally associated `processes` (if process details were requested).
+- `unreachable` (Array of Strings, Optional): A list of GCP locations that failed to respond during the multi-location search (e.g., `projects/123456789/locations/us-east1`). This field is omitted if there are no unreachable locations.
+
+### Example Response
+
+```json
+{
+  "links": [
+    {
+      "name": "projects/my-project/locations/us/links/link-id",
+      "source": {
+        "fullyQualifiedName": "bigquery:project.dataset.source_table"
+      },
+      "target": {
+        "fullyQualifiedName": "bigquery:project.dataset.target_table"
+      },
+      "startTime": "2026-01-01T01:01:01.010Z",
+      "endTime": "2026-01-01T01:01:01.010Z"
+    }
+  ],
+  "unreachable": ["projects/my-project/locations/us-east1"]
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| :---------- | :------: | :----------: | :------------------------------------------------- |
+| type        |  string  |     true     | Must be "datalineage-search-lineage".              |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
 
 
 
@@ -33341,8 +33867,8 @@ In this section, we will download Toolbox and run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -33502,8 +34028,8 @@ In this section, we will download Toolbox and run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -33625,8 +34151,8 @@ In this section, we will download Toolbox and run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.4.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -36261,7 +36787,7 @@ The simplest way to get started is to download the latest binary for your operat
 \+
 
 ```bash
-export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
 curl -O [https://storage.googleapis.com/mcp-toolbox-for-databases/v0.16.0/$OS/toolbox](https://storage.googleapis.com/mcp-toolbox-for-databases/v0.16.0/$OS/toolbox)
 ```
 
@@ -40718,7 +41244,7 @@ In this section, we will download and install the Toolbox binary.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     export VERSION="0.10.0"
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/$OS/toolbox
     ```
@@ -41010,6 +41536,76 @@ description: Use this tool to execute sql statement.
 | source      |  string  |     true     | Name of the source the SQL should execute on.                                            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.                                       |
 | readOnly    |   bool   |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`. |
+
+
+
+
+========================================================================
+## spanner-search-catalog
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Spanner > Tools > spanner-search-catalog
+**URL:** https://mcp-toolbox.dev/integrations/spanner/tools/spanner-search-catalog/
+**Description:** A "spanner-search-catalog" tool allows to search for entries based on the provided query.
+
+
+
+## About
+
+A `spanner-search-catalog` tool returns all entries in Knowledge Catalog (e.g.
+tables, views, databases) with system=Spanner that matches given user query.
+
+`spanner-search-catalog` takes a required `prompt` parameter based on which
+entries are filtered and returned to the user. It also optionally accepts
+following parameters:
+
+- `databaseIds` - The IDs of the spanner database.
+- `projectIds` - The IDs of the GCP project.
+- `types` - The type of the data. Accepted values are: DATABASE, TABLE, VIEW.
+- `pageSize` - Number of results in the search page. Defaults to `5`.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Spanner uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog (formerly known as Dataplex) resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex/docs
+
+## Example
+
+```yaml
+kind: tool
+name: search_catalog
+type: spanner-search-catalog
+source: spanner-source
+description: Searches for data assets (eg. Spanner tables, views, or databases) in Knowledge Catalog (formerly known as Dataplex) based on the provided search query
+```
+
+## Reference
+
+| **field**   |                  **type**                  | **required** | **description**                                                                                  |
+|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
+| type        |                   string                   |     true     | Must be "spanner-search-catalog".                                                               |
+| source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
 
 
 
@@ -41805,6 +42401,7 @@ description: |
     *   `execute_sql_dql`: Executes a DQL SQL query.
     *   `list_tables`: Lists tables in the database.
     *   `list_graphs`: Lists graphs in the database.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).
 
 
 
@@ -41835,6 +42432,7 @@ description: |
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL
         interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).
 
 
 
@@ -43840,6 +44438,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 | `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                       | `127.0.0.1` |
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
+|              | `--ignore-unknown-tools`   | Log warnings and skip unknown/unsupported tool types instead of failing to start.                                                                                          |             |
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                              | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                             | `standard`  |
 |              | `--mcp-prm-file`           | Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation for MCP Server-Wide Authentication.                                  |             |
@@ -43849,6 +44448,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 |              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
+|              | `--telemetry-gcp-project`  | Google Cloud project ID used for `--telemetry-gcp`; defaults to `GOOGLE_CLOUD_PROJECT` if not set.                                                                        |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                             |             |
 |              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                 | `toolbox`   |
 |              | `--sql-commenter`          | Append SQLCommenter-format comments (traceparent, server, tool.name, db.system.name, client metadata from `_meta["dev.mcp-toolbox/telemetry"]`) to executed SQL.          |             |
@@ -44067,6 +44667,15 @@ For detailed instructions, check out these resources:
 Nope! While some of the sources Toolbox connects to may require GCP credentials,
 Toolbox doesn't require them and can connect to a bunch of different resources
 that don't.
+
+## How do I configure Google Cloud telemetry with ADC when running locally?
+
+If you run Toolbox with `--telemetry-gcp`, make sure Application Default Credentials are available via `GOOGLE_APPLICATION_CREDENTIALS` (or other ADC-compatible setup) and specify a project ID either by:
+
+- setting `--telemetry-gcp-project`, or
+- setting `GOOGLE_CLOUD_PROJECT` environment variable.
+
+This avoids "no project found" errors when exporting telemetry to Google Cloud.
 
 ## Does Toolbox take contributions from external users?
 
