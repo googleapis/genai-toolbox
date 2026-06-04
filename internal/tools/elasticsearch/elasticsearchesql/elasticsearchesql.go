@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
@@ -44,18 +43,14 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired" validate:"required"`
-	Query        string                 `yaml:"query" validate:"required"`
-	Format       string                 `yaml:"format"`
-	Timeout      int                    `yaml:"timeout"`
-	Parameters   parameters.Parameters  `yaml:"parameters"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Query            string                 `yaml:"query" validate:"required"`
+	Format           string                 `yaml:"format"`
+	Timeout          int                    `yaml:"timeout"`
+	Parameters       parameters.Parameters  `yaml:"parameters"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -65,7 +60,7 @@ func (c Config) ToolConfigType() string {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -73,59 +68,50 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Tool struct {
-	Config
-	manifest tools.Manifest
+	tools.BaseTool[Config]
 }
 
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if c.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", c.Name)
+	}
+
 	return Tool{
-		Config:   c,
-		manifest: tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
+		BaseTool: tools.NewBaseTool(
+			c,
+			tools.GetAnnotationsOrDefault(c.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
+			c.Parameters,
+		),
 	}, nil
 }
 
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
-}
-
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	var cancel context.CancelFunc
-	if t.Timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
+	if t.Cfg.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Cfg.Timeout)*time.Second)
 		defer cancel()
 	} else {
 		ctx, cancel = context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 	}
 
-	query := t.Query
+	query := t.Cfg.Query
 	paramMap := params.AsMap()
 
 	var paramsList []map[string]any
-	for _, param := range t.Parameters {
+	for _, param := range t.Cfg.Parameters {
 		if param.GetType() == "array" {
 			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
@@ -136,37 +122,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	resp, err := source.RunSQL(ctx, t.Format, query, paramsList)
+	resp, err := source.RunSQL(ctx, t.Cfg.Format, query, paramsList)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }
