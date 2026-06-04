@@ -51,11 +51,13 @@ func TestParseFromYamlCloudStorageGetBucketMetadata(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"bucket_metadata_tool": cloudstoragegetbucketmetadata.Config{
-					Name:         "bucket_metadata_tool",
-					Type:         "cloud-storage-get-bucket-metadata",
-					Source:       "my-gcs",
-					Description:  "Get bucket metadata",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "bucket_metadata_tool",
+						Description:  "Get bucket metadata",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-get-bucket-metadata",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -72,11 +74,13 @@ func TestParseFromYamlCloudStorageGetBucketMetadata(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_bucket_metadata": cloudstoragegetbucketmetadata.Config{
-					Name:         "secure_bucket_metadata",
-					Type:         "cloud-storage-get-bucket-metadata",
-					Source:       "prod-gcs",
-					Description:  "Get bucket metadata with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_bucket_metadata",
+						Description:  "Get bucket metadata with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-get-bucket-metadata",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -117,10 +121,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragegetbucketmetadata.Config{
-		Name:        "bucket_metadata_tool",
-		Type:        "cloud-storage-get-bucket-metadata",
-		Source:      "my-gcs",
-		Description: "Get bucket metadata",
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_metadata_tool",
+			Description: "Get bucket metadata",
+		},
+		Type:   "cloud-storage-get-bucket-metadata",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {

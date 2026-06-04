@@ -232,27 +232,39 @@ implementation](https://github.com/googleapis/mcp-toolbox/tree/main/internal/too
 Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
 
 * **Create a new directory** under `internal/tools` for your tool type (e.g., `internal/tools/newdb/newdbtool`).
-* **Define a configuration struct** for your tool in a file named `newdbtool.go`.
-Create a `Config` struct and a `Tool` struct to store necessary parameters for
-tools.
+* **Define a `Config` struct** for your tool in a file named `newdbtool.go`.
+  **Embed [`tools.ConfigBase`](https://github.com/googleapis/mcp-toolbox/blob/main/internal/tools/tools.go)
+  with `yaml:",inline"`** so your tool inherits the shared `name`,
+  `description`, `authRequired`, and `scopesRequired` fields (and their getters)
+  for free. Add only the fields specific to your tool (e.g., `Type`, `Source`,
+  `Statement`, `Parameters`, `Annotations`). Do **not** redeclare the shared
+  fields.
+* **Define a `Tool` struct** that **embeds
+  [`tools.BaseTool[Config]`](https://github.com/googleapis/mcp-toolbox/blob/main/internal/tools/tools.go)**.
+  `BaseTool` provides default implementations of most of the `Tool` interface —
+  `GetName`, `GetDescription`, `GetAuthRequired`, `GetScopesRequired`,
+  `GetAnnotations`, `Manifest`, `GetParameters`, `Authorized`,
+  `RequiresClientAuthorization`, `GetAuthTokenHeaderName`, and `EmbedParams`.
+  **Do not re-declare these** — eliminating that boilerplate is the entire point
+  of embedding `BaseTool`.
+    
+  **Override an inherited method only when behavior differs from the default.**
+  For example, override `EmbedParams` to inject a vector formatter (see Vector
+  Search below), or override `RequiresClientAuthorization` /
+  `GetAuthTokenHeaderName` for tools that use client-side OAuth.
 * **Implement the
-  [`ToolConfig`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
-  interface**. This interface requires one method:
+  [`ToolConfig`](https://github.com/googleapis/mcp-toolbox/blob/main/internal/tools/tools.go)
+  interface**:
   * `ToolConfigType() string`: Returns a unique string identifier for your tool
     (e.g., `"newdb-tool"`).
-  * `Initialize(sources map[string]Source) (Tool, error)`: Creates a new
-    instance of your tool and validates that it can connect to the specified
-    data source.
-* **Implement the `Tool` interface**. This interface requires the following
-  methods:
-  * `Invoke(ctx context.Context, params map[string]any) ([]any, error)`:
-    Executes the operation on the database using the provided parameters.
-  * `ParseParams(data map[string]any, claims map[string]map[string]any)
-    (ParamValues, error)`: Parses and validates the input parameters.
-  * `Manifest() Manifest`: Returns a manifest describing the tool's capabilities
-    and parameters.
-  * `Authorized(services []string) bool`: Checks if the tool is authorized to
-    run based on the provided authentication services.
+  * `Initialize(srcs map[string]sources.Source) (tools.Tool, error)`: Validates
+    the config, processes parameters, and returns your `Tool` constructed via
+    `tools.NewBaseTool(cfg, annotations, manifest, staticParameters)`.
+* **Implement only the two methods `BaseTool` does not provide**:
+  * `Invoke(ctx context.Context, sp tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError)`:
+    Executes the operation. Return typed errors (see [Error
+    Categorization](#error-categorization)).
+  * `ToConfig() tools.ToolConfig`: Returns the embedded `Cfg`.
 * **Implement `init()`** to register the new Tool.
 * **Implement Unit Tests** in a file named `newdbtool_test.go`.
 * **Implement Vector Search** if your new tool supports it. You must:
@@ -821,6 +833,7 @@ releases:
 * darwin/arm64
 * darwin/amd64
 * windows/amd64
+* windows/arm64
 
 #### Supported Container Images
 
@@ -891,11 +904,12 @@ MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.np
   - `darwin/arm64` -> `server-darwin-arm64`
   - `darwin/x64` -> `server-darwin-x64`
   - `linux/x64` -> `server-linux-x64`
+  - `win32/arm64` -> `server-win32-arm64`
   - `win32/x64` -> `server-win32-x64`
 
 **Phase A: Release Platform-Specific Packages**
 
-_Repeat the following steps for each of the 4 combinations listed above._
+_Repeat the following steps for each of the 5 combinations listed above._
 
 1. **Navigate to the package directory:**
    ```bash
@@ -929,8 +943,8 @@ Once all platform-specific packages are live, release the main wrapper package.
    ```
 2. **Verify Versioning:**
    - Open `package.json` and verify the `"version"` field reflects the target version.
-   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 4 packages.
-3. **Sync Lockfile:** (Before this step, all 4 dep packages need to be published to npm)
+   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 5 packages.
+3. **Sync Lockfile:** (Before this step, all 5 dep packages need to be published to npm)
    ```bash
    npm install --package-lock-only
    ```
