@@ -57,13 +57,15 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbaggregate.Config{
-					Name:            "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:            "mongodb-aggregate",
 					Source:          "my-instance",
-					AuthRequired:    []string{},
 					Database:        "test_db",
 					Collection:      "test_coll",
-					Description:     "some description",
 					PipelinePayload: "[{ $match: { name: {{json .name}} }}]\n",
 					PipelineParams: parameters.Parameters{
 						&parameters.StringParameter{
