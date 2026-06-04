@@ -213,6 +213,19 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
+		if cfg.IgnoreUnknownTools {
+			filteredToolNames := make([]string, 0, len(tc.ToolNames))
+			for _, tn := range tc.ToolNames {
+				if _, ok := toolsMap[tn]; ok {
+					filteredToolNames = append(filteredToolNames, tn)
+				} else {
+					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in toolset %q", tn, name))
+				}
+			}
+			tc.ToolNames = filteredToolNames
+			cfg.ToolsetConfigs[name] = tc
+		}
+
 		t, err := func() (tools.Toolset, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
