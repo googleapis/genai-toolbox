@@ -328,8 +328,7 @@ func TestGoogleTokenValidation(t *testing.T) {
 	// Get access token
 	accessToken, err := sources.GetIAMAccessToken(ctx)
 	if err != nil {
-		t.Skipf("skipping test because ADC is not available: %v", err)
-		return
+		t.Errorf("error getting access token from ADC: %s", err)
 	}
 
 	// Call tokeninfo to get audience
