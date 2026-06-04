@@ -314,6 +314,32 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
+// loopbackAllowedHosts is the secure-by-default allowlist applied to
+// --allowed-hosts when the server binds to a loopback address and the user did
+// not explicitly set the flag. It blocks DNS rebinding for local development.
+var loopbackAllowedHosts = []string{"127.0.0.1", "localhost", "::1"}
+
+// isLoopbackAddress reports whether addr refers to the loopback interface
+// (e.g. "127.0.0.1", any "127.*" address, "localhost", or "::1"). It returns
+// false for wildcard binds ("0.0.0.0", "::") and specific public addresses.
+func isLoopbackAddress(addr string) bool {
+	host := strings.TrimSpace(addr)
+	// Tolerate an address that includes a port (e.g. "127.0.0.1:5000").
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	// Strip brackets from IPv6 literals (e.g. "[::1]").
+	host = strings.Trim(host, "[]")
+	if host == "localhost" {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return ip.IsLoopback()
+	}
+	// Fall back to a 127.* prefix check for non-canonical IPv4 inputs.
+	return strings.HasPrefix(host, "127.")
+}
+
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -407,6 +433,17 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	}
 	r.Use(cors.Handler(corsOpts))
 	// validate hosts for DNS rebinding attacks
+	//
+	// Secure-by-default for local development: if the user did not explicitly
+	// set --allowed-hosts and the server binds to a loopback address, downgrade
+	// the wildcard default to a loopback-only allowlist so a malicious web page
+	// cannot reach the server via DNS rebinding. Non-loopback binds (e.g.
+	// 0.0.0.0 / :: on Cloud Run or in a container) keep the wildcard default so
+	// remote access is not broken.
+	if !cfg.AllowedHostsSet && isLoopbackAddress(cfg.Address) && slices.Contains(cfg.AllowedHosts, "*") {
+		cfg.AllowedHosts = slices.Clone(loopbackAllowedHosts)
+		s.logger.InfoContext(ctx, "Defaulting --allowed-hosts to loopback for local development; pass --allowed-hosts explicitly to override.")
+	}
 	if slices.Contains(cfg.AllowedHosts, "*") {
 		s.logger.WarnContext(ctx, "wildcard (*) hosts allow any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of whether you are in a production or local development environment. For improved security, use the --allowed-hosts flag to specify trusted domains.")
 	}

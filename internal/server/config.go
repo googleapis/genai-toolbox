@@ -88,6 +88,10 @@ type ServerConfig struct {
 	AllowedOrigins []string
 	// Specifies a list of hosts permitted to access this server.
 	AllowedHosts []string
+	// AllowedHostsSet indicates whether the user explicitly set --allowed-hosts.
+	// When false, the server may apply a context-aware default (loopback-only)
+	// for local (loopback) deployments to mitigate DNS rebinding attacks.
+	AllowedHostsSet bool
 	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.

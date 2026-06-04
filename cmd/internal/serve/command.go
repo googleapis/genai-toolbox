@@ -71,6 +71,10 @@ func runServe(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
+	// Record whether the user explicitly set --allowed-hosts so the server can
+	// apply a context-aware (loopback-only) default for local deployments.
+	opts.Cfg.AllowedHostsSet = cmd.Flags().Changed("allowed-hosts")
+
 	// start server
 	s, err := server.NewServer(ctx, opts.Cfg)
 	if err != nil {

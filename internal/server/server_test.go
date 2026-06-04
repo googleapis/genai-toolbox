@@ -150,10 +150,11 @@ func TestServe(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := server.ServerConfig{
-				Version:      "0.0.0",
-				Address:      tt.addr,
-				Port:         tt.port,
-				AllowedHosts: []string{"*"},
+				Version:         "0.0.0",
+				Address:         tt.addr,
+				Port:            tt.port,
+				AllowedHosts:    []string{"*"},
+				AllowedHostsSet: true,
 			}
 
 			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
@@ -336,12 +337,13 @@ func TestEndpointSecurityAllowedOrigin(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			addr, port := "127.0.0.1", 0
 			cfg := server.ServerConfig{
-				Version:        "0.0.0",
-				Address:        addr,
-				Port:           port,
-				EnableAPI:      true,
-				AllowedOrigins: tc.allowedOrigins,
-				AllowedHosts:   []string{"*"},
+				Version:         "0.0.0",
+				Address:         addr,
+				Port:            port,
+				EnableAPI:       true,
+				AllowedOrigins:  tc.allowedOrigins,
+				AllowedHosts:    []string{"*"},
+				AllowedHostsSet: true,
 			}
 
 			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
@@ -485,11 +487,12 @@ func TestEndpointSecurityAllowedHost(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			addr, port := "127.0.0.1", 0
 			cfg := server.ServerConfig{
-				Version:      "0.0.0",
-				Address:      addr,
-				Port:         port,
-				EnableAPI:    true,
-				AllowedHosts: tc.allowedHosts,
+				Version:         "0.0.0",
+				Address:         addr,
+				Port:            port,
+				EnableAPI:       true,
+				AllowedHosts:    tc.allowedHosts,
+				AllowedHostsSet: true,
 			}
 
 			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
@@ -604,6 +607,137 @@ func TestEndpointSecurityAllowedHost(t *testing.T) {
 	}
 }
 
+// TestAllowedHostsContextAwareDefault verifies the secure-by-default behavior of
+// --allowed-hosts: when the user does not explicitly set the flag (the wildcard
+// default is in place) and the server binds to a loopback address, the host
+// allowlist is downgraded to loopback-only to block DNS rebinding. For
+// non-loopback binds the wildcard is preserved, and an explicit flag value is
+// always respected.
+func TestAllowedHostsContextAwareDefault(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	testCases := []struct {
+		desc            string
+		address         string
+		allowedHosts    []string
+		allowedHostsSet bool
+		host            string
+		wantStatus      int
+	}{
+		{
+			desc:            "loopback bind, no flag => loopback default blocks rebinding host",
+			address:         "127.0.0.1",
+			allowedHosts:    []string{"*"},
+			allowedHostsSet: false,
+			host:            "evil.com",
+			wantStatus:      http.StatusForbidden,
+		},
+		{
+			desc:            "loopback bind, no flag => loopback default allows localhost",
+			address:         "127.0.0.1",
+			allowedHosts:    []string{"*"},
+			allowedHostsSet: false,
+			host:            "localhost",
+			wantStatus:      http.StatusOK,
+		},
+		{
+			desc:            "loopback bind, no flag => loopback default allows 127.0.0.1",
+			address:         "127.0.0.1",
+			allowedHosts:    []string{"*"},
+			allowedHostsSet: false,
+			host:            "127.0.0.1",
+			wantStatus:      http.StatusOK,
+		},
+		{
+			desc:            "non-loopback bind, no flag => wildcard preserved",
+			address:         "0.0.0.0",
+			allowedHosts:    []string{"*"},
+			allowedHostsSet: false,
+			host:            "evil.com",
+			wantStatus:      http.StatusOK,
+		},
+		{
+			desc:            "loopback bind, explicit wildcard flag => respected",
+			address:         "127.0.0.1",
+			allowedHosts:    []string{"*"},
+			allowedHostsSet: true,
+			host:            "evil.com",
+			wantStatus:      http.StatusOK,
+		},
+		{
+			desc:            "loopback bind, explicit specific flag => respected",
+			address:         "127.0.0.1",
+			allowedHosts:    []string{"trusted.com"},
+			allowedHostsSet: true,
+			host:            "trusted.com",
+			wantStatus:      http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			cfg := server.ServerConfig{
+				Version:         "0.0.0",
+				Address:         tc.address,
+				Port:            0,
+				EnableAPI:       true,
+				AllowedHosts:    tc.allowedHosts,
+				AllowedHostsSet: tc.allowedHostsSet,
+			}
+
+			instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			ctx = util.WithInstrumentation(ctx, instrumentation)
+
+			s, err := server.NewServer(ctx, cfg)
+			if err != nil {
+				t.Fatalf("error setting up server: %s", err)
+			}
+
+			if err := s.Listen(ctx, "", ""); err != nil {
+				t.Fatalf("unable to start server: %v", err)
+			}
+
+			_, actualPort, err := net.SplitHostPort(s.Addr())
+			if err != nil {
+				t.Fatalf("failed to parse server address: %v", err)
+			}
+
+			go func() {
+				if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+					t.Errorf("server serve error: %v", err)
+				}
+			}()
+
+			// Always dial the loopback interface (the listener accepts on it for
+			// both 127.0.0.1 and 0.0.0.0 binds); the host-check keys off the
+			// Host header, which we set independently below.
+			reqURL := fmt.Sprintf("http://127.0.0.1:%s/api/toolset", actualPort)
+			req, err := http.NewRequest(http.MethodGet, reqURL, nil)
+			if err != nil {
+				t.Fatalf("failed to create request: %v", err)
+			}
+			req.Host = net.JoinHostPort(tc.host, actualPort)
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("failed to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatus {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("expected status %d, got %d: %s", tc.wantStatus, resp.StatusCode, string(body))
+			}
+		})
+	}
+}
+
 func TestNameValidation(t *testing.T) {
 	testCases := []struct {
 		desc         string
@@ -709,11 +843,12 @@ func TestPRMEndpoint(t *testing.T) {
 	// Configure the server
 	addr, port := "127.0.0.1", 5003
 	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		ToolboxUrl:   "https://my-toolbox.example.com",
-		AllowedHosts: []string{"*"},
+		Version:         "0.0.0",
+		Address:         addr,
+		Port:            port,
+		ToolboxUrl:      "https://my-toolbox.example.com",
+		AllowedHosts:    []string{"*"},
+		AllowedHostsSet: true,
 		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
 			"generic1": generic.Config{
 				Name:                "generic1",
@@ -818,11 +953,12 @@ func TestPRMOverride(t *testing.T) {
 	// Configure the server with the Override Flag
 	addr, port := "127.0.0.1", 5004
 	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		McpPrmFile:   tmpFile.Name(),
-		AllowedHosts: []string{"*"},
+		Version:         "0.0.0",
+		Address:         addr,
+		Port:            port,
+		McpPrmFile:      tmpFile.Name(),
+		AllowedHosts:    []string{"*"},
+		AllowedHostsSet: true,
 	}
 
 	// Initialize and Start the Server
@@ -895,10 +1031,11 @@ func TestLegacyAPIGone(t *testing.T) {
 	// Configure the server (EnableAPI defaults to false)
 	addr, port := "127.0.0.1", 5005
 	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		AllowedHosts: []string{"*"},
+		Version:         "0.0.0",
+		Address:         addr,
+		Port:            port,
+		AllowedHosts:    []string{"*"},
+		AllowedHostsSet: true,
 	}
 
 	// Initialize and Start the Server
@@ -1005,11 +1142,12 @@ func TestMCPAuthMiddleware(t *testing.T) {
 	// Configure the server
 	addr, port := "127.0.0.1", 5004
 	cfg := server.ServerConfig{
-		Version:      "0.0.0",
-		Address:      addr,
-		Port:         port,
-		ToolboxUrl:   "https://my-toolbox.example.com",
-		AllowedHosts: []string{"*"},
+		Version:         "0.0.0",
+		Address:         addr,
+		Port:            port,
+		ToolboxUrl:      "https://my-toolbox.example.com",
+		AllowedHosts:    []string{"*"},
+		AllowedHostsSet: true,
 		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
 			"generic1": generic.Config{
 				Name:                "generic1",
