@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryforecast"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -80,10 +81,12 @@ func TestParseFromYamlBigQueryForecast(t *testing.T) {
 
 func TestInvoke(t *testing.T) {
 	cfg := bigqueryforecast.Config{
-		Name:        "forecast_tool",
-		Type:        "bigquery-forecast",
-		Source:      "my-bq-source",
-		Description: "Forecast",
+		ConfigBase: tools.ConfigBase{
+			Name:        "forecast_tool",
+			Description: "Forecast",
+		},
+		Type:   "bigquery-forecast",
+		Source: "my-bq-source",
 	}
 	src := &bigquerycommon.MockSource{RunSQLResult: "mocked_forecast_result"}
 	sourcesMap := map[string]sources.Source{
@@ -175,7 +178,7 @@ func TestInvoke(t *testing.T) {
 				data["id_cols"] = tc.idCols
 			}
 
-			paramVals, err := parameters.ParseParams(forecastTool.Parameters, data, nil)
+			paramVals, err := parameters.ParseParams(forecastTool.GetParameters(), data, nil)
 			if err != nil {
 				if tc.wantErr {
 					if !strings.Contains(err.Error(), tc.wantSubstr) {
@@ -298,10 +301,12 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	}
 
 	cfg := bigqueryforecast.Config{
-		Name:        "forecast_tool",
-		Type:        "bigquery-forecast",
-		Source:      "my-bq-source",
-		Description: "Forecast",
+		ConfigBase: tools.ConfigBase{
+			Name:        "forecast_tool",
+			Description: "Forecast",
+		},
+		Type:   "bigquery-forecast",
+		Source: "my-bq-source",
 	}
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
@@ -325,7 +330,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		"horizon":       5,
 	}
 
-	paramVals, err := parameters.ParseParams(forecastTool.Parameters, data, nil)
+	paramVals, err := parameters.ParseParams(forecastTool.GetParameters(), data, nil)
 	if err != nil {
 		t.Fatalf("unexpected error parsing parameters: %v", err)
 	}

@@ -28,6 +28,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -118,10 +119,12 @@ func TestInvoke(t *testing.T) {
 	}
 
 	cfg := bigqueryanalyzecontribution.Config{
-		Name:        "analyze_contribution_tool",
-		Type:        "bigquery-analyze-contribution",
-		Source:      "my-bq-source",
-		Description: "Analyze Contribution",
+		ConfigBase: tools.ConfigBase{
+			Name:        "analyze_contribution_tool",
+			Description: "Analyze Contribution",
+		},
+		Type:   "bigquery-analyze-contribution",
+		Source: "my-bq-source",
 	}
 	src := &bigquerycommon.MockSource{Client: bqClient, RunSQLResult: "mocked_analyze_contribution_result"}
 	sourcesMap := map[string]sources.Source{
@@ -202,7 +205,7 @@ func TestInvoke(t *testing.T) {
 				data["dimension_id_cols"] = tc.dimensionIdCols
 			}
 
-			paramVals, err := parameters.ParseParams(analyzeContributionTool.Parameters, data, nil)
+			paramVals, err := parameters.ParseParams(analyzeContributionTool.GetParameters(), data, nil)
 			if err != nil {
 				if tc.wantErr {
 					if !strings.Contains(err.Error(), tc.wantSubstr) {
@@ -319,10 +322,12 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	}
 
 	cfg := bigqueryanalyzecontribution.Config{
-		Name:        "analyze_contribution_tool",
-		Type:        "bigquery-analyze-contribution",
-		Source:      "my-bq-source",
-		Description: "Analyze Contribution",
+		ConfigBase: tools.ConfigBase{
+			Name:        "analyze_contribution_tool",
+			Description: "Analyze Contribution",
+		},
+		Type:   "bigquery-analyze-contribution",
+		Source: "my-bq-source",
 	}
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
@@ -345,7 +350,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 		"dimension_id_cols":   []any{"dim1"},
 	}
 
-	paramVals, err := parameters.ParseParams(analyzeContributionTool.Parameters, data, nil)
+	paramVals, err := parameters.ParseParams(analyzeContributionTool.GetParameters(), data, nil)
 	if err != nil {
 		t.Fatalf("unexpected error parsing parameters: %v", err)
 	}
