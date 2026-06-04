@@ -803,6 +803,12 @@ names, or other parts of the query.&lt;/p&gt;</description></item><item><title>C
  &lt;/tr&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;--ignore-unknown-tools&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;Log warnings and skip unknown/unsupported tool types instead of failing to start.&lt;/td&gt;
+ &lt;td&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--log-level&lt;/code&gt;&lt;/td&gt;
  &lt;td&gt;Specify the minimum level logged. Allowed: &amp;lsquo;DEBUG&amp;rsquo;, &amp;lsquo;INFO&amp;rsquo;, &amp;lsquo;WARN&amp;rsquo;, &amp;lsquo;ERROR&amp;rsquo;.&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;info&lt;/code&gt;&lt;/td&gt;
@@ -8416,7 +8422,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode254s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode241s0hbhb"&gt;
 
 
 
