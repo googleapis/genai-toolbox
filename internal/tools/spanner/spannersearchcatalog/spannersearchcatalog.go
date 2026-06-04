@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquerysearchcatalog
+package spannersearchcatalog
 
 import (
 	"context"
 	"fmt"
 	"net/http"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "bigquery-search-catalog"
+const resourceType string = "spanner-search-catalog"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -47,22 +45,19 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	MakeDataplexCatalogClient() func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
-	BigQueryProject() string
+	ProjectID() string
 	UseClientAuthorization() bool
-	GetAuthTokenHeaderName() string
 	InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error)
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	Name           string                 `yaml:"name" validate:"required"`
+	Type           string                 `yaml:"type" validate:"required"`
+	Source         string                 `yaml:"source" validate:"required"`
+	Description    string                 `yaml:"description"`
+	AuthRequired   []string               `yaml:"authRequired"`
+	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	ScopesRequired []string               `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -74,14 +69,34 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	prompt := parameters.NewStringParameter("prompt", "Prompt representing search intention. Do not rewrite the prompt.")
-	datasetIds := parameters.NewArrayParameterWithDefault("datasetIds", []any{}, "Array of dataset IDs.", parameters.NewStringParameter("datasetId", "The IDs of the bigquery dataset."))
-	projectIds := parameters.NewArrayParameterWithDefault("projectIds", []any{}, "Array of project IDs.", parameters.NewStringParameter("projectId", "The IDs of the bigquery project."))
-	types := parameters.NewArrayParameterWithDefault("types", []any{}, "Array of data types to filter by.", parameters.NewStringParameter("type", "The type of the data. Accepted values are: CONNECTION, POLICY, DATASET, MODEL, ROUTINE, TABLE, VIEW."))
+
+	databaseIds := parameters.NewArrayParameterWithDefault(
+		"databaseIds",
+		[]any{},
+		"Array of database IDs.",
+		parameters.NewStringParameter("databaseId", "The IDs of the spanner database."),
+	)
+
+	projectIds := parameters.NewArrayParameterWithDefault(
+		"projectIds",
+		[]any{},
+		"Array of project IDs.",
+		parameters.NewStringParameter("projectId", "The IDs of the GCP project."),
+	)
+
+	types := parameters.NewArrayParameterWithDefault(
+		"types",
+		[]any{},
+		"Array of data types to filter by.",
+		parameters.NewStringParameter("type", "The type of the data. Accepted values are: SERVICE, DATABASE, TABLE, VIEW."),
+	)
+
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	params := parameters.Parameters{prompt, datasetIds, projectIds, types, pageSize}
+
+	params := parameters.Parameters{prompt, databaseIds, projectIds, types, pageSize}
 
 	if cfg.Description == "" {
-		cfg.Description = "Use this tool to find tables, views, models, routines or connections."
+		cfg.Description = "Searches for data assets (eg. Spanner tables, views, or databases) in catalog based on the provided search query"
 	}
 
 	t := Tool{
@@ -95,6 +110,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	return t, nil
 }
+
+// validate interface
+var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
@@ -144,7 +162,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.UseClientAuthorization() {
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
+			return nil, util.NewClientServerError("failed to parse access token", http.StatusInternalServerError, err)
 		}
 	}
 
@@ -161,16 +179,11 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 }
 
 func (t Tool) Manifest() tools.Manifest {
-	// Returns the tool manifest
 	return t.manifest
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
-	if err != nil {
-		return "", err
-	}
-	return source.GetAuthTokenHeaderName(), nil
+	return "", nil
 }
 
 func (t Tool) GetParameters() parameters.Parameters {
