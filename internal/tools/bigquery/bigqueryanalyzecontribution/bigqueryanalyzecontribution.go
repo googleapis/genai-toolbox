@@ -23,7 +23,6 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/uuid"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -42,7 +41,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -62,14 +61,10 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -80,6 +75,10 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -133,47 +132,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		topKInsightsParameter,
 		pruningMethodParameter,
 	}
-	// finish tool setup
-	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-	manifest   tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 // Invoke runs the contribution analysis.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -191,16 +173,39 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	modelID := fmt.Sprintf("contribution_analysis_model_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
+	contributionMetric, ok := paramsMap["contribution_metric"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast contribution_metric parameter %v", paramsMap["contribution_metric"]), nil)
+	}
+	if strings.ContainsRune(contributionMetric, '\'') {
+		return nil, util.NewAgentError("invalid 'contribution_metric': must not contain single quotes", nil)
+	}
+
+	isTestCol, ok := paramsMap["is_test_col"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast is_test_col parameter %v", paramsMap["is_test_col"]), nil)
+	}
+	if !bqutil.ValidColumnName(isTestCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'is_test_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", isTestCol), nil)
+	}
+
 	var options []string
 	options = append(options, "MODEL_TYPE = 'CONTRIBUTION_ANALYSIS'")
-	options = append(options, fmt.Sprintf("CONTRIBUTION_METRIC = '%s'", paramsMap["contribution_metric"]))
-	options = append(options, fmt.Sprintf("IS_TEST_COL = '%s'", paramsMap["is_test_col"]))
+	options = append(options, fmt.Sprintf("CONTRIBUTION_METRIC = '%s'", contributionMetric))
+	options = append(options, fmt.Sprintf("IS_TEST_COL = '%s'", isTestCol))
 
 	if val, ok := paramsMap["dimension_id_cols"]; ok {
 		if cols, ok := val.([]any); ok {
 			var strCols []string
 			for _, c := range cols {
-				strCols = append(strCols, fmt.Sprintf("'%s'", c))
+				colStr, ok := c.(string)
+				if !ok {
+					return nil, util.NewAgentError(fmt.Sprintf("dimension_id_cols contains non-string value: %v", c), nil)
+				}
+				if !bqutil.ValidColumnName(colStr) {
+					return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'dimension_id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", colStr), nil)
+				}
+				strCols = append(strCols, fmt.Sprintf("'%s'", colStr))
 			}
 			options = append(options, fmt.Sprintf("DIMENSION_ID_COLS = [%s]", strings.Join(strCols, ", ")))
 		} else {
@@ -254,6 +259,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		inputDataSource = fmt.Sprintf("(%s)", inputData)
 	} else {
+		if !bqutil.ValidTableID(inputData) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid table identifier for 'input_data': %q; expected 'dataset.table' or 'project.dataset.table'", inputData), nil)
+		}
 		if len(source.BigQueryAllowedDatasets()) > 0 {
 			parts := strings.Split(inputData, ".")
 			var projectID, datasetID string
@@ -331,20 +339,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
@@ -352,17 +348,9 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

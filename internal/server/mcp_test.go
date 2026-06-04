@@ -788,6 +788,7 @@ func TestMcpEndpoint(t *testing.T) {
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
+						"id":      nil,
 						"error": map[string]any{
 							"code":    -32600.0,
 							"message": "not supporting batch requests",
@@ -898,10 +899,6 @@ func TestMcpEndpoint(t *testing.T) {
 						var got map[string]any
 						if err := json.Unmarshal(body, &got); err != nil {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
-						}
-						// for decode failure, a random uuid is generated in server
-						if tc.want["id"] == nil {
-							tc.want["id"] = got["id"]
 						}
 						if !reflect.DeepEqual(got, tc.want) {
 							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
@@ -1108,7 +1105,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}

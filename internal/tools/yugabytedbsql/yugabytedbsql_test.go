@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/yugabytedbsql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -59,12 +60,14 @@ func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"hotel_search": yugabytedbsql.Config{
-					Name:         "hotel_search",
-					Type:         "yugabytedb-sql",
-					Source:       "yb-source",
-					Description:  "search hotels by city",
-					Statement:    "SELECT * FROM hotels WHERE city = $1;\n",
-					AuthRequired: []string{"auth-service-a", "auth-service-b"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "hotel_search",
+						Description:  "search hotels by city",
+						AuthRequired: []string{"auth-service-a", "auth-service-b"},
+					},
+					Type:      "yugabytedb-sql",
+					Source:    "yb-source",
+					Statement: "SELECT * FROM hotels WHERE city = $1;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("city", "city name",
 							[]parameters.ParamAuthService{
@@ -171,12 +174,14 @@ func TestParseFromYamlWithTemplateParamsYugabyteDB(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": yugabytedbsql.Config{
-					Name:         "example_tool",
-					Type:         "yugabytedb-sql",
-					Source:       "my-yb-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "yugabytedb-sql",
+					Source:    "my-yb-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "some description"),
 					},

@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"write_tool": cloudstoragewriteobject.Config{
-					Name:         "write_tool",
-					Type:         "cloud-storage-write-object",
-					Source:       "my-gcs",
-					Description:  "Write content to Cloud Storage",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "write_tool",
+						Description:  "Write content to Cloud Storage",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-write-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_write": cloudstoragewriteobject.Config{
-					Name:         "secure_write",
-					Type:         "cloud-storage-write-object",
-					Source:       "prod-gcs",
-					Description:  "Write with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_write",
+						Description:  "Write with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-write-object",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -122,10 +126,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragewriteobject.Config{
-		Name:        "write_tool",
-		Type:        "cloud-storage-write-object",
-		Source:      "my-gcs",
-		Description: "Write",
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {

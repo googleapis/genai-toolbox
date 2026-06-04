@@ -158,6 +158,26 @@ curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-database
 ```
 
 {{% /tab %}}
+{{% tab header="Windows ARM64 (Command Prompt)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (Command Prompt):
+
+```cmd
+:: see releases page for other versions
+set VERSION=1.2.0
+curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (PowerShell)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (PowerShell):
+
+```powershell
+# see releases page for other versions
+$VERSION = "1.2.0"
+curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
+```
+
+{{% /tab %}}
 {{< /tabpane >}}
 {{% /tab %}}
 {{% tab header="Container image" lang="en" %}}
