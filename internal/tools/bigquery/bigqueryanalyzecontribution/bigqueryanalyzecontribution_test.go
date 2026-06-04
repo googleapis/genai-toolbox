@@ -27,12 +27,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
+	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/option"
 )
 
@@ -90,60 +88,6 @@ func (m *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return m.roundTrip(req)
 }
 
-type mockSource struct {
-	sources.Source
-	calledSQL string
-	client    *bigqueryapi.Client
-}
-
-func (m *mockSource) BigQueryClient() *bigqueryapi.Client {
-	return m.client
-}
-
-func (m *mockSource) UseClientAuthorization() bool {
-	return false
-}
-
-func (m *mockSource) GetAuthTokenHeaderName() string {
-	return ""
-}
-
-func (m *mockSource) GetMaximumBytesBilled() int64 {
-	return 0
-}
-
-func (m *mockSource) IsDatasetAllowed(projectID, datasetID string) bool {
-	return true
-}
-
-func (m *mockSource) BigQueryAllowedDatasets() []string {
-	return nil
-}
-
-func (m *mockSource) BigQuerySession() bigqueryds.BigQuerySessionProvider {
-	return func(ctx context.Context) (*bigqueryds.Session, error) {
-		return &bigqueryds.Session{ID: "mock-session-id"}, nil
-	}
-}
-
-func (m *mockSource) RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	return m.client, nil, nil
-}
-
-func (m *mockSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql string, queryType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
-	m.calledSQL = sql
-	return "mocked_analyze_contribution_result", nil
-}
-
-type mockSourceProvider struct {
-	tools.SourceProvider
-	source sources.Source
-}
-
-func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
-	return m.source, true
-}
-
 func TestInvoke(t *testing.T) {
 	mockClient := &http.Client{
 		Transport: &mockTransport{
@@ -179,7 +123,7 @@ func TestInvoke(t *testing.T) {
 		Source:      "my-bq-source",
 		Description: "Analyze Contribution",
 	}
-	src := &mockSource{client: bqClient}
+	src := &bigquerycommon.MockSource{Client: bqClient, RunSQLResult: "mocked_analyze_contribution_result"}
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": src,
 	}
@@ -242,7 +186,7 @@ func TestInvoke(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			provider := &mockSourceProvider{source: src}
+			provider := &bigquerycommon.MockSourceProvider{Source: src}
 
 			data := map[string]any{}
 			if tc.inputData != nil {
@@ -293,61 +237,11 @@ func TestInvoke(t *testing.T) {
 				t.Errorf("unexpected response: got %v", resp)
 			}
 
-			if tc.wantSQLSub != "" && !strings.Contains(src.calledSQL, tc.wantSQLSub) {
-				t.Errorf("expected SQL to contain %q, but got:\n%s", tc.wantSQLSub, src.calledSQL)
+			if tc.wantSQLSub != "" && !strings.Contains(src.CalledSQL, tc.wantSQLSub) {
+				t.Errorf("expected SQL to contain %q, but got:\n%s", tc.wantSQLSub, src.CalledSQL)
 			}
 		})
 	}
-}
-
-type mockAllowedDatasetsSource struct {
-	sources.Source
-	client          *bigqueryapi.Client
-	allowedDatasets []string
-}
-
-func (m *mockAllowedDatasetsSource) BigQueryClient() *bigqueryapi.Client {
-	return m.client
-}
-
-func (m *mockAllowedDatasetsSource) UseClientAuthorization() bool {
-	return false
-}
-
-func (m *mockAllowedDatasetsSource) GetAuthTokenHeaderName() string {
-	return ""
-}
-
-func (m *mockAllowedDatasetsSource) GetMaximumBytesBilled() int64 {
-	return 0
-}
-
-func (m *mockAllowedDatasetsSource) IsDatasetAllowed(projectID, datasetID string) bool {
-	targetDataset := datasetID
-	for _, allowed := range m.allowedDatasets {
-		if allowed == targetDataset {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *mockAllowedDatasetsSource) BigQueryAllowedDatasets() []string {
-	return m.allowedDatasets
-}
-
-func (m *mockAllowedDatasetsSource) BigQuerySession() bigqueryds.BigQuerySessionProvider {
-	return func(ctx context.Context) (*bigqueryds.Session, error) {
-		return &bigqueryds.Session{ID: "mock-session-id"}, nil
-	}
-}
-
-func (m *mockAllowedDatasetsSource) RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	return m.client, nil, nil
-}
-
-func (m *mockAllowedDatasetsSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql string, queryType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
-	return "mocked_analyze_contribution_result", nil
 }
 
 func TestInvokeAllowedDatasetsValidation(t *testing.T) {
@@ -419,9 +313,9 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	}
 
 	// 3. Define mock source that returns this client and allowed datasets configuration
-	testSrc := &mockAllowedDatasetsSource{
-		client:          bqClient,
-		allowedDatasets: []string{"allowed_dataset"},
+	testSrc := &bigquerycommon.MockSource{
+		Client:          bqClient,
+		AllowedDatasets: []string{"allowed_dataset"},
 	}
 
 	cfg := bigqueryanalyzecontribution.Config{
@@ -457,7 +351,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	}
 
 	// 5. Invoke the tool and assert it fails with the dataset permission check error
-	provider := &mockSourceProvider{source: testSrc}
+	provider := &bigquerycommon.MockSourceProvider{Source: testSrc}
 	_, err = tool.Invoke(ctx, provider, paramVals, "")
 	if err == nil {
 		t.Fatal("expected Invoke to return an error due to out-of-allowlist dataset reference, but got nil")
