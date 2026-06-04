@@ -181,7 +181,7 @@ func TestGenerateSkillMarkdown(t *testing.T) {
 			}, false, false),
 	}
 
-	got, err := generateSkillMarkdown("MySkill", "My Description", "Some extra notes", toolsMap, nil)
+	got, err := generateSkillMarkdown(nil, "MySkill", "My Description", "Some extra notes", toolsMap, nil)
 	if err != nil {
 		t.Fatalf("generateSkillMarkdown() error = %v", err)
 	}

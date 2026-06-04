@@ -207,7 +207,7 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		}
 
 		// Generate SKILL.md
-		skillContent, err := generateSkillMarkdown(skillName, cmd.description, cmd.additionalNotes, allTools, parser.EnvVars)
+		skillContent, err := generateSkillMarkdown(nil, skillName, cmd.description, cmd.additionalNotes, allTools, parser.EnvVars)
 		if err != nil {
 			errMsg := fmt.Errorf("error generating SKILL.md content: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())

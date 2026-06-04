@@ -71,7 +71,7 @@ type skillTemplateData struct {
 // generateSkillMarkdown generates the content of the SKILL.md file.
 // It includes usage instructions and a reference section for each tool in the skill,
 // detailing its description and parameters.
-func generateSkillMarkdown(skillName, skillDescription, additionalNotes string, toolsMap map[string]tools.Tool, envVars map[string]string) (string, error) {
+func generateSkillMarkdown(sp tools.SourceProvider, skillName, skillDescription, additionalNotes string, toolsMap map[string]tools.Tool, envVars map[string]string) (string, error) {
 	var toolsData []toolTemplateData
 
 	// Order tools based on name

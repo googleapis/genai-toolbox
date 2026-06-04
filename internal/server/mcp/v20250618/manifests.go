@@ -90,7 +90,7 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
+func GenerateListToolsResult(sp tools.SourceProvider, t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(t.ToolNames))
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]

@@ -117,7 +117,7 @@ func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManag
 	}
 
 	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	listToolsResult, err := GenerateListToolsResult(resourceMgr, toolset, toolsMap)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
