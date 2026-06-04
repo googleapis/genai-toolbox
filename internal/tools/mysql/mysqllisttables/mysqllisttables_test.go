@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	mysqllisttables "github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqllisttables"
 )
 
@@ -47,11 +48,13 @@ func TestParseFromYamlMySQLListTables(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mysqllisttables.Config{
-					Name:         "example_tool",
-					Type:         "mysql-list-tables",
-					Source:       "my-mysql-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "mysql-list-tables",
+					Source: "my-mysql-instance",
 				},
 			},
 		},
