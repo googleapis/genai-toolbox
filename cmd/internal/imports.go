@@ -257,6 +257,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannerlistgraphs"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannerlisttables"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannersearchcatalog"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqliteexecutesql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
