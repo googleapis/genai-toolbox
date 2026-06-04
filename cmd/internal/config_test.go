@@ -624,15 +624,17 @@ func TestParseConfig(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 						},
-						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -746,15 +748,17 @@ func TestParseConfig(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 						},
-						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -927,12 +931,14 @@ func TestParseConfigWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -1033,12 +1039,14 @@ func TestParseConfigWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{"my-google-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-service"},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
