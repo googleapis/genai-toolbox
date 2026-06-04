@@ -451,6 +451,18 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			errContains: "token has expired",
 		},
 		{
+			name:  "missing issuer in opaque token response",
+			token: "opaque-missing-iss",
+			mockResponse: map[string]any{
+				"active": true,
+				"aud":    "my-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "missing issuer in token validation",
+		},
+		{
 			name:  "introspection error status",
 			token: "opaque-error",
 			mockResponse: map[string]any{
@@ -686,6 +698,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 				"scope":  "read:files write:files",
 				"aud":    "my-audience",
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			},
 			mockStatus: http.StatusOK,
 			wantError:  false,
@@ -700,6 +713,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 				"scope":  "read:files write:files",
 				"aud":    "my-audience",
 				"exp":    "2000000000",
+				"iss":    "https://example.com",
 			},
 			mockStatus: http.StatusOK,
 			wantError:  false,
@@ -717,6 +731,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 				"scope":  "read:files",
 				"aud":    "my-audience",
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			},
 			mockStatus: http.StatusOK,
 			wantError:  false,
@@ -731,6 +746,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 				"scope":  "read:files",
 				"aud":    []string{"other-audience", "my-audience"},
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			},
 			mockStatus: http.StatusOK,
 			wantError:  false,
@@ -765,6 +781,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 				"active": true,
 				"scope":  "read:files",
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			},
 			mockStatus:  http.StatusOK,
 			wantError:   true,
@@ -778,6 +795,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 				"active": true,
 				"aud":    "wrong-audience",
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			},
 			mockStatus:  http.StatusOK,
 			wantError:   true,
@@ -789,10 +807,23 @@ func TestValidateOpaqueToken(t *testing.T) {
 			mockResponse: map[string]any{
 				"active": true,
 				"exp":    time.Now().Add(-1 * time.Hour).Unix(),
+				"iss":    "https://example.com",
 			},
 			mockStatus:  http.StatusOK,
 			wantError:   true,
 			errContains: "token has expired",
+		},
+		{
+			name:  "missing issuer in opaque token response",
+			token: "opaque-missing-iss",
+			mockResponse: map[string]any{
+				"active": true,
+				"aud":    "my-audience",
+				"exp":    time.Now().Add(time.Hour).Unix(),
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "missing issuer in token validation",
 		},
 		{
 			name:  "introspection error status",
@@ -827,6 +858,7 @@ func TestValidateOpaqueToken(t *testing.T) {
 					ScopesRequired:      tc.scopesRequired,
 				},
 				client: newSecureHTTPClient(),
+				issuer: "https://example.com",
 			}
 
 			logger, err := log.NewLogger("standard", log.Debug, &bytes.Buffer{}, &bytes.Buffer{})
