@@ -297,6 +297,30 @@ To install Toolbox as a binary:
 > ```
 >
 > </details>
+> <details>
+> <summary>Windows ARM64 (Command Prompt)</summary>
+>
+> To install Toolbox as a binary on Windows ARM64 (Command Prompt):
+>
+> ```cmd
+> :: see releases page for other versions
+> set VERSION=1.2.0
+> curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows ARM64 (PowerShell)</summary>
+>
+> To install Toolbox as a binary on Windows ARM64 (PowerShell):
+>
+> ```powershell
+> # see releases page for other versions
+> $VERSION = "1.2.0"
+> curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
+> ```
+>
+> </details>
 </details>
 
 <details>

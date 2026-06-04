@@ -57,6 +57,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 

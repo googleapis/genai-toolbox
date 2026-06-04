@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/vectorassistgeneratequery"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"generate-query-tool": vectorassistgeneratequery.Config{
-					Name:         "generate-query-tool",
-					Type:         "vector-assist-generate-query",
-					Source:       "a-source",
-					Description:  "a test description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "generate-query-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "vector-assist-generate-query",
+					Source: "a-source",
 				},
 			},
 		},
