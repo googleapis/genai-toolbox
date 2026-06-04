@@ -113,22 +113,6 @@ description: >-
   calling get_data_insights. Typical execution takes 2-5 minutes. If the state
   is 'FAILED', check the error details.
 ---
-kind: toolset
-name: enrich
-tools:
-- search_entries
-- lookup_entry
-- generate_data_insights
-- get_data_insights
-- generate_data_profile
-- get_data_profile
-- discover_metadata
-- get_discovery_results
-- check_data_quality
-- get_data_quality_results
-- get_operation
-- get_run_status
----
 kind: tool
 name: generate_data_profile
 type: dataplex-generate-data-profile
@@ -246,3 +230,20 @@ description: >-
   otherwise the results will be empty.
   CRITICAL: Access the results via the nested public fields 'dataQualityResult' inside the returned DataScan.
   Note that the 'failingRowsQuery' field inside the rules result is extremely useful for retrieving failed rows.
+---
+kind: toolset
+name: enrich
+tools:
+- search_entries
+- lookup_entry
+- generate_data_insights
+- get_data_insights
+- generate_data_profile
+- get_data_profile
+- discover_metadata
+- get_discovery_results
+- check_data_quality
+- get_data_quality_results
+- get_operation
+- get_run_status
+

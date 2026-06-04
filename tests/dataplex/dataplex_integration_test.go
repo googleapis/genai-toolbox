@@ -46,6 +46,10 @@ var (
 	DataplexLookupEntryToolType            = "dataplex-lookup-entry"
 	DataplexSearchAspectTypesToolType      = "dataplex-search-aspect-types"
 	DataplexSearchDataQualityScansToolType = "dataplex-search-dq-scans"
+	DataplexGenerateDataProfileToolType     = "dataplex-generate-data-profile"
+	DataplexGetDataProfileToolType          = "dataplex-get-data-profile"
+	DataplexGetOperationToolType            = "dataplex-get-operation"
+	DataplexGetRunStatusToolType            = "dataplex-get-run-status"
 	DataplexProject                        = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -269,6 +273,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexSearchAspectTypesToolInvokeTest(t, aspectTypeId)
 	runDataplexLookupContextToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchDataQualityScansToolInvokeTest(t, dataScanId, tableName, datasetName)
+	runDataplexDataScanLifecycleIntegrationTest(t, tableName, datasetName, dataplexDataScanClient)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -427,6 +432,26 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"description":  "Simple dataplex search dq scans tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"my-dataplex-generate-data-profile-tool": map[string]any{
+				"type":        DataplexGenerateDataProfileToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex generate data profile tool to test end to end functionality.",
+			},
+			"my-dataplex-get-data-profile-tool": map[string]any{
+				"type":        DataplexGetDataProfileToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get data profile tool to test end to end functionality.",
+			},
+			"my-dataplex-get-operation-tool": map[string]any{
+				"type":        DataplexGetOperationToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get operation tool to test end to end functionality.",
+			},
+			"my-dataplex-get-run-status-tool": map[string]any{
+				"type":        DataplexGetRunStatusToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get run status tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -458,6 +483,26 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-search-dq-scans-tool",
 			toolName:       "my-dataplex-search-dq-scans-tool",
 			expectedParams: []string{"filter", "data_scan_id", "table_name", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-generate-data-profile-tool",
+			toolName:       "my-dataplex-generate-data-profile-tool",
+			expectedParams: []string{"resourcePath", "location", "publish"},
+		},
+		{
+			name:           "get my-dataplex-get-data-profile-tool",
+			toolName:       "my-dataplex-get-data-profile-tool",
+			expectedParams: []string{"scanId", "location"},
+		},
+		{
+			name:           "get my-dataplex-get-operation-tool",
+			toolName:       "my-dataplex-get-operation-tool",
+			expectedParams: []string{"operationName"},
+		},
+		{
+			name:           "get my-dataplex-get-run-status-tool",
+			toolName:       "my-dataplex-get-run-status-tool",
+			expectedParams: []string{"scanId", "location"},
 		},
 	}
 
@@ -1204,3 +1249,164 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 		})
 	}
 }
+
+func runDataplexDataScanLifecycleIntegrationTest(t *testing.T, tableName string, datasetName string, client *dataplex.DataScanClient) {
+	ctx := context.Background()
+	tableResource := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetName, tableName)
+
+	// Step 1: Generate Data Profile (Create Scan)
+	generateURL := "http://127.0.0.1:5000/api/tool/my-dataplex-generate-data-profile-tool/invoke"
+	reqBody := map[string]any{
+		"resourcePath": tableResource,
+		"location":     "us-central1",
+		"publish":      false,
+	}
+	reqBytes, _ := json.Marshal(reqBody)
+	resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
+	if err != nil {
+		t.Fatalf("failed to invoke generate_data_profile: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("generate_data_profile response status got %d, want 200. Body: %s", resp.StatusCode, string(body))
+	}
+
+	var invokeResult map[string]any
+	json.NewDecoder(resp.Body).Decode(&invokeResult)
+	resultStr, ok := invokeResult["result"].(string)
+	if !ok || resultStr == "" {
+		t.Fatalf("expected string result from generate_data_profile, got: %v", invokeResult)
+	}
+
+	operationName := resultStr
+	if !strings.Contains(operationName, "/operations/") {
+		t.Fatalf("expected operation name in result, got: %s", operationName)
+	}
+
+	// Step 2: Get Operation Status
+	getOpURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-operation-tool/invoke"
+	opReqBody := map[string]any{
+		"operationName": operationName,
+	}
+	opReqBytes, _ := json.Marshal(opReqBody)
+
+	var scanID string
+	var opDone bool
+	for i := 0; i < 6; i++ {
+		opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
+		if err != nil {
+			t.Fatalf("failed to invoke get_operation: %v", err)
+		}
+		if opResp.StatusCode != 200 {
+			body, _ := io.ReadAll(opResp.Body)
+			opResp.Body.Close()
+			t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
+		}
+		var opResult map[string]any
+		json.NewDecoder(opResp.Body).Decode(&opResult)
+		opResp.Body.Close()
+
+		opResultStr := opResult["result"].(string)
+		var innerOp map[string]any
+		json.Unmarshal([]byte(opResultStr), &innerOp)
+
+		if done, _ := innerOp["done"].(bool); done {
+			opDone = true
+			responseMap, ok := innerOp["response"].(map[string]any)
+			if !ok {
+				t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
+			}
+			name, ok := responseMap["name"].(string)
+			if !ok {
+				t.Fatalf("DataScan response missing name: %v", responseMap)
+			}
+			parts := strings.Split(name, "/")
+			scanID = parts[len(parts)-1]
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+
+	if !opDone {
+		t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
+	}
+
+	if scanID == "" {
+		t.Fatalf("scanID was empty after operation completed")
+	}
+
+	defer func() {
+		parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
+		deleteReq := &dataplexpb.DeleteDataScanRequest{
+			Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
+		}
+		op, err := client.DeleteDataScan(ctx, deleteReq)
+		if err != nil {
+			t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
+			return
+		}
+		op.Wait(ctx)
+		t.Logf("cleanup: successfully deleted scan template %s", scanID)
+	}()
+
+	// Step 3: Get Run Status
+	runStatusURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-run-status-tool/invoke"
+	runReqBody := map[string]any{
+		"scanId":   scanID,
+		"location": "us-central1",
+	}
+	runReqBytes, _ := json.Marshal(runReqBody)
+	runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
+	if err != nil {
+		t.Fatalf("failed to invoke get_run_status: %v", err)
+	}
+	defer runResp.Body.Close()
+
+	if runResp.StatusCode != 200 {
+		body, _ := io.ReadAll(runResp.Body)
+		t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
+	}
+
+	var runResult map[string]any
+	json.NewDecoder(runResp.Body).Decode(&runResult)
+	runResultStr, _ := runResult["result"].(string)
+
+	var jobStatus map[string]any
+	if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
+		t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
+	}
+
+	// Step 4: Get Data Profile
+	getProfileURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-profile-tool/invoke"
+	profileReqBody := map[string]any{
+		"scanId":   scanID,
+		"location": "us-central1",
+	}
+	profileReqBytes, _ := json.Marshal(profileReqBody)
+	profileResp, err := http.Post(getProfileURL, "application/json", bytes.NewBuffer(profileReqBytes))
+	if err != nil {
+		t.Fatalf("failed to invoke get_data_profile: %v", err)
+	}
+	defer profileResp.Body.Close()
+
+	if profileResp.StatusCode != 200 {
+		body, _ := io.ReadAll(profileResp.Body)
+		t.Fatalf("get_data_profile response status got %d, want 200. Body: %s", profileResp.StatusCode, string(body))
+	}
+
+	var profileResult map[string]any
+	json.NewDecoder(profileResp.Body).Decode(&profileResult)
+	profileResultStr, _ := profileResult["result"].(string)
+
+	var scanData map[string]any
+	if err := json.Unmarshal([]byte(profileResultStr), &scanData); err != nil {
+		t.Fatalf("get_data_profile returned invalid JSON: %v. Raw: %s", err, profileResultStr)
+	}
+
+	if scanData["name"] != fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID) {
+		t.Fatalf("expected scan name %s, got: %s", scanID, scanData["name"])
+	}
+}
+
