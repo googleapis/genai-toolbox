@@ -259,7 +259,7 @@ Remember to keep your PRs small. For example, if you are contributing a new Sour
     (e.g., `"newdb-tool"`).
   * `Initialize(srcs map[string]sources.Source) (tools.Tool, error)`: Validates
     the config, processes parameters, and returns your `Tool` constructed via
-    `tools.NewBaseTool(cfg, annotations, manifest, params)`.
+    `tools.NewBaseTool(cfg, annotations, manifest, staticParameters)`.
 * **Implement only the two methods `BaseTool` does not provide**:
   * `Invoke(ctx context.Context, sp tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError)`:
     Executes the operation. Return typed errors (see [Error
