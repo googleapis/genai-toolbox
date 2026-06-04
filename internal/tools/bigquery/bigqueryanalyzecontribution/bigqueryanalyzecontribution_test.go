@@ -16,8 +16,10 @@ package bigqueryanalyzecontribution_test
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -135,7 +137,7 @@ func (m *mockSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql
 
 type mockSourceProvider struct {
 	tools.SourceProvider
-	source *mockSource
+	source sources.Source
 }
 
 func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
@@ -295,5 +297,174 @@ func TestInvoke(t *testing.T) {
 				t.Errorf("expected SQL to contain %q, but got:\n%s", tc.wantSQLSub, src.calledSQL)
 			}
 		})
+	}
+}
+
+type mockAllowedDatasetsSource struct {
+	sources.Source
+	client          *bigqueryapi.Client
+	allowedDatasets []string
+}
+
+func (m *mockAllowedDatasetsSource) BigQueryClient() *bigqueryapi.Client {
+	return m.client
+}
+
+func (m *mockAllowedDatasetsSource) UseClientAuthorization() bool {
+	return false
+}
+
+func (m *mockAllowedDatasetsSource) GetAuthTokenHeaderName() string {
+	return ""
+}
+
+func (m *mockAllowedDatasetsSource) GetMaximumBytesBilled() int64 {
+	return 0
+}
+
+func (m *mockAllowedDatasetsSource) IsDatasetAllowed(projectID, datasetID string) bool {
+	targetDataset := datasetID
+	for _, allowed := range m.allowedDatasets {
+		if allowed == targetDataset {
+			return true
+		}
+	}
+	return false
+}
+
+func (m *mockAllowedDatasetsSource) BigQueryAllowedDatasets() []string {
+	return m.allowedDatasets
+}
+
+func (m *mockAllowedDatasetsSource) BigQuerySession() bigqueryds.BigQuerySessionProvider {
+	return func(ctx context.Context) (*bigqueryds.Session, error) {
+		return &bigqueryds.Session{ID: "mock-session-id"}, nil
+	}
+}
+
+func (m *mockAllowedDatasetsSource) RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	return m.client, nil, nil
+}
+
+func (m *mockAllowedDatasetsSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql string, queryType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
+	return "mocked_analyze_contribution_result", nil
+}
+
+func TestInvokeAllowedDatasetsValidation(t *testing.T) {
+	// 1. Start httptest Server to mock BigQuery jobs.insert API
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/jobs") {
+			var body struct {
+				Configuration struct {
+					DryRun bool `json:"dryRun"`
+					Query  struct {
+						Query string `json:"query"`
+					} `json:"query"`
+				} `json:"configuration"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			if body.Configuration.DryRun {
+				resp := map[string]any{
+					"kind": "bigquery#job",
+					"jobReference": map[string]string{
+						"projectId": "test-project",
+						"jobId":     "mock-job-id",
+					},
+					"status": map[string]any{
+						"state": "DONE",
+					},
+					"configuration": map[string]any{
+						"query": map[string]any{
+							"query": body.Configuration.Query.Query,
+						},
+					},
+					"statistics": map[string]any{
+						"creationTime": "123456789",
+						"startTime":    "123456789",
+						"endTime":      "123456789",
+						"query": map[string]any{
+							"referencedTables": []map[string]any{
+								{
+									"projectId": "test-project",
+									"datasetId": "unauthorized_dataset", // This dataset is NOT in the allowed list!
+									"tableId":   "some_table",
+								},
+							},
+						},
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(resp)
+				return
+			}
+		}
+
+		http.Error(w, "not implemented", http.StatusNotFound)
+	}))
+	defer mockServer.Close()
+
+	// 2. Initialize BigQuery client pointing to the mock server
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("failed to create context with logger: %v", err)
+	}
+
+	bqClient, err := bigqueryapi.NewClient(ctx, "test-project", option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery client: %v", err)
+	}
+
+	// 3. Define mock source that returns this client and allowed datasets configuration
+	testSrc := &mockAllowedDatasetsSource{
+		client:          bqClient,
+		allowedDatasets: []string{"allowed_dataset"},
+	}
+
+	cfg := bigqueryanalyzecontribution.Config{
+		Name:        "analyze_contribution_tool",
+		Type:        "bigquery-analyze-contribution",
+		Source:      "my-bq-source",
+		Description: "Analyze Contribution",
+	}
+	sourcesMap := map[string]sources.Source{
+		"my-bq-source": testSrc,
+	}
+	tool, err := cfg.Initialize(sourcesMap)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	analyzeContributionTool, ok := tool.(bigqueryanalyzecontribution.Tool)
+	if !ok {
+		t.Fatalf("expected bigqueryanalyzecontribution.Tool, got %T", tool)
+	}
+
+	// 4. Set up parameters
+	data := map[string]any{
+		"input_data":          "allowed_dataset.my_table",
+		"contribution_metric": "SUM(metric)",
+		"is_test_col":         "is_test",
+		"dimension_id_cols":   []any{"dim1"},
+	}
+
+	paramVals, err := parameters.ParseParams(analyzeContributionTool.Parameters, data, nil)
+	if err != nil {
+		t.Fatalf("unexpected error parsing parameters: %v", err)
+	}
+
+	// 5. Invoke the tool and assert it fails with the dataset permission check error
+	provider := &mockSourceProvider{source: testSrc}
+	_, err = tool.Invoke(ctx, provider, paramVals, "")
+	if err == nil {
+		t.Fatal("expected Invoke to return an error due to out-of-allowlist dataset reference, but got nil")
+	}
+
+	expectedErr := "query accesses dataset 'test-project.unauthorized_dataset', which is not in the allowed list"
+	if !strings.Contains(err.Error(), expectedErr) {
+		t.Errorf("expected error to contain %q, got: %v", expectedErr, err)
 	}
 }
