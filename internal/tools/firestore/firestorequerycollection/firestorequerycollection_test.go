@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequerycollection"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"query_users_tool": firestorequerycollection.Config{
-					Name:         "query_users_tool",
-					Type:         "firestore-query-collection",
-					Source:       "my-firestore-instance",
-					Description:  "Query users collection with filters and ordering",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_users_tool",
+						Description:  "Query users collection with filters and ordering",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-query-collection",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_query_tool": firestorequerycollection.Config{
-					Name:         "secure_query_tool",
-					Type:         "firestore-query-collection",
-					Source:       "prod-firestore",
-					Description:  "Query collections with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_query_tool",
+						Description:  "Query collections with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-query-collection",
+					Source: "prod-firestore",
 				},
 			},
 		},
@@ -120,25 +125,31 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"query_users": firestorequerycollection.Config{
-			Name:         "query_users",
-			Type:         "firestore-query-collection",
-			Source:       "users-firestore",
-			Description:  "Query user documents with filtering",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_users",
+				Description:  "Query user documents with filtering",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-query-collection",
+			Source: "users-firestore",
 		},
 		"query_products": firestorequerycollection.Config{
-			Name:         "query_products",
-			Type:         "firestore-query-collection",
-			Source:       "products-firestore",
-			Description:  "Query product catalog",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_products",
+				Description:  "Query product catalog",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-query-collection",
+			Source: "products-firestore",
 		},
 		"query_orders": firestorequerycollection.Config{
-			Name:         "query_orders",
-			Type:         "firestore-query-collection",
-			Source:       "orders-firestore",
-			Description:  "Query customer orders with complex filters",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_orders",
+				Description:  "Query customer orders with complex filters",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-query-collection",
+			Source: "orders-firestore",
 		},
 	}
 

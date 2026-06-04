@@ -103,10 +103,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	sliceParams := newParams.AsSlice()
 
-	for i, p := range sliceParams {
-		fmt.Printf("[%d]=%T ", i, p)
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	fmt.Printf("\n")
+	logger.DebugContext(ctx, "executing %s tool query: %s", resourceType, newStatement)
 
 	isReadOnly := true
 	if t.Cfg.ReadOnly != nil {

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorevalidaterules"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"validate_rules_tool": firestorevalidaterules.Config{
-					Name:         "validate_rules_tool",
-					Type:         "firestore-validate-rules",
-					Source:       "my-firestore-instance",
-					Description:  "Validate Firestore security rules",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "validate_rules_tool",
+						Description:  "Validate Firestore security rules",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-validate-rules",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_validate_rules": firestorevalidaterules.Config{
-					Name:         "secure_validate_rules",
-					Type:         "firestore-validate-rules",
-					Source:       "prod-firestore",
-					Description:  "Validate rules with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_validate_rules",
+						Description:  "Validate rules with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-validate-rules",
+					Source: "prod-firestore",
 				},
 			},
 		},
@@ -119,25 +124,31 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"validate_dev_rules": firestorevalidaterules.Config{
-			Name:         "validate_dev_rules",
-			Type:         "firestore-validate-rules",
-			Source:       "dev-firestore",
-			Description:  "Validate development environment rules",
-			AuthRequired: []string{"dev-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "validate_dev_rules",
+				Description:  "Validate development environment rules",
+				AuthRequired: []string{"dev-auth"},
+			},
+			Type:   "firestore-validate-rules",
+			Source: "dev-firestore",
 		},
 		"validate_staging_rules": firestorevalidaterules.Config{
-			Name:         "validate_staging_rules",
-			Type:         "firestore-validate-rules",
-			Source:       "staging-firestore",
-			Description:  "Validate staging environment rules",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "validate_staging_rules",
+				Description:  "Validate staging environment rules",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-validate-rules",
+			Source: "staging-firestore",
 		},
 		"validate_prod_rules": firestorevalidaterules.Config{
-			Name:         "validate_prod_rules",
-			Type:         "firestore-validate-rules",
-			Source:       "prod-firestore",
-			Description:  "Validate production environment rules",
-			AuthRequired: []string{"prod-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "validate_prod_rules",
+				Description:  "Validate production environment rules",
+				AuthRequired: []string{"prod-auth", "admin-auth"},
+			},
+			Type:   "firestore-validate-rules",
+			Source: "prod-firestore",
 		},
 	}
 
