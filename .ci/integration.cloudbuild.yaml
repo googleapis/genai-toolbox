@@ -23,6 +23,10 @@ steps:
         git fetch --unshallow || true
         git fetch origin main > /dev/null 2>&1
         git diff --name-only origin/main...HEAD > /workspace/changed_files.txt
+        if [ ! -s /workspace/changed_files.txt ]; then
+          echo "No changed files detected. Writing a representative CI path to run all test shards."
+          echo ".ci/integration.cloudbuild.yaml" > /workspace/changed_files.txt
+        fi
 
   - id: "install-dependencies"
     name: golang:1
