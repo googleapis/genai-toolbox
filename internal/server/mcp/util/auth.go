@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -30,8 +29,7 @@ func ValidateScopes(ctx context.Context, toolScopes []string, authServices map[s
 	// Find MCP enabled auth service
 	var mcpEnabled bool
 	for _, aS := range authServices {
-		cfg := aS.ToConfig()
-		if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+		if mSvc, ok := aS.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpEnabled = true
 			break
 		}
@@ -40,7 +38,7 @@ func ValidateScopes(ctx context.Context, toolScopes []string, authServices map[s
 	if mcpEnabled && len(toolScopes) > 0 {
 		claims := util.AuthTokenClaimsFromContext(ctx)
 		if claims == nil {
-			return &generic.MCPAuthError{
+			return &auth.MCPAuthError{
 				Code:           http.StatusForbidden,
 				Message:        "missing claims for MCP authorization",
 				ScopesRequired: toolScopes,
@@ -53,7 +51,7 @@ func ValidateScopes(ctx context.Context, toolScopes []string, authServices map[s
 		// Check if all required scopes are present in the token
 		for _, ts := range toolScopes {
 			if !slices.Contains(tokenScopes, ts) {
-				return &generic.MCPAuthError{
+				return &auth.MCPAuthError{
 					Code:           http.StatusForbidden,
 					Message:        "insufficient scopes for this tool",
 					ScopesRequired: toolScopes,

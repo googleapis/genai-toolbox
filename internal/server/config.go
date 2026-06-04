@@ -16,6 +16,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"regexp"
@@ -58,6 +59,8 @@ type ServerConfig struct {
 	PromptConfigs PromptConfigs
 	// PromptsetConfigs defines what prompts are available
 	PromptsetConfigs PromptsetConfigs
+	// IgnoreUnknownTools logs warnings and skips unknown/unsupported tool types instead of failing to start.
+	IgnoreUnknownTools bool
 	// LoggingFormat defines whether structured loggings are used.
 	LoggingFormat logFormat
 	// LogLevel defines the levels to log.
@@ -209,6 +212,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
 			}
+			if c == nil {
+				continue
+			}
 			if toolConfigs == nil {
 				toolConfigs = make(ToolConfigs)
 			}
@@ -279,11 +285,33 @@ func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[stri
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
 		}
+		if !actual.McpEnabled {
+			if actual.Audience != "" {
+				return nil, fmt.Errorf("`audience` is not allowed when `mcpEnabled` is false")
+			}
+			if len(actual.ScopesRequired) > 0 {
+				return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+			}
+		}
 		return actual, nil
 	case generic.AuthServiceType:
 		actual := generic.Config{Name: name}
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+		}
+		if !actual.McpEnabled {
+			if actual.IntrospectionEndpoint != "" {
+				return nil, fmt.Errorf("`introspectionEndpoint` is not allowed when `mcpEnabled` is false")
+			}
+			if actual.IntrospectionMethod != "" {
+				return nil, fmt.Errorf("`introspectionMethod` is not allowed when `mcpEnabled` is false")
+			}
+			if actual.IntrospectionParamName != "" {
+				return nil, fmt.Errorf("`introspectionParamName` is not allowed when `mcpEnabled` is false")
+			}
+			if len(actual.ScopesRequired) > 0 {
+				return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+			}
 		}
 		return actual, nil
 	default:
@@ -383,6 +411,13 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 	}
 	toolCfg, err := tools.DecodeConfig(ctx, resourceType, name, dec)
 	if err != nil {
+		if errors.Is(err, tools.ErrUnknownToolType) && util.IgnoreUnknownToolsFromContext(ctx) {
+			l, logErr := util.LoggerFromContext(ctx)
+			if logErr == nil {
+				l.WarnContext(ctx, fmt.Sprintf("Skipping unknown tool type %q for tool %q", resourceType, name))
+			}
+			return nil, nil
+		}
 		return nil, err
 	}
 	return toolCfg, nil

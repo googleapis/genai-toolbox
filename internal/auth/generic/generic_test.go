@@ -88,6 +88,107 @@ func generateValidToken(t *testing.T, key *rsa.PrivateKey, keyID string, claims 
 	return signedString
 }
 
+func TestInitialize_Validation(t *testing.T) {
+	key := generateRSAPrivateKey(t)
+	mockOIDC := setupJWKSMockServer(t, key, "my-key-id")
+	defer mockOIDC.Close()
+
+	tests := []struct {
+		name      string
+		config    Config
+		wantError bool
+		errString string
+	}{
+		{
+			name: "valid mcpEnabled true",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          true,
+				ScopesRequired:      []string{"email"},
+			},
+			wantError: false,
+		},
+		{
+			name: "valid mcpEnabled false",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          false,
+			},
+			wantError: false,
+		},
+		{
+			name: "introspectionEndpoint disallowed with mcpEnabled false",
+			config: Config{
+				Name:                  "generic-auth",
+				Type:                  "generic",
+				Audience:              "my-audience",
+				AuthorizationServer:   mockOIDC.URL,
+				McpEnabled:            false,
+				IntrospectionEndpoint: "http://example.com/introspect",
+			},
+			wantError: true,
+			errString: "`introspectionEndpoint` is not allowed when `mcpEnabled` is false",
+		},
+		{
+			name: "introspectionMethod disallowed with mcpEnabled false",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          false,
+				IntrospectionMethod: "POST",
+			},
+			wantError: true,
+			errString: "`introspectionMethod` is not allowed when `mcpEnabled` is false",
+		},
+		{
+			name: "introspectionParamName disallowed with mcpEnabled false",
+			config: Config{
+				Name:                   "generic-auth",
+				Type:                   "generic",
+				Audience:               "my-audience",
+				AuthorizationServer:    mockOIDC.URL,
+				McpEnabled:             false,
+				IntrospectionParamName: "token",
+			},
+			wantError: true,
+			errString: "`introspectionParamName` is not allowed when `mcpEnabled` is false",
+		},
+		{
+			name: "scopesRequired disallowed with mcpEnabled false",
+			config: Config{
+				Name:                "generic-auth",
+				Type:                "generic",
+				Audience:            "my-audience",
+				AuthorizationServer: mockOIDC.URL,
+				McpEnabled:          false,
+				ScopesRequired:      []string{"email"},
+			},
+			wantError: true,
+			errString: "`scopesRequired` is not allowed when `mcpEnabled` is false",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.config.Initialize()
+			if (err != nil) != tc.wantError {
+				t.Fatalf("Initialize() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError && err != nil && !strings.Contains(err.Error(), tc.errString) {
+				t.Errorf("expected error containing %q, got %v", tc.errString, err)
+			}
+		})
+	}
+}
+
 func TestGetClaimsFromHeader(t *testing.T) {
 	privateKey := generateRSAPrivateKey(t)
 	keyID := "test-key-id"
@@ -100,7 +201,6 @@ func TestGetClaimsFromHeader(t *testing.T) {
 		Audience:            "my-audience",
 		McpEnabled:          false,
 		AuthorizationServer: server.URL,
-		ScopesRequired:      []string{"read:files"},
 	}
 
 	authService, err := cfg.Initialize()
@@ -300,6 +400,17 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 			errContains: "token is not active",
 		},
 		{
+			name:           "missing active claim",
+			token:          "opaque-missing-active",
+			scopesRequired: []string{"read:files"},
+			mockResponse: map[string]any{
+				"scope": "read:files",
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "token is not active",
+		},
+		{
 			name:           "insufficient scopes",
 			token:          "opaque-bad-scope",
 			scopesRequired: []string{"read:files", "write:files"},
@@ -408,6 +519,7 @@ func TestValidateMCPAuth_Opaque(t *testing.T) {
 				Type:                "generic",
 				Audience:            tc.audience,
 				AuthorizationServer: server.URL,
+				McpEnabled:          true,
 				ScopesRequired:      tc.scopesRequired,
 			}
 
@@ -459,6 +571,7 @@ func TestValidateJwtToken(t *testing.T) {
 		Type:                "generic",
 		Audience:            "my-audience",
 		AuthorizationServer: server.URL,
+		McpEnabled:          true,
 		ScopesRequired:      []string{"read:files"},
 	}
 
@@ -644,6 +757,17 @@ func TestValidateOpaqueToken(t *testing.T) {
 			scopesRequired: []string{"read:files"},
 			mockResponse: map[string]any{
 				"active": false,
+			},
+			mockStatus:  http.StatusOK,
+			wantError:   true,
+			errContains: "token is not active",
+		},
+		{
+			name:           "missing active claim",
+			token:          "opaque-missing-active",
+			scopesRequired: []string{"read:files"},
+			mockResponse: map[string]any{
+				"scope": "read:files",
 			},
 			mockStatus:  http.StatusOK,
 			wantError:   true,

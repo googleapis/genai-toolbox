@@ -21,7 +21,6 @@ import (
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -42,11 +41,38 @@ func (aS mockAuthService) GetClaimsFromHeader(context.Context, http.Header) (map
 	return nil, nil
 }
 
+type mockAuthServiceConfig struct {
+	name string
+}
+
+func (c mockAuthServiceConfig) AuthServiceConfigType() string {
+	return "mock"
+}
+
+func (c mockAuthServiceConfig) Initialize() (auth.AuthService, error) {
+	return nil, nil
+}
+
 func (aS mockAuthService) ToConfig() auth.AuthServiceConfig {
-	return generic.Config{
-		Name:       aS.name,
-		McpEnabled: aS.mcpEnabled,
+	return mockAuthServiceConfig{
+		name: aS.name,
 	}
+}
+
+func (aS mockAuthService) IsMCPEnabled() bool {
+	return aS.mcpEnabled
+}
+
+func (aS mockAuthService) GetScopesRequired() []string {
+	return nil
+}
+
+func (aS mockAuthService) GetAuthorizationServer() string {
+	return ""
+}
+
+func (aS mockAuthService) ValidateMCPAuth(context.Context, http.Header) (map[string]any, error) {
+	return nil, nil
 }
 
 func TestValidateScopes(t *testing.T) {
@@ -131,9 +157,9 @@ func TestValidateScopes(t *testing.T) {
 				if err == nil {
 					t.Fatal("expected error, got nil")
 				}
-				var authErr *generic.MCPAuthError
+				var authErr *auth.MCPAuthError
 				if !errors.As(err, &authErr) {
-					t.Fatalf("expected generic.MCPAuthError, got: %T", err)
+					t.Fatalf("expected auth.MCPAuthError, got: %T", err)
 				}
 				if authErr.Code != http.StatusForbidden {
 					t.Errorf("expected Code StatusForbidden (403), got: %d", authErr.Code)

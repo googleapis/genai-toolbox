@@ -23,7 +23,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
@@ -229,8 +229,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 			var claims map[string]any
 			var err error
 
-			cfg := aS.ToConfig()
-			if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+			if mSvc, ok := aS.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 				claims = util.AuthTokenClaimsFromContext(ctx)
 			} else {
 				claims, err = aS.GetClaimsFromHeader(ctx, header)
