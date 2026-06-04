@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYamlElasticsearchExecuteEsql(t *testing.T) {
@@ -43,11 +44,13 @@ func TestParseFromYamlElasticsearchExecuteEsql(t *testing.T) {
 		`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "elasticsearch-execute-esql",
-					Source:       "my-elasticsearch-instance",
-					Description:  "Elasticsearch execute ES|QL tool",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "Elasticsearch execute ES|QL tool",
+						AuthRequired: []string{},
+					},
+					Type:   "elasticsearch-execute-esql",
+					Source: "my-elasticsearch-instance",
 				},
 			},
 		},
@@ -63,12 +66,14 @@ func TestParseFromYamlElasticsearchExecuteEsql(t *testing.T) {
 		`,
 			want: server.ToolConfigs{
 				"example_tool_csv": Config{
-					Name:         "example_tool_csv",
-					Type:         "elasticsearch-execute-esql",
-					Source:       "my-elasticsearch-instance",
-					Description:  "Elasticsearch execute ES|QL tool in CSV",
-					AuthRequired: []string{},
-					Format:       "csv",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool_csv",
+						Description:  "Elasticsearch execute ES|QL tool in CSV",
+						AuthRequired: []string{},
+					},
+					Type:   "elasticsearch-execute-esql",
+					Source: "my-elasticsearch-instance",
+					Format: "csv",
 				},
 			},
 		},

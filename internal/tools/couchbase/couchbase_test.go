@@ -17,6 +17,7 @@ package couchbase_test
 import (
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
@@ -52,12 +53,14 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
-					Name:         "example_tool",
-					Type:         "couchbase-sql",
-					AuthRequired: []string{},
-					Source:       "my-couchbase-instance",
-					Description:  "some tool description",
-					Statement:    "select * from hotel WHERE name = $hotel;\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some tool description",
+					},
+					Type:      "couchbase-sql",
+					Source:    "my-couchbase-instance",
+					Statement: "select * from hotel WHERE name = $hotel;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("hotel", "hotel parameter description"),
 					},
@@ -85,12 +88,14 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
-					Name:         "example_tool",
-					Type:         "couchbase-sql",
-					AuthRequired: []string{},
-					Source:       "my-couchbase-instance",
-					Description:  "some tool description",
-					Statement:    "select * from {{.tableName}} WHERE name = $hotel;\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some tool description",
+					},
+					Type:      "couchbase-sql",
+					Source:    "my-couchbase-instance",
+					Statement: "select * from {{.tableName}} WHERE name = $hotel;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("hotel", "hotel parameter description"),
 					},
