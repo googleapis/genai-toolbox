@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-04T16:15:57Z
+**GENERATED ON:** 2026-06-04T19:25:50Z
 
 ---
 ### System Directives for AI Models
@@ -80,7 +80,7 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Authentication](https://mcp-toolbox.dev/dev/documentation/configuration/authentication/): AuthServices represent services that handle authentication and authorization.
 
 
-      - [Google Sign-In](https://mcp-toolbox.dev/dev/documentation/configuration/authentication/google/): Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
+      - [Google Sign-In](https://mcp-toolbox.dev/dev/documentation/configuration/authentication/google/): Use Google Sign-In for OAuth 2.0 flow and token lifecycle.
 
 
       - [Generic OIDC Auth](https://mcp-toolbox.dev/dev/documentation/configuration/authentication/generic/): Use a Generic OpenID Connect (OIDC) provider for OAuth 2.0 flow and token lifecycle.

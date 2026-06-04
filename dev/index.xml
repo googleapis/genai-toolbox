@@ -4522,16 +4522,15 @@ of a LookML project.&lt;/p&gt;
  &lt;/tr&gt;
  &lt;/tbody&gt;
 &lt;/table&gt;</description></item><item><title>Google Sign-In</title><link>https://mcp-toolbox.dev/dev/documentation/configuration/authentication/google/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/documentation/configuration/authentication/google/</guid><description>&lt;h2 id="getting-started"&gt;Getting Started&lt;/h2&gt;
-&lt;p&gt;Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the
-Google Sign-In workflow to your web app &lt;a href="https://developers.google.com/identity/sign-in/web/sign-in"&gt;follow this guide&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;After setting up the Google Sign-In workflow, you should have registered your
-application and retrieved a &lt;a href="https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials"&gt;Client ID&lt;/a&gt;. Configure your auth service
-in with the &lt;code&gt;Client ID&lt;/code&gt;.&lt;/p&gt;
-&lt;h2 id="behavior"&gt;Behavior&lt;/h2&gt;
-&lt;h3 id="authorized-invocations"&gt;Authorized Invocations&lt;/h3&gt;
-&lt;p&gt;When using &lt;a href="https://mcp-toolbox.dev/dev/documentation/configuration/tools/#authorized-invocations"&gt;Authorized Invocations&lt;/a&gt;, a tool will be
-considered authorized if it has a valid Oauth 2.0 token that matches the Client
-ID.&lt;/p&gt;</description></item><item><title>http</title><link>https://mcp-toolbox.dev/dev/integrations/http/tools/http-tool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/http/tools/http-tool/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the Google Sign-In workflow to your web app, &lt;a href="https://developers.google.com/identity/sign-in/web/sign-in"&gt;follow this guide&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;After setting up Google Sign-In, configure your auth service in the toolbox. The Google auth provider supports two distinct validation modes:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Web App Claims (OIDC)&lt;/strong&gt;: Used to authenticate user requests in web applications.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;MCP Authorization&lt;/strong&gt;: Used to secure the entire MCP server transport (SSE or Stdio).&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="configuration-modes"&gt;Configuration Modes&lt;/h2&gt;
+&lt;h3 id="1-web-app-oidc-authentication"&gt;1. Web App OIDC Authentication&lt;/h3&gt;
+&lt;p&gt;If you are developing a web application using the Toolbox and need to retrieve user claims from Google ID tokens sent in custom request headers, configure the &lt;code&gt;clientId&lt;/code&gt; field.&lt;/p&gt;</description></item><item><title>http</title><link>https://mcp-toolbox.dev/dev/integrations/http/tools/http-tool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/http/tools/http-tool/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;http&lt;/code&gt; tool allows you to make HTTP requests to APIs to retrieve data.
 An HTTP request is the method by which a client communicates with a server to
 retrieve or manipulate resources.
@@ -8417,7 +8416,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode443s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode254s0hbhb"&gt;
 
 
 
