@@ -188,7 +188,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	bqClient, restService, err := source.RetrieveClientAndService(accessToken)
+	bqClient, _, err := source.RetrieveClientAndService(accessToken)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
@@ -197,38 +197,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
-
-		if len(source.BigQueryAllowedDatasets()) > 0 {
-			var connProps []*bigqueryapi.ConnectionProperty
-			session, err := source.BigQuerySession()(ctx)
-			if err != nil {
-				return nil, util.NewClientServerError("failed to get BigQuery session", http.StatusInternalServerError, err)
-			}
-			if session != nil {
-				connProps = []*bigqueryapi.ConnectionProperty{
-					{Key: "session_id", Value: session.ID},
-				}
-			}
-			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps, source.GetMaximumBytesBilled())
-			if err != nil {
-				return nil, util.ProcessGcpError(err)
-			}
-			statementType := dryRunJob.Statistics.Query.StatementType
-			if statementType != "SELECT" {
-				return nil, util.NewAgentError(fmt.Sprintf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType), nil)
-			}
-
-			if dryRunJob.Statistics != nil && dryRunJob.Statistics.Query != nil {
-				queryStats := dryRunJob.Statistics.Query
-				for _, tableRef := range queryStats.ReferencedTables {
-					if !source.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
-						return nil, util.NewAgentError(fmt.Sprintf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId), nil)
-					}
-				}
-			} else {
-				return nil, util.NewAgentError("could not analyze query in history_data to validate against allowed datasets", nil)
-			}
-		}
 	} else {
 		if !bqutil.ValidTableID(historyData) {
 			return nil, util.NewAgentError(fmt.Sprintf("invalid table identifier for 'history_data': %q; expected 'dataset.table' or 'project.dataset.table'", historyData), nil)
@@ -277,6 +245,33 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		// Add session ID to the connection properties for subsequent calls.
 		connProps = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},
+		}
+	}
+
+	if len(source.BigQueryAllowedDatasets()) > 0 {
+		dryRunQuery := bqClient.Query(sql)
+		dryRunQuery.Location = bqClient.Location
+		if connProps != nil {
+			dryRunQuery.ConnectionProperties = connProps
+		}
+		dryRunQuery.DryRun = true
+		dryRunJob, err := dryRunQuery.Run(ctx)
+		if err != nil {
+			return nil, util.ProcessGcpError(err)
+		}
+		status := dryRunJob.LastStatus()
+		if status.Statistics != nil {
+			if qStats, ok := status.Statistics.Details.(*bigqueryapi.QueryStatistics); ok {
+				for _, tableRef := range qStats.ReferencedTables {
+					if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+						return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectID, tableRef.DatasetID), nil)
+					}
+				}
+			} else {
+				return nil, util.NewAgentError("could not get query statistics details during dry run validation", nil)
+			}
+		} else {
+			return nil, util.NewAgentError("could not dry run final query to validate allowed datasets", nil)
 		}
 	}
 
