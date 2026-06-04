@@ -5317,3 +5317,194 @@ func RunStatementToolsTest(t *testing.T, tools map[string]string) {
 		})
 	}
 }
+
+// SearchCatalogTestParams defines parameters for RunSearchCatalogToolTest
+type SearchCatalogTestParams struct {
+	ContainerParamName string // "databaseIds" or "datasetIds"
+	ContainerName      string // databaseName or datasetName
+	ProjectID          string // SpannerProject or BigqueryProject
+	TargetName         string // tableName
+	WantKey            string // "DisplayName"
+	AllowEmpty         bool   // true for Spanner, false for BigQuery
+	CheckValue         bool   // true for BigQuery, false for Spanner
+}
+
+// RunSearchCatalogToolTest tests the search catalog tool for Spanner or BigQuery
+func RunSearchCatalogToolTest(t *testing.T, params SearchCatalogTestParams) {
+	// Get ID token
+	idToken, err := GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-catalog-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-catalog-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with correct project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s\"], \"%s\":[\"%s\"]}", params.TargetName, params.ProjectID, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with non-existent project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s-%s\"], \"%s\":[\"%s\"]}", params.TargetName, params.ProjectID, uuid.NewString(), params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				if result["result"] == nil && tc.isErr {
+					return
+				}
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+
+			var errorCheck map[string]any
+			if err := json.Unmarshal([]byte(resultStr), &errorCheck); err == nil {
+				if _, hasError := errorCheck["error"]; hasError {
+					if tc.isErr {
+						return
+					}
+					t.Fatalf("unexpected error object in result: %s", resultStr)
+				}
+			}
+
+			if tc.isErr && (resultStr == "" || resultStr == "[]") {
+				return
+			}
+
+			var entries []any
+			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+				t.Fatalf("error unmarshalling result string: %v. Raw string: %s", err, resultStr)
+			}
+
+			if !tc.isErr {
+				if len(entries) == 0 {
+					if params.AllowEmpty {
+						t.Logf("No entries found, skipping content verification")
+						return
+					}
+					t.Fatalf("expected entries, but got 0")
+				}
+
+				if !params.AllowEmpty && len(entries) != 1 {
+					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				}
+
+				entry, ok := entries[0].(map[string]interface{})
+				if !ok {
+					t.Fatalf("expected first entry to be a map, got %T", entries[0])
+				}
+
+				val, ok := entry[params.WantKey]
+				if !ok {
+					t.Fatalf("expected entry to have key '%s', but it was not found", params.WantKey)
+				}
+
+				if params.CheckValue {
+					if val != params.TargetName {
+						t.Fatalf("expected key '%s' to have value '%s', but got %s", params.WantKey, params.TargetName, val)
+					}
+				}
+			} else {
+				if len(entries) != 0 {
+					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
+			}
+		})
+	}
+}

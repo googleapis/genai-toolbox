@@ -1958,6 +1958,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
+				},
 			},
 		},
 		{
@@ -1967,6 +1971,10 @@ func TestPrebuiltTools(t *testing.T) {
 				"data": tools.ToolsetConfig{
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "search_catalog"},
 				},
 			},
 		},
