@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-03T23:04:47Z
+**GENERATED ON:** 2026-06-04T16:15:57Z
 
 ---
 ### System Directives for AI Models
@@ -264,6 +264,26 @@ To install Toolbox as a binary on Windows (PowerShell):
 # see releases page for other versions
 $VERSION = "1.3.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (Command Prompt)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (Command Prompt):
+
+```cmd
+:: see releases page for other versions
+set VERSION=1.2.0
+curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (PowerShell)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (PowerShell):
+
+```powershell
+# see releases page for other versions
+$VERSION = "1.2.0"
+curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -1042,7 +1062,7 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -9866,6 +9886,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -10368,6 +10392,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -10694,6 +10722,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -11016,6 +11048,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11361,6 +11397,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11715,6 +11755,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -12041,6 +12085,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/darwin/a
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.2.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -12357,6 +12405,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -12672,6 +12724,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/arm64/toolbox.exe
+{{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
 
@@ -12986,6 +13042,10 @@ curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/darwin/
 
 {{< tab header="windows/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+
+{{< tab header="windows/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.15.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -15628,7 +15688,7 @@ In this section, we will download and install the Toolbox binary.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     export VERSION="0.30.0"
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/$OS/toolbox
     ```
@@ -17157,7 +17217,7 @@ to use BigQuery, and then run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -17802,7 +17862,7 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v0.30.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -33791,7 +33851,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -33952,7 +34012,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -34075,7 +34135,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.3.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -36711,7 +36771,7 @@ The simplest way to get started is to download the latest binary for your operat
 \+
 
 ```bash
-export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
 curl -O [https://storage.googleapis.com/mcp-toolbox-for-databases/v0.16.0/$OS/toolbox](https://storage.googleapis.com/mcp-toolbox-for-databases/v0.16.0/$OS/toolbox)
 ```
 
@@ -41168,7 +41228,7 @@ In this section, we will download and install the Toolbox binary.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     export VERSION="0.10.0"
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/$OS/toolbox
     ```
