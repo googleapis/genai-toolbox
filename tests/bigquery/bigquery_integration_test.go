@@ -2942,6 +2942,8 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 	testCases := []struct {
 		name           string
 		historyData    string
+		timestampCol   string
+		dataCol        string
 		wantStatusCode int
 		wantInResult   string
 		wantInError    string
@@ -2968,16 +2970,38 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 			name:           "invoke with query on disallowed table",
 			historyData:    fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
 			wantStatusCode: http.StatusOK,
-			wantInError:    fmt.Sprintf("query in history_data accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
+			wantInError:    fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
+		},
+		{
+			name:           "invoke with SQL injection in timestamp_col",
+			historyData:    allowedTableUnquoted,
+			timestampCol:   "ts', horizon => 5) --",
+			wantStatusCode: http.StatusOK,
+			wantInError:    `invalid column name for 'timestamp_col': "ts', horizon => 5) --"`,
+		},
+		{
+			name:           "invoke with SQL injection in data_col",
+			historyData:    allowedTableUnquoted,
+			dataCol:        "data', horizon => 5) --",
+			wantStatusCode: http.StatusOK,
+			wantInError:    `invalid column name for 'data_col': "data', horizon => 5) --"`,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tCol := tc.timestampCol
+			if tCol == "" {
+				tCol = "ts"
+			}
+			dCol := tc.dataCol
+			if dCol == "" {
+				dCol = "data"
+			}
 			requestBodyMap := map[string]any{
 				"history_data":  tc.historyData,
-				"timestamp_col": "ts",
-				"data_col":      "data",
+				"timestamp_col": tCol,
+				"data_col":      dCol,
 			}
 			bodyBytes, err := json.Marshal(requestBodyMap)
 			if err != nil {
@@ -2996,19 +3020,23 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 			}
 			defer resp.Body.Close()
 
+			bodyBytes, err = io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("failed to read response body: %v", err)
+			}
+
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			if tc.wantInResult != "" {
 				var respBody map[string]interface{}
-				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+				if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 					t.Fatalf("error parsing response body: %v", err)
 				}
 				got, ok := respBody["result"].(string)
 				if !ok {
-					t.Fatalf("unable to find result in response body")
+					t.Fatalf("unable to find result in response body. Body: %s", string(bodyBytes))
 				}
 				if !strings.Contains(got, tc.wantInResult) {
 					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
@@ -3016,7 +3044,6 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 			}
 
 			if tc.wantInError != "" {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				if !strings.Contains(string(bodyBytes), tc.wantInError) {
 					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
 				}
@@ -3031,11 +3058,14 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 	disallowedDatasetFQN := strings.Join(strings.Split(disallowedTableUnquoted, ".")[0:2], ".")
 
 	testCases := []struct {
-		name           string
-		inputData      string
-		wantStatusCode int
-		wantInResult   string
-		wantInError    string
+		name               string
+		inputData          string
+		contributionMetric string
+		isTestCol          string
+		dimensionIdCols    []string
+		wantStatusCode     int
+		wantInResult       string
+		wantInError        string
 	}{
 		{
 			name:           "invoke with allowed table name",
@@ -3061,15 +3091,49 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			wantStatusCode: http.StatusOK,
 			wantInResult:   fmt.Sprintf("query in input_data accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
 		},
+		{
+			name:           "invoke with SQL injection in is_test_col",
+			inputData:      allowedTableUnquoted,
+			isTestCol:      "is_test; drop table x",
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `invalid column name for 'is_test_col': "is_test; drop table x"`,
+		},
+		{
+			name:            "invoke with SQL injection in dimension_id_cols",
+			inputData:       allowedTableUnquoted,
+			dimensionIdCols: []string{"dim1", "dim2; drop table x"},
+			wantStatusCode:  http.StatusOK,
+			wantInResult:    `invalid column name in 'dimension_id_cols': "dim2; drop table x"`,
+		},
+		{
+			name:               "invoke with single quote in contribution_metric",
+			inputData:          allowedTableUnquoted,
+			contributionMetric: "SUM('metric')",
+			wantStatusCode:     http.StatusOK,
+			wantInResult:       `invalid 'contribution_metric': must not contain single quotes`,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			cMetric := tc.contributionMetric
+			if cMetric == "" {
+				cMetric = "SUM(metric)"
+			}
+			tCol := tc.isTestCol
+			if tCol == "" {
+				tCol = "is_test"
+			}
+			dCols := tc.dimensionIdCols
+			if dCols == nil {
+				dCols = []string{"dim1", "dim2"}
+			}
+
 			requestBodyMap := map[string]any{
 				"input_data":          tc.inputData,
-				"contribution_metric": "SUM(metric)",
-				"is_test_col":         "is_test",
-				"dimension_id_cols":   []string{"dim1", "dim2"},
+				"contribution_metric": cMetric,
+				"is_test_col":         tCol,
+				"dimension_id_cols":   dCols,
 			}
 			bodyBytes, err := json.Marshal(requestBodyMap)
 			if err != nil {
@@ -3091,7 +3155,7 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			if tc.wantInResult != "" {
 				got, ok := respBody["result"].(string)
 				if !ok {
-					t.Fatalf("unable to find result in response body")
+					t.Fatalf("unable to find result in response body. Body: %s", string(bodyBytes))
 				}
 
 				if !strings.Contains(got, tc.wantInResult) {
