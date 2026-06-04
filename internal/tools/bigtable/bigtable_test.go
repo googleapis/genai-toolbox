@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigtable"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -51,12 +52,14 @@ func TestParseFromYamlBigtable(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": bigtable.Config{
-					Name:         "example_tool",
-					Type:         "bigtable-sql",
-					Source:       "my-pg-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "bigtable-sql",
+					Source:    "my-pg-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("country", "some description"),
 					},
@@ -116,12 +119,14 @@ func TestParseFromYamlWithTemplateBigtable(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": bigtable.Config{
-					Name:         "example_tool",
-					Type:         "bigtable-sql",
-					Source:       "my-pg-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "bigtable-sql",
+					Source:    "my-pg-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("country", "some description"),
 					},
