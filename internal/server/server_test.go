@@ -994,7 +994,14 @@ func TestMCPAuthMiddleware(t *testing.T) {
 			if mockRawResponse != "" {
 				_, _ = w.Write([]byte(mockRawResponse))
 			} else {
-				_ = json.NewEncoder(w).Encode(mockResponse)
+				respCopy := make(map[string]any)
+				for k, v := range mockResponse {
+					respCopy[k] = v
+				}
+				if _, hasIss := respCopy["iss"]; !hasIss {
+					respCopy["iss"] = "http://" + r.Host
+				}
+				_ = json.NewEncoder(w).Encode(respCopy)
 			}
 			return
 		}
@@ -1146,6 +1153,184 @@ func TestMCPAuthMiddleware(t *testing.T) {
 				if _, ok := jsonResp["result"]; !ok {
 					t.Errorf("expected result field in response, got: %s", string(body))
 				}
+			}
+		})
+	}
+}
+
+func TestGoogleAuthConfigValidation(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "only clientId, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+clientId: my-client-id
+`,
+			wantError: false,
+		},
+		{
+			name: "only audience, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+audience: my-audience
+`,
+			wantError: true,
+		},
+		{
+			name: "only audience, mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+audience: my-audience
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+		{
+			name: "scopesRequired, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+scopesRequired:
+  - email
+`,
+			wantError: true,
+		},
+		{
+			name: "scopesRequired, mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+scopesRequired:
+  - email
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+		{
+			name: "both clientId and audience, mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+clientId: my-client-id
+audience: my-audience
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestGenericAuthConfigValidation(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "valid mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+`,
+			wantError: false,
+		},
+		{
+			name: "valid mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+		{
+			name: "introspectionEndpoint, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+introspectionEndpoint: http://example.com/introspect
+`,
+			wantError: true,
+		},
+		{
+			name: "introspectionMethod, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+introspectionMethod: POST
+`,
+			wantError: true,
+		},
+		{
+			name: "introspectionParamName, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+introspectionParamName: token
+`,
+			wantError: true,
+		},
+		{
+			name: "scopesRequired, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+scopesRequired:
+  - email
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
 	}

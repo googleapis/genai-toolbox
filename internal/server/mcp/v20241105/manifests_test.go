@@ -15,6 +15,7 @@
 package v20241105
 
 import (
+	"encoding/json"
 	"reflect"
 	"slices"
 	"testing"
@@ -25,6 +26,106 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
+
+func TestGenerateToolManifest(t *testing.T) {
+	trueVal := true
+	falseVal := false
+
+	authServices := []parameters.ParamAuthService{
+		{
+			Name:  "my-google-auth-service",
+			Field: "auth_field",
+		},
+		{
+			Name:  "other-auth-service",
+			Field: "other_auth_field",
+		}}
+	tcs := []struct {
+		desc            string
+		name            string
+		description     string
+		authInvoke      []string
+		params          parameters.Parameters
+		annotations     *tools.ToolAnnotations
+		wantMetadata    map[string]any
+		wantAnnotations []byte
+	}{
+		{
+			desc:         "basic manifest without metadata",
+			name:         "basic",
+			description:  "foo bar",
+			authInvoke:   []string{},
+			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
+			annotations:  nil,
+			wantMetadata: nil,
+		},
+		{
+			desc:            "basic manifest without metadata with annotations",
+			name:            "basic",
+			description:     "foo bar",
+			authInvoke:      []string{},
+			params:          parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
+			annotations:     &tools.ToolAnnotations{ReadOnlyHint: &trueVal, DestructiveHint: &falseVal},
+			wantMetadata:    nil,
+			wantAnnotations: []byte(`{"readOnlyHint":true,"destructiveHint":false}`),
+		},
+		{
+			desc:         "with auth invoke metadata",
+			name:         "basic",
+			description:  "foo bar",
+			authInvoke:   []string{"auth1", "auth2"},
+			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
+			annotations:  nil,
+			wantMetadata: map[string]any{"toolbox/authInvoke": []string{"auth1", "auth2"}},
+		},
+		{
+			desc:        "with auth param metadata",
+			name:        "basic",
+			description: "foo bar",
+			authInvoke:  []string{},
+			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			annotations: nil,
+			wantMetadata: map[string]any{
+				"toolbox/authParam": map[string][]string{
+					"string-param": {"my-google-auth-service", "other-auth-service"},
+				},
+			},
+		},
+		{
+			desc:        "with auth invoke and auth param metadata",
+			name:        "basic",
+			description: "foo bar",
+			authInvoke:  []string{"auth1", "auth2"},
+			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			annotations: nil,
+			wantMetadata: map[string]any{
+				"toolbox/authInvoke": []string{"auth1", "auth2"},
+				"toolbox/authParam": map[string][]string{
+					"string-param": {"my-google-auth-service", "other-auth-service"},
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations)
+			gotM := got.Metadata
+			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
+				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
+			}
+
+			if tc.wantAnnotations != nil {
+				annotations, err := json.Marshal(got.Annotations)
+				if err != nil {
+					t.Fatalf("error marshaling annotations")
+				}
+				if diff := cmp.Diff(tc.wantAnnotations, annotations); diff != "" {
+					t.Fatalf("unexpected annotations (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
 
 func TestParamManifest(t *testing.T) {
 	authServices := []parameters.ParamAuthService{

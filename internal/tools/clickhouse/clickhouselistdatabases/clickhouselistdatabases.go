@@ -65,7 +65,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	allParameters, paramManifest, _ := parameters.ProcessParameters(nil, cfg.Parameters)
+	allParameters, paramManifest, err := parameters.ProcessParameters(nil, cfg.Parameters)
+	if err != nil {
+		return nil, err
+	}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(

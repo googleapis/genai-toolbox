@@ -32,7 +32,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -606,7 +606,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			if errors.As(err, &clientServerErr) {
 				w.WriteHeader(clientServerErr.Code)
 			}
-			var mcpErr *generic.MCPAuthError
+			var mcpErr *auth.MCPAuthError
 			if errors.As(err, &mcpErr) {
 				switch mcpErr.Code {
 				case http.StatusForbidden:
@@ -860,15 +860,10 @@ func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
 	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-		cfg := authSvc.ToConfig()
-		if genCfg, ok := cfg.(generic.Config); ok {
-			if genCfg.McpEnabled {
-				server = genCfg.AuthorizationServer
-				if genCfg.ScopesRequired != nil {
-					scopes = genCfg.ScopesRequired
-				}
-				break
-			}
+		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+			server = mSvc.GetAuthorizationServer()
+			scopes = mSvc.GetScopesRequired()
+			break
 		}
 	}
 

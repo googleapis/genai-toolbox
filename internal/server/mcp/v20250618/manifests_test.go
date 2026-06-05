@@ -114,13 +114,15 @@ func TestGenerateToolManifest(t *testing.T) {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
 			}
 
-			if got.Annotations != nil {
-				annotations, _ := json.Marshal(got.Annotations)
+			if tc.wantAnnotations != nil {
+				annotations, err := json.Marshal(got.Annotations)
+				if err != nil {
+					t.Fatalf("error marshaling annotations")
+				}
 				if diff := cmp.Diff(tc.wantAnnotations, annotations); diff != "" {
 					t.Fatalf("unexpected annotations (-want +got):\n%s", diff)
 				}
 			}
-
 		})
 	}
 }
