@@ -217,7 +217,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			serviceName: ORCL
 			user: my_user
 			`,
-			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide both 'user' and 'password' unless using a wallet ('tnsAdmin' or 'walletLocation')",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide both 'user' and 'password' unless using OCI driver with a wallet ('tnsAdmin')",
 		},
 		{
 			desc: "missing connection method fields (validate fails)",

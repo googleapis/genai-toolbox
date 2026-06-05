@@ -12,10 +12,10 @@ description: "Details of the Oracle prebuilt configuration."
     *   `ORACLE_CONNECTION_STRING`: The connection string for the Oracle server (e.g., "hostname:port/servicename"). Required if not using `ORACLE_TNS_ALIAS`.
     *   `ORACLE_TNS_ALIAS`: The TNS connection alias. Required if not using `ORACLE_CONNECTION_STRING`.
     *   `ORACLE_TNS_ADMIN`: The directory containing `tnsnames.ora`, `sqlnet.ora`, and/or wallet credentials files (used with `ORACLE_USE_OCI=true`).
-    *   `ORACLE_USERNAME`: The database username. Required unless passwordless wallet/external authentication is configured.
-    *   `ORACLE_PASSWORD`: The database user's password. Required unless passwordless wallet/external authentication is configured.
+    *   `ORACLE_USERNAME`: The database username. Required unless `ORACLE_USE_OCI=true` and passwordless wallet/external authentication is configured.
+    *   `ORACLE_PASSWORD`: The database user's password. Required unless `ORACLE_USE_OCI=true` and passwordless wallet/external authentication is configured.
     *   `ORACLE_WALLET`: The path to the Oracle DB Wallet folder for the pure-Go driver (`ORACLE_USE_OCI=false`).
-    *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating whether to use the OCI-based driver. Setting to `true` is required for features like Oracle Wallet and requires the Oracle Instant Client libraries to be installed.
+    *   `ORACLE_USE_OCI`: A boolean flag (`true` or `false`) indicating whether to use the OCI-based driver. Setting to `true` is required for passwordless Oracle Wallet / external authentication (SEPS) and requires the Oracle Instant Client libraries to be installed.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
     *   For queries on DBA views like `dba_data_files` and `dba_free_space`, access typically requires elevated database privileges (like `SELECT_CATALOG_ROLE` or direct grants) that a standard user may not have.

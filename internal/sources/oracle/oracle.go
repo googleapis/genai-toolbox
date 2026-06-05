@@ -92,9 +92,9 @@ func (c Config) validate() error {
 		return fmt.Errorf("when using an OCI driver, use `tnsAdmin` to specify credentials file location instead")
 	}
 
-	if !hasTnsAdmin && !hasWallet {
+	if !c.UseOCI || !hasTnsAdmin {
 		if strings.TrimSpace(c.User) == "" || strings.TrimSpace(c.Password) == "" {
-			return fmt.Errorf("must provide both 'user' and 'password' unless using a wallet ('tnsAdmin' or 'walletLocation')")
+			return fmt.Errorf("must provide both 'user' and 'password' unless using OCI driver with a wallet ('tnsAdmin')")
 		}
 	}
 
