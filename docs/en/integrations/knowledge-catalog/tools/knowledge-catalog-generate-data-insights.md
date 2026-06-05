@@ -66,4 +66,3 @@ description: Trigger a new data insights scan.
 | resourcePath | string   | true         | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
 | location    | string   | true         | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
 | publish     | boolean  | false        | If true, publishes the generated insights directly to the Dataplex Universal Catalog. Defaults to false. |
-| projectID   | string   | false        | Optional. The target Google Cloud project ID. If omitted, uses the source project ID. |

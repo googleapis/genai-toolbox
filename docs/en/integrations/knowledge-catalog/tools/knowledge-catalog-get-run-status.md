@@ -60,4 +60,3 @@ description: Monitor the background execution run of a Dataplex scan.
 | scanId      | string   | true         | The unique ID of the Dataplex scan template (e.g. `nq-prof-12345`). |
 | location    | string   | true         | The Google Cloud region where the scan was created (e.g. `us-central1`). |
 | jobId       | string   | false        | Optional. A specific job run ID. If omitted, returns status for the latest job run. |
-| projectID   | string   | false        | Optional. The target Google Cloud project ID. |

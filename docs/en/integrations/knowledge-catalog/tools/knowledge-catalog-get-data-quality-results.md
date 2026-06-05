@@ -61,4 +61,3 @@ description: Fetch results of a completed data quality scan.
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | scanId      | string   | true         | The unique ID of the Dataplex quality scan (e.g. `nq-dq-12345`). |
 | location    | string   | true         | The Google Cloud region where the scan was created (e.g. `us-central1`). |
-| projectID   | string   | false        | Optional. The target Google Cloud project ID. |

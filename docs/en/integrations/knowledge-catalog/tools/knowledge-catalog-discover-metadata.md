@@ -59,4 +59,3 @@ description: Trigger a new metadata discovery scan.
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 | resourcePath | string   | true         | The resource path of the target Cloud Storage bucket (format: `//storage.googleapis.com/{bucket_name}`). |
 | location    | string   | true         | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
-| projectID   | string   | false        | Optional. The target Google Cloud project ID. |

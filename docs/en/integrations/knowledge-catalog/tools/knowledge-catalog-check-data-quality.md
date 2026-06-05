@@ -61,4 +61,3 @@ description: Trigger a new data quality scan.
 | location    | string   | true         | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
 | publish     | boolean  | false        | If true, publishes the quality results directly to the Dataplex Universal Catalog. Defaults to false. |
 | specJSON    | string   | true         | A raw JSON string defining the quality checks rules (e.g. `{"rules": [{"column": "age", "nonNullExpectation": {}}]}`, maps directly to `dataplexpb.DataQualitySpec`). |
-| projectID   | string   | false        | Optional. The target Google Cloud project ID. |
