@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/cloudsqlpgupgradeprecheck"
 )
 
@@ -46,11 +47,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool": cloudsqlpgupgradeprecheck.Config{
-					Name:         "precheck-upgrade-tool",
-					Type:         "postgres-upgrade-precheck",
-					Description:  "a precheck test description",
-					Source:       "some-admin-source",
-					AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "precheck-upgrade-tool",
+						Description:  "a precheck test description",
+						AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
+					},
+					Type:   "postgres-upgrade-precheck",
+					Source: "some-admin-source",
 				},
 			},
 		},
@@ -65,11 +68,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool-no-auth": cloudsqlpgupgradeprecheck.Config{
-					Name:         "precheck-upgrade-tool-no-auth",
-					Type:         "postgres-upgrade-precheck",
-					Description:  "a precheck test description no auth",
-					Source:       "other-admin-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "precheck-upgrade-tool-no-auth",
+						Description:  "a precheck test description no auth",
+						AuthRequired: []string{},
+					},
+					Type:   "postgres-upgrade-precheck",
+					Source: "other-admin-source",
 				},
 			},
 		},

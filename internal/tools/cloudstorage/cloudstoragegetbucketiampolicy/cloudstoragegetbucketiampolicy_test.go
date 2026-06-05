@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageGetBucketIAMPolicy(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"bucket_iam_tool": cloudstoragegetbucketiampolicy.Config{
-					Name:         "bucket_iam_tool",
-					Type:         "cloud-storage-get-bucket-iam-policy",
-					Source:       "my-gcs",
-					Description:  "Get bucket IAM policy",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "bucket_iam_tool",
+						Description:  "Get bucket IAM policy",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-get-bucket-iam-policy",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageGetBucketIAMPolicy(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_bucket_iam": cloudstoragegetbucketiampolicy.Config{
-					Name:         "secure_bucket_iam",
-					Type:         "cloud-storage-get-bucket-iam-policy",
-					Source:       "prod-gcs",
-					Description:  "Get bucket IAM policy with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_bucket_iam",
+						Description:  "Get bucket IAM policy with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-get-bucket-iam-policy",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -116,10 +120,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragegetbucketiampolicy.Config{
-		Name:        "bucket_iam_tool",
-		Type:        "cloud-storage-get-bucket-iam-policy",
-		Source:      "my-gcs",
-		Description: "Get bucket IAM policy",
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_iam_tool",
+			Description: "Get bucket IAM policy",
+		},
+		Type:   "cloud-storage-get-bucket-iam-policy",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {
