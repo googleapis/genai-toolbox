@@ -15,10 +15,12 @@
 kind: source
 name: oracle-source
 type: oracle
-connectionString: ${ORACLE_CONNECTION_STRING}
+connectionString: ${ORACLE_CONNECTION_STRING:}
+tnsAlias: ${ORACLE_TNS_ALIAS:}
+tnsAdmin: ${ORACLE_TNS_ADMIN:}
 walletLocation: ${ORACLE_WALLET:}
-user: ${ORACLE_USERNAME}
-password: ${ORACLE_PASSWORD}
+user: ${ORACLE_USERNAME:}
+password: ${ORACLE_PASSWORD:}
 useOCI: ${ORACLE_USE_OCI:false}
 ---
 kind: tool
