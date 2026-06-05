@@ -25,13 +25,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	MySQLSourceKind = "mysql"
-	MySQLToolKind   = "mysql-sql"
+	MySQLSourceType = "mysql"
+	MySQLToolType   = "mysql-sql"
 	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
 	MySQLHost       = os.Getenv("MYSQL_HOST")
 	MySQLPort       = os.Getenv("MYSQL_PORT")
@@ -54,7 +54,7 @@ func getMySQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MySQLSourceKind,
+		"type":     MySQLSourceType,
 		"host":     MySQLHost,
 		"port":     MySQLPort,
 		"database": MySQLDatabase,
@@ -80,7 +80,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initMySQLConnectionPool(MySQLHost, MySQLPort, MySQLUser, MySQLPass, MySQLDatabase)
 	if err != nil {
@@ -106,10 +106,10 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MySQLToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MySQLToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	toolsFile = tests.AddMySQLPrebuiltToolConfig(t, toolsFile)
 
@@ -138,8 +138,11 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run specific MySQL tool tests
-	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
+	const expectedOwner = ""
+	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth, expectedOwner)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, MySQLDatabase)
 	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
+	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, MySQLDatabase, tableNameParam)
+	tests.RunMySQLListTableStatsTest(t, ctx, pool, MySQLDatabase, tableNameParam, tableNameAuth)
 }

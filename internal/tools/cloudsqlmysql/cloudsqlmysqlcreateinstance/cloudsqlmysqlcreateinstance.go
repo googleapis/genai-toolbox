@@ -17,47 +17,53 @@ package cloudsqlmysqlcreateinstance
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "cloud-sql-mysql-create-instance"
+const resourceType string = "cloud-sql-mysql-create-instance"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
+type compatibleSource interface {
+	GetDefaultProject() string
+	UseClientAuthorization() bool
+	CreateInstance(context.Context, string, string, string, string, sqladmin.Settings, string) (any, error)
+}
+
 // Config defines the configuration for the create-instances tool.
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Description  string   `yaml:"description"`
-	Source       string   `yaml:"source" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of the tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of the tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize initializes the tool from the configuration.
@@ -66,12 +72,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-	s, ok := rawS.(*cloudsqladmin.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be `cloud-sql-admin`", resourceType)
 	}
 
-	project := s.DefaultProject
+	project := s.GetDefaultProject()
 	var projectParam parameters.Parameter
 	if project != "" {
 		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
@@ -86,59 +92,54 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameter("rootPassword", "The root password for the instance"),
 		parameters.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
 	}
-	paramManifest := allParameters.Manifest()
 
-	description := cfg.Description
-	if description == "" {
-		description = "Creates a MySQL instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `MYSQL_8_4`. The agent should ask the user if they want to use a different version."
+	if cfg.Description == "" {
+		cfg.Description = "Creates a MySQL instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `MYSQL_8_4`. The agent should ask the user if they want to use a different version."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Config:      cfg,
-		Source:      s,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
 // Tool represents the create-instances tool.
 type Tool struct {
-	Config
-	Source      *cloudsqladmin.Source
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	tools.BaseTool[Config]
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, util.NewAgentError("missing 'project' parameter", nil)
 	}
 	name, ok := paramsMap["name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'name' parameter")
+		return nil, util.NewAgentError("missing 'name' parameter", nil)
 	}
 	dbVersion, ok := paramsMap["databaseVersion"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'databaseVersion' parameter")
+		return nil, util.NewAgentError("missing 'databaseVersion' parameter", nil)
 	}
 	rootPassword, ok := paramsMap["rootPassword"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'rootPassword' parameter")
+		return nil, util.NewAgentError("missing 'rootPassword' parameter", nil)
 	}
 	editionPreset, ok := paramsMap["editionPreset"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'editionPreset' parameter")
+		return nil, util.NewAgentError("missing 'editionPreset' parameter", nil)
 	}
 
 	settings := sqladmin.Settings{}
@@ -156,50 +157,30 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		settings.DataDiskSizeGb = 100
 		settings.DataDiskType = "PD_SSD"
 	default:
-		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset), nil)
 	}
 
-	instance := sqladmin.DatabaseInstance{
-		Name:            name,
-		DatabaseVersion: dbVersion,
-		RootPassword:    rootPassword,
-		Settings:        &settings,
-		Project:         project,
-	}
-
-	service, err := t.Source.GetService(ctx, string(accessToken))
+	resp, err := source.CreateInstance(ctx, project, name, dbVersion, rootPassword, settings, string(accessToken))
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGcpError(err)
 	}
-
-	resp, err := service.Instances.Insert(project, &instance).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating instance: %w", err)
-	}
-
 	return resp, nil
 }
 
-// ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
-}
-
-// Manifest returns the tool's manifest.
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-// McpManifest returns the tool's MCP manifest.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-// Authorized checks if the tool is authorized.
+// Authorized always returns true: this admin tool intentionally bypasses
+// per-request auth-service checks (server-side credentials handle access).
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.Source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }

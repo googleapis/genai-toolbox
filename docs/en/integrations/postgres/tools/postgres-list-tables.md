@@ -1,0 +1,45 @@
+---
+title: "postgres-list-tables"
+type: docs
+weight: 1
+description: >
+  The "postgres-list-tables" tool lists schema information for all or specified
+  tables in a Postgres database.
+---
+
+## About
+
+The `postgres-list-tables` tool retrieves schema information for all or
+specified tables in a Postgres database.
+
+`postgres-list-tables` lists detailed schema information (object type, columns,
+constraints, indexes, triggers, owner, comment) as JSON for user-created tables
+(ordinary or partitioned). The tool takes the following input parameters: *
+ `table_names` (optional): Filters by a comma-separated list of names. By
+ default, it lists all tables in user schemas.* `output_format` (optional):
+ Indicate the output format of table schema. `simple` will return only the
+ table names, `detailed` will return the full table information. Default:
+ `detailed`.
+
+## Compatible Sources
+
+{{< compatible-sources others="integrations/alloydb, integrations/cloud-sql-pg">}}
+
+## Example
+
+```yaml
+kind: tool
+name: postgres_list_tables
+type: postgres-list-tables
+source: postgres-source
+description: Use this tool to retrieve schema information for all or
+  specified tables. Output format can be simple (only table names) or detailed.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| type        |  string  |     true     | Must be "postgres-list-tables".                      |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |     true     | Description of the tool that is passed to the agent. |

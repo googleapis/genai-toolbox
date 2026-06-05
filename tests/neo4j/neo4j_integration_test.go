@@ -27,14 +27,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	Neo4jSourceKind = "neo4j"
+	Neo4jSourceType = "neo4j"
 	Neo4jDatabase   = os.Getenv("NEO4J_DATABASE")
 	Neo4jUri        = os.Getenv("NEO4J_URI")
 	Neo4jUser       = os.Getenv("NEO4J_USER")
@@ -56,7 +56,7 @@ func getNeo4jVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     Neo4jSourceKind,
+		"type":     Neo4jSourceType,
 		"uri":      Neo4jUri,
 		"database": Neo4jDatabase,
 		"user":     Neo4jUser,
@@ -71,50 +71,62 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to the command.
 	// This configuration defines the data source and the tools to be tested.
 	toolsFile := map[string]any{
 		"sources": map[string]any{
-			"my-neo4j-instance": sourceConfig,
+			"my-instance": sourceConfig,
 		},
 		"tools": map[string]any{
 			"my-simple-cypher-tool": map[string]any{
-				"kind":        "neo4j-cypher",
-				"source":      "my-neo4j-instance",
+				"type":        "neo4j-cypher",
+				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "RETURN 1 as a;",
 			},
 			"my-simple-execute-cypher-tool": map[string]any{
-				"kind":        "neo4j-execute-cypher",
-				"source":      "my-neo4j-instance",
+				"type":        "neo4j-execute-cypher",
+				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-readonly-execute-cypher-tool": map[string]any{
-				"kind":        "neo4j-execute-cypher",
-				"source":      "my-neo4j-instance",
+				"type":        "neo4j-execute-cypher",
+				"source":      "my-instance",
 				"description": "A readonly cypher execution tool.",
 				"readOnly":    true,
 			},
 			"my-schema-tool": map[string]any{
-				"kind":        "neo4j-schema",
-				"source":      "my-neo4j-instance",
+				"type":        "neo4j-schema",
+				"source":      "my-instance",
 				"description": "A tool to get the Neo4j schema.",
 			},
 			"my-schema-tool-with-cache": map[string]any{
-				"kind":               "neo4j-schema",
-				"source":             "my-neo4j-instance",
+				"type":               "neo4j-schema",
+				"source":             "my-instance",
 				"description":        "A schema tool with a custom cache expiration.",
 				"cacheExpireMinutes": 10,
 			},
 			"my-populated-schema-tool": map[string]any{
-				"kind":        "neo4j-schema",
-				"source":      "my-neo4j-instance",
+				"type":        "neo4j-schema",
+				"source":      "my-instance",
 				"description": "A tool to get the Neo4j schema from a populated DB.",
 			},
 		},
 	}
+
+	insertStmt := `CREATE (n:SenseAIDocument {content: $content, embedding: $text_to_embed}) RETURN 1 as result`
+	searchStmt := `
+        MATCH (n:SenseAIDocument)
+        WITH n, vector.similarity.cosine(n.embedding, $query) AS score
+        WHERE score IS NOT NULL
+        ORDER BY score DESC
+        LIMIT 1
+        RETURN n.content as content
+    `
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, "neo4j-cypher", insertStmt, searchStmt)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -154,18 +166,19 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 					"description": "Simple tool to test end to end functionality.",
 					"parameters": []any{
 						map[string]any{
-							"name":        "cypher",
-							"type":        "string",
-							"required":    true,
-							"description": "The cypher to execute.",
-							"authSources": []any{},
+							"name":         "cypher",
+							"type":         "string",
+							"required":     true,
+							"description":  "The cypher to execute.",
+							"authServices": []any{},
 						},
 						map[string]any{
-							"name":        "dry_run",
-							"type":        "boolean",
-							"required":    false,
-							"description": "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
-							"authSources": []any{},
+							"name":         "dry_run",
+							"type":         "boolean",
+							"required":     false,
+							"description":  "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
+							"default":      false,
+							"authServices": []any{},
 						},
 					},
 					"authRequired": []any{},
@@ -286,25 +299,37 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			},
 		},
 		{
-			name:               "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
-			api:                "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "unable to execute query",
+			name:        "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "unable to execute query") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
-			name:               "invoke readonly tool with write query",
-			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+			name:        "invoke readonly tool with write query",
+			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
-			name:               "invoke readonly tool with write query and dry_run",
-			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
-			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
-			wantStatus:         http.StatusBadRequest,
-			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+			name:        "invoke readonly tool with write query and dry_run",
+			api:         "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				if !strings.Contains(body, "this tool is read-only and cannot execute write queries") {
+					t.Errorf("expected error message not found in body: %s", body)
+				}
+			},
 		},
 		{
 			name:        "invoke my-schema-tool",
@@ -351,7 +376,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			wantStatus:  http.StatusOK,
 			prepareData: func(t *testing.T) {
 				ctx := context.Background()
-				driver, err := neo4j.NewDriverWithContext(Neo4jUri, neo4j.BasicAuth(Neo4jUser, Neo4jPass, ""))
+				driver, err := neo4j.NewDriver(Neo4jUri, neo4j.BasicAuth(Neo4jUser, Neo4jPass, ""))
 				if err != nil {
 					t.Fatalf("failed to create neo4j driver: %v", err)
 				}
@@ -565,4 +590,9 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			}
 		})
 	}
+
+	// Semantic search tests
+	semanticInsertWant := `[{"result":1}]`
+	semanticSearchWant := `[{"content":"The quick brown fox jumps over the lazy dog"}]`
+	tests.RunSemanticSearchToolInvokeTest(t, semanticInsertWant, semanticInsertWant, semanticSearchWant)
 }

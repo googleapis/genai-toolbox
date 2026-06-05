@@ -17,30 +17,30 @@ package bigqueryforecast
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	bqutil "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
-	"google.golang.org/api/iterator"
 )
 
-const kind string = "bigquery-forecast"
+const resourceType string = "bigquery-forecast"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -49,35 +49,35 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryRestService() *bigqueryrestapi.Service
-	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
+	GetMaximumBytesBilled() int64
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 	BigQuerySession() bigqueryds.BigQuerySessionProvider
+	RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty, map[string]string) (any, error)
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
-
-var compatibleSources = [...]string{bigqueryds.SourceKind}
-
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -87,7 +87,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
@@ -101,81 +101,66 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
-	timestampColumnNameParameter := parameters.NewStringParameter("timestamp_col",
-		"The name of the time series timestamp column.")
-	dataColumnNameParameter := parameters.NewStringParameter("data_col",
-		"The name of the time series data column.")
+	timestampColumnNameParameter := parameters.NewStringParameterWithEscape("timestamp_col",
+		"The name of the time series timestamp column.", "single-quotes")
+	dataColumnNameParameter := parameters.NewStringParameterWithEscape("data_col",
+		"The name of the time series data column.", "single-quotes")
 	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
 		"An array of the time series id column names.",
-		parameters.NewStringParameter("id_col", "The name of time series id column."))
+		parameters.NewStringParameterWithEscape("id_col", "The name of time series id column.", "single-quotes"))
 	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
 	params := parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
-
-	// finish tool setup
-	t := Tool{
-		Config:           cfg,
-		Parameters:       params,
-		UseClientOAuth:   s.UseClientAuthorization(),
-		ClientCreator:    s.BigQueryClientCreator(),
-		Client:           s.BigQueryClient(),
-		RestService:      s.BigQueryRestService(),
-		IsDatasetAllowed: s.IsDatasetAllowed,
-		SessionProvider:  s.BigQuerySession(),
-		AllowedDatasets:  allowedDatasets,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:      mcpManifest,
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
-	Client           *bigqueryapi.Client
-	RestService      *bigqueryrestapi.Service
-	ClientCreator    bigqueryds.BigqueryClientCreator
-	IsDatasetAllowed func(projectID, datasetID string) bool
-	AllowedDatasets  []string
-	SessionProvider  bigqueryds.BigQuerySessionProvider
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	paramsMap := params.AsMap()
 	historyData, ok := paramsMap["history_data"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast history_data parameter %v", paramsMap["history_data"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast history_data parameter %v", paramsMap["history_data"]), nil)
 	}
 	timestampCol, ok := paramsMap["timestamp_col"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast timestamp_col parameter %v", paramsMap["timestamp_col"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast timestamp_col parameter %v", paramsMap["timestamp_col"]), nil)
 	}
 	dataCol, ok := paramsMap["data_col"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast data_col parameter %v", paramsMap["data_col"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast data_col parameter %v", paramsMap["data_col"]), nil)
 	}
 	idColsRaw, ok := paramsMap["id_cols"].([]any)
 	if !ok {
-		return nil, fmt.Errorf("unable to cast id_cols parameter %v", paramsMap["id_cols"])
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast id_cols parameter %v", paramsMap["id_cols"]), nil)
 	}
 	var idCols []string
 	for _, v := range idColsRaw {
 		s, ok := v.(string)
 		if !ok {
-			return nil, fmt.Errorf("id_cols contains non-string value: %v", v)
+			return nil, util.NewAgentError(fmt.Sprintf("id_cols contains non-string value: %v", v), nil)
 		}
 		idCols = append(idCols, s)
 	}
@@ -184,63 +169,36 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		if h, ok := paramsMap["horizon"].(float64); ok {
 			horizon = int(h)
 		} else {
-			return nil, fmt.Errorf("unable to cast horizon parameter %v", paramsMap["horizon"])
+			return nil, util.NewAgentError(fmt.Sprintf("unable to cast horizon parameter %v", paramsMap["horizon"]), nil)
 		}
 	}
 
-	bqClient := t.Client
-	restService := t.RestService
-	var err error
+	if !bqutil.ValidColumnParam(dataCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataCol), nil)
+	}
+	if !bqutil.ValidColumnParam(timestampCol) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampCol), nil)
+	}
+	for _, col := range idCols {
+		if !bqutil.ValidColumnParam(col) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", col), nil)
+		}
+	}
 
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, false)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
+	bqClient, _, err := source.RetrieveClientAndService(accessToken)
+	if err != nil {
+		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
 
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
-		if len(t.AllowedDatasets) > 0 {
-			var connProps []*bigqueryapi.ConnectionProperty
-			session, err := t.SessionProvider(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
-			}
-			if session != nil {
-				connProps = []*bigqueryapi.ConnectionProperty{
-					{Key: "session_id", Value: session.ID},
-				}
-			}
-			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
-			if err != nil {
-				return nil, fmt.Errorf("query validation failed: %w", err)
-			}
-			statementType := dryRunJob.Statistics.Query.StatementType
-			if statementType != "SELECT" {
-				return nil, fmt.Errorf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType)
-			}
-
-			queryStats := dryRunJob.Statistics.Query
-			if queryStats != nil {
-				for _, tableRef := range queryStats.ReferencedTables {
-					if !t.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
-						return nil, fmt.Errorf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId)
-					}
-				}
-			} else {
-				return nil, fmt.Errorf("could not analyze query in history_data to validate against allowed datasets")
-			}
-		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
-		if len(t.AllowedDatasets) > 0 {
+		if !bqutil.ValidTableID(historyData) {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid table identifier for 'history_data': %q; expected 'dataset.table' or 'project.dataset.table'", historyData), nil)
+		}
+		if len(source.BigQueryAllowedDatasets()) > 0 {
 			parts := strings.Split(historyData, ".")
 			var projectID, datasetID string
 
@@ -249,14 +207,14 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 				projectID = parts[0]
 				datasetID = parts[1]
 			case 2: // dataset.table
-				projectID = t.Client.Project()
+				projectID = source.BigQueryClient().Project()
 				datasetID = parts[0]
 			default:
-				return nil, fmt.Errorf("invalid table ID format for 'history_data': %q. Expected 'dataset.table' or 'project.dataset.table'", historyData)
+				return nil, util.NewAgentError(fmt.Sprintf("invalid table ID format for 'history_data': %q. Expected 'dataset.table' or 'project.dataset.table'", historyData), nil)
 			}
 
-			if !t.IsDatasetAllowed(projectID, datasetID) {
-				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, historyData)
+			if !source.IsDatasetAllowed(projectID, datasetID) {
+				return nil, util.NewAgentError(fmt.Sprintf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, historyData), nil)
 			}
 		}
 		historyDataSource = fmt.Sprintf("TABLE `%s`", historyData)
@@ -264,92 +222,82 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 
 	idColsArg := ""
 	if len(idCols) > 0 {
-		idColsFormatted := fmt.Sprintf("['%s']", strings.Join(idCols, "', '"))
+		idColsFormatted := fmt.Sprintf("[%s]", strings.Join(idCols, ", "))
 		idColsArg = fmt.Sprintf(", id_cols => %s", idColsFormatted)
 	}
-
 	sql := fmt.Sprintf(`SELECT * 
 		FROM AI.FORECAST(
-			%s,
-			data_col => '%s',
-			timestamp_col => '%s',
-			horizon => %d%s)`,
+            %s,
+            data_col => %s,
+            timestamp_col => %s,
+            horizon => %d%s)`,
 		historyDataSource, dataCol, timestampCol, horizon, idColsArg)
 
-	// JobStatistics.QueryStatistics.StatementType
-	query := bqClient.Query(sql)
-	query.Location = bqClient.Location
-	query.Labels = map[string]string{"genai-toolbox-tool": kind}
-	session, err := t.SessionProvider(ctx)
+	session, err := source.BigQuerySession()(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+		return nil, util.NewClientServerError("failed to get BigQuery session", http.StatusInternalServerError, err)
 	}
+	var connProps []*bigqueryapi.ConnectionProperty
 	if session != nil {
 		// Add session ID to the connection properties for subsequent calls.
-		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+		connProps = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},
+		}
+	}
+
+	if len(source.BigQueryAllowedDatasets()) > 0 {
+		dryRunQuery := bqClient.Query(sql)
+		dryRunQuery.Location = bqClient.Location
+		if connProps != nil {
+			dryRunQuery.ConnectionProperties = connProps
+		}
+		dryRunQuery.DryRun = true
+		dryRunJob, err := dryRunQuery.Run(ctx)
+		if err != nil {
+			return nil, util.ProcessGcpError(err)
+		}
+		status := dryRunJob.LastStatus()
+		if status.Statistics != nil {
+			if qStats, ok := status.Statistics.Details.(*bigqueryapi.QueryStatistics); ok {
+				for _, tableRef := range qStats.ReferencedTables {
+					if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+						return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectID, tableRef.DatasetID), nil)
+					}
+				}
+			} else {
+				return nil, util.NewAgentError("could not get query statistics details during dry run validation", nil)
+			}
+		} else {
+			return nil, util.NewAgentError("could not dry run final query to validate allowed datasets", nil)
 		}
 	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
+		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
 
-	// This block handles SELECT statements, which return a row set.
-	// We iterate through the results, convert each row into a map of
-	// column names to values, and return the collection of rows.
-	var out []any
-	job, err := query.Run(ctx)
+	resp, err := source.RunSQL(ctx, bqClient, sql, "SELECT", nil, connProps, map[string]string{"mcp-toolbox-tool": resourceType})
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, util.ProcessGcpError(err)
 	}
-	it, err := job.Read(ctx)
+	return resp, nil
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read query results: %w", err)
+		return false, err
 	}
-	for {
-		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
-		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
-		}
-		out = append(out, vMap)
+	return source.UseClientAuthorization(), nil
+}
+
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return "", err
 	}
-	// If the query returned any rows, return them directly.
-	if len(out) > 0 {
-		return out, nil
-	}
-
-	// This handles the standard case for a SELECT query that successfully
-	return "The query returned 0 rows.", nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return source.GetAuthTokenHeaderName(), nil
 }

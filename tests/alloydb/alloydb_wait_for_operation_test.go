@@ -23,21 +23,20 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 
-	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 )
 
 var (
-	waitToolKind = "alloydb-wait-for-operation"
+	waitToolType = "alloydb-wait-for-operation"
 )
 
 type waitForOperationTransport struct {
@@ -76,7 +75,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
 		h.t.Errorf("User-Agent header not found")
 	}
-
 	// The format is projects/{project}/locations/{location}/operations/{operation}
 	// The tool will call something like /v1/projects/p1/locations/l1/operations/op1
 	if match, _ := regexp.MatchString("/v1/projects/.*/locations/.*/operations/.*", r.URL.Path); match {
@@ -136,7 +134,7 @@ func TestWaitToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getWaitToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -165,13 +163,13 @@ func TestWaitToolEndpoints(t *testing.T) {
 			name:     "successful operation",
 			toolName: "wait-for-op1",
 			body:     `{"project": "p1", "location": "l1", "operation": "op1"}`,
-			want:     `{"name":"op1","done":true,"response":"success"}`,
+			want:     `{"done":true,"name":"op1","response":"success"}`,
 		},
 		{
-			name:        "failed operation",
-			toolName:    "wait-for-op2",
-			body:        `{"project": "p1", "location": "l1", "operation": "op2"}`,
-			expectError: true,
+			name:     "failed operation",
+			toolName: "wait-for-op2",
+			body:     `{"project": "p1", "location": "l1", "operation": "op2"}`,
+			want:     `{"error":"error processing request: operation finished with error: {\"code\":1,\"message\":\"failed\"}"}`,
 		},
 	}
 
@@ -189,48 +187,42 @@ func TestWaitToolEndpoints(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			if tc.expectError {
-				if resp.StatusCode == http.StatusOK {
-					t.Fatal("expected error but got status 200")
-				}
-				return
-			}
-
 			if resp.StatusCode != http.StatusOK {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
-
-			var result struct {
-				Result string `json:"result"`
+			var response struct {
+				Result any `json:"result"`
 			}
-			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 				t.Fatalf("failed to decode response: %v", err)
 			}
 
+			var got string
+			// Check if the result is a string (which contains JSON)
+			if s, ok := response.Result.(string); ok {
+				got = s
+			} else {
+				b, err := json.Marshal(response.Result)
+				if err != nil {
+					t.Fatalf("failed to marshal result object: %v", err)
+				}
+				got = string(b)
+			}
+
+			// Clean up both strings to ignore whitespace differences
+			got = strings.ReplaceAll(strings.ReplaceAll(got, " ", ""), "\n", "")
+			want := strings.ReplaceAll(strings.ReplaceAll(tc.want, " ", ""), "\n", "")
+
 			if tc.wantSubstring {
-				if !bytes.Contains([]byte(result.Result), []byte(tc.want)) {
-					t.Fatalf("unexpected result: got %q, want substring %q", result.Result, tc.want)
+				if !strings.Contains(got, want) {
+					t.Fatalf("unexpected result: got %q, want substring %q", got, want)
 				}
 				return
 			}
 
-			// The result is a JSON-encoded string, so we need to unmarshal it twice.
-			var tempString string
-			if err := json.Unmarshal([]byte(result.Result), &tempString); err != nil {
-				t.Fatalf("failed to unmarshal result string: %v", err)
-			}
-
-			var got, want map[string]any
-			if err := json.Unmarshal([]byte(tempString), &got); err != nil {
-				t.Fatalf("failed to unmarshal result: %v", err)
-			}
-			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
-				t.Fatalf("failed to unmarshal want: %v", err)
-			}
-
-			if !reflect.DeepEqual(got, want) {
-				t.Fatalf("unexpected result: got %+v, want %+v", got, want)
+			if got != want {
+				t.Fatalf("unexpected result: \ngot:  %s\nwant: %s", got, want)
 			}
 		})
 	}
@@ -240,17 +232,17 @@ func getWaitToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-alloydb-source": map[string]any{
-				"kind": "alloydb-admin",
+				"type": "alloydb-admin",
 			},
 		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":        waitToolKind,
+				"type":        waitToolType,
 				"source":      "my-alloydb-source",
 				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":        waitToolKind,
+				"type":        waitToolType,
 				"source":      "my-alloydb-source",
 				"description": "wait for op2",
 			},

@@ -30,12 +30,12 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	createUserToolKind = "cloud-sql-create-users"
+	createUserToolType = "cloud-sql-create-users"
 )
 
 type createUsersTransport struct {
@@ -130,7 +130,7 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 		http.DefaultClient.Transport = originalTransport
 	})
 
-	var args []string
+	args := []string{"--enable-api"}
 	toolsFile := getCreateUsersToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -167,11 +167,10 @@ func TestCreateUsersToolEndpoints(t *testing.T) {
 			want:     `{"name":"op2","status":"PENDING"}`,
 		},
 		{
-			name:        "missing password for built-in user",
-			toolName:    "create-user",
-			body:        `{"project": "p1", "instance": "i1", "name": "test-user", "iamUser": false}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing password for built-in user",
+			toolName: "create-user",
+			body:     `{"project": "p1", "instance": "i1", "name": "test-user", "iamUser": false}`,
+			want:     `{"error":"missing 'password' parameter for non-IAM user"}`,
 		},
 	}
 
@@ -229,12 +228,12 @@ func getCreateUsersToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"create-user": map[string]any{
-				"kind":   createUserToolKind,
+				"type":   createUserToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

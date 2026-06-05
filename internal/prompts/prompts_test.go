@@ -22,23 +22,23 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 type mockPromptConfig struct {
 	name string
-	kind string
+	Type string
 }
 
-func (m *mockPromptConfig) PromptConfigKind() string            { return m.kind }
+func (m *mockPromptConfig) PromptConfigType() string            { return m.Type }
 func (m *mockPromptConfig) Initialize() (prompts.Prompt, error) { return nil, nil }
 
 var errMockFactory = errors.New("mock factory error")
 
 func mockFactory(ctx context.Context, name string, decoder *yaml.Decoder) (prompts.PromptConfig, error) {
-	return &mockPromptConfig{name: name, kind: "mockKind"}, nil
+	return &mockPromptConfig{name: name, Type: "mockType"}, nil
 }
 
 func mockErrorFactory(ctx context.Context, name string, decoder *yaml.Decoder) (prompts.PromptConfig, error) {
@@ -50,17 +50,17 @@ func TestRegistry(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("RegisterAndDecodeSuccess", func(t *testing.T) {
-		kind := "testKindSuccess"
-		if !prompts.Register(kind, mockFactory) {
+		resourceType := "testTypeSuccess"
+		if !prompts.Register(resourceType, mockFactory) {
 			t.Fatal("expected registration to succeed")
 		}
 		// This should fail because we are registering a duplicate
-		if prompts.Register(kind, mockFactory) {
+		if prompts.Register(resourceType, mockFactory) {
 			t.Fatal("expected duplicate registration to fail")
 		}
 
 		decoder := yaml.NewDecoder(strings.NewReader(""))
-		config, err := prompts.DecodeConfig(ctx, kind, "testPrompt", decoder)
+		config, err := prompts.DecodeConfig(ctx, resourceType, "testPrompt", decoder)
 		if err != nil {
 			t.Fatalf("expected DecodeConfig to succeed, but got error: %v", err)
 		}
@@ -69,25 +69,25 @@ func TestRegistry(t *testing.T) {
 		}
 	})
 
-	t.Run("DecodeUnknownKind", func(t *testing.T) {
+	t.Run("DecodeUnknownType", func(t *testing.T) {
 		decoder := yaml.NewDecoder(strings.NewReader(""))
-		_, err := prompts.DecodeConfig(ctx, "unregisteredKind", "testPrompt", decoder)
+		_, err := prompts.DecodeConfig(ctx, "unregisteredType", "testPrompt", decoder)
 		if err == nil {
-			t.Fatal("expected an error for unknown kind, but got nil")
+			t.Fatal("expected an error for unknown type, but got nil")
 		}
-		if !strings.Contains(err.Error(), "unknown prompt kind") {
-			t.Errorf("expected error to contain 'unknown prompt kind', but got: %v", err)
+		if !strings.Contains(err.Error(), "unknown prompt type") {
+			t.Errorf("expected error to contain 'unknown prompt type', but got: %v", err)
 		}
 	})
 
 	t.Run("FactoryReturnsError", func(t *testing.T) {
-		kind := "testKindError"
-		if !prompts.Register(kind, mockErrorFactory) {
+		resourceType := "testTypeError"
+		if !prompts.Register(resourceType, mockErrorFactory) {
 			t.Fatal("expected registration to succeed")
 		}
 
 		decoder := yaml.NewDecoder(strings.NewReader(""))
-		_, err := prompts.DecodeConfig(ctx, kind, "testPrompt", decoder)
+		_, err := prompts.DecodeConfig(ctx, resourceType, "testPrompt", decoder)
 		if err == nil {
 			t.Fatal("expected an error from the factory, but got nil")
 		}
@@ -100,63 +100,15 @@ func TestRegistry(t *testing.T) {
 		decoder := yaml.NewDecoder(strings.NewReader("description: A test prompt"))
 		config, err := prompts.DecodeConfig(ctx, "", "testDefaultPrompt", decoder)
 		if err != nil {
-			t.Fatalf("expected DecodeConfig with empty kind to succeed, but got error: %v", err)
+			t.Fatalf("expected DecodeConfig with empty type to succeed, but got error: %v", err)
 		}
 		if config == nil {
-			t.Fatal("expected a non-nil config for default kind")
+			t.Fatal("expected a non-nil config for default type")
 		}
-		if config.PromptConfigKind() != "custom" {
-			t.Errorf("expected default kind to be 'custom', but got %q", config.PromptConfigKind())
+		if config.PromptConfigType() != "custom" {
+			t.Errorf("expected default type to be 'custom', but got %q", config.PromptConfigType())
 		}
 	})
-}
-
-func TestGetMcpManifest(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		name        string
-		promptName  string
-		description string
-		args        prompts.Arguments
-		want        prompts.McpManifest
-	}{
-		{
-			name:        "No arguments",
-			promptName:  "test-prompt",
-			description: "A test prompt.",
-			args:        prompts.Arguments{},
-			want: prompts.McpManifest{
-				Name:        "test-prompt",
-				Description: "A test prompt.",
-				Arguments:   []prompts.ArgMcpManifest{},
-			},
-		},
-		{
-			name:        "With arguments",
-			promptName:  "arg-prompt",
-			description: "Prompt with args.",
-			args: prompts.Arguments{
-				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
-			},
-			want: prompts.McpManifest{
-				Name:        "arg-prompt",
-				Description: "Prompt with args.",
-				Arguments: []prompts.ArgMcpManifest{
-					{Name: "param1", Description: "First param", Required: true},
-					{Name: "param2", Description: "Second param", Required: false},
-				},
-			},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := prompts.GetMcpManifest(tc.promptName, tc.description, tc.args)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("GetMcpManifest() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
 }
 
 func TestGetManifest(t *testing.T) {

@@ -18,13 +18,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mongodb/mongodbaggregate"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlMongoQuery(t *testing.T) {
@@ -40,30 +40,32 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: mongodb-aggregate
-					source: my-instance
-					description: some description
-					database: test_db
-					collection: test_coll
-					readOnly: true
-					pipelinePayload: |
-					    [{ $match: { name: {{json .name}} }}]
-					pipelineParams:
-                        - name: name 
-                          type: string
-                          description: small description
+            kind: tool
+            name: example_tool
+            type: mongodb-aggregate
+            source: my-instance
+            description: some description
+            database: test_db
+            collection: test_coll
+            readOnly: true
+            pipelinePayload: |
+                [{ $match: { name: {{json .name}} }}]
+            pipelineParams:
+                - name: name 
+                  type: string
+                  description: small description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbaggregate.Config{
-					Name:            "example_tool",
-					Kind:            "mongodb-aggregate",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
+					Type:            "mongodb-aggregate",
 					Source:          "my-instance",
-					AuthRequired:    []string{},
 					Database:        "test_db",
 					Collection:      "test_coll",
-					Description:     "some description",
 					PipelinePayload: "[{ $match: { name: {{json .name}} }}]\n",
 					PipelineParams: parameters.Parameters{
 						&parameters.StringParameter{
@@ -81,20 +83,40 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
 	}
 
+}
+
+func TestAnnotations(t *testing.T) {
+	// Test default annotations for read-only tool
+	t.Run("default annotations", func(t *testing.T) {
+		annotations := tools.GetAnnotationsOrDefault(nil, tools.NewReadOnlyAnnotations)
+		if annotations == nil {
+			t.Fatal("expected non-nil annotations")
+		}
+		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != true {
+			t.Error("expected readOnlyHint to be true")
+		}
+	})
+
+	// Test custom annotations override default
+	t.Run("custom annotations", func(t *testing.T) {
+		customReadOnly := false
+		custom := &tools.ToolAnnotations{ReadOnlyHint: &customReadOnly}
+		annotations := tools.GetAnnotationsOrDefault(custom, tools.NewReadOnlyAnnotations)
+		if annotations.ReadOnlyHint == nil || *annotations.ReadOnlyHint != false {
+			t.Error("expected custom readOnlyHint to be false")
+		}
+	})
 }
 
 func TestFailParseFromYamlMongoQuery(t *testing.T) {
@@ -110,25 +132,21 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-			tools:
-				example_tool:
-					kind: mongodb-aggregate
-					source: my-instance
-					description: some description
-					collection: test_coll
-					pipelinePayload: |
-					  [{ $match: { name : {{json .name}} }}]
+            kind: tool
+            name: example_tool
+            type: mongodb-aggregate
+            source: my-instance
+            description: some description
+            collection: test_coll
+            pipelinePayload: |
+              [{ $match: { name : {{json .name}} }}]
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-aggregate"`,
+			err: `unable to parse tool "example_tool" as type "mongodb-aggregate"`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

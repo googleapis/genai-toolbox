@@ -16,153 +16,68 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
+	"slices"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httplog/v2"
-	"github.com/googleapis/genai-toolbox/internal/auth"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/go-chi/cors"
+	"github.com/go-chi/httplog/v3"
+	"github.com/go-chi/render"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version         string
-	srv             *http.Server
-	listener        net.Listener
-	root            chi.Router
-	logger          log.Logger
-	instrumentation *telemetry.Instrumentation
-	sseManager      *sseManager
-	ResourceMgr     *ResourceManager
-}
-
-// ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
-type ResourceManager struct {
-	mu           sync.RWMutex
-	sources      map[string]sources.Source
-	authServices map[string]auth.AuthService
-	tools        map[string]tools.Tool
-	toolsets     map[string]tools.Toolset
-	prompts      map[string]prompts.Prompt
-	promptsets   map[string]prompts.Promptset
-}
-
-func NewResourceManager(
-	sourcesMap map[string]sources.Source,
-	authServicesMap map[string]auth.AuthService,
-	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
-	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
-
-) *ResourceManager {
-	resourceMgr := &ResourceManager{
-		mu:           sync.RWMutex{},
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
-		prompts:      promptsMap,
-		promptsets:   promptsetsMap,
-	}
-
-	return resourceMgr
-}
-
-func (r *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	source, ok := r.sources[sourceName]
-	return source, ok
-}
-
-func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	authService, ok := r.authServices[authServiceName]
-	return authService, ok
-}
-
-func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	tool, ok := r.tools[toolName]
-	return tool, ok
-}
-
-func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	toolset, ok := r.toolsets[toolsetName]
-	return toolset, ok
-}
-
-func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	prompt, ok := r.prompts[promptName]
-	return prompt, ok
-}
-
-func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	promptset, ok := r.promptsets[promptsetName]
-	return promptset, ok
-}
-
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.sources = sourcesMap
-	r.authServices = authServicesMap
-	r.tools = toolsMap
-	r.toolsets = toolsetsMap
-	r.prompts = promptsMap
-	r.promptsets = promptsetsMap
-}
-
-func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.authServices
-}
-
-func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.tools
-}
-
-func (r *ResourceManager) GetPromptsMap() map[string]prompts.Prompt {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.prompts
+	version             string
+	sqlCommenterEnabled bool
+	toolboxUrl          string
+	srv                 *http.Server
+	listener            net.Listener
+	root                chi.Router
+	logger              log.Logger
+	instrumentation     *telemetry.Instrumentation
+	sseManager          *sseManager
+	ResourceMgr         *resources.ResourceManager
+	mcpPrmFile          string
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]sources.Source,
 	map[string]auth.AuthService,
+	map[string]embeddingmodels.EmbeddingModel,
 	map[string]tools.Tool,
 	map[string]tools.Toolset,
 	map[string]prompts.Prompt,
 	map[string]prompts.Promptset,
 	error,
 ) {
-	ctx = util.WithUserAgent(ctx, cfg.Version)
+	metadataStr := cfg.Version
+	if len(cfg.UserAgentMetadata) > 0 {
+		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
+	}
+	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -180,7 +95,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			childCtx, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/source/init",
-				trace.WithAttributes(attribute.String("source_kind", sc.SourceConfigKind())),
+				trace.WithAttributes(attribute.String("source_type", sc.SourceConfigType())),
 				trace.WithAttributes(attribute.String("source_name", name)),
 			)
 			defer span.End()
@@ -191,7 +106,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return s, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		sourcesMap[name] = s
 	}
@@ -208,7 +123,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/auth/init",
-				trace.WithAttributes(attribute.String("auth_kind", sc.AuthServiceConfigKind())),
+				trace.WithAttributes(attribute.String("auth_type", sc.AuthServiceConfigType())),
 				trace.WithAttributes(attribute.String("auth_name", name)),
 			)
 			defer span.End()
@@ -219,7 +134,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return a, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		authServicesMap[name] = a
 	}
@@ -229,6 +144,34 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices: %s", len(authServicesMap), strings.Join(authServiceNames, ", ")))
 
+	// Initialize and validate embedding models from configs.
+	embeddingModelsMap := make(map[string]embeddingmodels.EmbeddingModel)
+	for name, ec := range cfg.EmbeddingModelConfigs {
+		em, err := func() (embeddingmodels.EmbeddingModel, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/embeddingmodel/init",
+				trace.WithAttributes(attribute.String("model_type", ec.EmbeddingModelConfigType())),
+				trace.WithAttributes(attribute.String("model_name", name)),
+			)
+			defer span.End()
+			em, err := ec.Initialize(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize embedding model %q: %w", name, err)
+			}
+			return em, nil
+		}()
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		embeddingModelsMap[name] = em
+	}
+	embeddingModelNames := make([]string, 0, len(embeddingModelsMap))
+	for name := range embeddingModelsMap {
+		embeddingModelNames = append(embeddingModelNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
+
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
@@ -236,7 +179,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/tool/init",
-				trace.WithAttributes(attribute.String("tool_kind", tc.ToolConfigKind())),
+				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()
@@ -247,7 +190,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		toolsMap[name] = t
 	}
@@ -270,11 +213,24 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
+		if cfg.IgnoreUnknownTools {
+			filteredToolNames := make([]string, 0, len(tc.ToolNames))
+			for _, tn := range tc.ToolNames {
+				if _, ok := toolsMap[tn]; ok {
+					filteredToolNames = append(filteredToolNames, tn)
+				} else {
+					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in toolset %q", tn, name))
+				}
+			}
+			tc.ToolNames = filteredToolNames
+			cfg.ToolsetConfigs[name] = tc
+		}
+
 		t, err := func() (tools.Toolset, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/toolset/init",
-				trace.WithAttributes(attribute.String("toolset_name", name)),
+				trace.WithAttributes(attribute.String("toolset.name", name)),
 			)
 			defer span.End()
 			t, err := tc.Initialize(cfg.Version, toolsMap)
@@ -284,7 +240,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, err
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		toolsetsMap[name] = t
 	}
@@ -305,7 +261,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/prompt/init",
-				trace.WithAttributes(attribute.String("prompt_kind", pc.PromptConfigKind())),
+				trace.WithAttributes(attribute.String("prompt_type", pc.PromptConfigType())),
 				trace.WithAttributes(attribute.String("prompt_name", name)),
 			)
 			defer span.End()
@@ -316,7 +272,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsMap[name] = p
 	}
@@ -353,7 +309,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, err
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsetsMap[name] = p
 	}
@@ -367,7 +323,26 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets: %s", len(promptsetsMap), strings.Join(promptsetNames, ", ")))
 
-	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+}
+
+func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, hasWildcard := allowedHosts["*"]
+			hostname := r.Host
+			if host, _, err := net.SplitHostPort(r.Host); err == nil {
+				hostname = host
+			}
+			_, hostIsAllowed := allowedHosts[hostname]
+			if !hasWildcard && !hostIsAllowed {
+				// Return 403 Forbidden to block the attack
+				http.Error(w, "Invalid Host header", http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // NewServer returns a Server object based on provided Config.
@@ -388,38 +363,24 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	// set up http serving
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
+
 	// logging
 	logLevel, err := log.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
 	}
-	var httpOpts httplog.Options
-	switch cfg.LoggingFormat.String() {
-	case "json":
-		httpOpts = httplog.Options{
-			JSON:             true,
-			LogLevel:         logLevel,
-			Concise:          true,
-			RequestHeaders:   false,
-			MessageFieldName: "message",
-			SourceFieldName:  "logging.googleapis.com/sourceLocation",
-			TimeFieldName:    "timestamp",
-			LevelFieldName:   "severity",
-		}
-	case "standard":
-		httpOpts = httplog.Options{
-			LogLevel:         logLevel,
-			Concise:          true,
-			RequestHeaders:   false,
-			MessageFieldName: "message",
-		}
-	default:
-		return nil, fmt.Errorf("invalid Logging format: %q", cfg.LoggingFormat.String())
-	}
-	httpLogger := httplog.NewLogger("httplog", httpOpts)
-	r.Use(httplog.RequestLogger(httpLogger))
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
+	schema := *httplog.SchemaGCP
+	schema.Level = cfg.LogLevel.String()
+	schema.Concise(true)
+	httpOpts := &httplog.Options{
+		Level:  logLevel,
+		Schema: &schema,
+	}
+	logger := l.SlogLogger()
+	r.Use(httplog.RequestLogger(logger, httpOpts))
+
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
 	}
@@ -429,28 +390,108 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
-		version:         cfg.Version,
-		srv:             srv,
-		root:            r,
-		logger:          l,
-		instrumentation: instrumentation,
-		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
+		version:             cfg.Version,
+		sqlCommenterEnabled: cfg.SQLCommenter,
+		srv:                 srv,
+		root:                r,
+		logger:              l,
+		instrumentation:     instrumentation,
+		sseManager:          sseManager,
+		ResourceMgr:         resourceManager,
+		toolboxUrl:          cfg.ToolboxUrl,
+		mcpPrmFile:          cfg.McpPrmFile,
 	}
+
+	// cors
+	if slices.Contains(cfg.AllowedOrigins, "*") {
+		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
+	}
+	corsOpts := cors.Options{
+		AllowedOrigins:   cfg.AllowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowCredentials: true, // required since Toolbox uses auth headers
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Mcp-Session-Id", "MCP-Protocol-Version"},
+		ExposedHeaders:   []string{"Mcp-Session-Id"}, // headers that are sent to clients
+		MaxAge:           300,                        // cache preflight results for 5 minutes
+	}
+	r.Use(cors.Handler(corsOpts))
+	// validate hosts for DNS rebinding attacks
+	if slices.Contains(cfg.AllowedHosts, "*") {
+		s.logger.WarnContext(ctx, "wildcard (*) hosts allow any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of whether you are in a production or local development environment. For improved security, use the --allowed-hosts flag to specify trusted domains.")
+	}
+	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
+	for _, h := range cfg.AllowedHosts {
+		hostname := h
+		if host, _, err := net.SplitHostPort(h); err == nil {
+			hostname = host
+		}
+		allowedHostsMap[hostname] = struct{}{}
+	}
+	r.Use(hostCheck(allowedHostsMap))
+
+	// Host OAuth Protected Resource Metadata endpoint
+	mcpAuthEnabled := false
+	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+			mcpAuthEnabled = true
+			break
+		}
+	}
+
+	// Manual PRM override
+	var cachedPrmBytes []byte
+	var prmConfig ProtectedResourceMetadata
+	if s.mcpPrmFile != "" {
+		var err error
+		cachedPrmBytes, err = os.ReadFile(s.mcpPrmFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read manual PRM file at startup: %w", err)
+		}
+		// Unmarshal into the struct to strictly validate the schema
+		if err := json.Unmarshal(cachedPrmBytes, &prmConfig); err != nil {
+			return nil, fmt.Errorf("manual PRM file does not match expected schema: %w", err)
+		}
+	}
+
+	// Register route if auth is enabled or a manual file is provided
+	if mcpAuthEnabled || s.mcpPrmFile != "" {
+		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, req *http.Request) {
+			// Serve from memory if file was loaded
+			if s.mcpPrmFile != "" {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				if _, err := w.Write(cachedPrmBytes); err != nil {
+					s.logger.ErrorContext(req.Context(), "failed to write manual PRM file response", "error", err)
+				}
+				return
+			}
+
+			prmHandler(s, w, req)
+		})
+	}
+
 	// control plane
-	apiR, err := apiRouter(s)
-	if err != nil {
-		return nil, err
-	}
-	r.Mount("/api", apiR)
 	mcpR, err := mcpRouter(s)
 	if err != nil {
 		return nil, err
 	}
+
 	r.Mount("/mcp", mcpR)
+	if cfg.EnableAPI {
+		apiR, err := apiRouter(s)
+		if err != nil {
+			return nil, err
+		}
+		r.Mount("/api", apiR)
+	} else {
+		r.Handle("/api/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			err := errors.New("/api native endpoints are disabled by default. Please use the standard /mcp JSON-RPC endpoint")
+			_ = render.Render(w, r, newErrResponse(err, http.StatusGone))
+		}))
+	}
 	if cfg.UI {
 		webR, err := webRouter()
 		if err != nil {
@@ -466,8 +507,62 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	return s, nil
 }
 
+func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Find McpEnabled auth service
+			var mcpSvc auth.MCPAuthService
+			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+					mcpSvc = mSvc
+					break
+				}
+			}
+
+			// MCP Auth not enabled
+			if mcpSvc == nil {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			claims, err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header)
+			if err != nil {
+				var mcpErr *auth.MCPAuthError
+				if errors.As(err, &mcpErr) {
+					switch mcpErr.Code {
+					case http.StatusUnauthorized:
+						scopesArg := ""
+						if len(mcpErr.ScopesRequired) > 0 {
+							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
+						}
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
+						render.Status(r, http.StatusUnauthorized)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
+						return
+					case http.StatusForbidden:
+						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
+						render.Status(r, http.StatusForbidden)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
+						return
+					}
+				}
+				// Fail closed on unexpected errors
+				s.logger.ErrorContext(r.Context(), "unexpected error during MCP auth validation", "error", err)
+				render.Status(r, http.StatusInternalServerError)
+				render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INTERNAL_ERROR, "Internal Server Error", nil))
+				return
+			}
+
+			ctx := util.WithAuthTokenClaims(r.Context(), claims)
+			r = r.WithContext(ctx)
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // Listen starts a listener for the given Server instance.
-func (s *Server) Listen(ctx context.Context) error {
+func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -475,11 +570,26 @@ func (s *Server) Listen(ctx context.Context) error {
 		return fmt.Errorf("server is already listening: %s", s.listener.Addr().String())
 	}
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
-	var err error
-	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
+	if err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
-	s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+
+	if certFile != "" || keyFile != "" {
+		// Load the certificates
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			ln.Close()
+			return fmt.Errorf("failed to load TLS key pair (cert: %q, key: %q): %w", certFile, keyFile, err)
+		}
+		// Wrap the listener with TLS
+		config := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+		s.listener = tls.NewListener(ln, config)
+		s.logger.DebugContext(ctx, fmt.Sprintf("secure server listening on %s", s.srv.Addr))
+	} else {
+		s.listener = ln
+		s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+	}
 	return nil
 }
 
@@ -500,4 +610,8 @@ func (s *Server) ServeStdio(ctx context.Context, stdin io.Reader, stdout io.Writ
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.logger.DebugContext(ctx, "shutting down the server.")
 	return s.srv.Shutdown(ctx)
+}
+
+func (s *Server) Addr() string {
+	return s.listener.Addr().String()
 }

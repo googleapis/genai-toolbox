@@ -1,0 +1,183 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package gemini
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"google.golang.org/genai"
+)
+
+const EmbeddingModelType string = "gemini"
+
+// validate interface
+var _ embeddingmodels.EmbeddingModelConfig = Config{}
+
+type Config struct {
+	Name      string `yaml:"name" validate:"required"`
+	Type      string `yaml:"type" validate:"required"`
+	Model     string `yaml:"model" validate:"required"`
+	ApiKey    string `yaml:"apiKey"`
+	Project   string `yaml:"project"`
+	Location  string `yaml:"location"`
+	Dimension int32  `yaml:"dimension"`
+}
+
+// Returns the embedding model type
+func (cfg Config) EmbeddingModelConfigType() string {
+	return EmbeddingModelType
+}
+
+// Initialize a Gemini embedding model
+func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingModel, error) {
+	configs := &genai.ClientConfig{}
+
+	// Retrieve logger from context
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve logger: %w", err)
+	}
+
+	// Get API Key
+	apiKey := cfg.ApiKey
+	if apiKey == "" {
+		apiKey = os.Getenv("GOOGLE_API_KEY")
+	}
+	if apiKey == "" {
+		apiKey = os.Getenv("GEMINI_API_KEY")
+	}
+
+	// Try to resolve Project and Location
+	project := cfg.Project
+	if project == "" {
+		project = os.Getenv("GOOGLE_CLOUD_PROJECT")
+	}
+
+	location := cfg.Location
+	if location == "" {
+		location = os.Getenv("GOOGLE_CLOUD_LOCATION")
+	}
+
+	// Determine the Backend
+	if project != "" && location != "" {
+		// VertexAI API uses ADC for authentication.
+		// ADC requires `Project` and `Location` to be set.
+		configs.Backend = genai.BackendVertexAI
+		configs.Project = project
+		configs.Location = location
+
+		l.InfoContext(ctx, "Using Vertex AI backend for Gemini embedding", "project", project, "location", location)
+
+	} else if apiKey != "" {
+		// Using Gemini API, which uses API Key for authentication.
+		configs.Backend = genai.BackendGeminiAPI
+		configs.APIKey = apiKey
+
+		l.InfoContext(ctx, "Using Google AI (Gemini API) backend for Gemini embedding")
+
+	} else {
+		// Missing credentials
+		return nil, fmt.Errorf("missing credentials for Gemini embedding: " +
+			"For Google AI: Provide 'apiKey' in YAML or set GOOGLE_API_KEY/GEMINI_API_KEY env vars. " +
+			"For Vertex AI: Provide 'project'/'location' in YAML or via GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION env vars. " +
+			"See documentation for details: https://mcp-toolbox.dev/documentation/configuration/embedding-models/gemini/")
+	}
+
+	// Set user agent
+	ua, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user agent from context: %w", err)
+	}
+	configs.HTTPOptions = genai.HTTPOptions{
+		Headers: http.Header{
+			"User-Agent": []string{ua},
+		},
+	}
+
+	// Create new Gemini API client
+	client, err := genai.NewClient(ctx, configs)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Gemini API client: %w", err)
+	}
+
+	return &EmbeddingModel{
+		Config: cfg,
+		Client: client,
+	}, nil
+}
+
+var _ embeddingmodels.EmbeddingModel = EmbeddingModel{}
+
+type EmbeddingModel struct {
+	Client *genai.Client
+	Config
+}
+
+// Returns the embedding model type
+func (m EmbeddingModel) EmbeddingModelType() string {
+	return EmbeddingModelType
+}
+
+func (m EmbeddingModel) ToConfig() embeddingmodels.EmbeddingModelConfig {
+	return m.Config
+}
+
+func (m EmbeddingModel) EmbedParameters(ctx context.Context, parameters []string) ([][]float32, error) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+	}
+
+	contents := convertStringsToContents(parameters)
+
+	embedConfig := &genai.EmbedContentConfig{
+		TaskType: "SEMANTIC_SIMILARITY",
+	}
+
+	if m.Dimension > 0 {
+		embedConfig.OutputDimensionality = genai.Ptr(m.Dimension)
+	}
+
+	result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, embedConfig)
+	if err != nil {
+		logger.ErrorContext(ctx, "Error calling EmbedContent for model %s: %v", m.Model, err)
+		return nil, err
+	}
+
+	embeddings := make([][]float32, 0, len(result.Embeddings))
+	for _, embedding := range result.Embeddings {
+		embeddings = append(embeddings, embedding.Values)
+	}
+
+	logger.InfoContext(ctx, "Successfully embedded %d text parameters using model %s", len(parameters), m.Model)
+
+	return embeddings, nil
+}
+
+// convertStringsToContents takes a slice of strings and converts it into a slice of *genai.Content objects.
+func convertStringsToContents(texts []string) []*genai.Content {
+	contents := make([]*genai.Content, 0, len(texts))
+
+	for _, text := range texts {
+		content := genai.NewContentFromText(text, "")
+		contents = append(contents, content)
+	}
+	return contents
+}

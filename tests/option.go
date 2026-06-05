@@ -28,9 +28,17 @@ type InvokeTestConfig struct {
 	supportArrayParam        bool
 	supportClientAuth        bool
 	supportSelect1Auth       bool
+	isMCP                    bool
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
+
+// WithMCP enables the MCP routing for standard Tool Invoke tests
+func WithMCP() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.isMCP = true
+	}
+}
 
 // WithMyAuthToolWant represents the response value for my-auth-tool.
 // e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
@@ -119,6 +127,7 @@ func EnableClientAuthTest() InvokeTestOption {
 // MCPTestConfig represents the various configuration options for mcp tool call tests.
 type MCPTestConfig struct {
 	myToolId3NameAliceWant string
+	mcpSelect1Want         string
 	supportClientAuth      bool
 	supportSelect1Auth     bool
 }
@@ -149,11 +158,21 @@ func DisableMcpSelect1AuthTest() McpTestOption {
 	}
 }
 
+func WithMcpSelect1Want(want string) McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.mcpSelect1Want = want
+	}
+}
+
 /* Configurations for RunExecuteSqlToolInvokeTest()  */
 
 // ExecuteSqlTestConfig represents the various configuration options for RunExecuteSqlToolInvokeTest()
 type ExecuteSqlTestConfig struct {
 	select1Statement string
+	createWant       string
+	dropWant         string
+	selectEmptyWant  string
+	isMCP            bool
 }
 
 type ExecuteSqlOption func(*ExecuteSqlTestConfig)
@@ -163,6 +182,34 @@ type ExecuteSqlOption func(*ExecuteSqlTestConfig)
 func WithSelect1Statement(s string) ExecuteSqlOption {
 	return func(c *ExecuteSqlTestConfig) {
 		c.select1Statement = s
+	}
+}
+
+// WithMCPSql enables the MCP routing for ExecuteSql tests
+func WithMCPSql() ExecuteSqlOption {
+	return func(c *ExecuteSqlTestConfig) {
+		c.isMCP = true
+	}
+}
+
+// WithExecuteCreateWant represents the expected response for a CREATE TABLE statement.
+func WithExecuteCreateWant(s string) ExecuteSqlOption {
+	return func(c *ExecuteSqlTestConfig) {
+		c.createWant = s
+	}
+}
+
+// WithExecuteDropWant represents the expected response for a DROP TABLE statement.
+func WithExecuteDropWant(s string) ExecuteSqlOption {
+	return func(c *ExecuteSqlTestConfig) {
+		c.dropWant = s
+	}
+}
+
+// WithExecuteSelectEmptyWant represents the expected response for a SELECT from an empty table.
+func WithExecuteSelectEmptyWant(s string) ExecuteSqlOption {
+	return func(c *ExecuteSqlTestConfig) {
+		c.selectEmptyWant = s
 	}
 }
 
@@ -184,9 +231,18 @@ type TemplateParameterTestConfig struct {
 	supportDdl          bool
 	supportInsert       bool
 	supportSelectFields bool
+	isMCP               bool
 }
 
 type TemplateParamOption func(*TemplateParameterTestConfig)
+
+// WithMCPTemplate flags the test harness to route the request through the local MCP server.
+// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableName, tests.WithMCPTemplate())
+func WithMCPTemplate() TemplateParamOption {
+	return func(c *TemplateParameterTestConfig) {
+		c.isMCP = true
+	}
+}
 
 // WithDdlWant represents the response value of ddl statements.
 // e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithDdlWant("custom"))
@@ -281,5 +337,23 @@ func DisableInsertTest() TemplateParamOption {
 func DisableSelectFilterTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.supportSelectFields = false
+	}
+}
+
+/* Configurations for RunMySQL...Test()  */
+
+// ToolExecConfig holds the configuration for executing prebuilt tool tests.
+type ToolExecConfig struct {
+	isMCP bool
+}
+
+// ToolExecOption is a functional option used to configure a ToolExecConfig.
+type ToolExecOption func(*ToolExecConfig)
+
+// WithMCPExec flags the test harness to route the request through the local MCP server
+// instead of the Native Toolbox REST API.
+func WithMCPExec() ToolExecOption {
+	return func(c *ToolExecConfig) {
+		c.isMCP = true
 	}
 }

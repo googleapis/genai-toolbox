@@ -18,23 +18,22 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	cloudmonitoringsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	cloudmonitoringsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudmonitoring"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// mockIncompatibleSource is a source of a different kind to test error paths.
+// mockIncompatibleSource is a source of a different type to test error paths.
 type mockIncompatibleSource struct{ sources.Source }
 
 func TestInitialize(t *testing.T) {
 	t.Parallel()
-	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Kind: "cloud-monitoring"}}
+	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Type: "cloud-monitoring"}}
 	srcs := map[string]sources.Source{
 		"my-monitoring-source": testSource,
 		"incompatible-source":  &mockIncompatibleSource{},
@@ -54,11 +53,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "Success case with nil authRequired",
 			cfg: cloudmonitoring.Config{
-				Name:         "test-tool",
-				Kind:         "cloud-monitoring-query-prometheus",
-				Source:       "my-monitoring-source",
-				Description:  "A test description.",
-				AuthRequired: nil,
+				ConfigBase: tools.ConfigBase{
+					Name:         "test-tool",
+					Description:  "A test description.",
+					AuthRequired: nil,
+				},
+				Type:   "cloud-monitoring-query-prometheus",
+				Source: "my-monitoring-source",
 			},
 			want: &tools.Manifest{
 				Description:  "A test description.",
@@ -69,33 +70,19 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "Success case with specified authRequired",
 			cfg: cloudmonitoring.Config{
-				Name:         "test-tool-with-auth",
-				Kind:         "cloud-monitoring-query-prometheus",
-				Source:       "my-monitoring-source",
-				Description:  "Another test description.",
-				AuthRequired: []string{"google-auth-service"},
+				ConfigBase: tools.ConfigBase{
+					Name:         "test-tool-with-auth",
+					Description:  "Another test description.",
+					AuthRequired: []string{"google-auth-service"},
+				},
+				Type:   "cloud-monitoring-query-prometheus",
+				Source: "my-monitoring-source",
 			},
 			want: &tools.Manifest{
 				Description:  "Another test description.",
 				Parameters:   wantParams.Manifest(),
 				AuthRequired: []string{"google-auth-service"},
 			},
-		},
-		{
-			desc: "Error: source not found",
-			cfg: cloudmonitoring.Config{
-				Name:   "test-tool",
-				Source: "non-existent-source",
-			},
-			wantErr: `no source named "non-existent-source" configured`,
-		},
-		{
-			desc: "Error: incompatible source kind",
-			cfg: cloudmonitoring.Config{
-				Name:   "test-tool",
-				Source: "incompatible-source",
-			},
-			wantErr: "invalid source for \"cloud-monitoring-query-prometheus\" tool",
 		},
 	}
 
@@ -138,56 +125,56 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					source: my-instance
-					description: some description
-				`,
+			kind: tool
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			source: my-instance
+			description: some description
+			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
-					Name:         "example_tool",
-					Kind:         "cloud-monitoring-query-prometheus",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-monitoring-query-prometheus",
+					Source: "my-instance",
 				},
 			},
 		},
 		{
 			desc: "advanced example",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					source: my-instance
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
+			kind: tool
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			source: my-instance
+			description: some description
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
-					Name:         "example_tool",
-					Kind:         "cloud-monitoring-query-prometheus",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "cloud-monitoring-query-prometheus",
+					Source: "my-instance",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools, cmp.AllowUnexported(cloudmonitoring.Config{})); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(cloudmonitoring.Config{})); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -205,44 +192,30 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 		err  string
 	}{
 		{
-			desc: "Invalid kind",
+			desc: "Invalid type",
 			in: `
-			tools:
-				example_tool:
-					kind: invalid-kind
-					source: my-instance
-					description: some description
+			kind: tool
+			name: example_tool
+			type: invalid-type
+			source: my-instance
+			description: some description
 			`,
-			err: `unknown tool kind: "invalid-kind"`,
+			err: `unknown tool type: "invalid-type"`,
 		},
 		{
 			desc: "missing source",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					description: some description
+			kind: tool
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			description: some description
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
-		},
-		{
-			desc: "missing description",
-			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					source: my-instance
-			`,
-			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

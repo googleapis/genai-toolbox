@@ -17,27 +17,26 @@ package dataplexsearchaspecttypes
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
-	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
-	"github.com/cenkalti/backoff/v5"
+	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	dataplexds "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const kind string = "dataplex-search-aspect-types"
+const resourceType string = "dataplex-search-aspect-types"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -45,153 +44,71 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CatalogClient() *dataplexapi.CatalogClient
-	ProjectID() string
+	SearchAspectTypes(context.Context, string, int, string) ([]*dataplexpb.AspectType, error)
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &dataplexds.Source{}
-
-var compatibleSources = [...]string{dataplexds.SourceKind}
-
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Initialize the search configuration with the provided sources
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	query := parameters.NewStringParameter("query", "The query against which aspect type should be matched.")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of returned aspect types in the search page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	params := parameters.Parameters{query, pageSize, orderBy}
+	allParameters := parameters.Parameters{query, pageSize, orderBy}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
-
-	t := Tool{
-		Config:        cfg,
-		Parameters:    params,
-		CatalogClient: s.CatalogClient(),
-		ProjectID:     s.ProjectID(),
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		},
-		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
+// validate interface
+var _ tools.Tool = Tool{}
+
 type Tool struct {
-	Config
-	Parameters    parameters.Parameters
-	CatalogClient *dataplexapi.CatalogClient
-	ProjectID     string
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	// Invoke the tool with the provided parameters
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
 	paramsMap := params.AsMap()
-	query, _ := paramsMap["query"].(string)
-	pageSize := int32(paramsMap["pageSize"].(int))
-	orderBy, _ := paramsMap["orderBy"].(string)
-
-	// Create SearchEntriesRequest with the provided parameters
-	req := &dataplexpb.SearchEntriesRequest{
-		Query:          query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype",
-		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
-		PageSize:       pageSize,
-		OrderBy:        orderBy,
-		SemanticSearch: true,
+	query, ok := paramsMap["query"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'query' parameter: %v", paramsMap["query"]), nil)
 	}
-
-	// Perform the search using the CatalogClient - this will return an iterator
-	it := t.CatalogClient.SearchEntries(ctx, req)
-	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
+	pageSize, ok := paramsMap["pageSize"].(int)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'pageSize' parameter: %v", paramsMap["pageSize"]), nil)
 	}
-
-	// Create an instance of exponential backoff with default values for retrying GetAspectType calls
-	// InitialInterval, RandomizationFactor, Multiplier, MaxInterval = 500 ms, 0.5, 1.5, 60 s
-	getAspectBackOff := backoff.NewExponentialBackOff()
-
-	// Iterate through the search results and call GetAspectType for each result using the resource name
-	var results []*dataplexpb.AspectType
-	for {
-		entry, err := it.Next()
-		if err != nil {
-			break
-		}
-		resourceName := entry.DataplexEntry.GetEntrySource().Resource
-		getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
-			Name: resourceName,
-		}
-
-		operation := func() (*dataplexpb.AspectType, error) {
-			aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
-			}
-			return aspectType, nil
-		}
-
-		// Retry the GetAspectType operation with exponential backoff
-		aspectType, err := backoff.Retry(ctx, operation, backoff.WithBackOff(getAspectBackOff))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get aspect type after retries for entry %q: %w", resourceName, err)
-		}
-
-		results = append(results, aspectType)
+	orderBy, ok := paramsMap["orderBy"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
 	}
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	// Parse parameters from the provided data
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	// Returns the tool manifest
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	// Returns the tool MCP manifest
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	resp, err := source.SearchAspectTypes(ctx, query, pageSize, orderBy)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+	return resp, nil
 }

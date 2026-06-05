@@ -13,11 +13,17 @@ node_modules
 # hugo
 .hugo/public/
 .hugo/resources/_gen
+.hugo/static/pagefind/
 .hugo_build.lock
 
 # coverage
 .coverage
 
+# python
+__pycache__/
+
 # executable
-genai-toolbox
+mcp-toolbox
 toolbox
+toolbox.exe
+**/test.db

@@ -1,0 +1,43 @@
+---
+title: cloud-sql-create-database
+type: docs
+weight: 10
+description: >
+  Create a new database in a Cloud SQL instance.
+---
+
+## About
+
+The `cloud-sql-create-database` tool creates a new database in a specified Cloud
+SQL instance.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+| **parameter** | **type** | **required** | **description**                                                    |
+| ------------- | :------: | :----------: | ------------------------------------------------------------------ |
+| project       |  string  |     true     | The project ID.                                                    |
+| instance      |  string  |     true     | The ID of the instance where the database will be created.         |
+| name          |  string  |     true     | The name for the new database. Must be unique within the instance. |
+
+
+## Example
+
+```yaml
+kind: tool
+name: create-cloud-sql-database
+type: cloud-sql-create-database
+source: my-cloud-sql-admin-source
+description: "Creates a new database in a Cloud SQL instance."
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                  |
+| ----------- | :------: | :----------: | ------------------------------------------------ |
+| type        |  string  |     true     | Must be "cloud-sql-create-database".             |
+| source      |  string  |     true     | The name of the `cloud-sql-admin` source to use. |
+| description |  string  |     false    | A description of the tool.                       |

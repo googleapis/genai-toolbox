@@ -22,6 +22,18 @@ import (
 	"strings"
 )
 
+// NewLogger creates a new logger based on the provided format and level.
+func NewLogger(format, level string, out, err io.Writer) (Logger, error) {
+	switch strings.ToLower(format) {
+	case "json":
+		return NewStructuredLogger(out, err, level)
+	case "standard":
+		return NewStdLogger(out, err, level)
+	default:
+		return nil, fmt.Errorf("logging format invalid: %s", format)
+	}
+}
+
 // StdLogger is the standard logger
 type StdLogger struct {
 	outLogger *slog.Logger
@@ -47,23 +59,33 @@ func NewStdLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 }
 
 // DebugContext logs debug messages
-func (sl *StdLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.DebugContext(ctx, msg, keysAndValues...)
 }
 
 // InfoContext logs debug messages
-func (sl *StdLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.InfoContext(ctx, msg, keysAndValues...)
 }
 
 // WarnContext logs warning messages
-func (sl *StdLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.WarnContext(ctx, msg, keysAndValues...)
 }
 
 // ErrorContext logs error messages
-func (sl *StdLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.ErrorContext(ctx, msg, keysAndValues...)
+}
+
+// SlogLogger returns a single standard *slog.Logger that routes
+// records to the outLogger or errLogger based on the log level.
+func (sl *StdLogger) SlogLogger() *slog.Logger {
+	splitHandler := &SplitHandler{
+		OutHandler: sl.outLogger.Handler(),
+		ErrHandler: sl.errLogger.Handler(),
+	}
+	return slog.New(splitHandler)
 }
 
 const (
@@ -165,21 +187,64 @@ func NewStructuredLogger(outW, errW io.Writer, logLevel string) (Logger, error) 
 }
 
 // DebugContext logs debug messages
-func (sl *StructuredLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.DebugContext(ctx, msg, keysAndValues...)
 }
 
 // InfoContext logs info messages
-func (sl *StructuredLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.InfoContext(ctx, msg, keysAndValues...)
 }
 
 // WarnContext logs warning messages
-func (sl *StructuredLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.WarnContext(ctx, msg, keysAndValues...)
 }
 
 // ErrorContext logs error messages
-func (sl *StructuredLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.ErrorContext(ctx, msg, keysAndValues...)
+}
+
+// SlogLogger returns a single standard *slog.Logger that routes
+// records to the outLogger or errLogger based on the log level.
+func (sl *StructuredLogger) SlogLogger() *slog.Logger {
+	splitHandler := &SplitHandler{
+		OutHandler: sl.outLogger.Handler(),
+		ErrHandler: sl.errLogger.Handler(),
+	}
+	return slog.New(splitHandler)
+}
+
+type SplitHandler struct {
+	OutHandler slog.Handler
+	ErrHandler slog.Handler
+}
+
+func (h *SplitHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	if level >= slog.LevelWarn {
+		return h.ErrHandler.Enabled(ctx, level)
+	}
+	return h.OutHandler.Enabled(ctx, level)
+}
+
+func (h *SplitHandler) Handle(ctx context.Context, r slog.Record) error {
+	if r.Level >= slog.LevelWarn {
+		return h.ErrHandler.Handle(ctx, r)
+	}
+	return h.OutHandler.Handle(ctx, r)
+}
+
+func (h *SplitHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &SplitHandler{
+		OutHandler: h.OutHandler.WithAttrs(attrs),
+		ErrHandler: h.ErrHandler.WithAttrs(attrs),
+	}
+}
+
+func (h *SplitHandler) WithGroup(name string) slog.Handler {
+	return &SplitHandler{
+		OutHandler: h.OutHandler.WithGroup(name),
+		ErrHandler: h.ErrHandler.WithGroup(name),
+	}
 }

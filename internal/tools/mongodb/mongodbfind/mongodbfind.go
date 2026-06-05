@@ -15,105 +15,92 @@ package mongodbfind
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"net/http"
 	"slices"
 
 	"github.com/goccy/go-yaml"
-	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
-const kind string = "mongodb-find"
+const resourceType string = "mongodb-find"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
+type compatibleSource interface {
+	MongoClient() *mongo.Client
+	Find(context.Context, string, string, string, *options.FindOptionsBuilder) ([]any, error)
+}
+
 type Config struct {
-	Name           string                `yaml:"name" validate:"required"`
-	Kind           string                `yaml:"kind" validate:"required"`
-	Source         string                `yaml:"source" validate:"required"`
-	AuthRequired   []string              `yaml:"authRequired" validate:"required"`
-	Description    string                `yaml:"description" validate:"required"`
-	Database       string                `yaml:"database" validate:"required"`
-	Collection     string                `yaml:"collection" validate:"required"`
-	FilterPayload  string                `yaml:"filterPayload" validate:"required"`
-	FilterParams   parameters.Parameters `yaml:"filterParams"`
-	ProjectPayload string                `yaml:"projectPayload"`
-	ProjectParams  parameters.Parameters `yaml:"projectParams"`
-	SortPayload    string                `yaml:"sortPayload"`
-	SortParams     parameters.Parameters `yaml:"sortParams"`
-	Limit          int64                 `yaml:"limit"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Database         string                 `yaml:"database" validate:"required"`
+	Collection       string                 `yaml:"collection" validate:"required"`
+	FilterPayload    string                 `yaml:"filterPayload" validate:"required"`
+	FilterParams     parameters.Parameters  `yaml:"filterParams"`
+	ProjectPayload   string                 `yaml:"projectPayload"`
+	ProjectParams    parameters.Parameters  `yaml:"projectParams"`
+	SortPayload      string                 `yaml:"sortPayload"`
+	SortParams       parameters.Parameters  `yaml:"sortParams"`
+	Limit            int64                  `yaml:"limit"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify the source is compatible
-	s, ok := rawS.(*mongosrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
-	}
-
-	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
 
-	// Verify no duplicate parameter names
-	err := parameters.CheckDuplicateParameters(allParameters)
-	if err != nil {
+	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
 		return nil, err
 	}
 
-	// Verify 'limit' value
 	if cfg.Limit <= 0 {
 		return nil, fmt.Errorf("limit must be a positive number, but got %d", cfg.Limit)
 	}
 
-	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
 	if paramManifest == nil {
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
-
-	// finish tool setup
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		database:    s.Client.Database(cfg.Database),
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -121,18 +108,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	database    *mongo.Database
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
 }
 
-func getOptions(ctx context.Context, sortParameters parameters.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptions, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
+func getOptions(ctx context.Context, sortParameters parameters.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptionsBuilder, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	opts := options.Find()
@@ -168,72 +154,24 @@ func getOptions(ctx context.Context, sortParameters parameters.Parameters, proje
 	return opts, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	paramsMap := params.AsMap()
-
-	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindFilterString", t.FilterPayload, paramsMap)
-
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindFilterString", t.Cfg.FilterPayload, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("error populating filter: %s", err)
+		return nil, util.NewAgentError("error populating filter", err)
 	}
-
-	opts, err := getOptions(ctx, t.SortParams, t.ProjectPayload, t.Limit, paramsMap)
+	opts, err := getOptions(ctx, t.Cfg.SortParams, t.Cfg.ProjectPayload, t.Cfg.Limit, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("error populating options: %s", err)
+		return nil, util.NewAgentError("error populating options", err)
 	}
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
+	resp, err := source.Find(ctx, filterString, t.Cfg.Database, t.Cfg.Collection, opts)
 	if err != nil {
-		return nil, err
+		return nil, util.ProcessGeneralError(err)
 	}
-
-	cur, err := t.database.Collection(t.Collection).Find(ctx, filter, opts)
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-
-	var data = []any{}
-	err = cur.All(context.TODO(), &data)
-	if err != nil {
-		return nil, err
-	}
-
-	var final []any
-	for _, item := range data {
-		tmp, _ := bson.MarshalExtJSON(item, false, false)
-		var tmp2 any
-		err = json.Unmarshal(tmp, &tmp2)
-		if err != nil {
-			return nil, err
-		}
-		final = append(final, tmp2)
-	}
-
-	return final, err
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return resp, nil
 }

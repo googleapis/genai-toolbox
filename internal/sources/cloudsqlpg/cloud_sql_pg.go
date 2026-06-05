@@ -21,20 +21,22 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "cloud-sql-postgres"
+const SourceType string = "cloud-sql-postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -48,7 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string         `yaml:"name" validate:"required"`
-	Kind     string         `yaml:"kind" validate:"required"`
+	Type     string         `yaml:"type" validate:"required"`
 	Project  string         `yaml:"project" validate:"required"`
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
@@ -58,8 +60,8 @@ type Config struct {
 	Password string         `yaml:"password"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -70,7 +72,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	err = pool.Ping(ctx)
 	if err != nil {
+		pool.Close()
 		return nil, fmt.Errorf("unable to connect successfully: %w", err)
+	}
+
+	var res int
+	err = pool.QueryRow(ctx, "SELECT 1").Scan(&res)
+	if err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("failed to execute 'SELECT 1' after connection: %w", err)
 	}
 
 	s := &Source{
@@ -87,8 +97,8 @@ type Source struct {
 	Pool *pgxpool.Pool
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -97,6 +107,34 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	results, err := s.PostgresPool().Query(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	fields := results.FieldDescriptions()
+	out := []any{}
+	for results.Next() {
+		values, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		row := orderedmap.Row{}
+		for i, f := range fields {
+			row.Add(f.Name, values[i])
+		}
+		out = append(out, row)
+	}
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	return out, nil
 }
 
 func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
@@ -120,7 +158,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 			// If password is provided without an username, raise an error
 			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
 		}
-		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "postgres")
 		if err != nil {
 			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}
@@ -134,7 +172,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 
 func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database

@@ -17,11 +17,11 @@ package cloudsqlmysqlcreateinstance_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -37,34 +37,32 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				create-instance-tool:
-					kind: cloud-sql-mysql-create-instance
-					description: a test description
-					source: a-source
+			kind: tool
+			name: create-instance-tool
+			type: cloud-sql-mysql-create-instance
+			description: a test description
+			source: a-source
 			`,
 			want: server.ToolConfigs{
 				"create-instance-tool": cloudsqlmysqlcreateinstance.Config{
-					Name:         "create-instance-tool",
-					Kind:         "cloud-sql-mysql-create-instance",
-					Description:  "a test description",
-					Source:       "a-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "create-instance-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-mysql-create-instance",
+					Source: "a-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

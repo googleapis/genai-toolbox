@@ -17,16 +17,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 )
+
+// GDAClientID is the client ID for Gemini Data Analytics
+const GDAClientID = "GENAI_TOOLBOX"
 
 // DecodeJSON decodes a given reader into an interface using the json decoder.
 func DecodeJSON(r io.Reader, v interface{}) error {
@@ -119,6 +122,30 @@ func UserAgentFromContext(ctx context.Context) (string, error) {
 	}
 }
 
+type UserAgentRoundTripper struct {
+	userAgent string
+	next      http.RoundTripper
+}
+
+func NewUserAgentRoundTripper(ua string, next http.RoundTripper) *UserAgentRoundTripper {
+	return &UserAgentRoundTripper{
+		userAgent: ua,
+		next:      next,
+	}
+}
+
+func (rt *UserAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// create a deep copy of the request
+	newReq := req.Clone(req.Context())
+	ua := newReq.Header.Get("User-Agent")
+	if ua == "" {
+		newReq.Header.Set("User-Agent", rt.userAgent)
+	} else {
+		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
+	}
+	return rt.next.RoundTrip(newReq)
+}
+
 func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
 	b, err := yaml.Marshal(v)
 	if err != nil {
@@ -164,4 +191,142 @@ func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation
 	return nil, fmt.Errorf("unable to retrieve instrumentation")
 }
 
-var ErrUnauthorized = errors.New("unauthorized")
+// GenAIMetricAttrs holds gen_ai and network attributes for metrics
+type GenAIMetricAttrs struct {
+	OperationName          string
+	ToolName               string
+	PromptName             string
+	NetworkProtocolName    string
+	NetworkProtocolVersion string
+}
+
+const genAIMetricAttrsKey contextKey = "genAIMetricAttrs"
+
+// WithGenAIMetricAttrs adds GenAIMetricAttrs to the context
+func WithGenAIMetricAttrs(ctx context.Context, attrs *GenAIMetricAttrs) context.Context {
+	return context.WithValue(ctx, genAIMetricAttrsKey, attrs)
+}
+
+// GenAIMetricAttrsFromContext retrieves GenAIMetricAttrs from context
+func GenAIMetricAttrsFromContext(ctx context.Context) *GenAIMetricAttrs {
+	if attrs, ok := ctx.Value(genAIMetricAttrsKey).(*GenAIMetricAttrs); ok {
+		return attrs
+	}
+	return nil
+}
+
+const authTokenClaimsKey contextKey = "authTokenClaims"
+
+// WithAuthTokenClaims adds auth token claims into the context as a value
+func WithAuthTokenClaims(ctx context.Context, claims map[string]any) context.Context {
+	return context.WithValue(ctx, authTokenClaimsKey, claims)
+}
+
+// AuthTokenClaimsFromContext retrieves the auth token claims from context
+func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
+	if claims, ok := ctx.Value(authTokenClaimsKey).(map[string]any); ok {
+		return claims
+	}
+	return nil
+}
+
+const clientIPKey contextKey = "clientIP"
+
+// WithClientIP adds a client IP address into the context as a value
+func WithClientIP(ctx context.Context, clientIP string) context.Context {
+	return context.WithValue(ctx, clientIPKey, clientIP)
+}
+
+// ClientIPFromContext retrieves the client IP address or returns false if not present
+func ClientIPFromContext(ctx context.Context) (string, bool) {
+	if ip, ok := ctx.Value(clientIPKey).(string); ok {
+		return ip, true
+	}
+	return "", false
+}
+
+// ExtractClientIP retrieves the leftmost client IP from X-Forwarded-For or X-Real-IP header
+func ExtractClientIP(header http.Header) string {
+	if xff := header.Get("X-Forwarded-For"); xff != "" {
+		for _, ip := range strings.Split(xff, ",") {
+			if trimmed := strings.TrimSpace(ip); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	if xri := header.Get("X-Real-IP"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+	return ""
+}
+
+// TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
+type TelemetryAttributes struct {
+	ClientName    string
+	ClientVersion string
+	ClientModel   string
+	ClientUserID  string
+	ClientAgentID string
+}
+
+const telemetryAttrsKey contextKey = "telemetryAttrs"
+
+// WithTelemetryAttributes adds TelemetryAttributes to the context
+func WithTelemetryAttributes(ctx context.Context, attrs *TelemetryAttributes) context.Context {
+	return context.WithValue(ctx, telemetryAttrsKey, attrs)
+}
+
+// TelemetryAttributesFromContext retrieves TelemetryAttributes from context
+func TelemetryAttributesFromContext(ctx context.Context) *TelemetryAttributes {
+	if attrs, ok := ctx.Value(telemetryAttrsKey).(*TelemetryAttributes); ok {
+		return attrs
+	}
+	return nil
+}
+
+const sqlCommenterEnabledKey contextKey = "sqlCommenterEnabled"
+
+// WithSQLCommenterEnabled adds the sql-commenter-enabled flag to the context
+func WithSQLCommenterEnabled(ctx context.Context, enabled bool) context.Context {
+	return context.WithValue(ctx, sqlCommenterEnabledKey, enabled)
+}
+
+// SQLCommenterEnabledFromContext retrieves the sql-commenter-enabled flag from context
+func SQLCommenterEnabledFromContext(ctx context.Context) bool {
+	if enabled, ok := ctx.Value(sqlCommenterEnabledKey).(bool); ok {
+		return enabled
+	}
+	return false
+}
+
+// toolboxVersionKey is the key used to store toolbox version within context
+const toolboxVersionKey contextKey = "toolboxVersion"
+
+// WithToolboxVersionKey adds a toolbox version into the context as a value
+func WithToolboxVersionKey(ctx context.Context, versionString string) context.Context {
+	return context.WithValue(ctx, toolboxVersionKey, versionString)
+}
+
+// ToolboxVersionFromContext retrieves the toolbox version or return an error
+func ToolboxVersionFromContext(ctx context.Context) (string, error) {
+	if v, ok := ctx.Value(toolboxVersionKey).(string); ok && v != "" {
+		return v, nil
+	} else {
+		return "", fmt.Errorf("unable to retrieve toolbox version")
+	}
+}
+
+const ignoreUnknownToolsKey contextKey = "ignoreUnknownTools"
+
+// WithIgnoreUnknownTools adds the ignore-unknown-tools flag to the context
+func WithIgnoreUnknownTools(ctx context.Context, ignore bool) context.Context {
+	return context.WithValue(ctx, ignoreUnknownToolsKey, ignore)
+}
+
+// IgnoreUnknownToolsFromContext retrieves the ignore-unknown-tools flag from context
+func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
+	if ignore, ok := ctx.Value(ignoreUnknownToolsKey).(bool); ok {
+		return ignore
+	}
+	return false
+}

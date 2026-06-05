@@ -25,16 +25,15 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	lookerds "github.com/googleapis/genai-toolbox/internal/sources/looker"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	"golang.org/x/oauth2"
 )
 
-const kind string = "looker-conversational-analytics"
+const resourceType string = "looker-conversational-analytics"
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
@@ -42,13 +41,13 @@ const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 3. **NO CHARTS:** You are STRICTLY FORBIDDEN from generating any charts, graphs, images, or any other form of visualization.`
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -56,11 +55,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetApiSettings() *rtl.ApiSettings
 	GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
+	LookerApiSettings() *rtl.ApiSettings
 }
 
 // Structs for building the JSON payload
@@ -84,7 +84,7 @@ type SecretBased struct {
 	ClientSecret string `json:"clientSecret"`
 }
 type TokenBased struct {
-	AccessToken string `json:"accessToken"`
+	AccessToken string `json:"access_token"`
 }
 type OAuthCredentials struct {
 	Secret SecretBased `json:"secret,omitzero"`
@@ -123,27 +123,25 @@ type CAPayload struct {
 	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &lookerds.Source{}
-
-var compatibleSources = [...]string{lookerds.SourceKind}
-
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -153,11 +151,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	if s.GoogleCloudProject() == "" {
-		return nil, fmt.Errorf("project must be defined for source to use with %q tool", kind)
+		return nil, fmt.Errorf("project must be defined for source to use with %q tool", resourceType)
 	}
 
 	userQueryParameter := parameters.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
@@ -174,7 +172,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	)
 
 	params := parameters.Parameters{userQueryParameter, exploreRefsParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// Get cloud-platform token source for Gemini Data Analytics API during initialization
 	ctx := context.Background()
@@ -185,15 +182,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:         cfg,
-		ApiSettings:    s.GetApiSettings(),
-		Project:        s.GoogleCloudProject(),
-		Location:       s.GoogleCloudLocation(),
-		Parameters:     params,
-		UseClientOAuth: s.UseClientAuthorization(),
-		TokenSource:    ts,
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+		TokenSource: ts,
 	}
 	return t, nil
 }
@@ -202,33 +197,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	ApiSettings    *rtl.ApiSettings
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-	Project        string
-	Location       string
-	TokenSource    oauth2.TokenSource
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
+	tools.BaseTool[Config]
+	TokenSource oauth2.TokenSource
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	var tokenStr string
-	var err error
 
 	// Get credentials for the API call
 	// Use cloud-platform token source for Gemini Data Analytics API
 	if t.TokenSource == nil {
-		return nil, fmt.Errorf("cloud-platform token source is missing")
+		return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
 	}
 	token, err := t.TokenSource.Token()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
+		return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
 	}
 	tokenStr = token.AccessToken
 
@@ -240,16 +232,20 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	ler := make([]LookerExploreReference, 0)
 	for _, er := range exploreReferences {
 		ler = append(ler, LookerExploreReference{
-			LookerInstanceUri: t.ApiSettings.BaseUrl,
+			LookerInstanceUri: source.LookerApiSettings().BaseUrl,
 			LookmlModel:       er.(map[string]any)["model"].(string),
 			Explore:           er.(map[string]any)["explore"].(string),
 		})
 	}
 	oauth_creds := OAuthCredentials{}
-	if t.UseClientOAuth {
-		oauth_creds.Token = TokenBased{AccessToken: string(accessToken)}
+	if source.UseClientAuthorization() {
+		rawToken, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, err.(util.ToolboxError)
+		}
+		oauth_creds.Token = TokenBased{AccessToken: rawToken}
 	} else {
-		oauth_creds.Secret = SecretBased{ClientId: t.ApiSettings.ClientId, ClientSecret: t.ApiSettings.ClientSecret}
+		oauth_creds.Secret = SecretBased{ClientId: source.LookerApiSettings().ClientId, ClientSecret: source.LookerApiSettings().ClientSecret}
 	}
 
 	lers := LookerExploreReferences{
@@ -260,13 +256,14 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	}
 
 	// Construct URL, headers, and payload
-	projectID := t.Project
-	location := t.Location
+	projectID := source.GoogleCloudProject()
+	location := source.GoogleCloudLocation()
 	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":  "application/json",
+		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":      "application/json",
+		"X-Goog-API-Client": util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -278,36 +275,24 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 			},
 			Options: ConversationOptions{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
-		ClientIdEnum: "GENAI_TOOLBOX",
+		ClientIdEnum: util.GDAClientID,
 	}
 
 	// Call the streaming API
 	response, err := getStream(ctx, caURL, payload, headers)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
+		return nil, util.NewClientServerError("failed to get response from conversational analytics API", http.StatusInternalServerError, err)
 	}
 
 	return response, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 // StreamMessage represents a single message object from the streaming API response.
@@ -548,4 +533,12 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 		}
 	}
 	return append(messages, newMessage)
+}
+
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return "", err
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }

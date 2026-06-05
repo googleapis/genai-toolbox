@@ -22,9 +22,27 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
+
+func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
+	t.Helper()
+	cfg := cloudmonitoring.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-cloudmonitoring",
+			Description: "Test Cloudmonitoring Tool",
+		},
+		Type:   toolType,
+		Source: "test-source",
+	}
+	toolIface, err := cfg.Initialize(nil)
+	if err != nil {
+		t.Fatalf("Initialize() error = %v", err)
+	}
+	return toolIface.(cloudmonitoring.Tool)
+}
 
 func TestTool_Invoke(t *testing.T) {
 	t.Parallel()
@@ -46,16 +64,7 @@ func TestTool_Invoke(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := cloudmonitoring.Tool{
-		Config: cloudmonitoring.Config{
-			Name:        "test-cloudmonitoring",
-			Kind:        "cloud-monitoring-query-prometheus",
-			Description: "Test Cloudmonitoring Tool",
-		},
-		AllParams: parameters.Parameters{},
-		BaseURL:   server.URL,
-		Client:    &http.Client{},
-	}
+	tool := newTestTool(t, "cloud-monitoring-query-prometheus")
 
 	// Define the test parameters
 	params := parameters.ParamValues{
@@ -64,7 +73,7 @@ func TestTool_Invoke(t *testing.T) {
 	}
 
 	// Invoke the tool
-	result, err := tool.Invoke(context.Background(), params, "")
+	result, err := tool.Invoke(context.Background(), nil, params, "")
 	if err != nil {
 		t.Fatalf("Invoke() error = %v", err)
 	}
@@ -92,16 +101,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := cloudmonitoring.Tool{
-		Config: cloudmonitoring.Config{
-			Name:        "test-cloudmonitoring",
-			Kind:        "clou-monitoring-query-prometheus",
-			Description: "Test Cloudmonitoring Tool",
-		},
-		AllParams: parameters.Parameters{},
-		BaseURL:   server.URL,
-		Client:    &http.Client{},
-	}
+	tool := newTestTool(t, "clou-monitoring-query-prometheus")
 
 	// Define the test parameters
 	params := parameters.ParamValues{
@@ -110,7 +110,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	}
 
 	// Invoke the tool
-	_, err := tool.Invoke(context.Background(), params, "")
+	_, err := tool.Invoke(context.Background(), nil, params, "")
 	if err == nil {
 		t.Fatal("Invoke() error = nil, want error")
 	}

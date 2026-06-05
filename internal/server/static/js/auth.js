@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { escapeHtml } from './sanitize.js';
+
 /**
  * Renders the Google Sign-In button using the GIS library.
  * @param {string} toolId The ID of the tool.
  * @param {string} clientId The Google OAuth Client ID.
- * @param {string} authProfileName The name of the auth service in tools file.
+ * @param {string} authProfileName The name of the auth service in config.
  */
 function renderGoogleSignInButton(toolId, clientId, authProfileName) { 
     const UNIQUE_ID_BASE = `${toolId}-${authProfileName}`;
@@ -68,7 +70,7 @@ function renderGoogleSignInButton(toolId, clientId, authProfileName) {
  * Handles the credential response from the Google Sign-In library.
  * @param {!CredentialResponse} response The credential response object from GIS.
  * @param {string} toolId The ID of the tool.
- * @param {string} authProfileName The name of the auth service in tools file.
+ * @param {string} authProfileName The name of the auth service in config.
  */
 function handleCredentialResponse(response, toolId, authProfileName) { 
     console.debug("handleCredentialResponse called with:", { response, toolId, authProfileName });
@@ -112,13 +114,14 @@ function handleCredentialResponse(response, toolId, authProfileName) {
 
 // creates the Google Auth method dropdown
 export function createGoogleAuthMethodItem(toolId, authProfileName) { 
+    const safeProfileName = escapeHtml(authProfileName);
     const UNIQUE_ID_BASE = `${toolId}-${authProfileName}`;
     const item = document.createElement('div');
 
     item.className = 'auth-method-item';
     item.innerHTML = `
         <div class="auth-method-header">
-            <span class="auth-method-label">Google ID Token (${authProfileName})</span>
+            <span class="auth-method-label">Google ID Token (${safeProfileName})</span>
             <button class="toggle-details-tab">Auto Setup</button>
         </div>
         <div class="auth-method-details" id="google-auth-details-${UNIQUE_ID_BASE}" style="display: none;">

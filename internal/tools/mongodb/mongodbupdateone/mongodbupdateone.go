@@ -16,97 +16,84 @@ package mongodbupdateone
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"slices"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-const kind string = "mongodb-update-one"
+const resourceType string = "mongodb-update-one"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
-type Config struct {
-	Name          string                `yaml:"name" validate:"required"`
-	Kind          string                `yaml:"kind" validate:"required"`
-	Source        string                `yaml:"source" validate:"required"`
-	AuthRequired  []string              `yaml:"authRequired" validate:"required"`
-	Description   string                `yaml:"description" validate:"required"`
-	Database      string                `yaml:"database" validate:"required"`
-	Collection    string                `yaml:"collection" validate:"required"`
-	FilterPayload string                `yaml:"filterPayload" validate:"required"`
-	FilterParams  parameters.Parameters `yaml:"filterParams"`
-	UpdatePayload string                `yaml:"updatePayload" validate:"required"`
-	UpdateParams  parameters.Parameters `yaml:"updateParams" validate:"required"`
+type compatibleSource interface {
+	MongoClient() *mongo.Client
+	UpdateOne(context.Context, string, bool, string, string, string, bool) (any, error)
+}
 
-	Canonical bool `yaml:"canonical" validate:"required"`
-	Upsert    bool `yaml:"upsert"`
+type Config struct {
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                `yaml:"type" validate:"required"`
+	Source           string                `yaml:"source" validate:"required"`
+	Database         string                `yaml:"database" validate:"required"`
+	Collection       string                `yaml:"collection" validate:"required"`
+	FilterPayload    string                `yaml:"filterPayload" validate:"required"`
+	FilterParams     parameters.Parameters `yaml:"filterParams"`
+	UpdatePayload    string                `yaml:"updatePayload" validate:"required"`
+	UpdateParams     parameters.Parameters `yaml:"updateParams" validate:"required"`
+
+	Canonical   bool                   `yaml:"canonical"`
+	Upsert      bool                   `yaml:"upsert"`
+	Annotations *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify the source is compatible
-	s, ok := rawS.(*mongosrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `mongodb`", kind)
-	}
-
-	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.FilterParams, cfg.UpdateParams)
 
-	// Verify no duplicate parameter names
-	err := parameters.CheckDuplicateParameters(allParameters)
-	if err != nil {
+	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
 		return nil, err
 	}
 
-	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
-
 	if paramManifest == nil {
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
-
-	// finish tool setup
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		database:    s.Client.Database(cfg.Database),
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -114,67 +101,31 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters
-
-	database    *mongo.Database
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-}
-
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	paramsMap := params.AsMap()
-
-	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.FilterPayload, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("error populating filter: %s", err)
-	}
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
-	}
-
-	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOne", t.UpdatePayload, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get update: %w", err)
-	}
-
-	var update = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(updateString), t.Canonical, &update)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
-	}
-
-	res, err := t.database.Collection(t.Collection).UpdateOne(ctx, filter, update, options.Update().SetUpsert(t.Upsert))
-	if err != nil {
-		return nil, fmt.Errorf("error updating collection: %w", err)
-	}
-
-	return res.ModifiedCount, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
+}
+
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	paramsMap := params.AsMap()
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.Cfg.FilterPayload, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("error populating filter", err)
+	}
+	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOne", t.Cfg.UpdatePayload, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("unable to get update", err)
+	}
+	resp, err := source.UpdateOne(ctx, filterString, t.Cfg.Canonical, updateString, t.Cfg.Database, t.Cfg.Collection, t.Cfg.Upsert)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
 }

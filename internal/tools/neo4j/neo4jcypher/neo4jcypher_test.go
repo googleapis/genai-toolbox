@@ -17,11 +17,11 @@ package neo4jcypher
 import (
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -37,29 +37,31 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: neo4j-cypher
-					source: my-neo4j-instance
-					description: some tool description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					statement: |
-						MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;
-					parameters:
-						- name: country
-						  type: string
-						  description: country parameter description
+            kind: tool
+            name: example_tool
+            type: neo4j-cypher
+            source: my-neo4j-instance
+            description: some tool description
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
+            statement: |
+                MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;
+            parameters:
+                - name: country
+                  type: string
+                  description: country parameter description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Kind:         "neo4j-cypher",
-					Source:       "my-neo4j-instance",
-					Description:  "some tool description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Statement:    "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "neo4j-cypher",
+					Source:    "my-neo4j-instance",
+					Statement: "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("country", "country parameter description"),
 					},
@@ -69,15 +71,12 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

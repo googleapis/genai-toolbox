@@ -16,61 +16,60 @@ package lookeradddashboardelement
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-add-dashboard-element"
+const resourceType string = "looker-add-dashboard-element"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
+type compatibleSource interface {
+	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
+	LookerApiSettings() *rtl.ApiSettings
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
+}
+
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(*lookersrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	params := lookercommon.GetQueryParameters()
@@ -85,22 +84,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		"",
 	)
 	params = append(params, vizParameter)
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	dashFilters := parameters.NewArrayParameterWithRequired("dashboard_filters",
+		`An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
+		false,
+		parameters.NewMapParameterWithDefault("dashboard_filter",
+			map[string]any{},
+			`A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
+			"",
+		),
+	)
+	params = append(params, dashFilters)
 
 	// finish tool setup
 	return Tool{
-		Config:         cfg,
-		Parameters:     params,
-		UseClientOAuth: s.UseClientOAuth,
-		Client:         s.Client,
-		ApiSettings:    s.ApiSettings,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewWriteAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
 	}, nil
 }
 
@@ -108,17 +110,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	UseClientOAuth bool
-	Client         *v4.LookerSDK
-	ApiSettings    *rtl.ApiSettings
-	Parameters     parameters.Parameters `yaml:"parameters"`
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 var (
@@ -126,41 +122,111 @@ var (
 	visType  string = "vis"
 )
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
+
 	logger.DebugContext(ctx, "params = ", params)
+
 	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("error building query request: %w", err)
+		return nil, util.NewAgentError("error building query request", err)
 	}
 
 	paramsMap := params.AsMap()
-	dashboard_id := paramsMap["dashboard_id"].(string)
-	title := paramsMap["title"].(string)
 
-	visConfig := paramsMap["vis_config"].(map[string]any)
+	dashboard_id, ok := paramsMap["dashboard_id"].(string)
+	if !ok {
+		return nil, util.NewAgentError("dashboard_id parameter missing or invalid", nil)
+	}
+
+	title, ok := paramsMap["title"].(string)
+	if !ok {
+		title = ""
+	}
+
+	visConfig, ok := paramsMap["vis_config"].(map[string]any)
+	if !ok {
+		visConfig = make(map[string]any)
+	}
 	wq.VisConfig = &visConfig
 
-	qrespFields := "id"
-
-	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
+	}
+	if escErr := lookercommon.EscapeUnquotedParameterFilters(ctx, sdk, wq, source.LookerApiSettings()); escErr != nil {
+		logger.WarnContext(ctx, "skipping unquoted-parameter escape, metadata lookup failed", "error", escErr)
 	}
 
-	qresp, err := sdk.CreateQuery(*wq, qrespFields, t.ApiSettings)
+	qresp, err := sdk.CreateQuery(*wq, "id", source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create query request: %w", err)
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
+		return nil, util.ProcessGeneralError(err)
 	}
 
+	dashFilters := []any{}
+	if v, ok := paramsMap["dashboard_filters"]; ok {
+		if v != nil {
+			if df, ok := v.([]any); ok {
+				dashFilters = df
+			}
+		}
+	}
+
+	var filterables []v4.ResultMakerFilterables
+	for _, m := range dashFilters {
+		f, ok := m.(map[string]any)
+		if !ok {
+			return nil, util.NewAgentError("invalid dashboard filter structure", nil)
+		}
+		name, ok := f["dashboard_filter_name"].(string)
+		if !ok {
+			return nil, util.NewAgentError("error processing dashboard filter: missing dashboard_filter_name", nil)
+		}
+		field, ok := f["field"].(string)
+		if !ok {
+			return nil, util.NewAgentError("error processing dashboard filter: missing field", nil)
+		}
+		listener := v4.ResultMakerFilterablesListen{
+			DashboardFilterName: &name,
+			Field:               &field,
+		}
+		listeners := []v4.ResultMakerFilterablesListen{listener}
+
+		filter := v4.ResultMakerFilterables{
+			Listen: &listeners,
+		}
+
+		filterables = append(filterables, filter)
+	}
+
+	if len(filterables) == 0 {
+		filterables = nil
+	}
+
+	wrm := v4.WriteResultMakerWithIdVisConfigAndDynamicFields{
+		Query:       wq,
+		VisConfig:   &visConfig,
+		Filterables: &filterables,
+	}
 	wde := v4.WriteDashboardElement{
 		DashboardId: &dashboard_id,
 		Title:       &title,
+		ResultMaker: &wrm,
+		Query:       wq,
 		QueryId:     qresp.Id,
 	}
+
 	switch len(visConfig) {
 	case 0:
 		wde.Type = &dataType
@@ -175,9 +241,9 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		Fields: &fields,
 	}
 
-	resp, err := sdk.CreateDashboardElement(req, t.ApiSettings)
+	resp, err := sdk.CreateDashboardElement(req, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create dashboard element request: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
@@ -188,22 +254,18 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return "", err
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }

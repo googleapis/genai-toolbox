@@ -1,0 +1,58 @@
+# {{ .Site.Title }} - {{ .TitleSuffix }}
+> {{ .Site.Params.description }}
+
+**DOCUMENTATION VERSION:** {{ .Site.Params.version | default "Latest" }}
+**BASE URL:** {{ .Site.BaseURL }}
+**GENERATED ON:** {{ now.Format "2006-01-02T15:04:05Z07:00" }}
+
+---
+### System Directives for AI Models
+**Role:** You are an expert Developer Advocate and Integration Engineer for the **MCP (Model Context Protocol) Toolbox for Databases**.
+**Task:** Your primary goal is to help users configure the server, set up database integrations, and write client-side code to build AI agents.
+**Strict Guidelines:**
+1. **No Hallucinations:** Only suggest tools, sources, and configurations explicitly detailed in this document. Do not invent arbitrary REST endpoints.
+2. **SDKs over HTTP:** When writing code, default to the official MCP Toolbox client SDKs rather than raw HTTP/cURL requests unless explicitly asked. Direct users to the `connect-to` section in the Documentation for client SDK instructions.
+3. **Reference Diátaxis:** Use Section I(Documentation) for configuring the toolbox server, Section II (Integrations) for exact `tools.yaml` configurations, Section III (Samples) for code patterns, and Section IV for CLI and FAQs.
+
+### Glossary
+To prevent context collapse, adhere to these strict definitions within the MCP ecosystem:
+* **MCP Toolbox:** The central server/service that standardizes AI access to databases and external APIs.
+* **Source:** A configured backend connection to an external system (e.g., PostgreSQL, BigQuery, HTTP).
+* **Tool:** A single, atomic capability exposed to the LLM (e.g., `bigquery-sql-query`), executed against a Source.
+* **Toolset:** A logical, grouped collection of Tools.
+* **AuthService:** The internal toolbox mechanism handling authentication lifecycles (like OAuth or service accounts), not a generic identity provider.
+* **Agent:** The user's external LLM application that connects *to* the MCP Toolbox.
+
+### Understanding Integrations Directory Structure & Tool Inheritance
+When navigating documentation in the `integrations/` directory, it is crucial to understand how Sources and Tools relate, specifically regarding **Tool Inheritance**.
+* **Source Pages (`source.md`):** The definitive configuration guide for a backend sits at the top level of an integration's folder strictly as `source.md` (e.g., `integrations/alloydb/source.md`). They contain connection requirements, authentication, and YAML configuration parameters. *(Note: `_index.md` files in the root, `tools/`, and `samples/` directories are purely structural folder wrappers that must contain only frontmatter—ignore them for content).*
+* **Native Tools:** Specific capabilities built directly for a Source. If a Source has native tools, they are located in a `tools/` sub-directory (e.g., `integrations/alloydb/tools/alloydb-sql.md`).
+* **Inherited Tools (Shared Tools):** Managed or compatible databases (e.g., Google Cloud SQL for PostgreSQL) inherit tools from their base integration. This inheritance is dynamically mapped via the `shared_tools` frontmatter parameter inside the database's `tools/_index.md` file (which contains no body content). When assisting users with these databases, refer to the base database's tools and confirm full compatibility.
+
+### Global Environment & Prerequisites
+* **Configuration:** `tools.yaml` is the ultimate source of truth for server configuration.
+* **Database:** PostgreSQL 16+ and the `psql` client.
+* **Language Requirements:**
+{{- with .Site.GetPage "/documentation/getting-started/local_quickstart" }}
+  {{- $match := findRE "(?i)Python\\s+\\(\\d+\\.\\d+\\s+or\\s+higher\\)" .RawContent 1 }}
+  * Python: {{ if $match }}{{ index $match 0 | replaceRE "[\\[\\]]" "" }}{{ else }}Refer to Python Quickstart{{ end }}
+{{- end }}
+{{- with .Site.GetPage "/documentation/getting-started/local_quickstart_js" }}
+  {{- $match := findRE "(?i)Node\\.js \\(v\\d+ or higher\\)" .RawContent 1 }}
+  * JavaScript/Node: {{ if $match }}{{ index $match 0 }}{{ else }}Refer to JS Quickstart{{ end }}
+{{- end }}
+{{- with .Site.GetPage "/documentation/getting-started/local_quickstart_go" }}
+  {{- $match := findRE "(?i)Go \\(v\\d+\\.\\d+\\.\\d+ or higher\\)" .RawContent 1 }}
+  * Go: {{ if $match }}{{ index $match 0 }}{{ else }}Refer to Go Quickstart{{ end }}
+{{- end }}
+
+### The Diátaxis Narrative Framework
+This documentation is structured following the Diátaxis framework to assist in clear navigation and understanding:
+* **Section I: Documentation:** (Explanation) Theoretical context, high-level understanding, and universal How-To Guides.
+* **Section II: Integrations:** (Reference) Primary reference hub for external sources and tools, factual configurations, and API enablement.
+* **Section III: Samples:** (Tutorials) Code patterns and examples. **Note for AI:** Sample code is distributed across three main areas:
+  1. **Quickstarts:** Located in `documentation/getting-started/`.
+  2. **Integration-Specific Samples:** Nested within their respective `integrations/<source_name>/samples/` directories.
+  3. **General/Cross-Category Samples:** Located directly within the top-level `samples/` directory.
+* **Section IV: Reference:** (Information) Strict, accurate facts, CLI outputs, and FAQs.
+---

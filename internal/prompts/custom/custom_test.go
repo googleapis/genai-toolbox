@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestConfig(t *testing.T) {
@@ -42,7 +42,7 @@ func TestConfig(t *testing.T) {
 		Arguments: testArgs,
 	}
 
-	// initialize and check kind
+	// initialize and check type
 	p, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() failed: %v", err)
@@ -50,8 +50,8 @@ func TestConfig(t *testing.T) {
 	if p == nil {
 		t.Fatal("Initialize() returned a nil prompt")
 	}
-	if cfg.PromptConfigKind() != "custom" {
-		t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "custom")
+	if cfg.PromptConfigType() != "custom" {
+		t.Errorf("PromptConfigType() = %q, want %q", cfg.PromptConfigType(), "custom")
 	}
 
 	t.Run("Manifest", func(t *testing.T) {
@@ -65,21 +65,6 @@ func TestConfig(t *testing.T) {
 		got := p.Manifest()
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
-		}
-	})
-
-	t.Run("McpManifest", func(t *testing.T) {
-		want := prompts.McpManifest{
-			Name:        "TestConfig",
-			Description: "A test config.",
-			Arguments: []prompts.ArgMcpManifest{
-				{Name: "name", Description: "The name to use.", Required: true},
-				{Name: "location", Description: "The location.", Required: false},
-			},
-		}
-		got := p.McpManifest()
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
 		}
 	})
 

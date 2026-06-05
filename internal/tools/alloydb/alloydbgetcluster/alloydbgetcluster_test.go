@@ -17,11 +17,11 @@ package alloydbgetcluster_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbgetcluster "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	alloydbgetcluster "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbgetcluster"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -37,56 +37,57 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				get-my-cluster:
-					kind: alloydb-get-cluster
-					source: my-alloydb-admin-source
-					description: some description
-			`,
+            kind: tool
+            name: get-my-cluster
+            type: alloydb-get-cluster
+            source: my-alloydb-admin-source
+            description: some description
+            `,
 			want: server.ToolConfigs{
 				"get-my-cluster": alloydbgetcluster.Config{
-					Name:         "get-my-cluster",
-					Kind:         "alloydb-get-cluster",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-my-cluster",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "alloydb-get-cluster",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
 		{
 			desc: "with auth required",
 			in: `
-			tools:
-				get-my-cluster-auth:
-					kind: alloydb-get-cluster
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-			`,
+            kind: tool
+            name: get-my-cluster-auth
+            type: alloydb-get-cluster
+            source: my-alloydb-admin-source
+            description: some description
+            authRequired: 
+            - my-google-auth-service
+            - other-auth-service
+            `,
 			want: server.ToolConfigs{
 				"get-my-cluster-auth": alloydbgetcluster.Config{
-					Name:         "get-my-cluster-auth",
-					Kind:         "alloydb-get-cluster",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-my-cluster-auth",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "alloydb-get-cluster",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

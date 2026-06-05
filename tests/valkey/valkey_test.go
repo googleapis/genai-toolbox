@@ -22,14 +22,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/valkey-io/valkey-go"
 )
 
 var (
-	ValkeySourceKind = "valkey"
-	ValkeyToolKind   = "valkey"
+	ValkeySourceType = "valkey"
+	ValkeyToolType   = "valkey"
 	ValkeyAddress    = os.Getenv("VALKEY_ADDRESS")
 )
 
@@ -39,7 +39,7 @@ func getValkeyVars(t *testing.T) map[string]any {
 		t.Fatal("'VALKEY_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":         ValkeySourceKind,
+		"type":         ValkeySourceType,
 		"address":      []string{ValkeyAddress},
 		"disableCache": true,
 	}
@@ -72,7 +72,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	client, err := initValkeyClient(ctx, []string{ValkeyAddress})
 	if err != nil {
@@ -84,7 +84,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, ValkeyToolKind)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, ValkeyToolType)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

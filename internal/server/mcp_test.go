@@ -27,15 +27,23 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 const jsonrpcVersion = "2.0"
 const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
+const protocolVersion20251125 = "2025-11-25"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -74,8 +82,8 @@ var prompt2Args = []any{
 }
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
@@ -229,7 +237,7 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				"id":      "tools-call-tool4",
 				"error": map[string]any{
 					"code":    -32600.0,
-					"message": "unauthorized Tool call: Please make sure your specify correct auth headers: unauthorized",
+					"message": "unauthorized Tool call: Please make sure you specify correct auth headers",
 				},
 			},
 		},
@@ -318,7 +326,7 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				Params: map[string]any{
 					"name": "prompt2",
 					"arguments": map[string]any{
-						"arg1": 42, // prompt2 expects a string, we send a number
+						"arg1": 42,
 					},
 				},
 			},
@@ -419,8 +427,8 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
@@ -484,6 +492,23 @@ func TestMcpEndpoint(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "version 2025-11-25",
+			protocol: protocolVersion20251125,
+			idHeader: false,
+			initWant: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "mcp-initialize",
+				"result": map[string]any{
+					"protocolVersion": "2025-11-25",
+					"capabilities": map[string]any{
+						"tools":   map[string]any{"listChanged": false},
+						"prompts": map[string]any{"listChanged": false},
+					},
+					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+				},
+			},
+		},
 	}
 	for _, vtc := range versTestCases {
 		t.Run(vtc.name, func(t *testing.T) {
@@ -493,8 +518,7 @@ func TestMcpEndpoint(t *testing.T) {
 			if sessionId != "" {
 				header["Mcp-Session-Id"] = sessionId
 			}
-
-			if vtc.protocol == protocolVersion20250618 {
+			if vtc.protocol != protocolVersion20241105 && vtc.protocol != protocolVersion20250326 {
 				header["MCP-Protocol-Version"] = vtc.protocol
 			}
 
@@ -764,6 +788,7 @@ func TestMcpEndpoint(t *testing.T) {
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
+						"id":      nil,
 						"error": map[string]any{
 							"code":    -32600.0,
 							"message": "not supporting batch requests",
@@ -816,7 +841,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"id":      "tools-call-tool4",
 						"error": map[string]any{
 							"code":    -32600.0,
-							"message": "unauthorized Tool call: Please make sure your specify correct auth headers: unauthorized",
+							"message": "unauthorized Tool call: Please make sure you specify correct auth headers",
 						},
 					},
 				},
@@ -874,10 +899,6 @@ func TestMcpEndpoint(t *testing.T) {
 						var got map[string]any
 						if err := json.Unmarshal(body, &got); err != nil {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
-						}
-						// for decode failure, a random uuid is generated in server
-						if tc.want["id"] == nil {
-							tc.want["id"] = got["id"]
 						}
 						if !reflect.DeepEqual(got, tc.want) {
 							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
@@ -972,7 +993,6 @@ func TestSseEndpoint(t *testing.T) {
 	contentType := "text/event-stream"
 	cacheControl := "no-cache"
 	connection := "keep-alive"
-	accessControlAllowOrigin := "*"
 
 	testCases := []struct {
 		name   string
@@ -1038,9 +1058,6 @@ func TestSseEndpoint(t *testing.T) {
 			if gotConnection := resp.Header.Get("Connection"); gotConnection != connection {
 				t.Fatalf("unexpected content-type header: want %s, got %s", connection, gotConnection)
 			}
-			if gotAccessControlAllowOrigin := resp.Header.Get("Access-Control-Allow-Origin"); gotAccessControlAllowOrigin != accessControlAllowOrigin {
-				t.Fatalf("unexpected cache-control header: want %s, got %s", accessControlAllowOrigin, gotAccessControlAllowOrigin)
-			}
 
 			buffer := make([]byte, 1024)
 			n, err := resp.Body.Read(buffer)
@@ -1074,8 +1091,8 @@ func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mockTools := []MockTool{tool1, tool2, tool3}
-	mockPrompts := []MockPrompt{prompt1, prompt2}
+	mockTools := []testutils.MockTool{tool1, tool2, tool3}
+	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
 	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
@@ -1088,7 +1105,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
@@ -1106,7 +1123,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	server := &Server{
 		version:         fakeVersionString,
@@ -1148,5 +1165,120 @@ func TestStdioSession(t *testing.T) {
 	want := fmt.Sprintf(`"%s"`, write) + "\n"
 	if read != want {
 		t.Fatalf("unexpected read: got %s, want %s", read, want)
+	}
+}
+
+func TestSseManagerGetNonExistentSession(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	m := newSseManager(ctx)
+
+	// Must not panic when session ID doesn't exist in the map.
+	session, ok := m.get("non-existent-id")
+	if ok {
+		t.Error("expected ok to be false for non-existent session")
+	}
+	if session != nil {
+		t.Error("expected nil session for non-existent ID")
+	}
+}
+
+func TestSseManagerGetNilSessionValue(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	m := newSseManager(ctx)
+	m.sseSessions["nil-session-id"] = nil
+
+	session, ok := m.get("nil-session-id")
+	if ok {
+		t.Error("expected ok to be false for nil session value")
+	}
+	if session != nil {
+		t.Error("expected nil session for nil session value")
+	}
+}
+
+// withTraceContextPropagator registers the W3C trace-context propagator globally
+// for the duration of the test. extractMeta delegates to otel.GetTextMapPropagator,
+// and the default global propagator is a no-op — so without this helper the
+// "extracted" trace context would always be invalid.
+func withTraceContextPropagator(t *testing.T) {
+	t.Helper()
+	prev := otel.GetTextMapPropagator()
+	otel.SetTextMapPropagator(propagation.TraceContext{})
+	t.Cleanup(func() { otel.SetTextMapPropagator(prev) })
+}
+
+func TestExtractMeta_EmptyOrInvalidBody(t *testing.T) {
+	cases := map[string][]byte{
+		"empty":      []byte(""),
+		"not json":   []byte("not json"),
+		"no _meta":   []byte(`{"params":{}}`),
+		"no params":  []byte(`{"method":"tools/call"}`),
+		"empty meta": []byte(`{"params":{"_meta":{}}}`),
+	}
+	for name, body := range cases {
+		t.Run(name, func(t *testing.T) {
+			ctx := extractMeta(context.Background(), body)
+			if util.TelemetryAttributesFromContext(ctx) != nil {
+				t.Error("expected no telemetry attributes")
+			}
+		})
+	}
+}
+
+func TestExtractMeta_TraceparentOnly(t *testing.T) {
+	withTraceContextPropagator(t)
+	body := []byte(`{"params":{"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}`)
+	ctx := extractMeta(context.Background(), body)
+
+	sc := trace.SpanContextFromContext(ctx)
+	if !sc.IsValid() {
+		t.Fatal("expected valid span context from extracted traceparent")
+	}
+	if got := sc.TraceID().String(); got != "0af7651916cd43dd8448eb211c80319c" {
+		t.Errorf("trace id mismatch: got %s", got)
+	}
+	if util.TelemetryAttributesFromContext(ctx) != nil {
+		t.Error("expected no telemetry attributes when only traceparent is sent")
+	}
+}
+
+func TestExtractMeta_TelemetryAttrsOnly(t *testing.T) {
+	body := []byte(`{"params":{"_meta":{"dev.mcp-toolbox/telemetry":{` +
+		`"client.name":"toolbox-langchain-python",` +
+		`"client.version":"v0.1.0",` +
+		`"client.model":"gemini-2.5-flash",` +
+		`"client.user.id":"user-123",` +
+		`"client.agent.id":"agent-456"}}}}`)
+
+	ta := util.TelemetryAttributesFromContext(extractMeta(context.Background(), body))
+	if ta == nil {
+		t.Fatal("expected TelemetryAttributes in context")
+	}
+	want := util.TelemetryAttributes{
+		ClientName: "toolbox-langchain-python", ClientVersion: "v0.1.0",
+		ClientModel: "gemini-2.5-flash", ClientUserID: "user-123", ClientAgentID: "agent-456",
+	}
+	if *ta != want {
+		t.Errorf("got %+v, want %+v", *ta, want)
+	}
+}
+
+func TestExtractMeta_TraceparentAndTelemetryBoth(t *testing.T) {
+	withTraceContextPropagator(t)
+	body := []byte(`{"params":{"_meta":{` +
+		`"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",` +
+		`"dev.mcp-toolbox/telemetry":{"client.name":"foo","client.version":"v1"}}}}`)
+	ctx := extractMeta(context.Background(), body)
+
+	if !trace.SpanContextFromContext(ctx).IsValid() {
+		t.Error("expected valid span context")
+	}
+	ta := util.TelemetryAttributesFromContext(ctx)
+	if ta == nil || ta.ClientName != "foo" || ta.ClientVersion != "v1" {
+		t.Errorf("expected telemetry attrs alongside traceparent, got %+v", ta)
 	}
 }

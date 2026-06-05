@@ -17,33 +17,17 @@ package clickhouse
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-func TestListTablesConfigToolConfigKind(t *testing.T) {
+func TestListTablesConfigToolConfigType(t *testing.T) {
 	cfg := Config{}
-	if cfg.ToolConfigKind() != listTablesKind {
-		t.Errorf("expected %q, got %q", listTablesKind, cfg.ToolConfigKind())
-	}
-}
-
-func TestListTablesConfigInitializeMissingSource(t *testing.T) {
-	cfg := Config{
-		Name:        "test-list-tables",
-		Kind:        listTablesKind,
-		Source:      "missing-source",
-		Description: "Test list tables tool",
-	}
-
-	srcs := map[string]sources.Source{}
-	_, err := cfg.Initialize(srcs)
-	if err == nil {
-		t.Error("expected error for missing source")
+	if cfg.ToolConfigType() != listTablesType {
+		t.Errorf("expected %q, got %q", listTablesType, cfg.ToolConfigType())
 	}
 }
 
@@ -60,33 +44,33 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: clickhouse-list-tables
-					source: my-instance
-					description: some description
-			`,
+            kind: tool
+            name: example_tool
+            type: clickhouse-list-tables
+            source: my-instance
+            description: some description
+            `,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Kind:         "clickhouse-list-tables",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "clickhouse-list-tables",
+					Source: "my-instance",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			// Parse contents
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -96,13 +80,12 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 func TestListTablesToolParseParams(t *testing.T) {
 	databaseParam := parameters.NewStringParameter("database", "The database to list tables from.")
 	tool := Tool{
-		Config: Config{
-			Parameters: parameters.Parameters{databaseParam},
+		BaseTool: tools.BaseTool[Config]{
+			StaticParameters: parameters.Parameters{databaseParam},
 		},
-		AllParams: parameters.Parameters{databaseParam},
 	}
 
-	params, err := tool.ParseParams(map[string]any{"database": "test_db"}, map[string]map[string]any{})
+	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{"database": "test_db"}, map[string]map[string]any{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -114,5 +97,53 @@ func TestListTablesToolParseParams(t *testing.T) {
 	mapParams := params.AsMap()
 	if mapParams["database"] != "test_db" {
 		t.Errorf("expected database parameter to be 'test_db', got %v", mapParams["database"])
+	}
+}
+
+func TestValidIdentifierRegexp(t *testing.T) {
+	tcs := []struct {
+		in    string
+		valid bool
+	}{
+		// Allowed: plain identifiers.
+		{"default", true},
+		{"my_db", true},
+		{"DB1", true},
+		{"_internal", true},
+		{"a", true},
+
+		// Rejected: empty, whitespace, control characters.
+		{"", false},
+		{" ", false},
+		{"\t", false},
+		{"\n", false},
+
+		// Rejected: leading digit (ClickHouse identifier rule).
+		{"1db", false},
+
+		// Rejected: identifier-quoting characters that would let the value
+		// re-open the identifier and append clauses after it.
+		{"`default`", false},
+		{`"default"`, false},
+
+		// Rejected: separators / statement terminators / metacharacters.
+		{"default;DROP TABLE x", false},
+		{"default LIKE '%'", false},
+		{"default LIMIT 0 FORMAT JSON", false},
+		{"default INTO OUTFILE '/tmp/x'", false},
+		{"system.tables", false},
+		{"default--", false},
+		{"default/*", false},
+
+		// Rejected: unicode and surrounding spaces.
+		{"𝐝𝐞𝐟𝐚𝐮𝐥𝐭", false},
+		{"  default  ", false},
+		{"default ", false},
+		{" default", false},
+	}
+	for _, tc := range tcs {
+		if got := validIdentifier.MatchString(tc.in); got != tc.valid {
+			t.Errorf("validIdentifier.MatchString(%q) = %v, want %v", tc.in, got, tc.valid)
+		}
 	}
 }

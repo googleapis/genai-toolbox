@@ -21,17 +21,19 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	_ "github.com/nakagami/firebirdsql"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 )
 
-const SourceKind string = "firebird"
+const SourceType string = "firebird"
 
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -45,7 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
@@ -53,8 +55,8 @@ type Config struct {
 	Database string `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -82,8 +84,8 @@ type Source struct {
 	Db *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -94,8 +96,55 @@ func (s *Source) FirebirdDB() *sql.DB {
 	return s.Db
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	rows, err := s.FirebirdDB().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get columns: %w", err)
+	}
+
+	values := make([]any, len(cols))
+	scanArgs := make([]any, len(values))
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+
+	out := []any{}
+	for rows.Next() {
+
+		err = rows.Scan(scanArgs...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+
+		vMap := make(map[string]any)
+		for i, col := range cols {
+			if b, ok := values[i].([]byte); ok {
+				vMap[col] = string(b)
+			} else {
+				vMap[col] = values[i]
+			}
+		}
+		out = append(out, vMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	// In most cases, DML/DDL statements like INSERT, UPDATE, CREATE, etc. might return no rows
+	// However, it is also possible that this was a query that was expected to return rows
+	// but returned none, a case that we cannot distinguish here.
+	return out, nil
+}
+
 func initFirebirdConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
-	_, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	_, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// urlExample := "user:password@host:port/path/to/database.fdb"

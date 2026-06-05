@@ -31,17 +31,18 @@ import (
 	database "cloud.google.com/go/spanner/admin/database/apiv1"
 	"cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	SpannerSourceKind = "spanner"
-	SpannerToolKind   = "spanner-sql"
+	SpannerSourceType = "spanner"
+	SpannerToolType   = "spanner-sql"
 	SpannerProject    = os.Getenv("SPANNER_PROJECT")
 	SpannerDatabase   = os.Getenv("SPANNER_DATABASE")
 	SpannerInstance   = os.Getenv("SPANNER_INSTANCE")
+	SpannerPgDatabase = os.Getenv("SPANNER_PG_DATABASE")
 )
 
 func getSpannerVars(t *testing.T) map[string]any {
@@ -55,7 +56,7 @@ func getSpannerVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     SpannerSourceKind,
+		"type":     SpannerSourceType,
 		"project":  SpannerProject,
 		"instance": SpannerInstance,
 		"database": SpannerDatabase,
@@ -66,16 +67,8 @@ func initSpannerClients(ctx context.Context, project, instance, dbname string) (
 	// Configure the connection to the database
 	db := fmt.Sprintf("projects/%s/instances/%s/databases/%s", project, instance, dbname)
 
-	// Configure session pool to automatically clean inactive transactions
-	sessionPoolConfig := spanner.SessionPoolConfig{
-		TrackSessionHandles: true,
-		InactiveTransactionRemovalOptions: spanner.InactiveTransactionRemovalOptions{
-			ActionOnInactiveTransaction: spanner.WarnAndClose,
-		},
-	}
-
 	// Create Spanner client (for queries)
-	dataClient, err := spanner.NewClientWithConfig(context.Background(), db, spanner.ClientConfig{SessionPoolConfig: sessionPoolConfig})
+	dataClient, err := spanner.NewClient(context.Background(), db)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to create new Spanner client: %w", err)
 	}
@@ -94,7 +87,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Create Spanner client
 	dataClient, adminClient, err := initSpannerClients(ctx, SpannerProject, SpannerInstance, SpannerDatabase)
@@ -128,12 +121,56 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	teardownTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createStatementTmpl, "", tableNameTemplateParam, dbString, nil)
 	defer teardownTableTmpl(t)
 
+	// set up for graph tool
+	nodeTableName := "node_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createNodeStatementTmpl := fmt.Sprintf("CREATE TABLE %s (id INT64 NOT NULL) PRIMARY KEY (id)", nodeTableName)
+	teardownNodeTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createNodeStatementTmpl, "", nodeTableName, dbString, nil)
+	defer teardownNodeTableTmpl(t)
+
+	edgeTableName := "edge_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createEdgeStatementTmpl := fmt.Sprintf(`
+	CREATE TABLE %[1]s (
+		id INT64 NOT NULL,
+		target_id INT64 NOT NULL,
+		FOREIGN KEY (target_id) REFERENCES %[2]s (id)
+	) PRIMARY KEY (id, target_id),
+	 INTERLEAVE IN PARENT %[2]s ON DELETE CASCADE
+	`, edgeTableName, nodeTableName)
+	teardownEdgeTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createEdgeStatementTmpl, "", edgeTableName, dbString, nil)
+	defer teardownEdgeTableTmpl(t)
+
+	graphName := "graph_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createGraphStmt := fmt.Sprintf(`
+	CREATE PROPERTY GRAPH %[3]s
+		NODE TABLES (
+			%[1]s
+		)
+		EDGE TABLES (
+			%[2]s
+				SOURCE KEY (id) REFERENCES %[1]s
+				DESTINATION KEY (target_id) REFERENCES %[1]s
+				LABEL EDGE
+		)
+	`, nodeTableName, edgeTableName, graphName)
+	teardownGraph := setupSpannerGraph(t, ctx, adminClient, createGraphStmt, graphName, dbString)
+	defer teardownGraph(t)
+
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
 	toolsFile = addTemplateParamConfig(t, toolsFile)
 	toolsFile = addSpannerListTablesConfig(t, toolsFile)
+	toolsFile = addSpannerListGraphsConfig(t, toolsFile)
+	toolsFile = addSpannerSearchCatalogConfig(t, toolsFile)
+
+	// Set up table for semantic search
+	vectorTableName, tearDownVectorTable := setupSpannerVectorTable(t, ctx, adminClient, dbString)
+	defer tearDownVectorTable(t)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := getSpannerVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, SpannerToolType, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -175,11 +212,22 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		tests.DisableDdlTest(),
 	)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
-	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
+	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runSpannerListTablesTest(t, tableNameParam, tableNameAuth, tableNameTemplateParam)
+	runSpannerListGraphsTest(t, graphName)
+	tests.RunSearchCatalogToolTest(t, tests.SearchCatalogTestParams{
+		ContainerParamName: "databaseIds",
+		ContainerName:      SpannerDatabase,
+		ProjectID:          SpannerProject,
+		TargetName:         tableNameParam,
+		WantKey:            "DisplayName",
+		AllowEmpty:         true,
+		CheckValue:         false,
+	})
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }
 
-// getSpannerToolInfo returns statements and param for my-tool for spanner-sql kind
+// getSpannerToolInfo returns statements and param for my-tool for spanner-sql type
 func getSpannerParamToolInfo(tableName string) (string, string, string, string, string, string, map[string]any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX)) PRIMARY KEY (id)", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, @name1), (2, @name2), (3, @name3), (4, @name4)", tableName)
@@ -191,7 +239,7 @@ func getSpannerParamToolInfo(tableName string) (string, string, string, string, 
 	return createStatement, insertStatement, toolStatement, idToolStatement, nameToolStatement, arrayToolStatement, params
 }
 
-// getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql kind
+// getSpannerAuthToolInfo returns statements and param of my-auth-tool for spanner-sql type
 func getSpannerAuthToolInfo(tableName string) (string, string, string, map[string]any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), email STRING(MAX)) PRIMARY KEY (id)", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, @name1, @email1), (2, @name2, @email2)", tableName)
@@ -241,10 +289,43 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 		// tear down test
 		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
 			Database:   dbString,
-			Statements: []string{fmt.Sprintf("DROP TABLE %s", tableName)},
+			Statements: []string{fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)},
 		})
 		if err != nil {
 			t.Errorf("unable to start drop %s operation: %s", tableName, err)
+			return
+		}
+
+		opErr := op.Wait(ctx)
+		if opErr != nil {
+			t.Errorf("Teardown failed: %s", opErr)
+		}
+	}
+}
+
+// setupSpannerGraph creates a graph and inserts data into it.
+func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, createStatement, graphName, dbString string) func(*testing.T) {
+	// Create graph
+	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		Database:   dbString,
+		Statements: []string{createStatement},
+	})
+	if err != nil {
+		t.Fatalf("unable to start create graph operation %s: %s", graphName, err)
+	}
+	err = op.Wait(ctx)
+	if err != nil {
+		t.Fatalf("unable to create test graph %s: %s", graphName, err)
+	}
+
+	return func(t *testing.T) {
+		// tear down test
+		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   dbString,
+			Statements: []string{fmt.Sprintf("DROP PROPERTY GRAPH IF EXISTS %s", graphName)},
+		})
+		if err != nil {
+			t.Errorf("unable to start drop %s operation: %s", graphName, err)
 			return
 		}
 
@@ -262,18 +343,18 @@ func addSpannerExecuteSqlConfig(t *testing.T, config map[string]any) map[string]
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool-read-only"] = map[string]any{
-		"kind":        "spanner-execute-sql",
+		"type":        "spanner-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"readOnly":    true,
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "spanner-execute-sql",
+		"type":        "spanner-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "spanner-execute-sql",
+		"type":        "spanner-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -290,14 +371,14 @@ func addSpannerReadOnlyConfig(t *testing.T, config map[string]any) map[string]an
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["access-schema-read-only"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Tool to access information schema in read-only mode.",
 		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
 		"readOnly":    true,
 	}
 	tools["access-schema"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Tool to access information schema.",
 		"statement":   "SELECT schema_name FROM `INFORMATION_SCHEMA`.SCHEMATA WHERE schema_name='INFORMATION_SCHEMA';",
@@ -315,9 +396,75 @@ func addSpannerListTablesConfig(t *testing.T, config map[string]any) map[string]
 
 	// Add spanner-list-tables tool
 	tools["list-tables-tool"] = map[string]any{
-		"kind":        "spanner-list-tables",
+		"type":        "spanner-list-tables",
 		"source":      "my-instance",
 		"description": "Lists tables with their schema information",
+	}
+
+	config["tools"] = tools
+	return config
+}
+
+// addSpannerSearchCatalogConfig adds the spanner-search-catalog tool configuration
+func addSpannerSearchCatalogConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+	myInstanceConfig, ok := sources["my-instance"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get my-instance from sources")
+	}
+
+	// Create a copy of the source config with client OAuth enabled
+	oauthSourceConfig := make(map[string]any)
+	for k, v := range myInstanceConfig {
+		oauthSourceConfig[k] = v
+	}
+	oauthSourceConfig["useClientOAuth"] = true
+	sources["my-oauth-instance"] = oauthSourceConfig
+
+	// Add tools
+	tools["my-search-catalog-tool"] = map[string]any{
+		"type":        "spanner-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"type":        "spanner-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"type":        "spanner-search-catalog",
+		"source":      "my-oauth-instance",
+		"description": "Searches for data assets in catalog",
+	}
+
+	config["tools"] = tools
+	config["sources"] = sources
+	return config
+}
+
+// addSpannerListGraphsConfig adds the spanner-list-graphs tool configuration
+func addSpannerListGraphsConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+
+	// Add spanner-list-graphs tool
+	tools["list-graphs-tool"] = map[string]any{
+		"type":        "spanner-list-graphs",
+		"source":      "my-instance",
+		"description": "Lists graphs with their schema information",
 	}
 
 	config["tools"] = tools
@@ -330,7 +477,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		t.Fatalf("unable to get tools from config")
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Insert tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -341,7 +488,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT * FROM {{.tableName}}",
@@ -350,7 +497,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT * FROM {{.tableName}} WHERE id = @id",
@@ -360,7 +507,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}} FROM {{.tableName}}",
@@ -370,7 +517,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        "spanner-sql",
+		"type":        "spanner-sql",
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = @name",
@@ -384,9 +531,9 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 	return config
 }
 
-func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam, tableNameAuth string) {
+func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam string) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -471,7 +618,7 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"INSERT INTO %s (id, name) VALUES (5, 'test_name')\"}", tableNameParam))),
-			want:          "null",
+			want:          "[]",
 			isErr:         false,
 		},
 		{
@@ -655,6 +802,156 @@ func runSpannerListTablesTest(t *testing.T, tableNameParam, tableNameAuth, table
 	}
 }
 
+// Helper function to verify graph list results
+func verifyGraphListResult(t *testing.T, body map[string]interface{}, expectedGraphs []string, expectedSimpleFormat bool) {
+	// Parse the result
+	result, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	var graphs []interface{}
+	err := json.Unmarshal([]byte(result), &graphs)
+	if err != nil {
+		t.Fatalf("unable to parse result as JSON array: %s", err)
+	}
+
+	// If we expect specific graphs, verify they exist
+	if len(expectedGraphs) > 0 {
+		graphNames := make(map[string]bool)
+		requiredKeys := []string{"schema_name", "object_name", "catalog", "node_tables", "edge_tables", "labels", "property_declarations"}
+		if expectedSimpleFormat {
+			requiredKeys = []string{"name"}
+		}
+
+		for _, graph := range graphs {
+			graphMap, ok := graph.(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			objectDetails, ok := graphMap["object_details"].(map[string]interface{})
+			if !ok {
+				t.Fatalf("object_details is not of type map[string]interface{}, got: %T", graphMap["object_details"])
+			}
+			for _, reqKey := range requiredKeys {
+				if _, hasKey := objectDetails[reqKey]; !hasKey {
+					t.Errorf("missing required key '%s', for object_details: %v", reqKey, objectDetails)
+				}
+			}
+
+			if name, ok := graphMap["object_name"].(string); ok {
+				graphNames[name] = true
+			}
+		}
+
+		for _, expected := range expectedGraphs {
+			if !graphNames[expected] {
+				t.Errorf("expected graph %s not found in results", expected)
+			}
+		}
+	}
+}
+
+// runSpannerListGraphsTest tests the spanner-list-graphs tool
+func runSpannerListGraphsTest(t *testing.T, graphName string) {
+	invokeTcs := []struct {
+		name            string
+		requestBody     io.Reader
+		expectedGraphs  []string // empty means don't check specific graphs
+		useSimpleFormat bool
+	}{
+		{
+			name:           "list all graphs with detailed format",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			expectedGraphs: []string{graphName},
+		},
+		{
+			name:            "list graphs with simple format",
+			requestBody:     bytes.NewBuffer([]byte(`{"output_format": "simple"}`)),
+			expectedGraphs:  []string{graphName},
+			useSimpleFormat: true,
+		},
+		{
+			name:           "list specific graphs",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"graph_names": "%s"}`, graphName))),
+			expectedGraphs: []string{graphName},
+		},
+		{
+			name:           "list non-existent graph",
+			requestBody:    bytes.NewBuffer([]byte(`{"graph_names": "non_existent_graph_xyz"}`)),
+			expectedGraphs: []string{},
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Use RunRequest helper function from tests package
+			url := "http://127.0.0.1:5000/api/tool/list-graphs-tool/invoke"
+			headers := map[string]string{}
+
+			resp, respBody := tests.RunRequest(t, http.MethodPost, url, tc.requestBody, headers)
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+
+			verifyGraphListResult(t, body, tc.expectedGraphs, tc.useSimpleFormat)
+		})
+	}
+}
+
+// setupSpannerVectorTable creates a vector table in Spanner for semantic search testing
+func setupSpannerVectorTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dbString string) (string, func(*testing.T)) {
+	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createStatement := fmt.Sprintf(`CREATE TABLE %s (
+		id INT64,
+		content STRING(MAX),
+		embedding ARRAY<FLOAT32>
+	) PRIMARY KEY (id)`, tableName)
+
+	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		Database:   dbString,
+		Statements: []string{createStatement},
+	})
+	if err != nil {
+		t.Fatalf("unable to start create vector table operation %s: %s", tableName, err)
+	}
+	err = op.Wait(ctx)
+	if err != nil {
+		t.Fatalf("unable to create test vector table %s: %s", tableName, err)
+	}
+
+	return tableName, func(t *testing.T) {
+		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   dbString,
+			Statements: []string{fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)},
+		})
+		if err != nil {
+			t.Errorf("unable to start drop %s operation: %s", tableName, err)
+			return
+		}
+		opErr := op.Wait(ctx)
+		if opErr != nil {
+			t.Errorf("Teardown failed: %s", opErr)
+		}
+	}
+}
+
+// getSpannerVectorSearchStmts returns statements for spanner semantic search
+func getSpannerVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, @content, @text_to_embed)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, COSINE_DISTANCE(embedding, @query) AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
+}
+
 func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	invokeTcs := []struct {
 		name          string
@@ -722,4 +1019,117 @@ func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 			}
 		})
 	}
+}
+
+// setupSpannerPgVectorTable creates a vector table in Spanner (PostgreSQL dialect) for semantic search testing
+func setupSpannerPgVectorTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dbString string) (string, func(*testing.T)) {
+	tableName := "vector_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createStatement := fmt.Sprintf(`CREATE TABLE %s (
+		id bigint PRIMARY KEY,
+		content text,
+		embedding float4[]
+	)`, tableName)
+
+	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+		Database:   dbString,
+		Statements: []string{createStatement},
+	})
+	if err != nil {
+		t.Fatalf("unable to start create vector table operation %s: %s", tableName, err)
+	}
+	err = op.Wait(ctx)
+	if err != nil {
+		t.Fatalf("unable to create test vector table %s: %s", tableName, err)
+	}
+
+	return tableName, func(t *testing.T) {
+		op, err = adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   dbString,
+			Statements: []string{fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)},
+		})
+		if err != nil {
+			t.Errorf("unable to start drop %s operation: %s", tableName, err)
+			return
+		}
+		opErr := op.Wait(ctx)
+		if opErr != nil {
+			t.Errorf("Teardown failed: %s", opErr)
+		}
+	}
+}
+
+// getSpannerPgVectorSearchStmts returns statements for spanner semantic search (PostgreSQL dialect)
+func getSpannerPgVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (id, content, embedding) VALUES (1, $1, $2)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, spanner.cosine_distance(embedding, $1::float4[]) AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
+}
+
+func TestSpannerPostgresqlToolEndpoints(t *testing.T) {
+	// Skip if environment variables are not set
+	if SpannerProject == "" || SpannerInstance == "" {
+		t.Skip("SPANNER_PROJECT or SPANNER_INSTANCE not set, skipping PostgreSQL tests")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+
+	// Create admin client
+	adminClient, err := database.NewDatabaseAdminClient(ctx)
+	if err != nil {
+		t.Fatalf("unable to create admin client: %s", err)
+	}
+	defer adminClient.Close()
+
+	dbName := SpannerPgDatabase
+	if dbName == "" {
+		dbName = "pg_test_database"
+	}
+	t.Logf("Using PostgreSQL database: %s", dbName)
+
+	dbString := fmt.Sprintf("projects/%s/instances/%s/databases/%s", SpannerProject, SpannerInstance, dbName)
+	dataClient, err := spanner.NewClient(ctx, dbString)
+	if err != nil {
+		t.Fatalf("unable to create data client: %s", err)
+	}
+	defer dataClient.Close()
+
+	// Set up table for semantic search
+	vectorTableName, tearDownVectorTable := setupSpannerPgVectorTable(t, ctx, adminClient, dbString)
+	defer tearDownVectorTable(t)
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := getSpannerPgVectorSearchStmts(vectorTableName)
+
+	config := map[string]any{
+		"sources": map[string]any{
+			"my-instance": map[string]any{
+				"type":     "spanner",
+				"project":  SpannerProject,
+				"instance": SpannerInstance,
+				"database": dbName,
+				"dialect":  "postgresql",
+			},
+		},
+		"tools": map[string]any{},
+	}
+
+	toolsConfig := tests.AddSemanticSearchConfig(t, config, SpannerToolType, insertStmt, searchStmt)
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Run semantic search test
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }

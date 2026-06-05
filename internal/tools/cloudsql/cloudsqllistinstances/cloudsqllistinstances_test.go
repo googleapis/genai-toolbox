@@ -17,10 +17,10 @@ package cloudsqllistinstances
 import (
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -36,34 +36,32 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				list-my-instances:
-					kind: cloud-sql-list-instances
-					description: some description
-					source: some-source
+			kind: tool
+			name: list-my-instances
+			type: cloud-sql-list-instances
+			description: some description
+			source: some-source
 			`,
 			want: server.ToolConfigs{
 				"list-my-instances": Config{
-					Name:         "list-my-instances",
-					Kind:         "cloud-sql-list-instances",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Source:       "some-source",
+					ConfigBase: tools.ConfigBase{
+						Name:         "list-my-instances",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-list-instances",
+					Source: "some-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

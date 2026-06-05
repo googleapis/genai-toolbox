@@ -29,9 +29,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 type transport struct {
@@ -81,7 +81,7 @@ func TestListInstance(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getListInstanceToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -171,20 +171,20 @@ func getListInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
-				"kind":           "cloud-sql-admin",
+				"type":           "cloud-sql-admin",
 				"useClientOAuth": true,
 			},
 		},
 		"tools": map[string]any{
 			"list-instances": map[string]any{
-				"kind":   "cloud-sql-list-instances",
+				"type":   "cloud-sql-list-instances",
 				"source": "my-cloud-sql-source",
 			},
 			"list-instances-fail": map[string]any{
-				"kind":        "cloud-sql-list-instances",
+				"type":        "cloud-sql-list-instances",
 				"description": "list instances",
 				"source":      "my-invalid-cloud-sql-source",
 			},

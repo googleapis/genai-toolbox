@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//  http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,25 +17,26 @@ package cassandracql
 import (
 	"context"
 	"fmt"
+	"net/http"
 
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/gocql/gocql"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cassandra"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const kind string = "cassandra-cql"
+const resourceType string = "cassandra-cql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -44,35 +45,30 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	CassandraSession() *gocql.Session
+	RunSQL(context.Context, string, parameters.ParamValues) (any, error)
 }
 
-var _ compatibleSource = &cassandra.Source{}
-
-var compatibleSources = [...]string{cassandra.SourceKind}
-
 type Config struct {
-	Name               string                `yaml:"name" validate:"required"`
-	Kind               string                `yaml:"kind" validate:"required"`
-	Source             string                `yaml:"source" validate:"required"`
-	Description        string                `yaml:"description" validate:"required"`
-	Statement          string                `yaml:"statement" validate:"required"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
+	tools.ConfigBase   `yaml:",inline"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Statement          string                 `yaml:"statement" validate:"required"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+}
+
+var _ tools.ToolConfig = Config{}
+
+// ToolConfigType implements tools.ToolConfig.
+func (c Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize implements tools.ToolConfig.
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[c.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", c.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+	if c.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", c.Name)
 	}
 
 	allParameters, paramManifest, err := parameters.ProcessParameters(c.TemplateParameters, c.Parameters)
@@ -80,94 +76,46 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters)
-
-	t := Tool{
-		Config:      c,
-		AllParams:   allParameters,
-		Session:     s.CassandraSession(),
-		manifest:    tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
-		mcpManifest: mcpManifest,
-	}
-	return t, nil
-}
-
-// ToolConfigKind implements tools.ToolConfig.
-func (c Config) ToolConfigKind() string {
-	return kind
-}
-
-var _ tools.ToolConfig = Config{}
-
-type Tool struct {
-	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	Session     *gocql.Session
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-// RequiresClientAuthorization implements tools.Tool.
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
-}
-
-// Authorized implements tools.Tool.
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-// Invoke implements tools.Tool.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	paramsMap := params.AsMap()
-	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract template params %w", err)
-	}
-
-	newParams, err := parameters.GetParams(t.Parameters, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
-	}
-	sliceParams := newParams.AsSlice()
-	iter := t.Session.Query(newStatement, sliceParams...).WithContext(ctx).Iter()
-
-	// Create a slice to store the out
-	var out []map[string]interface{}
-
-	// Scan results into a map and append to the slice
-	for {
-		row := make(map[string]interface{}) // Create a new map for each row
-		if !iter.MapScan(row) {
-			break // No more rows
-		}
-		out = append(out, row)
-	}
-
-	if err := iter.Close(); err != nil {
-		return nil, fmt.Errorf("unable to parse rows: %w", err)
-	}
-	return out, nil
-}
-
-// Manifest implements tools.Tool.
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-// McpManifest implements tools.Tool.
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-// ParseParams implements tools.Tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			c,
+			tools.GetAnnotationsOrDefault(c.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 var _ tools.Tool = Tool{}
+
+type Tool struct {
+	tools.BaseTool[Config]
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
+// Invoke implements tools.Tool.
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	paramsMap := params.AsMap()
+	newStatement, err := parameters.ResolveTemplateParams(t.Cfg.TemplateParameters, t.Cfg.Statement, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("unable to extract template params", err)
+	}
+
+	newParams, err := parameters.GetParams(t.Cfg.Parameters, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("unable to extract standard params", err)
+	}
+	resp, err := source.RunSQL(ctx, newStatement, newParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
+}

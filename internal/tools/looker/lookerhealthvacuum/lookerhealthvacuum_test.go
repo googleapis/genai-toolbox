@@ -18,11 +18,11 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	lhv "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	lhv "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerhealthvacuum"
 )
 
 func TestParseFromYamlLookerHealthVacuum(t *testing.T) {
@@ -38,34 +38,32 @@ func TestParseFromYamlLookerHealthVacuum(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: looker-health-vacuum
-					source: my-instance
-					description: some description
+			kind: tool
+			name: example_tool
+			type: looker-health-vacuum
+			source: my-instance
+			description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": lhv.Config{
-					Name:         "example_tool",
-					Kind:         "looker-health-vacuum",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-health-vacuum",
+					Source: "my-instance",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -85,22 +83,18 @@ func TestFailParseFromYamlLookerHealthVacuum(t *testing.T) {
 		{
 			desc: "Invalid field",
 			in: `
-			tools:
-				example_tool:
-					kind: looker-health-vacuum
-					source: my-instance
-					invalid_field: true
+			kind: tool
+			name: example_tool
+			type: looker-health-vacuum
+			source: my-instance
+			invalid_field: true
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-health-vacuum\": [2:1] unknown field \"invalid_field\"",
+			err: "unable to parse tool \"example_tool\" as type \"looker-health-vacuum\": [2:1] unknown field \"invalid_field\"",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

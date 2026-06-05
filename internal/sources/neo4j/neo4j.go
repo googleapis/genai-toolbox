@@ -19,21 +19,26 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	neo4jconf "github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jexecutecypher/classifier"
+	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/helpers"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
+	neo4jconf "github.com/neo4j/neo4j-go-driver/v6/neo4j/config"
+
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "neo4j"
+const SourceType string = "neo4j"
+
+var sourceClassifier *classifier.QueryClassifier = classifier.NewQueryClassifier()
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -47,15 +52,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Uri      string `yaml:"uri" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
 	Password string `yaml:"password" validate:"required"`
 	Database string `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -83,18 +88,18 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Driver neo4j.DriverWithContext
+	Driver neo4j.Driver
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
-func (s *Source) Neo4jDriver() neo4j.DriverWithContext {
+func (s *Source) Neo4jDriver() neo4j.Driver {
 	return s.Driver
 }
 
@@ -102,9 +107,82 @@ func (s *Source) Neo4jDatabase() string {
 	return s.Database
 }
 
-func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, password, name string) (neo4j.DriverWithContext, error) {
+func (s *Source) RunQuery(ctx context.Context, cypherStr string, params map[string]any, readOnly, dryRun bool) (any, error) {
+	// validate the cypher query before executing
+	cf := sourceClassifier.Classify(cypherStr)
+	if cf.Error != nil {
+		return nil, cf.Error
+	}
+
+	if cf.Type == classifier.WriteQuery && readOnly {
+		return nil, fmt.Errorf("this tool is read-only and cannot execute write queries")
+	}
+
+	if dryRun {
+		// Add EXPLAIN to the beginning of the query to validate it without executing
+		cypherStr = "EXPLAIN " + cypherStr
+	}
+
+	config := neo4j.ExecuteQueryWithDatabase(s.Neo4jDatabase())
+	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, s.Neo4jDriver(), cypherStr, params,
+		neo4j.EagerResultTransformer, config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	// If dry run, return the summary information only
+	if dryRun {
+		summary := results.Summary
+		plan := summary.Plan()
+		execPlan := map[string]any{
+			"queryType":     cf.Type.String(),
+			"statementType": summary.QueryType(),
+			"operator":      plan.Operator(),
+			"arguments":     plan.Arguments(),
+			"identifiers":   plan.Identifiers(),
+			"childrenCount": len(plan.Children()),
+		}
+		if len(plan.Children()) > 0 {
+			execPlan["children"] = addPlanChildren(plan)
+		}
+		return []map[string]any{execPlan}, nil
+	}
+
+	var out []map[string]any
+	keys := results.Keys
+	records := results.Records
+	for _, record := range records {
+		vMap := make(map[string]any)
+		for col, value := range record.Values {
+			vMap[keys[col]] = helpers.ConvertValue(value)
+		}
+		out = append(out, vMap)
+	}
+
+	return out, nil
+}
+
+// Recursive function to add plan children
+func addPlanChildren(p neo4j.Plan) []map[string]any {
+	var children []map[string]any
+	for _, child := range p.Children() {
+		childMap := map[string]any{
+			"operator":       child.Operator(),
+			"arguments":      child.Arguments(),
+			"identifiers":    child.Identifiers(),
+			"children_count": len(child.Children()),
+		}
+		if len(child.Children()) > 0 {
+			childMap["children"] = addPlanChildren(child)
+		}
+		children = append(children, childMap)
+	}
+	return children
+}
+
+func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, password, name string) (neo4j.Driver, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	auth := neo4j.BasicAuth(user, password, "")
@@ -112,7 +190,7 @@ func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, passwo
 	if err != nil {
 		return nil, err
 	}
-	driver, err := neo4j.NewDriverWithContext(uri, auth, func(config *neo4jconf.Config) {
+	driver, err := neo4j.NewDriver(uri, auth, func(config *neo4jconf.Config) {
 		config.UserAgent = userAgent
 	})
 	if err != nil {

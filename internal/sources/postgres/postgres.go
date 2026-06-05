@@ -17,24 +17,27 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
-	"strings"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "postgres"
+const SourceType string = "postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -47,22 +50,23 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name        string            `yaml:"name" validate:"required"`
-	Kind        string            `yaml:"kind" validate:"required"`
-	Host        string            `yaml:"host" validate:"required"`
-	Port        string            `yaml:"port" validate:"required"`
-	User        string            `yaml:"user" validate:"required"`
-	Password    string            `yaml:"password" validate:"required"`
-	Database    string            `yaml:"database" validate:"required"`
-	QueryParams map[string]string `yaml:"queryParams"`
+	Name          string            `yaml:"name" validate:"required"`
+	Type          string            `yaml:"type" validate:"required"`
+	Host          string            `yaml:"host" validate:"required"`
+	Port          string            `yaml:"port" validate:"required"`
+	User          string            `yaml:"user" validate:"required"`
+	Password      string            `yaml:"password" validate:"required"`
+	Database      string            `yaml:"database" validate:"required"`
+	QueryParams   map[string]string `yaml:"queryParams"`
+	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -86,8 +90,8 @@ type Source struct {
 	Pool *pgxpool.Pool
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -98,9 +102,37 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string) (*pgxpool.Pool, error) {
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	results, err := s.PostgresPool().Query(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	fields := results.FieldDescriptions()
+	out := []any{}
+	for results.Next() {
+		values, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		row := orderedmap.Row{}
+		for i, f := range fields {
+			row.Add(f.Name, values[i])
+		}
+		out = append(out, row)
+	}
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	return out, nil
+}
+
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -114,15 +146,18 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		queryParams["application_name"] = userAgent
 	}
 
-	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
-	url := &url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword(user, pass),
-		Host:     fmt.Sprintf("%s:%s", host, port),
-		Path:     dbname,
-		RawQuery: ConvertParamMapToRawQuery(queryParams),
+	config, err := pgxpool.ParseConfig(BuildPostgresURL(host, port, user, pass, dbname, queryParams))
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
-	pool, err := pgxpool.New(ctx, url.String())
+
+	execMode, err := ParseQueryExecMode(queryExecMode)
+	if err != nil {
+		return nil, err
+	}
+	config.ConnConfig.DefaultQueryExecMode = execMode
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection pool: %w", err)
 	}
@@ -130,10 +165,41 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	return pool, nil
 }
 
-func ConvertParamMapToRawQuery(queryParams map[string]string) string {
-	queryArray := []string{}
-	for k, v := range queryParams {
-		queryArray = append(queryArray, fmt.Sprintf("%s=%s", k, v))
+// BuildPostgresURL assembles a postgres connection URL from its components.
+// It uses net.JoinHostPort so IPv6 host literals are wrapped in brackets as
+// required by RFC 3986 (e.g. "[::1]:5432"); IPv4 addresses and hostnames are
+// left unchanged. Query parameters are encoded with url.Values so special
+// characters are escaped correctly and the output is deterministic.
+func BuildPostgresURL(host, port, user, pass, dbname string, queryParams map[string]string) string {
+	u := &url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, pass),
+		Host:   net.JoinHostPort(host, port),
+		Path:   dbname,
 	}
-	return strings.Join(queryArray, "&")
+	if len(queryParams) > 0 {
+		q := url.Values{}
+		for k, v := range queryParams {
+			q.Set(k, v)
+		}
+		u.RawQuery = q.Encode()
+	}
+	return u.String()
+}
+
+func ParseQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {
+	switch queryExecMode {
+	case "", "cache_statement":
+		return pgx.QueryExecModeCacheStatement, nil
+	case "cache_describe":
+		return pgx.QueryExecModeCacheDescribe, nil
+	case "describe_exec":
+		return pgx.QueryExecModeDescribeExec, nil
+	case "exec":
+		return pgx.QueryExecModeExec, nil
+	case "simple_protocol":
+		return pgx.QueryExecModeSimpleProtocol, nil
+	default:
+		return 0, fmt.Errorf("invalid queryExecMode %q: must be one of %q, %q, %q, %q, or %q", queryExecMode, "cache_statement", "cache_describe", "describe_exec", "exec", "simple_protocol")
+	}
 }

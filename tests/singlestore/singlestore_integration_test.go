@@ -18,20 +18,23 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	singlestoresrc "github.com/googleapis/mcp-toolbox/internal/sources/singlestore"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	SingleStoreSourceKind = "singlestore"
-	SingleStoreToolKind   = "singlestore-sql"
+	SingleStoreSourceType = "singlestore"
+	SingleStoreToolType   = "singlestore-sql"
 	SingleStoreDatabase   = os.Getenv("SINGLESTORE_DATABASE")
 	SingleStoreHost       = os.Getenv("SINGLESTORE_HOST")
 	SingleStorePort       = os.Getenv("SINGLESTORE_PORT")
@@ -54,7 +57,7 @@ func getSingleStoreVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     SingleStoreSourceKind,
+		"type":     SingleStoreSourceType,
 		"host":     SingleStoreHost,
 		"port":     SingleStorePort,
 		"database": SingleStoreDatabase,
@@ -85,7 +88,7 @@ func getSingleStoreAuthToolInfo(tableName string) (string, string, string, []any
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getSingleStoreTmplToolStatement returns statements and param for template parameter test cases for singlestore-sql kind
+// getSingleStoreTmplToolStatement returns statements and param for template parameter test cases for singlestore-sql type
 func getSingleStoreTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -95,7 +98,7 @@ func getSingleStoreTmplToolStatement() (string, string) {
 // getSingleStoreWants return the expected wants for singlestore
 func getSingleStoreWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"error processing request: unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id BIGINT PRIMARY KEY, name TEXT)"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
@@ -130,8 +133,8 @@ func setupSingleStoreTable(t *testing.T, ctx context.Context, pool *sql.DB, crea
 	}
 }
 
-func getSingleStoreToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
-	toolsFile := tests.GetToolsConfig(sourceConfig, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+func getSingleStoreToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+	toolsFile := tests.GetToolsConfig(sourceConfig, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
 
 	toolsMap, ok := toolsFile["tools"].(map[string]any)
 	if !ok {
@@ -151,12 +154,12 @@ func addSingleStoreExecuteSQLConfig(t *testing.T, config map[string]any) map[str
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "singlestore-execute-sql",
+		"type":        "singlestore-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "singlestore-execute-sql",
+		"type":        "singlestore-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -167,9 +170,50 @@ func addSingleStoreExecuteSQLConfig(t *testing.T, config map[string]any) map[str
 	return config
 }
 
-// Copied over from singlestore.go
-func initSingleStoreConnectionPool(host, port, user, pass, dbname string) (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+// Copied over from singlestore.go, with context and tracer removed
+func initSingleStoreConnectionPool(cfg singlestoresrc.Config) (*sql.DB, error) {
+	// Build query parameters via url.Values for deterministic order and proper escaping.
+	connectionParams := url.Values{}
+
+	mysqlCfg := mysql.Config{
+		User:                 cfg.User,
+		Passwd:               cfg.Password,
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		DBName:               cfg.Database,
+		ParseTime:            true,
+		AllowNativePasswords: true,
+		CheckConnLiveness:    true,
+		MaxAllowedPacket:     64 << 20,
+		ConnectionAttributes: "_connector_name:MCP toolbox for Databases",
+		Params: map[string]string{
+			"vector_type_project_format": "JSON",
+		},
+	}
+
+	// Default to TLS preferred; can be overridden via connectionParams.
+	connectionParams.Set("tls", "preferred")
+
+	// Derive readTimeout from queryTimeout when provided.
+	if cfg.QueryTimeout != "" {
+		timeout, err := time.ParseDuration(cfg.QueryTimeout)
+		if err != nil {
+			return nil, fmt.Errorf("invalid queryTimeout %q: %w", cfg.QueryTimeout, err)
+		}
+		connectionParams.Set("readTimeout", timeout.String())
+	}
+
+	// Custom user parameters (e.g. tls, compress) — may override defaults above.
+	for k, v := range cfg.ConnectionParams {
+		if v == "" {
+			continue // skip empty values
+		}
+		connectionParams.Set(k, v)
+	}
+	dsn := mysqlCfg.FormatDSN()
+	if enc := connectionParams.Encode(); enc != "" {
+		dsn += "&" + enc
+	}
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)
@@ -184,9 +228,16 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
-	pool, err := initSingleStoreConnectionPool(SingleStoreHost, SingleStorePort, SingleStoreUser, SingleStorePass, SingleStoreDatabase)
+	cfg := singlestoresrc.Config{
+		Host:     SingleStoreHost,
+		Port:     SingleStorePort,
+		User:     SingleStoreUser,
+		Password: SingleStorePass,
+		Database: SingleStoreDatabase,
+	}
+	pool, err := initSingleStoreConnectionPool(cfg)
 	if err != nil {
 		t.Fatalf("unable to create SingleStore connection pool: %s", err)
 	}
@@ -207,11 +258,14 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := getSingleStoreToolsConfig(sourceConfig, SingleStoreToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := getSingleStoreToolsConfig(sourceConfig, SingleStoreToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSingleStoreExecuteSQLConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSingleStoreTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	insertStmt := `INSERT INTO senseai_docs (content, embedding) VALUES (?, JSON_ARRAY_PACK(?))`
+	searchStmt := `SELECT content FROM senseai_docs ORDER BY DOT_PRODUCT(embedding, JSON_ARRAY_PACK(?)) DESC LIMIT 1`
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, SingleStoreToolType, insertStmt, searchStmt)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -235,4 +289,22 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Create table for semantic search
+	_, err = pool.ExecContext(ctx, "CREATE TABLE IF NOT EXISTS senseai_docs (id INT AUTO_INCREMENT PRIMARY KEY, content TEXT, embedding BLOB);")
+	if err != nil {
+		t.Fatalf("unable to create semantic search table: %s", err)
+	}
+	defer func() {
+		_, err = pool.ExecContext(ctx, "DROP TABLE IF EXISTS senseai_docs;")
+		if err != nil {
+			t.Logf("Teardown failed: %s", err)
+		}
+	}()
+
+	// Semantic search tests
+	httpSemanticInsertWant := `[]`
+	mcpSemanticInsertWant := ``
+	semanticSearchWant := `The quick brown fox jumps over the lazy dog`
+	tests.RunSemanticSearchToolInvokeTest(t, httpSemanticInsertWant, mcpSemanticInsertWant, semanticSearchWant)
 }

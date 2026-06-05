@@ -30,12 +30,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	getInstancesToolKind = "cloud-sql-get-instance"
+	getInstancesToolType = "cloud-sql-get-instance"
 )
 
 type getInstancesTransport struct {
@@ -122,7 +122,7 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	toolsFile := getToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -231,21 +231,21 @@ func getToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
-				"kind":           "cloud-sql-admin",
+				"type":           "cloud-sql-admin",
 				"useClientOAuth": true,
 			},
 		},
 		"tools": map[string]any{
 			"get-instance-1": map[string]any{
-				"kind":        getInstancesToolKind,
+				"type":        getInstancesToolType,
 				"description": "get instance 1",
 				"source":      "my-cloud-sql-source",
 			},
 			"get-instance-2": map[string]any{
-				"kind":        getInstancesToolKind,
+				"type":        getInstancesToolType,
 				"description": "get instance 2",
 				"source":      "my-invalid-cloud-sql-source",
 			},

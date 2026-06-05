@@ -17,11 +17,11 @@ package firestoreadddocuments_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoreadddocuments"
 )
 
 func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
@@ -37,56 +37,56 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				add_docs_tool:
-					kind: firestore-add-documents
-					source: my-firestore-instance
-					description: Add documents to Firestore collections
+			kind: tool
+			name: add_docs_tool
+			type: firestore-add-documents
+			source: my-firestore-instance
+			description: Add documents to Firestore collections
 			`,
 			want: server.ToolConfigs{
 				"add_docs_tool": firestoreadddocuments.Config{
-					Name:         "add_docs_tool",
-					Kind:         "firestore-add-documents",
-					Source:       "my-firestore-instance",
-					Description:  "Add documents to Firestore collections",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "add_docs_tool",
+						Description:  "Add documents to Firestore collections",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-add-documents",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_add_docs:
-					kind: firestore-add-documents
-					source: prod-firestore
-					description: Add documents with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tool
+			name: secure_add_docs
+			type: firestore-add-documents
+			source: prod-firestore
+			description: Add documents with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_add_docs": firestoreadddocuments.Config{
-					Name:         "secure_add_docs",
-					Kind:         "firestore-add-documents",
-					Source:       "prod-firestore",
-					Description:  "Add documents with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_add_docs",
+						Description:  "Add documents with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-add-documents",
+					Source: "prod-firestore",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,58 +99,63 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		add_user_docs:
-			kind: firestore-add-documents
-			source: users-firestore
-			description: Add user documents
-			authRequired:
-				- user-auth
-		add_product_docs:
-			kind: firestore-add-documents
-			source: products-firestore
-			description: Add product documents
-		add_order_docs:
-			kind: firestore-add-documents
-			source: orders-firestore
-			description: Add order documents
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tool
+	name: add_user_docs
+	type: firestore-add-documents
+	source: users-firestore
+	description: Add user documents
+	authRequired:
+		- user-auth
+---
+	kind: tool
+	name: add_product_docs
+	type: firestore-add-documents
+	source: products-firestore
+	description: Add product documents
+---
+	kind: tool
+	name: add_order_docs
+	type: firestore-add-documents
+	source: orders-firestore
+	description: Add order documents
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"add_user_docs": firestoreadddocuments.Config{
-			Name:         "add_user_docs",
-			Kind:         "firestore-add-documents",
-			Source:       "users-firestore",
-			Description:  "Add user documents",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "add_user_docs",
+				Description:  "Add user documents",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-add-documents",
+			Source: "users-firestore",
 		},
 		"add_product_docs": firestoreadddocuments.Config{
-			Name:         "add_product_docs",
-			Kind:         "firestore-add-documents",
-			Source:       "products-firestore",
-			Description:  "Add product documents",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "add_product_docs",
+				Description:  "Add product documents",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-add-documents",
+			Source: "products-firestore",
 		},
 		"add_order_docs": firestoreadddocuments.Config{
-			Name:         "add_order_docs",
-			Kind:         "firestore-add-documents",
-			Source:       "orders-firestore",
-			Description:  "Add order documents",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "add_order_docs",
+				Description:  "Add order documents",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-add-documents",
+			Source: "orders-firestore",
 		},
 	}
-
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

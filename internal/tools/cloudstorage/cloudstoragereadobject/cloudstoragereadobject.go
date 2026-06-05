@@ -1,0 +1,188 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package cloudstoragereadobject
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
+	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragecommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+)
+
+const resourceType string = "cloud-storage-read-object"
+
+const (
+	bucketKey = "bucket"
+	objectKey = "object"
+	rangeKey  = "range"
+)
+
+func init() {
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
+
+type compatibleSource interface {
+	ReadObject(ctx context.Context, bucket, object string, offset, length int64) (map[string]any, error)
+}
+
+type Config struct {
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+}
+
+// validate interface
+var _ tools.ToolConfig = Config{}
+
+func (cfg Config) ToolConfigType() string {
+	return resourceType
+}
+
+func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
+	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object.")
+	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
+	rangeParam := parameters.NewStringParameterWithDefault(rangeKey, "", "Optional HTTP byte range, e.g. 'bytes=0-999' (first 1000 bytes), 'bytes=-500' (last 500 bytes), or 'bytes=500-' (from byte 500 to end). Empty reads the full object.")
+	allParameters := parameters.Parameters{bucketParam, objectParam, rangeParam}
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
+}
+
+// validate interface
+var _ tools.Tool = Tool{}
+
+type Tool struct {
+	tools.BaseTool[Config]
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	mapParams := params.AsMap()
+	bucket, ok := mapParams[bucketKey].(string)
+	if !ok || bucket == "" {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
+	}
+	object, ok := mapParams[objectKey].(string)
+	if !ok || object == "" {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", objectKey), nil)
+	}
+	rangeSpec, _ := mapParams[rangeKey].(string)
+
+	offset, length, err := parseRange(rangeSpec)
+	if err != nil {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter: %v", rangeKey, err), err)
+	}
+
+	resp, err := source.ReadObject(ctx, bucket, object, offset, length)
+	if err != nil {
+		return nil, cloudstoragecommon.ProcessGCSError(err)
+	}
+	return resp, nil
+}
+
+// parseRange converts an HTTP Range header value into (offset, length) args for
+// storage.ObjectHandle.NewRangeReader, where length == -1 means "read to end".
+// Supported forms:
+//
+//	""           → (0, -1)       // full object
+//	"bytes=0-9"  → (0, 10)       // first 10 bytes
+//	"bytes=10-"  → (10, -1)      // from byte 10 to end
+//	"bytes=-N"   → (-N, -1)      // last N bytes
+func parseRange(rangeSpec string) (offset int64, length int64, err error) {
+	if rangeSpec == "" {
+		return 0, -1, nil
+	}
+
+	spec := strings.TrimSpace(rangeSpec)
+	if !strings.HasPrefix(spec, "bytes=") {
+		return 0, 0, fmt.Errorf("range %q must start with 'bytes='", rangeSpec)
+	}
+	spec = strings.TrimPrefix(spec, "bytes=")
+
+	dash := strings.IndexByte(spec, '-')
+	if dash < 0 {
+		return 0, 0, fmt.Errorf("range %q is missing '-'", rangeSpec)
+	}
+
+	startStr := spec[:dash]
+	endStr := spec[dash+1:]
+
+	switch {
+	case startStr == "" && endStr == "":
+		return 0, 0, fmt.Errorf("range %q requires at least one bound", rangeSpec)
+
+	case startStr == "":
+		n, parseErr := strconv.ParseInt(endStr, 10, 64)
+		if parseErr != nil || n <= 0 {
+			return 0, 0, fmt.Errorf("range %q has a bad suffix length", rangeSpec)
+		}
+		return -n, -1, nil
+
+	case endStr == "":
+		start, parseErr := strconv.ParseInt(startStr, 10, 64)
+		if parseErr != nil || start < 0 {
+			return 0, 0, fmt.Errorf("range %q has a bad start", rangeSpec)
+		}
+		return start, -1, nil
+
+	default:
+		start, parseErr := strconv.ParseInt(startStr, 10, 64)
+		if parseErr != nil || start < 0 {
+			return 0, 0, fmt.Errorf("range %q has a bad start", rangeSpec)
+		}
+		end, parseErr := strconv.ParseInt(endStr, 10, 64)
+		if parseErr != nil || end < start {
+			return 0, 0, fmt.Errorf("range %q has a bad end", rangeSpec)
+		}
+		return start, end - start + 1, nil
+	}
+}

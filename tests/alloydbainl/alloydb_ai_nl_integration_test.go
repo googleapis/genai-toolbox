@@ -20,65 +20,23 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
-
-var (
-	AlloyDBAINLSourceKind = "alloydb-postgres"
-	AlloyDBAINLToolKind   = "alloydb-ai-nl"
-	AlloyDBAINLProject    = os.Getenv("ALLOYDB_AI_NL_PROJECT")
-	AlloyDBAINLRegion     = os.Getenv("ALLOYDB_AI_NL_REGION")
-	AlloyDBAINLCluster    = os.Getenv("ALLOYDB_AI_NL_CLUSTER")
-	AlloyDBAINLInstance   = os.Getenv("ALLOYDB_AI_NL_INSTANCE")
-	AlloyDBAINLDatabase   = os.Getenv("ALLOYDB_AI_NL_DATABASE")
-	AlloyDBAINLUser       = os.Getenv("ALLOYDB_AI_NL_USER")
-	AlloyDBAINLPass       = os.Getenv("ALLOYDB_AI_NL_PASS")
-)
-
-func getAlloyDBAINLVars(t *testing.T) map[string]any {
-	switch "" {
-	case AlloyDBAINLProject:
-		t.Fatal("'ALLOYDB_AI_NL_PROJECT' not set")
-	case AlloyDBAINLRegion:
-		t.Fatal("'ALLOYDB_AI_NL_REGION' not set")
-	case AlloyDBAINLCluster:
-		t.Fatal("'ALLOYDB_AI_NL_CLUSTER' not set")
-	case AlloyDBAINLInstance:
-		t.Fatal("'ALLOYDB_AI_NL_INSTANCE' not set")
-	case AlloyDBAINLDatabase:
-		t.Fatal("'ALLOYDB_AI_NL_DATABASE' not set")
-	case AlloyDBAINLUser:
-		t.Fatal("'ALLOYDB_AI_NL_USER' not set")
-	case AlloyDBAINLPass:
-		t.Fatal("'ALLOYDB_AI_NL_PASS' not set")
-	}
-	return map[string]any{
-		"kind":     AlloyDBAINLSourceKind,
-		"project":  AlloyDBAINLProject,
-		"cluster":  AlloyDBAINLCluster,
-		"instance": AlloyDBAINLInstance,
-		"region":   AlloyDBAINLRegion,
-		"database": AlloyDBAINLDatabase,
-		"user":     AlloyDBAINLUser,
-		"password": AlloyDBAINLPass,
-	}
-}
 
 func TestAlloyDBAINLToolEndpoints(t *testing.T) {
 	sourceConfig := getAlloyDBAINLVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to command
 	toolsFile := getAINLToolsConfig(sourceConfig)
@@ -117,11 +75,11 @@ func runAINLToolGetTest(t *testing.T) {
 					"description": "Simple tool to test end to end functionality.",
 					"parameters": []any{
 						map[string]any{
-							"name":        "question",
-							"type":        "string",
-							"required":    true,
-							"description": "The natural language question to ask.",
-							"authSources": []any{},
+							"name":         "question",
+							"type":         "string",
+							"required":     true,
+							"description":  "The natural language question to ask.",
+							"authServices": []any{},
 						},
 					},
 					"authRequired": []any{},
@@ -159,7 +117,7 @@ func runAINLToolGetTest(t *testing.T) {
 
 func runAINLToolInvokeTest(t *testing.T) {
 	// Get ID token
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
@@ -178,7 +136,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 			api:           "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
-			want:          "[{\"execute_nl_query\":{\"?column?\":1}}]",
+			want:          "[{\"execute_nl_query\":{\"number_one\":1}}]",
 			isErr:         false,
 		},
 		{
@@ -216,7 +174,7 @@ func runAINLToolInvokeTest(t *testing.T) {
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{"question": "return the number 1"}`)),
 			isErr:         false,
-			want:          "[{\"execute_nl_query\":{\"?column?\":1}}]",
+			want:          "[{\"execute_nl_query\":{\"number_one\":1}}]",
 		},
 		{
 			name:          "Invoke my-auth-required-tool with invalid auth token",
@@ -277,59 +235,6 @@ func runAINLToolInvokeTest(t *testing.T) {
 
 }
 
-func getAINLToolsConfig(sourceConfig map[string]any) map[string]any {
-	// Write config into a file and pass it to command
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"authServices": map[string]any{
-			"my-google-auth": map[string]any{
-				"kind":     "google",
-				"clientId": tests.ClientId,
-			},
-		},
-		"tools": map[string]any{
-			"my-simple-tool": map[string]any{
-				"kind":        AlloyDBAINLToolKind,
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-				"nlConfig":    "my_nl_config",
-			},
-			"my-auth-tool": map[string]any{
-				"kind":        AlloyDBAINLToolKind,
-				"source":      "my-instance",
-				"description": "Tool to test authenticated parameters.",
-				"nlConfig":    "my_nl_config",
-				"nlConfigParameters": []map[string]any{
-					{
-						"name":        "email",
-						"type":        "string",
-						"description": "user email",
-						"authServices": []map[string]string{
-							{
-								"name":  "my-google-auth",
-								"field": "email",
-							},
-						},
-					},
-				},
-			},
-			"my-auth-required-tool": map[string]any{
-				"kind":        AlloyDBAINLToolKind,
-				"source":      "my-instance",
-				"description": "Tool to test auth required invocation.",
-				"nlConfig":    "my_nl_config",
-				"authRequired": []string{
-					"my-google-auth",
-				},
-			},
-		},
-	}
-
-	return toolsFile
-}
-
 func runAINLMCPToolCallMethod(t *testing.T) {
 	sessionId := tests.RunInitialize(t, "2024-11-05")
 	header := map[string]string{}
@@ -362,7 +267,7 @@ func runAINLMCPToolCallMethod(t *testing.T) {
 					},
 				},
 			},
-			want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"?column?\":1}}"}]}}`,
+			want: `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"execute_nl_query\":{\"number_one\":1}}"}]}}`,
 		},
 		{
 			name:          "MCP Invoke invalid tool",

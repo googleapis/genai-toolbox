@@ -17,27 +17,27 @@ package spannersql
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"cloud.google.com/go/spanner"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const kind string = "spanner-sql"
+const resourceType string = "spanner-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -47,43 +47,30 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	SpannerClient() *spanner.Client
 	DatabaseDialect() string
+	RunSQL(context.Context, bool, string, map[string]any) (any, error)
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &spannerdb.Source{}
-
-var compatibleSources = [...]string{spannerdb.SourceKind}
-
 type Config struct {
-	Name               string                `yaml:"name" validate:"required"`
-	Kind               string                `yaml:"kind" validate:"required"`
-	Source             string                `yaml:"source" validate:"required"`
-	Description        string                `yaml:"description" validate:"required"`
-	Statement          string                `yaml:"statement" validate:"required"`
-	ReadOnly           bool                  `yaml:"readOnly"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
+	tools.ConfigBase   `yaml:",inline"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Statement          string                 `yaml:"statement" validate:"required"`
+	ReadOnly           bool                   `yaml:"readOnly"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
@@ -91,30 +78,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
-
-	// finish tool setup
-	t := Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		Client:      s.SpannerClient(),
-		dialect:     s.DatabaseDialect(),
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	Client      *spanner.Client
-	dialect     string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func getMapParams(params parameters.ParamValues, dialect string) (map[string]interface{}, error) {
@@ -124,47 +102,28 @@ func getMapParams(params parameters.ParamValues, dialect string) (map[string]int
 	case "postgresql":
 		return params.AsMapByOrderedKeys(), nil
 	default:
-		return nil, fmt.Errorf("invalid dialect %s", dialect)
+		return nil, util.NewAgentError(fmt.Sprintf("invalid dialect %s", dialect), nil)
 	}
 }
 
-// processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
-func processRows(iter *spanner.RowIterator) ([]any, error) {
-	var out []any
-	defer iter.Stop()
-
-	for {
-		row, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-
-		vMap := make(map[string]any)
-		cols := row.ColumnNames()
-		for i, c := range cols {
-			vMap[c] = row.ColumnValue(i)
-		}
-		out = append(out, vMap)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
-	return out, nil
-}
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	newStatement, err := parameters.ResolveTemplateParams(t.Cfg.TemplateParameters, t.Cfg.Statement, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract template params %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("unable to extract template params: %v", err), http.StatusInternalServerError, err)
 	}
 
-	newParams, err := parameters.GetParams(t.Parameters, paramsMap)
+	newParams, err := parameters.GetParams(t.Cfg.Parameters, paramsMap)
 	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("unable to extract standard params: %v", err), http.StatusInternalServerError, err)
 	}
 
-	for i, p := range t.Parameters {
+	for i, p := range t.Cfg.Parameters {
 		name := p.GetName()
 		value := newParams[i].Value
 
@@ -175,71 +134,30 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		case *parameters.ArrayParameter:
 			arrayParamValue, ok := value.([]any)
 			if !ok {
-				return nil, fmt.Errorf("unable to convert parameter `%s` to []any %w", name, err)
+				return nil, util.NewClientServerError(fmt.Sprintf("unable to convert parameter `%s` to []any", name), http.StatusInternalServerError, err)
 			}
 			itemType := arrayParam.GetItems().GetType()
-			var err error
-			value, err = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
-			if err != nil {
-				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
+			var convertErr error
+			value, convertErr = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
+			if convertErr != nil {
+				return nil, util.NewClientServerError(fmt.Sprintf("unable to convert parameter `%s` from []any to typed slice: %v", name, convertErr), http.StatusInternalServerError, convertErr)
 			}
 		}
 		newParams[i] = parameters.ParamValue{Name: name, Value: value}
 	}
 
-	mapParams, err := getMapParams(newParams, t.dialect)
+	mapParams, err := getMapParams(newParams, source.DatabaseDialect())
 	if err != nil {
-		return nil, fmt.Errorf("fail to get map params: %w", err)
+		return nil, util.NewAgentError("fail to get map params", err)
 	}
 
-	var results []any
-	var opErr error
-	stmt := spanner.Statement{
-		SQL:    newStatement,
-		Params: mapParams,
+	resp, err := source.RunSQL(ctx, t.Cfg.ReadOnly, newStatement, mapParams)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
 	}
-
-	if t.ReadOnly {
-		iter := t.Client.Single().Query(ctx, stmt)
-		results, opErr = processRows(iter)
-	} else {
-		_, opErr = t.Client.ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-			iter := txn.Query(ctx, stmt)
-			results, err = processRows(iter)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-
-	if opErr != nil {
-		return nil, fmt.Errorf("unable to execute client: %w", opErr)
-	}
-
-	return results, nil
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.AllParams, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return resp, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }

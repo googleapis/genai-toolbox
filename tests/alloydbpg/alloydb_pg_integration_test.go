@@ -26,21 +26,21 @@ import (
 
 	"cloud.google.com/go/alloydbconn"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	AlloyDBPostgresSourceKind = "alloydb-postgres"
-	AlloyDBPostgresToolKind   = "postgres-sql"
+	AlloyDBPostgresSourceType = "alloydb-postgres"
+	AlloyDBPostgresToolType   = "postgres-sql"
 	AlloyDBPostgresProject    = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
 	AlloyDBPostgresRegion     = os.Getenv("ALLOYDB_POSTGRES_REGION")
 	AlloyDBPostgresCluster    = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
 	AlloyDBPostgresInstance   = os.Getenv("ALLOYDB_POSTGRES_INSTANCE")
 	AlloyDBPostgresDatabase   = os.Getenv("ALLOYDB_POSTGRES_DATABASE")
 	AlloyDBPostgresUser       = os.Getenv("ALLOYDB_POSTGRES_USER")
-	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASS")
+	AlloyDBPostgresPass       = os.Getenv("ALLOYDB_POSTGRES_PASSWORD")
 )
 
 func getAlloyDBPgVars(t *testing.T) map[string]any {
@@ -58,10 +58,10 @@ func getAlloyDBPgVars(t *testing.T) map[string]any {
 	case AlloyDBPostgresUser:
 		t.Fatal("'ALLOYDB_POSTGRES_USER' not set")
 	case AlloyDBPostgresPass:
-		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
+		t.Fatal("'ALLOYDB_POSTGRES_PASSWORD' not set")
 	}
 	return map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -122,20 +122,25 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initAlloyDBPgConnectionPool(AlloyDBPostgresProject, AlloyDBPostgresRegion, AlloyDBPostgresCluster, AlloyDBPostgresInstance, "public", AlloyDBPostgresUser, AlloyDBPostgresPass, AlloyDBPostgresDatabase)
 	if err != nil {
 		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}
 
-	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool)
+	// Generate a unique ID
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	// create table name with UUID
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	// This will execute after all tool tests complete (success, fail, or t.Fatal)
+	t.Cleanup(func() {
+		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
+	})
+
+	//Create table names using the UUID
+	tableNameParam := "param_table_" + uniqueID
+	tableNameAuth := "auth_table_" + uniqueID
+	tableNameTemplateParam := "template_param_table_" + uniqueID
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
@@ -147,11 +152,19 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	// Set up table for semanti search
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, AlloyDBPostgresToolType, insertStmt, searchStmt)
 
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
@@ -181,8 +194,8 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	// Run Postgres prebuilt tool tests
 	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, AlloyDBPostgresUser)
-	tests.RunPostgresListViewsTest(t, ctx, pool, tableNameParam)
-	tests.RunPostgresListSchemasTest(t, ctx, pool)
+	tests.RunPostgresListViewsTest(t, ctx, pool)
+	tests.RunPostgresListSchemasTest(t, ctx, pool, AlloyDBPostgresUser, uniqueID)
 	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
 	tests.RunPostgresListAvailableExtensionsTest(t)
 	tests.RunPostgresListInstalledExtensionsTest(t)
@@ -193,6 +206,48 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunPostgresListLocksTest(t, ctx, pool)
 	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
 	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
+	tests.RunPostgresListQueryStatsTest(t, ctx, pool)
+	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
+	tests.RunPostgresListTableStatsTest(t, ctx, pool)
+	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
+	tests.RunPostgresListTableSpacesTest(t)
+	tests.RunPostgresListPgSettingsTest(t, ctx, pool)
+	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
+	tests.RunPostgresListRolesTest(t, ctx, pool)
+	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
+}
+
+func TestAlloyDBPgPrebuiltStatementTools(t *testing.T) {
+	getAlloyDBPgVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	args := []string{"--prebuilt", "alloydb-postgres", "--enable-api"}
+
+	cmd, cleanup, err := tests.StartCmd(ctx, map[string]any{}, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancelWait := context.WithTimeout(ctx, 10*time.Second)
+	defer cancelWait()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	toolsToTest := map[string]string{
+		"list_autovacuum_configurations": `{}`,
+		"list_memory_configurations":     `{}`,
+		"list_top_bloated_tables":        `{"limit": 10}`,
+		"list_replication_slots":         `{}`,
+		"list_invalid_indexes":           `{}`,
+		"get_query_plan":                 `{"query": "SELECT 1"}`,
+	}
+
+	tests.RunStatementToolsTest(t, toolsToTest)
 }
 
 // Test connection with different IP type
@@ -215,7 +270,7 @@ func TestAlloyDBPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, AlloyDBPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, AlloyDBPostgresToolType)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
@@ -230,7 +285,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -240,7 +295,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -250,7 +305,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -280,7 +335,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, AlloyDBPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, AlloyDBPostgresToolType)
 			if err != nil {
 				if tc.isErr {
 					return

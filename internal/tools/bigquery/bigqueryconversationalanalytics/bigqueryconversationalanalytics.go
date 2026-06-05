@@ -22,18 +22,20 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"golang.org/x/oauth2"
 )
 
-const kind string = "bigquery-conversational-analytics"
+const resourceType string = "bigquery-conversational-analytics"
+
+const gdaURLFormat = "https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat"
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 1. **CONTENT:** Your answer should present the supporting data and then provide a conclusion based on that data.
@@ -41,13 +43,13 @@ const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
 3. **NO CHARTS:** You are STRICTLY FORBIDDEN from generating any charts, graphs, images, or any other form of visualization.`
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -56,11 +58,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
+	BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -105,27 +108,25 @@ type CAPayload struct {
 	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
-
-var compatibleSources = [...]string{bigqueryds.SourceKind}
-
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -135,7 +136,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
@@ -151,82 +152,60 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	tableRefsParameter := parameters.NewStringParameter("table_references", tableRefsDescription)
 
 	params := parameters.Parameters{userQueryParameter, tableRefsParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
-	// Get cloud-platform token source for Gemini Data Analytics API during initialization
-	var bigQueryTokenSourceWithScope oauth2.TokenSource
-	if !s.UseClientAuthorization() {
-		ctx := context.Background()
-		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
-		}
-		bigQueryTokenSourceWithScope = ts
-	}
-
-	// finish tool setup
-	t := Tool{
-		Config:             cfg,
-		Project:            s.BigQueryProject(),
-		Location:           s.BigQueryLocation(),
-		Parameters:         params,
-		Client:             s.BigQueryClient(),
-		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        bigQueryTokenSourceWithScope,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
-		MaxQueryResultRows: s.GetMaxQueryResultRows(),
-		IsDatasetAllowed:   s.IsDatasetAllowed,
-		AllowedDatasets:    allowedDatasets,
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
-	Project            string
-	Location           string
-	Client             *bigqueryapi.Client
-	TokenSource        oauth2.TokenSource
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
-	MaxQueryResultRows int
-	IsDatasetAllowed   func(projectID, datasetID string) bool
-	AllowedDatasets    []string
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	var tokenStr string
-	var err error
 
 	// Get credentials for the API call
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		// Use client-side access token
 		if accessToken == "" {
-			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", util.ErrUnauthorized)
+			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
 		}
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
+			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
 	} else {
-		// Use cloud-platform token source for Gemini Data Analytics API
-		if t.TokenSource == nil {
-			return nil, fmt.Errorf("cloud-platform token source is missing")
-		}
-		token, err := t.TokenSource.Token()
+		// Get a token source for the Gemini Data Analytics API.
+		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
+			return nil, util.NewClientServerError("failed to get token source", http.StatusInternalServerError, err)
+		}
+
+		// Use cloud-platform token source for Gemini Data Analytics API
+		if tokenSource == nil {
+			return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
+		}
+		token, err := tokenSource.Token()
+		if err != nil {
+			return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
 		}
 		tokenStr = token.AccessToken
 	}
@@ -241,29 +220,30 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	var tableRefs []BQTableReference
 	if tableRefsJSON != "" {
 		if err := json.Unmarshal([]byte(tableRefsJSON), &tableRefs); err != nil {
-			return nil, fmt.Errorf("failed to parse 'table_references' JSON string: %w", err)
+			return nil, util.NewAgentError("failed to parse 'table_references' JSON string", err)
 		}
 	}
 
-	if len(t.AllowedDatasets) > 0 {
+	if len(source.BigQueryAllowedDatasets()) > 0 {
 		for _, tableRef := range tableRefs {
-			if !t.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
-				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
+			if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+				return nil, util.NewAgentError(fmt.Sprintf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID), nil)
 			}
 		}
 	}
 
 	// Construct URL, headers, and payload
-	projectID := t.Project
-	location := t.Location
+	projectID := source.BigQueryProject()
+	location := source.BigQueryLocation()
 	if location == "" {
 		location = "us"
 	}
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1alpha/projects/%s/locations/%s:chat", projectID, location)
+	caURL := fmt.Sprintf(gdaURLFormat, projectID, location)
 
 	headers := map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", tokenStr),
-		"Content-Type":  "application/json",
+		source.GetAuthTokenHeaderName(): fmt.Sprintf("Bearer %s", tokenStr),
+		"Content-Type":                  "application/json",
+		"X-Goog-API-Client":             util.GDAClientID,
 	}
 
 	payload := CAPayload{
@@ -275,114 +255,25 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 			},
 			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
-		ClientIdEnum: "GENAI_TOOLBOX",
+		ClientIdEnum: util.GDAClientID,
 	}
 
 	// Call the streaming API
-	response, err := getStream(caURL, payload, headers, t.MaxQueryResultRows)
+	response, err := getStream(caURL, payload, headers, source.GetMaxQueryResultRows())
 	if err != nil {
-		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
+		// getStream wraps network errors or non-200 responses
+		return nil, util.NewClientServerError("failed to get response from conversational analytics API", http.StatusInternalServerError, err)
 	}
 
 	return response, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
-}
-
-// StreamMessage represents a single message object from the streaming API response.
-type StreamMessage struct {
-	SystemMessage *SystemMessage `json:"systemMessage,omitempty"`
-	Error         *ErrorResponse `json:"error,omitempty"`
-}
-
-// SystemMessage contains different types of system-generated content.
-type SystemMessage struct {
-	Text   *TextResponse   `json:"text,omitempty"`
-	Schema *SchemaResponse `json:"schema,omitempty"`
-	Data   *DataResponse   `json:"data,omitempty"`
-}
-
-// TextResponse contains textual parts of a message.
-type TextResponse struct {
-	Parts []string `json:"parts"`
-}
-
-// SchemaResponse contains schema-related information.
-type SchemaResponse struct {
-	Query  *SchemaQuery  `json:"query,omitempty"`
-	Result *SchemaResult `json:"result,omitempty"`
-}
-
-// SchemaQuery holds the question that prompted a schema lookup.
-type SchemaQuery struct {
-	Question string `json:"question"`
-}
-
-// SchemaResult contains the datasources with their schemas.
-type SchemaResult struct {
-	Datasources []Datasource `json:"datasources"`
-}
-
-// Datasource represents a data source with its reference and schema.
-type Datasource struct {
-	BigQueryTableReference *BQTableReference `json:"bigqueryTableReference,omitempty"`
-	Schema                 *BQSchema         `json:"schema,omitempty"`
-}
-
-// BQSchema defines the structure of a BigQuery table.
-type BQSchema struct {
-	Fields []BQField `json:"fields"`
-}
-
-// BQField describes a single column in a BigQuery table.
-type BQField struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
-	Mode        string `json:"mode"`
-}
-
-// DataResponse contains data-related information, like queries and results.
-type DataResponse struct {
-	Query        *DataQuery  `json:"query,omitempty"`
-	GeneratedSQL string      `json:"generatedSql,omitempty"`
-	Result       *DataResult `json:"result,omitempty"`
-}
-
-// DataQuery holds information about a data retrieval query.
-type DataQuery struct {
-	Name     string `json:"name"`
-	Question string `json:"question"`
-}
-
-// DataResult contains the schema and rows of a query result.
-type DataResult struct {
-	Schema BQSchema         `json:"schema"`
-	Data   []map[string]any `json:"data"`
-}
-
-// ErrorResponse represents an error message from the API.
-type ErrorResponse struct {
-	Code    float64 `json:"code"` // JSON numbers are float64 by default
-	Message string  `json:"message"`
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 func getStream(url string, payload CAPayload, headers map[string]string, maxRows int) (string, error) {
@@ -399,7 +290,7 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 330 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)
@@ -413,6 +304,7 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 
 	var messages []map[string]any
 	decoder := json.NewDecoder(resp.Body)
+	dataMsgIdx := -1
 
 	// The response is a JSON array, so we read the opening bracket.
 	if _, err := decoder.Token(); err != nil {
@@ -423,32 +315,45 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 	}
 
 	for decoder.More() {
-		var msg StreamMessage
-		if err := decoder.Decode(&msg); err != nil {
+		var rawMsg json.RawMessage
+		if err := decoder.Decode(&rawMsg); err != nil {
 			if err == io.EOF {
 				break
 			}
-			return "", fmt.Errorf("error decoding stream message: %w", err)
+			return "", fmt.Errorf("error decoding raw message: %w", err)
 		}
 
-		var newMessage map[string]any
-		if msg.SystemMessage != nil {
-			if msg.SystemMessage.Text != nil {
-				newMessage = handleTextResponse(msg.SystemMessage.Text)
-			} else if msg.SystemMessage.Schema != nil {
-				newMessage = handleSchemaResponse(msg.SystemMessage.Schema)
-			} else if msg.SystemMessage.Data != nil {
-				newMessage = handleDataResponse(msg.SystemMessage.Data, maxRows)
-			}
-		} else if msg.Error != nil {
-			newMessage = handleError(msg.Error)
+		var msg map[string]any
+		if err := json.Unmarshal(rawMsg, &msg); err != nil {
+			return "", fmt.Errorf("error unmarshaling raw message: %w", err)
 		}
-		messages = appendMessage(messages, newMessage)
+
+		var processedMsg map[string]any
+		if dataResult := extractDataResult(msg); dataResult != nil {
+			// 1. If it's a data result, format it.
+			processedMsg = formatDataRetrieved(dataResult, maxRows)
+			if dataMsgIdx >= 0 {
+				// Replace previous data with a placeholder. Intermediate data results in a
+				// stream are redundant and consume unnecessary tokens.
+				messages[dataMsgIdx] = map[string]any{"Data Retrieved": "Intermediate result omitted"}
+			}
+			dataMsgIdx = len(messages)
+		} else if sm, ok := msg["systemMessage"].(map[string]any); ok {
+			// 2. If it's a system message, unwrap it.
+			processedMsg = sm
+		} else {
+			// 3. Otherwise (e.g. error), pass it through raw.
+			processedMsg = msg
+		}
+
+		if processedMsg != nil {
+			messages = append(messages, processedMsg)
+		}
 	}
 
 	var acc strings.Builder
 	for i, msg := range messages {
-		jsonBytes, err := json.MarshalIndent(msg, "", "  ")
+		jsonBytes, err := json.Marshal(msg)
 		if err != nil {
 			return "", fmt.Errorf("error marshalling message: %w", err)
 		}
@@ -461,121 +366,81 @@ func getStream(url string, payload CAPayload, headers map[string]string, maxRows
 	return acc.String(), nil
 }
 
-func formatBqTableRef(tableRef *BQTableReference) string {
-	return fmt.Sprintf("%s.%s.%s", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
+// extractDataResult attempts to find the result.data deep inside the generic map.
+func extractDataResult(msg map[string]any) map[string]any {
+	sm, ok := msg["systemMessage"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	data, ok := sm["data"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	result, ok := data["result"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	if _, hasData := result["data"].([]any); hasData {
+		return result
+	}
+	return nil
 }
 
-func formatSchemaAsDict(data *BQSchema) map[string]any {
-	headers := []string{"Column", "Type", "Description", "Mode"}
-	if data == nil {
-		return map[string]any{"headers": headers, "rows": []any{}}
+// formatDataRetrieved transforms the raw result map into the simplified Toolbox format.
+func formatDataRetrieved(result map[string]any, maxRows int) map[string]any {
+	rawData, _ := result["data"].([]any)
+
+	var fields []any
+	if schema, ok := result["schema"].(map[string]any); ok {
+		if f, ok := schema["fields"].([]any); ok {
+			fields = f
+		}
+	}
+
+	var headers []string
+	for _, f := range fields {
+		if fm, ok := f.(map[string]any); ok {
+			if name, ok := fm["name"].(string); ok {
+				headers = append(headers, name)
+			}
+		}
+	}
+
+	totalRows := len(rawData)
+	numToDisplay := totalRows
+	if numToDisplay > maxRows {
+		numToDisplay = maxRows
 	}
 
 	var rows [][]any
-	for _, field := range data.Fields {
-		rows = append(rows, []any{field.Name, field.Type, field.Description, field.Mode})
-	}
-	return map[string]any{"headers": headers, "rows": rows}
-}
-
-func formatDatasourceAsDict(datasource *Datasource) map[string]any {
-	var sourceName string
-	if datasource.BigQueryTableReference != nil {
-		sourceName = formatBqTableRef(datasource.BigQueryTableReference)
-	}
-
-	var schema map[string]any
-	if datasource.Schema != nil {
-		schema = formatSchemaAsDict(datasource.Schema)
-	}
-
-	return map[string]any{"source_name": sourceName, "schema": schema}
-}
-
-func handleTextResponse(resp *TextResponse) map[string]any {
-	return map[string]any{"Answer": strings.Join(resp.Parts, "")}
-}
-
-func handleSchemaResponse(resp *SchemaResponse) map[string]any {
-	if resp.Query != nil {
-		return map[string]any{"Question": resp.Query.Question}
-	}
-	if resp.Result != nil {
-		var formattedSources []map[string]any
-		for _, ds := range resp.Result.Datasources {
-			formattedSources = append(formattedSources, formatDatasourceAsDict(&ds))
-		}
-		return map[string]any{"Schema Resolved": formattedSources}
-	}
-	return nil
-}
-
-func handleDataResponse(resp *DataResponse, maxRows int) map[string]any {
-	if resp.Query != nil {
-		return map[string]any{
-			"Retrieval Query": map[string]any{
-				"Query Name": resp.Query.Name,
-				"Question":   resp.Query.Question,
-			},
-		}
-	}
-	if resp.GeneratedSQL != "" {
-		return map[string]any{"SQL Generated": resp.GeneratedSQL}
-	}
-	if resp.Result != nil {
-		var headers []string
-		for _, f := range resp.Result.Schema.Fields {
-			headers = append(headers, f.Name)
-		}
-
-		totalRows := len(resp.Result.Data)
-		var compactRows [][]any
-		numRowsToDisplay := totalRows
-		if numRowsToDisplay > maxRows {
-			numRowsToDisplay = maxRows
-		}
-
-		for _, rowVal := range resp.Result.Data[:numRowsToDisplay] {
-			var rowValues []any
-			for _, header := range headers {
-				rowValues = append(rowValues, rowVal[header])
+	for _, r := range rawData[:numToDisplay] {
+		if rm, ok := r.(map[string]any); ok {
+			var row []any
+			for _, h := range headers {
+				row = append(row, rm[h])
 			}
-			compactRows = append(compactRows, rowValues)
-		}
-
-		summary := fmt.Sprintf("Showing all %d rows.", totalRows)
-		if totalRows > maxRows {
-			summary = fmt.Sprintf("Showing the first %d of %d total rows.", numRowsToDisplay, totalRows)
-		}
-
-		return map[string]any{
-			"Data Retrieved": map[string]any{
-				"headers": headers,
-				"rows":    compactRows,
-				"summary": summary,
-			},
+			rows = append(rows, row)
 		}
 	}
-	return nil
-}
 
-func handleError(resp *ErrorResponse) map[string]any {
+	summary := fmt.Sprintf("Showing all %d rows.", totalRows)
+	if totalRows > maxRows {
+		summary = fmt.Sprintf("Showing the first %d of %d total rows.", numToDisplay, totalRows)
+	}
+
 	return map[string]any{
-		"Error": map[string]any{
-			"Code":    int(resp.Code),
-			"Message": resp.Message,
+		"Data Retrieved": map[string]any{
+			"headers": headers,
+			"rows":    rows,
+			"summary": summary,
 		},
 	}
 }
 
-func appendMessage(messages []map[string]any, newMessage map[string]any) []map[string]any {
-	if newMessage == nil {
-		return messages
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return "", err
 	}
-	if len(messages) > 0 {
-		if _, ok := messages[len(messages)-1]["Data Retrieved"]; ok {
-			messages = messages[:len(messages)-1]
-		}
-	}
-	return append(messages, newMessage)
+	return source.GetAuthTokenHeaderName(), nil
 }

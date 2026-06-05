@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/yugabyte/pgx/v5/pgxpool"
 )
 
@@ -58,7 +58,7 @@ func getYBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":        YBDB_SOURCE_KIND,
+		"type":        YBDB_SOURCE_KIND,
 		"host":        YBDB_HOST,
 		"port":        YBDB_PORT,
 		"database":    YBDB_DATABASE,
@@ -111,7 +111,7 @@ func TestYugabyteDB(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initYBConnectionPool(YBDB_HOST, YBDB_PORT, YBDB_USER, YBDB_PASS, YBDB_DATABASE, YBDB_LB)
 	if err != nil {

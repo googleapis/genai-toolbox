@@ -17,15 +17,15 @@ package singlestoresql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/singlestore/singlestoresql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-func TestParseFromYamlSingleStore(t *testing.T) {
+func TestParseFromYaml(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -38,34 +38,36 @@ func TestParseFromYamlSingleStore(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: singlestore-sql
-					source: my-singlestore-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
+			kind: tool
+			name: example_tool
+			type: singlestore-sql
+			source: my-singlestore-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
+			parameters:
+				- name: country
+				  type: string
+				  description: some description
+				  authServices:
+					- name: my-google-auth-service
+					  field: user_id
+					- name: other-auth-service
+					  field: user_id
 			`,
 			want: server.ToolConfigs{
 				"example_tool": singlestoresql.Config{
-					Name:         "example_tool",
-					Kind:         "singlestore-sql",
-					Source:       "my-singlestore-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "singlestore-sql",
+					Source:    "my-singlestore-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -74,76 +76,50 @@ func TestParseFromYamlSingleStore(t *testing.T) {
 				},
 			},
 		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
-				t.Fatalf("incorrect parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func TestParseFromYamlWithTemplateParamsSingleStore(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	tcs := []struct {
-		desc string
-		in   string
-		want server.ToolConfigs
-	}{
 		{
-			desc: "basic example",
+			desc: "with template params",
 			in: `
-			tools:
-				example_tool:
-					kind: singlestore-sql
-					source: my-singlestore-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
-					templateParameters:
-						- name: tableName
-						  type: string
-						  description: The table to select hotels from.
-						- name: fieldArray
-						  type: array
-						  description: The columns to return for the query.
-						  items: 
-								name: column
-								type: string
-								description: A column name that will be returned from the query.
+			kind: tool
+			name: example_tool
+			type: singlestore-sql
+			source: my-singlestore-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
+			parameters:
+				- name: country
+				  type: string
+				  description: some description
+				  authServices:
+					- name: my-google-auth-service
+					  field: user_id
+					- name: other-auth-service
+					  field: user_id
+			templateParameters:
+				- name: tableName
+				  type: string
+				  description: The table to select hotels from.
+				- name: fieldArray
+				  type: array
+				  description: The columns to return for the query.
+				  items: 
+						name: column
+						type: string
+						description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
 				"example_tool": singlestoresql.Config{
-					Name:         "example_tool",
-					Kind:         "singlestore-sql",
-					Source:       "my-singlestore-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "singlestore-sql",
+					Source:    "my-singlestore-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -159,15 +135,11 @@ func TestParseFromYamlWithTemplateParamsSingleStore(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

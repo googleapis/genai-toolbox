@@ -18,24 +18,26 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"net/url"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	driver "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlcommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "mysql"
+const SourceType string = "mysql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -49,18 +51,18 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
+	Type         string            `yaml:"type" validate:"required"`
 	Host         string            `yaml:"host" validate:"required"`
 	Port         string            `yaml:"port" validate:"required"`
-	User         string            `yaml:"user" validate:"required"`
-	Password     string            `yaml:"password" validate:"required"`
-	Database     string            `yaml:"database" validate:"required"`
+	User         string            `yaml:"user"`
+	Password     string            `yaml:"password"`
+	Database     string            `yaml:"database"`
 	QueryTimeout string            `yaml:"queryTimeout"`
 	QueryParams  map[string]string `yaml:"queryParams"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -88,8 +90,8 @@ type Source struct {
 	Pool *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -100,39 +102,107 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
+func (s *Source) MySQLDatabase() string {
+	return s.Database
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	results, err := s.MySQLPool().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	cols, err := results.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+
+	colTypes, err := results.ColumnTypes()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column types: %w", err)
+	}
+
+	out := []any{}
+	for results.Next() {
+		err := results.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		row := orderedmap.Row{}
+		for i, name := range cols {
+			val := rawValues[i]
+			if val == nil {
+				row.Add(name, nil)
+				continue
+			}
+
+			convertedValue, err := mysqlcommon.ConvertToType(colTypes[i], val)
+			if err != nil {
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
+			}
+			row.Add(name, convertedValue)
+		}
+		out = append(out, row)
+	}
+
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
+
+	return out, nil
+}
+
 func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, queryTimeout string, queryParams map[string]string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
-	// Build query parameters via url.Values for deterministic order and proper escaping.
-	values := url.Values{}
-
-	// Derive readTimeout from queryTimeout when provided.
+	config := driver.NewConfig()
+	config.Addr = fmt.Sprintf("%s:%s", host, port)
+	config.Net = "tcp"
+	if user != "" {
+		config.User = user
+		// password will require user
+		if pass != "" {
+			config.Passwd = pass
+		}
+	}
+	if dbname != "" {
+		config.DBName = dbname
+	}
 	if queryTimeout != "" {
 		timeout, err := time.ParseDuration(queryTimeout)
 		if err != nil {
 			return nil, fmt.Errorf("invalid queryTimeout %q: %w", queryTimeout, err)
 		}
-		values.Set("readTimeout", timeout.String())
+		config.ReadTimeout = timeout
 	}
 
 	// Custom user parameters
+	params := map[string]string{"parseTime": "true"}
 	for k, v := range queryParams {
 		if v == "" {
 			continue // skip empty values
 		}
-		values.Set(k, v)
+		params[k] = v
 	}
+	config.Params = params
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&connectionAttributes=program_name:%s", user, pass, host, port, dbname, url.QueryEscape(userAgent))
-	if enc := values.Encode(); enc != "" {
-		dsn += "&" + enc
-	}
+	config.ConnectionAttributes = fmt.Sprintf("program_name:%s", userAgent)
+	dsn := config.FormatDSN()
 
 	// Interact with the driver directly as you normally would
 	pool, err := sql.Open("mysql", dsn)

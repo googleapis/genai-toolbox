@@ -17,92 +17,86 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"slices"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-make-look"
+const resourceType string = "looker-make-look"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
+type compatibleSource interface {
+	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
+	LookerApiSettings() *rtl.ApiSettings
+	GetLookerSDK(context.Context, string) (*v4.LookerSDK, error)
+}
+
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify the source is compatible
-	s, ok := rawS.(*lookersrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
-	}
-
-	params := lookercommon.GetQueryParameters()
+	allParameters := lookercommon.GetQueryParameters()
 
 	titleParameter := parameters.NewStringParameter("title", "The title of the Look")
-	params = append(params, titleParameter)
+	allParameters = append(allParameters, titleParameter)
 	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Look")
-	params = append(params, descParameter)
+	allParameters = append(allParameters, descParameter)
+	folderParameter := parameters.NewStringParameterWithDefault("folder", "", "The folder id where the Look will be created. Leave blank to use the user's personal folder")
+	allParameters = append(allParameters, folderParameter)
 	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
 		map[string]any{},
 		"The visualization config for the query",
 		"",
 	)
-	params = append(params, vizParameter)
-
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	allParameters = append(allParameters, vizParameter)
 
 	// finish tool setup
 	return Tool{
-		Config:         cfg,
-		Parameters:     params,
-		UseClientOAuth: s.UseClientOAuth,
-		Client:         s.Client,
-		ApiSettings:    s.ApiSettings,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewWriteAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -110,47 +104,61 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	UseClientOAuth bool
-	Client         *v4.LookerSDK
-	ApiSettings    *rtl.ApiSettings
-	Parameters     parameters.Parameters `yaml:"parameters"`
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, "params = ", params)
 	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
-		return nil, fmt.Errorf("error building query request: %w", err)
+		return nil, util.NewAgentError("error building query request", err)
 	}
 
-	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	sdk, err := source.GetLookerSDK(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, util.NewClientServerError("error getting sdk", http.StatusInternalServerError, err)
 	}
-	mrespFields := "id,personal_folder_id"
-	mresp, err := sdk.Me(mrespFields, t.ApiSettings)
-	if err != nil {
-		return nil, fmt.Errorf("error making me request: %s", err)
+	if escErr := lookercommon.EscapeUnquotedParameterFilters(ctx, sdk, wq, source.LookerApiSettings()); escErr != nil {
+		logger.WarnContext(ctx, "skipping unquoted-parameter escape, metadata lookup failed", "error", escErr)
 	}
-
 	paramsMap := params.AsMap()
 	title := paramsMap["title"].(string)
 	description := paramsMap["description"].(string)
+	folder := paramsMap["folder"].(string)
+	visConfig := paramsMap["vis_config"].(map[string]any)
 
-	looks, err := sdk.FolderLooks(*mresp.PersonalFolderId, "title", t.ApiSettings)
+	mrespFields := "id,personal_folder_id"
+	mresp, err := sdk.Me(mrespFields, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error getting existing looks in folder: %s", err)
+		if strings.Contains(err.Error(), "status=401") {
+			return nil, util.NewClientServerError("unauthorized error", http.StatusUnauthorized, err)
+		}
+		return nil, util.ProcessGeneralError(err)
+	}
+
+	if folder == "" {
+		if mresp.PersonalFolderId == nil || *mresp.PersonalFolderId == "" {
+			return nil, util.NewAgentError("user does not have a personal folder. A folder must be specified", nil)
+		}
+		folder = *mresp.PersonalFolderId
+	}
+
+	looks, err := sdk.FolderLooks(folder, "title", source.LookerApiSettings())
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	lookTitles := []string{}
@@ -159,16 +167,15 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	}
 	if slices.Contains(lookTitles, title) {
 		lt, _ := json.Marshal(lookTitles)
-		return nil, fmt.Errorf("title %s already used in user's folder. Currently used titles are %v. Make the call again with a unique title", title, string(lt))
+		return nil, util.NewAgentError(fmt.Sprintf("title %s already used in folder. Currently used titles are %v. Make the call again with a unique title", title, string(lt)), nil)
 	}
 
-	visConfig := paramsMap["vis_config"].(map[string]any)
 	wq.VisConfig = &visConfig
 
 	qrespFields := "id"
-	qresp, err := sdk.CreateQuery(*wq, qrespFields, t.ApiSettings)
+	qresp, err := sdk.CreateQuery(*wq, qrespFields, source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create query request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 
 	wlwq := v4.WriteLookWithQuery{
@@ -176,15 +183,15 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		UserId:      mresp.Id,
 		Description: &description,
 		QueryId:     qresp.Id,
-		FolderId:    mresp.PersonalFolderId,
+		FolderId:    &folder,
 	}
-	resp, err := sdk.CreateLook(wlwq, "", t.ApiSettings)
+	resp, err := sdk.CreateLook(wlwq, "", source.LookerApiSettings())
 	if err != nil {
-		return nil, fmt.Errorf("error making create look request: %s", err)
+		return nil, util.ProcessGeneralError(err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
-	setting, err := sdk.GetSetting("host_url", t.ApiSettings)
+	setting, err := sdk.GetSetting("host_url", source.LookerApiSettings())
 	if err != nil {
 		logger.ErrorContext(ctx, "error getting settings: %s", err)
 	}
@@ -205,22 +212,18 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return "", err
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }

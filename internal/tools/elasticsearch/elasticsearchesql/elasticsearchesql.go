@@ -15,58 +15,52 @@
 package elasticsearchesql
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v9/esapi"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	es "github.com/googleapis/genai-toolbox/internal/sources/elasticsearch"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	es "github.com/googleapis/mcp-toolbox/internal/sources/elasticsearch"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
-const kind string = "elasticsearch-esql"
+const resourceType string = "elasticsearch-esql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 type compatibleSource interface {
 	ElasticsearchClient() es.EsClient
+	RunSQL(ctx context.Context, format, query string, params []map[string]any) (any, error)
 }
 
-var _ compatibleSource = &es.Source{}
-
-var compatibleSources = [...]string{es.SourceKind}
-
 type Config struct {
-	Name         string                `yaml:"name" validate:"required"`
-	Kind         string                `yaml:"kind" validate:"required"`
-	Source       string                `yaml:"source" validate:"required"`
-	Description  string                `yaml:"description" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired" validate:"required"`
-	Query        string                `yaml:"query"`
-	Format       string                `yaml:"format"`
-	Timeout      int                   `yaml:"timeout"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Query            string                 `yaml:"query" validate:"required"`
+	Format           string                 `yaml:"format"`
+	Timeout          int                    `yaml:"timeout"`
+	Parameters       parameters.Parameters  `yaml:"parameters"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
 
-func (c Config) ToolConfigKind() string {
-	return kind
+func (c Config) ToolConfigType() string {
+	return resourceType
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -74,162 +68,63 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Tool struct {
-	Config
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-	EsClient    es.EsClient
+	tools.BaseTool[Config]
 }
 
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	src, ok := srcs[c.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", c.Source)
+	if c.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", c.Name)
 	}
-
-	// verify the source is compatible
-	s, ok := src.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters)
 
 	return Tool{
-		Config:      c,
-		EsClient:    s.ElasticsearchClient(),
-		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			c,
+			tools.GetAnnotationsOrDefault(c.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
+			c.Parameters,
+		),
 	}, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-type esqlColumn struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
 
-type esqlResult struct {
-	Columns []esqlColumn `json:"columns"`
-	Values  [][]any      `json:"values"`
-}
-
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var cancel context.CancelFunc
-	if t.Timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
+	if t.Cfg.Timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Cfg.Timeout)*time.Second)
 		defer cancel()
 	} else {
 		ctx, cancel = context.WithTimeout(ctx, time.Minute)
 		defer cancel()
 	}
 
-	bodyStruct := struct {
-		Query  string           `json:"query"`
-		Params []map[string]any `json:"params,omitempty"`
-	}{
-		Query:  t.Query,
-		Params: make([]map[string]any, 0, len(params)),
-	}
-
+	query := t.Cfg.Query
 	paramMap := params.AsMap()
 
-	// If a query is provided in the params and not already set in the tool, use it.
-	if query, ok := paramMap["query"]; ok {
-		if str, ok := query.(string); ok && bodyStruct.Query == "" {
-			bodyStruct.Query = str
-		}
-
-		// Drop the query param if not a string or if the tool already has a query.
-		delete(paramMap, "query")
-	}
-
-	for _, param := range t.Parameters {
+	var paramsList []map[string]any
+	for _, param := range t.Cfg.Parameters {
 		if param.GetType() == "array" {
-			return nil, fmt.Errorf("array parameters are not supported yet")
+			return nil, util.NewAgentError("array parameters are not supported yet", nil)
 		}
-		bodyStruct.Params = append(bodyStruct.Params, map[string]any{param.GetName(): paramMap[param.GetName()]})
+
+		// ES|QL requires an array of single-key objects for named parameters
+		if val, ok := paramMap[param.GetName()]; ok {
+			paramsList = append(paramsList, map[string]any{param.GetName(): val})
+		}
 	}
 
-	body, err := json.Marshal(bodyStruct)
+	resp, err := source.RunSQL(ctx, t.Cfg.Format, query, paramsList)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal query body: %w", err)
+		return nil, util.ProcessGeneralError(err)
 	}
-	res, err := esapi.EsqlQueryRequest{
-		Body:       bytes.NewReader(body),
-		Format:     t.Format,
-		FilterPath: []string{"columns", "values"},
-		Instrument: t.EsClient.InstrumentationEnabled(),
-	}.Do(ctx, t.EsClient)
-
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		// Try to extract error message from response
-		var esErr json.RawMessage
-		err = util.DecodeJSON(res.Body, &esErr)
-		if err != nil {
-			return nil, fmt.Errorf("elasticsearch error: status %s", res.Status())
-		}
-		return esErr, nil
-	}
-
-	var result esqlResult
-	err = util.DecodeJSON(res.Body, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode response body: %w", err)
-	}
-
-	output := t.esqlToMap(result)
-
-	return output, nil
-}
-
-// esqlToMap converts the esqlResult to a slice of maps.
-func (t Tool) esqlToMap(result esqlResult) []map[string]any {
-	output := make([]map[string]any, 0, len(result.Values))
-	for _, value := range result.Values {
-		row := make(map[string]any)
-		if value == nil {
-			output = append(output, row)
-			continue
-		}
-		for i, col := range result.Columns {
-			if i < len(value) {
-				row[col.Name] = value[i]
-			} else {
-				row[col.Name] = nil
-			}
-		}
-		output = append(output, row)
-	}
-	return output
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return resp, nil
 }

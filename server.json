@@ -1,25 +1,24 @@
 {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-    "name": "io.github.googleapis/genai-toolbox",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.googleapis/mcp-toolbox",
     "description": "MCP Toolbox for Databases enables your agent to connect to your database.",
-    "title": "MCP Toolbox",
-    "websiteUrl": "https://github.com/googleapis/genai-toolbox",
+    "title": "MCP Toolbox for Databases",
+    "websiteUrl": "https://github.com/googleapis/mcp-toolbox",
     "icons": [
         {
-            "src": "https://github.com/googleapis/genai-toolbox/blob/main/.hugo/assets/icons/logo.svg",
+            "src": "https://github.com/googleapis/mcp-toolbox/blob/main/.hugo/assets/icons/logo.svg",
             "mimeType": "image/svg+xml"
         }
     ],
     "repository": {
-        "url": "https://github.com/googleapis/genai-toolbox",
+        "url": "https://github.com/googleapis/mcp-toolbox",
         "source": "github"
     },
-    "version": "0.20.0",
+    "version": "1.4.0",
     "packages": [
         {
             "registryType": "oci",
-            "registryBaseUrl": "https://artifactregistry.googleapis.com",
-            "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.20.0",
+            "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:1.4.0",
             "transport": {
                 "type": "streamable-http",
                 "url": "http://{host}:{port}/mcp"
@@ -27,14 +26,27 @@
             "runtimeArguments": [
                 {
                     "type": "named",
-                    "name": "--tools-file",
+                    "name": "--config",
                     "description": "File path specifying the tool configuration.",
                     "default": "tools.yaml",
                     "isRequired": false
                 },
                 {
                     "type": "named",
+                    "name": "--configs",
+                    "description": "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with –-config or –-config-folder.",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--config-folder",
+                    "description": "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with –-config or –-configs.",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
                     "name": "--address",
+                    "valueHint": "host",
                     "description": "Address of the interface the server will listen on.",
                     "value": "{host}",
                     "variables": {
@@ -48,6 +60,7 @@
                 {
                     "type": "named",
                     "name": "--port",
+                    "valueHint": "port",
                     "description": "Port the server will listen on.",
                     "value": "{port}",
                     "variables": {
@@ -69,6 +82,82 @@
                         "warn",
                         "error"
                     ]
+                },
+                {
+                    "type": "named",
+                    "name": "--logging-format",
+                    "description": "Specify logging format to use.",
+                    "default": "standard",
+                    "choices": [
+                        "standard",
+                        "json"
+                    ]
+                },
+                {
+                    "type": "named",
+                    "name": "--disable-reload",
+                    "description": "Disables dynamic reloading of config.",
+                    "format": "boolean",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--prebuilt",
+                    "description": "Use a prebuilt tool configuration by source type.",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--stdio",
+                    "description": "Listens via MCP STDIO instead of acting as a remote HTTP server.",
+                    "format": "boolean",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--telemetry-gcp",
+                    "description": "Enable exporting directly to Google Cloud Monitoring.",
+                    "format": "boolean",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--telemetry-otlp",
+                    "description": "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318').",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--telemetry-service-name",
+                    "description": "Sets the value of the service.name resource attribute for telemetry data.",
+                    "default": "toolbox",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--ui",
+                    "description": "Launches the Toolbox UI web server.",
+                    "format": "boolean",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--allowed-origins",
+                    "description": "Specifies a list of origins permitted to access this server.",
+                    "default": "*",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--help",
+                    "description": "Show help for toolbox",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--version",
+                    "description": "Show version for toolbox",
+                    "isRequired": false
                 }
             ]
         }

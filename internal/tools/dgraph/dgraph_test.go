@@ -17,11 +17,11 @@ package dgraph_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dgraph"
 )
 
 func TestParseFromYamlDgraph(t *testing.T) {
@@ -37,63 +37,63 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic query example",
 			in: `
-			tools:
-				example_tool:
-					kind: dgraph-dql
-					source: my-dgraph-instance
-					description: some tool description
-					isQuery: true
-					timeout: 20s
-					statement: |
-						    query {q(func: eq(email, "example@email.com")) {email}}
+			kind: tool
+			name: example_tool
+			type: dgraph-dql
+			source: my-dgraph-instance
+			description: some tool description
+			isQuery: true
+			timeout: 20s
+			statement: |
+				    query {q(func: eq(email, "example@email.com")) {email}}
 			`,
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
-					Name:         "example_tool",
-					Kind:         "dgraph-dql",
-					Source:       "my-dgraph-instance",
-					AuthRequired: []string{},
-					Description:  "some tool description",
-					IsQuery:      true,
-					Timeout:      "20s",
-					Statement:    "query {q(func: eq(email, \"example@email.com\")) {email}}\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some tool description",
+					},
+					Type:      "dgraph-dql",
+					Source:    "my-dgraph-instance",
+					IsQuery:   true,
+					Timeout:   "20s",
+					Statement: "query {q(func: eq(email, \"example@email.com\")) {email}}\n",
 				},
 			},
 		},
 		{
 			desc: "basic mutation example",
 			in: `
-			tools:
-				example_tool:
-					kind: dgraph-dql
-					source: my-dgraph-instance
-					description: some tool description
-					statement: |
-					  mutation {set { _:a <name> "a@email.com" . _:b <email> "b@email.com" .}}
+			kind: tool
+			name: example_tool
+			type: dgraph-dql
+			source: my-dgraph-instance
+			description: some tool description
+			statement: |
+			  mutation {set { _:a <name> "a@email.com" . _:b <email> "b@email.com" .}}
 			`,
 			want: server.ToolConfigs{
 				"example_tool": dgraph.Config{
-					Name:         "example_tool",
-					Kind:         "dgraph-dql",
-					Source:       "my-dgraph-instance",
-					Description:  "some tool description",
-					AuthRequired: []string{},
-					Statement:    "mutation {set { _:a <name> \"a@email.com\" . _:b <email> \"b@email.com\" .}}\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{},
+					},
+					Type:      "dgraph-dql",
+					Source:    "my-dgraph-instance",
+					Statement: "mutation {set { _:a <name> \"a@email.com\" . _:b <email> \"b@email.com\" .}}\n",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

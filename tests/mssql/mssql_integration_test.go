@@ -26,14 +26,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 	_ "github.com/microsoft/go-mssqldb"
 )
 
 var (
-	MSSQLSourceKind = "mssql"
-	MSSQLToolKind   = "mssql-sql"
+	MSSQLSourceType = "mssql"
+	MSSQLToolType   = "mssql-sql"
 	MSSQLDatabase   = os.Getenv("MSSQL_DATABASE")
 	MSSQLHost       = os.Getenv("MSSQL_HOST")
 	MSSQLPort       = os.Getenv("MSSQL_PORT")
@@ -56,7 +56,7 @@ func getMsSQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MSSQLSourceKind,
+		"type":     MSSQLSourceType,
 		"host":     MSSQLHost,
 		"port":     MSSQLPort,
 		"database": MSSQLDatabase,
@@ -90,7 +90,7 @@ func TestMSSQLToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	pool, err := initMSSQLConnection(MSSQLHost, MSSQLPort, MSSQLUser, MSSQLPass, MSSQLDatabase)
 	if err != nil {
@@ -116,10 +116,10 @@ func TestMSSQLToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MSSQLToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MSSQLToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddMSSQLExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMSSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MSSQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MSSQLToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 	toolsFile = tests.AddMSSQLPrebuiltToolConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)

@@ -24,15 +24,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocql/gocql"
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	CassandraSourceKind = "cassandra"
-	CassandraToolKind   = "cassandra-cql"
+	CassandraSourceType = "cassandra"
+	CassandraToolType   = "cassandra-cql"
 	Hosts               = os.Getenv("CASSANDRA_HOST")
 	Keyspace            = "example_keyspace"
 	Username            = os.Getenv("CASSANDRA_USER")
@@ -49,7 +49,7 @@ func getCassandraVars(t *testing.T) map[string]any {
 		t.Fatal("'Password' not set")
 	}
 	return map[string]any{
-		"kind":     CassandraSourceKind,
+		"type":     CassandraSourceType,
 		"hosts":    strings.Split(Hosts, ","),
 		"keyspace": Keyspace,
 		"username": Username,
@@ -180,7 +180,7 @@ func TestCassandra(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 	paramTableName := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -204,12 +204,12 @@ func TestCassandra(t *testing.T) {
 
 	paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt := createParamToolInfo(paramTableName)
 	_, _, authToolStmt := getCassandraAuthToolInfo(tableNameAuth)
-	toolsFile := tests.GetToolsConfig(sourceConfig, CassandraToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CassandraToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 
 	tmplSelectCombined, tmplSelectFilterCombined := getCassandraTmplToolInfo()
 	tmpSelectAll := "SELECT * FROM {{.tableName}} where id = 1"
 
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CassandraToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmpSelectAll)
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CassandraToolType, tmplSelectCombined, tmplSelectFilterCombined, tmpSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -271,7 +271,7 @@ func getCassandraWants() (string, string, string, string, string, string) {
 	selectIdNameWant := "[{\"id\":3,\"name\":\"Alice\"}]"
 	selectIdNullWant := "[{\"id\":4,\"name\":\"\"}]"
 	selectArrayParamWant := "[{\"id\":1,\"name\":\"Sid\"},{\"id\":3,\"name\":\"Alice\"}]"
-	mcpMyFailToolWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to parse rows: line 1:0 no viable alternative at input 'SELEC' ([SELEC]...)\"}],\"isError\":true}}"
+	mcpMyFailToolWant := "{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"error processing request: unable to parse rows: line 1:0 no viable alternative at input 'SELEC' ([SELEC]...)\"}],\"isError\":true}}"
 	mcpMyToolIdWant := "{\"jsonrpc\":\"2.0\",\"id\":\"my-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"[{\\\"id\\\":3,\\\"name\\\":\\\"Alice\\\"}]\"}]}}"
 	return selectIdNameWant, selectIdNullWant, selectArrayParamWant, mcpMyFailToolWant, "nil", mcpMyToolIdWant
 }

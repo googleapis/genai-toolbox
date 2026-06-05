@@ -1,0 +1,58 @@
+# Copyright 2025 Google LLC
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+import pytest
+from pathlib import Path
+import asyncio
+import sys
+import importlib.util
+
+ORCH_NAME = os.environ.get("ORCH_NAME")
+module_path = f"python.{ORCH_NAME}.quickstart"
+quickstart = importlib.import_module(module_path)
+
+
+GOLDEN_KEYWORDS = ["Hilton Basel", "Hyatt Regency", "book"]
+
+# --- Execution Tests ---
+class TestExecution:
+    """Test framework execution and output validation."""
+
+    _cached_output = None
+
+    @pytest.fixture(scope="function")
+    def script_output(self, capsys):
+        """Run the quickstart function and return its output."""
+        if TestExecution._cached_output is None:
+            asyncio.run(quickstart.main())
+            out, err = capsys.readouterr()
+            TestExecution._cached_output = (out, err)
+            
+        class Output:
+            def __init__(self, out, err):
+                self.out = out
+                self.err = err
+                
+        return Output(*TestExecution._cached_output)
+
+    def test_script_runs_without_errors(self, script_output):
+        """Test that the script runs and produces no stderr."""
+        assert script_output.err == "", f"Script produced stderr: {script_output.err}"
+
+    def test_keywords_in_output(self, script_output):
+        """Test that expected keywords are present in the script's output."""
+        output = script_output.out
+        missing_keywords = [kw for kw in GOLDEN_KEYWORDS if kw.lower() not in output.lower()]
+        assert not missing_keywords, f"Missing keywords in output: {missing_keywords}"

@@ -17,61 +17,54 @@ package serverlesssparklistbatches
 import (
 	"context"
 	"fmt"
-	"time"
+	"net/http"
 
-	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const kind = "serverless-spark-list-batches"
+const resourceType = "serverless-spark-list-batches"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
 }
 
+type compatibleSource interface {
+	GetBatchControllerClient() *dataproc.BatchControllerClient
+	ListBatches(context.Context, *int, string, string) (any, error)
+}
+
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the unique name for this tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the unique name for this tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-
-	ds, ok := rawS.(*serverlessspark.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, serverlessspark.SourceKind)
-	}
-
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Lists available Serverless Spark (aka Dataproc Serverless) batches"
@@ -82,126 +75,60 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewIntParameterWithDefault("pageSize", 20, "The maximum number of batches to return in a single page (default 20)"),
 		parameters.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListBatches` call", false),
 	}
-	inputSchema, _ := allParameters.McpManifest()
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: desc,
-		InputSchema: inputSchema,
-	}
-
 	return Tool{
-		Config:      cfg,
-		Source:      ds,
-		manifest:    tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
-		mcpManifest: mcpManifest,
-		Parameters:  allParameters,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: desc, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
+// validate interface
+var _ tools.Tool = Tool{}
+
 // Tool is the implementation of the tool.
 type Tool struct {
-	Config
-
-	Source *serverlessspark.Source
-
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-	Parameters  parameters.Parameters
-}
-
-// ListBatchesResponse is the response from the list batches API.
-type ListBatchesResponse struct {
-	Batches       []Batch `json:"batches"`
-	NextPageToken string  `json:"nextPageToken"`
-}
-
-// Batch represents a single batch job.
-type Batch struct {
-	Name       string `json:"name"`
-	UUID       string `json:"uuid"`
-	State      string `json:"state"`
-	Creator    string `json:"creator"`
-	CreateTime string `json:"createTime"`
-	Operation  string `json:"operation"`
+	tools.BaseTool[Config]
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	client := t.Source.GetBatchControllerClient()
-
-	parent := fmt.Sprintf("projects/%s/locations/%s", t.Source.Project, t.Source.Location)
-	req := &dataprocpb.ListBatchesRequest{
-		Parent:  parent,
-		OrderBy: "create_time desc",
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramMap := params.AsMap()
+	var pageSize *int
 	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
-		req.PageSize = int32(ps.(int))
-		if (req.PageSize) <= 0 {
-			return nil, fmt.Errorf("pageSize must be positive: %d", req.PageSize)
+		pageSizeV, ok := ps.(int)
+		if !ok {
+			// Handle float64 case if unmarshaled from JSON usually
+			if f, ok := ps.(float64); ok {
+				pageSizeV = int(f)
+			} else {
+				return nil, util.NewAgentError("pageSize must be an integer", nil)
+			}
 		}
-	}
-	if pt, ok := paramMap["pageToken"]; ok && pt != nil {
-		req.PageToken = pt.(string)
-	}
-	if filter, ok := paramMap["filter"]; ok && filter != nil {
-		req.Filter = filter.(string)
+
+		if pageSizeV <= 0 {
+			return nil, util.NewAgentError(fmt.Sprintf("pageSize must be positive: %d", pageSizeV), nil)
+		}
+		pageSize = &pageSizeV
 	}
 
-	it := client.ListBatches(ctx, req)
-	pager := iterator.NewPager(it, int(req.PageSize), req.PageToken)
+	pt, _ := paramMap["pageToken"].(string)
+	filter, _ := paramMap["filter"].(string)
 
-	var batchPbs []*dataprocpb.Batch
-	nextPageToken, err := pager.NextPage(&batchPbs)
+	resp, err := source.ListBatches(ctx, pageSize, pt, filter)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list batches: %w", err)
+		return nil, util.ProcessGcpError(err)
 	}
-
-	batches := ToBatches(batchPbs)
-
-	return ListBatchesResponse{Batches: batches, NextPageToken: nextPageToken}, nil
-}
-
-// ToBatches converts a slice of protobuf Batch messages to a slice of Batch structs.
-func ToBatches(batchPbs []*dataprocpb.Batch) []Batch {
-	batches := make([]Batch, 0, len(batchPbs))
-	for _, batchPb := range batchPbs {
-		batch := Batch{
-			Name:       batchPb.Name,
-			UUID:       batchPb.Uuid,
-			State:      batchPb.State.Enum().String(),
-			Creator:    batchPb.Creator,
-			CreateTime: batchPb.CreateTime.AsTime().Format(time.RFC3339),
-			Operation:  batchPb.Operation,
-		}
-		batches = append(batches, batch)
-	}
-	return batches
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(services []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, services)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	// Client OAuth not supported, rely on ADCs.
-	return false
+	return resp, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }

@@ -23,7 +23,7 @@ TOOL_PACKAGE_NAMES=("$@")
 COVERAGE_FILE="${TEST_BINARY%.test}_coverage.out"
 FILTERED_COVERAGE_FILE="${TEST_BINARY%.test}_filtered_coverage.out"
 
-export path="github.com/googleapis/genai-toolbox/internal/"
+export path="github.com/googleapis/mcp-toolbox/internal/"
 
 GREP_PATTERN="^mode:|${path}${SOURCE_PATH}"
 # Add each tool package path to the grep pattern
@@ -35,7 +35,7 @@ for tool_name in "${TOOL_PACKAGE_NAMES[@]}"; do
 done
 
 # Run integration test
-if ! ./"${TEST_BINARY}" -test.v -test.coverprofile="${COVERAGE_FILE}"; then
+if ! ./"${TEST_BINARY}" -test.v ${EXTRA_TEST_ARGS:-} -test.coverprofile="${COVERAGE_FILE}"; then
   echo "Error: Tests for ${DISPLAY_NAME} failed. Exiting."
   exit 1
 fi

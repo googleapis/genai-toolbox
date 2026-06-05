@@ -23,19 +23,21 @@ import (
 
 	"cloud.google.com/go/cloudsqlconn/sqlserver/mssql"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "cloud-sql-mssql"
+const SourceType string = "cloud-sql-mssql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -49,21 +51,20 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// Cloud SQL MSSQL configs
-	Name      string         `yaml:"name" validate:"required"`
-	Kind      string         `yaml:"kind" validate:"required"`
-	Project   string         `yaml:"project" validate:"required"`
-	Region    string         `yaml:"region" validate:"required"`
-	Instance  string         `yaml:"instance" validate:"required"`
-	IPAddress string         `yaml:"ipAddress"` // Deprecated: kept for backwards compatibility
-	IPType    sources.IPType `yaml:"ipType" validate:"required"`
-	User      string         `yaml:"user" validate:"required"`
-	Password  string         `yaml:"password" validate:"required"`
-	Database  string         `yaml:"database" validate:"required"`
+	Name     string         `yaml:"name" validate:"required"`
+	Type     string         `yaml:"type" validate:"required"`
+	Project  string         `yaml:"project" validate:"required"`
+	Region   string         `yaml:"region" validate:"required"`
+	Instance string         `yaml:"instance" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	User     string         `yaml:"user" validate:"required"`
+	Password string         `yaml:"password" validate:"required"`
+	Database string         `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns Cloud SQL MSSQL source type
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -93,9 +94,9 @@ type Source struct {
 	Db *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns Cloud SQL MSSQL source type
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -107,9 +108,52 @@ func (s *Source) MSSQLDB() *sql.DB {
 	return s.Db
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	results, err := s.MSSQLDB().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	cols, err := results.Columns()
+	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
+	// We proceed, and results.Err() will catch actual query execution errors.
+	// 'out' will remain an empty slice if cols is empty or err is not nil here.
+	out := []any{}
+	if err == nil && len(cols) > 0 {
+		// create an array of values for each column, which can be re-used to scan each row
+		rawValues := make([]any, len(cols))
+		values := make([]any, len(cols))
+		for i := range rawValues {
+			values[i] = &rawValues[i]
+		}
+
+		for results.Next() {
+			scanErr := results.Scan(values...)
+			if scanErr != nil {
+				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
+			}
+			row := orderedmap.Row{}
+			for i, name := range cols {
+				row.Add(name, rawValues[i])
+			}
+			out = append(out, row)
+		}
+	}
+
+	// Check for errors from iterating over rows or from the query execution itself.
+	// results.Close() is handled by defer.
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
+	}
+
+	return out, nil
+}
+
 func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)

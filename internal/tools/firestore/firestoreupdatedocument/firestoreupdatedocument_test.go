@@ -19,71 +19,82 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	firestoreds "github.com/googleapis/mcp-toolbox/internal/sources/firestore"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestNewConfig(t *testing.T) {
 	tests := []struct {
 		name    string
 		yaml    string
-		want    Config
+		want    server.ToolConfigs
 		wantErr bool
 	}{
 		{
 			name: "valid config",
 			yaml: `
-name: test-update-document
-kind: firestore-update-document
-source: test-firestore
-description: Update a document in Firestore
-authRequired:
-  - google-oauth
-`,
-			want: Config{
-				Name:         "test-update-document",
-				Kind:         "firestore-update-document",
-				Source:       "test-firestore",
-				Description:  "Update a document in Firestore",
-				AuthRequired: []string{"google-oauth"},
+			kind: tool
+			name: test-update-document
+			type: firestore-update-document
+			source: test-firestore
+			description: Update a document in Firestore
+			authRequired:
+			  - google-oauth
+			`,
+			want: server.ToolConfigs{
+				"test-update-document": Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "test-update-document",
+						Description:  "Update a document in Firestore",
+						AuthRequired: []string{"google-oauth"},
+					},
+					Type:   "firestore-update-document",
+					Source: "test-firestore",
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "minimal config",
 			yaml: `
-name: test-update-document
-kind: firestore-update-document
-source: test-firestore
-description: Update a document
-`,
-			want: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "test-firestore",
-				Description: "Update a document",
+			kind: tool
+			name: test-update-document
+			type: firestore-update-document
+			source: test-firestore
+			description: Update a document
+			`,
+			want: server.ToolConfigs{
+				"test-update-document": Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "test-update-document",
+						Description:  "Update a document",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-update-document",
+					Source: "test-firestore",
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "invalid yaml",
 			yaml: `
-name: test-update-document
-kind: [invalid
-`,
+			kind: tool
+			name: test-update-document
+			type: [invalid
+			`,
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(tt.yaml))
-			got, err := newConfig(context.Background(), "test-update-document", decoder)
-
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tt.yaml))
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error but got none")
@@ -102,12 +113,12 @@ kind: [invalid
 	}
 }
 
-func TestConfig_ToolConfigKind(t *testing.T) {
+func TestConfig_ToolConfigType(t *testing.T) {
 	cfg := Config{}
-	got := cfg.ToolConfigKind()
+	got := cfg.ToolConfigType()
 	want := "firestore-update-document"
 	if got != want {
-		t.Fatalf("ToolConfigKind() = %v, want %v", got, want)
+		t.Fatalf("ToolConfigType() = %v, want %v", got, want)
 	}
 }
 
@@ -122,41 +133,17 @@ func TestConfig_Initialize(t *testing.T) {
 		{
 			name: "valid initialization",
 			config: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "test-firestore",
-				Description: "Update a document",
+				ConfigBase: tools.ConfigBase{
+					Name:        "test-update-document",
+					Description: "Update a document",
+				},
+				Type:   "firestore-update-document",
+				Source: "test-firestore",
 			},
 			sources: map[string]sources.Source{
 				"test-firestore": &firestoreds.Source{},
 			},
 			wantErr: false,
-		},
-		{
-			name: "source not found",
-			config: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "missing-source",
-				Description: "Update a document",
-			},
-			sources: map[string]sources.Source{},
-			wantErr: true,
-			errMsg:  "no source named \"missing-source\" configured",
-		},
-		{
-			name: "incompatible source",
-			config: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "wrong-source",
-				Description: "Update a document",
-			},
-			sources: map[string]sources.Source{
-				"wrong-source": &mockIncompatibleSource{},
-			},
-			wantErr: true,
-			errMsg:  "invalid source for \"firestore-update-document\" tool",
 		},
 	}
 
@@ -184,20 +171,20 @@ func TestConfig_Initialize(t *testing.T) {
 
 			// Verify tool properties
 			actualTool := tool.(Tool)
-			if actualTool.Name != tt.config.Name {
-				t.Fatalf("tool.Name = %v, want %v", actualTool.Name, tt.config.Name)
+			if actualTool.GetName() != tt.config.Name {
+				t.Fatalf("tool.Name = %v, want %v", actualTool.GetName(), tt.config.Name)
 			}
-			if actualTool.Kind != "firestore-update-document" {
-				t.Fatalf("tool.Kind = %v, want %v", actualTool.Kind, "firestore-update-document")
+			if actualTool.Cfg.Type != "firestore-update-document" {
+				t.Fatalf("tool.Type = %v, want %v", actualTool.Cfg.Type, "firestore-update-document")
 			}
-			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.AuthRequired); diff != "" {
+			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.Manifest().AuthRequired); diff != "" {
 				t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
 			}
-			if actualTool.Parameters == nil {
+			if actualTool.StaticParameters == nil {
 				t.Fatalf("expected Parameters to be non-nil")
 			}
-			if len(actualTool.Parameters) != 4 {
-				t.Fatalf("len(Parameters) = %v, want 4", len(actualTool.Parameters))
+			if len(actualTool.StaticParameters) != 4 {
+				t.Fatalf("len(Parameters) = %v, want 4", len(actualTool.StaticParameters))
 			}
 		})
 	}
@@ -205,11 +192,13 @@ func TestConfig_Initialize(t *testing.T) {
 
 func TestTool_ParseParams(t *testing.T) {
 	tool := Tool{
-		Parameters: parameters.Parameters{
-			parameters.NewStringParameter("documentPath", "Document path"),
-			parameters.NewMapParameter("documentData", "Document data", ""),
-			parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
-			parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+		BaseTool: tools.BaseTool[Config]{
+			StaticParameters: parameters.Parameters{
+				parameters.NewStringParameter("documentPath", "Document path"),
+				parameters.NewMapParameter("documentData", "Document data", ""),
+				parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
+				parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+			},
 		},
 	}
 
@@ -261,7 +250,7 @@ func TestTool_ParseParams(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params, err := tool.ParseParams(tt.data, tt.claims)
+			params, err := parameters.ParseParams(tool.GetParameters(), tt.data, tt.claims)
 
 			if tt.wantErr {
 				if err == nil {
@@ -283,18 +272,23 @@ func TestTool_ParseParams(t *testing.T) {
 
 func TestTool_Manifest(t *testing.T) {
 	tool := Tool{
-		manifest: tools.Manifest{
-			Description: "Test description",
-			Parameters: []parameters.ParameterManifest{
-				{
-					Name:        "documentPath",
-					Type:        "string",
-					Description: "Document path",
-					Required:    true,
+		BaseTool: tools.NewBaseTool(
+			Config{},
+			nil,
+			tools.Manifest{
+				Description: "Test description",
+				Parameters: []parameters.ParameterManifest{
+					{
+						Name:        "documentPath",
+						Type:        "string",
+						Description: "Document path",
+						Required:    true,
+					},
 				},
+				AuthRequired: []string{"google-oauth"},
 			},
-			AuthRequired: []string{"google-oauth"},
-		},
+			nil,
+		),
 	}
 
 	manifest := tool.Manifest()
@@ -306,36 +300,6 @@ func TestTool_Manifest(t *testing.T) {
 	}
 	if diff := cmp.Diff([]string{"google-oauth"}, manifest.AuthRequired); diff != "" {
 		t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
-	}
-}
-
-func TestTool_McpManifest(t *testing.T) {
-	tool := Tool{
-		mcpManifest: tools.McpManifest{
-			Name:        "test-update-document",
-			Description: "Test description",
-			InputSchema: parameters.McpToolsSchema{
-				Type: "object",
-				Properties: map[string]parameters.ParameterMcpManifest{
-					"documentPath": {
-						Type:        "string",
-						Description: "Document path",
-					},
-				},
-				Required: []string{"documentPath"},
-			},
-		},
-	}
-
-	mcpManifest := tool.McpManifest()
-	if mcpManifest.Name != "test-update-document" {
-		t.Fatalf("mcpManifest.Name = %v, want %v", mcpManifest.Name, "test-update-document")
-	}
-	if mcpManifest.Description != "Test description" {
-		t.Fatalf("mcpManifest.Description = %v, want %v", mcpManifest.Description, "Test description")
-	}
-	if mcpManifest.InputSchema.Type == "" {
-		t.Fatalf("expected InputSchema to be non-empty")
 	}
 }
 
@@ -375,9 +339,12 @@ func TestTool_Authorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				Config: Config{
-					AuthRequired: tt.authRequired,
-				},
+				BaseTool: tools.NewBaseTool(
+					Config{ConfigBase: tools.ConfigBase{AuthRequired: tt.authRequired}},
+					nil,
+					tools.Manifest{AuthRequired: tt.authRequired},
+					nil,
+				),
 			}
 			got := tool.Authorized(tt.verifiedAuthServices)
 			if got != tt.want {
@@ -463,15 +430,4 @@ func TestGetFieldValue(t *testing.T) {
 			}
 		})
 	}
-}
-
-// mockIncompatibleSource is a mock source that doesn't implement compatibleSource
-type mockIncompatibleSource struct{}
-
-func (m *mockIncompatibleSource) SourceKind() string {
-	return "mock"
-}
-
-func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
-	return nil
 }

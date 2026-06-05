@@ -17,17 +17,17 @@ package firestorevalidaterules
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"google.golang.org/api/firebaserules/v1"
 )
 
-const kind string = "firestore-validate-rules"
+const resourceType string = "firestore-validate-rules"
 
 // Parameter keys
 const (
@@ -35,13 +35,13 @@ const (
 )
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -50,56 +50,39 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirebaseRulesClient() *firebaserules.Service
-	GetProjectId() string
+	ValidateRules(context.Context, string) (any, error)
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &firestoreds.Source{}
-
-var compatibleSources = [...]string{firestoreds.SourceKind}
-
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	// Create parameters
 	params := createParameters()
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
-	// finish tool setup
-	t := Tool{
-		Config:      cfg,
-		Parameters:  params,
-		RulesClient: s.FirebaseRulesClient(),
-		ProjectId:   s.GetProjectId(),
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 // createParameters creates the parameter definitions for the tool
@@ -116,177 +99,29 @@ func createParameters() parameters.Parameters {
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	RulesClient *firebaserules.Service
-	ProjectId   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-// Issue represents a validation issue in the rules
-type Issue struct {
-	SourcePosition SourcePosition `json:"sourcePosition"`
-	Description    string         `json:"description"`
-	Severity       string         `json:"severity"`
-}
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
 
-// SourcePosition represents the location of an issue in the source
-type SourcePosition struct {
-	FileName      string `json:"fileName,omitempty"`
-	Line          int64  `json:"line"`          // 1-based
-	Column        int64  `json:"column"`        // 1-based
-	CurrentOffset int64  `json:"currentOffset"` // 0-based, inclusive start
-	EndOffset     int64  `json:"endOffset"`     // 0-based, exclusive end
-}
-
-// ValidationResult represents the result of rules validation
-type ValidationResult struct {
-	Valid           bool    `json:"valid"`
-	IssueCount      int     `json:"issueCount"`
-	FormattedIssues string  `json:"formattedIssues,omitempty"`
-	RawIssues       []Issue `json:"rawIssues,omitempty"`
-}
-
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 
 	// Get source parameter
-	source, ok := mapParams[sourceKey].(string)
-	if !ok || source == "" {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter", sourceKey)
+	sourceParam, ok := mapParams[sourceKey].(string)
+	if !ok || sourceParam == "" {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter", sourceKey), nil)
 	}
-
-	// Create test request
-	testRequest := &firebaserules.TestRulesetRequest{
-		Source: &firebaserules.Source{
-			Files: []*firebaserules.File{
-				{
-					Name:    "firestore.rules",
-					Content: source,
-				},
-			},
-		},
-		// We don't need test cases for validation only
-		TestSuite: &firebaserules.TestSuite{
-			TestCases: []*firebaserules.TestCase{},
-		},
-	}
-
-	// Call the test API
-	projectName := fmt.Sprintf("projects/%s", t.ProjectId)
-	response, err := t.RulesClient.Projects.Test(projectName, testRequest).Context(ctx).Do()
+	resp, err := source.ValidateRules(ctx, sourceParam)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate rules: %w", err)
+		return nil, util.ProcessGcpError(err)
 	}
-
-	// Process the response
-	result := t.processValidationResponse(response, source)
-
-	return result, nil
-}
-
-func (t Tool) processValidationResponse(response *firebaserules.TestRulesetResponse, source string) ValidationResult {
-	if len(response.Issues) == 0 {
-		return ValidationResult{
-			Valid:           true,
-			IssueCount:      0,
-			FormattedIssues: "✓ No errors detected. Rules are valid.",
-		}
-	}
-
-	// Convert issues to our format
-	issues := make([]Issue, len(response.Issues))
-	for i, issue := range response.Issues {
-		issues[i] = Issue{
-			Description: issue.Description,
-			Severity:    issue.Severity,
-			SourcePosition: SourcePosition{
-				FileName:      issue.SourcePosition.FileName,
-				Line:          issue.SourcePosition.Line,
-				Column:        issue.SourcePosition.Column,
-				CurrentOffset: issue.SourcePosition.CurrentOffset,
-				EndOffset:     issue.SourcePosition.EndOffset,
-			},
-		}
-	}
-
-	// Format issues
-	formattedIssues := t.formatRulesetIssues(issues, source)
-
-	return ValidationResult{
-		Valid:           false,
-		IssueCount:      len(issues),
-		FormattedIssues: formattedIssues,
-		RawIssues:       issues,
-	}
-}
-
-// formatRulesetIssues formats validation issues into a human-readable string with code snippets
-func (t Tool) formatRulesetIssues(issues []Issue, rulesSource string) string {
-	sourceLines := strings.Split(rulesSource, "\n")
-	var formattedOutput []string
-
-	formattedOutput = append(formattedOutput, fmt.Sprintf("Found %d issue(s) in rules source:\n", len(issues)))
-
-	for _, issue := range issues {
-		issueString := fmt.Sprintf("%s: %s [Ln %d, Col %d]",
-			issue.Severity,
-			issue.Description,
-			issue.SourcePosition.Line,
-			issue.SourcePosition.Column)
-
-		if issue.SourcePosition.Line > 0 {
-			lineIndex := int(issue.SourcePosition.Line - 1) // 0-based index
-			if lineIndex >= 0 && lineIndex < len(sourceLines) {
-				errorLine := sourceLines[lineIndex]
-				issueString += fmt.Sprintf("\n```\n%s", errorLine)
-
-				// Add carets if we have column and offset information
-				if issue.SourcePosition.Column > 0 &&
-					issue.SourcePosition.CurrentOffset >= 0 &&
-					issue.SourcePosition.EndOffset > issue.SourcePosition.CurrentOffset {
-
-					startColumn := int(issue.SourcePosition.Column - 1) // 0-based
-					errorTokenLength := int(issue.SourcePosition.EndOffset - issue.SourcePosition.CurrentOffset)
-
-					if startColumn >= 0 && errorTokenLength > 0 && startColumn <= len(errorLine) {
-						padding := strings.Repeat(" ", startColumn)
-						carets := strings.Repeat("^", errorTokenLength)
-						issueString += fmt.Sprintf("\n%s%s", padding, carets)
-					}
-				}
-				issueString += "\n```"
-			}
-		}
-
-		formattedOutput = append(formattedOutput, issueString)
-	}
-
-	return strings.Join(formattedOutput, "\n\n")
-}
-
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.Parameters, data, claims)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return resp, nil
 }

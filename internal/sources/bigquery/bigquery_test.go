@@ -15,13 +15,18 @@
 package bigquery_test
 
 import (
+	"context"
+	"math/big"
+	"reflect"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestParseFromYamlBigQuery(t *testing.T) {
@@ -33,15 +38,15 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
 					Name:      "my-instance",
-					Kind:      bigquery.SourceKind,
+					Type:      bigquery.SourceType,
 					Project:   "my-project",
 					Location:  "",
 					WriteMode: "",
@@ -51,59 +56,119 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "all fields specified",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: asia
-					writeMode: blocked
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: asia
+			writeMode: blocked
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
 					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
+					Type:           bigquery.SourceType,
 					Project:        "my-project",
 					Location:       "asia",
 					WriteMode:      "blocked",
-					UseClientOAuth: false,
+					UseClientOAuth: "",
 				},
 			},
 		},
 		{
 			desc: "use client auth example",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					useClientOAuth: true
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: "true"
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
 					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
+					Type:           bigquery.SourceType,
 					Project:        "my-project",
 					Location:       "us",
-					UseClientOAuth: true,
+					UseClientOAuth: "true",
+				},
+			},
+		},
+		{
+			desc: "with custom auth header name example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: X-Custom-Auth
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "X-Custom-Auth",
+				},
+			},
+		},
+		{
+			desc: "use client auth with unquoted true",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "true",
+				},
+			},
+		},
+		{
+			desc: "use client auth with unquoted false",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			useClientOAuth: false
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Type:           bigquery.SourceType,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: "false",
 				},
 			},
 		},
 		{
 			desc: "with allowed datasets example",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					allowedDatasets:
-						- my_dataset
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			allowedDatasets:
+			- my_dataset
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
 					Name:            "my-instance",
-					Kind:            bigquery.SourceKind,
+					Type:            bigquery.SourceType,
 					Project:         "my-project",
 					Location:        "us",
 					AllowedDatasets: []string{"my_dataset"},
@@ -113,40 +178,97 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 		{
 			desc: "with service account impersonation example",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": bigquery.Config{
 					Name:                      "my-instance",
-					Kind:                      bigquery.SourceKind,
+					Type:                      bigquery.SourceType,
 					Project:                   "my-project",
 					Location:                  "us",
 					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
 				},
 			},
 		},
+		{
+			desc: "with custom scopes example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			scopes:
+			- https://www.googleapis.com/auth/bigquery
+			- https://www.googleapis.com/auth/cloud-platform
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:     "my-instance",
+					Type:     bigquery.SourceType,
+					Project:  "my-project",
+					Location: "us",
+					Scopes:   []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
+				},
+			},
+		},
+		{
+			desc: "with max query result rows example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			maxQueryResultRows: 10
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					MaxQueryResultRows: 10,
+				},
+			},
+		},
+		{
+			desc: "with maximum bytes billed example",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			maximumBytesBilled: 10737418240
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Type:               bigquery.SourceType,
+					Project:            "my-project",
+					Location:           "us",
+					MaximumBytesBilled: 10737418240,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Fatalf("incorrect parse (-want +got):\n%s", diff)
 			}
 		})
 	}
-
 }
 
 func TestFailParseFromYaml(t *testing.T) {
@@ -158,39 +280,254 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					project: my-project
-					location: us
-					foo: bar
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			location: us
+			foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: bigquery\n   3 | location: us\n   4 | project: my-project",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | location: us\n   3 | name: my-instance\n   4 | project: my-project\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-instance:
-					kind: bigquery
-					location: us
+			kind: source
+			name: my-instance
+			type: bigquery
+			location: us
 			`,
-			err: "unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+		},
+		{
+			desc: "negative maximum bytes billed",
+			in: `
+			kind: source
+			name: my-instance
+			type: bigquery
+			project: my-project
+			maximumBytesBilled: -1
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-instance\" as \"bigquery\": [1:21] Key: 'Config.MaximumBytesBilled' Error:Field validation for 'MaximumBytesBilled' failed on the 'gte' tag\n>  1 | maximumBytesBilled: -1\n                           ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: bigquery",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestInitialize_MaxQueryResultRows(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithUserAgent(ctx, "test-agent")
+	tracer := noop.NewTracerProvider().Tracer("")
+
+	tcs := []struct {
+		desc string
+		cfg  bigquery.Config
+		want int
+	}{
+		{
+			desc: "default value",
+			cfg: bigquery.Config{
+				Name:           "test-default",
+				Type:           bigquery.SourceType,
+				Project:        "test-project",
+				UseClientOAuth: "true",
+			},
+			want: 50,
+		},
+		{
+			desc: "configured value",
+			cfg: bigquery.Config{
+				Name:               "test-configured",
+				Type:               bigquery.SourceType,
+				Project:            "test-project",
+				UseClientOAuth:     "true",
+				MaxQueryResultRows: 100,
+			},
+			want: 100,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			src, err := tc.cfg.Initialize(ctx, tracer)
+			if err != nil {
+				t.Fatalf("Initialize failed: %v", err)
+			}
+			bqSrc, ok := src.(*bigquery.Source)
+			if !ok {
+				t.Fatalf("Expected *bigquery.Source, got %T", src)
+			}
+			if bqSrc.MaxQueryResultRows != tc.want {
+				t.Errorf("MaxQueryResultRows = %d, want %d", bqSrc.MaxQueryResultRows, tc.want)
+			}
+		})
+	}
+}
+
+func TestInitialize_MaximumBytesBilled(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithUserAgent(ctx, "test-agent")
+	tracer := noop.NewTracerProvider().Tracer("")
+
+	tcs := []struct {
+		desc string
+		cfg  bigquery.Config
+		want int64
+	}{
+		{
+			desc: "default value",
+			cfg: bigquery.Config{
+				Name:           "test-default",
+				Type:           bigquery.SourceType,
+				Project:        "test-project",
+				UseClientOAuth: "true",
+			},
+			want: 0,
+		},
+		{
+			desc: "configured value",
+			cfg: bigquery.Config{
+				Name:               "test-configured",
+				Type:               bigquery.SourceType,
+				Project:            "test-project",
+				UseClientOAuth:     "true",
+				MaximumBytesBilled: 10737418240,
+			},
+			want: 10737418240,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			src, err := tc.cfg.Initialize(ctx, tracer)
+			if err != nil {
+				t.Fatalf("Initialize failed: %v", err)
+			}
+			bqSrc, ok := src.(*bigquery.Source)
+			if !ok {
+				t.Fatalf("Expected *bigquery.Source, got %T", src)
+			}
+			if bqSrc.MaximumBytesBilled != tc.want {
+				t.Errorf("MaximumBytesBilled = %d, want %d", bqSrc.MaximumBytesBilled, tc.want)
+			}
+		})
+	}
+}
+
+func TestNormalizeValue(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    any
+		expected any
+	}{
+		{
+			name:     "big.Rat 1/3 (NUMERIC scale 9)",
+			input:    new(big.Rat).SetFrac64(1, 3),               // 0.33333333333...
+			expected: "0.33333333333333333333333333333333333333", // FloatString(38)
+		},
+		{
+			name:     "big.Rat 19/2 (9.5)",
+			input:    new(big.Rat).SetFrac64(19, 2),
+			expected: "9.5",
+		},
+		{
+			name:     "big.Rat 12341/10 (1234.1)",
+			input:    new(big.Rat).SetFrac64(12341, 10),
+			expected: "1234.1",
+		},
+		{
+			name:     "big.Rat 10/1 (10)",
+			input:    new(big.Rat).SetFrac64(10, 1),
+			expected: "10",
+		},
+		{
+			name:     "string",
+			input:    "hello",
+			expected: "hello",
+		},
+		{
+			name:     "int",
+			input:    123,
+			expected: 123,
+		},
+		{
+			name: "nested slice of big.Rat",
+			input: []any{
+				new(big.Rat).SetFrac64(19, 2),
+				new(big.Rat).SetFrac64(1, 4),
+			},
+			expected: []any{"9.5", "0.25"},
+		},
+		{
+			name: "nested map of big.Rat",
+			input: map[string]any{
+				"val1": new(big.Rat).SetFrac64(19, 2),
+				"val2": new(big.Rat).SetFrac64(1, 2),
+			},
+			expected: map[string]any{
+				"val1": "9.5",
+				"val2": "0.5",
+			},
+		},
+		{
+			name: "complex nested structure",
+			input: map[string]any{
+				"list": []any{
+					map[string]any{
+						"rat": new(big.Rat).SetFrac64(3, 2),
+					},
+				},
+			},
+			expected: map[string]any{
+				"list": []any{
+					map[string]any{
+						"rat": "1.5",
+					},
+				},
+			},
+		},
+		{
+			name: "slice of *big.Rat",
+			input: []*big.Rat{
+				new(big.Rat).SetFrac64(19, 2),
+				new(big.Rat).SetFrac64(1, 4),
+			},
+			expected: []any{"9.5", "0.25"},
+		},
+		{
+			name:     "slice of strings",
+			input:    []string{"a", "b"},
+			expected: []any{"a", "b"},
+		},
+		{
+			name:     "byte slice (BYTES)",
+			input:    []byte("hello"),
+			expected: []byte("hello"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := bigquery.NormalizeValue(tt.input)
+			if !reflect.DeepEqual(got, tt.expected) {
+				t.Errorf("NormalizeValue() = %v, want %v", got, tt.expected)
 			}
 		})
 	}

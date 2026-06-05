@@ -17,12 +17,12 @@ package oceanbasesql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/oceanbase/oceanbasesql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // Test parsing OceanBase SQL tool config from YAML.
@@ -39,25 +39,27 @@ func TestParseFromYamlOceanBaseSql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: oceanbase-sql
-					source: my-instance
-					description: some description
-					statement: select * from t where id = ?
-					parameters:
-					  - name: id
-					    type: string
-					    description: id param
+            kind: tool
+            name: example_tool
+            type: oceanbase-sql
+            source: my-instance
+            description: some description
+            statement: select * from t where id = ?
+            parameters:
+              - name: id
+                type: string
+                description: id param
 			`,
 			want: server.ToolConfigs{
 				"example_tool": oceanbasesql.Config{
-					Name:         "example_tool",
-					Kind:         "oceanbase-sql",
-					Source:       "my-instance",
-					Description:  "some description",
-					Statement:    "select * from t where id = ?",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "oceanbase-sql",
+					Source:    "my-instance",
+					Statement: "select * from t where id = ?",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("id", "id param"),
 					},
@@ -67,15 +69,12 @@ func TestParseFromYamlOceanBaseSql(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

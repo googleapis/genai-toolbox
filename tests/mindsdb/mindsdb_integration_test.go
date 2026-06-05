@@ -28,13 +28,13 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 var (
-	MindsDBSourceKind = "mindsdb"
-	MindsDBToolKind   = "mindsdb-sql"
+	MindsDBSourceType = "mindsdb"
+	MindsDBToolType   = "mindsdb-sql"
 	MindsDBDatabase   = os.Getenv("MINDSDB_DATABASE")
 	MindsDBHost       = os.Getenv("MINDSDB_HOST")
 	MindsDBPort       = os.Getenv("MINDSDB_PORT")
@@ -66,7 +66,7 @@ func getMindsDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MindsDBSourceKind,
+		"type":     MindsDBSourceType,
 		"host":     MindsDBHost,
 		"port":     MindsDBPort,
 		"database": MindsDBDatabase,
@@ -90,7 +90,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Create unique table names with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -107,19 +107,19 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1",
 			},
 			"my-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   paramToolStmt,
@@ -137,7 +137,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   idParamToolStmt,
@@ -150,7 +150,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   nameParamToolStmt,
@@ -164,13 +164,13 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-array-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
 				"statement":   "SELECT 1 as id, 'Alice' as name UNION SELECT 3 as id, 'Sid' as name",
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				"statement":   authToolStmt,
@@ -189,7 +189,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"statement":   "SELECT 1",
@@ -198,18 +198,18 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-fail-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"type":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test statement with incorrect syntax.",
 				"statement":   "INVALID SQL STATEMENT",
 			},
 			"my-exec-sql-tool": map[string]any{
-				"kind":        "mindsdb-execute-sql",
+				"type":        "mindsdb-execute-sql",
 				"source":      "my-instance",
 				"description": "Tool to execute sql",
 			},
 			"my-auth-exec-sql-tool": map[string]any{
-				"kind":        "mindsdb-execute-sql",
+				"type":        "mindsdb-execute-sql",
 				"source":      "my-instance",
 				"description": "Tool to execute sql with auth",
 				"authRequired": []string{

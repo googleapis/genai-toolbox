@@ -17,33 +17,17 @@ package clickhouse
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-func TestListDatabasesConfigToolConfigKind(t *testing.T) {
+func TestListDatabasesConfigToolConfigType(t *testing.T) {
 	cfg := Config{}
-	if cfg.ToolConfigKind() != listDatabasesKind {
-		t.Errorf("expected %q, got %q", listDatabasesKind, cfg.ToolConfigKind())
-	}
-}
-
-func TestListDatabasesConfigInitializeMissingSource(t *testing.T) {
-	cfg := Config{
-		Name:        "test-list-databases",
-		Kind:        listDatabasesKind,
-		Source:      "missing-source",
-		Description: "Test list databases tool",
-	}
-
-	srcs := map[string]sources.Source{}
-	_, err := cfg.Initialize(srcs)
-	if err == nil {
-		t.Error("expected error for missing source")
+	if cfg.ToolConfigType() != listDatabasesType {
+		t.Errorf("expected %q, got %q", listDatabasesType, cfg.ToolConfigType())
 	}
 }
 
@@ -60,33 +44,33 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: clickhouse-list-databases
-					source: my-instance
-					description: some description
-			`,
+            kind: tool
+            name: example_tool
+            type: clickhouse-list-databases
+            source: my-instance
+            description: some description
+            `,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Kind:         "clickhouse-list-databases",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "clickhouse-list-databases",
+					Source: "my-instance",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			// Parse contents
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -95,12 +79,12 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 
 func TestListDatabasesToolParseParams(t *testing.T) {
 	tool := Tool{
-		Config: Config{
-			Parameters: parameters.Parameters{},
+		BaseTool: tools.BaseTool[Config]{
+			StaticParameters: parameters.Parameters{},
 		},
 	}
 
-	params, err := tool.ParseParams(map[string]any{}, map[string]map[string]any{})
+	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{}, map[string]map[string]any{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}

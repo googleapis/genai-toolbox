@@ -19,18 +19,18 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 type Message = prompts.Message
 
-const kind = "custom"
+const resourceType = "custom"
 
-// init registers this prompt kind with the prompt framework.
+// init registers this prompt type with the prompt framework.
 func init() {
-	if !prompts.Register(kind, newConfig) {
-		panic(fmt.Sprintf("prompt kind %q already registered", kind))
+	if !prompts.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("prompt type %q already registered", resourceType))
 	}
 }
 
@@ -56,23 +56,29 @@ type Config struct {
 var _ prompts.PromptConfig = Config{}
 var _ prompts.Prompt = Prompt{}
 
-func (c Config) PromptConfigKind() string {
-	return kind
+func (c Config) PromptConfigType() string {
+	return resourceType
 }
 
 func (c Config) Initialize() (prompts.Prompt, error) {
 	p := Prompt{
-		Config:      c,
-		manifest:    prompts.GetManifest(c.Description, c.Arguments),
-		mcpManifest: prompts.GetMcpManifest(c.Name, c.Description, c.Arguments),
+		Config:   c,
+		manifest: prompts.GetManifest(c.Description, c.Arguments),
 	}
 	return p, nil
 }
 
 type Prompt struct {
 	Config
-	manifest    prompts.Manifest
-	mcpManifest prompts.McpManifest
+	manifest prompts.Manifest
+}
+
+func (p Prompt) GetDesc() string {
+	return p.Description
+}
+
+func (p Prompt) GetArguments() prompts.Arguments {
+	return p.Arguments
 }
 
 func (p Prompt) ToConfig() prompts.PromptConfig {
@@ -81,10 +87,6 @@ func (p Prompt) ToConfig() prompts.PromptConfig {
 
 func (p Prompt) Manifest() prompts.Manifest {
 	return p.manifest
-}
-
-func (p Prompt) McpManifest() prompts.McpManifest {
-	return p.mcpManifest
 }
 
 func (p Prompt) SubstituteParams(argValues parameters.ParamValues) (any, error) {

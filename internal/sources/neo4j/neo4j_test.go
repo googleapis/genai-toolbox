@@ -15,13 +15,14 @@
 package neo4j_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/neo4j"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/neo4j"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -33,18 +34,18 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-neo4j-instance:
-					kind: neo4j
-					uri: neo4j+s://my-host:7687
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: source
+			name: my-neo4j-instance
+			type: neo4j
+			uri: neo4j+s://my-host:7687
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-neo4j-instance": neo4j.Config{
 					Name:     "my-neo4j-instance",
-					Kind:     neo4j.SourceKind,
+					Type:     neo4j.SourceType,
 					Uri:      "neo4j+s://my-host:7687",
 					Database: "my_db",
 					User:     "my_user",
@@ -55,16 +56,12 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -80,37 +77,33 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-neo4j-instance:
-					kind: neo4j
-					uri: neo4j+s://my-host:7687
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: source
+			name: my-neo4j-instance
+			type: neo4j
+			uri: neo4j+s://my-host:7687
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unable to parse source \"my-neo4j-instance\" as \"neo4j\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | kind: neo4j\n   4 | password: my_pass\n   5 | uri: neo4j+s://my-host:7687\n   6 | ",
+			err: "error unmarshaling source: unable to parse source \"my-neo4j-instance\" as \"neo4j\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | name: my-neo4j-instance\n   4 | password: my_pass\n   5 | type: neo4j\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-neo4j-instance:
-					kind: neo4j
-					uri: neo4j+s://my-host:7687
-					database: my_db
-					user: my_user
+			kind: source
+			name: my-neo4j-instance
+			type: neo4j
+			uri: neo4j+s://my-host:7687
+			database: my_db
+			user: my_user
 			`,
-			err: "unable to parse source \"my-neo4j-instance\" as \"neo4j\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-neo4j-instance\" as \"neo4j\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

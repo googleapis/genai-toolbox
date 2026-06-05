@@ -15,13 +15,16 @@ package looker
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -30,14 +33,14 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const SourceKind string = "looker"
+const SourceType string = "looker"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -46,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		Name:               name,
 		SslVerification:    true,
 		Timeout:            "600s",
-		UseClientOAuth:     false,
+		UseClientOAuth:     "false",
 		ShowHiddenModels:   true,
 		ShowHiddenExplores: true,
 		ShowHiddenFields:   true,
@@ -61,12 +64,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name               string `yaml:"name" validate:"required"`
-	Kind               string `yaml:"kind" validate:"required"`
+	Type               string `yaml:"type" validate:"required"`
 	BaseURL            string `yaml:"base_url" validate:"required"`
 	ClientId           string `yaml:"client_id"`
 	ClientSecret       string `yaml:"client_secret"`
 	SslVerification    bool   `yaml:"verify_ssl"`
-	UseClientOAuth     bool   `yaml:"use_client_oauth"`
+	UseClientOAuth     string `yaml:"use_client_oauth"`
 	Timeout            string `yaml:"timeout"`
 	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
 	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
@@ -76,8 +79,8 @@ type Config struct {
 	SessionLength      int64  `yaml:"sessionLength"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize initializes a Looker Source instance.
@@ -114,12 +117,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	tokenSource, _ = initGoogleCloudConnection(ctx)
 
 	s := &Source{
-		Config:      r,
-		ApiSettings: &cfg,
-		TokenSource: tokenSource,
+		Config:              r,
+		ApiSettings:         &cfg,
+		TokenSource:         tokenSource,
+		AuthTokenHeaderName: "Authorization",
 	}
 
-	if !r.UseClientOAuth {
+	if strings.ToLower(r.UseClientOAuth) == "false" {
 		if r.ClientId == "" || r.ClientSecret == "" {
 			return nil, fmt.Errorf("client_id and client_secret need to be specified")
 		}
@@ -129,6 +133,11 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			return nil, fmt.Errorf("incorrect settings: %w", err)
 		}
 		logger.DebugContext(ctx, fmt.Sprintf("logged in as %s %s", *resp.FirstName, *resp.LastName))
+	} else {
+		if strings.ToLower(r.UseClientOAuth) != "true" {
+			s.AuthTokenHeaderName = r.UseClientOAuth
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("Using AuthTokenHeaderName: %s", s.AuthTokenHeaderName))
 	}
 
 	return s, nil
@@ -139,25 +148,26 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client      *v4.LookerSDK
-	ApiSettings *rtl.ApiSettings
-	TokenSource oauth2.TokenSource
+	Client              *v4.LookerSDK
+	ApiSettings         *rtl.ApiSettings
+	TokenSource         oauth2.TokenSource
+	AuthTokenHeaderName string
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
-func (s *Source) GetApiSettings() *rtl.ApiSettings {
-	return s.ApiSettings
+func (s *Source) UseClientAuthorization() bool {
+	return strings.ToLower(s.UseClientOAuth) != "false"
 }
 
-func (s *Source) UseClientAuthorization() bool {
-	return s.UseClientOAuth
+func (s *Source) GetAuthTokenHeaderName() string {
+	return s.AuthTokenHeaderName
 }
 
 func (s *Source) GoogleCloudProject() string {
@@ -174,6 +184,81 @@ func (s *Source) GoogleCloudTokenSource() oauth2.TokenSource {
 
 func (s *Source) GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
 	return google.DefaultTokenSource(ctx, scope)
+}
+
+func (s *Source) LookerClient() *v4.LookerSDK {
+	return s.Client
+}
+
+func (s *Source) LookerApiSettings() *rtl.ApiSettings {
+	return s.ApiSettings
+}
+
+func (s *Source) LookerShowHiddenFields() bool {
+	return s.ShowHiddenFields
+}
+
+func (s *Source) LookerShowHiddenModels() bool {
+	return s.ShowHiddenModels
+}
+
+func (s *Source) LookerShowHiddenExplores() bool {
+	return s.ShowHiddenExplores
+}
+
+func (s *Source) LookerSessionLength() int64 {
+	return s.SessionLength
+}
+
+// Make types for RoundTripper
+type transportWithAuthHeader struct {
+	Base      http.RoundTripper
+	AuthToken string
+	clientIP  string
+}
+
+func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("x-looker-appid", "go-sdk")
+	req.Header.Set("Authorization", t.AuthToken)
+	if t.clientIP != "" {
+		req.Header.Set("X-Forwarded-For", t.clientIP)
+		req.Header.Set("X-Real-IP", t.clientIP)
+	}
+	return t.Base.RoundTrip(req)
+}
+
+func (s *Source) GetLookerSDK(ctx context.Context, accessToken string) (*v4.LookerSDK, error) {
+	if s.UseClientAuthorization() {
+		if accessToken == "" {
+			return nil, fmt.Errorf("no access token supplied with request")
+		}
+
+		clientIP, _ := util.ClientIPFromContext(ctx)
+
+		session := rtl.NewAuthSession(*s.LookerApiSettings())
+		// Configure base transport with TLS
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !s.LookerApiSettings().VerifySsl,
+			},
+		}
+
+		// Build transport for end user token
+		session.Client = http.Client{
+			Transport: &transportWithAuthHeader{
+				Base:      transport,
+				AuthToken: accessToken,
+				clientIP:  clientIP,
+			},
+		}
+		// return SDK with new Transport
+		return v4.NewLookerSDK(session), nil
+	}
+
+	if s.LookerClient() == nil {
+		return nil, fmt.Errorf("client id or client secret not valid")
+	}
+	return s.LookerClient(), nil
 }
 
 func initGoogleCloudConnection(ctx context.Context) (oauth2.TokenSource, error) {

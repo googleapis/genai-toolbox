@@ -28,13 +28,13 @@ import (
 // JSONToFirestoreValue converts a JSON value with type information to a Firestore-compatible value
 // The input should be a map with a single key indicating the type (e.g., "stringValue", "integerValue")
 // If a client is provided, referenceValue types will be converted to *firestore.DocumentRef
-func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interface{}, error) {
+func JSONToFirestoreValue(value any, client *firestore.Client) (any, error) {
 	if value == nil {
 		return nil, nil
 	}
 
 	switch v := value.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		// Check for typed values
 		if len(v) == 1 {
 			for key, val := range v {
@@ -92,7 +92,7 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 					return nil, fmt.Errorf("timestamp value must be a string")
 				case "geoPointValue":
 					// Convert to LatLng
-					if geoMap, ok := val.(map[string]interface{}); ok {
+					if geoMap, ok := val.(map[string]any); ok {
 						lat, latOk := geoMap["latitude"].(float64)
 						lng, lngOk := geoMap["longitude"].(float64)
 						if latOk && lngOk {
@@ -105,9 +105,9 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 					return nil, fmt.Errorf("invalid geopoint value format")
 				case "arrayValue":
 					// Convert array
-					if arrayMap, ok := val.(map[string]interface{}); ok {
-						if values, ok := arrayMap["values"].([]interface{}); ok {
-							result := make([]interface{}, len(values))
+					if arrayMap, ok := val.(map[string]any); ok {
+						if values, ok := arrayMap["values"].([]any); ok {
+							result := make([]any, len(values))
 							for i, item := range values {
 								converted, err := JSONToFirestoreValue(item, client)
 								if err != nil {
@@ -121,9 +121,9 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 					return nil, fmt.Errorf("invalid array value format")
 				case "mapValue":
 					// Convert map
-					if mapMap, ok := val.(map[string]interface{}); ok {
-						if fields, ok := mapMap["fields"].(map[string]interface{}); ok {
-							result := make(map[string]interface{})
+					if mapMap, ok := val.(map[string]any); ok {
+						if fields, ok := mapMap["fields"].(map[string]any); ok {
+							result := make(map[string]any)
 							for k, v := range fields {
 								converted, err := JSONToFirestoreValue(v, client)
 								if err != nil {
@@ -160,8 +160,8 @@ func JSONToFirestoreValue(value interface{}, client *firestore.Client) (interfac
 }
 
 // convertPlainMap converts a plain map to Firestore format
-func convertPlainMap(m map[string]interface{}, client *firestore.Client) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
+func convertPlainMap(m map[string]any, client *firestore.Client) (map[string]any, error) {
+	result := make(map[string]any)
 	for k, v := range m {
 		converted, err := JSONToFirestoreValue(v, client)
 		if err != nil {
@@ -170,42 +170,6 @@ func convertPlainMap(m map[string]interface{}, client *firestore.Client) (map[st
 		result[k] = converted
 	}
 	return result, nil
-}
-
-// FirestoreValueToJSON converts a Firestore value to a simplified JSON representation
-// This removes type information and returns plain values
-func FirestoreValueToJSON(value interface{}) interface{} {
-	if value == nil {
-		return nil
-	}
-
-	switch v := value.(type) {
-	case time.Time:
-		return v.Format(time.RFC3339Nano)
-	case *latlng.LatLng:
-		return map[string]interface{}{
-			"latitude":  v.Latitude,
-			"longitude": v.Longitude,
-		}
-	case []byte:
-		return base64.StdEncoding.EncodeToString(v)
-	case []interface{}:
-		result := make([]interface{}, len(v))
-		for i, item := range v {
-			result[i] = FirestoreValueToJSON(item)
-		}
-		return result
-	case map[string]interface{}:
-		result := make(map[string]interface{})
-		for k, val := range v {
-			result[k] = FirestoreValueToJSON(val)
-		}
-		return result
-	case *firestore.DocumentRef:
-		return v.Path
-	default:
-		return value
-	}
 }
 
 // isValidDocumentPath checks if a string is a valid Firestore document path

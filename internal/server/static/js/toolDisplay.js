@@ -14,6 +14,7 @@
 
 import { handleRunTool, displayResults } from './runTool.js';
 import { createGoogleAuthMethodItem } from './auth.js'
+import { escapeHtml } from './sanitize.js'
 
 /**
  * Helper function to create form inputs for parameters.
@@ -357,9 +358,9 @@ export function renderToolInterface(tool, containerElement) {
     const descBox = document.createElement('div');
 
     nameBox.className = 'tool-box tool-name';
-    nameBox.innerHTML = `<h5>Name:</h5><p>${tool.name}</p>`;
+    nameBox.innerHTML = `<h5>Name:</h5><p>${escapeHtml(tool.name)}</p>`;
     descBox.className = 'tool-box tool-description';
-    descBox.innerHTML = `<h5>Description:</h5><p>${tool.description}</p>`;
+    descBox.innerHTML = `<h5>Description:</h5><p>${escapeHtml(tool.description)}</p>`;
 
     toolInfoContainer.className = 'tool-info';
     toolInfoContainer.appendChild(nameBox);
@@ -491,7 +492,7 @@ const AUTH_TOKEN_INSTRUCTIONS_SERVICE_ACCOUNT = `
             <li>Make sure you are on the intended SERVICE account (typically contain iam.gserviceaccount.com). Verify by running the command below.
                 <pre><code>gcloud auth list</code></pre>
             </li>
-            <li>Print an id token with the audience set to your clientID defined in tools file:
+            <li>Print an id token with the audience set to your clientID defined in config:
                 <pre><code>gcloud auth print-identity-token --audiences=YOUR_CLIENT_ID_HERE</code></pre>
             </li>
             <li>Copy the output token.</li>
@@ -514,7 +515,7 @@ const AUTH_TOKEN_INSTRUCTIONS_STANDARD = `
             <pre><code>https://developers.google.com/oauthplayground</code></pre>
             <li>Go to the Google OAuth Playground site: <a href="https://developers.google.com/oauthplayground/" target="_blank">https://developers.google.com/oauthplayground/</a></li>
             <li>In the top right settings menu, select "Use your own OAuth Credentials".</li>
-            <li>Input your clientID (from tools file), along with the client secret from Cloud Console.</li>
+            <li>Input your clientID (from config), along with the client secret from Cloud Console.</li>
             <li>Inside the Google OAuth Playground, select "Google OAuth2 API v2.</li>
             <ul>
                 <li>Select "Authorize APIs".</li>

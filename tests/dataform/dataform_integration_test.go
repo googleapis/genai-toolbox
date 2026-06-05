@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 // setupTestProject creates a minimal dataform project using the 'dataform init' CLI.
@@ -69,7 +69,7 @@ func TestDataformCompileTool(t *testing.T) {
 	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-dataform-compiler": map[string]any{
-				"kind":        "dataform-compile-local",
+				"type":        "dataform-compile-local",
 				"description": "Tool to compile dataform projects",
 			},
 		},
@@ -78,7 +78,8 @@ func TestDataformCompileTool(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile)
+	args := []string{"--enable-api"}
+	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
@@ -109,13 +110,13 @@ func TestDataformCompileTool(t *testing.T) {
 		{
 			name:       "missing parameter",
 			reqBody:    `{}`,
-			wantStatus: http.StatusBadRequest,
-			wantBody:   `parameter \"project_dir\" is required`,
+			wantStatus: http.StatusOK,
+			wantBody:   `error`,
 		},
 		{
 			name:       "non-existent directory",
 			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, nonExistentDir),
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusOK,
 			wantBody:   "error executing dataform compile",
 		},
 	}

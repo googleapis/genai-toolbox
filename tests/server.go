@@ -21,8 +21,9 @@ import (
 	"os"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/spf13/cobra"
 
-	"github.com/googleapis/genai-toolbox/cmd"
+	"github.com/googleapis/mcp-toolbox/cmd"
 )
 
 // tmpFileWithCleanup creates a temporary file with the content and returns the path and
@@ -50,7 +51,7 @@ func tmpFileWithCleanup(content []byte) (string, func(), error) {
 type CmdExec struct {
 	Out io.ReadCloser
 
-	cmd     *cmd.Command
+	cmd     *cobra.Command
 	cancel  context.CancelFunc
 	closers []io.Closer
 	done    chan bool // closed once the cmd is completed
@@ -61,13 +62,14 @@ type CmdExec struct {
 func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*CmdExec, func(), error) {
 	b, err := yaml.Marshal(toolsFile)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to marshal tools file: %s", err)
+		return nil, nil, fmt.Errorf("unable to marshal config: %s", err)
 	}
 	path, cleanup, err := tmpFileWithCleanup(b)
 	if err != nil {
-		return nil, nil, fmt.Errorf("unable to write tools file: %s", err)
+		return nil, nil, fmt.Errorf("unable to write config: %s", err)
 	}
-	args = append(args, "--tools-file", path)
+
+	args = append(args, "--config", path)
 
 	ctx, cancel := context.WithCancel(ctx)
 	// Open a pipe for tracking the output from the cmd
@@ -77,7 +79,7 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 		return nil, nil, fmt.Errorf("unable to open stdout pipe: %w", err)
 	}
 
-	c := cmd.NewCommand(cmd.WithStreams(pw, pw))
+	c := cmd.GenerateCommand(pw, pw)
 	c.SetArgs(args)
 
 	t := &CmdExec{
@@ -95,7 +97,6 @@ func StartCmd(ctx context.Context, toolsFile map[string]any, args ...string) (*C
 		t.err = c.ExecuteContext(ctx)
 	}()
 	return t, cleanup, nil
-
 }
 
 // Stop sends the TERM signal to the cmd and returns.

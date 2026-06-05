@@ -1,2 +1,13 @@
 {{ $file := .Get 0 }}
-{{ (printf "%s%s" .Page.File.Dir $file) | readFile | replaceRE "^---[\\s\\S]+?---" "" | safeHTML }}
+{{ $lang := .Get 1 }}
+
+{{ $content := (printf "%s%s" .Page.File.Dir $file) | readFile | replaceRE "^---[\\s\\S]+?---" "" | replaceRE "\r\n"
+"\n" | strings.TrimRight "\n" }}
+
+{{ if $lang }}
+```{{ $lang }}
+{{ $content | safeHTML }}
+```
+{{ else }}
+{{ $content | safeHTML }}
+{{ end }}

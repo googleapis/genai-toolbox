@@ -17,11 +17,11 @@ package postgreslistavailableextensions_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgreslistavailableextensions"
 )
 
 func TestParseFromYamlPostgres(t *testing.T) {
@@ -37,56 +37,56 @@ func TestParseFromYamlPostgres(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: postgres-list-available-extensions
-					source: my-pg-instance
-					description: "some description"
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
+			kind: tool
+			name: example_tool
+			type: postgres-list-available-extensions
+			source: my-pg-instance
+			description: "some description"
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgreslistavailableextensions.Config{
-					Name:         "example_tool",
-					Kind:         "postgres-list-available-extensions",
-					Source:       "my-pg-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "postgres-list-available-extensions",
+					Source: "my-pg-instance",
 				},
 			},
 		},
 		{
 			desc: "basic example without authRequired",
 			in: `
-			tools:
-				example_tool:
-					kind: postgres-list-available-extensions
-					source: my-pg-instance
-					description: "some description"
+			kind: tool
+			name: example_tool
+			type: postgres-list-available-extensions
+			source: my-pg-instance
+			description: "some description"
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgreslistavailableextensions.Config{
-					Name:         "example_tool",
-					Kind:         "postgres-list-available-extensions",
-					Source:       "my-pg-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "postgres-list-available-extensions",
+					Source: "my-pg-instance",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

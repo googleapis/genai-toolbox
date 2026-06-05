@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package looker
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -26,14 +27,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/tests"
+
+	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 var (
-	LookerSourceKind   = "looker"
+	LookerSourceType   = "looker"
 	LookerBaseUrl      = os.Getenv("LOOKER_BASE_URL")
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
@@ -59,7 +63,7 @@ func getLookerVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":          LookerSourceKind,
+		"type":          LookerSourceType,
 		"base_url":      LookerBaseUrl,
 		"verify_ssl":    (LookerVerifySsl == "true"),
 		"client_id":     LookerClientId,
@@ -80,7 +84,7 @@ func TestLooker(t *testing.T) {
 	}
 	ctx = util.WithLogger(ctx, testLogger)
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to command
 
@@ -90,142 +94,247 @@ func TestLooker(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"get_models": map[string]any{
-				"kind":        "looker-get-models",
+				"type":        "looker-get-models",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_explores": map[string]any{
-				"kind":        "looker-get-explores",
+				"type":        "looker-get-explores",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_dimensions": map[string]any{
-				"kind":        "looker-get-dimensions",
+				"type":        "looker-get-dimensions",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_measures": map[string]any{
-				"kind":        "looker-get-measures",
+				"type":        "looker-get-measures",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_filters": map[string]any{
-				"kind":        "looker-get-filters",
+				"type":        "looker-get-filters",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_parameters": map[string]any{
-				"kind":        "looker-get-parameters",
+				"type":        "looker-get-parameters",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query": map[string]any{
-				"kind":        "looker-query",
+				"type":        "looker-query",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query_sql": map[string]any{
-				"kind":        "looker-query-sql",
+				"type":        "looker-query-sql",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"query_url": map[string]any{
-				"kind":        "looker-query-url",
+				"type":        "looker-query-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_looks": map[string]any{
-				"kind":        "looker-get-looks",
+				"type":        "looker-get-looks",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"make_look": map[string]any{
+				"type":        "looker-make-look",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_dashboards": map[string]any{
-				"kind":        "looker-get-dashboards",
+				"type":        "looker-get-dashboards",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"make_dashboard": map[string]any{
+				"type":        "looker-make-dashboard",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"add_dashboard_filter": map[string]any{
+				"type":        "looker-add-dashboard-filter",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"add_dashboard_element": map[string]any{
+				"type":        "looker-add-dashboard-element",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"conversational_analytics": map[string]any{
-				"kind":        "looker-conversational-analytics",
+				"type":        "looker-conversational-analytics",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"health_pulse": map[string]any{
-				"kind":        "looker-health-pulse",
+				"type":        "looker-health-pulse",
 				"source":      "my-instance",
 				"description": "Checks the health of a Looker instance by running a series of checks on the system.",
 			},
 			"health_analyze": map[string]any{
-				"kind":        "looker-health-analyze",
+				"type":        "looker-health-analyze",
 				"source":      "my-instance",
 				"description": "Provides analysis of a Looker instance's projects, models, or explores.",
 			},
 			"health_vacuum": map[string]any{
-				"kind":        "looker-health-vacuum",
+				"type":        "looker-health-vacuum",
 				"source":      "my-instance",
 				"description": "Vacuums unused content from a Looker instance.",
 			},
 			"dev_mode": map[string]any{
-				"kind":        "looker-dev-mode",
+				"type":        "looker-dev-mode",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_projects": map[string]any{
-				"kind":        "looker-get-projects",
+				"type":        "looker-get-projects",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_project_files": map[string]any{
-				"kind":        "looker-get-project-files",
+				"type":        "looker-get-project-files",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_project_file": map[string]any{
-				"kind":        "looker-get-project-file",
+				"type":        "looker-get-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"create_project_file": map[string]any{
-				"kind":        "looker-create-project-file",
+				"type":        "looker-create-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"update_project_file": map[string]any{
-				"kind":        "looker-update-project-file",
+				"type":        "looker-update-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"delete_project_file": map[string]any{
-				"kind":        "looker-delete-project-file",
+				"type":        "looker-delete-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_project_directories": map[string]any{
+				"type":        "looker-get-project-directories",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_project_directory": map[string]any{
+				"type":        "looker-create-project-directory",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"delete_project_directory": map[string]any{
+				"type":        "looker-delete-project-directory",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"validate_project": map[string]any{
+				"type":        "looker-validate-project",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"generate_embed_url": map[string]any{
-				"kind":        "looker-generate-embed-url",
+				"type":        "looker-generate-embed-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connections": map[string]any{
-				"kind":        "looker-get-connections",
+				"type":        "looker-get-connections",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_schemas": map[string]any{
-				"kind":        "looker-get-connection-schemas",
+				"type":        "looker-get-connection-schemas",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_databases": map[string]any{
-				"kind":        "looker-get-connection-databases",
+				"type":        "looker-get-connection-databases",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_tables": map[string]any{
-				"kind":        "looker-get-connection-tables",
+				"type":        "looker-get-connection-tables",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"get_connection_table_columns": map[string]any{
-				"kind":        "looker-get-connection-table-columns",
+				"type":        "looker-get-connection-table-columns",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_lookml_tests": map[string]any{
+				"type":        "looker-get-lookml-tests",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"run_lookml_tests": map[string]any{
+				"type":        "looker-run-lookml-tests",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_view_from_table": map[string]any{
+				"type":        "looker-create-view-from-table",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"list_git_branches": map[string]any{
+				"type":        "looker-list-git-branches",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_git_branch": map[string]any{
+				"type":        "looker-get-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_git_branch": map[string]any{
+				"type":        "looker-create-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"switch_git_branch": map[string]any{
+				"type":        "looker-switch-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"delete_git_branch": map[string]any{
+				"type":        "looker-delete-git-branch",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"list_agents": map[string]any{
+				"type":        "looker-list-agents",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_agent": map[string]any{
+				"type":        "looker-get-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_agent": map[string]any{
+				"type":        "looker-create-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"update_agent": map[string]any{
+				"type":        "looker-update-agent",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"delete_agent": map[string]any{
+				"type":        "looker-delete-agent",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -262,11 +371,11 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explores.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explores.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -279,18 +388,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore containing the fields.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore containing the fields.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -303,18 +412,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore containing the fields.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore containing the fields.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -327,18 +436,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore containing the fields.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore containing the fields.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -351,18 +460,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore containing the fields.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore containing the fields.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -375,28 +484,28 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore to be queried.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore to be queried.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The fields to be retrieved.",
+						"authServices": []any{},
+						"description":  "The fields to be retrieved.",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be returned in the query",
-							"name":        "field",
-							"required":    true,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be returned in the query",
+							"name":         "field",
+							"required":     true,
+							"type":         "string",
 						},
 						"name":     "fields",
 						"required": true,
@@ -404,53 +513,57 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"additionalProperties": true,
-						"authSources":          []any{},
-						"description":          "The filters for the query",
+						"authServices":         []any{},
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The query pivots (must be included in fields as well).",
+						"authServices": []any{},
+						"description":  "The query pivots (must be included in fields as well).",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a pivot in the query",
-							"name":        "pivot_field",
-							"required":    false,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the query",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
 						},
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The sorts like \"field.id desc 0\".",
+						"authServices": []any{},
+						"description":  "The sorts like \"field.id desc 0\".",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a sort in the query",
-							"name":        "sort_field",
-							"required":    false,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the query",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
 						},
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The row limit.",
-						"name":        "limit",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The row limit.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The query timezone.",
-						"name":        "tz",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The query timezone.",
+						"name":         "tz",
+						"required":     false,
+						"type":         "string",
 					},
 				},
 			},
@@ -463,28 +576,28 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore to be queried.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore to be queried.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The fields to be retrieved.",
+						"authServices": []any{},
+						"description":  "The fields to be retrieved.",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be returned in the query",
-							"name":        "field",
-							"required":    true,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be returned in the query",
+							"name":         "field",
+							"required":     true,
+							"type":         "string",
 						},
 						"name":     "fields",
 						"required": true,
@@ -492,53 +605,57 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"additionalProperties": true,
-						"authSources":          []any{},
-						"description":          "The filters for the query",
+						"authServices":         []any{},
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The query pivots (must be included in fields as well).",
+						"authServices": []any{},
+						"description":  "The query pivots (must be included in fields as well).",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a pivot in the query",
-							"name":        "pivot_field",
-							"required":    false,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the query",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
 						},
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The sorts like \"field.id desc 0\".",
+						"authServices": []any{},
+						"description":  "The sorts like \"field.id desc 0\".",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a sort in the query",
-							"name":        "sort_field",
-							"required":    false,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the query",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
 						},
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The row limit.",
-						"name":        "limit",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The row limit.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The query timezone.",
-						"name":        "tz",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The query timezone.",
+						"name":         "tz",
+						"required":     false,
+						"type":         "string",
 					},
 				},
 			},
@@ -551,28 +668,28 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The model containing the explore.",
-						"name":        "model",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The explore to be queried.",
-						"name":        "explore",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The explore to be queried.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The fields to be retrieved.",
+						"authServices": []any{},
+						"description":  "The fields to be retrieved.",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be returned in the query",
-							"name":        "field",
-							"required":    true,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be returned in the query",
+							"name":         "field",
+							"required":     true,
+							"type":         "string",
 						},
 						"name":     "fields",
 						"required": true,
@@ -580,61 +697,175 @@ func TestLooker(t *testing.T) {
 					},
 					map[string]any{
 						"additionalProperties": true,
-						"authSources":          []any{},
-						"description":          "The filters for the query",
+						"authServices":         []any{},
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The query pivots (must be included in fields as well).",
+						"authServices": []any{},
+						"description":  "The query pivots (must be included in fields as well).",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a pivot in the query",
-							"name":        "pivot_field",
-							"required":    false,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the query",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
 						},
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The sorts like \"field.id desc 0\".",
+						"authServices": []any{},
+						"description":  "The sorts like \"field.id desc 0\".",
 						"items": map[string]any{
-							"authSources": []any{},
-							"description": "A field to be used as a sort in the query",
-							"name":        "sort_field",
-							"required":    false,
-							"type":        "string",
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the query",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
 						},
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The row limit.",
-						"name":        "limit",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The row limit.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The query timezone.",
-						"name":        "tz",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The query timezone.",
+						"name":         "tz",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
 						"additionalProperties": true,
-						"authSources":          []any{},
+						"authServices":         []any{},
 						"description":          "The visualization config for the query",
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_lookml_tests",
+		map[string]any{
+			"get_lookml_tests": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The unique ID of the LookML project.",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').",
+						"name":         "file_id",
+						"required":     false,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "run_lookml_tests",
+		map[string]any{
+			"run_lookml_tests": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the project to run LookML tests for.",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional id of the file to run tests for.",
+						"name":         "file_id",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional name of the test to run.",
+						"name":         "test",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "Optional name of the model to run tests for.",
+						"name":         "model",
+						"required":     false,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "create_view_from_table",
+		map[string]any{
+			"create_view_from_table": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the project to create the view in.",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The database connection name.",
+						"name":         "connection",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The tables to generate views for.\n\t\tEach item must be a map with:\n\t\t- schema (string, required)\n\t\t- table_name (string, required)\n\t\t- primary_key (string, optional)\n\t\t- base_view (boolean, optional)\n\t\t- columns (array of objects, optional): Each object must have 'column_name' (string).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "Table definition.",
+							"name":                 "table",
+							"required":             true,
+							"type":                 "object",
+						},
+						"name":     "tables",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      "views",
+						"description":  "The folder to place the view files in (e.g., 'views').",
+						"name":         "folder_name",
+						"required":     false,
+						"type":         "string",
 					},
 				},
 			},
@@ -647,32 +878,160 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The title of the look.",
-						"name":        "title",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The title of the look.",
+						"name":         "title",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The description of the look.",
-						"name":        "desc",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The description of the look.",
+						"name":         "desc",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The number of looks to fetch. Default 100",
-						"name":        "limit",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The number of looks to fetch. Default 100",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(100),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The number of looks to skip before fetching. Default 0",
-						"name":        "offset",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The number of looks to skip before fetching. Default 0",
+						"name":         "offset",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(0),
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "make_look",
+		map[string]any{
+			"make_look": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The explore to be queried.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The fields to be retrieved.",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be returned in the query",
+							"name":         "field",
+							"required":     true,
+							"type":         "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"name":                 "filters",
+						"required":             false,
+						"default":              map[string]any{},
+						"type":                 "object",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the query",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the query",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The row limit.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The query timezone.",
+						"name":         "tz",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The title of the Look",
+						"name":         "title",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The description of the Look",
+						"name":         "description",
+						"required":     false,
+						"default":      "",
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The folder id where the Look will be created. Leave blank to use the user's personal folder",
+						"name":         "folder",
+						"required":     false,
+						"default":      "",
+						"type":         "string",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The visualization config for the query",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+						"default":              map[string]any{},
 					},
 				},
 			},
@@ -685,32 +1044,284 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The title of the dashboard.",
-						"name":        "title",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The title of the dashboard.",
+						"name":         "title",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The description of the dashboard.",
-						"name":        "desc",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The description of the dashboard.",
+						"name":         "desc",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The number of dashboards to fetch. Default 100",
-						"name":        "limit",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The number of dashboards to fetch. Default 100",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(100),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The number of dashboards to skip before fetching. Default 0",
-						"name":        "offset",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The number of dashboards to skip before fetching. Default 0",
+						"name":         "offset",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(0),
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "make_dashboard",
+		map[string]any{
+			"make_dashboard": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The title of the Dashboard",
+						"name":         "title",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The description of the Dashboard",
+						"name":         "description",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder",
+						"name":         "folder",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "add_dashboard_filter",
+		map[string]any{
+			"add_dashboard_filter": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the dashboard where this filter will exist",
+						"name":         "dashboard_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The name of the Dashboard Filter",
+						"name":         "name",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The title of the Dashboard Filter",
+						"name":         "title",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The filter_type of the Dashboard Filter: date_filter, number_filter, string_filter, field_filter (default field_filter)",
+						"name":         "filter_type",
+						"required":     false,
+						"type":         "string",
+						"default":      "field_filter",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The default_value of the Dashboard Filter (optional)",
+						"name":         "default_value",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The model of a field type Dashboard Filter (required if type field)",
+						"name":         "model",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The explore of a field type Dashboard Filter (required if type field)",
+						"name":         "explore",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The dimension of a field type Dashboard Filter (required if type field)",
+						"name":         "dimension",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The Dashboard Filter should allow multiple values (default true)",
+						"name":         "allow_multiple_values",
+						"required":     false,
+						"type":         "boolean",
+						"default":      true,
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The Dashboard Filter is required to run dashboard (default false)",
+						"name":         "required",
+						"required":     false,
+						"type":         "boolean",
+						"default":      false,
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "add_dashboard_element",
+		map[string]any{
+			"add_dashboard_element": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The model containing the explore.",
+						"name":         "model",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The explore to be queried.",
+						"name":         "explore",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The fields to be retrieved.",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be returned in the query",
+							"name":         "field",
+							"required":     true,
+							"type":         "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
+						"name":                 "filters",
+						"required":             false,
+						"default":              map[string]any{},
+						"type":                 "object",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a pivot in the query",
+							"name":         "pivot_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authServices": []any{},
+							"description":  "A field to be used as a sort in the query",
+							"name":         "sort_field",
+							"required":     false,
+							"type":         "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+						"default":  []any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The row limit.",
+						"name":         "limit",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(500),
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The query timezone.",
+						"name":         "tz",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the dashboard where this tile will exist",
+						"name":         "dashboard_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The title of the Dashboard Element",
+						"name":         "title",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authServices":         []any{},
+						"description":          "The visualization config for the query",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+						"default":              map[string]any{},
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  `An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          `A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
+							"name":                 "dashboard_filter",
+							"required":             false,
+							"type":                 "object",
+							"default":              map[string]any{},
+						},
+						"name":     "dashboard_filters",
+						"required": false,
+						"type":     "array",
 					},
 				},
 			},
@@ -723,18 +1334,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The user's question, potentially including conversation history and system instructions for context.",
-						"name":        "user_query_with_context",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The user's question, potentially including conversation history and system instructions for context.",
+						"name":         "user_query_with_context",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "An Array of at least one and up to 5 explore references like [{'model': 'MODEL_NAME', 'explore': 'EXPLORE_NAME'}]",
+						"authServices": []any{},
+						"description":  "An Array of at least one and up to 5 explore references like [{'model': 'MODEL_NAME', 'explore': 'EXPLORE_NAME'}]",
 						"items": map[string]any{
 							"additionalProperties": true,
-							"authSources":          []any{},
+							"authServices":         []any{},
 							"name":                 "explore_reference",
 							"description":          "An explore reference like {'model': 'MODEL_NAME', 'explore': 'EXPLORE_NAME'}",
 							"required":             true,
@@ -755,11 +1366,11 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The health check to run. Can be either: `check_db_connections`, `check_dashboard_performance`,`check_dashboard_errors`,`check_explore_performance`,`check_schedule_failures`, or `check_legacy_features`",
-						"name":        "action",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The health check to run. Can be either: `check_db_connections`, `check_dashboard_performance`,`check_dashboard_errors`,`check_explore_performance`,`check_schedule_failures`, or `check_legacy_features`",
+						"name":         "action",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -772,46 +1383,48 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The analysis to run. Can be 'projects', 'models', or 'explores'.",
-						"name":        "action",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The analysis to run. Can be 'projects', 'models', or 'explores'.",
+						"name":         "action",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The Looker project to analyze (optional).",
-						"name":        "project",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The Looker project to analyze (optional).",
+						"name":         "project",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The Looker model to analyze (optional).",
-						"name":        "model",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The Looker model to analyze (optional).",
+						"name":         "model",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The Looker explore to analyze (optional).",
-						"name":        "explore",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The Looker explore to analyze (optional).",
+						"name":         "explore",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The timeframe in days to analyze.",
-						"name":        "timeframe",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The timeframe in days to analyze.",
+						"name":         "timeframe",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(90),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The minimum number of queries for a model or explore to be considered used.",
-						"name":        "min_queries",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The minimum number of queries for a model or explore to be considered used.",
+						"name":         "min_queries",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(0),
 					},
 				},
 			},
@@ -824,46 +1437,51 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The vacuum action to run. Can be 'models', or 'explores'.",
-						"name":        "action",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The vacuum action to run. Can be 'models', or 'explores'.",
+						"name":         "action",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The Looker project to vacuum (optional).",
-						"name":        "project",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The Looker project to vacuum (optional).",
+						"name":         "project",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The Looker model to vacuum (optional).",
-						"name":        "model",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The Looker model to vacuum (optional).",
+						"name":         "model",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The Looker explore to vacuum (optional).",
-						"name":        "explore",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The Looker explore to vacuum (optional).",
+						"name":         "explore",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The timeframe in days to analyze.",
-						"name":        "timeframe",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The timeframe in days to analyze.",
+						"name":         "timeframe",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(90),
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The minimum number of queries for a model or explore to be considered used.",
-						"name":        "min_queries",
-						"required":    false,
-						"type":        "integer",
+						"authServices": []any{},
+						"description":  "The minimum number of queries for a model or explore to be considered used.",
+						"name":         "min_queries",
+						"required":     false,
+						"type":         "integer",
+						"default":      float64(1),
 					},
 				},
 			},
@@ -876,11 +1494,12 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "Whether to set Dev Mode.",
-						"name":        "devMode",
-						"required":    false,
-						"type":        "boolean",
+						"authServices": []any{},
+						"description":  "Whether to set Dev Mode.",
+						"name":         "devMode",
+						"required":     false,
+						"type":         "boolean",
+						"default":      true,
 					},
 				},
 			},
@@ -902,11 +1521,11 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The id of the project containing the files",
-						"name":        "project_id",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The id of the project containing the files",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -919,18 +1538,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The id of the project containing the files",
-						"name":        "project_id",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The id of the project containing the files",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The path of the file within the project",
-						"name":        "file_path",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The path of the file within the project",
+						"name":         "file_path",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -943,25 +1562,25 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The id of the project containing the files",
-						"name":        "project_id",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The id of the project containing the files",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The path of the file within the project",
-						"name":        "file_path",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The path of the file within the project",
+						"name":         "file_path",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The content of the file",
-						"name":        "file_content",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The content of the file",
+						"name":         "file_content",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -974,25 +1593,25 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The id of the project containing the files",
-						"name":        "project_id",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The id of the project containing the files",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The path of the file within the project",
-						"name":        "file_path",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The path of the file within the project",
+						"name":         "file_path",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The content of the file",
-						"name":        "file_content",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The content of the file",
+						"name":         "file_content",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -1005,18 +1624,100 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The id of the project containing the files",
-						"name":        "project_id",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The id of the project containing the files",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The path of the file within the project",
-						"name":        "file_path",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The path of the file within the project",
+						"name":         "file_path",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_project_directories",
+		map[string]any{
+			"get_project_directories": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the project",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "create_project_directory",
+		map[string]any{
+			"create_project_directory": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the project",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The path to create in the project",
+						"name":         "directory_path",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "delete_project_directory",
+		map[string]any{
+			"delete_project_directory": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the project",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The path to delete in the project",
+						"name":         "directory_path",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "validate_project",
+		map[string]any{
+			"validate_project": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the project to validate",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -1029,18 +1730,20 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "Type of Looker content to embed (ie. dashboards, looks, query-visualization)",
-						"name":        "type",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "Type of Looker content to embed (ie. dashboards, looks, query-visualization)",
+						"name":         "type",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The ID of the content to embed.",
-						"name":        "id",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The ID of the content to embed.",
+						"name":         "id",
+						"required":     false,
+						"type":         "string",
+						"default":      "",
 					},
 				},
 			},
@@ -1062,18 +1765,18 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The connection containing the schemas.",
-						"name":        "conn",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The connection containing the schemas.",
+						"name":         "conn",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The optional database to search",
-						"name":        "db",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The optional database to search",
+						"name":         "db",
+						"required":     false,
+						"type":         "string",
 					},
 				},
 			},
@@ -1086,11 +1789,11 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The connection containing the databases.",
-						"name":        "conn",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The connection containing the databases.",
+						"name":         "conn",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -1103,25 +1806,25 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The connection containing the tables.",
-						"name":        "conn",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The connection containing the tables.",
+						"name":         "conn",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The optional database to search",
-						"name":        "db",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The optional database to search",
+						"name":         "db",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The schema containing the tables.",
-						"name":        "schema",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The schema containing the tables.",
+						"name":         "schema",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -1134,37 +1837,56 @@ func TestLooker(t *testing.T) {
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
-						"authSources": []any{},
-						"description": "The connection containing the tables.",
-						"name":        "conn",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The connection containing the tables.",
+						"name":         "conn",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The optional database to search",
-						"name":        "db",
-						"required":    false,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The optional database to search",
+						"name":         "db",
+						"required":     false,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "The schema containing the tables.",
-						"name":        "schema",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "The schema containing the tables.",
+						"name":         "schema",
+						"required":     true,
+						"type":         "string",
 					},
 					map[string]any{
-						"authSources": []any{},
-						"description": "A comma separated list of tables containing the columns.",
-						"name":        "tables",
-						"required":    true,
-						"type":        "string",
+						"authServices": []any{},
+						"description":  "A comma separated list of tables containing the columns.",
+						"name":         "tables",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "list_git_branches",
+		map[string]any{
+			"list_git_branches": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The project_id",
+						"name":         "project_id",
+						"required":     true,
+						"type":         "string",
+					},
+				},
+			},
+		},
+	)
+
+	randstr := rand.Text()[0:8]
 
 	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
@@ -1200,26 +1922,6 @@ func TestLooker(t *testing.T) {
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
 
-	runConversationalAnalytics(t, "system__activity", "content_usage")
-
-	wantResult = "\"Connection\":\"thelook\""
-	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
-
-	wantResult = "[]"
-	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_schedule_failures"}`), wantResult)
-
-	wantResult = "[{\"Feature\":\"Unsupported in Looker (Google Cloud core)\"}]"
-	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_legacy_features"}`), wantResult)
-
-	wantResult = "\"Project\":\"the_look\""
-	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
-
-	wantResult = "\"Model\":\"the_look\""
-	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "explores", "project": "the_look", "model": "the_look", "explore": "inventory_items"}`), wantResult)
-
-	wantResult = "\"Model\":\"the_look\""
-	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
-
 	wantResult = "the_look"
 	tests.RunToolInvokeSimpleTest(t, "get_projects", wantResult)
 
@@ -1233,13 +1935,54 @@ func TestLooker(t *testing.T) {
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": true}`), wantResult)
 
 	wantResult = "created"
-	tests.RunToolInvokeParametersTest(t, "create_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "view"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "create_project_file", []byte(fmt.Sprintf(`{"project_id": "the_look", "file_path": "foo%s.view.lkml", "file_content": "view"}`, randstr)), wantResult)
 
 	wantResult = "updated"
-	tests.RunToolInvokeParametersTest(t, "update_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "model"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "update_project_file", []byte(fmt.Sprintf(`{"project_id": "the_look", "file_path": "foo%s.view.lkml", "file_content": "model"}`, randstr)), wantResult)
 
 	wantResult = "deleted"
-	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(fmt.Sprintf(`{"project_id": "the_look", "file_path": "foo%s.view.lkml"}`, randstr)), wantResult)
+
+	wantResult = "Created"
+	tests.RunToolInvokeParametersTest(t, "create_project_directory", []byte(fmt.Sprintf(`{"project_id": "the_look", "directory_path": "views%s"}`, randstr)), wantResult)
+
+	wantResult = fmt.Sprintf("views%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "get_project_directories", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	// Add test back when infrastructure for testing supports it.
+	// wantResult = "{\"status\":  \"success\", \"message\": \"Triggered view generation for project the_look in folder views\"}"
+	// tests.RunToolInvokeParametersTest(t, "create_view_from_table", []byte(`{"project_id": "the_look", "connection": "thelook", "tables": [{"schema": "demo_db", "table_name": "Employees"}]}`), wantResult)
+
+	wantResult = "Deleted"
+	tests.RunToolInvokeParametersTest(t, "delete_project_directory", []byte(fmt.Sprintf(`{"project_id": "the_look", "directory_path": "views%s"}`, randstr)), wantResult)
+
+	wantResult = "\"errors\":[]"
+	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "master"
+	tests.RunToolInvokeParametersTest(t, "list_git_branches", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = fmt.Sprintf("test_branch_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "create_git_branch", []byte(fmt.Sprintf(`{"project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
+
+	time.Sleep(5 * time.Second)
+	wantResult = "d2d4eafdf8932837b2a12b773282c165a43fb0c0"
+	tests.RunToolInvokeParametersTest(t, "switch_git_branch", []byte(fmt.Sprintf(`{"project_id": "the_look", "branch": "test_branch_%s", "ref": "d2d4eafdf8932837b2a12b773282c165a43fb0c0"}`, randstr)), wantResult)
+
+	wantResult = fmt.Sprintf("test_branch_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "get_git_branch", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "dev-mike-deangelo-twqb"
+	tests.RunToolInvokeParametersTest(t, "switch_git_branch", []byte(`{"project_id": "the_look", "branch": "dev-mike-deangelo-twqb"}`), wantResult)
+
+	wantResult = "Deleted"
+	tests.RunToolInvokeParametersTest(t, "delete_git_branch", []byte(fmt.Sprintf(`{"project_id": "the_look", "branch": "test_branch_%s"}`, randstr)), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "get_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "run_lookml_tests", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
@@ -1261,6 +2004,67 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
 	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "create_agent", []byte(fmt.Sprintf(`{"name": "agent_%s", "description": "test description", "instructions": "test instructions", "sources": [{"model": "the_look", "explore": "events"}]}`, randstr)), wantResult)
+
+	agentId, _ := findTestAgentId(t, fmt.Sprintf("agent_%s", randstr))
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "list_agents", []byte(`{}`), wantResult)
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "get_agent", []byte(fmt.Sprintf(`{"agent_id": "%s"}`, agentId)), wantResult)
+
+	wantResult = fmt.Sprintf("agent_%s", randstr)
+	tests.RunToolInvokeParametersTest(t, "update_agent", []byte(fmt.Sprintf(`{"agent_id": "%s", "sources": [{"model": "system__activity", "explore": "history"}]}`, agentId)), wantResult)
+
+	wantResult = ""
+	tests.RunToolInvokeParametersTest(t, "delete_agent", []byte(fmt.Sprintf(`{"agent_id": "%s"}`, agentId)), wantResult)
+
+	runConversationalAnalytics(t, "system__activity", "content_usage")
+
+	deleteLook := testMakeLook(t, randstr)
+	defer deleteLook()
+
+	dashboardId, deleteDashboard := testMakeDashboard(t, randstr)
+	defer deleteDashboard()
+	testAddDashboardFilter(t, dashboardId)
+	testAddDashboardElement(t, dashboardId)
+
+	wantResult = "\"Connection\":\"thelook\""
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_schedule_failures"}`), wantResult)
+
+	wantResult = "[{\"Feature\":\"Unsupported in Looker (Google Cloud core)\"}]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_legacy_features"}`), wantResult)
+
+	wantResult = "\"Project\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
+
+	wantResult = "\"Model\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "explores", "project": "the_look", "model": "the_look", "explore": "inventory_items"}`), wantResult)
+
+	wantResult = "\"Model\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
+}
+
+func findTestAgentId(t *testing.T, name string) (string, error) {
+	sdk := newLookerTestSDK(t)
+	reqSearchAgents := v4.RequestSearchAgents{
+		Name: &name,
+	}
+	agents, err := sdk.SearchAgents(reqSearchAgents, nil)
+	if len(agents) == 0 {
+		t.Fatalf("Failed to find agent %s", name)
+	} else if len(agents) > 1 {
+		t.Fatalf("Found more than one agent with name %s", name)
+	}
+	agentId := *agents[0].Id
+	t.Logf("Found Agent Id %s", agentId)
+	return agentId, err
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
@@ -1323,5 +2127,124 @@ func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
 				}
 			}
 		})
+	}
+}
+
+func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
+	t.Helper()
+	cfg := rtl.ApiSettings{
+		BaseUrl:      LookerBaseUrl,
+		ApiVersion:   "4.0",
+		VerifySsl:    LookerVerifySsl == "true",
+		Timeout:      120,
+		ClientId:     LookerClientId,
+		ClientSecret: LookerClientSecret,
+	}
+	return v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+}
+
+func testMakeLook(t *testing.T, randstr string) func() {
+	var id string
+	t.Run("TestMakeLook", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestLook%s"}`, randstr))
+
+		url := "http://127.0.0.1:5000/api/tool/make_look/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		var respBody map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		result := respBody["result"].(string)
+		if err := json.Unmarshal([]byte(result), &respBody); err != nil {
+			t.Fatalf("error parsing result body: %v", err)
+		}
+
+		var ok bool
+		if id, ok = respBody["id"].(string); !ok || id == "" {
+			t.Fatalf("didn't get TestLook id, got %s", string(bodyBytes))
+		}
+	})
+
+	return func() {
+		sdk := newLookerTestSDK(t)
+
+		if _, err := sdk.DeleteLook(id, nil); err != nil {
+			t.Fatalf("error deleting look: %v", err)
+		}
+		t.Logf("deleted Look %s", id)
+	}
+}
+
+func testAddDashboardFilter(t *testing.T, dashboardId string) {
+	t.Run("TestAddDashboardFilter", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s", "model": "system__activity", "explore": "look", "dimension": "look.created_year", "name": "test_filter", "title": "TestDashboardFilter"}`, dashboardId))
+
+		url := "http://127.0.0.1:5000/api/tool/add_dashboard_filter/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		t.Logf("got %s", string(bodyBytes))
+	})
+}
+
+func testAddDashboardElement(t *testing.T, dashboardId string) {
+	t.Run("TestAddDashboardElement", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s", "model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestDashboardElement"}`, dashboardId))
+
+		url := "http://127.0.0.1:5000/api/tool/add_dashboard_element/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		t.Logf("got %s", string(bodyBytes))
+	})
+}
+
+func testMakeDashboard(t *testing.T, randstr string) (string, func()) {
+	var id string
+	t.Run("TestMakeDashboard", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"title": "TestDashboard%s"}`, randstr))
+
+		url := "http://127.0.0.1:5000/api/tool/make_dashboard/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		var respBody map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		result := respBody["result"].(string)
+		if err := json.Unmarshal([]byte(result), &respBody); err != nil {
+			t.Fatalf("error parsing result body: %v", err)
+		}
+
+		var ok bool
+		if id, ok = respBody["id"].(string); !ok || id == "" {
+			t.Fatalf("didn't get TestDashboard id, got %s", string(bodyBytes))
+		}
+	})
+
+	return id, func() {
+		sdk := newLookerTestSDK(t)
+
+		if _, err := sdk.DeleteDashboard(id, nil); err != nil {
+			t.Fatalf("error deleting dashboard: %v", err)
+		}
+		t.Logf("deleted Dashboard %s", id)
 	}
 }

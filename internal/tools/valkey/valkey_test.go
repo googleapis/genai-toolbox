@@ -17,12 +17,12 @@ package valkey_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/valkey"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/valkey"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlvalkey(t *testing.T) {
@@ -38,27 +38,29 @@ func TestParseFromYamlvalkey(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				valkey_tool:
-					kind: valkey
-					source: my-valkey-instance
-					description: some description
-					commands:
-						- [SET, greeting, "hello, {{.name}}"]
-						- [GET, id]
-					parameters:
-						- name: name
-						  type: string
-						  description: user name
+			kind: tool
+			name: valkey_tool
+			type: valkey
+			source: my-valkey-instance
+			description: some description
+			commands:
+				- [SET, greeting, "hello, {{.name}}"]
+				- [GET, id]
+			parameters:
+				- name: name
+				  type: string
+				  description: user name
 			`,
 			want: server.ToolConfigs{
 				"valkey_tool": valkey.Config{
-					Name:         "valkey_tool",
-					Kind:         "valkey",
-					Source:       "my-valkey-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Commands:     [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
+					ConfigBase: tools.ConfigBase{
+						Name:         "valkey_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:     "valkey",
+					Source:   "my-valkey-instance",
+					Commands: [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "user name"),
 					},
@@ -68,15 +70,11 @@ func TestParseFromYamlvalkey(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"testing"
 
 	"google.golang.org/api/idtoken"
 )
@@ -27,13 +28,15 @@ var ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
 var ClientId = os.Getenv("CLIENT_ID")
 
 // GetGoogleIdToken retrieve and return the Google ID token
-func GetGoogleIdToken(audience string) (string, error) {
+func GetGoogleIdToken(t *testing.T) (string, error) {
 	// For local testing - use gcloud command to print personal ID token
 	cmd := exec.Command("gcloud", "auth", "print-identity-token")
 	output, err := cmd.Output()
 	if err == nil {
 		return strings.TrimSpace(string(output)), nil
 	}
+	t.Logf("gcloud token lookup failed (%v). Falling back to Metadata Server...", err)
+
 	// For Cloud Build testing - retrieve ID token from GCE metadata server
 	ts, err := idtoken.NewTokenSource(context.Background(), ClientId)
 	if err != nil {

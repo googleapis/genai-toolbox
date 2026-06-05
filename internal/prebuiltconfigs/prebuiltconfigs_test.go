@@ -15,18 +15,22 @@
 package prebuiltconfigs
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
 
 var expectedToolSources = []string{
+	"alloydb-omni",
 	"alloydb-postgres-admin",
 	"alloydb-postgres-observability",
 	"alloydb-postgres",
+	"conversational-analytics-with-data-agent",
 	"bigquery",
 	"clickhouse",
 	"cloud-healthcare",
+	"cloud-storage",
 	"cloud-sql-mssql-admin",
 	"cloud-sql-mssql-observability",
 	"cloud-sql-mssql",
@@ -37,18 +41,22 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres-observability",
 	"cloud-sql-postgres",
 	"dataplex",
-	"elasticsearch",
+	"dataproc",
 	"firestore",
+	"elasticsearch",
 	"looker-conversational-analytics",
+	"looker-dev",
 	"looker",
 	"mindsdb",
 	"mssql",
 	"mysql",
 	"neo4j",
 	"oceanbase",
+	"oracledb",
 	"postgres",
 	"serverless-spark",
 	"singlestore",
+	"snowflake",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",
@@ -57,6 +65,8 @@ var expectedToolSources = []string{
 func TestGetPrebuiltSources(t *testing.T) {
 	t.Run("Test Get Prebuilt Sources", func(t *testing.T) {
 		sources := GetPrebuiltSources()
+		slices.Sort(expectedToolSources)
+		slices.Sort(sources)
 		if diff := cmp.Diff(expectedToolSources, sources); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
 		}
@@ -90,6 +100,8 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 		t.Log(expectedKeys)
 		t.Log(keys)
 
+		slices.Sort(expectedKeys)
+		slices.Sort(keys)
 		if diff := cmp.Diff(expectedKeys, keys); diff != "" {
 			t.Fatalf("incorrect sources parse: diff %v", diff)
 		}
@@ -98,38 +110,46 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 }
 
 func TestGetPrebuiltTool(t *testing.T) {
-	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
-	alloydb_observability_config, _ := Get("alloydb-postgres-observability")
-	alloydb_config, _ := Get("alloydb-postgres")
-	bigquery_config, _ := Get("bigquery")
-	clickhouse_config, _ := Get("clickhouse")
-	cloudsqlpg_observability_config, _ := Get("cloud-sql-postgres-observability")
-	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
-	cloudsqlpg_admin_config, _ := Get("cloud-sql-postgres-admin")
-	cloudsqlmysql_admin_config, _ := Get("cloud-sql-mysql-admin")
-	cloudsqlmssql_admin_config, _ := Get("cloud-sql-mssql-admin")
-	cloudsqlmysql_observability_config, _ := Get("cloud-sql-mysql-observability")
-	cloudsqlmysql_config, _ := Get("cloud-sql-mysql")
-	cloudsqlmssql_observability_config, _ := Get("cloud-sql-mssql-observability")
-	cloudsqlmssql_config, _ := Get("cloud-sql-mssql")
-	dataplex_config, _ := Get("dataplex")
-	firestoreconfig, _ := Get("firestore")
-	looker_config, _ := Get("looker")
-	lookerca_config, _ := Get("looker-conversational-analytics")
-	mysql_config, _ := Get("mysql")
-	mssql_config, _ := Get("mssql")
-	oceanbase_config, _ := Get("oceanbase")
-	postgresconfig, _ := Get("postgres")
-	singlestore_config, _ := Get("singlestore")
-	spanner_config, _ := Get("spanner")
-	spannerpg_config, _ := Get("spanner-postgres")
-	mindsdb_config, _ := Get("mindsdb")
-	sqlite_config, _ := Get("sqlite")
-	neo4jconfig, _ := Get("neo4j")
-	healthcare_config, _ := Get("cloud-healthcare")
-
+	alloydb_omni_config := getOrFatal(t, "alloydb-omni")
+	alloydb_admin_config := getOrFatal(t, "alloydb-postgres-admin")
+	alloydb_observability_config := getOrFatal(t, "alloydb-postgres-observability")
+	alloydb_config := getOrFatal(t, "alloydb-postgres")
+	bigquery_config := getOrFatal(t, "bigquery")
+	conversational_analytics_config := getOrFatal(t, "conversational-analytics-with-data-agent")
+	clickhouse_config := getOrFatal(t, "clickhouse")
+	cloudsqlpg_observability_config := getOrFatal(t, "cloud-sql-postgres-observability")
+	cloudsqlpg_config := getOrFatal(t, "cloud-sql-postgres")
+	cloudsqlpg_admin_config := getOrFatal(t, "cloud-sql-postgres-admin")
+	cloudsqlmysql_admin_config := getOrFatal(t, "cloud-sql-mysql-admin")
+	cloudsqlmssql_admin_config := getOrFatal(t, "cloud-sql-mssql-admin")
+	cloudsqlmysql_observability_config := getOrFatal(t, "cloud-sql-mysql-observability")
+	cloudsqlmysql_config := getOrFatal(t, "cloud-sql-mysql")
+	cloudsqlmssql_observability_config := getOrFatal(t, "cloud-sql-mssql-observability")
+	cloudsqlmssql_config := getOrFatal(t, "cloud-sql-mssql")
+	dataplex_config := getOrFatal(t, "dataplex")
+	firestoreconfig := getOrFatal(t, "firestore")
+	looker_config := getOrFatal(t, "looker")
+	lookerca_config := getOrFatal(t, "looker-conversational-analytics")
+	mysql_config := getOrFatal(t, "mysql")
+	mssql_config := getOrFatal(t, "mssql")
+	oceanbase_config := getOrFatal(t, "oceanbase")
+	postgresconfig := getOrFatal(t, "postgres")
+	singlestore_config := getOrFatal(t, "singlestore")
+	serverlessspark_config := getOrFatal(t, "serverless-spark")
+	spanner_config := getOrFatal(t, "spanner")
+	spannerpg_config := getOrFatal(t, "spanner-postgres")
+	mindsdb_config := getOrFatal(t, "mindsdb")
+	sqlite_config := getOrFatal(t, "sqlite")
+	neo4jconfig := getOrFatal(t, "neo4j")
+	oracle_config := getOrFatal(t, "oracledb")
+	healthcare_config := getOrFatal(t, "cloud-healthcare")
+	cloudstorage_config := getOrFatal(t, "cloud-storage")
+	snowflake_config := getOrFatal(t, "snowflake")
+	if len(alloydb_omni_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb omni prebuilt tools yaml")
+	}
 	if len(alloydb_admin_config) <= 0 {
-		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+		t.Fatalf("unexpected error: could not fetch alloydb admin prebuilt tools yaml")
 	}
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
@@ -139,6 +159,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(bigquery_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch bigquery prebuilt tools yaml")
+	}
+	if len(conversational_analytics_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch bigquery conversational analytics prebuilt tools yaml")
 	}
 	if len(clickhouse_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch clickhouse prebuilt tools yaml")
@@ -197,6 +220,12 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(singlestore_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
 	}
+	if len(serverlessspark_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch serverless spark prebuilt tools yaml")
+	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
 	}
@@ -218,6 +247,15 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(healthcare_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch healthcare prebuilt tools yaml")
 	}
+	if len(cloudstorage_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch cloud-storage prebuilt tools yaml")
+	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
+	if len(oracle_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch oracle prebuilt tools yaml")
+	}
 }
 
 func TestFailGetPrebuiltTool(t *testing.T) {
@@ -225,4 +263,12 @@ func TestFailGetPrebuiltTool(t *testing.T) {
 	if err == nil {
 		t.Fatalf("unexpected an error but got nil.")
 	}
+}
+
+func getOrFatal(t *testing.T, prebuiltSourceConfig string) []byte {
+	bytes, err := Get(prebuiltSourceConfig)
+	if err != nil {
+		t.Fatalf("Cannot get prebuilt config for %q, error %v", prebuiltSourceConfig, err)
+	}
+	return bytes
 }

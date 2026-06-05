@@ -1,9 +1,17 @@
-# {{ .Site.Title }}
+{{- define "print_index_node" }}
+{{ .indent }}- [{{ .page.Title }}]({{ .page.Permalink }}): {{ .page.Description | default "No description provided." }}
+{{- $nextIndent := printf "%s  " .indent }}
+{{- if .page.Pages }}
+{{- range .page.Pages.ByWeight }}
+{{ template "print_index_node" (dict "page" . "indent" $nextIndent) }}
+{{- end }}
+{{- end }}
+{{- end -}}
 
-> {{ .Site.Params.description }}
+{{ partial "llms-header.html" (dict "Site" .Site "TitleSuffix" "Documentation Index") }}
 
-## Docs
-{{ range .Site.Sections }}
-### {{ .Title }}
+## Documentation Map
 
-{{ .Description }}{{ range .Pages }}- [{{ .Title }}]({{ .Permalink }}): {{ .Description }}{{ range .Pages }}  - [{{ .Title }}]({{ .Permalink }}): {{ .Description }}{{end }}{{ end }}{{ end }}
+{{ range .Site.Sections.ByWeight -}}
+{{ template "print_index_node" (dict "page" . "indent" "") }}
+{{- end }}

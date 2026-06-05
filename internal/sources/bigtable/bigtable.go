@@ -20,20 +20,21 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "bigtable"
+const SourceType string = "bigtable"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -47,13 +48,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Project  string `yaml:"project" validate:"required"`
 	Instance string `yaml:"instance" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -76,8 +77,8 @@ type Source struct {
 	Client *bigtable.Client
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -88,9 +89,97 @@ func (s *Source) BigtableClient() *bigtable.Client {
 	return s.Client
 }
 
+func getBigtableType(paramType string) (bigtable.SQLType, error) {
+	switch paramType {
+	case "boolean":
+		return bigtable.BoolSQLType{}, nil
+	case "string":
+		return bigtable.StringSQLType{}, nil
+	case "integer":
+		return bigtable.Int64SQLType{}, nil
+	case "float":
+		return bigtable.Float64SQLType{}, nil
+	case "array":
+		return bigtable.ArraySQLType{}, nil
+	default:
+		return nil, fmt.Errorf("unknow param type %s", paramType)
+	}
+}
+
+func getMapParamsType(tparams parameters.Parameters) (map[string]bigtable.SQLType, error) {
+	btParamTypes := make(map[string]bigtable.SQLType)
+	for _, p := range tparams {
+		if p.GetType() == "array" {
+			itemType, err := getBigtableType(p.Manifest().Items.Type)
+			if err != nil {
+				return nil, err
+			}
+			btParamTypes[p.GetName()] = bigtable.ArraySQLType{
+				ElemType: itemType,
+			}
+			continue
+		}
+		paramType, err := getBigtableType(p.GetType())
+		if err != nil {
+			return nil, err
+		}
+		btParamTypes[p.GetName()] = paramType
+	}
+	return btParamTypes, nil
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, configParam parameters.Parameters, params parameters.ParamValues) (any, error) {
+	mapParamsType, err := getMapParamsType(configParam)
+	if err != nil {
+		return nil, fmt.Errorf("fail to get map params: %w", err)
+	}
+
+	ps, err := s.BigtableClient().PrepareStatement(
+		ctx,
+		statement,
+		mapParamsType,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to prepare statement: %w", err)
+	}
+
+	bs, err := ps.Bind(params.AsMap())
+	if err != nil {
+		return nil, fmt.Errorf("unable to bind: %w", err)
+	}
+
+	out := []any{}
+	var rowErr error
+	err = bs.Execute(ctx, func(resultRow bigtable.ResultRow) bool {
+		vMap := make(map[string]any)
+		cols := resultRow.Metadata.Columns
+
+		for _, c := range cols {
+			var columValue any
+			if err = resultRow.GetByName(c.Name, &columValue); err != nil {
+				rowErr = err
+				return false
+			}
+			vMap[c.Name] = columValue
+		}
+
+		out = append(out, vMap)
+
+		return true
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute client: %w", err)
+	}
+	if rowErr != nil {
+		return nil, fmt.Errorf("error processing row: %w", rowErr)
+	}
+
+	return out, nil
+}
+
 func initBigtableClient(ctx context.Context, tracer trace.Tracer, name, project, instance string) (*bigtable.Client, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// Set up Bigtable data operations client.

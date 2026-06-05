@@ -17,11 +17,11 @@ package firestorequerycollection_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequerycollection"
 )
 
 func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
@@ -37,56 +37,57 @@ func TestParseFromYamlFirestoreQueryCollection(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				query_users_tool:
-					kind: firestore-query-collection
-					source: my-firestore-instance
-					description: Query users collection with filters and ordering
+            kind: tool
+            name: query_users_tool
+            type: firestore-query-collection
+            source: my-firestore-instance
+            description: Query users collection with filters and ordering
 			`,
 			want: server.ToolConfigs{
 				"query_users_tool": firestorequerycollection.Config{
-					Name:         "query_users_tool",
-					Kind:         "firestore-query-collection",
-					Source:       "my-firestore-instance",
-					Description:  "Query users collection with filters and ordering",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_users_tool",
+						Description:  "Query users collection with filters and ordering",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-query-collection",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_query_tool:
-					kind: firestore-query-collection
-					source: prod-firestore
-					description: Query collections with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+            kind: tool
+            name: secure_query_tool
+            type: firestore-query-collection
+            source: prod-firestore
+            description: Query collections with authentication
+            authRequired:
+                - google-auth-service
+                - api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_query_tool": firestorequerycollection.Config{
-					Name:         "secure_query_tool",
-					Kind:         "firestore-query-collection",
-					Source:       "prod-firestore",
-					Description:  "Query collections with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_query_tool",
+						Description:  "Query collections with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-query-collection",
+					Source: "prod-firestore",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,58 +100,64 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		query_users:
-			kind: firestore-query-collection
-			source: users-firestore
-			description: Query user documents with filtering
-			authRequired:
-				- user-auth
-		query_products:
-			kind: firestore-query-collection
-			source: products-firestore
-			description: Query product catalog
-		query_orders:
-			kind: firestore-query-collection
-			source: orders-firestore
-			description: Query customer orders with complex filters
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tool
+	name: query_users
+	type: firestore-query-collection
+	source: users-firestore
+	description: Query user documents with filtering
+	authRequired:
+		- user-auth
+---
+	kind: tool
+	name: query_products
+	type: firestore-query-collection
+	source: products-firestore
+	description: Query product catalog
+---
+	kind: tool
+	name: query_orders
+	type: firestore-query-collection
+	source: orders-firestore
+	description: Query customer orders with complex filters
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"query_users": firestorequerycollection.Config{
-			Name:         "query_users",
-			Kind:         "firestore-query-collection",
-			Source:       "users-firestore",
-			Description:  "Query user documents with filtering",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_users",
+				Description:  "Query user documents with filtering",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-query-collection",
+			Source: "users-firestore",
 		},
 		"query_products": firestorequerycollection.Config{
-			Name:         "query_products",
-			Kind:         "firestore-query-collection",
-			Source:       "products-firestore",
-			Description:  "Query product catalog",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_products",
+				Description:  "Query product catalog",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-query-collection",
+			Source: "products-firestore",
 		},
 		"query_orders": firestorequerycollection.Config{
-			Name:         "query_orders",
-			Kind:         "firestore-query-collection",
-			Source:       "orders-firestore",
-			Description:  "Query customer orders with complex filters",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_orders",
+				Description:  "Query customer orders with complex filters",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-query-collection",
+			Source: "orders-firestore",
 		},
 	}
 
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

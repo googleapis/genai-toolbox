@@ -17,11 +17,11 @@ package firestorelistcollections_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorelistcollections"
 )
 
 func TestParseFromYamlFirestoreListCollections(t *testing.T) {
@@ -37,56 +37,56 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				list_collections_tool:
-					kind: firestore-list-collections
-					source: my-firestore-instance
-					description: List collections in Firestore
+			kind: tool
+			name: list_collections_tool
+			type: firestore-list-collections
+			source: my-firestore-instance
+			description: List collections in Firestore
 			`,
 			want: server.ToolConfigs{
 				"list_collections_tool": firestorelistcollections.Config{
-					Name:         "list_collections_tool",
-					Kind:         "firestore-list-collections",
-					Source:       "my-firestore-instance",
-					Description:  "List collections in Firestore",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_collections_tool",
+						Description:  "List collections in Firestore",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-list-collections",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_list_collections:
-					kind: firestore-list-collections
-					source: prod-firestore
-					description: List collections with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tool
+			name: secure_list_collections
+			type: firestore-list-collections
+			source: prod-firestore
+			description: List collections with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_list_collections": firestorelistcollections.Config{
-					Name:         "secure_list_collections",
-					Kind:         "firestore-list-collections",
-					Source:       "prod-firestore",
-					Description:  "List collections with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_list_collections",
+						Description:  "List collections with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-list-collections",
+					Source: "prod-firestore",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,58 +99,64 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		list_user_collections:
-			kind: firestore-list-collections
-			source: users-firestore
-			description: List user-related collections
-			authRequired:
-				- user-auth
-		list_product_collections:
-			kind: firestore-list-collections
-			source: products-firestore
-			description: List product-related collections
-		list_admin_collections:
-			kind: firestore-list-collections
-			source: admin-firestore
-			description: List administrative collections
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tool
+	name: list_user_collections
+	type: firestore-list-collections
+	source: users-firestore
+	description: List user-related collections
+	authRequired:
+		- user-auth
+---
+	kind: tool
+	name: list_product_collections
+	type: firestore-list-collections
+	source: products-firestore
+	description: List product-related collections
+---
+	kind: tool
+	name: list_admin_collections
+	type: firestore-list-collections
+	source: admin-firestore
+	description: List administrative collections
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"list_user_collections": firestorelistcollections.Config{
-			Name:         "list_user_collections",
-			Kind:         "firestore-list-collections",
-			Source:       "users-firestore",
-			Description:  "List user-related collections",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "list_user_collections",
+				Description:  "List user-related collections",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-list-collections",
+			Source: "users-firestore",
 		},
 		"list_product_collections": firestorelistcollections.Config{
-			Name:         "list_product_collections",
-			Kind:         "firestore-list-collections",
-			Source:       "products-firestore",
-			Description:  "List product-related collections",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "list_product_collections",
+				Description:  "List product-related collections",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-list-collections",
+			Source: "products-firestore",
 		},
 		"list_admin_collections": firestorelistcollections.Config{
-			Name:         "list_admin_collections",
-			Kind:         "firestore-list-collections",
-			Source:       "admin-firestore",
-			Description:  "List administrative collections",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "list_admin_collections",
+				Description:  "List administrative collections",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-list-collections",
+			Source: "admin-firestore",
 		},
 	}
 
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

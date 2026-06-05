@@ -17,11 +17,11 @@ package alloydbgetuser_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbgetuser "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetuser"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	alloydbgetuser "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbgetuser"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -37,56 +37,57 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				get-my-user:
-					kind: alloydb-get-user
-					source: my-alloydb-admin-source
-					description: some description
-			`,
+            kind: tool
+            name: get-my-user
+            type: alloydb-get-user
+            source: my-alloydb-admin-source
+            description: some description
+            `,
 			want: server.ToolConfigs{
 				"get-my-user": alloydbgetuser.Config{
-					Name:         "get-my-user",
-					Kind:         "alloydb-get-user",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-my-user",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "alloydb-get-user",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
 		{
 			desc: "with auth required",
 			in: `
-			tools:
-				get-my-user-auth:
-					kind: alloydb-get-user
-					source: my-alloydb-admin-source
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-			`,
+            kind: tool
+            name: get-my-user-auth
+            type: alloydb-get-user
+            source: my-alloydb-admin-source
+            description: some description
+            authRequired: 
+            - my-google-auth-service
+            - other-auth-service
+            `,
 			want: server.ToolConfigs{
 				"get-my-user-auth": alloydbgetuser.Config{
-					Name:         "get-my-user-auth",
-					Kind:         "alloydb-get-user",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-my-user-auth",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "alloydb-get-user",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

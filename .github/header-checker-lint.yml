@@ -22,6 +22,6 @@ sourceFileExtensions:
   - 'yaml'
   - 'yml'
 ignoreFiles:
-  - 'docs/en/getting-started/quickstart/**'
+  - 'docs/en/documentation/**/*.go'
+  - 'docs/en/samples/**/*'
   - '**/*oracle*'
-

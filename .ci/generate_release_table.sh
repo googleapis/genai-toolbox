@@ -8,7 +8,7 @@ if [ -z "${VERSION}" ]; then
 fi
 
 
-FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64")
+FILES=("linux.amd64" "darwin.arm64" "darwin.amd64" "windows.amd64" "windows.arm64")
 output_string=""
 
 # Define the descriptions - ensure this array's order matches FILES
@@ -17,6 +17,7 @@ DESCRIPTIONS=(
     "For **macOS** systems running on **Apple Silicon** (M1, M2, M3, etc.) processors."
     "For **macOS** systems running on **Intel processors**."
     "For **Windows** systems running on **Intel/AMD 64-bit processors**."
+    "For **Windows** systems running on **ARM 64-bit processors**."
 )
 
 # Write the table header
@@ -38,9 +39,9 @@ do
     # Get release URL
     if [ "$OS" = 'windows' ];
     then
-        URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox.exe"
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox.exe"
     else
-        URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox"
     fi
 
     curl "$URL" --fail --output toolbox || exit 1

@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
 )
 
 func RunWaitTool(t *testing.T) {
@@ -37,7 +37,7 @@ func RunWaitTool(t *testing.T) {
 	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-wait-for-tool": map[string]any{
-				"kind":        "wait",
+				"type":        "wait",
 				"description": "Wait for a specified duration.",
 				"timeout":     "30s",
 			},

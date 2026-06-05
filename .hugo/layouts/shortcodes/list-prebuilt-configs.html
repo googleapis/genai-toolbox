@@ -1,0 +1,100 @@
+{{ $integrations := site.GetPage "section" "integrations" }}
+
+<div class="db-index-list">
+  {{/*Loop through all database folders alphabetically */}}
+  {{ range $integrations.Pages.ByTitle }}
+    {{ $db := . }}
+    {{/* Only render a row if this database has a 'prebuilt-configs' folder */}}
+    {{ with $db.GetPage "prebuilt-configs" }}
+      {{ $displayTitle := $db.Title }}
+      {{ $targetLink := .RelPermalink }}
+      {{ $displayDesc := .Description | default (printf "Explore prebuilt configurations for %s." $db.Title) }}
+
+      <a href="{{ $targetLink }}" class="db-index-row">
+        <div class="db-index-content">
+          <div class="db-index-header">
+            <span class="db-index-title">{{ $displayTitle }}</span>
+            <svg class="db-index-arrow" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </div>
+          <div class="db-index-desc">{{ $displayDesc | plainify | truncate 120 }}</div>
+        </div>
+      </a>
+    {{ end }}
+  {{ end }}
+</div>
+
+<style>
+  .db-index-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 2rem;
+    margin-bottom: 3rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .db-index-row {
+    padding: 1.25rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    text-decoration: none !important;
+    display: block;
+    background: transparent;
+    transition: all 0.2s ease;
+  }
+
+  .db-index-row:hover .db-index-title {
+    color: #4484f4;
+  }
+
+  .db-index-row:hover .db-index-arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: #4484f4;
+  }
+
+  .db-index-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+  }
+
+  .db-index-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #202124;
+    transition: color 0.2s ease;
+  }
+
+  .db-index-arrow {
+    opacity: 0;
+    transform: translateX(-10px);
+    color: #5f6368;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .db-index-desc {
+    font-size: 0.95rem;
+    color: #5f6368;
+    line-height: 1.5;
+    padding-right: 2rem;
+  }
+
+  /* Dark Mode Adjustments */
+  html[data-bs-theme="dark"] .db-index-list,
+  body.dark .db-index-list { border-top-color: rgba(255, 255, 255, 0.1); }
+
+  html[data-bs-theme="dark"] .db-index-row,
+  body.dark .db-index-row { border-bottom-color: rgba(255, 255, 255, 0.1); }
+
+  html[data-bs-theme="dark"] .db-index-title,
+  body.dark .db-index-title { color: #e8eaed; }
+
+  html[data-bs-theme="dark"] .db-index-desc,
+  body.dark .db-index-desc { color: #9aa0a6; }
+
+  html[data-bs-theme="dark"] .db-index-row:hover .db-index-title,
+  html[data-bs-theme="dark"] .db-index-row:hover .db-index-arrow { color: #8ab4f8; }
+</style>

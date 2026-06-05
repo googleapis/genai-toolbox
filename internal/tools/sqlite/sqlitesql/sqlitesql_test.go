@@ -15,18 +15,14 @@
 package sqlitesql_test
 
 import (
-	"context"
-	"database/sql"
-	"reflect"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	_ "modernc.org/sqlite"
 )
 
@@ -43,34 +39,36 @@ func TestParseFromYamlSQLite(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: sqlite-sql
-					source: my-sqlite-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
+            kind: tool
+            name: example_tool
+            type: sqlite-sql
+            source: my-sqlite-instance
+            description: some description
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
+                  authServices:
+                    - name: my-google-auth-service
+                      field: user_id
+                    - name: other-auth-service
+                      field: user_id
 			`,
 			want: server.ToolConfigs{
 				"example_tool": sqlitesql.Config{
-					Name:         "example_tool",
-					Kind:         "sqlite-sql",
-					Source:       "my-sqlite-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "sqlite-sql",
+					Source:    "my-sqlite-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -82,15 +80,12 @@ func TestParseFromYamlSQLite(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -111,45 +106,47 @@ func TestParseFromYamlWithTemplateSqlite(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: sqlite-sql
-					source: my-sqlite-db
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
-					templateParameters:
-						- name: tableName
-						  type: string
-						  description: The table to select hotels from.
-						- name: fieldArray
-						  type: array
-						  description: The columns to return for the query.
-						  items: 
-								name: column
-								type: string
-								description: A column name that will be returned from the query.
+            kind: tool
+            name: example_tool
+            type: sqlite-sql
+            source: my-sqlite-db
+            description: some description
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
+                  authServices:
+                    - name: my-google-auth-service
+                      field: user_id
+                    - name: other-auth-service
+                      field: user_id
+            templateParameters:
+                - name: tableName
+                  type: string
+                  description: The table to select hotels from.
+                - name: fieldArray
+                  type: array
+                  description: The columns to return for the query.
+                  items: 
+                    name: column
+                    type: string
+                    description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
 				"example_tool": sqlitesql.Config{
-					Name:         "example_tool",
-					Kind:         "sqlite-sql",
-					Source:       "my-sqlite-db",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "sqlite-sql",
+					Source:    "my-sqlite-db",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -165,161 +162,13 @@ func TestParseFromYamlWithTemplateSqlite(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func setupTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
-		t.Fatalf("Failed to open in-memory database: %v", err)
-	}
-
-	createTable := `
-	CREATE TABLE users (
-		id INTEGER PRIMARY KEY,
-		name TEXT,
-		age INTEGER
-	);`
-	if _, err := db.Exec(createTable); err != nil {
-		t.Fatalf("Failed to create table: %v", err)
-	}
-
-	insertData := `
-	INSERT INTO users (id, name, age) VALUES
-	(1, 'Alice', 30),
-	(2, 'Bob', 25);`
-	if _, err := db.Exec(insertData); err != nil {
-		t.Fatalf("Failed to insert data: %v", err)
-	}
-
-	return db
-}
-
-func TestTool_Invoke(t *testing.T) {
-	type fields struct {
-		Name               string
-		Kind               string
-		AuthRequired       []string
-		Parameters         parameters.Parameters
-		TemplateParameters parameters.Parameters
-		AllParams          parameters.Parameters
-		Db                 *sql.DB
-		Statement          string
-	}
-	type args struct {
-		ctx         context.Context
-		params      parameters.ParamValues
-		accessToken tools.AccessToken
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    any
-		wantErr bool
-	}{
-		{
-			name: "simple select",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM users",
-			},
-			args: args{
-				ctx: context.Background(),
-			},
-			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-				map[string]any{"id": int64(2), "name": "Bob", "age": int64(25)},
-			},
-			wantErr: false,
-		},
-		{
-			name: "select with parameter",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM users WHERE name = ?",
-				Parameters: []parameters.Parameter{
-					parameters.NewStringParameter("name", "user name"),
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				params: []parameters.ParamValue{
-					{Name: "name", Value: "Alice"},
-				},
-			},
-			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-			},
-			wantErr: false,
-		},
-		{
-			name: "select with template parameter",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM {{.tableName}}",
-				TemplateParameters: []parameters.Parameter{
-					parameters.NewStringParameter("tableName", "table name"),
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				params: []parameters.ParamValue{
-					{Name: "tableName", Value: "users"},
-				},
-			},
-			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-				map[string]any{"id": int64(2), "name": "Bob", "age": int64(25)},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid sql",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM non_existent_table",
-			},
-			args: args{
-				ctx: context.Background(),
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := sqlitesql.Tool{
-				Config: sqlitesql.Config{
-					Name:               tt.fields.Name,
-					Kind:               tt.fields.Kind,
-					AuthRequired:       tt.fields.AuthRequired,
-					Statement:          tt.fields.Statement,
-					Parameters:         tt.fields.Parameters,
-					TemplateParameters: tt.fields.TemplateParameters,
-				},
-				AllParams: tt.fields.AllParams,
-				Db:        tt.fields.Db,
-			}
-			got, err := tr.Invoke(tt.args.ctx, tt.args.params, tt.args.accessToken)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Tool.Invoke() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Tool.Invoke() = %v, want %v", got, tt.want)
 			}
 		})
 	}

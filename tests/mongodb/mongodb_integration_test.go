@@ -26,15 +26,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/tests"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var (
-	MongoDbSourceKind   = "mongodb"
-	MongoDbToolKind     = "mongodb-find"
+	MongoDbSourceType   = "mongodb"
+	MongoDbToolType     = "mongodb-find"
 	MongoDbUri          = os.Getenv("MONGODB_URI")
 	MongoDbDatabase     = os.Getenv("MONGODB_DATABASE")
 	ServiceAccountEmail = os.Getenv("SERVICE_ACCOUNT_EMAIL")
@@ -48,14 +48,14 @@ func getMongoDBVars(t *testing.T) map[string]any {
 		t.Fatal("'MongoDbDatabase' not set")
 	}
 	return map[string]any{
-		"kind": MongoDbSourceKind,
+		"type": MongoDbSourceType,
 		"uri":  MongoDbUri,
 	}
 }
 
 func initMongoDbDatabase(ctx context.Context, uri, database string) (*mongo.Database, error) {
 	// Create a new mongodb Database
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to mongodb: %s", err)
 	}
@@ -71,7 +71,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	database, err := initMongoDbDatabase(ctx, MongoDbUri, MongoDbDatabase)
 	if err != nil {
@@ -83,7 +83,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := getMongoDBToolsConfig(sourceConfig, MongoDbToolKind)
+	toolsFile := getMongoDBToolsConfig(sourceConfig, MongoDbToolType)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -102,9 +102,10 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
-	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
+	myToolById4Want := `[]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
-	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	mcpAuthRequiredWant := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"_id\":3,\"id\":3,\"name\":\"Sid\"}"}]}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
@@ -115,13 +116,14 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, select1Want,
 		tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant),
+		tests.WithMcpSelect1Want(mcpAuthRequiredWant),
 	)
 
 	delete1Want := "1"
 	deleteManyWant := "2"
 	runToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
 
-	insert1Want := `["68666e1035bb36bf1b4d47fb"]`
+	insert1Want := `"68666e1035bb36bf1b4d47fb"`
 	insertManyWant := `["68667a6436ec7d0363668db7","68667a6436ec7d0363668db8","68667a6436ec7d0363668db9"]`
 	runToolInsertInvokeTest(t, insert1Want, insertManyWant)
 
@@ -352,6 +354,7 @@ func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 		})
 	}
 }
+
 func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateManyWant string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -383,8 +386,8 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 			api:           "http://127.0.0.1:5000/api/tool/my-read-only-aggregate-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{ "name" : "ToBeAggregated" }`)),
-			want:          "",
-			isErr:         true,
+			want:          `{"error":"error processing request: this is not a read-only pipeline: {\"$out\":\"target_collection\"}"}`,
+			isErr:         false,
 		},
 		{
 			name:          "invoke my-read-write-aggregate-tool",
@@ -444,12 +447,15 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) func(*testing.T) {
 	collectionName := "test_collection"
 
+	if err := database.Collection(collectionName).Drop(ctx); err != nil {
+		t.Logf("Warning: failed to drop collection before setup: %v", err)
+	}
+
 	documents := []map[string]any{
 		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
-		{"_id": 1, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
+		{"_id": 14, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
-		{"_id": 4, "id": 4, "name": nil},
 		{"_id": 5, "id": 3, "name": "Alice", "email": "alice@gmail.com"},
 		{"_id": 6, "id": 100, "name": "ToBeDeleted", "email": "bob@gmail.com"},
 		{"_id": 7, "id": 101, "name": "ToBeDeleted", "email": "bob1@gmail.com"},
@@ -477,20 +483,20 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 
 }
 
-func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[string]any {
+func getMongoDBToolsConfig(sourceConfig map[string]any, toolType string) map[string]any {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":           "mongodb-find-one",
+				"type":           "mongodb-find-one",
 				"source":         "my-instance",
 				"description":    "Simple tool to test end to end functionality.",
 				"collection":     "test_collection",
@@ -498,11 +504,9 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterParams":   []any{},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
-				"limit":          1,
-				"sort":           `{ "id": 1 }`,
 			},
 			"my-tool": map[string]any{
-				"kind":          toolKind,
+				"type":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
@@ -522,9 +526,10 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":          toolKind,
+				"type":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
@@ -539,14 +544,15 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":          toolKind,
+				"type":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "name" : {{ .name }} }`,
+				"filterPayload": `{ "name" : {{json .name }} }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "name",
@@ -557,14 +563,15 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-array-tool": map[string]any{
-				"kind":          toolKind,
+				"type":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test invocation with array.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 })`,
+				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "nameArray",
@@ -578,9 +585,10 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-auth-tool": map[string]any{
-				"kind":          toolKind,
+				"type":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test authenticated parameters.",
 				"authRequired":  []string{},
@@ -601,9 +609,10 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 0, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"authRequired": []string{
@@ -613,9 +622,10 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterPayload": `{ "_id": 3, "id": 3 }`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
+				"limit":         10,
 			},
 			"my-fail-tool": map[string]any{
-				"kind":          toolKind,
+				"type":          toolType,
 				"source":        "my-instance",
 				"description":   "Tool to test statement with incorrect syntax.",
 				"authRequired":  []string{},
@@ -623,9 +633,10 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterPayload": `{ "id" ; 1 }"}`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
+				"limit":         10,
 			},
 			"my-delete-one-tool": map[string]any{
-				"kind":          "mongodb-delete-one",
+				"type":          "mongodb-delete-one",
 				"source":        "my-instance",
 				"description":   "Tool to test deleting an entry.",
 				"authRequired":  []string{},
@@ -635,7 +646,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":      MongoDbDatabase,
 			},
 			"my-delete-many-tool": map[string]any{
-				"kind":          "mongodb-delete-many",
+				"type":          "mongodb-delete-many",
 				"source":        "my-instance",
 				"description":   "Tool to test deleting multiple entries.",
 				"authRequired":  []string{},
@@ -645,7 +656,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":      MongoDbDatabase,
 			},
 			"my-insert-one-tool": map[string]any{
-				"kind":         "mongodb-insert-one",
+				"type":         "mongodb-insert-one",
 				"source":       "my-instance",
 				"description":  "Tool to test inserting an entry.",
 				"authRequired": []string{},
@@ -654,7 +665,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":     MongoDbDatabase,
 			},
 			"my-insert-many-tool": map[string]any{
-				"kind":         "mongodb-insert-many",
+				"type":         "mongodb-insert-many",
 				"source":       "my-instance",
 				"description":  "Tool to test inserting multiple entries.",
 				"authRequired": []string{},
@@ -663,7 +674,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database":     MongoDbDatabase,
 			},
 			"my-update-one-tool": map[string]any{
-				"kind":          "mongodb-update-one",
+				"type":          "mongodb-update-one",
 				"source":        "my-instance",
 				"description":   "Tool to test updating an entry.",
 				"authRequired":  []string{},
@@ -688,7 +699,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database": MongoDbDatabase,
 			},
 			"my-update-many-tool": map[string]any{
-				"kind":          "mongodb-update-many",
+				"type":          "mongodb-update-many",
 				"source":        "my-instance",
 				"description":   "Tool to test updating multiple entries.",
 				"authRequired":  []string{},
@@ -713,7 +724,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database": MongoDbDatabase,
 			},
 			"my-aggregate-tool": map[string]any{
-				"kind":            "mongodb-aggregate",
+				"type":            "mongodb-aggregate",
 				"source":          "my-instance",
 				"description":     "Tool to test an aggregation.",
 				"authRequired":    []string{},
@@ -730,7 +741,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database": MongoDbDatabase,
 			},
 			"my-read-only-aggregate-tool": map[string]any{
-				"kind":            "mongodb-aggregate",
+				"type":            "mongodb-aggregate",
 				"source":          "my-instance",
 				"description":     "Tool to test an aggregation.",
 				"authRequired":    []string{},
@@ -748,7 +759,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"database": MongoDbDatabase,
 			},
 			"my-read-write-aggregate-tool": map[string]any{
-				"kind":            "mongodb-aggregate",
+				"type":            "mongodb-aggregate",
 				"source":          "my-instance",
 				"description":     "Tool to test an aggregation.",
 				"authRequired":    []string{},

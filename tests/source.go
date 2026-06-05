@@ -26,15 +26,15 @@ import (
 	"time"
 
 	"cloud.google.com/go/cloudsqlconn"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
 // RunSourceConnection test for source connection
-func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind string) error {
+func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	var args []string
+	args := []string{"--enable-api"}
 
 	// Write config into a file and pass it to command
 	toolsFile := map[string]any{
@@ -43,7 +43,7 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolKind
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",

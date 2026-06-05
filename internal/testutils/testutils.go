@@ -23,8 +23,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 // formatYaml is a utility function for stripping out tabs in multiline strings
@@ -44,6 +44,11 @@ func ContextWithNewLogger() (context.Context, error) {
 		return nil, fmt.Errorf("unable to create logger: %s", err)
 	}
 	return util.WithLogger(ctx, logger), nil
+}
+
+// ContextWithUserAgent creates a new context with a specified user agent string.
+func ContextWithUserAgent(ctx context.Context, userAgent string) context.Context {
+	return util.WithUserAgent(ctx, userAgent)
 }
 
 // WaitForString waits until the server logs a single line that matches the provided regex.

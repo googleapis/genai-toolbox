@@ -17,16 +17,42 @@ package bigquerycommon
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
+// validBQTableID matches BigQuery table identifiers in 'dataset.table' or
+// 'project.dataset.table' form. Components are restricted to letters, digits,
+// and underscores — the character set that BigQuery allows for dataset and
+// table IDs and that is safe to interpolate inside a backtick-quoted SQL
+// identifier.
+var validBQTableID = regexp.MustCompile(`^[a-zA-Z0-9_-]+(\.([a-zA-Z0-9_]+)){1,2}$`)
+
+// validBQColumnName matches BigQuery column names: a letter or underscore
+// followed by letters, digits, or underscores.
+var validBQColumnName = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+
+// ValidTableID returns true if s is a safe BigQuery table identifier of the
+// form 'dataset.table' or 'project.dataset.table'. Values that fail this check
+// must not be interpolated into backtick-quoted SQL.
+func ValidTableID(s string) bool {
+	return validBQTableID.MatchString(s)
+}
+
+// ValidColumnName returns true if s is a safe BigQuery column name.
+// Values that fail this check must not be interpolated as SQL identifiers
+// or into single-quoted SQL string arguments that represent column references.
+func ValidColumnName(s string) bool {
+	return validBQColumnName.MatchString(s)
+}
+
 // DryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (*bigqueryrestapi.Job, error) {
+func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, maximumBytesBilled int64) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
 
 	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
@@ -46,6 +72,7 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 				UseLegacySql:         &useLegacySql,
 				ConnectionProperties: restConnProps,
 				QueryParameters:      params,
+				MaximumBytesBilled:   maximumBytesBilled,
 			},
 		},
 	}
@@ -60,14 +87,16 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 // BQTypeStringFromToolType converts a tool parameter type string to a BigQuery standard SQL type string.
 func BQTypeStringFromToolType(toolType string) (string, error) {
 	switch toolType {
-	case "string":
+	case parameters.TypeString:
 		return "STRING", nil
-	case "integer":
+	case parameters.TypeInt:
 		return "INT64", nil
-	case "float":
+	case parameters.TypeFloat:
 		return "FLOAT64", nil
-	case "boolean":
+	case parameters.TypeBool:
 		return "BOOL", nil
+	case parameters.TypeMap:
+		return "STRUCT", nil
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}
@@ -117,4 +146,22 @@ func InitializeDatasetParameters(
 	projectParam = parameters.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 
 	return projectParam, datasetParam
+}
+
+// StripSingleQuotes removes leading and trailing single quotes from a string if both are present.
+func StripSingleQuotes(s string) string {
+	if len(s) >= 2 && s[0] == '\'' && s[len(s)-1] == '\'' {
+		return s[1 : len(s)-1]
+	}
+	return s
+}
+
+// ValidColumnParam returns true if s (stripped of leading/trailing single quotes) is a safe column name.
+func ValidColumnParam(s string) bool {
+	return ValidColumnName(StripSingleQuotes(s))
+}
+
+// ValidContributionMetricParam returns true if s (stripped of leading/trailing single quotes) is a safe contribution metric (does not contain single quotes).
+func ValidContributionMetricParam(s string) bool {
+	return !strings.ContainsRune(StripSingleQuotes(s), '\'')
 }
