@@ -73,7 +73,7 @@ To learn more on how to configure your toolbox, visit the [official docsite](htt
 The toolbox automatically handles platform-specific binaries. Supported platforms include:
 - macOS (arm64, x64)
 - Linux (x64)
-- Windows (x64)
+- Windows (x64, arm64)
 
 ## Resources
 
