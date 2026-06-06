@@ -290,7 +290,8 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 
 	// run tool invocation and generate response.
 	executionStart := time.Now()
-	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
+	srcProvider := tools.NewOverridingSourceProvider(resourceMgr, util.ExtractTargetResourceName(header))
+	results, err := tool.Invoke(ctx, srcProvider, params, accessToken)
 	executionDuration := time.Since(executionStart).Seconds()
 
 	// Record tool execution duration metric

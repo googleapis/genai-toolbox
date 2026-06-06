@@ -413,7 +413,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		AllowedOrigins:   cfg.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowCredentials: true, // required since Toolbox uses auth headers
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Mcp-Session-Id", "MCP-Protocol-Version"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Mcp-Session-Id", "MCP-Protocol-Version", "Tool-Target-Source"},
 		ExposedHeaders:   []string{"Mcp-Session-Id"}, // headers that are sent to clients
 		MaxAge:           300,                        // cache preflight results for 5 minutes
 	}

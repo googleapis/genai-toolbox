@@ -179,6 +179,27 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 	return source, nil
 }
 
+// overridingSourceProvider wraps a SourceProvider and redirects all GetSource
+// calls to a fixed override name, implementing dynamic source selection via the
+// Tool-Target-Source request header.
+type overridingSourceProvider struct {
+	SourceProvider
+	override string
+}
+
+func (o overridingSourceProvider) GetSource(_ string) (sources.Source, bool) {
+	return o.SourceProvider.GetSource(o.override)
+}
+
+// NewOverridingSourceProvider returns a SourceProvider that redirects all
+// GetSource calls to override. Returns base unchanged when override is empty.
+func NewOverridingSourceProvider(base SourceProvider, override string) SourceProvider {
+	if override == "" {
+		return base
+	}
+	return overridingSourceProvider{SourceProvider: base, override: override}
+}
+
 // ToolMeta is the read-only view BaseTool needs of any tool's Config. Tools
 // satisfy it for free by embedding ConfigBase.
 type ToolMeta interface {

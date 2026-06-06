@@ -101,3 +101,45 @@ func TestExtractClientIP(t *testing.T) {
 		})
 	}
 }
+
+
+func TestExtractTargetResourceName(t *testing.T) {
+	tests := []struct {
+		name     string
+		headers  map[string]string
+		expected string
+	}{
+		{
+			name:     "No headers",
+			headers:  map[string]string{},
+			expected: "",
+		},
+		{
+			name: "Tool-Target-Source header set",
+			headers: map[string]string{
+				"Tool-Target-Source": "some_source",
+			},
+			expected: "some_source",
+		},
+		{
+			name: "Tool-Target-Source header set with whitespace",
+			headers: map[string]string{
+				"Tool-Target-Source": "    some_source ",
+			},
+			expected: "some_source",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, _ := http.NewRequest("GET", "http://example.com", nil)
+			for k, v := range tt.headers {
+				req.Header.Set(k, v)
+			}
+			actual := ExtractTargetResourceName(req.Header)
+			if actual != tt.expected {
+				t.Errorf("ExtractTargetResourceName() = %q, expected %q", actual, tt.expected)
+			}
+		})
+	}
+}

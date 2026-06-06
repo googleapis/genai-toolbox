@@ -450,6 +450,71 @@ func TestEndpointSecurityAllowedOrigin(t *testing.T) {
 	}
 }
 
+func TestCORSAllowedHeaders(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+
+	cfg := server.ServerConfig{
+		Version:        "0.0.0",
+		Address:        "127.0.0.1",
+		Port:           0,
+		EnableAPI:      true,
+		AllowedOrigins: []string{"https://trusted.com"},
+		AllowedHosts:   []string{"*"},
+	}
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cfg.Version)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	s, err := server.NewServer(ctx, cfg)
+	if err != nil {
+		t.Fatalf("error setting up server: %s", err)
+	}
+	if err := s.Listen(ctx, "", ""); err != nil {
+		t.Fatalf("unable to start server: %v", err)
+	}
+	go func() {
+		if err := s.Serve(ctx); err != nil && err != http.ErrServerClosed {
+			t.Errorf("server serve error: %v", err)
+		}
+	}()
+
+	headersToCheck := []string{
+		"Mcp-Session-Id",
+		"MCP-Protocol-Version",
+		"Authorization",
+		"Tool-Target-Source",
+	}
+	for _, hdr := range headersToCheck {
+		t.Run(hdr, func(t *testing.T) {
+			url := fmt.Sprintf("http://%s/mcp", s.Addr())
+			req, err := http.NewRequest(http.MethodOptions, url, nil)
+			if err != nil {
+				t.Fatalf("failed to create request: %v", err)
+			}
+			req.Header.Set("Origin", "https://trusted.com")
+			req.Header.Set("Access-Control-Request-Method", "POST")
+			req.Header.Set("Access-Control-Request-Headers", hdr)
+
+			resp, err := (&http.Client{}).Do(req)
+			if err != nil {
+				t.Fatalf("failed to send preflight: %v", err)
+			}
+			defer resp.Body.Close()
+
+			allowed := resp.Header.Get("Access-Control-Allow-Headers")
+			if !strings.Contains(strings.ToLower(allowed), strings.ToLower(hdr)) {
+				t.Errorf("preflight did not allow header %q; Access-Control-Allow-Headers = %q", hdr, allowed)
+			}
+		})
+	}
+}
+
 func TestEndpointSecurityAllowedHost(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
