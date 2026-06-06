@@ -112,9 +112,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   version = "v0.30.0"
   url = "https://mcp-toolbox.dev/v0.30.0/"
 
-[[params.versions]]
-  version = "v0.29.0"
-  url = "https://mcp-toolbox.dev/v0.29.0/"
 
 [[menu.main]]
   name = "GitHub"
