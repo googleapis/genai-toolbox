@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
+	pgxdecimal "github.com/jackc/pgx-shopspring-decimal"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
@@ -156,6 +157,11 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		return nil, err
 	}
 	config.ConnConfig.DefaultQueryExecMode = execMode
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		registerGoogleUUID(conn.TypeMap())
+		pgxdecimal.Register(conn.TypeMap())
+		return nil
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
