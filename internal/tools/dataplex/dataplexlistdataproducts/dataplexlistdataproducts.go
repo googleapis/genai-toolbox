@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -45,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	ListDataProducts(ctx context.Context, filter string, pageSize int, orderBy string) ([]*dataplexpb.DataProduct, error)
+	ListDataProducts(ctx context.Context, filter string, pageSize int, orderBy string) ([]*dataplex.DataProductSummary, error)
 }
 
 type Config struct {

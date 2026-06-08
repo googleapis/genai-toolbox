@@ -378,7 +378,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 					Description: "Test Group Description",
 					Principal: &dataplexpb.DataProduct_Principal{
 						Type: &dataplexpb.DataProduct_Principal_GoogleGroup{
-							GoogleGroup: "test-mcp-group@google.com",
+							GoogleGroup: ownerEmail,
 						},
 					},
 				},
@@ -1425,6 +1425,16 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 			if tc.wantValue != "" && val != tc.wantValue {
 				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
 			}
+			// Assert raw SDK fields are cleaned/removed
+			if _, ok := entry["uid"]; ok {
+				t.Errorf("expected entry to NOT have 'uid' field, but it was found")
+			}
+			if _, ok := entry["etag"]; ok {
+				t.Errorf("expected entry to NOT have 'etag' field, but it was found")
+			}
+			if _, ok := entry["createTime"]; ok {
+				t.Errorf("expected entry to NOT have 'createTime' field, but it was found")
+			}
 		})
 	}
 }
@@ -1556,8 +1566,8 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 			if ag["id"] != "test-group" {
 				t.Errorf("expected access group id 'test-group', got %q", ag["id"])
 			}
-			if ag["googleGroup"] != "test-mcp-group@google.com" {
-				t.Errorf("expected googleGroup 'test-mcp-group@google.com', got %q", ag["googleGroup"])
+			if ag["googleGroup"] != tests.ServiceAccountEmail {
+				t.Errorf("expected googleGroup %q, got %q", tests.ServiceAccountEmail, ag["googleGroup"])
 			}
 			if ag["serviceAccount"] != "" {
 				t.Errorf("expected serviceAccount to be empty, got %q", ag["serviceAccount"])
