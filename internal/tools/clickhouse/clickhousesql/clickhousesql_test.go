@@ -19,8 +19,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -122,14 +120,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 		Parameters: parameters.Parameters{},
 	}
 
-	// Create a mock ClickHouse source
-	mockSource := &clickhouse.Source{}
-
-	sources := map[string]sources.Source{
-		"test-clickhouse": mockSource,
-	}
-
-	tool, err := config.Initialize(sources)
+	tool, err := config.Initialize()
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}
@@ -157,7 +148,10 @@ func TestToolManifest(t *testing.T) {
 		),
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != "Test description" {
 		t.Errorf("Expected description 'Test description', got %s", manifest.Description)
 	}

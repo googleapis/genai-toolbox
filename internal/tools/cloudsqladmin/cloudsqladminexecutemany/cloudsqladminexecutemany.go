@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Cloud SQL Admin ExecuteSqlMany tool.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	params := parameters.Parameters{
 		parameters.NewStringParameter("project", "The GCP project ID."),
 		parameters.NewStringParameter("instanceId", "The Cloud SQL instance ID."),
@@ -147,8 +147,8 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	return t.manifest, nil
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
@@ -171,8 +171,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	return "Authorization", nil
 }
 
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.Parameters, nil
 }
 
 func (t Tool) GetScopesRequired() []string {

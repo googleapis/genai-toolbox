@@ -183,7 +183,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize(sourcesMap)
+			t, err := tc.Initialize()
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 			}

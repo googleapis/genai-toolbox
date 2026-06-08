@@ -21,7 +21,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/mcp-toolbox/internal/sources/mysql"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -108,6 +107,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
+	SourceType() string
 	MySQLPool() *sql.DB
 	RunSQL(context.Context, string, []any) (any, error)
 }
@@ -126,36 +126,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
-	}
-
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-	// verify the source is compatible
-	_, ok = rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	allParameters := parameters.Parameters{
 		parameters.NewIntParameterWithDefault("min_duration_secs", 0, "Optional: Only show queries running for at least this long in seconds"),
 		parameters.NewIntParameterWithDefault("limit", 100, "Optional: The maximum number of rows to return."),
-	}
-
-	var statement string
-	sourceType := rawS.SourceType()
-	switch sourceType {
-	case mysql.SourceType:
-		statement = listActiveQueriesStatementMySQL
-	case cloudsqlmysql.SourceType:
-		statement = listActiveQueriesStatementCloudSQLMySQL
-	default:
-		return nil, fmt.Errorf("unsupported source type: %s", cfg.Source)
 	}
 
 	return Tool{
@@ -165,7 +143,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
-		statement: statement,
 	}, nil
 }
 
@@ -174,13 +151,22 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	tools.BaseTool[Config]
-	statement string
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	var statement string
+	switch source.SourceType() {
+	case mysql.SourceType:
+		statement = listActiveQueriesStatementMySQL
+	case cloudsqlmysql.SourceType:
+		statement = listActiveQueriesStatementCloudSQLMySQL
+	default:
+		return nil, util.NewClientServerError(fmt.Sprintf("unsupported source type: %s", source.SourceType()), http.StatusInternalServerError, nil)
 	}
 
 	paramsMap := params.AsMap()
@@ -199,8 +185,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, t.statement))
-	resp, err := source.RunSQL(ctx, t.statement, []any{duration, duration, limit})
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, statement))
+	resp, err := source.RunSQL(ctx, statement, []any{duration, duration, limit})
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

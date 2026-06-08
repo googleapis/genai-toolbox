@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/cache"
 	"github.com/googleapis/mcp-toolbox/internal/tools/neo4j/neo4jschema/helpers"
@@ -78,7 +77,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}

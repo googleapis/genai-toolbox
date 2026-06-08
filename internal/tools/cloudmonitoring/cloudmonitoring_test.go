@@ -21,7 +21,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	cloudmonitoringsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
@@ -33,11 +32,6 @@ type mockIncompatibleSource struct{ sources.Source }
 
 func TestInitialize(t *testing.T) {
 	t.Parallel()
-	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Type: "cloud-monitoring"}}
-	srcs := map[string]sources.Source{
-		"my-monitoring-source": testSource,
-		"incompatible-source":  &mockIncompatibleSource{},
-	}
 
 	wantParams := parameters.Parameters{
 		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
@@ -88,7 +82,7 @@ func TestInitialize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tool, err := tc.cfg.Initialize(srcs)
+			tool, err := tc.cfg.Initialize()
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -104,7 +98,10 @@ func TestInitialize(t *testing.T) {
 				t.Fatalf("Initialize() failed: %v", err)
 			}
 
-			got := tool.Manifest()
+			got, err := tool.Manifest(nil)
+			if err != nil {
+				t.Fatalf("Manifest() failed: %v", err)
+			}
 			if diff := cmp.Diff(tc.want, &got); diff != "" {
 				t.Errorf("Initialize() manifest mismatch (-want +got):\n%s", diff)
 			}

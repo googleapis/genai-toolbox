@@ -64,7 +64,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 		Tools:         make([]*Tool, 0, len(t.ToolNames)),
 		Manifest: ToolsetManifest{
 			ServerVersion: serverVersion,
-			ToolsManifest: make(map[string]Manifest),
 		},
 		toolNameSet: make(map[string]struct{}, len(t.ToolNames)),
 	}
@@ -77,7 +76,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 			return toolset, fmt.Errorf("tool does not exist: %s", toolName)
 		}
 		toolset.Tools = append(toolset.Tools, &tool)
-		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
 		toolset.toolNameSet[toolName] = struct{}{}
 	}
 	return toolset, nil

@@ -93,7 +93,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional parameter: Schema name of the table."),
 		parameters.NewStringParameterWithRequired("table_name", "Table name experiencing degraded vector search recall.", true),
@@ -224,8 +224,8 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 	return parameters.EmbedParams(ctx, t.allParams, paramValues, embeddingModelsMap, nil)
 }
 
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	return t.manifest, nil
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
@@ -240,8 +240,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	return "Authorization", nil
 }
 
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.allParams
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.allParams, nil
 }
 
 func (t Tool) GetScopesRequired() []string {

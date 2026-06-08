@@ -149,7 +149,7 @@ func TestConfig_Initialize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool, err := tt.config.Initialize(tt.sources)
+			tool, err := tt.config.Initialize()
 
 			if tt.wantErr {
 				if err == nil {
@@ -177,7 +177,11 @@ func TestConfig_Initialize(t *testing.T) {
 			if actualTool.Cfg.Type != "firestore-update-document" {
 				t.Fatalf("tool.Type = %v, want %v", actualTool.Cfg.Type, "firestore-update-document")
 			}
-			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.Manifest().AuthRequired); diff != "" {
+			gotManifest, err := actualTool.Manifest(nil)
+			if err != nil {
+				t.Fatalf("Manifest() returned unexpected error: %v", err)
+			}
+			if diff := cmp.Diff(tt.config.AuthRequired, gotManifest.AuthRequired); diff != "" {
 				t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)
 			}
 			if actualTool.StaticParameters == nil {
@@ -250,7 +254,11 @@ func TestTool_ParseParams(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params, err := parameters.ParseParams(tool.GetParameters(), tt.data, tt.claims)
+			toolParams, err := tool.GetParameters(nil)
+			if err != nil {
+				t.Fatalf("GetParameters() returned unexpected error: %v", err)
+			}
+			params, err := parameters.ParseParams(toolParams, tt.data, tt.claims)
 
 			if tt.wantErr {
 				if err == nil {
@@ -291,7 +299,10 @@ func TestTool_Manifest(t *testing.T) {
 		),
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != "Test description" {
 		t.Fatalf("manifest.Description = %v, want %v", manifest.Description, "Test description")
 	}
