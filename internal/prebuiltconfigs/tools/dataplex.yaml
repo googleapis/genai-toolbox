@@ -47,6 +47,12 @@ type: dataplex-search-dq-scans
 source: dataplex-source
 description: Use this tool to search for data quality scans in Dataplex.
 ---
+kind: tool
+name: list_data_products
+type: dataplex-list-data-products
+source: dataplex-source
+description: Lists Data Products across all locations.
+---
 kind: toolset
 name: discovery
 tools:
@@ -55,3 +61,4 @@ tools:
 - search_aspect_types
 - lookup_context
 - search_dq_scans
+- list_data_products
