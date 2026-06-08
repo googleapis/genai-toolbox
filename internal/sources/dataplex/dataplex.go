@@ -314,12 +314,19 @@ func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
 	return s.dataProductClient
 }
 
+type DataProductSummary struct {
+	Name        string   `json:"name"`
+	DisplayName string   `json:"displayName"`
+	OwnerEmails []string `json:"ownerEmails"`
+	AssetCount  int32    `json:"assetCount"`
+}
+
 func (s *Source) ListDataProducts(
 	ctx context.Context,
 	filter string,
 	pageSize int,
 	orderBy string,
-) ([]*dataplexpb.DataProduct, error) {
+) ([]*DataProductSummary, error) {
 	if s.dataProductClient == nil {
 		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
@@ -335,7 +342,7 @@ func (s *Source) ListDataProducts(
 	}
 
 	it := s.dataProductClient.ListDataProducts(ctx, req)
-	var results []*dataplexpb.DataProduct
+	var results []*DataProductSummary
 
 	for len(results) < pageSize {
 		dp, err := it.Next()
@@ -348,7 +355,12 @@ func (s *Source) ListDataProducts(
 			}
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
-		results = append(results, dp)
+		results = append(results, &DataProductSummary{
+			Name:        dp.GetName(),
+			DisplayName: dp.GetDisplayName(),
+			OwnerEmails: dp.GetOwnerEmails(),
+			AssetCount:  dp.GetAssetCount(),
+		})
 	}
 	return results, nil
 }

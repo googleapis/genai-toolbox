@@ -1395,6 +1395,16 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 			if tc.wantValue != "" && val != tc.wantValue {
 				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
 			}
+			// Assert raw SDK fields are cleaned/removed
+			if _, ok := entry["uid"]; ok {
+				t.Errorf("expected entry to NOT have 'uid' field, but it was found")
+			}
+			if _, ok := entry["etag"]; ok {
+				t.Errorf("expected entry to NOT have 'etag' field, but it was found")
+			}
+			if _, ok := entry["createTime"]; ok {
+				t.Errorf("expected entry to NOT have 'createTime' field, but it was found")
+			}
 		})
 	}
 }
