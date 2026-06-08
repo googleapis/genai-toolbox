@@ -381,4 +381,11 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 2. You can optionally filter by `display_name` (e.g., "`display_name:\"my-product\"`") or other fields using the Dataplex filter syntax.
 ### Response
 1. Unless asked for a specific data product, respond with all entries returned.
+
+## Tool: get_data_product
+### Request
+1. Use this tool to retrieve detailed metadata for a specific Data Product.
+2. You must provide the full resource name of the Data Product in the format `projects/{project}/locations/{location}/dataProducts/{dataProduct}`.
+### Response
+1. Present the retrieved metadata for the Data Product, including its display name, description, owner emails, asset count, labels, and access groups.
 ```

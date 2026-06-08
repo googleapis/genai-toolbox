@@ -108,6 +108,10 @@ func (s *Source) GetDataScanClient() *dataplexapi.DataScanClient {
 	return s.DataScanClient
 }
 
+func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
+	return s.dataProductClient
+}
+
 func initDataplexConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -310,17 +314,13 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 	return results, nil
 }
 
-func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
-	return s.dataProductClient
-}
-
 func (s *Source) ListDataProducts(
 	ctx context.Context,
 	filter string,
 	pageSize int,
 	orderBy string,
 ) ([]*dataplexpb.DataProduct, error) {
-	if s.dataProductClient == nil {
+	if s.GetDataProductClient() == nil {
 		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
 	if pageSize <= 0 {
@@ -334,7 +334,7 @@ func (s *Source) ListDataProducts(
 		OrderBy:  orderBy,
 	}
 
-	it := s.dataProductClient.ListDataProducts(ctx, req)
+	it := s.GetDataProductClient().ListDataProducts(ctx, req)
 	var results []*dataplexpb.DataProduct
 
 	for len(results) < pageSize {
@@ -351,4 +351,56 @@ func (s *Source) ListDataProducts(
 		results = append(results, dp)
 	}
 	return results, nil
+}
+
+type AccessGroup struct {
+	ID             string `json:"id"`
+	DisplayName    string `json:"displayName"`
+	Description    string `json:"description"`
+	GoogleGroup    string `json:"googleGroup,omitempty"`
+	ServiceAccount string `json:"serviceAccount,omitempty"`
+}
+
+type DataProduct struct {
+	Name         string            `json:"name"`
+	DisplayName  string            `json:"displayName"`
+	Description  string            `json:"description"`
+	OwnerEmails  []string          `json:"ownerEmails"`
+	AssetCount   int32             `json:"assetCount"`
+	Labels       map[string]string `json:"labels"`
+	AccessGroups []AccessGroup     `json:"accessGroups"`
+}
+
+func (s *Source) GetDataProduct(ctx context.Context, name string) (*DataProduct, error) {
+	if s.GetDataProductClient() == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	req := &dataplexpb.GetDataProductRequest{
+		Name: name,
+	}
+	resp, err := s.GetDataProductClient().GetDataProduct(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	accessGroups := []AccessGroup{}
+	for _, ag := range resp.GetAccessGroups() {
+		accessGroups = append(accessGroups, AccessGroup{
+			ID:             ag.GetId(),
+			DisplayName:    ag.GetDisplayName(),
+			Description:    ag.GetDescription(),
+			GoogleGroup:    ag.GetPrincipal().GetGoogleGroup(),
+			ServiceAccount: ag.GetPrincipal().GetServiceAccount(),
+		})
+	}
+
+	return &DataProduct{
+		Name:         resp.GetName(),
+		DisplayName:  resp.GetDisplayName(),
+		Description:  resp.GetDescription(),
+		OwnerEmails:  resp.GetOwnerEmails(),
+		AssetCount:   resp.GetAssetCount(),
+		Labels:       resp.GetLabels(),
+		AccessGroups: accessGroups,
+	}, nil
 }

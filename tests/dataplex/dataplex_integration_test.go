@@ -47,6 +47,7 @@ var (
 	DataplexSearchAspectTypesToolType      = "dataplex-search-aspect-types"
 	DataplexSearchDataQualityScansToolType = "dataplex-search-dq-scans"
 	DataplexListDataProductsToolType       = "dataplex-list-data-products"
+	DataplexGetDataProductToolType         = "dataplex-get-data-product"
 	DataplexProject                        = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -295,6 +296,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexLookupContextToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchDataQualityScansToolInvokeTest(t, dataScanId, tableName, datasetName)
 	runDataplexListDataProductsToolInvokeTest(t, dataProductId1, dataProductId2)
+	runDataplexGetDataProductToolInvokeTest(t, dataProductId1)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -369,6 +371,18 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 			DisplayName: dataProductId,
 			Description: "Temporary Data Product for MCP Toolbox integration tests",
 			OwnerEmails: []string{ownerEmail},
+			AccessGroups: map[string]*dataplexpb.DataProduct_AccessGroup{
+				"test-group": {
+					Id:          "test-group",
+					DisplayName: "Test Group",
+					Description: "Test Group Description",
+					Principal: &dataplexpb.DataProduct_Principal{
+						Type: &dataplexpb.DataProduct_Principal_GoogleGroup{
+							GoogleGroup: "test-mcp-group@google.com",
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -509,6 +523,17 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"description":  "Simple dataplex list data products tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"my-dataplex-get-data-product-tool": map[string]any{
+				"type":        DataplexGetDataProductToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get data product tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-get-data-product-tool": map[string]any{
+				"type":         DataplexGetDataProductToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex get data product tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
 		},
 	}
 
@@ -545,6 +570,11 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-list-data-products-tool",
 			toolName:       "my-dataplex-list-data-products-tool",
 			expectedParams: []string{"filter", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-get-data-product-tool",
+			toolName:       "my-dataplex-get-data-product-tool",
+			expectedParams: []string{"name"},
 		},
 	}
 
@@ -1394,6 +1424,143 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 			}
 			if tc.wantValue != "" && val != tc.wantValue {
 				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
+			}
+		})
+	}
+}
+
+func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string) {
+	idToken, err := tests.GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	fullDataProductId := fmt.Sprintf("projects/%s/locations/us-central1/dataProducts/%s", DataplexProject, dataProductId)
+
+	testCases := []struct {
+		name           string
+		api            string
+		requestHeader  map[string]string
+		requestBody    io.Reader
+		wantStatusCode int
+		expectResult   bool
+		wantContentKey string
+		wantValue      string
+	}{
+		{
+			name:           "Success - Get Product (Authorized)",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "name",
+			wantValue:      fullDataProductId,
+		},
+		{
+			name:           "Success - Get Product (Un-authorized)",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "name",
+			wantValue:      fullDataProductId,
+		},
+		{
+			name:           "Failure - Invalid Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:           "Failure - Without Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:           "Failure - Invalid Name Format",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataProductId))),
+			wantStatusCode: 500, // Tool validation fails with agent error mapped to 500
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+			}
+			if !tc.expectResult {
+				return
+			}
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			var entry map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			val, ok := entry[tc.wantContentKey].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key '%s' as string, but it was not found or not a string in %v", tc.wantContentKey, entry)
+			}
+			if tc.wantValue != "" && val != tc.wantValue {
+				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
+			}
+			// Additionally assert key fields are populated
+			if entry["displayName"] == "" {
+				t.Errorf("displayName should not be empty")
+			}
+			if entry["ownerEmails"] == nil {
+				t.Errorf("ownerEmails should not be nil")
+			}
+			// Assert access groups are mapped correctly
+			accessGroups, ok := entry["accessGroups"].([]interface{})
+			if !ok {
+				t.Fatalf("expected 'accessGroups' to be a slice, got %T", entry["accessGroups"])
+			}
+			if len(accessGroups) != 1 {
+				t.Fatalf("expected 1 access group, got %d", len(accessGroups))
+			}
+			ag, ok := accessGroups[0].(map[string]interface{})
+			if !ok {
+				t.Fatalf("expected access group to be a map, got %T", accessGroups[0])
+			}
+			if ag["id"] != "test-group" {
+				t.Errorf("expected access group id 'test-group', got %q", ag["id"])
+			}
+			if ag["googleGroup"] != "test-mcp-group@google.com" {
+				t.Errorf("expected googleGroup 'test-mcp-group@google.com', got %q", ag["googleGroup"])
+			}
+			if ag["serviceAccount"] != "" {
+				t.Errorf("expected serviceAccount to be empty, got %q", ag["serviceAccount"])
 			}
 		})
 	}

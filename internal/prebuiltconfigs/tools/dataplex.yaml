@@ -53,6 +53,12 @@ type: dataplex-list-data-products
 source: dataplex-source
 description: Lists Data Products across all locations.
 ---
+kind: tool
+name: get_data_product
+type: dataplex-get-data-product
+source: dataplex-source
+description: Retrieves specific metadata regarding a Data Product.
+---
 kind: toolset
 name: discovery
 tools:
@@ -62,3 +68,4 @@ tools:
 - lookup_context
 - search_dq_scans
 - list_data_products
+- get_data_product
