@@ -17,6 +17,8 @@ package tools
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 )
 
 type ToolsetConfig struct {
@@ -54,6 +56,20 @@ func (t Toolset) ContainsTool(name string) bool {
 type ToolsetManifest struct {
 	ServerVersion string              `json:"serverVersion"`
 	ToolsManifest map[string]Manifest `json:"tools"`
+}
+
+// BuildManifest resolves the manifest for every tool in the toolset against the
+// provided sources, returning an error if any tool's manifest cannot be built.
+func (t Toolset) BuildManifest(srcs map[string]sources.Source) (ToolsetManifest, error) {
+	toolsManifest := make(map[string]Manifest, len(t.Tools))
+	for _, tool := range t.Tools {
+		m, err := (*tool).Manifest(srcs)
+		if err != nil {
+			return ToolsetManifest{}, fmt.Errorf("error generating manifest for tool %q: %w", (*tool).GetName(), err)
+		}
+		toolsManifest[(*tool).GetName()] = m
+	}
+	return ToolsetManifest{ServerVersion: t.Manifest.ServerVersion, ToolsManifest: toolsManifest}, nil
 }
 
 func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool) (Toolset, error) {

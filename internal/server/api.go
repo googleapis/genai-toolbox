@@ -74,21 +74,11 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	toolsManifest := make(map[string]tools.Manifest, len(toolset.Tools))
-	for _, tool := range toolset.Tools {
-		var m tools.Manifest
-		m, err = (*tool).Manifest(s.ResourceMgr.GetSourcesMap())
-		if err != nil {
-			err = fmt.Errorf("error generating manifest for tool %q: %w", (*tool).GetName(), err)
-			s.logger.DebugContext(ctx, err.Error())
-			_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
-			return
-		}
-		toolsManifest[(*tool).GetName()] = m
-	}
-	manifest := tools.ToolsetManifest{
-		ServerVersion: s.version,
-		ToolsManifest: toolsManifest,
+	manifest, err := toolset.BuildManifest(s.ResourceMgr.GetSourcesMap())
+	if err != nil {
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
 	}
 
 	render.JSON(w, r, manifest)
