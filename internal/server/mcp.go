@@ -540,7 +540,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// check if client have `MCP-Protocol-Version` header
 	// Only supported for v2025-06-18+.
-	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
+	headerProtocolVersion := r.Header.Get("Mcp-Protocol-Version")
 	if headerProtocolVersion != "" {
 		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
 			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)
