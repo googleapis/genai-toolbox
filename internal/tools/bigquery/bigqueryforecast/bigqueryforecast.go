@@ -78,12 +78,15 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	// params is the static skeleton (no source at init ⇒ no allowed-dataset restriction).
+	// Manifest/GetParameters re-resolve against the source lazily.
+	params := buildParams(nil)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -269,13 +272,7 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 }
 
 // resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
+func buildParams(allowedDatasets []string) parameters.Parameters {
 	historyDataDescription := "The table id or the query of the history time series data."
 	if len(allowedDatasets) > 0 {
 		datasetIDs := []string{}
@@ -294,9 +291,16 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		"An array of the time series id column names.",
 		parameters.NewStringParameterWithEscape("id_col", "The name of time series id column.", "single-quotes"))
 	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
-	params := parameters.Parameters{historyDataParameter,
+	return parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
-	return params, nil
+}
+
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryAllowedDatasets()), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

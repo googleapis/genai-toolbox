@@ -72,13 +72,13 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		cfg.Description = "Clone an existing Cloud SQL instance into a new instance. The clone can be a direct copy of the source instance, or a point-in-time-recovery (PITR) clone from a specific timestamp. The call returns a Cloud SQL Operation object. Call wait_for_operation tool after this, make sure to use multiplier as 4 to poll the opertation status till it is marked DONE."
 	}
-
+	params := buildParams("")
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -138,21 +138,13 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return source.UseClientAuthorization(), nil
 }
 
-// resolveParams builds the tool's parameters using the source's configured default GCP project.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	project := s.GetDefaultProject()
-	var projectParam parameters.Parameter
+// buildParams builds the tool's parameters. A non-empty project means the source has a
+// configured default project, which is baked into the project param; otherwise the plain form is used.
+func buildParams(project string) parameters.Parameters {
+	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
 		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
-	} else {
-		projectParam = parameters.NewStringParameter("project", "The project ID")
 	}
-
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("sourceInstanceName", "The name of the instance to be cloned."),
@@ -161,7 +153,16 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		parameters.NewStringParameterWithRequired("pointInTime", "The timestamp in RFC 3339 format to which the source instance should be cloned.", false),
 		parameters.NewStringParameterWithRequired("preferredZone", "The preferred zone for the new instance.", false),
 		parameters.NewStringParameterWithRequired("preferredSecondaryZone", "The preferred secondary zone for the new instance.", false),
-	}, nil
+	}
+}
+
+// resolveParams builds the tool's parameters using the source's configured default GCP project.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.GetDefaultProject()), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

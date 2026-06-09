@@ -71,12 +71,13 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		cfg.Description = "Lists all AlloyDB users in a given project, location and cluster."
 	}
+	params := buildParams("")
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -133,26 +134,27 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return source.UseClientAuthorization(), nil
 }
 
+// buildParams builds the tool's parameters. A non-empty project means the source has a
+// configured default project, which is baked into the project param; otherwise the plain form is used.
+func buildParams(project string) parameters.Parameters {
+	projectParam := parameters.NewStringParameter("project", "The GCP project ID.")
+	if project != "" {
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	}
+	return parameters.Parameters{
+		projectParam,
+		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		parameters.NewStringParameter("cluster", "The ID of the cluster to list users from."),
+	}
+}
+
 // resolveParams builds the tool's parameters using the source's configured default GCP project.
 func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
 	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, err
 	}
-
-	project := s.GetDefaultProject()
-	var projectParam parameters.Parameter
-	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
-	} else {
-		projectParam = parameters.NewStringParameter("project", "The GCP project ID.")
-	}
-
-	return parameters.Parameters{
-		projectParam,
-		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
-		parameters.NewStringParameter("cluster", "The ID of the cluster to list users from."),
-	}, nil
+	return buildParams(s.GetDefaultProject()), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

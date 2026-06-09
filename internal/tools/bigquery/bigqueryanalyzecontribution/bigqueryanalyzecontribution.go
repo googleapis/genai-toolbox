@@ -79,12 +79,15 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	// params is the static skeleton (no source at init ⇒ no allowed-dataset restriction).
+	// Manifest/GetParameters re-resolve against the source lazily.
+	params := buildParams(nil)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -296,13 +299,7 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 }
 
 // resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
+func buildParams(allowedDatasets []string) parameters.Parameters {
 	inputDataDescription := "The data that contain the test and control data to analyze. Can be a fully qualified BigQuery table ID or a SQL query."
 	if len(allowedDatasets) > 0 {
 		datasetIDs := []string{}
@@ -335,7 +332,7 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 	pruningMethodParameter := parameters.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
 		"The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.")
 
-	params := parameters.Parameters{
+	return parameters.Parameters{
 		inputDataParameter,
 		contributionMetricParameter,
 		isTestColParameter,
@@ -343,7 +340,14 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		topKInsightsParameter,
 		pruningMethodParameter,
 	}
-	return params, nil
+}
+
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryAllowedDatasets()), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

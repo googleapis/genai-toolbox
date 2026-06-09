@@ -79,12 +79,13 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	params := buildParams(false)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -148,14 +149,10 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return source.UseClientAuthorization(), nil
 }
 
-// resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	allParameters := parameters.Parameters{
+// buildParams builds the tool's parameters. When the source pins exactly one store
+// (singleStore), the store param is omitted; otherwise it is included.
+func buildParams(singleStore bool) parameters.Parameters {
+	params := parameters.Parameters{
 		parameters.NewStringParameterWithDefault(studyInstanceUIDKey, "", "The UID of the DICOM study"),
 		parameters.NewStringParameterWithDefault(patientNameKey, "", "The name of the patient"),
 		parameters.NewStringParameterWithDefault(patientIDKey, "", "The ID of the patient"),
@@ -167,10 +164,20 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		parameters.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
 		parameters.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", parameters.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
 	}
-	if len(s.AllowedDICOMStores()) != 1 {
-		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
+	if !singleStore {
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
 	}
-	return allParameters, nil
+	return params
+}
+
+// resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildParams(len(s.AllowedDICOMStores()) == 1), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

@@ -69,14 +69,28 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		cfg.Description = "Gets a particular cloud sql instance."
 	}
+	params := buildParams("")
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
+}
+
+// buildParams builds the tool's parameters. A non-empty project means the source has a
+// configured default project, which is baked into the project param; otherwise the plain form is used.
+func buildParams(project string) parameters.Parameters {
+	projectParam := parameters.NewStringParameter("projectId", "The project ID")
+	if project != "" {
+		projectParam = parameters.NewStringParameterWithDefault("projectId", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	}
+	return parameters.Parameters{
+		projectParam,
+		parameters.NewStringParameter("instanceId", "The instance ID"),
+	}
 }
 
 // resolveParams builds the tool's parameters using the source's configured default GCP project.
@@ -85,19 +99,7 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 	if err != nil {
 		return nil, err
 	}
-
-	project := s.GetDefaultProject()
-	var projectParam parameters.Parameter
-	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("projectId", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
-	} else {
-		projectParam = parameters.NewStringParameter("projectId", "The project ID")
-	}
-
-	return parameters.Parameters{
-		projectParam,
-		parameters.NewStringParameter("instanceId", "The instance ID"),
-	}, nil
+	return buildParams(s.GetDefaultProject()), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

@@ -75,12 +75,13 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	params := buildParams(false)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -159,6 +160,20 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return source.UseClientAuthorization(), nil
 }
 
+// buildParams builds the tool's parameters. When the source pins exactly one store
+// (singleStore), the store param is omitted; otherwise it is included.
+func buildParams(singleStore bool) parameters.Parameters {
+	params := parameters.Parameters{
+		parameters.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required"),
+		parameters.NewArrayParameterWithDefault(typeFilterKey, []any{}, "List of FHIR resource types. If provided, only resources of the specified resource type(s) are returned.", parameters.NewStringParameter("resourceType", "A FHIR resource type")),
+		parameters.NewStringParameterWithDefault(sinceFilterKey, "", "If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z"),
+	}
+	if !singleStore {
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+	}
+	return params
+}
+
 // resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
 func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
 	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
@@ -166,14 +181,7 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		return nil, err
 	}
 
-	idParameter := parameters.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required")
-	typeFilterParameter := parameters.NewArrayParameterWithDefault(typeFilterKey, []any{}, "List of FHIR resource types. If provided, only resources of the specified resource type(s) are returned.", parameters.NewStringParameter("resourceType", "A FHIR resource type"))
-	sinceFilterParameter := parameters.NewStringParameterWithDefault(sinceFilterKey, "", "If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z")
-	allParameters := parameters.Parameters{idParameter, typeFilterParameter, sinceFilterParameter}
-	if len(s.AllowedFHIRStores()) != 1 {
-		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
-	}
-	return allParameters, nil
+	return buildParams(len(s.AllowedFHIRStores()) == 1), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

@@ -80,12 +80,16 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	params, err := buildParams("", nil)
+	if err != nil {
+		return nil, err
+	}
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -250,15 +254,11 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	return source.GetAuthTokenHeaderName(), nil
 }
 
-// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
-	}
-
+// buildParams builds the tool's parameters from the source's write mode and allowed-dataset
+// configuration. Empty writeMode and a nil allow-list yield the plain skeleton.
+func buildParams(writeMode string, allowedDatasets []string) (parameters.Parameters, error) {
 	var sqlDescriptionBuilder strings.Builder
-	switch s.BigQueryWriteMode() {
+	switch writeMode {
 	case bigqueryds.WriteModeBlocked:
 		sqlDescriptionBuilder.WriteString("The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail.")
 	case bigqueryds.WriteModeProtected:
@@ -267,7 +267,6 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		sqlDescriptionBuilder.WriteString("The SQL to execute.")
 	}
 
-	allowedDatasets := s.BigQueryAllowedDatasets()
 	if len(allowedDatasets) > 0 {
 		if len(allowedDatasets) == 1 {
 			datasetFQN := allowedDatasets[0]
@@ -295,8 +294,16 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		"If set to true, the query will be validated and information about the execution will be returned "+
 			"without running the query. Defaults to false.",
 	)
-	params := parameters.Parameters{sqlParameter, dryRunParameter}
-	return params, nil
+	return parameters.Parameters{sqlParameter, dryRunParameter}, nil
+}
+
+// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryWriteMode(), s.BigQueryAllowedDatasets())
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

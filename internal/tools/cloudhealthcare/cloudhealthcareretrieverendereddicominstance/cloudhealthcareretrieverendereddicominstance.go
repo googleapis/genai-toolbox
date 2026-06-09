@@ -74,12 +74,13 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	params := buildParams(false)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -143,6 +144,21 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return source.UseClientAuthorization(), nil
 }
 
+// buildParams builds the tool's parameters. When the source pins exactly one store
+// (singleStore), the store param is omitted; otherwise it is included.
+func buildParams(singleStore bool) parameters.Parameters {
+	params := parameters.Parameters{
+		parameters.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study"),
+		parameters.NewStringParameter(seriesInstanceUIDKey, "The UID of the DICOM series"),
+		parameters.NewStringParameter(sopInstanceUIDKey, "The UID of the SOP instance."),
+		parameters.NewIntParameterWithDefault(frameNumberKey, 1, "The frame number to retrieve (1-based). Only applicable to multi-frame instances."),
+	}
+	if !singleStore {
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
+	}
+	return params
+}
+
 // resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
 func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
 	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
@@ -150,16 +166,7 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		return nil, err
 	}
 
-	allParameters := parameters.Parameters{
-		parameters.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study"),
-		parameters.NewStringParameter(seriesInstanceUIDKey, "The UID of the DICOM series"),
-		parameters.NewStringParameter(sopInstanceUIDKey, "The UID of the SOP instance."),
-		parameters.NewIntParameterWithDefault(frameNumberKey, 1, "The frame number to retrieve (1-based). Only applicable to multi-frame instances."),
-	}
-	if len(s.AllowedDICOMStores()) != 1 {
-		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
-	}
-	return allParameters, nil
+	return buildParams(len(s.AllowedDICOMStores()) == 1), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.

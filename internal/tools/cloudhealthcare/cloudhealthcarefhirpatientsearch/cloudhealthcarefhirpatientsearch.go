@@ -91,12 +91,13 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
+	params := buildParams(false)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired},
-			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -212,14 +213,10 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return source.UseClientAuthorization(), nil
 }
 
-// resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
-func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	allParameters := parameters.Parameters{
+// buildParams builds the tool's parameters. When the source pins exactly one store
+// (singleStore), the store param is omitted; otherwise it is included.
+func buildParams(singleStore bool) parameters.Parameters {
+	params := parameters.Parameters{
 		parameters.NewStringParameterWithDefault(activeKey, "", "Whether the patient record is active. Use true or false"),
 		parameters.NewStringParameterWithDefault(cityKey, "", "The city of the patient's address"),
 		parameters.NewStringParameterWithDefault(countryKey, "", "The country of the patient's address"),
@@ -240,11 +237,20 @@ func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Paramete
 		parameters.NewStringParameterWithDefault(identifierKey, "", "An identifier for the patient"),
 		parameters.NewBooleanParameterWithDefault(summaryKey, true, "Requests the server to return a subset of the resource. Return a limited subset of elements from the resource. Enabled by default to reduce response size. Use get-fhir-resource tool to get full resource details (preferred) or set to false to disable."),
 	}
-
-	if len(s.AllowedFHIRStores()) != 1 {
-		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+	if !singleStore {
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
 	}
-	return allParameters, nil
+	return params
+}
+
+// resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildParams(len(s.AllowedFHIRStores()) == 1), nil
 }
 
 // GetParameters returns the tool's parameters, resolved against the source.
