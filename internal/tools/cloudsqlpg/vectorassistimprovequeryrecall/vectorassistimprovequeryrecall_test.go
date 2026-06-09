@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/vectorassistimprovequeryrecall"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
       `,
 			want: server.ToolConfigs{
 				"improve-query-recall-tool": vectorassistimprovequeryrecall.Config{
-					Name:         "improve-query-recall-tool",
-					Type:         "vector-assist-improve-query-recall",
-					Source:       "a-source",
-					Description:  "a test description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "improve-query-recall-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "vector-assist-improve-query-recall",
+					Source: "a-source",
 				},
 			},
 		},
