@@ -65,6 +65,12 @@ type: dataplex-list-data-assets
 source: dataplex-source
 description: Lists Data Assets under a Data Product.
 ---
+kind: tool
+name: get_data_asset
+type: dataplex-get-data-asset
+source: dataplex-source
+description: Retrieves specific metadata regarding a Data Asset.
+---
 kind: toolset
 name: discovery
 tools:
@@ -76,3 +82,4 @@ tools:
 - list_data_products
 - get_data_product
 - list_data_assets
+- get_data_asset

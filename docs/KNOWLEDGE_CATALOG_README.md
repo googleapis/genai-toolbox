@@ -45,6 +45,7 @@ Once configured, the MCP server will automatically provide Knowledge Catalog cap
 *   "List all Data Products."
 *   "Get details of the Data Product 'projects/my-project/locations/us-central1/dataProducts/my-product'."
 *   "List Data Assets for the Data Product 'projects/my-project/locations/us-central1/dataProducts/my-product'."
+*   "Get details of the Data Asset 'projects/my-project/locations/us-central1/dataProducts/my-product/dataAssets/my-asset'."
 
 ## Server Capabilities
 
@@ -60,6 +61,7 @@ The Knowledge Catalog MCP server provides the following tools:
 | `list_data_products`  | List Data Products for the current project.                                                                                  |
 | `get_data_product`    | Retrieve a specific Data Product.                                                                                            |
 | `list_data_assets`    | List Data Assets under a Data Product.                                                                                       |
+| `get_data_asset`      | Retrieve specific metadata regarding a Data Asset.                                                                           |
 
 ## Custom MCP Server Configuration
 

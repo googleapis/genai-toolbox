@@ -465,3 +465,32 @@ func (s *Source) ListDataAssets(
 	}
 	return results, nil
 }
+
+type DataAsset struct {
+	Name               string                                             `json:"name"`
+	Resource           string                                             `json:"resource"`
+	Labels             map[string]string                                  `json:"labels"`
+	AccessGroupConfigs map[string]*dataplexpb.DataAsset_AccessGroupConfig `json:"accessGroupConfigs"`
+}
+
+func (s *Source) GetDataAsset(ctx context.Context, name string) (*DataAsset, error) {
+	if s.GetDataProductClient() == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	req := &dataplexpb.GetDataAssetRequest{
+		Name: name,
+	}
+	resp, err := s.GetDataProductClient().GetDataAsset(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DataAsset{
+		Name:               resp.GetName(),
+		Resource:           resp.GetResource(),
+		Labels:             resp.GetLabels(),
+		AccessGroupConfigs: resp.GetAccessGroupConfigs(),
+	}, nil
+}
+
+

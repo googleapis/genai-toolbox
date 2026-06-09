@@ -396,4 +396,11 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 3. You can optionally filter the listed assets using `filter` or limit the response using `pageSize`.
 ### Response
 1. Present the retrieved list of Data Assets, including their names, resources, and labels.
+
+## Tool: get_data_asset
+### Request
+1. Use this tool to retrieve detailed metadata for a specific Data Asset.
+2. You must provide the full resource name of the Data Asset in the format `projects/{project}/locations/{location}/dataProducts/{dataProduct}/dataAssets/{dataAsset}`.
+### Response
+1. Present the retrieved metadata for the Data Asset, including its name, resource, labels, and access group configurations.
 ```
