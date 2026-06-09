@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageCreateBucket(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"create_bucket_tool": cloudstoragecreatebucket.Config{
-					Name:         "create_bucket_tool",
-					Type:         "cloud-storage-create-bucket",
-					Source:       "my-gcs",
-					Description:  "Create a Cloud Storage bucket",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "create_bucket_tool",
+						Description:  "Create a Cloud Storage bucket",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-create-bucket",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageCreateBucket(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_create_bucket": cloudstoragecreatebucket.Config{
-					Name:         "secure_create_bucket",
-					Type:         "cloud-storage-create-bucket",
-					Source:       "prod-gcs",
-					Description:  "Create bucket with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_create_bucket",
+						Description:  "Create bucket with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-create-bucket",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -121,10 +125,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 func initTool(t *testing.T) tools.Tool {
 	t.Helper()
 	cfg := cloudstoragecreatebucket.Config{
-		Name:        "create_bucket_tool",
-		Type:        "cloud-storage-create-bucket",
-		Source:      "my-gcs",
-		Description: "Create bucket",
+		ConfigBase: tools.ConfigBase{
+			Name:        "create_bucket_tool",
+			Description: "Create bucket",
+		},
+		Type:   "cloud-storage-create-bucket",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {

@@ -49,12 +49,14 @@ func Register(resourceType string, factory ToolConfigFactory) bool {
 	return true
 }
 
+var ErrUnknownToolType = fmt.Errorf("unknown tool type")
+
 // DecodeConfig looks up the registered factory for the given type and uses it
 // to decode the tool configuration.
 func DecodeConfig(ctx context.Context, resourceType string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
 	factory, found := toolRegistry[resourceType]
 	if !found {
-		return nil, fmt.Errorf("unknown tool type: %q", resourceType)
+		return nil, fmt.Errorf("%w: %q", ErrUnknownToolType, resourceType)
 	}
 	toolConfig, err := factory(ctx, name, decoder)
 	if err != nil {
@@ -92,6 +94,13 @@ func NewDestructiveAnnotations() *ToolAnnotations {
 		ReadOnlyHint:    &readOnly,
 		DestructiveHint: &destructive,
 	}
+}
+
+// NewWriteAnnotations creates default annotations for a non-destructive write
+// tool: ReadOnlyHint is false, DestructiveHint is left unset.
+func NewWriteAnnotations() *ToolAnnotations {
+	readOnly := false
+	return &ToolAnnotations{ReadOnlyHint: &readOnly}
 }
 
 // GetAnnotationsOrDefault returns the provided annotations if non-nil,

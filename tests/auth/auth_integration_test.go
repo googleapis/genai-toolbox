@@ -74,6 +74,7 @@ func TestMcpAuth(t *testing.T) {
 				"scope":  "read:files execute:sql",
 				"aud":    "test-audience",
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			})
 			return
 		}
@@ -319,8 +320,8 @@ func TestMcpAuth(t *testing.T) {
 	}
 }
 
-// TestGoogleTokenValidation tests validation of Google access token
-func TestGoogleTokenValidation(t *testing.T) {
+// TestGoogleOAuthValidation tests validation of Google access token using type: google
+func TestGoogleOAuthValidation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -358,19 +359,15 @@ func TestGoogleTokenValidation(t *testing.T) {
 		"sources": map[string]any{},
 		"authServices": map[string]any{
 			"google-auth": map[string]any{
-				"type":                   "generic",
-				"audience":               aud,
-				"authorizationServer":    "https://accounts.google.com",
-				"introspectionEndpoint":  "https://www.googleapis.com/oauth2/v3/tokeninfo",
-				"introspectionMethod":    "GET",
-				"introspectionParamName": "access_token",
-				"mcpEnabled":             true,
+				"type":       "google",
+				"audience":   aud,
+				"mcpEnabled": true,
 			},
 		},
 		"tools": map[string]any{},
 	}
 
-	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5005", "--port=5005"}
+	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5006", "--port=5006"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -385,12 +382,66 @@ func TestGoogleTokenValidation(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	api := "http://127.0.0.1:5005/mcp/sse"
+	api := "http://127.0.0.1:5006/mcp/sse"
 
 	req, _ := http.NewRequest(http.MethodGet, api, nil)
 	req.Header.Add("Authorization", "Bearer "+accessToken)
 
 	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+}
+
+// TestGoogleOAuthValidationNoClientID tests validation of Google access token using type: google without clientId
+func TestGoogleOAuthValidationNoClientID(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(ctx)
+	if err != nil {
+		t.Errorf("error getting access token from ADC: %s", err)
+	}
+
+	toolsFile := map[string]any{
+		"sources": map[string]any{},
+		"authServices": map[string]any{
+			"google-auth": map[string]any{
+				"type":       "google",
+				"mcpEnabled": true,
+			},
+		},
+		"tools": map[string]any{},
+	}
+
+	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5007", "--port=5007"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	api := "http://127.0.0.1:5007/mcp/sse"
+
+	req, _ := http.NewRequest(http.MethodGet, api, nil)
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("unable to send request: %s", err)
 	}

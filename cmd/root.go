@@ -119,6 +119,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	internal.ConfigFileFlags(flags, opts)
 	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
+	flags.BoolVar(&opts.Cfg.IgnoreUnknownTools, "ignore-unknown-tools", false, "Log warnings and skip unknown/unsupported tool types instead of failing to start.")
 	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
@@ -178,6 +179,7 @@ func validateReloadEdits(
 		ToolConfigs:           toolsFile.Tools,
 		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)

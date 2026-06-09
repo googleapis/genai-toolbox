@@ -315,3 +315,18 @@ func ToolboxVersionFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("unable to retrieve toolbox version")
 	}
 }
+
+const ignoreUnknownToolsKey contextKey = "ignoreUnknownTools"
+
+// WithIgnoreUnknownTools adds the ignore-unknown-tools flag to the context
+func WithIgnoreUnknownTools(ctx context.Context, ignore bool) context.Context {
+	return context.WithValue(ctx, ignoreUnknownToolsKey, ignore)
+}
+
+// IgnoreUnknownToolsFromContext retrieves the ignore-unknown-tools flag from context
+func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
+	if ignore, ok := ctx.Value(ignoreUnknownToolsKey).(bool); ok {
+		return ignore
+	}
+	return false
+}

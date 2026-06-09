@@ -23,12 +23,33 @@ import (
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, params parameters.Parameters) Tool {
-	inputSchema, _ := generateParamManifest(params)
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations) Tool {
+	inputSchema, authParams := generateParamManifest(params)
+
+	var toolAnnotations *ToolAnnotations
+	if annotations != nil {
+		toolAnnotations = &ToolAnnotations{
+			DestructiveHint: annotations.DestructiveHint,
+			IdempotentHint:  annotations.IdempotentHint,
+			OpenWorldHint:   annotations.OpenWorldHint,
+			ReadOnlyHint:    annotations.ReadOnlyHint,
+		}
+	}
 	mcpManifest := Tool{
 		Name:            name,
 		Description:     desc,
 		ToolInputSchema: inputSchema,
+		Annotations:     toolAnnotations,
+	}
+	metadata := make(map[string]any)
+	if len(authInvoke) > 0 {
+		metadata["toolbox/authInvoke"] = authInvoke
+	}
+	if len(authParams) > 0 {
+		metadata["toolbox/authParam"] = authParams
+	}
+	if len(metadata) > 0 {
+		mcpManifest.Metadata = metadata
 	}
 	return mcpManifest
 }
@@ -75,7 +96,7 @@ func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (L
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetParameters())
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations())
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil

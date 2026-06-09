@@ -16,7 +16,8 @@ handleGHRelease: true
 packageName: genai-toolbox
 releaseType: simple
 versionFile: "cmd/version.txt"
-extraFiles: [
+extraFiles:
+  [
     "README.md",
     "docs/en/documentation/getting-started/colab_quickstart.ipynb",
     "docs/en/documentation/introduction/_index.md",
@@ -43,60 +44,67 @@ extraFiles: [
     "npm/server-darwin-arm64/version.txt",
     "npm/server-darwin-x64/version.txt",
     "npm/server-linux-x64/version.txt",
+    "npm/server-win32-arm64/version.txt",
     "npm/server-win32-x64/version.txt",
+    { "type": "json", "path": "server.json", "jsonpath": "$.version" },
     {
-        "type": "json",
-        "path": "server.json",
-        "jsonpath": "$.version"
+      "type": "json",
+      "path": "server.json",
+      "jsonpath": "$.packages[0].identifier",
     },
     {
-        "type": "json",
-        "path": "server.json",
-        "jsonpath": "$.packages[0].identifier"
+      "type": "json",
+      "path": "npm/server/package.json",
+      "jsonpath": "$.version",
     },
     {
-        "type": "json",
-        "path": "npm/server/package.json",
-        "jsonpath": "$.version"
+      "type": "json",
+      "path": "npm/server/package.json",
+      "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-darwin-arm64']",
     },
     {
-        "type": "json",
-        "path": "npm/server/package.json",
-        "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-darwin-arm64']"
+      "type": "json",
+      "path": "npm/server/package.json",
+      "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-darwin-x64']",
     },
     {
-        "type": "json",
-        "path": "npm/server/package.json",
-        "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-darwin-x64']"
+      "type": "json",
+      "path": "npm/server/package.json",
+      "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-linux-x64']",
     },
     {
-        "type": "json",
-        "path": "npm/server/package.json",
-        "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-linux-x64']"
+      "type": "json",
+      "path": "npm/server/package.json",
+      "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-win32-arm64']",
     },
     {
-        "type": "json",
-        "path": "npm/server/package.json",
-        "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-win32-x64']"
+      "type": "json",
+      "path": "npm/server/package.json",
+      "jsonpath": "$.optionalDependencies['@toolbox-sdk/server-win32-x64']",
     },
     {
-        "type": "json",
-        "path": "npm/server-darwin-arm64/package.json",
-        "jsonpath": "$.version"
+      "type": "json",
+      "path": "npm/server-darwin-arm64/package.json",
+      "jsonpath": "$.version",
     },
     {
-        "type": "json",
-        "path": "npm/server-darwin-x64/package.json",
-        "jsonpath": "$.version"
+      "type": "json",
+      "path": "npm/server-darwin-x64/package.json",
+      "jsonpath": "$.version",
     },
     {
-        "type": "json",
-        "path": "npm/server-linux-x64/package.json",
-        "jsonpath": "$.version"
+      "type": "json",
+      "path": "npm/server-linux-x64/package.json",
+      "jsonpath": "$.version",
     },
     {
-        "type": "json",
-        "path": "npm/server-win32-x64/package.json",
-        "jsonpath": "$.version"
-    }
-]
+      "type": "json",
+      "path": "npm/server-win32-arm64/package.json",
+      "jsonpath": "$.version",
+    },
+    {
+      "type": "json",
+      "path": "npm/server-win32-x64/package.json",
+      "jsonpath": "$.version",
+    },
+  ]

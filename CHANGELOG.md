@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.4.0](https://github.com/googleapis/mcp-toolbox/compare/v1.3.0...v1.4.0) (2026-06-04)
+
+
+### Features
+
+* **ci:** Add support for windows/arm64 binary distribution ([#3231](https://github.com/googleapis/mcp-toolbox/issues/3231)) ([10abf3b](https://github.com/googleapis/mcp-toolbox/commit/10abf3b9e195a03f535e3807b7df9883899ef7c0))
+* **datalineage:** Add Data Lineage integration ([#3285](https://github.com/googleapis/mcp-toolbox/issues/3285)) ([19353c3](https://github.com/googleapis/mcp-toolbox/commit/19353c37e17ab1f3599cafa04337a32a7baec1c3))
+* **server:** Ignore unknown tools at startup with `--ignore-unknown-tools` flag ([#3353](https://github.com/googleapis/mcp-toolbox/issues/3353)) ([5f0304f](https://github.com/googleapis/mcp-toolbox/commit/5f0304f71231cce322ab2a3e458af07b392a06fc))
+* **tools/cloudsqlpg:** Add remaining vector assist tools for Cloud SQL Postgres ([#3203](https://github.com/googleapis/mcp-toolbox/issues/3203)) ([b514cbd](https://github.com/googleapis/mcp-toolbox/commit/b514cbd7be2dbf49276f2327059194f9e7dc1be1))
+* **tools/spanner-search-catalog:** Implement search_catalog tool ([#3140](https://github.com/googleapis/mcp-toolbox/issues/3140)) ([defc086](https://github.com/googleapis/mcp-toolbox/commit/defc0860c8876fcd465728ac6ce41de8262ed572))
+
+
+### Bug Fixes
+
+* **auth/generic:** Enforce issuer presence in opaque token validation ([#3360](https://github.com/googleapis/mcp-toolbox/issues/3360)) ([1d8df0d](https://github.com/googleapis/mcp-toolbox/commit/1d8df0df590383ba56091b6e4d7c37ab7d7d9749))
+* **auth:** Separate Google and Generic MCP OAuth verification ([#3341](https://github.com/googleapis/mcp-toolbox/issues/3341)) ([dfd66ee](https://github.com/googleapis/mcp-toolbox/commit/dfd66ee7de6fe9750d932d30bf3b67a2f4d2a176))
+* **mcp:** Support annotations and metadata within Tools to earlier MCP schemas ([#3300](https://github.com/googleapis/mcp-toolbox/issues/3300)) ([9a88c72](https://github.com/googleapis/mcp-toolbox/commit/9a88c72792563e4868c82a4f3be55e6af25c1477))
+* **oracle:** Remove trailing semicolons from prebuilt tools ([#3215](https://github.com/googleapis/mcp-toolbox/issues/3215)) ([fcad02d](https://github.com/googleapis/mcp-toolbox/commit/fcad02de73ffe9c6ecf29572f0f92674aacbe493))
+* **server/auth:** Centralize tool scopes validation ([#3335](https://github.com/googleapis/mcp-toolbox/issues/3335)) ([adce4ab](https://github.com/googleapis/mcp-toolbox/commit/adce4abb27327aae4e9736581df7a544b55c939e))
+* **server:** Return null id for batch request rejection ([#3333](https://github.com/googleapis/mcp-toolbox/issues/3333)) ([0b18d58](https://github.com/googleapis/mcp-toolbox/commit/0b18d58aea131baceb1c70f300879de8ecdf569e))
+* **source/dataplex:** Limit search results to pageSize ([#3323](https://github.com/googleapis/mcp-toolbox/issues/3323)) ([905c1f6](https://github.com/googleapis/mcp-toolbox/commit/905c1f68fcdb848d014aeaed3193af2f94fac507)), closes [#3308](https://github.com/googleapis/mcp-toolbox/issues/3308)
+* **telemetry:** Allow GCP project override ([#2960](https://github.com/googleapis/mcp-toolbox/issues/2960)) ([3c83ba5](https://github.com/googleapis/mcp-toolbox/commit/3c83ba5ab1d2ab38369e0b5c47396fabf6ecabef))
+* **tool/bigquery:** Prevent `allowedDatasets` bypass in forecast query ([#3324](https://github.com/googleapis/mcp-toolbox/issues/3324)) ([45df461](https://github.com/googleapis/mcp-toolbox/commit/45df461e84e4a8ca6706f30f9a31096828f846eb))
+* **tool/clickhouse:** Handle ignored ProcessParameters error ([#3340](https://github.com/googleapis/mcp-toolbox/issues/3340)) ([ddfd887](https://github.com/googleapis/mcp-toolbox/commit/ddfd88717dd1ce2c2706cc35785e481e8794479a))
+* **tools/clickhouse,tools/bigquery:** Validate identifier parameters to prevent injection ([#3219](https://github.com/googleapis/mcp-toolbox/issues/3219)) ([2f45f75](https://github.com/googleapis/mcp-toolbox/commit/2f45f75525ac1b5dbbe3056e07441ef9a3bd6680))
+* **tools/looker:** Escape filter values for unquoted parameters ([#3289](https://github.com/googleapis/mcp-toolbox/issues/3289)) ([1711156](https://github.com/googleapis/mcp-toolbox/commit/17111562dc2585c7372798f7f18e5ff3d32d21fe))
+
 ## [1.3.0](https://github.com/googleapis/mcp-toolbox/compare/v1.2.0...v1.3.0) (2026-05-21)
 
 

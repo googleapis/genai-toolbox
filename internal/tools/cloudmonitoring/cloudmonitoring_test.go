@@ -53,11 +53,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "Success case with nil authRequired",
 			cfg: cloudmonitoring.Config{
-				Name:         "test-tool",
-				Type:         "cloud-monitoring-query-prometheus",
-				Source:       "my-monitoring-source",
-				Description:  "A test description.",
-				AuthRequired: nil,
+				ConfigBase: tools.ConfigBase{
+					Name:         "test-tool",
+					Description:  "A test description.",
+					AuthRequired: nil,
+				},
+				Type:   "cloud-monitoring-query-prometheus",
+				Source: "my-monitoring-source",
 			},
 			want: &tools.Manifest{
 				Description:  "A test description.",
@@ -68,11 +70,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "Success case with specified authRequired",
 			cfg: cloudmonitoring.Config{
-				Name:         "test-tool-with-auth",
-				Type:         "cloud-monitoring-query-prometheus",
-				Source:       "my-monitoring-source",
-				Description:  "Another test description.",
-				AuthRequired: []string{"google-auth-service"},
+				ConfigBase: tools.ConfigBase{
+					Name:         "test-tool-with-auth",
+					Description:  "Another test description.",
+					AuthRequired: []string{"google-auth-service"},
+				},
+				Type:   "cloud-monitoring-query-prometheus",
+				Source: "my-monitoring-source",
 			},
 			want: &tools.Manifest{
 				Description:  "Another test description.",
@@ -129,11 +133,13 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
-					Name:         "example_tool",
-					Type:         "cloud-monitoring-query-prometheus",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-monitoring-query-prometheus",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -151,11 +157,13 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
-					Name:         "example_tool",
-					Type:         "cloud-monitoring-query-prometheus",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "cloud-monitoring-query-prometheus",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -203,16 +211,6 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 			description: some description
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
-		},
-		{
-			desc: "missing description",
-			in: `
-			kind: tool
-			name: example_tool
-			type: cloud-monitoring-query-prometheus
-			source: my-instance
-			`,
-			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
 	for _, tc := range tcs {
