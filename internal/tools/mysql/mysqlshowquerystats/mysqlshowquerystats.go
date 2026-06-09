@@ -68,6 +68,7 @@ type compatibleSource interface {
 	MySQLPool() *sql.DB
 	RunSQL(context.Context, string, []any) (any, error)
 	MySQLDatabase() string
+	PerformanceSchemaEnabled(context.Context) (bool, error)
 }
 
 type Config struct {
@@ -92,8 +93,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
 		parameters.NewStringParameterWithRequired("connected_schema", "(Optional) The connected db", false),
 	}
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
 		return nil, fmt.Errorf("source %q not found", cfg.Source)
@@ -104,10 +103,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:      cfg,
-		allParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		Config:    cfg,
+		allParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -117,9 +115,8 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	allParams   parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	allParams parameters.Parameters `yaml:"parameters"`
+	manifest  tools.Manifest
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
@@ -128,11 +125,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	var performanceSchemaName, performanceSchemaValue string
-	if err := source.MySQLPool().QueryRow("SHOW VARIABLES LIKE 'performance_schema'").Scan(&performanceSchemaName, &performanceSchemaValue); err != nil {
+	// Check performance schema
+	enabled, err := source.PerformanceSchemaEnabled(ctx)
+	if err != nil {
 		return nil, util.NewClientServerError("failed to check performance_schema", http.StatusInternalServerError, err)
 	}
-	if performanceSchemaValue != "ON" {
+	if !enabled {
 		return nil, util.NewClientServerError("enable performance_schema to run this tool", http.StatusInternalServerError, nil)
 	}
 
@@ -179,16 +177,28 @@ func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	return false, nil
+}
+
+func (t Tool) GetName() string {
+	return t.Name
+}
+
+func (t Tool) GetDescription() string {
+	return t.Description
+}
+
+func (t Tool) GetAuthRequired() []string {
+	return t.AuthRequired
+}
+
+func (t Tool) GetAnnotations() *tools.ToolAnnotations {
+	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
