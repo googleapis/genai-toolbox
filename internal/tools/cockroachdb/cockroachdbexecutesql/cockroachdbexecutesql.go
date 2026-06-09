@@ -21,7 +21,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/cockroachdb"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -48,8 +47,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 }
-
-var compatibleSources = [...]string{cockroachdb.SourceType}
 
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`

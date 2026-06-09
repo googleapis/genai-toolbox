@@ -20,15 +20,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
-
-// mockIncompatibleSource is a source of a different type to test error paths.
-type mockIncompatibleSource struct{ sources.Source }
 
 func TestInitialize(t *testing.T) {
 	t.Parallel()
