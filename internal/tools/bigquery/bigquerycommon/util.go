@@ -21,9 +21,9 @@ import (
 	"sort"
 	"strings"
 
+	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	bigqueryapi "cloud.google.com/go/bigquery"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
