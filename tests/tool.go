@@ -4046,20 +4046,6 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 
 func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string) {
 
-	type queryStatsDetails struct {
-		TableSchema               string `json:"table_schema"`
-		Query                     string `json:"query"`
-		ExecutionCount            any    `json:"execution_count"`
-		TotalLatency              any    `json:"total_latency_ms"`
-		AverageLatency            any    `json:"average_latency_ms"`
-		MaxLatency                any    `json:"max_latency_ms"`
-		TotalRowsSent             any    `json:"total_rows_sent"`
-		TotalRowsExamined         any    `json:"total_rows_examined"`
-		FullTableScanCount        any    `json:"full_table_scan_count"`
-		InefficientIndexUsedCount any    `json:"inefficient_index_used_count"`
-		LastExecuted              any    `json:"last_executed"`
-	}
-
 	// Generating stats for query
 	selectStmt := "SELECT 1"
 	if _, err := pool.ExecContext(ctx, selectStmt); err != nil {
@@ -4137,19 +4123,6 @@ func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, dat
 
 func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string) {
 
-	type listAllLocksDetails struct {
-		ThreadId         string `json:"thread_id"`
-		ProcessId        string `json:"process_id"`
-		TableSchema      string `json:"table_schema"`
-		TableName        string `json:"table_name"`
-		LockType         any    `json:"lock_type"`
-		LockMode         any    `json:"lock_mode"`
-		LockStatus       any    `json:"lock_status"`
-		TransactionState any    `json:"transaction_state"`
-		CurrentOperation any    `json:"current_operation"`
-		Query            string `json:"query"`
-	}
-
 	// Create table and lock the table for test
 	testTableName := "test_list_table_stats_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	createTableStmt := fmt.Sprintf(`
@@ -4190,7 +4163,11 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 			t.Logf("warning: unable to begin transaction: %v", err)
 			return
 		}
-		defer tx.Rollback()
+		defer func() {
+			if err := tx.Rollback(); err != nil {
+				t.Logf("warning: unable to rollback transaction: %v", err)
+			}
+		}()
 
 		selectStmt := fmt.Sprintf("SELECT * FROM %s WHERE id = 1 FOR UPDATE", testTableName)
 		if _, err := tx.ExecContext(ctx, selectStmt); err != nil {

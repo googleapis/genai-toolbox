@@ -1892,8 +1892,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_tables_missing_unique_indexes", "show_query_stats", "list_all_locks"},
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats", "list_all_locks"},
 				},
 			},
 		},
