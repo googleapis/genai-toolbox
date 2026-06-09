@@ -18,18 +18,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
-	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const resourceType string = "bigquery-search-catalog"
@@ -41,7 +38,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -53,17 +50,14 @@ type compatibleSource interface {
 	BigQueryProject() string
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
+	InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error)
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -85,221 +79,58 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		cfg.Description = "Use this tool to find tables, views, models, routines or connections."
 	}
 
-	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters
-	manifest   tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+	return t.Cfg
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
 }
 
-func constructSearchQueryHelper(predicate string, operator string, items []string) string {
-	if len(items) == 0 {
-		return ""
-	}
-
-	if len(items) == 1 {
-		return predicate + operator + items[0]
-	}
-
-	var builder strings.Builder
-	builder.WriteString("(")
-	for i, item := range items {
-		if i > 0 {
-			builder.WriteString(" OR ")
-		}
-		builder.WriteString(predicate)
-		builder.WriteString(operator)
-		builder.WriteString(item)
-	}
-	builder.WriteString(")")
-	return builder.String()
-}
-
-func constructSearchQuery(projectIds []string, datasetIds []string, types []string) string {
-	queryParts := []string{}
-
-	if clause := constructSearchQueryHelper("projectid", "=", projectIds); clause != "" {
-		queryParts = append(queryParts, clause)
-	}
-
-	if clause := constructSearchQueryHelper("parent", "=", datasetIds); clause != "" {
-		queryParts = append(queryParts, clause)
-	}
-
-	if clause := constructSearchQueryHelper("type", "=", types); clause != "" {
-		queryParts = append(queryParts, clause)
-	}
-	queryParts = append(queryParts, "system=bigquery")
-
-	return strings.Join(queryParts, " AND ")
-}
-
-type Response struct {
-	DisplayName   string
-	Description   string
-	Type          string
-	Resource      string
-	DataplexEntry string
-}
-
-var typeMap = map[string]string{
-	"bigquery-connection":  "CONNECTION",
-	"bigquery-data-policy": "POLICY",
-	"bigquery-dataset":     "DATASET",
-	"bigquery-model":       "MODEL",
-	"bigquery-routine":     "ROUTINE",
-	"bigquery-table":       "TABLE",
-	"bigquery-view":        "VIEW",
-}
-
-func ExtractType(resourceString string) string {
-	lastIndex := strings.LastIndex(resourceString, "/")
-	if lastIndex == -1 {
-		// No "/" found, return the original string
-		return resourceString
-	}
-	return typeMap[resourceString[lastIndex+1:]]
-}
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	paramsMap := params.AsMap()
-	pageSize := int32(paramsMap["pageSize"].(int))
-	prompt, _ := paramsMap["prompt"].(string)
-
-	projectIdSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["projectIds"].([]any), "string")
-	if err != nil {
-		return nil, util.NewAgentError(fmt.Sprintf("can't convert projectIds to array of strings: %s", err), err)
-	}
-	projectIds := projectIdSlice.([]string)
-
-	datasetIdSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["datasetIds"].([]any), "string")
-	if err != nil {
-		return nil, util.NewAgentError(fmt.Sprintf("can't convert datasetIds to array of strings: %s", err), err)
-	}
-	datasetIds := datasetIdSlice.([]string)
-
-	typesSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["types"].([]any), "string")
-	if err != nil {
-		return nil, util.NewAgentError(fmt.Sprintf("can't convert types to array of strings: %s", err), err)
-	}
-	types := typesSlice.([]string)
-
-	req := &dataplexpb.SearchEntriesRequest{
-		Query:          fmt.Sprintf("%s %s", prompt, constructSearchQuery(projectIds, datasetIds, types)),
-		Name:           fmt.Sprintf("projects/%s/locations/global", source.BigQueryProject()),
-		PageSize:       pageSize,
-		SemanticSearch: true,
-	}
-
-	catalogClient, dataplexClientCreator, _ := source.MakeDataplexCatalogClient()()
-
+	var tokenStr string
 	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
+		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
-		catalogClient, err = dataplexClientCreator(tokenStr)
-		if err != nil {
-			return nil, util.NewClientServerError("error creating client from OAuth access token", http.StatusInternalServerError, err)
-		}
 	}
 
-	it := catalogClient.SearchEntries(ctx, req)
-	if it == nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("failed to create search entries iterator for project %q", source.BigQueryProject()), http.StatusInternalServerError, nil)
+	results, err := source.InvokeSearchCatalog(ctx, params.AsMap(), tokenStr)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
 	}
 
-	var results []Response
-	for {
-		entry, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, util.ProcessGcpError(err)
-		}
-		entrySource := entry.DataplexEntry.GetEntrySource()
-		resp := Response{
-			DisplayName:   entrySource.GetDisplayName(),
-			Description:   entrySource.GetDescription(),
-			Type:          ExtractType(entry.DataplexEntry.GetEntryType()),
-			Resource:      entrySource.GetResource(),
-			DataplexEntry: entry.DataplexEntry.GetName(),
-		}
-		results = append(results, resp)
-	}
 	return results, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	// Returns the tool manifest
-	return t.manifest
-}
-
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

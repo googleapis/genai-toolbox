@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_objects_tool": cloudstoragelistobjects.Config{
-					Name:         "list_objects_tool",
-					Type:         "cloud-storage-list-objects",
-					Source:       "my-gcs",
-					Description:  "List objects in a Cloud Storage bucket",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_objects_tool",
+						Description:  "List objects in a Cloud Storage bucket",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-list-objects",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -72,11 +74,13 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_list_objects": cloudstoragelistobjects.Config{
-					Name:         "secure_list_objects",
-					Type:         "cloud-storage-list-objects",
-					Source:       "prod-gcs",
-					Description:  "List objects with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_list_objects",
+						Description:  "List objects with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "cloud-storage-list-objects",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -125,10 +129,12 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			cfg := cloudstoragelistobjects.Config{
-				Name:        "list_objects_tool",
-				Type:        "cloud-storage-list-objects",
-				Source:      "my-gcs",
-				Description: "List objects",
+				ConfigBase: tools.ConfigBase{
+					Name:        "list_objects_tool",
+					Description: "List objects",
+				},
+				Type:   "cloud-storage-list-objects",
+				Source: "my-gcs",
 			}
 			tool, err := cfg.Initialize(nil)
 			if err != nil {

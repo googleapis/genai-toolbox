@@ -101,6 +101,8 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 	ctx = util.WithLogger(ctx, logger)
 	opts.Logger = logger
 
+	ctx = util.WithIgnoreUnknownTools(ctx, opts.Cfg.IgnoreUnknownTools)
+
 	logger.InfoContext(ctx, fmt.Sprintf("Starting MCP Toolbox for Databases version %s", opts.Cfg.Version))
 
 	// Set up OpenTelemetry

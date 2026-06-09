@@ -22,7 +22,6 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -41,7 +40,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -61,14 +60,10 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -79,6 +74,10 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
@@ -102,57 +101,40 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
-	timestampColumnNameParameter := parameters.NewStringParameter("timestamp_col",
-		"The name of the time series timestamp column.")
-	dataColumnNameParameter := parameters.NewStringParameter("data_col",
-		"The name of the time series data column.")
+	timestampColumnNameParameter := parameters.NewStringParameterWithEscape("timestamp_col",
+		"The name of the time series timestamp column.", "single-quotes")
+	dataColumnNameParameter := parameters.NewStringParameterWithEscape("data_col",
+		"The name of the time series data column.", "single-quotes")
 	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
 		"An array of the time series id column names.",
-		parameters.NewStringParameter("id_col", "The name of time series id column."))
+		parameters.NewStringParameterWithEscape("id_col", "The name of time series id column.", "single-quotes"))
 	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
 	params := parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
 
-	// finish tool setup
-	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-	manifest   tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -191,19 +173,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	if !bqutil.ValidColumnName(dataCol) {
+	if !bqutil.ValidColumnParam(dataCol) {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'data_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", dataCol), nil)
 	}
-	if !bqutil.ValidColumnName(timestampCol) {
+	if !bqutil.ValidColumnParam(timestampCol) {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid column name for 'timestamp_col': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", timestampCol), nil)
 	}
 	for _, col := range idCols {
-		if !bqutil.ValidColumnName(col) {
+		if !bqutil.ValidColumnParam(col) {
 			return nil, util.NewAgentError(fmt.Sprintf("invalid column name in 'id_cols': %q; must match [a-zA-Z_][a-zA-Z0-9_]*", col), nil)
 		}
 	}
 
-	bqClient, restService, err := source.RetrieveClientAndService(accessToken)
+	bqClient, _, err := source.RetrieveClientAndService(accessToken)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to retrieve BigQuery client", http.StatusInternalServerError, err)
 	}
@@ -211,37 +193,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
-		if len(source.BigQueryAllowedDatasets()) > 0 {
-			var connProps []*bigqueryapi.ConnectionProperty
-			session, err := source.BigQuerySession()(ctx)
-			if err != nil {
-				return nil, util.NewClientServerError("failed to get BigQuery session", http.StatusInternalServerError, err)
-			}
-			if session != nil {
-				connProps = []*bigqueryapi.ConnectionProperty{
-					{Key: "session_id", Value: session.ID},
-				}
-			}
-			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps, source.GetMaximumBytesBilled())
-			if err != nil {
-				return nil, util.ProcessGcpError(err)
-			}
-			statementType := dryRunJob.Statistics.Query.StatementType
-			if statementType != "SELECT" {
-				return nil, util.NewAgentError(fmt.Sprintf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType), nil)
-			}
-
-			queryStats := dryRunJob.Statistics.Query
-			if queryStats != nil {
-				for _, tableRef := range queryStats.ReferencedTables {
-					if !source.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
-						return nil, util.NewAgentError(fmt.Sprintf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId), nil)
-					}
-				}
-			} else {
-				return nil, util.NewAgentError("could not analyze query in history_data to validate against allowed datasets", nil)
-			}
-		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
 		if !bqutil.ValidTableID(historyData) {
@@ -271,14 +222,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	idColsArg := ""
 	if len(idCols) > 0 {
-		idColsFormatted := fmt.Sprintf("['%s']", strings.Join(idCols, "', '"))
+		idColsFormatted := fmt.Sprintf("[%s]", strings.Join(idCols, ", "))
 		idColsArg = fmt.Sprintf(", id_cols => %s", idColsFormatted)
 	}
 	sql := fmt.Sprintf(`SELECT * 
 		FROM AI.FORECAST(
             %s,
-            data_col => '%s',
-            timestamp_col => '%s',
+            data_col => %s,
+            timestamp_col => %s,
             horizon => %d%s)`,
 		historyDataSource, dataCol, timestampCol, horizon, idColsArg)
 
@@ -291,6 +242,33 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		// Add session ID to the connection properties for subsequent calls.
 		connProps = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},
+		}
+	}
+
+	if len(source.BigQueryAllowedDatasets()) > 0 {
+		dryRunQuery := bqClient.Query(sql)
+		dryRunQuery.Location = bqClient.Location
+		if connProps != nil {
+			dryRunQuery.ConnectionProperties = connProps
+		}
+		dryRunQuery.DryRun = true
+		dryRunJob, err := dryRunQuery.Run(ctx)
+		if err != nil {
+			return nil, util.ProcessGcpError(err)
+		}
+		status := dryRunJob.LastStatus()
+		if status.Statistics != nil {
+			if qStats, ok := status.Statistics.Details.(*bigqueryapi.QueryStatistics); ok {
+				for _, tableRef := range qStats.ReferencedTables {
+					if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+						return nil, util.NewAgentError(fmt.Sprintf("query accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectID, tableRef.DatasetID), nil)
+					}
+				}
+			} else {
+				return nil, util.NewAgentError("could not get query statistics details during dry run validation", nil)
+			}
+		} else {
+			return nil, util.NewAgentError("could not dry run final query to validate allowed datasets", nil)
 		}
 	}
 
@@ -308,20 +286,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
@@ -329,17 +295,9 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

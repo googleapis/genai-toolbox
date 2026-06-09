@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	lkr "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookergetprojectdirectories"
 )
 
@@ -45,11 +46,13 @@ func TestParseFromYamlLookerGetProjectDirectories(t *testing.T) {
 				`,
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
-					Name:         "example_tool",
-					Type:         "looker-get-project-directories",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-get-project-directories",
+					Source: "my-instance",
 				},
 			},
 		},

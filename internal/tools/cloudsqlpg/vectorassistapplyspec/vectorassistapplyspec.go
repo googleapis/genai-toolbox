@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -32,7 +31,7 @@ import (
 const resourceType string = "vector-assist-apply-spec"
 
 const applySpecQuery = `
-    SELECT * FROM vector_assist.apply_spec(spec_id => @spec_id::TEXT, table_name => @table_name::TEXT, 
+    SELECT * FROM vector_assist.apply_spec(spec_id => @spec_id::TEXT, table_name => @table_name::TEXT,
     column_name => @column_name::TEXT, schema_name => @schema_name::TEXT);
 `
 
@@ -43,7 +42,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -56,13 +55,9 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string `yaml:"type" validate:"required"`
+	Source           string `yaml:"source" validate:"required"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -79,53 +74,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameterWithRequired("column_name", "The text_column_name or vector_column_name of the spec to identify the exact spec in case there are multiple specs defined on a table.", false),
 		parameters.NewStringParameterWithRequired("schema_name", "The schema name for the table.", false),
 	}
-	paramManifest := allParameters.Manifest()
 
 	if cfg.Description == "" {
 		cfg.Description = "This tool automatically executes all the SQL recommendations associated with a specific vector specification (spec_id) or table. It runs the necessary commands in the correct sequence to provision the workload, marking each step as applied once successful. Use this tool when the user has reviewed the generated recommendations from a defined (or modified) spec and is ready to apply the changes directly to their database instance to finalize the vector search setup. This tool can be used as a follow-up action after invoking the 'define_spec' or 'modify_spec' tool."
 	}
 
 	return Tool{
-		Config:    cfg,
-		allParams: allParameters,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   paramManifest,
-			AuthRequired: cfg.AuthRequired,
-		},
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	allParams parameters.Parameters `yaml:"allParams"`
-	manifest  tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return nil
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	tools.BaseTool[Config]
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -145,30 +116,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.allParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.allParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }

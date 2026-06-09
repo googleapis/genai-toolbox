@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	alloydblistusers "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydblistusers"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"list-my-users": alloydblistusers.Config{
-					Name:         "list-my-users",
-					Type:         "alloydb-list-users",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list-my-users",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "alloydb-list-users",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"list-my-users-auth": alloydblistusers.Config{
-					Name:         "list-my-users-auth",
-					Type:         "alloydb-list-users",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list-my-users-auth",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "alloydb-list-users",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
