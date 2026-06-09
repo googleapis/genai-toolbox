@@ -57,7 +57,7 @@ type compatibleSource interface {
 	BigQueryAllowedDatasets() []string
 	BigQuerySession() bigqueryds.BigQuerySessionProvider
 	RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
-	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty) (any, error)
+	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty, map[string]string) (any, error)
 }
 
 type Config struct {
@@ -258,6 +258,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	)
 
 	createModelQuery := bqClient.Query(createModelSQL)
+	createModelQuery.Labels = map[string]string{"mcp-toolbox-tool": resourceType}
 
 	// Get session from provider if in protected mode.
 	// Otherwise, a new session will be created by the first query.
@@ -324,7 +325,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	getInsightsSQL := fmt.Sprintf("SELECT * FROM ML.GET_INSIGHTS(MODEL %s)", modelID)
 	connProps := []*bigqueryapi.ConnectionProperty{{Key: "session_id", Value: sessionID}}
 
-	resp, err := source.RunSQL(ctx, bqClient, getInsightsSQL, "SELECT", nil, connProps)
+	resp, err := source.RunSQL(ctx, bqClient, getInsightsSQL, "SELECT", nil, connProps, map[string]string{"mcp-toolbox-tool": resourceType})
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
