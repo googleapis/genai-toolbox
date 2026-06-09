@@ -58,6 +58,8 @@ var tableFollowsKeywords = map[string]bool{
 	"update": true,
 	"into":   true, // INSERT INTO, MERGE INTO
 	"table":  true, // CREATE TABLE, ALTER TABLE
+	"model":  true, // ML.GET_INSIGHTS(MODEL ...)
+	"view":   true, // DROP VIEW ...
 	"using":  true, // MERGE ... USING
 	"insert": true, // INSERT my_table
 	"merge":  true, // MERGE my_table
@@ -359,7 +361,15 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 							return 0, err
 						}
 						if tableID != "" {
-							tableIDSet[tableID] = struct{}{}
+							// If it's a system function (AI.FORECAST, etc.), don't treat it as a table.
+							isSystem := false
+							p := strings.Split(tableID, ".")
+							if len(p) == 3 && IsSystemResource(p[1], p[2]) {
+								isSystem = true
+							}
+							if !isSystem {
+								tableIDSet[tableID] = struct{}{}
+							}
 						}
 					}
 					// For most keywords, we expect only one table.

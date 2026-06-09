@@ -18,6 +18,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 
 	mexporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric"
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
@@ -33,7 +35,11 @@ import (
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
 // If it does not return an error, make sure to call shutdown for proper cleanup.
-func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemetryGCP bool, telemetryServiceName string) (shutdown func(context.Context) error, err error) {
+func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemetryGCP bool, telemetryGCPProject, telemetryServiceName string) (shutdown func(context.Context) error, err error) {
+	if telemetryGCPProject == "" {
+		telemetryGCPProject = os.Getenv("GOOGLE_CLOUD_PROJECT")
+	}
+
 	var shutdownFuncs []func(context.Context) error
 
 	// shutdown calls cleanup functions registered via shutdownFuncs.
@@ -63,7 +69,7 @@ func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemet
 		return
 	}
 
-	tracerProvider, err := newTracerProvider(ctx, res, telemetryOTLP, telemetryGCP)
+	tracerProvider, err := newTracerProvider(ctx, res, telemetryOTLP, telemetryGCP, telemetryGCPProject)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up trace provider: %w", err)
 		handleErr(errMsg)
@@ -72,7 +78,7 @@ func SetupOTel(ctx context.Context, versionString, telemetryOTLP string, telemet
 	shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
 	otel.SetTracerProvider(tracerProvider)
 
-	meterProvider, err := newMeterProvider(ctx, res, telemetryOTLP, telemetryGCP)
+	meterProvider, err := newMeterProvider(ctx, res, telemetryOTLP, telemetryGCP, telemetryGCPProject)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to set up meter provider: %w", err)
 		handleErr(errMsg)
@@ -109,7 +115,7 @@ func newResource(ctx context.Context, versionString string, telemetryServiceName
 
 // newTracerProvider creates TracerProvider.
 // TracerProvider is a factory for Tracers and is responsible for creating spans.
-func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool) (*tracesdk.TracerProvider, error) {
+func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool, telemetryGCPProject string) (*tracesdk.TracerProvider, error) {
 	traceOpts := []tracesdk.TracerProviderOption{}
 	if telemetryOTLP != "" {
 		// otlptracehttp provides an OTLP span exporter using HTTP with protobuf payloads.
@@ -121,9 +127,13 @@ func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP 
 		traceOpts = append(traceOpts, tracesdk.WithBatcher(otlpExporter))
 	}
 	if telemetryGCP {
-		gcpExporter, err := texporter.New()
+		gcpExporterOpts := []texporter.Option{}
+		if telemetryGCPProject != "" {
+			gcpExporterOpts = append(gcpExporterOpts, texporter.WithProjectID(telemetryGCPProject))
+		}
+		gcpExporter, err := texporter.New(gcpExporterOpts...)
 		if err != nil {
-			return nil, err
+			return nil, wrapGCPProjectHint(err)
 		}
 		traceOpts = append(traceOpts, tracesdk.WithBatcher(gcpExporter))
 	}
@@ -135,7 +145,7 @@ func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP 
 
 // newMeterProvider creates MeterProvider.
 // MeterProvider is a factory for Meters, and is responsible for creating metrics.
-func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool) (*metric.MeterProvider, error) {
+func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP string, telemetryGCP bool, telemetryGCPProject string) (*metric.MeterProvider, error) {
 	metricOpts := []metric.Option{}
 	if telemetryOTLP != "" {
 		// otlpmetrichttp provides an OTLP metrics exporter using HTTP with protobuf payloads.
@@ -147,9 +157,13 @@ func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP s
 		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(otlpExporter)))
 	}
 	if telemetryGCP {
-		gcpExporter, err := mexporter.New()
+		gcpExporterOpts := []mexporter.Option{}
+		if telemetryGCPProject != "" {
+			gcpExporterOpts = append(gcpExporterOpts, mexporter.WithProjectID(telemetryGCPProject))
+		}
+		gcpExporter, err := mexporter.New(gcpExporterOpts...)
 		if err != nil {
-			return nil, err
+			return nil, wrapGCPProjectHint(err)
 		}
 		metricOpts = append(metricOpts, metric.WithReader(metric.NewPeriodicReader(gcpExporter)))
 	}
@@ -180,4 +194,13 @@ func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP s
 
 	meterProvider := metric.NewMeterProvider(metricOpts...)
 	return meterProvider, nil
+}
+
+func wrapGCPProjectHint(err error) error {
+	message := err.Error()
+	if strings.Contains(message, "no project found with application default credentials") {
+		projectHint := "please ensure that `--telemetry-gcp-project` flag or `GOOGLE_CLOUD_PROJECT` env var is set, and `GOOGLE_APPLICATION_CREDENTIALS` points to valid ADC credentials"
+		return fmt.Errorf("%s: %s", projectHint, message)
+	}
+	return err
 }

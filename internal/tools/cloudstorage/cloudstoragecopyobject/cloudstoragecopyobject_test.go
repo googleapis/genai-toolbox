@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageCopyObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"copy_tool": cloudstoragecopyobject.Config{
-					Name:         "copy_tool",
-					Type:         "cloud-storage-copy-object",
-					Source:       "my-gcs",
-					Description:  "Copy a Cloud Storage object",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "copy_tool",
+						Description:  "Copy a Cloud Storage object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-copy-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageCopyObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_copy": cloudstoragecopyobject.Config{
-					Name:         "secure_copy",
-					Type:         "cloud-storage-copy-object",
-					Source:       "prod-gcs",
-					Description:  "Copy with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_copy",
+						Description:  "Copy with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-copy-object",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -122,10 +126,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragecopyobject.Config{
-		Name:        "copy_tool",
-		Type:        "cloud-storage-copy-object",
-		Source:      "my-gcs",
-		Description: "Copy",
+		ConfigBase: tools.ConfigBase{
+			Name:        "copy_tool",
+			Description: "Copy",
+		},
+		Type:   "cloud-storage-copy-object",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {

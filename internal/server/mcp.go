@@ -32,7 +32,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -495,10 +495,11 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		// The id cannot be determined from an unreadable body. Per JSON-RPC 2.0,
+		// the response id MUST be null in that case.
+		// See https://www.jsonrpc.org/specification#response_object
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil))
 		return
 	}
 
@@ -605,7 +606,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			if errors.As(err, &clientServerErr) {
 				w.WriteHeader(clientServerErr.Code)
 			}
-			var mcpErr *generic.MCPAuthError
+			var mcpErr *auth.MCPAuthError
 			if errors.As(err, &mcpErr) {
 				switch mcpErr.Code {
 				case http.StatusForbidden:
@@ -639,18 +640,19 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage jsonrpc.BaseMessage
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		// The id cannot be determined from an undecodable body (batch or parse
+		// error). Per JSON-RPC 2.0, the response id MUST be null in that case.
+		// See https://www.jsonrpc.org/specification#response_object
 
 		// check if user is sending a batch request
 		var a []any
 		unmarshalErr := json.Unmarshal(body, &a)
 		if unmarshalErr == nil {
 			err = fmt.Errorf("not supporting batch requests")
-			return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", jsonrpc.NewError(nil, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 
-		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+		return "", jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
 	// Check if method is present
@@ -858,15 +860,10 @@ func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
 	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-		cfg := authSvc.ToConfig()
-		if genCfg, ok := cfg.(generic.Config); ok {
-			if genCfg.McpEnabled {
-				server = genCfg.AuthorizationServer
-				if genCfg.ScopesRequired != nil {
-					scopes = genCfg.ScopesRequired
-				}
-				break
-			}
+		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+			server = mSvc.GetAuthorizationServer()
+			scopes = mSvc.GetScopesRequired()
+			break
 		}
 	}
 

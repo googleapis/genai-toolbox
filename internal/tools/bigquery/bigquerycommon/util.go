@@ -21,8 +21,9 @@ import (
 	"sort"
 	"strings"
 
-	bigqueryapi "cloud.google.com/go/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	bigqueryapi "cloud.google.com/go/bigquery"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
@@ -44,6 +45,24 @@ func ValidTableID(s string) bool {
 	return validBQTableID.MatchString(s)
 }
 
+// ValidColumnParam returns true if s (stripped of leading/trailing single quotes) is a safe column name.
+func ValidColumnParam(s string) bool {
+	return ValidColumnName(StripSingleQuotes(s))
+}
+
+// ValidContributionMetricParam returns true if s (stripped of leading/trailing single quotes) is a safe contribution metric (does not contain single quotes).
+func ValidContributionMetricParam(s string) bool {
+	return !strings.ContainsRune(StripSingleQuotes(s), '\'')
+}
+
+// StripSingleQuotes removes leading and trailing single quotes from a string if both are present.
+func StripSingleQuotes(s string) string {
+	if len(s) >= 2 && s[0] == '\'' && s[len(s)-1] == '\'' {
+		return s[1 : len(s)-1]
+	}
+	return s
+}
+
 // ValidColumnName returns true if s is a safe BigQuery column name.
 // Values that fail this check must not be interpolated as SQL identifiers
 // or into single-quoted SQL string arguments that represent column references.
@@ -52,9 +71,18 @@ func ValidColumnName(s string) bool {
 }
 
 // DryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, maximumBytesBilled int64) (*bigqueryrestapi.Job, error) {
+func DryRunQuery(
+	ctx context.Context,
+	restService *bigqueryrestapi.Service,
+	projectID string,
+	location string,
+	sql string,
+	params []*bigqueryrestapi.QueryParameter,
+	connProps []*bigqueryapi.ConnectionProperty,
+	maximumBytesBilled int64,
+	createSession bool,
+) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
-
 	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
 	for i, prop := range connProps {
 		restConnProps[i] = &bigqueryrestapi.ConnectionProperty{Key: prop.Key, Value: prop.Value}
@@ -73,6 +101,7 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 				ConnectionProperties: restConnProps,
 				QueryParameters:      params,
 				MaximumBytesBilled:   maximumBytesBilled,
+				CreateSession:        createSession,
 			},
 		},
 	}
@@ -101,8 +130,9 @@ func ValidateQueryAgainstAllowedDatasets(
 	connProps []*bigqueryapi.ConnectionProperty,
 	validator DatasetValidator,
 	maximumBytesBilled int64,
+	createSession bool,
 ) (*bigqueryrestapi.Job, error) {
-	dryRunJob, err := DryRunQuery(ctx, restService, projectID, location, sql, params, connProps, maximumBytesBilled)
+	dryRunJob, err := DryRunQuery(ctx, restService, projectID, location, sql, params, connProps, maximumBytesBilled, createSession)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed: %w", err)
 	}
@@ -132,6 +162,10 @@ func ValidateQueryAgainstAllowedDatasets(
 	for tableID := range tableIDSet {
 		parts := strings.Split(tableID, ".")
 		if len(parts) == 3 {
+			// Skip validation for specific system functions that BigQuery reports as referenced tables.
+			if IsSystemResource(parts[1], parts[2]) {
+				continue
+			}
 			if !validator.IsDatasetAllowed(parts[0], parts[1]) {
 				violatingTables = append(violatingTables, tableID)
 			}
@@ -177,6 +211,9 @@ func ValidateQueryAgainstAllowedDatasets(
 	for _, tableID := range parsedTables {
 		parts := strings.Split(tableID, ".")
 		if len(parts) == 3 {
+			if IsSystemResource(parts[1], parts[2]) {
+				continue
+			}
 			if !validator.IsDatasetAllowed(parts[0], parts[1]) {
 				datasetFQN := fmt.Sprintf("%s.%s", parts[0], parts[1])
 				if _, seen := seenParsedDatasets[datasetFQN]; !seen {
@@ -195,6 +232,27 @@ func ValidateQueryAgainstAllowedDatasets(
 	}
 
 	return dryRunJob, nil
+}
+
+// IsSystemResource checks if a given dataset and table/function ID refer to a BigQuery system resource
+// (like a built-in AI or ML function) that should be exempted from dataset restriction checks.
+func IsSystemResource(datasetID, resourceID string) bool {
+	datasetID = strings.ToUpper(datasetID)
+	resourceID = strings.ToUpper(resourceID)
+
+	if datasetID == "AI" {
+		switch resourceID {
+		case "FORECAST", "GENERATE_TEXT", "EXTRACT_ENTITY", "SUMMARIZE":
+			return true
+		}
+	}
+	if datasetID == "ML" {
+		switch resourceID {
+		case "GET_INSIGHTS", "EXPLAIN_PREDICT", "GENERATE_TEXT", "DISTANCE", "PREDICT":
+			return true
+		}
+	}
+	return false
 }
 
 // BQTypeStringFromToolType converts a tool parameter type string to a BigQuery standard SQL type string.
@@ -259,4 +317,19 @@ func InitializeDatasetParameters(
 	projectParam = parameters.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 
 	return projectParam, datasetParam
+}
+
+// ProcessGcpError converts a Google API error into a user-friendly error.
+func ProcessGcpError(err error) util.ToolboxError {
+	return util.ProcessGcpError(err)
+}
+
+// NewAgentError returns a new AgentError.
+func NewAgentError(message string, err error) util.ToolboxError {
+	return util.NewAgentError(message, err)
+}
+
+// NewClientServerError returns a new ClientServerError.
+func NewClientServerError(message string, statusCode int, err error) util.ToolboxError {
+	return util.NewClientServerError(message, statusCode, err)
 }

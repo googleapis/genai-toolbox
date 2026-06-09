@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageListBuckets(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_buckets_tool": cloudstoragelistbuckets.Config{
-					Name:         "list_buckets_tool",
-					Type:         "cloud-storage-list-buckets",
-					Source:       "my-gcs",
-					Description:  "List Cloud Storage buckets",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_buckets_tool",
+						Description:  "List Cloud Storage buckets",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-list-buckets",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageListBuckets(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_list_buckets": cloudstoragelistbuckets.Config{
-					Name:         "secure_list_buckets",
-					Type:         "cloud-storage-list-buckets",
-					Source:       "prod-gcs",
-					Description:  "List buckets with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_list_buckets",
+						Description:  "List buckets with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-list-buckets",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -117,10 +121,12 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 func initTool(t *testing.T) tools.Tool {
 	t.Helper()
 	cfg := cloudstoragelistbuckets.Config{
-		Name:        "list_buckets_tool",
-		Type:        "cloud-storage-list-buckets",
-		Source:      "my-gcs",
-		Description: "List buckets",
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_buckets_tool",
+			Description: "List buckets",
+		},
+		Type:   "cloud-storage-list-buckets",
+		Source: "my-gcs",
 	}
 	tool, err := cfg.Initialize(nil)
 	if err != nil {

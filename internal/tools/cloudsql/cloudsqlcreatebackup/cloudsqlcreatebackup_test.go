@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlcreatebackup"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"create-backup-tool": cloudsqlcreatebackup.Config{
-					Name:         "create-backup-tool",
-					Type:         "cloud-sql-create-backup",
-					Description:  "a test description",
-					Source:       "a-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "create-backup-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-create-backup",
+					Source: "a-source",
 				},
 			},
 		},

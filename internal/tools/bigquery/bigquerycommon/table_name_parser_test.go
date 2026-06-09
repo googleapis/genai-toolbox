@@ -145,6 +145,27 @@ func TestTableParser(t *testing.T) {
 			wantErr:          false,
 		},
 		{
+			name:             "model as column name in where clause",
+			sql:              "SELECT * FROM `proj.data.tbl` WHERE model = 'v1' AND status = 'active'",
+			defaultProjectID: "default-proj",
+			want:             []string{"proj.data.tbl"},
+			wantErr:          false,
+		},
+		{
+			name:             "AI.FORECAST function call",
+			sql:              "SELECT * FROM AI.FORECAST(TABLE `project.dataset.table`, data_col => 'val')",
+			defaultProjectID: "my-project",
+			want:             []string{"project.dataset.table"},
+			wantErr:          false,
+		},
+		{
+			name:             "ML.GET_INSIGHTS function call",
+			sql:              "SELECT * FROM ML.GET_INSIGHTS(MODEL `project.dataset.model`)",
+			defaultProjectID: "my-project",
+			want:             []string{"project.dataset.model"},
+			wantErr:          false,
+		},
+		{
 			name:             "multi-statement with semicolon",
 			sql:              "SELECT * FROM `proj1.data1.tbl1`; SELECT * FROM `proj2.data2.tbl2`",
 			defaultProjectID: "default-proj",

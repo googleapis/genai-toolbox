@@ -171,6 +171,8 @@ type Tool struct {
 	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
 	// Optional additional tool information.
 	Annotations *ToolAnnotations `json:"annotations,omitempty"`
+	// Extension of the schema: This was not in the original schema for this version.
+	Metadata map[string]any `json:"_meta,omitempty"`
 }
 
 type InputSchema struct {

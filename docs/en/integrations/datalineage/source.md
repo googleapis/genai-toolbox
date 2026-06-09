@@ -1,7 +1,11 @@
 ---
 title: "Data Lineage Source"
-weight: 1
+type: docs
 linkTitle: "Source"
+weight: 1
+description: >
+  The Data Lineage integration allows the MCP Toolbox to connect to the Google Cloud Data Lineage API.
+no_list: true
 ---
 
 ## About
