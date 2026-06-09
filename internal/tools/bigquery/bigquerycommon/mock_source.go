@@ -76,7 +76,7 @@ func (m *MockSource) RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.C
 	return m.Client, nil, nil
 }
 
-func (m *MockSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql string, queryType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
+func (m *MockSource) RunSQL(ctx context.Context, client *bigqueryapi.Client, sql string, queryType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, labels map[string]string) (any, error) {
 	m.CalledSQL = sql
 	return m.RunSQLResult, m.RunSQLError
 }
