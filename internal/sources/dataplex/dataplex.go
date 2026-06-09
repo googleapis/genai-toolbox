@@ -416,3 +416,52 @@ func (s *Source) GetDataProduct(ctx context.Context, name string) (*DataProduct,
 		AccessGroups: accessGroups,
 	}, nil
 }
+
+type DataAssetSummary struct {
+	Name     string            `json:"name"`
+	Resource string            `json:"resource"`
+	Labels   map[string]string `json:"labels"`
+}
+
+func (s *Source) ListDataAssets(
+	ctx context.Context,
+	parent string,
+	filter string,
+	pageSize int,
+	orderBy string,
+) ([]*DataAssetSummary, error) {
+	if s.GetDataProductClient() == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
+	req := &dataplexpb.ListDataAssetsRequest{
+		Parent:   parent,
+		Filter:   filter,
+		PageSize: int32(pageSize),
+		OrderBy:  orderBy,
+	}
+
+	it := s.GetDataProductClient().ListDataAssets(ctx, req)
+	var results []*DataAssetSummary
+
+	for len(results) < pageSize {
+		asset, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				return nil, fmt.Errorf("failed to list data assets: code=%s message=%s", st.Code(), st.Message())
+			}
+			return nil, fmt.Errorf("failed to list data assets: %w", err)
+		}
+		results = append(results, &DataAssetSummary{
+			Name:     asset.GetName(),
+			Resource: asset.GetResource(),
+			Labels:   asset.GetLabels(),
+		})
+	}
+	return results, nil
+}

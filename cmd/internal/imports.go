@@ -115,6 +115,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/datalineage/datalineagesearchlineage"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdataproduct"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlistdataproducts"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlistdataassets"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlookupcontext"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlookupentry"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
