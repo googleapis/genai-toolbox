@@ -58,7 +58,7 @@ type compatibleSource interface {
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 	RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
-	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty) (any, error)
+	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty, map[string]string) (any, error)
 }
 
 type Config struct {
@@ -279,7 +279,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
-	resp, err := source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps)
+	resp, err := source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps, map[string]string{"mcp-toolbox-tool": resourceType})
 	if err != nil {
 		return nil, util.NewClientServerError("error running sql", http.StatusInternalServerError, err)
 	}

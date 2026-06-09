@@ -571,7 +571,7 @@ func (s *Source) RetrieveClientAndService(accessToken tools.AccessToken) (*bigqu
 	return bqClient, restService, nil
 }
 
-func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, statement, statementType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, statement, statementType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, labels map[string]string) (any, error) {
 	query := bqClient.Query(statement)
 	query.Location = bqClient.Location
 	if params != nil {
@@ -579,6 +579,9 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	}
 	if connProps != nil {
 		query.ConnectionProperties = connProps
+	}
+	if labels != nil {
+		query.Labels = labels
 	}
 	if s.MaximumBytesBilled > 0 {
 		query.MaxBytesBilled = s.MaximumBytesBilled
