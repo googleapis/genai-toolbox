@@ -17,8 +17,14 @@
 # to the OSS Exit Gate internal Artifact Registry. The Exit Gate then ships
 # them externally to npmjs.org once trigger_exit_gate.sh uploads the manifest.
 #
-# Required CWD: repo root (so npm/server-*/ paths resolve, and freshly-built
-# binaries toolbox.<os>.<arch> are present in the workspace).
+# Required CWD: repo root (so npm/server-*/ paths resolve).
+#
+# Binaries (toolbox.<os>.<arch>) are picked up from the workspace if present
+# (versioned-release pipeline) and otherwise downloaded by each package's own
+# prepack script from GCS by version (retry pipeline).
+#
+# Each publish is gated by an "already in AR?" check so the script is safe to
+# re-run after a partial failure.
 
 set -eo pipefail
 
@@ -33,9 +39,26 @@ EOF
 
 npx --yes google-artifactregistry-auth
 
+# Publishes the npm package at npm/${pkg} to the Exit Gate AR, unless that
+# exact version is already there (idempotency check makes retries safe).
+publish_pkg() {
+  local pkg="$1"
+  local npm_name="@toolbox-sdk/${pkg}"
+  local version
+  version=$(cd "npm/${pkg}" && node -p "require('./package.json').version")
+
+  if npm view "${npm_name}@${version}" version --registry "${AR_REGISTRY}" 2>/dev/null | grep -q .; then
+    echo "Skipping ${npm_name}@${version}: already in AR"
+    return
+  fi
+
+  (cd "npm/${pkg}" && npm publish)
+}
+
 # Stages a Cloud-Build-produced binary into a platform npm package and publishes
 # it. Copying the binary into bin/ short-circuits the package's prepack
-# download script (it skips when the binary already exists).
+# download script (it skips when the binary already exists). When the binary
+# isn't in the workspace (retry pipeline), prepack downloads it from GCS.
 #
 # Args:
 #   pkg:  npm folder under npm/ (e.g., server-linux-x64)
@@ -43,10 +66,12 @@ npx --yes google-artifactregistry-auth
 #   dest: binary name inside the package's bin/ (toolbox or toolbox.exe)
 publish_platform() {
   local pkg="$1" src="$2" dest="$3"
-  mkdir -p "npm/${pkg}/bin"
-  cp "${src}" "npm/${pkg}/bin/${dest}"
-  chmod +x "npm/${pkg}/bin/${dest}"
-  (cd "npm/${pkg}" && npm publish)
+  if [[ -f "${src}" ]]; then
+    mkdir -p "npm/${pkg}/bin"
+    cp "${src}" "npm/${pkg}/bin/${dest}"
+    chmod +x "npm/${pkg}/bin/${dest}"
+  fi
+  publish_pkg "${pkg}"
 }
 
 publish_platform "server-linux-x64"    "toolbox.linux.amd64"   "toolbox"
@@ -55,4 +80,4 @@ publish_platform "server-darwin-x64"   "toolbox.darwin.amd64"  "toolbox"
 publish_platform "server-win32-x64"    "toolbox.windows.amd64" "toolbox.exe"
 publish_platform "server-win32-arm64"  "toolbox.windows.arm64" "toolbox.exe"
 
-(cd npm/server && npm publish)
+publish_pkg "server"

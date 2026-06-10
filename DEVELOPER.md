@@ -902,6 +902,12 @@ MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.np
 > `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/npm/manifests/`, which
 > triggers Exit Gate to publish externally to npmjs.org.
 >
+> If the npm portion fails after the Go binaries are already in GCS, retry
+> just the npm steps without rebuilding binaries via
+> [.ci/npm_retry.cloudbuild.yaml](.ci/npm_retry.cloudbuild.yaml) (invocation
+> instructions are in the file header). The retry is idempotent — already-
+> published packages are skipped.
+>
 > The manual procedure below is retained as a fallback for when the automation
 > is broken.
 
