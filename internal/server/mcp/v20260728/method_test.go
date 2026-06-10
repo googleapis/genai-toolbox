@@ -28,7 +28,9 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // Dummy JSONRPC ID for testing
@@ -1229,3 +1231,186 @@ func TestGetResultMetadata(t *testing.T) {
 		})
 	}
 }
+
+func TestToolsCallHandlerWithSecureParams(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	ctx = util.WithToolboxVersionKey(ctx, "v0.0.0")
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	ctxLogger := util.WithLogger(ctx, testLogger)
+
+	secureTool := testutils.NewMockTool(
+		"secure_tool",
+		"A tool with secure parameters",
+		parameters.Parameters{
+			&parameters.StringParameter{
+				CommonParameter: parameters.CommonParameter{
+					Name:   "api_key",
+					Type:   parameters.TypeString,
+					Desc:   "A secure api key",
+					Secure: true,
+				},
+			},
+			parameters.NewStringParameter("query", "A standard search query"),
+		},
+		false,
+		false,
+	)
+
+	toolsMap := map[string]tools.Tool{
+		"secure_tool": secureTool,
+	}
+
+	g := group.NewGroup(group.GroupConfig{
+		Name:      "test-toolset",
+		ToolNames: []string{"secure_tool"},
+	})
+	groups := map[string]group.Group{
+		"":             g,
+		"test-toolset": g,
+	}
+	primitiveMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, groups)
+
+	tests := []struct {
+		desc        string
+		body        string // raw JSON-RPC body
+		wantErr     bool
+		errContains string
+	}{
+		{
+			desc: "Client does not support secure parameters",
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello"
+					},
+					"secureArguments": {
+						"api_key": "secret"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {}
+					}
+				}
+			}`,
+			wantErr:     true,
+			errContains: "requires secure-params extension which is not supported by the client",
+		},
+		{
+			desc: "Secure parameter passed in standard arguments",
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello",
+						"api_key": "secret"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"toolbox/secure-params": true
+						}
+					}
+				}
+			}`,
+			wantErr:     true,
+			errContains: "parameter \"api_key\" is secure and must not be passed in standard arguments",
+		},
+		{
+			desc: "Standard parameter passed in secureArguments",
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {},
+					"secureArguments": {
+						"query": "hello",
+						"api_key": "secret"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"toolbox/secure-params": true
+						}
+					}
+				}
+			}`,
+			wantErr:     true,
+			errContains: "parameter \"query\" is not secure and must not be passed in secureArguments",
+		},
+		{
+			desc: "Successful invocation with correct routing",
+			body: `{
+				"jsonrpc": "2.0",
+				"id": 1,
+				"method": "tools/call",
+				"params": {
+					"name": "secure_tool",
+					"arguments": {
+						"query": "hello"
+					},
+					"secureArguments": {
+						"api_key": "secret"
+					},
+					"_meta": {
+						"io.modelcontextprotocol/protocolVersion": "2024-11-05",
+						"io.modelcontextprotocol/clientInfo": {
+							"name": "TestClient",
+							"version": "1.0"
+						},
+						"io.modelcontextprotocol/clientCapabilities": {
+							"toolbox/secure-params": true
+						}
+					}
+				}
+			}`,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			got, err := toolsCallHandler(ctxLogger, dummyID, g, primitiveMgr, []byte(tt.body), nil)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("error = %v, want string containing %q", err, tt.errContains)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if got == nil {
+					t.Errorf("expected valid response, got nil")
+				}
+			}
+		})
+	}
+}
+

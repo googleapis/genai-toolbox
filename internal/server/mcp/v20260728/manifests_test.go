@@ -248,7 +248,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 	})
 
 	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
-	got, err := GenerateListToolsResult(pMgr, g, nil)
+	got, err := GenerateListToolsResult(pMgr, g, nil, false)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
@@ -400,5 +400,110 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
+	}
+}
+
+func TestGenerateToolManifestWithSecureParams(t *testing.T) {
+	params := parameters.Parameters{
+		&parameters.StringParameter{
+			CommonParameter: parameters.CommonParameter{
+				Name: "standard_param",
+				Type: parameters.TypeString,
+				Desc: "A standard param",
+			},
+		},
+		&parameters.StringParameter{
+			CommonParameter: parameters.CommonParameter{
+				Name:   "secure_param",
+				Type:   parameters.TypeString,
+				Desc:   "A secure param",
+				Secure: true,
+			},
+		},
+	}
+	got := generateToolManifest("test-tool", "desc", nil, params, nil, nil)
+
+	// Validate standard schema
+	wantStandard := InputSchema{
+		Type: "object",
+		Properties: map[string]parameters.ParameterMcpManifest{
+			"standard_param": {
+				Type:        "string",
+				Description: "A standard param",
+			},
+		},
+		Required: []string{"standard_param"},
+	}
+	if diff := cmp.Diff(wantStandard, got.ToolInputSchema); diff != "" {
+		t.Errorf("unexpected standard schema (-want +got):\n%s", diff)
+	}
+
+	// Validate secure schema
+	if got.SecureInputSchema == nil {
+		t.Fatal("expected secure input schema to be populated, got nil")
+	}
+	wantSecure := InputSchema{
+		Type: "object",
+		Properties: map[string]parameters.ParameterMcpManifest{
+			"secure_param": {
+				Type:        "string",
+				Description: "A secure param",
+			},
+		},
+		Required: []string{"secure_param"},
+	}
+	if diff := cmp.Diff(wantSecure, *got.SecureInputSchema); diff != "" {
+		t.Errorf("unexpected secure schema (-want +got):\n%s", diff)
+	}
+}
+
+func TestGenerateListToolsResultWithSecureParamsFiltering(t *testing.T) {
+	paramsStandard := parameters.Parameters{
+		parameters.NewStringParameter("param1", "desc"),
+	}
+	paramsSecure := parameters.Parameters{
+		&parameters.StringParameter{
+			CommonParameter: parameters.CommonParameter{
+				Name:   "param2",
+				Type:   parameters.TypeString,
+				Desc:   "desc",
+				Secure: true,
+			},
+		},
+	}
+
+	toolStandard := testutils.NewMockTool("standard_tool", "", paramsStandard, false, false)
+	toolSecure := testutils.NewMockTool("secure_tool", "", paramsSecure, false, false)
+
+	toolsMap := map[string]tools.Tool{
+		"standard_tool": toolStandard,
+		"secure_tool":   toolSecure,
+	}
+
+	g := group.NewGroup(group.GroupConfig{
+		Name:      "test-toolset",
+		ToolNames: []string{"standard_tool", "secure_tool"},
+	})
+	pMgr := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, nil, nil)
+
+	// Case 1: Client does NOT support secure params
+	gotNoSupport, err := GenerateListToolsResult(pMgr, g, nil, false)
+	if err != nil {
+		t.Fatalf("failed GenerateListToolsResult: %s", err)
+	}
+	if len(gotNoSupport.Tools) != 1 {
+		t.Fatalf("expected only 1 tool (standard), got: %+v", gotNoSupport.Tools)
+	}
+	if gotNoSupport.Tools[0].Name != "standard_tool" {
+		t.Errorf("expected standard_tool, got: %s", gotNoSupport.Tools[0].Name)
+	}
+
+	// Case 2: Client DOES support secure params
+	gotSupport, err := GenerateListToolsResult(pMgr, g, nil, true)
+	if err != nil {
+		t.Fatalf("failed GenerateListToolsResult: %s", err)
+	}
+	if len(gotSupport.Tools) != 2 {
+		t.Fatalf("expected 2 tools, got: %+v", gotSupport.Tools)
 	}
 }
