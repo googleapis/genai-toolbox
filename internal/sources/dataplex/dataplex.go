@@ -29,7 +29,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -72,7 +71,7 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, dataScanClient, tokenSource, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
+	client, dataScanClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +79,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Config:         r,
 		Client:         client,
 		DataScanClient: dataScanClient,
-		tokenSource:    tokenSource,
 	}
 
 	return s, nil
@@ -92,7 +90,6 @@ type Source struct {
 	Config
 	Client         *dataplexapi.CatalogClient
 	DataScanClient *dataplexapi.DataScanClient
-	tokenSource    oauth2.TokenSource
 }
 
 func (s *Source) SourceType() string {
@@ -121,29 +118,29 @@ func initDataplexConnection(
 	tracer trace.Tracer,
 	name string,
 	project string,
-) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, oauth2.TokenSource, error) {
+) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
+		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 
 	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
+		return nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
 	}
-	return client, dataScanClient, cred.TokenSource, nil
+	return client, dataScanClient, nil
 }
 
 func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectTypes []string, entry string) (*dataplexpb.Entry, error) {
