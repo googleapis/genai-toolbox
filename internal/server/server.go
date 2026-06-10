@@ -27,6 +27,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -39,8 +40,10 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -59,6 +62,8 @@ type Server struct {
 	logger              log.Logger
 	instrumentation     *telemetry.Instrumentation
 	sseManager          *sseManager
+	httpSessions        map[string]*mcputil.SessionState
+	httpSessionsMu      sync.Mutex
 	ResourceMgr         *resources.ResourceManager
 	mcpPrmFile          string
 }
@@ -400,6 +405,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:              l,
 		instrumentation:     instrumentation,
 		sseManager:          sseManager,
+		httpSessions:        make(map[string]*mcputil.SessionState),
 		ResourceMgr:         resourceManager,
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,

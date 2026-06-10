@@ -14,6 +14,10 @@
 
 package util
 
+import (
+	"context"
+)
+
 const (
 	VERSION_20241105 = "2024-11-05"
 	VERSION_20250326 = "2025-03-26"
@@ -31,4 +35,24 @@ var SUPPORTED_PROTOCOL_VERSIONS = []string{
 	VERSION_20250326,
 	VERSION_20250618,
 	VERSION_20251125,
+}
+
+type contextKey string
+
+const sessionStateKey contextKey = "sessionState"
+
+// SessionState represents the stateful information associated with an MCP session.
+type SessionState struct {
+	SupportsSecureParams bool
+}
+
+// WithSessionState returns a new context with the given SessionState.
+func WithSessionState(ctx context.Context, state *SessionState) context.Context {
+	return context.WithValue(ctx, sessionStateKey, state)
+}
+
+// SessionStateFromContext retrieves the SessionState from the context.
+func SessionStateFromContext(ctx context.Context) (*SessionState, bool) {
+	state, ok := ctx.Value(sessionStateKey).(*SessionState)
+	return state, ok
 }
