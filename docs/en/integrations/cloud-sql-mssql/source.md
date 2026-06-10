@@ -111,4 +111,3 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                                       |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                                |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |
-| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
