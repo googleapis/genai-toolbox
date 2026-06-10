@@ -19,6 +19,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	alloydbcreatecluster "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbcreatecluster"
@@ -91,5 +92,35 @@ func TestParseFromYaml(t *testing.T) {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
+	}
+}
+
+func TestResolveParamsWithoutSource(t *testing.T) {
+	cfg := alloydbcreatecluster.Config{
+		ConfigBase: tools.ConfigBase{Name: "create-my-cluster", Description: "some description"},
+		Type:       "alloydb-create-cluster",
+		Source:     "my-alloydb-admin-source",
+	}
+	tool, err := cfg.Initialize()
+	if err != nil {
+		t.Fatalf("unable to initialize tool: %s", err)
+	}
+
+	// A nil sources map (e.g. offline manifest generation) degrades to the
+	// static skeleton baked at Initialize rather than erroring.
+	params, err := tool.GetParameters(nil)
+	if err != nil {
+		t.Fatalf("GetParameters(nil) returned error: %s", err)
+	}
+	if len(params) == 0 {
+		t.Fatal("GetParameters(nil) returned no parameters")
+	}
+	if _, err := tool.Manifest(nil); err != nil {
+		t.Fatalf("Manifest(nil) returned error: %s", err)
+	}
+
+	// A non-nil map missing the configured source still fails fast.
+	if _, err := tool.GetParameters(map[string]sources.Source{}); err == nil {
+		t.Fatal("GetParameters with a missing source: expected error, got nil")
 	}
 }

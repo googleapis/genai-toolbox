@@ -155,6 +155,11 @@ func buildParams(project string) parameters.Parameters {
 
 // resolveParams builds the tool's parameters using the source's configured default GCP project.
 func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	// Without a source (e.g. offline manifest generation), fall back to the
+	// static skeleton baked at Initialize rather than erroring.
+	if srcs == nil {
+		return t.StaticParameters, nil
+	}
 	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, err
