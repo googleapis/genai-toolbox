@@ -47,6 +47,14 @@ rather than an access denied error.
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex/docs
 
+## Parameters
+
+The `dataplex-lookup-context` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resources | list of strings | true | A list of up to 10 resource names for which metadata is needed (format: `projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}`). |
+
 ## Example
 
 ```yaml

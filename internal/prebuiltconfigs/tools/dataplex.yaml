@@ -47,15 +47,6 @@ type: dataplex-search-dq-scans
 source: dataplex-source
 description: Use this tool to search for data quality scans in Dataplex.
 ---
-kind: toolset
-name: discovery
-tools:
-- search_entries
-- lookup_entry
-- search_aspect_types
-- lookup_context
-- search_dq_scans
----
 kind: tool
 name: generate_data_insights
 type: dataplex-generate-data-insights
@@ -232,6 +223,15 @@ description: >-
   Note that the 'failingRowsQuery' field inside the rules result is extremely useful for retrieving failed rows.
 ---
 kind: toolset
+name: discovery
+tools:
+- search_entries
+- lookup_entry
+- search_aspect_types
+- lookup_context
+- search_dq_scans
+---
+kind: toolset
 name: enrich
 tools:
 - search_entries
@@ -246,4 +246,3 @@ tools:
 - get_data_quality_results
 - get_operation
 - get_run_status
-

@@ -40,6 +40,16 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 
+## Parameters
+
+The `dataplex-generate-data-profile` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the profile results directly to the Dataplex Universal Catalog. Defaults to false. |
+
 ## Example
 
 ```yaml
@@ -57,6 +67,3 @@ description: Trigger a new data profiling scan.
 | type        |  string  |     true     | Must be "dataplex-generate-data-profile".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
-| resourcePath | string   | true         | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
-| location    | string   | true         | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
-| publish     | boolean  | false        | If true, publishes the profile results directly to the Dataplex Universal Catalog. Defaults to false. |

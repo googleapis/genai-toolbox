@@ -40,6 +40,16 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 
+## Parameters
+
+The `dataplex-get-run-status` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex scan template (e.g. `nq-prof-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+| jobId | string | false | Optional. A specific job run ID. If omitted, returns status for the latest job run. |
+
 ## Example
 
 ```yaml
@@ -57,6 +67,3 @@ description: Monitor the background execution run of a Dataplex scan.
 | type        |  string  |     true     | Must be "dataplex-get-run-status".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
-| scanId      | string   | true         | The unique ID of the Dataplex scan template (e.g. `nq-prof-12345`). |
-| location    | string   | true         | The Google Cloud region where the scan was created (e.g. `us-central1`). |
-| jobId       | string   | false        | Optional. A specific job run ID. If omitted, returns status for the latest job run. |

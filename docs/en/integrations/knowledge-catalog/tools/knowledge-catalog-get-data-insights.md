@@ -41,6 +41,15 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 
+## Parameters
+
+The `dataplex-get-data-insights` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex scan (e.g. `nq-doc-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+
 ## Example
 
 ```yaml
@@ -58,5 +67,3 @@ description: Retrieve results from a completed data insights scan.
 | type        |  string  |     true     | Must be "dataplex-get-data-insights".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
-| scanId      | string   | true         | The unique ID of the Dataplex scan (e.g. `nq-doc-12345`). |
-| location    | string   | true         | The Google Cloud region where the scan was created (e.g. `us-central1`). |

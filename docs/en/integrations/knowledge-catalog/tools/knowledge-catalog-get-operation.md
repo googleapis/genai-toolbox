@@ -41,6 +41,14 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 
+## Parameters
+
+The `dataplex-get-operation` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| operationName | string | true | The full operation resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`). |
+
 ## Example
 
 ```yaml
@@ -58,4 +66,3 @@ description: Check the status of a long-running scan template creation.
 | type        |  string  |     true     | Must be "dataplex-get-operation".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
-| operationName | string   | true         | The full operation resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`). |

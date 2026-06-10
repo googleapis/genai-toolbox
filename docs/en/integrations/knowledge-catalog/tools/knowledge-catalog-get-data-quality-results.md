@@ -42,6 +42,15 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 
+## Parameters
+
+The `dataplex-get-data-quality-results` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex quality scan (e.g. `nq-dq-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+
 ## Example
 
 ```yaml
@@ -59,5 +68,3 @@ description: Fetch results of a completed data quality scan.
 | type        |  string  |     true     | Must be "dataplex-get-data-quality-results".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
-| scanId      | string   | true         | The unique ID of the Dataplex quality scan (e.g. `nq-dq-12345`). |
-| location    | string   | true         | The Google Cloud region where the scan was created (e.g. `us-central1`). |

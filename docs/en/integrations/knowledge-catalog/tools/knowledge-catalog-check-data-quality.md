@@ -40,6 +40,17 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 
+## Parameters
+
+The `dataplex-check-data-quality` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the quality results directly to the Dataplex Universal Catalog. Defaults to false. |
+| specJSON | string | true | A raw JSON string defining the quality checks rules (e.g. `{"rules": [{"column": "age", "nonNullExpectation": {}}]}`, maps directly to `dataplexpb.DataQualitySpec`). |
+
 ## Example
 
 ```yaml
@@ -57,7 +68,3 @@ description: Trigger a new data quality scan.
 | type        |  string  |     true     | Must be "dataplex-check-data-quality".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
-| resourcePath | string   | true         | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
-| location    | string   | true         | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
-| publish     | boolean  | false        | If true, publishes the quality results directly to the Dataplex Universal Catalog. Defaults to false. |
-| specJSON    | string   | true         | A raw JSON string defining the quality checks rules (e.g. `{"rules": [{"column": "age", "nonNullExpectation": {}}]}`, maps directly to `dataplexpb.DataQualitySpec`). |
