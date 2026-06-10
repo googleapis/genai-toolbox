@@ -310,16 +310,13 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 	return results, nil
 }
 
-func (s *Source) GenerateDataInsights(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error) {
-	if projectID == "" {
-		projectID = s.ProjectID()
-	}
-	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
-	dataScanId := fmt.Sprintf("nq-doc-%s", uuid.New().String())
+func (s *Source) GenerateDataInsights(ctx context.Context, location, resourcePath string, publish bool) (string, error) {
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), location)
+	dataScanID := fmt.Sprintf("nq-doc-%s", uuid.New().String())
 
 	req := &dataplexpb.CreateDataScanRequest{
 		Parent:     parent,
-		DataScanId: dataScanId,
+		DataScanId: dataScanID,
 		DataScan: &dataplexpb.DataScan{
 			Data: &dataplexpb.DataSource{
 				Source: &dataplexpb.DataSource_Resource{
@@ -352,11 +349,8 @@ func (s *Source) GenerateDataInsights(ctx context.Context, projectID, location, 
 	return op.Name(), nil
 }
 
-func (s *Source) GetDataScan(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error) {
-	if projectID == "" {
-		projectID = s.ProjectID()
-	}
-	name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", projectID, location, scanID)
+func (s *Source) GetDataScan(ctx context.Context, location, scanID string) (*dataplexpb.DataScan, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", s.ProjectID(), location, scanID)
 	req := &dataplexpb.GetDataScanRequest{
 		Name: name,
 		View: dataplexpb.GetDataScanRequest_FULL,
@@ -390,14 +384,10 @@ func (s *Source) GetOperation(ctx context.Context, opName string) (map[string]an
 	return opData, nil
 }
 
-func (s *Source) GetJobStatus(ctx context.Context, projectID, location, scanID, jobID string) (*dataplexpb.DataScanJob, error) {
-	if projectID == "" {
-		projectID = s.ProjectID()
-	}
-
+func (s *Source) GetJobStatus(ctx context.Context, location, scanID, jobID string) (*dataplexpb.DataScanJob, error) {
 	// If jobID is provided, fetch that specific job directly!
 	if jobID != "" {
-		name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s/jobs/%s", projectID, location, scanID, jobID)
+		name := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s/jobs/%s", s.ProjectID(), location, scanID, jobID)
 		req := &dataplexpb.GetDataScanJobRequest{
 			Name: name,
 		}
@@ -405,7 +395,7 @@ func (s *Source) GetJobStatus(ctx context.Context, projectID, location, scanID, 
 	}
 
 	// Fallback to listing and returning the latest job (PageSize: 1)
-	parent := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", projectID, location, scanID)
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataScans/%s", s.ProjectID(), location, scanID)
 	req := &dataplexpb.ListDataScanJobsRequest{
 		Parent:   parent,
 		PageSize: 1,
@@ -427,11 +417,8 @@ func (s *Source) GetJobStatus(ctx context.Context, projectID, location, scanID, 
 	return job, nil
 }
 
-func (s *Source) GenerateDataProfile(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error) {
-	if projectID == "" {
-		projectID = s.ProjectID()
-	}
-	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+func (s *Source) GenerateDataProfile(ctx context.Context, location, resourcePath string, publish bool) (string, error) {
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), location)
 	dataScanID := fmt.Sprintf("nq-prof-%s", uuid.New().String())
 
 	req := &dataplexpb.CreateDataScanRequest{
@@ -469,11 +456,8 @@ func (s *Source) GenerateDataProfile(ctx context.Context, projectID, location, r
 	return op.Name(), nil
 }
 
-func (s *Source) GenerateDataDiscovery(ctx context.Context, projectID, location, resourcePath string) (string, error) {
-	if projectID == "" {
-		projectID = s.ProjectID()
-	}
-	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+func (s *Source) GenerateDataDiscovery(ctx context.Context, location, resourcePath string) (string, error) {
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), location)
 	dataScanID := fmt.Sprintf("nq-disc-%s", uuid.New().String())
 
 	req := &dataplexpb.CreateDataScanRequest{
@@ -509,11 +493,8 @@ func (s *Source) GenerateDataDiscovery(ctx context.Context, projectID, location,
 	return op.Name(), nil
 }
 
-func (s *Source) GenerateDataQuality(ctx context.Context, projectID, location, resourcePath string, specJSON string, publish bool) (string, error) {
-	if projectID == "" {
-		projectID = s.ProjectID()
-	}
-	parent := fmt.Sprintf("projects/%s/locations/%s", projectID, location)
+func (s *Source) GenerateDataQuality(ctx context.Context, location, resourcePath string, specJSON string, publish bool) (string, error) {
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), location)
 	dataScanID := fmt.Sprintf("nq-dq-%s", uuid.New().String())
 
 	var dqSpec dataplexpb.DataQualitySpec

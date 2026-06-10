@@ -48,7 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ProjectID() string
-	GetDataScan(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error)
+	GetDataScan(ctx context.Context, location, scanID string) (*dataplexpb.DataScan, error)
 }
 
 type Config struct {
@@ -138,8 +138,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
 
-	projectId := source.ProjectID()
-	resp, err := source.GetDataScan(ctx, projectId, location, scanId)
+	resp, err := source.GetDataScan(ctx, location, scanId)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

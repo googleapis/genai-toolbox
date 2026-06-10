@@ -48,7 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ProjectID() string
-	GetDataScan(ctx context.Context, projectID, location, scanID string) (*dataplexpb.DataScan, error)
+	GetDataScan(ctx context.Context, location, scanID string) (*dataplexpb.DataScan, error)
 }
 
 type Config struct {
@@ -78,10 +78,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	scanId := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-disc-12345...'). This is extracted from the target or name field of the creation operation.")
+	scanID := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-disc-12345...'). This is extracted from the target or name field of the creation operation.")
 	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
 
-	params := parameters.Parameters{scanId, location}
+	params := parameters.Parameters{scanID, location}
 
 	t := Tool{
 		Config:     cfg,
@@ -138,8 +138,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
 
-	projectId := source.ProjectID()
-	resp, err := source.GetDataScan(ctx, projectId, location, scanId)
+	resp, err := source.GetDataScan(ctx, location, scanId)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

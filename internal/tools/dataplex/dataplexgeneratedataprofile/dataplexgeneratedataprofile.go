@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ProjectID() string
-	GenerateDataProfile(ctx context.Context, projectID, location, resourcePath string, publish bool) (string, error)
+	GenerateDataProfile(ctx context.Context, location, resourcePath string, publish bool) (string, error)
 }
 
 type Config struct {
@@ -154,7 +154,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	opName, err := source.GenerateDataProfile(ctx, projectId, location, resourcePath, publish)
+	opName, err := source.GenerateDataProfile(ctx, location, resourcePath, publish)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

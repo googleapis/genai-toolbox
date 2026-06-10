@@ -46,7 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ProjectID() string
-	GenerateDataDiscovery(ctx context.Context, projectID, location, resourcePath string) (string, error)
+	GenerateDataDiscovery(ctx context.Context, location, resourcePath string) (string, error)
 }
 
 type Config struct {
@@ -151,7 +151,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, resourcePath)
 	}
 
-	opName, err := source.GenerateDataDiscovery(ctx, projectId, location, resourcePath)
+	opName, err := source.GenerateDataDiscovery(ctx, location, resourcePath)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
