@@ -19,9 +19,7 @@ Since scan template creation is asynchronous, this tool returns an LRO name. You
 
 {{< compatible-sources >}}
 
-## Requirements
-
-### IAM Permissions
+## IAM Permissions
 
 Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your

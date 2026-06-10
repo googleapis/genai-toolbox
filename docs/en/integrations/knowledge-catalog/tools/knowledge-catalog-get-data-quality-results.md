@@ -21,9 +21,7 @@ Note that the `failingRowsQuery` field inside the rules result is extremely usef
 
 {{< compatible-sources >}}
 
-## Requirements
-
-### IAM Permissions
+## IAM Permissions
 
 Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your

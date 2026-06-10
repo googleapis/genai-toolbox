@@ -28,9 +28,7 @@ The `dataplex-search-dq-scans` tool accepts the following optional parameters:
 | pageSize | integer | false | Number of returned data quality scans in the page. Defaults to 10. |
 | orderBy | string | false | Specifies ordering of results. |
 
-## Requirements
-
-### IAM Permissions
+## IAM Permissions
 
 Dataplex uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Dataplex resources. Toolbox will use your

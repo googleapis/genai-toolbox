@@ -27,9 +27,7 @@ The `dataplex-search-aspect-types` tool accepts the following parameters:
 | pageSize | integer | false | Number of returned aspect types in the search page. Defaults to 5. |
 | orderBy | string | false | Specifies ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
 
-## Requirements
-
-### IAM Permissions
+## IAM Permissions
 
 Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your

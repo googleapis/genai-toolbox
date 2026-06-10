@@ -20,9 +20,7 @@ CRITICAL: Access the results only via the nested public GA fields `dataDocumenta
 
 {{< compatible-sources >}}
 
-## Requirements
-
-### IAM Permissions
+## IAM Permissions
 
 Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your

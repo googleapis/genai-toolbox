@@ -20,9 +20,7 @@ WARNING: This only tracks the creation of the scan template, NOT the actual back
 
 {{< compatible-sources >}}
 
-## Requirements
-
-### IAM Permissions
+## IAM Permissions
 
 Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your
