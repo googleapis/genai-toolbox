@@ -423,6 +423,8 @@ steps:
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
       - "publish-npm-to-ar"
+    env:
+      - "BUILD_ID=$BUILD_ID"
     script: |
       #!/usr/bin/env bash
       bash .ci/trigger_exit_gate.sh
