@@ -136,9 +136,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:      cfg,
-		allParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		Config:    cfg,
+		allParams: allParameters,
+		manifest:  tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 	}
 	return t, nil
 }
@@ -148,25 +148,14 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	allParams   parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
+	allParams parameters.Parameters `yaml:"parameters"`
+	manifest  tools.Manifest
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
-	}
-
-	var version string
-	if err := source.MySQLPool().QueryRow("SELECT VERSION()").Scan(&version); err != nil {
-		return nil, util.NewClientServerError("failed to get mysql version", http.StatusInternalServerError, err)
-	}
-	var listAllLocksStatement string
-	if strings.HasPrefix(version, "5.7") {
-		listAllLocksStatement = listAllLocksStatement57
-	} else {
-		listAllLocksStatement = listAllLocksStatement8plus
 	}
 
 	// Check performance schema
@@ -207,6 +196,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
+
+	var version string
+	if err := source.MySQLPool().QueryRow("SELECT VERSION()").Scan(&version); err != nil {
+		return nil, util.NewClientServerError("failed to get mysql version", http.StatusInternalServerError, err)
+	}
+	var listAllLocksStatement string
+	if strings.HasPrefix(version, "5.7") {
+		listAllLocksStatement = listAllLocksStatement57
+	} else {
+		listAllLocksStatement = listAllLocksStatement8plus
+	}
+
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, listAllLocksStatement))
 	sliceParams := []any{table_schema, table_schema, table_name, table_name, limit}
 	resp, err := source.RunSQL(ctx, listAllLocksStatement, sliceParams)
@@ -262,5 +263,5 @@ func (t Tool) GetParameters() parameters.Parameters {
 }
 
 func (t Tool) GetScopesRequired() []string {
-        return nil
+	return nil
 }
