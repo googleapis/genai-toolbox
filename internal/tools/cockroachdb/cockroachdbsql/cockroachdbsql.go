@@ -51,8 +51,6 @@ type compatibleSource interface {
 
 var _ compatibleSource = &cockroachdb.Source{}
 
-var compatibleSources = [...]string{cockroachdb.SourceType}
-
 type Config struct {
 	tools.ConfigBase   `yaml:",inline"`
 	Type               string                 `yaml:"type" validate:"required"`

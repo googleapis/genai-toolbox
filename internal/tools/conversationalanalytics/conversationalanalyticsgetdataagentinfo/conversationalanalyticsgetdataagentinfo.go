@@ -56,8 +56,6 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudgdads.Source{}
 
-var compatibleSources = [...]string{cloudgdads.SourceType}
-
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
 	Type             string `yaml:"type" validate:"required"`

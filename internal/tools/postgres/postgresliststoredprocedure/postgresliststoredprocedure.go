@@ -75,8 +75,6 @@ var _ compatibleSource = &alloydbpg.Source{}
 var _ compatibleSource = &cloudsqlpg.Source{}
 var _ compatibleSource = &postgres.Source{}
 
-var compatibleSources = [...]string{alloydbpg.SourceType, cloudsqlpg.SourceType, postgres.SourceType}
-
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
 	Type             string                 `yaml:"type" validate:"required"`

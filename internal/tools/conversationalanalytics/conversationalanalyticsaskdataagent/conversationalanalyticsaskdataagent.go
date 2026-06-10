@@ -58,8 +58,6 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudgdads.Source{}
 
-var compatibleSources = [...]string{cloudgdads.SourceType}
-
 type BQTableReference struct {
 	ProjectID string `json:"projectId"`
 	DatasetID string `json:"datasetId"`
