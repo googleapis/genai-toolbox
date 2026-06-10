@@ -51,15 +51,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// Cloud SQL MSSQL configs
-	Name     string         `yaml:"name" validate:"required"`
-	Type     string         `yaml:"type" validate:"required"`
-	Project  string         `yaml:"project" validate:"required"`
-	Region   string         `yaml:"region" validate:"required"`
-	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
-	Database string         `yaml:"database" validate:"required"`
+	Name         string         `yaml:"name" validate:"required"`
+	Type         string         `yaml:"type" validate:"required"`
+	Project      string         `yaml:"project" validate:"required"`
+	Region       string         `yaml:"region" validate:"required"`
+	Instance     string         `yaml:"instance" validate:"required"`
+	IPType       sources.IPType `yaml:"ipType" validate:"required"`
+	User         string         `yaml:"user" validate:"required"`
+	Password     string         `yaml:"password" validate:"required"`
+	Database     string         `yaml:"database" validate:"required"`
+	SQLCommenter *bool          `yaml:"sqlCommenter"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -109,7 +110,7 @@ func (s *Source) MSSQLDB() *sql.DB {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
-	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	statement = sqlcommenter.AppendComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.MSSQLDB().QueryContext(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

@@ -139,3 +139,4 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |    false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
 | password  |  string  |    false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.              |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`.                    |
+| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
