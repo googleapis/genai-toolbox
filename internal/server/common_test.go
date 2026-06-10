@@ -30,6 +30,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
@@ -67,6 +68,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+		httpSessions:    make(map[string]*mcputil.SessionState),
 	}
 
 	var r chi.Router

@@ -36,6 +36,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
@@ -1131,6 +1132,7 @@ func TestStdioSession(t *testing.T) {
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+		httpSessions:    make(map[string]*mcputil.SessionState),
 	}
 
 	in := bufio.NewReader(pr)
