@@ -18,12 +18,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -93,6 +93,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
+var _ tools.Tool = Tool{}
+
 type Tool struct {
 	Config
 	Parameters parameters.Parameters
@@ -136,20 +138,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
 
-	projectID := source.ProjectID()
-
-	// Smart GCS path normalization to prevent ResourceName errors in Dataplex
-	if strings.HasPrefix(resourcePath, "gs://") {
-		bucketName := strings.TrimPrefix(resourcePath, "gs://")
-		bucketName = strings.Split(bucketName, "/")[0]
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectID, bucketName)
-	} else if strings.HasPrefix(resourcePath, "//storage.googleapis.com/buckets/") {
-		bucketName := strings.TrimPrefix(resourcePath, "//storage.googleapis.com/buckets/")
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectID, bucketName)
-	} else if !strings.HasPrefix(resourcePath, "//storage.googleapis.com/projects/") {
-		// Assume it is a raw bucket name
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectID, resourcePath)
-	}
+	resourcePath = dataplexcommon.NormalizeResourcePath(resourcePath, source.ProjectID())
 
 	opName, err := source.GenerateDataDiscovery(ctx, location, resourcePath)
 	if err != nil {

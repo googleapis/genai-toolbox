@@ -279,10 +279,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexSearchAspectTypesToolInvokeTest(t, aspectTypeId)
 	runDataplexLookupContextToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchDataQualityScansToolInvokeTest(t, dataScanId, tableName, datasetName)
-	runDataplexDataScanLifecycleIntegrationTest(t, tableName, datasetName, dataplexDataScanClient)
-	runDataplexDataInsightsLifecycleIntegrationTest(t, tableName, datasetName, dataplexDataScanClient)
-	runDataplexDiscoverMetadataLifecycleIntegrationTest(t, dataplexDataScanClient)
-	runDataplexDataQualityLifecycleIntegrationTest(t, tableName, datasetName, dataplexDataScanClient)
+	runDataplexEnrichmentToolInvokeTest(t, tableName, datasetName, dataplexDataScanClient)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -1319,644 +1316,208 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 	}
 }
 
-func runDataplexDataScanLifecycleIntegrationTest(t *testing.T, tableName string, datasetName string, client *dataplex.DataScanClient) {
+func runDataplexEnrichmentToolInvokeTest(t *testing.T, tableName string, datasetName string, client *dataplex.DataScanClient) {
 	ctx := context.Background()
 	tableResource := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetName, tableName)
-
-	// Step 1: Generate Data Profile (Create Scan)
-	generateURL := "http://127.0.0.1:5000/api/tool/my-dataplex-generate-data-profile-tool/invoke"
-	reqBody := map[string]any{
-		"resourcePath": tableResource,
-		"location":     "us-central1",
-		"publish":      false,
-	}
-	reqBytes, _ := json.Marshal(reqBody)
-	resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke generate_data_profile: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		t.Fatalf("generate_data_profile response status got %d, want 200. Body: %s", resp.StatusCode, string(body))
-	}
-
-	var invokeResult map[string]any
-	json.NewDecoder(resp.Body).Decode(&invokeResult)
-	resultStr, ok := invokeResult["result"].(string)
-	if !ok || resultStr == "" {
-		t.Fatalf("expected string result from generate_data_profile, got: %v", invokeResult)
-	}
-
-	operationName := resultStr
-	if !strings.Contains(operationName, "/operations/") {
-		t.Fatalf("expected operation name in result, got: %s", operationName)
-	}
-
-	// Step 2: Get Operation Status
-	getOpURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-operation-tool/invoke"
-	opReqBody := map[string]any{
-		"operationName": operationName,
-	}
-	opReqBytes, _ := json.Marshal(opReqBody)
-
-	var scanID string
-	var opDone bool
-	for i := 0; i < 6; i++ {
-		opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
-		if err != nil {
-			t.Fatalf("failed to invoke get_operation: %v", err)
-		}
-		if opResp.StatusCode != 200 {
-			body, _ := io.ReadAll(opResp.Body)
-			opResp.Body.Close()
-			t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
-		}
-		var opResult map[string]any
-		json.NewDecoder(opResp.Body).Decode(&opResult)
-		opResp.Body.Close()
-
-		opResultStr := opResult["result"].(string)
-		var innerOp map[string]any
-		json.Unmarshal([]byte(opResultStr), &innerOp)
-
-		if done, _ := innerOp["done"].(bool); done {
-			opDone = true
-			responseMap, ok := innerOp["response"].(map[string]any)
-			if !ok {
-				t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
-			}
-			name, ok := responseMap["name"].(string)
-			if !ok {
-				t.Fatalf("DataScan response missing name: %v", responseMap)
-			}
-			parts := strings.Split(name, "/")
-			scanID = parts[len(parts)-1]
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
-
-	if !opDone {
-		t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
-	}
-
-	if scanID == "" {
-		t.Fatalf("scanID was empty after operation completed")
-	}
-
-	defer func() {
-		parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
-		deleteReq := &dataplexpb.DeleteDataScanRequest{
-			Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
-		}
-		op, err := client.DeleteDataScan(ctx, deleteReq)
-		if err != nil {
-			t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
-			return
-		}
-		op.Wait(ctx)
-		t.Logf("cleanup: successfully deleted scan template %s", scanID)
-	}()
-
-	// Step 3: Get Run Status
-	runStatusURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-run-status-tool/invoke"
-	runReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	runReqBytes, _ := json.Marshal(runReqBody)
-	runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_run_status: %v", err)
-	}
-	defer runResp.Body.Close()
-
-	if runResp.StatusCode != 200 {
-		body, _ := io.ReadAll(runResp.Body)
-		t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
-	}
-
-	var runResult map[string]any
-	json.NewDecoder(runResp.Body).Decode(&runResult)
-	runResultStr, _ := runResult["result"].(string)
-
-	var jobStatus map[string]any
-	if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
-		t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
-	}
-
-	// Step 4: Get Data Profile
-	getProfileURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-profile-tool/invoke"
-	profileReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	profileReqBytes, _ := json.Marshal(profileReqBody)
-	profileResp, err := http.Post(getProfileURL, "application/json", bytes.NewBuffer(profileReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_data_profile: %v", err)
-	}
-	defer profileResp.Body.Close()
-
-	if profileResp.StatusCode != 200 {
-		body, _ := io.ReadAll(profileResp.Body)
-		t.Fatalf("get_data_profile response status got %d, want 200. Body: %s", profileResp.StatusCode, string(body))
-	}
-
-	var profileResult map[string]any
-	json.NewDecoder(profileResp.Body).Decode(&profileResult)
-	profileResultStr, _ := profileResult["result"].(string)
-
-	var scanData map[string]any
-	if err := json.Unmarshal([]byte(profileResultStr), &scanData); err != nil {
-		t.Fatalf("get_data_profile returned invalid JSON: %v. Raw: %s", err, profileResultStr)
-	}
-
-	if scanData["name"] != fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID) {
-		t.Fatalf("expected scan name %s, got: %s", scanID, scanData["name"])
-	}
-}
-
-func runDataplexDataInsightsLifecycleIntegrationTest(t *testing.T, tableName string, datasetName string, client *dataplex.DataScanClient) {
-	ctx := context.Background()
-	tableResource := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetName, tableName)
-
-	// Step 1: Generate Data Insights
-	generateURL := "http://127.0.0.1:5000/api/tool/my-dataplex-generate-data-insights-tool/invoke"
-	reqBody := map[string]any{
-		"resourcePath": tableResource,
-		"location":     "us-central1",
-		"publish":      false,
-	}
-	reqBytes, _ := json.Marshal(reqBody)
-	resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke generate_data_insights: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		t.Fatalf("generate_data_insights response status got %d, want 200. Body: %s", resp.StatusCode, string(body))
-	}
-
-	var invokeResult map[string]any
-	json.NewDecoder(resp.Body).Decode(&invokeResult)
-	resultStr, ok := invokeResult["result"].(string)
-	if !ok || resultStr == "" {
-		t.Fatalf("expected string result from generate_data_insights, got: %v", invokeResult)
-	}
-
-	operationName := resultStr
-	if !strings.Contains(operationName, "/operations/") {
-		t.Fatalf("expected operation name in result, got: %s", operationName)
-	}
-
-	// Step 2: Get Operation Status
-	getOpURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-operation-tool/invoke"
-	opReqBody := map[string]any{
-		"operationName": operationName,
-	}
-	opReqBytes, _ := json.Marshal(opReqBody)
-
-	var scanID string
-	var opDone bool
-	for i := 0; i < 6; i++ {
-		opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
-		if err != nil {
-			t.Fatalf("failed to invoke get_operation: %v", err)
-		}
-		if opResp.StatusCode != 200 {
-			body, _ := io.ReadAll(opResp.Body)
-			opResp.Body.Close()
-			t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
-		}
-		var opResult map[string]any
-		json.NewDecoder(opResp.Body).Decode(&opResult)
-		opResp.Body.Close()
-
-		opResultStr := opResult["result"].(string)
-		var innerOp map[string]any
-		json.Unmarshal([]byte(opResultStr), &innerOp)
-
-		if done, _ := innerOp["done"].(bool); done {
-			opDone = true
-			responseMap, ok := innerOp["response"].(map[string]any)
-			if !ok {
-				t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
-			}
-			name, ok := responseMap["name"].(string)
-			if !ok {
-				t.Fatalf("DataScan response missing name: %v", responseMap)
-			}
-			parts := strings.Split(name, "/")
-			scanID = parts[len(parts)-1]
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
-
-	if !opDone {
-		t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
-	}
-
-	if scanID == "" {
-		t.Fatalf("scanID was empty after operation completed")
-	}
-
-	defer func() {
-		parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
-		deleteReq := &dataplexpb.DeleteDataScanRequest{
-			Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
-		}
-		op, err := client.DeleteDataScan(ctx, deleteReq)
-		if err != nil {
-			t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
-			return
-		}
-		op.Wait(ctx)
-		t.Logf("cleanup: successfully deleted scan template %s", scanID)
-	}()
-
-	// Step 3: Get Run Status
-	runStatusURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-run-status-tool/invoke"
-	runReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	runReqBytes, _ := json.Marshal(runReqBody)
-	runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_run_status: %v", err)
-	}
-	defer runResp.Body.Close()
-
-	if runResp.StatusCode != 200 {
-		body, _ := io.ReadAll(runResp.Body)
-		t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
-	}
-
-	var runResult map[string]any
-	json.NewDecoder(runResp.Body).Decode(&runResult)
-	runResultStr, _ := runResult["result"].(string)
-
-	var jobStatus map[string]any
-	if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
-		t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
-	}
-
-	// Step 4: Get Data Insights
-	getInsightsURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-insights-tool/invoke"
-	insightsReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	insightsReqBytes, _ := json.Marshal(insightsReqBody)
-	insightsResp, err := http.Post(getInsightsURL, "application/json", bytes.NewBuffer(insightsReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_data_insights: %v", err)
-	}
-	defer insightsResp.Body.Close()
-
-	if insightsResp.StatusCode != 200 {
-		body, _ := io.ReadAll(insightsResp.Body)
-		t.Fatalf("get_data_insights response status got %d, want 200. Body: %s", insightsResp.StatusCode, string(body))
-	}
-
-	var insightsResult map[string]any
-	json.NewDecoder(insightsResp.Body).Decode(&insightsResult)
-	insightsResultStr, _ := insightsResult["result"].(string)
-
-	var scanData map[string]any
-	if err := json.Unmarshal([]byte(insightsResultStr), &scanData); err != nil {
-		t.Fatalf("get_data_insights returned invalid JSON: %v. Raw: %s", err, insightsResultStr)
-	}
-
-	if scanData["name"] != fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID) {
-		t.Fatalf("expected scan name %s, got: %s", scanID, scanData["name"])
-	}
-}
-
-func runDataplexDiscoverMetadataLifecycleIntegrationTest(t *testing.T, client *dataplex.DataScanClient) {
-	ctx := context.Background()
 	dummyBucketResource := fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/dummy-bucket-12345", DataplexProject)
 
-	// Step 1: Discover Metadata
-	generateURL := "http://127.0.0.1:5000/api/tool/my-dataplex-discover-metadata-tool/invoke"
-	reqBody := map[string]any{
-		"resourcePath": dummyBucketResource,
-		"location":     "us-central1",
+	testCases := []struct {
+		name              string
+		generateToolName  string
+		generateReqBody   map[string]any
+		getResultToolName string
+	}{
+		{
+			name:             "Generate Data Profile Lifecycle",
+			generateToolName: "my-dataplex-generate-data-profile-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": tableResource,
+				"location":     "us-central1",
+				"publish":      false,
+			},
+			getResultToolName: "my-dataplex-get-data-profile-tool",
+		},
+		{
+			name:             "Generate Data Insights Lifecycle",
+			generateToolName: "my-dataplex-generate-data-insights-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": tableResource,
+				"location":     "us-central1",
+				"publish":      false,
+			},
+			getResultToolName: "my-dataplex-get-data-insights-tool",
+		},
+		{
+			name:             "Discover Metadata Lifecycle",
+			generateToolName: "my-dataplex-discover-metadata-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": dummyBucketResource,
+				"location":     "us-central1",
+			},
+			getResultToolName: "my-dataplex-get-discovery-results-tool",
+		},
+		{
+			name:             "Check Data Quality Lifecycle",
+			generateToolName: "my-dataplex-check-data-quality-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": tableResource,
+				"location":     "us-central1",
+				"specJSON":     `{"rules": [{"column": "name", "dimension": "COMPLETENESS", "nonNullExpectation": {}}]}`,
+				"publish":      false,
+			},
+			getResultToolName: "my-dataplex-get-data-quality-results-tool",
+		},
 	}
-	reqBytes, _ := json.Marshal(reqBody)
-	resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke discover_metadata: %v", err)
-	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		t.Fatalf("discover_metadata response status got %d, want 200. Body: %s", resp.StatusCode, string(body))
-	}
-
-	var invokeResult map[string]any
-	json.NewDecoder(resp.Body).Decode(&invokeResult)
-	resultStr, ok := invokeResult["result"].(string)
-	if !ok || resultStr == "" {
-		t.Fatalf("expected string result from discover_metadata, got: %v", invokeResult)
-	}
-
-	operationName := resultStr
-	if !strings.Contains(operationName, "/operations/") {
-		t.Fatalf("expected operation name in result, got: %s", operationName)
-	}
-
-	// Step 2: Get Operation Status
 	getOpURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-operation-tool/invoke"
-	opReqBody := map[string]any{
-		"operationName": operationName,
-	}
-	opReqBytes, _ := json.Marshal(opReqBody)
-
-	var scanID string
-	var opDone bool
-	for i := 0; i < 6; i++ {
-		opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
-		if err != nil {
-			t.Fatalf("failed to invoke get_operation: %v", err)
-		}
-		if opResp.StatusCode != 200 {
-			body, _ := io.ReadAll(opResp.Body)
-			opResp.Body.Close()
-			t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
-		}
-		var opResult map[string]any
-		json.NewDecoder(opResp.Body).Decode(&opResult)
-		opResp.Body.Close()
-
-		opResultStr := opResult["result"].(string)
-		var innerOp map[string]any
-		json.Unmarshal([]byte(opResultStr), &innerOp)
-
-		if done, _ := innerOp["done"].(bool); done {
-			opDone = true
-			responseMap, ok := innerOp["response"].(map[string]any)
-			if !ok {
-				t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
-			}
-			name, ok := responseMap["name"].(string)
-			if !ok {
-				t.Fatalf("DataScan response missing name: %v", responseMap)
-			}
-			parts := strings.Split(name, "/")
-			scanID = parts[len(parts)-1]
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
-
-	if !opDone {
-		t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
-	}
-
-	if scanID == "" {
-		t.Fatalf("scanID was empty after operation completed")
-	}
-
-	defer func() {
-		parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
-		deleteReq := &dataplexpb.DeleteDataScanRequest{
-			Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
-		}
-		op, err := client.DeleteDataScan(ctx, deleteReq)
-		if err != nil {
-			t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
-			return
-		}
-		op.Wait(ctx)
-		t.Logf("cleanup: successfully deleted scan template %s", scanID)
-	}()
-
-	// Step 3: Get Run Status
 	runStatusURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-run-status-tool/invoke"
-	runReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	runReqBytes, _ := json.Marshal(runReqBody)
-	runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_run_status: %v", err)
-	}
-	defer runResp.Body.Close()
 
-	if runResp.StatusCode != 200 {
-		body, _ := io.ReadAll(runResp.Body)
-		t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
-	}
-
-	var runResult map[string]any
-	json.NewDecoder(runResp.Body).Decode(&runResult)
-	runResultStr, _ := runResult["result"].(string)
-
-	var jobStatus map[string]any
-	if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
-		t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
-	}
-
-	// Step 4: Get Discovery Results
-	getDiscoveryURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-discovery-results-tool/invoke"
-	discoveryReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	discoveryReqBytes, _ := json.Marshal(discoveryReqBody)
-	discoveryResp, err := http.Post(getDiscoveryURL, "application/json", bytes.NewBuffer(discoveryReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_discovery_results: %v", err)
-	}
-	defer discoveryResp.Body.Close()
-
-	if discoveryResp.StatusCode != 200 {
-		body, _ := io.ReadAll(discoveryResp.Body)
-		t.Fatalf("get_discovery_results response status got %d, want 200. Body: %s", discoveryResp.StatusCode, string(body))
-	}
-
-	var discoveryResult map[string]any
-	json.NewDecoder(discoveryResp.Body).Decode(&discoveryResult)
-	discoveryResultStr, _ := discoveryResult["result"].(string)
-
-	var scanData map[string]any
-	if err := json.Unmarshal([]byte(discoveryResultStr), &scanData); err != nil {
-		t.Fatalf("get_discovery_results returned invalid JSON: %v. Raw: %s", err, discoveryResultStr)
-	}
-
-	if scanData["name"] != fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID) {
-		t.Fatalf("expected scan name %s, got: %s", scanID, scanData["name"])
-	}
-}
-
-func runDataplexDataQualityLifecycleIntegrationTest(t *testing.T, tableName string, datasetName string, client *dataplex.DataScanClient) {
-	ctx := context.Background()
-	tableResource := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetName, tableName)
-	specJSON := `{"rules": [{"column": "name", "dimension": "COMPLETENESS", "nonNullExpectation": {}}]}`
-
-	// Step 1: Check Data Quality
-	generateURL := "http://127.0.0.1:5000/api/tool/my-dataplex-check-data-quality-tool/invoke"
-	reqBody := map[string]any{
-		"resourcePath": tableResource,
-		"location":     "us-central1",
-		"specJSON":     specJSON,
-		"publish":      false,
-	}
-	reqBytes, _ := json.Marshal(reqBody)
-	resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke check_data_quality: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		t.Fatalf("check_data_quality response status got %d, want 200. Body: %s", resp.StatusCode, string(body))
-	}
-
-	var invokeResult map[string]any
-	json.NewDecoder(resp.Body).Decode(&invokeResult)
-	resultStr, ok := invokeResult["result"].(string)
-	if !ok || resultStr == "" {
-		t.Fatalf("expected string result from check_data_quality, got: %v", invokeResult)
-	}
-
-	operationName := resultStr
-	if !strings.Contains(operationName, "/operations/") {
-		t.Fatalf("expected operation name in result, got: %s", operationName)
-	}
-
-	// Step 2: Get Operation Status
-	getOpURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-operation-tool/invoke"
-	opReqBody := map[string]any{
-		"operationName": operationName,
-	}
-	opReqBytes, _ := json.Marshal(opReqBody)
-
-	var scanID string
-	var opDone bool
-	for i := 0; i < 6; i++ {
-		opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
-		if err != nil {
-			t.Fatalf("failed to invoke get_operation: %v", err)
-		}
-		if opResp.StatusCode != 200 {
-			body, _ := io.ReadAll(opResp.Body)
-			opResp.Body.Close()
-			t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
-		}
-		var opResult map[string]any
-		json.NewDecoder(opResp.Body).Decode(&opResult)
-		opResp.Body.Close()
-
-		opResultStr := opResult["result"].(string)
-		var innerOp map[string]any
-		json.Unmarshal([]byte(opResultStr), &innerOp)
-
-		if done, _ := innerOp["done"].(bool); done {
-			opDone = true
-			responseMap, ok := innerOp["response"].(map[string]any)
-			if !ok {
-				t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Step 1: Invoke Generate/Discover/Check Tool
+			generateURL := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.generateToolName)
+			reqBytes, _ := json.Marshal(tc.generateReqBody)
+			resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
+			if err != nil {
+				t.Fatalf("failed to invoke %s: %v", tc.generateToolName, err)
 			}
-			name, ok := responseMap["name"].(string)
-			if !ok {
-				t.Fatalf("DataScan response missing name: %v", responseMap)
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("%s response status got %d, want 200. Body: %s", tc.generateToolName, resp.StatusCode, string(body))
 			}
-			parts := strings.Split(name, "/")
-			scanID = parts[len(parts)-1]
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
 
-	if !opDone {
-		t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
-	}
+			var invokeResult map[string]any
+			json.NewDecoder(resp.Body).Decode(&invokeResult)
+			resultStr, ok := invokeResult["result"].(string)
+			if !ok || resultStr == "" {
+				t.Fatalf("expected string result from %s, got: %v", tc.generateToolName, invokeResult)
+			}
 
-	if scanID == "" {
-		t.Fatalf("scanID was empty after operation completed")
-	}
+			operationName := resultStr
+			if !strings.Contains(operationName, "/operations/") {
+				t.Fatalf("expected operation name in result, got: %s", operationName)
+			}
 
-	defer func() {
-		parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
-		deleteReq := &dataplexpb.DeleteDataScanRequest{
-			Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
-		}
-		op, err := client.DeleteDataScan(ctx, deleteReq)
-		if err != nil {
-			t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
-			return
-		}
-		op.Wait(ctx)
-		t.Logf("cleanup: successfully deleted scan template %s", scanID)
-	}()
+			// Step 2: Poll Operation Status
+			opReqBody := map[string]any{"operationName": operationName}
+			opReqBytes, _ := json.Marshal(opReqBody)
 
-	// Step 3: Get Run Status
-	runStatusURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-run-status-tool/invoke"
-	runReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	runReqBytes, _ := json.Marshal(runReqBody)
-	runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_run_status: %v", err)
-	}
-	defer runResp.Body.Close()
+			var scanID string
+			var opDone bool
+			for i := 0; i < 6; i++ {
+				opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
+				if err != nil {
+					t.Fatalf("failed to invoke get_operation: %v", err)
+				}
+				if opResp.StatusCode != http.StatusOK {
+					body, _ := io.ReadAll(opResp.Body)
+					opResp.Body.Close()
+					t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
+				}
+				var opResult map[string]any
+				json.NewDecoder(opResp.Body).Decode(&opResult)
+				opResp.Body.Close()
 
-	if runResp.StatusCode != 200 {
-		body, _ := io.ReadAll(runResp.Body)
-		t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
-	}
+				opResultStr, ok := opResult["result"].(string)
+				if !ok {
+					t.Fatalf("get_operation returned invalid result field: %v", opResult)
+				}
+				var innerOp map[string]any
+				json.Unmarshal([]byte(opResultStr), &innerOp)
 
-	var runResult map[string]any
-	json.NewDecoder(runResp.Body).Decode(&runResult)
-	runResultStr, _ := runResult["result"].(string)
+				if done, _ := innerOp["done"].(bool); done {
+					opDone = true
+					responseMap, ok := innerOp["response"].(map[string]any)
+					if !ok {
+						t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
+					}
+					name, ok := responseMap["name"].(string)
+					if !ok {
+						t.Fatalf("DataScan response missing name: %v", responseMap)
+					}
+					parts := strings.Split(name, "/")
+					scanID = parts[len(parts)-1]
+					break
+				}
+				time.Sleep(5 * time.Second)
+			}
 
-	var jobStatus map[string]any
-	if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
-		t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
-	}
+			if !opDone {
+				t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
+			}
+			if scanID == "" {
+				t.Fatalf("scanID was empty after operation completed")
+			}
 
-	// Step 4: Get Data Quality Results
-	getQualityURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-quality-results-tool/invoke"
-	qualityReqBody := map[string]any{
-		"scanId":   scanID,
-		"location": "us-central1",
-	}
-	qualityReqBytes, _ := json.Marshal(qualityReqBody)
-	qualityResp, err := http.Post(getQualityURL, "application/json", bytes.NewBuffer(qualityReqBytes))
-	if err != nil {
-		t.Fatalf("failed to invoke get_data_quality_results: %v", err)
-	}
-	defer qualityResp.Body.Close()
+			// Ensure DataScan is cleaned up from Dataplex
+			defer func() {
+				parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
+				deleteReq := &dataplexpb.DeleteDataScanRequest{
+					Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
+				}
+				op, err := client.DeleteDataScan(ctx, deleteReq)
+				if err != nil {
+					t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
+					return
+				}
+				op.Wait(ctx)
+				t.Logf("cleanup: successfully deleted scan template %s", scanID)
+			}()
 
-	if qualityResp.StatusCode != 200 {
-		body, _ := io.ReadAll(qualityResp.Body)
-		t.Fatalf("get_data_quality_results response status got %d, want 200. Body: %s", qualityResp.StatusCode, string(body))
-	}
+			// Step 3: Get Run Status
+			runReqBody := map[string]any{"scanId": scanID, "location": "us-central1"}
+			runReqBytes, _ := json.Marshal(runReqBody)
+			runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
+			if err != nil {
+				t.Fatalf("failed to invoke get_run_status: %v", err)
+			}
+			defer runResp.Body.Close()
 
-	var qualityResult map[string]any
-	json.NewDecoder(qualityResp.Body).Decode(&qualityResult)
-	qualityResultStr, _ := qualityResult["result"].(string)
+			if runResp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(runResp.Body)
+				t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
+			}
 
-	var scanData map[string]any
-	if err := json.Unmarshal([]byte(qualityResultStr), &scanData); err != nil {
-		t.Fatalf("get_data_quality_results returned invalid JSON: %v. Raw: %s", err, qualityResultStr)
-	}
+			var runResult map[string]any
+			json.NewDecoder(runResp.Body).Decode(&runResult)
+			runResultStr, _ := runResult["result"].(string)
 
-	if scanData["name"] != fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID) {
-		t.Fatalf("expected scan name %s, got: %s", scanID, scanData["name"])
+			var jobStatus map[string]any
+			if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
+				t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
+			}
+
+			// Step 4: Get Profile / Insights / Discovery / Quality Results
+			getResultURL := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.getResultToolName)
+			resultReqBody := map[string]any{"scanId": scanID, "location": "us-central1"}
+			resultReqBytes, _ := json.Marshal(resultReqBody)
+			resultResp, err := http.Post(getResultURL, "application/json", bytes.NewBuffer(resultReqBytes))
+			if err != nil {
+				t.Fatalf("failed to invoke %s: %v", tc.getResultToolName, err)
+			}
+			defer resultResp.Body.Close()
+
+			if resultResp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resultResp.Body)
+				t.Fatalf("%s response status got %d, want 200. Body: %s", tc.getResultToolName, resultResp.StatusCode, string(body))
+			}
+
+			var innerResult map[string]any
+			json.NewDecoder(resultResp.Body).Decode(&innerResult)
+			innerResultStr, _ := innerResult["result"].(string)
+
+			var scanData map[string]any
+			if err := json.Unmarshal([]byte(innerResultStr), &scanData); err != nil {
+				t.Fatalf("%s returned invalid JSON: %v. Raw: %s", tc.getResultToolName, err, innerResultStr)
+			}
+
+			expectedScanName := fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID)
+			if scanData["name"] != expectedScanName {
+				t.Fatalf("expected scan name %s, got: %s", expectedScanName, scanData["name"])
+			}
+		})
 	}
 }
 

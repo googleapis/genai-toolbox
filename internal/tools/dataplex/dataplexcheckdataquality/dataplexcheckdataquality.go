@@ -18,12 +18,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -95,6 +95,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
+var _ tools.Tool = Tool{}
+
 type Tool struct {
 	Config
 	Parameters parameters.Parameters
@@ -143,31 +145,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("specJSON parameter is required", nil)
 	}
 
-	projectId := source.ProjectID()
-
-	// Smart path normalization for both Cloud Storage and BigQuery
-	if strings.HasPrefix(resourcePath, "gs://") {
-		bucketName := strings.TrimPrefix(resourcePath, "gs://")
-		bucketName = strings.Split(bucketName, "/")[0]
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, bucketName)
-	} else if strings.HasPrefix(resourcePath, "//storage.googleapis.com/buckets/") {
-		bucketName := strings.TrimPrefix(resourcePath, "//storage.googleapis.com/buckets/")
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, bucketName)
-	} else if strings.HasPrefix(resourcePath, "//storage.googleapis.com/projects/") {
-		// Keep GCS as is
-	} else if !strings.HasPrefix(resourcePath, "//bigquery.googleapis.com/") {
-		// Assume BigQuery table path
-		if strings.HasPrefix(resourcePath, "projects/") {
-			resourcePath = "//bigquery.googleapis.com/" + resourcePath
-		} else {
-			parts := strings.Split(resourcePath, ".")
-			if len(parts) == 3 {
-				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", parts[0], parts[1], parts[2])
-			} else if len(parts) == 2 {
-				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", projectId, parts[0], parts[1])
-			}
-		}
-	}
+	resourcePath = dataplexcommon.NormalizeResourcePath(resourcePath, source.ProjectID())
 
 	opName, err := source.GenerateDataQuality(ctx, location, resourcePath, specJSON, publish)
 	if err != nil {

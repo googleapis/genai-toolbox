@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -93,6 +94,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
+var _ tools.Tool = Tool{}
+
 type Tool struct {
 	Config
 	Parameters parameters.Parameters
@@ -136,6 +139,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if location == "" {
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
+
+	resourcePath = dataplexcommon.NormalizeResourcePath(resourcePath, source.ProjectID())
 
 	opName, err := source.GenerateDataInsights(ctx, location, resourcePath, publish)
 	if err != nil {

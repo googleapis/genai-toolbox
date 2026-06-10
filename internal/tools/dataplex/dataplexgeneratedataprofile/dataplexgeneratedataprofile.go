@@ -18,12 +18,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -94,6 +94,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
+var _ tools.Tool = Tool{}
+
 type Tool struct {
 	Config
 	Parameters parameters.Parameters
@@ -138,21 +140,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
 
-	projectId := source.ProjectID()
-
-	// Smart BigQuery path normalization to prevent ResourceName errors in Dataplex
-	if !strings.HasPrefix(resourcePath, "//bigquery.googleapis.com/") {
-		if strings.HasPrefix(resourcePath, "projects/") {
-			resourcePath = "//bigquery.googleapis.com/" + resourcePath
-		} else {
-			parts := strings.Split(resourcePath, ".")
-			if len(parts) == 3 {
-				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", parts[0], parts[1], parts[2])
-			} else if len(parts) == 2 {
-				resourcePath = fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", projectId, parts[0], parts[1])
-			}
-		}
-	}
+	resourcePath = dataplexcommon.NormalizeResourcePath(resourcePath, source.ProjectID())
 
 	opName, err := source.GenerateDataProfile(ctx, location, resourcePath, publish)
 	if err != nil {

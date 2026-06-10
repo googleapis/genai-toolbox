@@ -91,6 +91,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return t, nil
 }
 
+var _ tools.Tool = Tool{}
+
+var _ tools.Tool = Tool{}
+
 type Tool struct {
 	Config
 	Parameters parameters.Parameters
