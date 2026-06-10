@@ -75,7 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	operationName := parameters.NewStringParameter("operationName", "Required. The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{project}/locations/{location}/operations/{operation_id}.")
+	operationName := parameters.NewStringParameter("operationName", "The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{project}/locations/{location}/operations/{operation_id}.")
 
 	params := parameters.Parameters{operationName}
 

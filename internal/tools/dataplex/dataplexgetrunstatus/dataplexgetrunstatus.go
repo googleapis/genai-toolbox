@@ -78,11 +78,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	scanID := parameters.NewStringParameter("scanId", "Required. The unique ID of the Dataplex DataScan (e.g. 'nq-doc-12345...').")
-	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
-	jobId := parameters.NewStringParameterWithRequired("jobId", "Optional. The specific unique ID of the background job run (DataScanJob) to track. If not provided, tracks the latest execution run.", false)
+	scanID := parameters.NewStringParameter("scanId", "The unique ID of the Dataplex DataScan (e.g. 'nq-doc-12345...').")
+	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
+	jobID := parameters.NewStringParameterWithRequired("jobId", "Optional. The specific unique ID of the background job run (DataScanJob) to track. If not provided, tracks the latest execution run.", false)
 
-	params := parameters.Parameters{scanID, location, jobId}
+	params := parameters.Parameters{scanID, location, jobID}
 
 	t := Tool{
 		Config:     cfg,

@@ -76,9 +76,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	resourcePath := parameters.NewStringParameter("resourcePath", "Required. The BigQuery table to analyze. Accepts raw table name (e.g. 'my_table'), dataset.table (e.g. 'my_dataset.my_table'), or fully-qualified resource path (e.g. '//bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}').")
-	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource.")
-	publish := parameters.NewBooleanParameter("publish", "Required. Whether to publish the generated profile results to the Dataplex Universal Catalog.")
+	resourcePath := parameters.NewStringParameter("resourcePath", "The BigQuery table to analyze. Accepts raw table name (e.g. 'my_table'), dataset.table (e.g. 'my_dataset.my_table'), or fully-qualified resource path (e.g. '//bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}').")
+	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource.")
+	publish := parameters.NewBooleanParameter("publish", "Whether to publish the generated profile results to the Dataplex Universal Catalog.")
 
 	params := parameters.Parameters{resourcePath, location, publish}
 

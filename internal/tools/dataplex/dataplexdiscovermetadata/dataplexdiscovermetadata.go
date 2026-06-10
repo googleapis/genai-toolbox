@@ -76,8 +76,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
-	resourcePath := parameters.NewStringParameter("resourcePath", "Required. The Cloud Storage bucket to discover. Accepts raw bucket name (e.g. 'my-bucket'), standard gs:// URI (e.g. 'gs://my-bucket'), or fully-qualified resource path (e.g. '//storage.googleapis.com/projects/{project}/buckets/{bucket}').")
-	location := parameters.NewStringParameter("location", "Required. The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the GCS bucket.")
+	resourcePath := parameters.NewStringParameter("resourcePath", "The Cloud Storage bucket to discover. Accepts raw bucket name (e.g. 'my-bucket'), standard gs:// URI (e.g. 'gs://my-bucket'), or fully-qualified resource path (e.g. '//storage.googleapis.com/projects/{project}/buckets/{bucket}').")
+	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the GCS bucket.")
 
 	params := parameters.Parameters{resourcePath, location}
 
@@ -136,19 +136,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("location parameter is required", nil)
 	}
 
-	projectId := source.ProjectID()
+	projectID := source.ProjectID()
 
 	// Smart GCS path normalization to prevent ResourceName errors in Dataplex
 	if strings.HasPrefix(resourcePath, "gs://") {
 		bucketName := strings.TrimPrefix(resourcePath, "gs://")
 		bucketName = strings.Split(bucketName, "/")[0]
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, bucketName)
+		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectID, bucketName)
 	} else if strings.HasPrefix(resourcePath, "//storage.googleapis.com/buckets/") {
 		bucketName := strings.TrimPrefix(resourcePath, "//storage.googleapis.com/buckets/")
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, bucketName)
+		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectID, bucketName)
 	} else if !strings.HasPrefix(resourcePath, "//storage.googleapis.com/projects/") {
 		// Assume it is a raw bucket name
-		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectId, resourcePath)
+		resourcePath = fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", projectID, resourcePath)
 	}
 
 	opName, err := source.GenerateDataDiscovery(ctx, location, resourcePath)
