@@ -92,7 +92,8 @@ type ClientCapabilities struct {
 	// Present if the client supports listing roots.
 	Roots *ListChanged `json:"roots,omitempty"`
 	// Present if the client supports sampling from an LLM.
-	Sampling struct{} `json:"sampling,omitempty"`
+	Sampling     struct{}       `json:"sampling,omitempty"`
+	SecureParams map[string]any `json:"toolbox/secure-params,omitempty"`
 }
 
 // ServerCapabilities represents capabilities that a server may support. Known
@@ -168,7 +169,8 @@ type Tool struct {
 	// A human-readable description of the tool.
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
-	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+	ToolInputSchema   InputSchema  `json:"inputSchema,omitempty"`
+	SecureInputSchema *InputSchema `json:"secureInputSchema,omitempty"`
 	// Extension of the schema: This was not in the original schema for this version.
 	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 	// Extension of the schema: This was not in the original schema for this version.
@@ -185,8 +187,9 @@ type InputSchema struct {
 type CallToolRequest struct {
 	jsonrpc.Request
 	Params struct {
-		Name      string         `json:"name"`
-		Arguments map[string]any `json:"arguments,omitempty"`
+		Name            string         `json:"name"`
+		Arguments       map[string]any `json:"arguments,omitempty"`
+		SecureArguments map[string]any `json:"secureArguments,omitempty"`
 	} `json:"params,omitempty"`
 }
 

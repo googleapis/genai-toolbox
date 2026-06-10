@@ -221,7 +221,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(dummyID, resourceMgr, tt.toolset, body)
+			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.toolset, body)
 
 			if tt.wantErr {
 				if err == nil {
@@ -281,8 +281,9 @@ func TestToolsCallHandler(t *testing.T) {
 					Method: "tools/call",
 				},
 				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
+					Name            string         `json:"name"`
+					Arguments       map[string]any `json:"arguments,omitempty"`
+					SecureArguments map[string]any `json:"secureArguments,omitempty"`
 				}{
 					Name: "no_params",
 				},
@@ -298,8 +299,9 @@ func TestToolsCallHandler(t *testing.T) {
 					Method: "tools/call",
 				},
 				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
+					Name            string         `json:"name"`
+					Arguments       map[string]any `json:"arguments,omitempty"`
+					SecureArguments map[string]any `json:"secureArguments,omitempty"`
 				}{
 					Name: "unknown_tool",
 				},
@@ -315,8 +317,9 @@ func TestToolsCallHandler(t *testing.T) {
 					Method: "tools/call",
 				},
 				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
+					Name            string         `json:"name"`
+					Arguments       map[string]any `json:"arguments,omitempty"`
+					SecureArguments map[string]any `json:"secureArguments,omitempty"`
 				}{
 					Name: "require_client_auth_tool",
 				},
@@ -332,8 +335,9 @@ func TestToolsCallHandler(t *testing.T) {
 					Method: "tools/call",
 				},
 				Params: struct {
-					Name      string         `json:"name"`
-					Arguments map[string]any `json:"arguments,omitempty"`
+					Name            string         `json:"name"`
+					Arguments       map[string]any `json:"arguments,omitempty"`
+					SecureArguments map[string]any `json:"secureArguments,omitempty"`
 				}{
 					Name: "no_params",
 				},

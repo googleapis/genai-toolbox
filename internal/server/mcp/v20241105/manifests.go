@@ -23,8 +23,20 @@ import (
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations) Tool {
-	inputSchema, authParams := generateParamManifest(params)
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, supportsSecureParams bool) (Tool, bool) {
+	stdSchema, secureSchema, authParams := generateParamManifests(params, supportsSecureParams)
+
+	// If the tool has secure parameters, and the client does NOT support secure parameters, omit this tool.
+	hasSecureParams := false
+	for _, p := range params {
+		if p.GetSecure() {
+			hasSecureParams = true
+			break
+		}
+	}
+	if hasSecureParams && !supportsSecureParams {
+		return Tool{}, false
+	}
 
 	var toolAnnotations *ToolAnnotations
 	if annotations != nil {
@@ -38,9 +50,13 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 	mcpManifest := Tool{
 		Name:            name,
 		Description:     desc,
-		ToolInputSchema: inputSchema,
+		ToolInputSchema: stdSchema,
 		Annotations:     toolAnnotations,
 	}
+	if secureSchema != nil {
+		mcpManifest.SecureInputSchema = secureSchema
+	}
+
 	metadata := make(map[string]any)
 	if len(authInvoke) > 0 {
 		metadata["toolbox/authInvoke"] = authInvoke
@@ -51,13 +67,17 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 	if len(metadata) > 0 {
 		mcpManifest.Metadata = metadata
 	}
-	return mcpManifest
+	return mcpManifest, true
 }
 
-// generateParamManifest generates the input schema and get authParam
-func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]string) {
-	properties := make(map[string]parameters.ParameterMcpManifest)
-	required := make([]string, 0)
+// generateParamManifests splits parameters into standard and secure manifests.
+func generateParamManifests(ps parameters.Parameters, supportsSecureParams bool) (InputSchema, *InputSchema, map[string][]string) {
+	stdProps := make(map[string]parameters.ParameterMcpManifest)
+	stdReq := make([]string, 0)
+
+	secProps := make(map[string]parameters.ParameterMcpManifest)
+	secReq := make([]string, 0)
+
 	authParam := make(map[string][]string)
 
 	for _, p := range ps {
@@ -72,31 +92,54 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 		if defaultV != nil {
 			paramManifest.Default = defaultV
 		}
-		properties[name] = paramManifest
-		// parameters that doesn't have a default value are added to the required field
-		if parameters.CheckParamRequired(p.GetRequired(), defaultV) {
-			required = append(required, name)
-		}
+
 		if len(authParamList) > 0 {
 			authParam[name] = authParamList
 		}
+
+		if p.GetSecure() {
+			if supportsSecureParams {
+				secProps[name] = paramManifest
+				if parameters.CheckParamRequired(p.GetRequired(), defaultV) {
+					secReq = append(secReq, name)
+				}
+			}
+		} else {
+			stdProps[name] = paramManifest
+			if parameters.CheckParamRequired(p.GetRequired(), defaultV) {
+				stdReq = append(stdReq, name)
+			}
+		}
 	}
+
+	var secureSchema *InputSchema
+	if supportsSecureParams && len(secProps) > 0 {
+		secureSchema = &InputSchema{
+			Type:       "object",
+			Properties: secProps,
+			Required:   secReq,
+		}
+	}
+
 	return InputSchema{
 		Type:       "object",
-		Properties: properties,
-		Required:   required,
-	}, authParam
+		Properties: stdProps,
+		Required:   stdReq,
+	}, secureSchema, authParam
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
+func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool, supportsSecureParams bool) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(t.ToolNames))
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations())
+		toolManifest, ok := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations(), supportsSecureParams)
+		if !ok {
+			continue
+		}
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil

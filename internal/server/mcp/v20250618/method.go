@@ -44,7 +44,7 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
-		return toolsListHandler(id, resourceMgr, toolset, body)
+		return toolsListHandler(ctx, id, resourceMgr, toolset, body)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
@@ -70,6 +70,12 @@ func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp initialize request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	if state, ok := mcputil.SessionStateFromContext(ctx); ok {
+		if req.Params.Capabilities.SecureParams != nil || (req.Params.Capabilities.Experimental != nil && req.Params.Capabilities.Experimental["toolbox/secure-params"] != nil) {
+			state.SupportsSecureParams = true
+		}
 	}
 
 	toolsListChanged := false
@@ -109,15 +115,20 @@ func pingHandler(id jsonrpc.RequestId) (any, error) {
 	}, nil
 }
 
-func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
+	supportsSecureParams := false
+	if state, ok := mcputil.SessionStateFromContext(ctx); ok {
+		supportsSecureParams = state.SupportsSecureParams
+	}
+
 	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap, supportsSecureParams)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err

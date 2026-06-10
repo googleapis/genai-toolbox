@@ -49,11 +49,12 @@ import (
 )
 
 type sseSession struct {
-	writer     http.ResponseWriter
-	flusher    http.Flusher
-	done       chan struct{}
-	eventQueue chan string
-	lastActive time.Time
+	writer       http.ResponseWriter
+	flusher      http.Flusher
+	done         chan struct{}
+	eventQueue   chan string
+	lastActive   time.Time
+	sessionState *mcputil.SessionState
 }
 
 // sseManager manages and control access to sse sessions
@@ -124,10 +125,11 @@ func (m *sseManager) cleanupRoutine(ctx context.Context) {
 }
 
 type stdioSession struct {
-	protocol string
-	server   *Server
-	reader   *bufio.Reader
-	writer   io.Writer
+	protocol     string
+	server       *Server
+	reader       *bufio.Reader
+	writer       io.Writer
+	sessionState *mcputil.SessionState
 }
 
 // traceContextCarrier implements propagation.TextMapCarrier for extracting trace context from _meta
@@ -194,9 +196,10 @@ func extractMeta(ctx context.Context, body []byte) context.Context {
 
 func NewStdioSession(s *Server, stdin io.Reader, stdout io.Writer) *stdioSession {
 	stdioSession := &stdioSession{
-		server: s,
-		reader: bufio.NewReader(stdin),
-		writer: stdout,
+		server:       s,
+		reader:       bufio.NewReader(stdin),
+		writer:       stdout,
+		sessionState: &mcputil.SessionState{},
 	}
 	return stdioSession
 }
@@ -258,6 +261,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 		if err := func() error {
 			// This ensures the transport span becomes a child of the client span
 			msgCtx := extractMeta(ctx, []byte(line))
+			msgCtx = mcputil.WithSessionState(msgCtx, s.sessionState)
 
 			// Create span for STDIO transport
 			msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
@@ -431,10 +435,11 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 	}
 	session := &sseSession{
-		writer:     w,
-		flusher:    flusher,
-		done:       make(chan struct{}),
-		eventQueue: make(chan string, 100),
+		writer:       w,
+		flusher:      flusher,
+		done:         make(chan struct{}),
+		eventQueue:   make(chan string, 100),
+		sessionState: &mcputil.SessionState{},
 	}
 	s.sseManager.add(sessionId, session)
 	defer s.sseManager.remove(sessionId)
@@ -529,13 +534,32 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
+		ctx = mcputil.WithSessionState(ctx, session.sessionState)
+		r = r.WithContext(ctx)
 	}
 
 	// check if client have `Mcp-Session-Id` header
 	// `Mcp-Session-Id` is only set for v2025-03-26 in Toolbox
 	headerSessionId := r.Header.Get("Mcp-Session-Id")
+	var httpSessionState *mcputil.SessionState
 	if headerSessionId != "" {
 		protocolVersion = v20250326.PROTOCOL_VERSION
+		s.httpSessionsMu.Lock()
+		state, exists := s.httpSessions[headerSessionId]
+		if exists {
+			httpSessionState = state
+		}
+		s.httpSessionsMu.Unlock()
+	}
+
+	if httpSessionState != nil {
+		ctx = mcputil.WithSessionState(ctx, httpSessionState)
+		r = r.WithContext(ctx)
+	} else if headerSessionId == "" && paramSessionId == "" {
+		// New HTTP session (e.g. initialize request)
+		httpSessionState = &mcputil.SessionState{}
+		ctx = mcputil.WithSessionState(ctx, httpSessionState)
+		r = r.WithContext(ctx)
 	}
 
 	// check if client have `MCP-Protocol-Version` header
@@ -581,6 +605,11 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if v == v20250326.PROTOCOL_VERSION {
 		sessionId = uuid.New().String()
 		w.Header().Set("Mcp-Session-Id", sessionId)
+		if httpSessionState != nil {
+			s.httpSessionsMu.Lock()
+			s.httpSessions[sessionId] = httpSessionState
+			s.httpSessionsMu.Unlock()
+		}
 	}
 
 	if session != nil {
