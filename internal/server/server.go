@@ -264,12 +264,12 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 ) {
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
