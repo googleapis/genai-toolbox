@@ -160,6 +160,40 @@ parameters:
     valueType: integer # This enforces the value type for all entries.
 ```
 
+
+### Secure Parameters
+
+Secure parameters are designed to handle sensitive information (such as API keys, passwords, and credentials) that should not be transmitted in plain text through standard client-server arguments or logs.
+
+Secure parameters require negotiation of the draft protocol version (`DRAFT-2026-v1`) and the client capability `toolbox/secure-params` to be set to `true`. 
+
+To configure a parameter as secure, set the `secure` field to `true` in your tool's parameter definition:
+
+```yaml
+kind: tool
+name: search_secure_data
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM sessions WHERE token = $1
+parameters:
+  - name: sessionToken
+    type: string
+    description: Sensitive session token
+    secure: true
+```
+
+#### Protocol Constraints
+
+When a parameter is marked as `secure: true`, the following strict rules are enforced at the transport level:
+
+1. **Capability Requirement**: If a tool has one or more secure parameters, the client **must** negotiate the `"DRAFT-2026-v1"` protocol version during initialization and declare support for `toolbox/secure-params` in its capabilities. Otherwise, invoking the tool will return a `jsonrpc.INVALID_PARAMS` error.
+2. **Mutual Exclusion (Configuration)**: A parameter **cannot** have both `secure: true` and `authServices` specified. An error will be thrown during configuration loading.
+3. **Mutual Exclusion (Arguments)**:
+   - Parameters marked as `secure` **must** be passed in the request's `secureArguments` map, and **must not** be passed in the standard `arguments` map.
+   - Parameters **not** marked as `secure` **must** be passed in the standard `arguments` map, and **must not** be passed in the `secureArguments` map.
+   - Any violation of these rules will result in a `jsonrpc.INVALID_PARAMS` error and execution will be blocked.
+
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
@@ -193,38 +227,6 @@ parameters:
 | name      |  string  |     true     | Name of the [authServices](../authentication/_index.md) used to verify the OIDC auth token. |
 | field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
 
-### Secure Parameters
-
-Secure parameters are designed to handle sensitive information (such as API keys, passwords, and credentials) that should not be transmitted in plain text through standard client-server arguments or logs.
-
-Secure parameters require negotiation of the draft protocol version (`DRAFT-2026-v1`) and the client capability `toolbox/secure-params` to be set to `true`. 
-
-To configure a parameter as secure, set the `secure` field to `true` in your tool's parameter definition:
-
-```yaml
-kind: tool
-name: search_secure_data
-type: postgres-sql
-source: my-pg-instance
-statement: |
-  SELECT * FROM sessions WHERE token = $1
-parameters:
-  - name: sessionToken
-    type: string
-    description: Sensitive session token for authorization
-    secure: true
-```
-
-#### Protocol Constraints
-
-When a parameter is marked as `secure: true`, the following strict rules are enforced at the transport level:
-
-1. **Capability Requirement**: If a tool has one or more secure parameters, the client **must** negotiate the `"DRAFT-2026-v1"` protocol version during initialization and declare support for `toolbox/secure-params` in its capabilities. Otherwise, invoking the tool will return a `jsonrpc.INVALID_PARAMS` error.
-2. **Mutual Exclusion (Configuration)**: A parameter **cannot** have both `secure: true` and `authServices` specified. An error will be thrown during configuration loading.
-3. **Mutual Exclusion (Arguments)**:
-   - Parameters marked as `secure` **must** be passed in the request's `secureArguments` map, and **must not** be passed in the standard `arguments` map.
-   - Parameters **not** marked as `secure` **must** be passed in the standard `arguments` map, and **must not** be passed in the `secureArguments` map.
-   - Any violation of these rules will result in a `jsonrpc.INVALID_PARAMS` error and execution will be blocked.
 
 ### Template Parameters
 
