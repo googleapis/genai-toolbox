@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdataqualityresults"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlDataplexGetDataQualityResults(t *testing.T) {
 		            `,
 			want: server.ToolConfigs{
 				"example_tool": dataplexgetdataqualityresults.Config{
-					Name:         "example_tool",
-					Type:         "dataplex-get-data-quality-results",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "dataplex-get-data-quality-results",
+					Source: "my-instance",
 				},
 			},
 		},

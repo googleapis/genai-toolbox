@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetrunstatus"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlDataplexGetRunStatus(t *testing.T) {
 		            `,
 			want: server.ToolConfigs{
 				"example_tool": dataplexgetrunstatus.Config{
-					Name:         "example_tool",
-					Type:         "dataplex-get-run-status",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "dataplex-get-run-status",
+					Source: "my-instance",
 				},
 			},
 		},
