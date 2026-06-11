@@ -15,21 +15,29 @@ database.
 `mysql-get-query-plan` takes one input parameter `sql_statement` and gets the execution plan for the SQL
 statement against the `source`.
 
-## Input Validation
+## Security
 
-To prevent query execution and statement injection through `EXPLAIN`, the
-`sql_statement` is validated before it is run:
+The tool runs the supplied statement as `EXPLAIN FORMAT=JSON <sql_statement>`.
+A plain `EXPLAIN` (without `ANALYZE`) only computes the query plan; it never
+executes the wrapped statement, so `SELECT`, `INSERT`, `UPDATE`, and `DELETE`
+inputs all return a plan without side effects.
 
-- It must be a **single** statement. Multiple statements separated by a
-  top-level `;` are rejected. A single trailing `;`, and `;` characters inside
-  string literals or comments, are allowed.
-- It must begin with one of the statement types that `EXPLAIN FORMAT=JSON`
-  supports: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `REPLACE`, `TABLE`, `WITH`,
-  or `VALUES`. Leading parentheses (e.g. parenthesized `UNION`) and leading
-  comments are permitted.
-- The `ANALYZE` keyword is rejected because `EXPLAIN ANALYZE` executes the
-  statement instead of only planning it. Other forms such as `FOR CONNECTION`,
-  DDL, and `CALL` are rejected as they are not supported with `FORMAT=JSON`.
+Two execution vectors are blocked structurally rather than by parsing the
+input:
+
+- **`EXPLAIN ANALYZE` (which does execute the statement) is unreachable.** The
+  tool fixes the `FORMAT=JSON` prefix, and MySQL's grammar requires `ANALYZE`
+  to appear *before* `FORMAT=`. A statement beginning with `ANALYZE` therefore
+  lands after `FORMAT=JSON` and is rejected by the server as a syntax error.
+- **Multiple statements are not run.** The MySQL driver does not enable
+  multi-statement execution by default, so input such as
+  `SELECT 1; DROP TABLE t` is rejected by the server rather than executed.
+
+As defense in depth, configure the `source` with a **least-privilege database
+user** scoped to only the objects the agent needs to plan against. This bounds
+what any statement — including those that `EXPLAIN` does plan — can reach, and
+is the recommended control for this tool. Avoid enabling the driver's
+multi-statement option on the source.
 
 ## Compatible Sources
 

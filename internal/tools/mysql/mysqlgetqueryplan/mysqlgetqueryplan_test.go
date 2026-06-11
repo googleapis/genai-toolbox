@@ -23,45 +23,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlgetqueryplan"
 )
 
-func TestValidateSQLStatement(t *testing.T) {
-	tcs := []struct {
-		desc    string
-		input   string
-		wantErr bool
-	}{
-		{desc: "select ok", input: "SELECT 1", wantErr: false},
-		{desc: "select with where ok", input: "SELECT id FROM users WHERE id = 1", wantErr: false},
-		{desc: "update ok", input: "UPDATE users SET x=1 WHERE id=2", wantErr: false},
-		{desc: "insert ok", input: "INSERT INTO t VALUES (1)", wantErr: false},
-		{desc: "delete ok", input: "DELETE FROM t WHERE id=1", wantErr: false},
-		{desc: "with cte ok", input: "WITH cte AS (SELECT 1) SELECT * FROM cte", wantErr: false},
-		{desc: "parenthesized union ok", input: "(SELECT 1) UNION (SELECT 2)", wantErr: false},
-		{desc: "leading block comment ok", input: "/* hint */ SELECT 1", wantErr: false},
-		{desc: "leading line comment ok", input: "-- note\nSELECT 1", wantErr: false},
-		{desc: "trailing semicolon ok", input: "SELECT 1;", wantErr: false},
-		{desc: "trailing semicolon with comment ok", input: "SELECT 1; -- done", wantErr: false},
-		{desc: "semicolon in string literal ok", input: "SELECT 'a;b' FROM t", wantErr: false},
-		{desc: "ANALYZE rejected", input: "ANALYZE SELECT * FROM mysql.user", wantErr: true},
-		{desc: "analyze lowercase rejected", input: "analyze select 1", wantErr: true},
-		{desc: "parenthesized analyze rejected", input: "(ANALYZE SELECT 1)", wantErr: true},
-		{desc: "multi statement rejected", input: "SELECT 1; DROP TABLE users", wantErr: true},
-		{desc: "multi statement after string rejected", input: "SELECT 'x'; DROP TABLE t", wantErr: true},
-		{desc: "FOR rejected", input: "FOR CONNECTION 1", wantErr: true},
-		{desc: "DROP rejected", input: "DROP TABLE users", wantErr: true},
-		{desc: "CREATE rejected", input: "CREATE TABLE t (id INT)", wantErr: true},
-		{desc: "CALL rejected", input: "CALL stored_proc()", wantErr: true},
-		{desc: "empty rejected", input: "   ", wantErr: true},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			err := mysqlgetqueryplan.ValidateSQLStatement(tc.input)
-			if (err != nil) != tc.wantErr {
-				t.Errorf("ValidateSQLStatement(%q) error = %v, wantErr %v", tc.input, err, tc.wantErr)
-			}
-		})
-	}
-}
-
 func TestParseFromYamlGetQueryPlan(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
