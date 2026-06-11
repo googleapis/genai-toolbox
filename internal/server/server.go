@@ -172,87 +172,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
-	// initialize and validate the tools from configs
-	toolsMap := make(map[string]tools.Tool)
-	for name, tc := range cfg.ToolConfigs {
-		t, err := func() (tools.Tool, error) {
-			_, span := instrumentation.Tracer.Start(
-				ctx,
-				"toolbox/server/tool/init",
-				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
-				trace.WithAttributes(attribute.String("tool_name", name)),
-			)
-			defer span.End()
-			t, err := tc.Initialize()
-			if err != nil {
-				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
-			}
-			return t, nil
-		}()
-		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
-		}
-		toolsMap[name] = t
+	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
-	toolNames := make([]string, 0, len(toolsMap))
-	for name := range toolsMap {
-		toolNames = append(toolNames, name)
-	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 
-	// create a default toolset that contains all tools
-	allToolNames := make([]string, 0, len(toolsMap))
-	for name := range toolsMap {
-		allToolNames = append(allToolNames, name)
+	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
-	if cfg.ToolsetConfigs == nil {
-		cfg.ToolsetConfigs = make(ToolsetConfigs)
-	}
-	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
-
-	// initialize and validate the toolsets from configs
-	toolsetsMap := make(map[string]tools.Toolset)
-	for name, tc := range cfg.ToolsetConfigs {
-		if cfg.IgnoreUnknownTools {
-			filteredToolNames := make([]string, 0, len(tc.ToolNames))
-			for _, tn := range tc.ToolNames {
-				if _, ok := toolsMap[tn]; ok {
-					filteredToolNames = append(filteredToolNames, tn)
-				} else {
-					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in toolset %q", tn, name))
-				}
-			}
-			tc.ToolNames = filteredToolNames
-			cfg.ToolsetConfigs[name] = tc
-		}
-
-		t, err := func() (tools.Toolset, error) {
-			_, span := instrumentation.Tracer.Start(
-				ctx,
-				"toolbox/server/toolset/init",
-				trace.WithAttributes(attribute.String("toolset.name", name)),
-			)
-			defer span.End()
-			t, err := tc.Initialize(cfg.Version, toolsMap)
-			if err != nil {
-				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
-			}
-			return t, err
-		}()
-		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
-		}
-		toolsetsMap[name] = t
-	}
-	toolsetNames := make([]string, 0, len(toolsetsMap))
-	for name := range toolsetsMap {
-		if name == "" {
-			toolsetNames = append(toolsetNames, "default")
-		} else {
-			toolsetNames = append(toolsetNames, name)
-		}
-	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
 
 	// initialize and validate the prompts from configs
 	promptsMap := make(map[string]prompts.Prompt)
@@ -344,7 +272,21 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		panic(err)
 	}
 
-	// initialize and validate the tools from configs
+	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return toolsMap, toolsetsMap, nil
+}
+
+// initializeTools initializes and validates the tools from the config.
+func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
@@ -362,7 +304,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, nil
 		}()
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		toolsMap[name] = t
 	}
@@ -371,7 +313,12 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		toolNames = append(toolNames, name)
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
+	return toolsMap, nil
+}
 
+// initializeToolsets seeds a default toolset containing all tools, then
+// initializes and validates the toolsets from the config.
+func initializeToolsets(ctx context.Context, cfg ServerConfig, toolsMap map[string]tools.Tool, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Toolset, error) {
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
 	for name := range toolsMap {
@@ -382,7 +329,6 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
 
-	// initialize and validate the toolsets from configs
 	toolsetsMap := make(map[string]tools.Toolset)
 	for name, tc := range cfg.ToolsetConfigs {
 		if cfg.IgnoreUnknownTools {
@@ -412,12 +358,21 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, err
 		}()
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		toolsetsMap[name] = t
 	}
+	toolsetNames := make([]string, 0, len(toolsetsMap))
+	for name := range toolsetsMap {
+		if name == "" {
+			toolsetNames = append(toolsetNames, "default")
+		} else {
+			toolsetNames = append(toolsetNames, name)
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
 
-	return toolsMap, toolsetsMap, nil
+	return toolsetsMap, nil
 }
 
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
