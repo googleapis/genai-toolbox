@@ -31,6 +31,10 @@ if _bdist_wheel is not None:
     class bdist_wheel(_bdist_wheel):
         def finalize_options(self):
             super().finalize_options()
+            # Tell bdist_wheel this package contains a platform-specific binary
+            # (not just Python), so the wheel gets a real platform tag instead
+            # of the default "any". Required for our get_tag override to take
+            # effect.
             self.root_is_pure = False
 
         def get_tag(self):
