@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"time"
 
@@ -313,55 +314,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	toolParams, err := tool.GetParameters(src)
+	toolArguments, toolParams, err := validateAndMergeSecureParams(tool, src, req, body)
 	if err != nil {
-		err = fmt.Errorf("error getting parameters for tool: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-
-	// Validate capability and parameter routing
-	supportsSecureParams := parseSupportsSecureParams(body)
-
-	var hasSecureParams bool
-	secureParamMap := make(map[string]bool)
-	for _, p := range toolParams {
-		if p.GetSecure() {
-			hasSecureParams = true
-			secureParamMap[p.GetName()] = true
-		}
-	}
-
-	if hasSecureParams && !supportsSecureParams {
-		err = fmt.Errorf("tool %q requires secure-params extension which is not supported by the client", req.Params.Name)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
-
-	// Validate that secure parameters are only passed in secureArguments
-	for argName := range req.Params.Arguments {
-		if secureParamMap[argName] {
-			err = fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName)
-			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
-		}
-	}
-
-	// Validate that non-secure parameters are not passed in secureArguments
-	for argName := range req.Params.SecureArguments {
-		if !secureParamMap[argName] {
-			err = fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
-			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
-		}
-	}
-
-	// Merge standard arguments and secure arguments on the server side
-	mergedArguments := make(map[string]any)
-	for k, v := range req.Params.Arguments {
-		mergedArguments[k] = v
-	}
-	for k, v := range req.Params.SecureArguments {
-		mergedArguments[k] = v
-	}
-
-	toolArgument := mergedArguments
 	// Populate gen_ai attributes for operation duration metric
 	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
 		genAIAttrs.OperationName = "execute_tool"
@@ -396,10 +352,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 		}
 	}
 
-	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
 	var data map[string]any
-	if toolArgument != nil {
-		aMarshal, err := json.Marshal(toolArgument)
+	if toolArguments != nil {
+		aMarshal, err := json.Marshal(toolArguments)
 		if err != nil {
 			err = fmt.Errorf("unable to marshal tools argument: %w", err)
 			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -859,4 +814,49 @@ func parseSupportsSecureParams(body []byte) bool {
 	}
 	supported, ok := val.(bool)
 	return ok && supported
+}
+
+// validateAndMergeSecureParams validates and merges standard and secure arguments based on the tool's parameter definitions.
+func validateAndMergeSecureParams(tool tools.Tool, src sources.Source, req CallToolRequest, body []byte) (map[string]any, parameters.Parameters, error) {
+	// Validate capability and parameter routing
+	supportsSecureParams := parseSupportsSecureParams(body)
+
+	toolParams, err := tool.GetParameters(src)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var hasSecureParams bool
+	secureParamMap := make(map[string]bool)
+	for _, p := range toolParams {
+		if p.GetSecure() {
+			hasSecureParams = true
+			secureParamMap[p.GetName()] = true
+		}
+	}
+
+	if hasSecureParams && !supportsSecureParams {
+		return nil, nil, fmt.Errorf("tool %q requires secure-params extension which is not supported by the client", req.Params.Name)
+	}
+
+	// Validate that secure parameters are only passed in secureArguments
+	for argName := range req.Params.Arguments {
+		if secureParamMap[argName] {
+			return nil, nil, fmt.Errorf("parameter %q is secure and must not be passed in standard arguments", argName)
+		}
+	}
+
+	// Validate that non-secure parameters are not passed in secureArguments
+	for argName := range req.Params.SecureArguments {
+		if !secureParamMap[argName] {
+			return nil, nil, fmt.Errorf("parameter %q is not secure and must not be passed in secureArguments", argName)
+		}
+	}
+
+	// Merge standard arguments and secure arguments using standard maps.Copy
+	toolArgument := make(map[string]any)
+	maps.Copy(toolArgument, req.Params.Arguments)
+	maps.Copy(toolArgument, req.Params.SecureArguments)
+
+	return toolArgument, toolParams, nil
 }
