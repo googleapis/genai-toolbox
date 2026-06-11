@@ -333,7 +333,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group, 
 
 	if hasSecureParams && !supportsSecureParams {
 		err = fmt.Errorf("tool %q requires secure-params extension which is not supported by the client", req.Params.Name)
-		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
 	// Validate that secure parameters are only passed in secureArguments

@@ -311,6 +311,13 @@ func ProcessParameters(templateParams Parameters, params Parameters) (Parameters
 		return nil, nil, err
 	}
 
+	// verify "secure" flag is not specified together with "authServices"
+	for _, p := range allParameters {
+		if p.GetSecure() && len(p.GetAuthServices()) > 0 {
+			return nil, nil, fmt.Errorf("parameter %q cannot have both 'secure' set to true and 'authServices' specified", p.GetName())
+		}
+	}
+
 	// create Toolbox manifest
 	paramManifest := allParameters.Manifest()
 	if paramManifest == nil {
