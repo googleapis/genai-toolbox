@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,11 @@ func NormalizeResourcePath(resourcePath, projectID string) string {
 
 	// 3. BigQuery relative projects/ path check
 	if strings.HasPrefix(resourcePath, "projects/") {
-		return "//bigquery.googleapis.com/" + resourcePath
+		if strings.Contains(resourcePath, "/datasets/") {
+			return "//bigquery.googleapis.com/" + resourcePath
+		}
+		// Return as-is for other projects/ paths (like Dataplex entries, Datascans, etc)
+		return resourcePath
 	}
 
 	// 4. Dot-separated BigQuery shorthand (project.dataset.table or dataset.table)

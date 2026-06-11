@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -70,6 +70,16 @@ func TestNormalizeResourcePath(t *testing.T) {
 			name:         "unrecognized raw string",
 			resourcePath: "raw_string_without_dots",
 			want:         "raw_string_without_dots",
+		},
+		{
+			name:         "dataplex entry path",
+			resourcePath: "projects/my-project/locations/us-central1/entryGroups/my-group/entries/my-entry",
+			want:         "projects/my-project/locations/us-central1/entryGroups/my-group/entries/my-entry",
+		},
+		{
+			name:         "dataplex datascan path",
+			resourcePath: "projects/my-project/locations/us-central1/dataScans/my-scan",
+			want:         "projects/my-project/locations/us-central1/dataScans/my-scan",
 		},
 	}
 
