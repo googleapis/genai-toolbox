@@ -258,19 +258,19 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 // skipping sources, auth services, and embedding models. It backs flows like
 // skills-generate that need tool metadata without live source connections.
 func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
-    map[string]tools.Tool,
-    map[string]tools.Toolset,
-    error,
+	map[string]tools.Tool,
+	map[string]tools.Toolset,
+	error,
 ) {
-    instrumentation, err := util.InstrumentationFromContext(ctx)
-    if err != nil {
-        return nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
-    }
+	instrumentation, err := util.InstrumentationFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
 
-    l, err := util.LoggerFromContext(ctx)
-    if err != nil {
-        return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
-    }
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
 	if err != nil {
