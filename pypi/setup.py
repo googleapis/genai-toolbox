@@ -34,6 +34,9 @@ if _bdist_wheel is not None:
             self.root_is_pure = False
 
         def get_tag(self):
+            # Override the default "infer the platform tag from the build
+            # machine" behavior so one Linux Cloud Build VM can produce wheels
+            # for all 5 platforms by varying TOOLBOX_PLATFORM per invocation.
             plat = os.environ.get("TOOLBOX_PLATFORM")
             if not plat:
                 raise SystemExit(
