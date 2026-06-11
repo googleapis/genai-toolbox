@@ -1,6 +1,5 @@
 import os
 import sys
-import subprocess
 from unittest import mock
 import pytest
 from toolbox_server import main
