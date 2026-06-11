@@ -1279,6 +1279,10 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 			}
 		})
 	}
+
+	t.Run("secure parameters", func(t *testing.T) {
+		RunMCPSecureToolInvokeTest(t)
+	})
 }
 
 func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName string) func() {

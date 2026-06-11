@@ -571,3 +571,138 @@ func GetTemplateParamMCPExpectedTools() []MCPToolManifest {
 		},
 	}
 }
+
+// RunMCPSecureToolInvokeTest runs integration test cases verifying secure-params protocol constraints.
+func RunMCPSecureToolInvokeTest(t *testing.T) {
+	t.Helper()
+
+	mcpVersion := "DRAFT-2026-v1"
+
+	// Initialize session with the specified protocol version
+	sessionId := RunInitialize(t, mcpVersion)
+	header := map[string]string{}
+	if sessionId != "" {
+		header["Mcp-Session-Id"] = sessionId
+	}
+
+	// Local helper to send the tools/call request
+	invokeTool := func(toolName string, arguments, secureArguments map[string]any, supportsSecure bool) (int, *MCPCallToolResponse, error) {
+		headers := map[string]string{
+			"Content-Type":         "application/json",
+			"MCP-Protocol-Version": mcpVersion,
+		}
+		for k, v := range header {
+			headers[k] = v
+		}
+
+		params := map[string]any{
+			"name": toolName,
+		}
+		if arguments != nil {
+			params["arguments"] = arguments
+		}
+		if secureArguments != nil {
+			params["secureArguments"] = secureArguments
+		}
+		if supportsSecure {
+			params["_meta"] = map[string]any{
+				"capabilities": map[string]any{
+					"toolbox/secure-params": true,
+				},
+			}
+		}
+
+		req := map[string]any{
+			"jsonrpc": "2.0",
+			"id":      uuid.New().String(),
+			"method":  "tools/call",
+			"params":  params,
+		}
+
+		reqBody, err := json.Marshal(req)
+		if err != nil {
+			return 0, nil, err
+		}
+
+		resp, respBody := RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp", bytes.NewBuffer(reqBody), headers)
+
+		var mcpResp MCPCallToolResponse
+		if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+			if resp.StatusCode != http.StatusOK {
+				return resp.StatusCode, nil, fmt.Errorf("%s", string(respBody))
+			}
+			return resp.StatusCode, nil, err
+		}
+
+		return resp.StatusCode, &mcpResp, nil
+	}
+
+	tcs := []struct {
+		name            string
+		arguments       map[string]any
+		secureArguments map[string]any
+		supportsSecure  bool
+		wantError       bool
+		wantErrorMsg    string
+		wantBodyMatch   string
+	}{
+		{
+			name:            "client doesn't support secure-params",
+			arguments:       map[string]any{"id": 3},
+			secureArguments: map[string]any{"name": "Alice"},
+			supportsSecure:  false,
+			wantError:       true,
+			wantErrorMsg:    "requires secure-params extension which is not supported by the client",
+		},
+		{
+			name:            "secure parameter passed in standard arguments",
+			arguments:       map[string]any{"id": 3, "name": "Alice"},
+			secureArguments: nil,
+			supportsSecure:  true,
+			wantError:       true,
+			wantErrorMsg:    `parameter "name" is secure and must not be passed in standard arguments`,
+		},
+		{
+			name:            "standard parameter passed in secureArguments",
+			arguments:       nil,
+			secureArguments: map[string]any{"id": 3, "name": "Alice"},
+			supportsSecure:  true,
+			wantError:       true,
+			wantErrorMsg:    `parameter "id" is not secure and must not be passed in secureArguments`,
+		},
+		{
+			name:            "successful invocation with correct routing",
+			arguments:       map[string]any{"id": 3},
+			secureArguments: map[string]any{"name": "Alice"},
+			supportsSecure:  true,
+			wantError:       false,
+			wantBodyMatch:   `[{"id":1,"name":"Alice"},{"id":3,"name":"Sid"}]`,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			statusCode, mcpResp, err := invokeTool("my-secure-tool", tc.arguments, tc.secureArguments, tc.supportsSecure)
+			if err != nil {
+				t.Fatalf("unexpected native error: %s", err)
+			}
+			if statusCode != http.StatusOK {
+				t.Fatalf("expected status 200, got %d", statusCode)
+			}
+
+			if tc.wantError {
+				AssertMCPError(t, mcpResp, tc.wantErrorMsg)
+			} else {
+				if mcpResp.Result.IsError {
+					t.Fatalf("expected successful execution, got error: %v", mcpResp.Result)
+				}
+				got := getMCPResultText(t, mcpResp)
+				gotBytes, _ := json.Marshal(got)
+				gotStr := string(gotBytes)
+				if !strings.Contains(gotStr, tc.wantBodyMatch) {
+					t.Fatalf(`expected %q to contain %q`, gotStr, tc.wantBodyMatch)
+				}
+			}
+		})
+	}
+}

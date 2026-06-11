@@ -157,6 +157,25 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 					"my-google-auth",
 				},
 			},
+			"my-secure-tool": map[string]any{
+				"type":        toolType,
+				"source":      "my-instance",
+				"description": "Tool to test secure parameters.",
+				"statement":   paramToolStatement,
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
+					},
+					map[string]any{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+						"secure":      true,
+					},
+				},
+			},
 			"my-fail-tool": map[string]any{
 				"type":        toolType,
 				"source":      "my-instance",
