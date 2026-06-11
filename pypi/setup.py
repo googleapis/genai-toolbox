@@ -1,22 +1,21 @@
 """Build configuration for the toolbox-server PyPI package.
 
 Each wheel embeds a single Go binary and is tagged for a single platform. The
-caller is responsible for staging the binary before running `python -m build`:
+caller is responsible for staging the binary and declaring the target platform
+before running `python -m build`:
 
   1. Place the matching binary at src/toolbox_server/bin/toolbox (or
      toolbox.exe for Windows wheels). On Unix wheels it must be marked
      executable (chmod +x).
-  2. Optionally set TOOLBOX_PLATFORM to the PEP 425 platform tag for the
-     wheel, e.g. "manylinux2014_x86_64", "macosx_11_0_arm64",
-     "macosx_10_14_x86_64", "win_amd64", "win_arm64". If unset, the wheel is
-     tagged for the host platform (useful for local development).
+  2. Set TOOLBOX_PLATFORM to the PEP 425 platform tag for the wheel:
+     "manylinux2014_x86_64", "macosx_11_0_arm64", "macosx_10_14_x86_64",
+     "win_amd64", or "win_arm64".
 
 The wheel is always tagged py3 / none / <plat> since it ships no Python code
 that depends on a specific interpreter ABI.
 """
 
 import os
-import platform
 import shutil
 
 from setuptools import setup, find_packages
@@ -27,23 +26,6 @@ except ImportError:
     _bdist_wheel = None
 
 
-def _host_platform_tag():
-    """PEP 425 platform tag for the current host."""
-    system = platform.system().lower()
-    machine = platform.machine().lower()
-    if system == "linux" and machine == "x86_64":
-        return "manylinux2014_x86_64"
-    if system == "darwin" and machine == "arm64":
-        return "macosx_11_0_arm64"
-    if system == "darwin" and machine == "x86_64":
-        return "macosx_10_14_x86_64"
-    if system == "windows" and machine in ("amd64", "x86_64"):
-        return "win_amd64"
-    if system == "windows" and machine == "arm64":
-        return "win_arm64"
-    raise OSError(f"Unsupported host platform: {system}-{machine}")
-
-
 if _bdist_wheel is not None:
 
     class bdist_wheel(_bdist_wheel):
@@ -52,7 +34,13 @@ if _bdist_wheel is not None:
             self.root_is_pure = False
 
         def get_tag(self):
-            plat = os.environ.get("TOOLBOX_PLATFORM") or _host_platform_tag()
+            plat = os.environ.get("TOOLBOX_PLATFORM")
+            if not plat:
+                raise SystemExit(
+                    "TOOLBOX_PLATFORM env var is required (e.g., "
+                    "'manylinux2014_x86_64', 'macosx_11_0_arm64'). "
+                    "See setup.py docstring."
+                )
             return "py3", "none", plat
 
 else:

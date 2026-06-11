@@ -45,14 +45,17 @@ jobs:
 
       - name: Build toolbox binary and stage it for the wheel
         # setup.py now expects the binary pre-staged in src/toolbox_server/bin/
-        # instead of downloading from GCS at build time. Build for the host
-        # platform; setup.py's default platform tag matches.
+        # instead of downloading from GCS at build time.
         run: |
           go build -o pypi/src/toolbox_server/bin/toolbox .
           chmod +x pypi/src/toolbox_server/bin/toolbox
 
       - name: Build wheel
         working-directory: pypi
+        env:
+          # setup.py requires this explicitly; matches the Linux x86_64 binary
+          # built above. Release pipeline sets it per-platform in a loop.
+          TOOLBOX_PLATFORM: manylinux2014_x86_64
         run: python -m build --wheel
 
       - name: Install built wheel
