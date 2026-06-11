@@ -56,7 +56,7 @@ type compatibleSource interface {
 	GetAuthTokenHeaderName() string
 	GetMaximumBytesBilled() int64
 	RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
-	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty) (any, error)
+	RunSQL(context.Context, *bigqueryapi.Client, string, string, []bigqueryapi.QueryParameter, []*bigqueryapi.ConnectionProperty, map[string]string) (any, error)
 }
 
 type Config struct {
@@ -147,7 +147,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
-	resp, err := source.RunSQL(ctx, bqClient, newStatement, statementType, highLevelParams, connProps)
+	resp, err := source.RunSQL(ctx, bqClient, newStatement, statementType, highLevelParams, connProps, map[string]string{"mcp-toolbox-tool": resourceType})
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

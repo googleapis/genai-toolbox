@@ -28,8 +28,8 @@ import (
 )
 
 func TestToolsetEndpoint(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2}
-	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -53,8 +53,8 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    fakeVersionString,
-				tools:      []string{tool1.Name, tool2.Name},
+				version:    testutils.MockVersionString,
+				tools:      []string{testutils.MockTool1.Name, testutils.MockTool2.Name},
 			},
 		},
 		{
@@ -70,8 +70,8 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "tool1_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    fakeVersionString,
-				tools:      []string{tool1.Name},
+				version:    testutils.MockVersionString,
+				tools:      []string{testutils.MockTool1.Name},
 			},
 		},
 		{
@@ -79,8 +79,8 @@ func TestToolsetEndpoint(t *testing.T) {
 			toolsetName: "tool2_only",
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    fakeVersionString,
-				tools:      []string{tool2.Name},
+				version:    testutils.MockVersionString,
+				tools:      []string{testutils.MockTool2.Name},
 			},
 		},
 	}
@@ -125,8 +125,8 @@ func TestToolsetEndpoint(t *testing.T) {
 }
 
 func TestToolGetEndpoint(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2}
-	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -147,20 +147,20 @@ func TestToolGetEndpoint(t *testing.T) {
 	}{
 		{
 			name:     "tool1",
-			toolName: tool1.Name,
+			toolName: testutils.MockTool1.Name,
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    fakeVersionString,
-				tools:      []string{tool1.Name},
+				version:    testutils.MockVersionString,
+				tools:      []string{testutils.MockTool1.Name},
 			},
 		},
 		{
 			name:     "tool2",
-			toolName: tool2.Name,
+			toolName: testutils.MockTool2.Name,
 			want: wantResponse{
 				statusCode: http.StatusOK,
-				version:    fakeVersionString,
-				tools:      []string{tool2.Name},
+				version:    testutils.MockVersionString,
+				tools:      []string{testutils.MockTool2.Name},
 			},
 		},
 		{
@@ -213,8 +213,8 @@ func TestToolGetEndpoint(t *testing.T) {
 }
 
 func TestToolInvokeEndpoint(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2, tool4, tool5}
-	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool4, testutils.MockTool5}
+	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -229,14 +229,14 @@ func TestToolInvokeEndpoint(t *testing.T) {
 	}{
 		{
 			name:        "tool1",
-			toolName:    tool1.Name,
+			toolName:    testutils.MockTool1.Name,
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "{result:[no_params]}\n",
 			isErr:       false,
 		},
 		{
 			name:        "tool2",
-			toolName:    tool2.Name,
+			toolName:    testutils.MockTool2.Name,
 			requestBody: bytes.NewBuffer([]byte(`{"param1": 1, "param2": 2}`)),
 			want:        "{result:[some_params]}\n",
 			isErr:       false,
@@ -250,14 +250,14 @@ func TestToolInvokeEndpoint(t *testing.T) {
 		},
 		{
 			name:        "tool4",
-			toolName:    tool4.Name,
+			toolName:    testutils.MockTool4.Name,
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "",
 			isErr:       true,
 		},
 		{
 			name:        "tool5",
-			toolName:    tool5.Name,
+			toolName:    testutils.MockTool5.Name,
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "",
 			isErr:       true,
