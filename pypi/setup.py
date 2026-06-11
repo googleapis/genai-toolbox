@@ -20,40 +20,33 @@ import shutil
 
 from setuptools import setup, find_packages
 
-try:
-    # Canonical path as of setuptools 70.1+; the older `wheel.bdist_wheel`
-    # import emits a DeprecationWarning and is slated for removal.
-    from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
-except ImportError:
-    _bdist_wheel = None
+# Canonical path as of setuptools 70.1+ (pinned in pyproject.toml). Letting
+# this fail loud is intentional — without our bdist_wheel overrides, the wheel
+# would be silently mis-tagged as pure-Python and break for every user.
+from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
 
 
-if _bdist_wheel is not None:
+class bdist_wheel(_bdist_wheel):
+    def finalize_options(self):
+        super().finalize_options()
+        # Tell bdist_wheel this package contains a platform-specific binary
+        # (not just Python), so the wheel gets a real platform tag instead
+        # of the default "any". Required for our get_tag override to take
+        # effect.
+        self.root_is_pure = False
 
-    class bdist_wheel(_bdist_wheel):
-        def finalize_options(self):
-            super().finalize_options()
-            # Tell bdist_wheel this package contains a platform-specific binary
-            # (not just Python), so the wheel gets a real platform tag instead
-            # of the default "any". Required for our get_tag override to take
-            # effect.
-            self.root_is_pure = False
-
-        def get_tag(self):
-            # Override the default "infer the platform tag from the build
-            # machine" behavior so one Linux Cloud Build VM can produce wheels
-            # for all 5 platforms by varying TOOLBOX_PLATFORM per invocation.
-            plat = os.environ.get("TOOLBOX_PLATFORM")
-            if not plat:
-                raise SystemExit(
-                    "TOOLBOX_PLATFORM env var is required (e.g., "
-                    "'manylinux2014_x86_64', 'macosx_11_0_arm64'). "
-                    "See setup.py docstring."
-                )
-            return "py3", "none", plat
-
-else:
-    bdist_wheel = None
+    def get_tag(self):
+        # Override the default "infer the platform tag from the build
+        # machine" behavior so one Linux Cloud Build VM can produce wheels
+        # for all 5 platforms by varying TOOLBOX_PLATFORM per invocation.
+        plat = os.environ.get("TOOLBOX_PLATFORM")
+        if not plat:
+            raise SystemExit(
+                "TOOLBOX_PLATFORM env var is required (e.g., "
+                "'manylinux2014_x86_64', 'macosx_11_0_arm64'). "
+                "See setup.py docstring."
+            )
+        return "py3", "none", plat
 
 
 # Ship the root LICENSE inside the package.
@@ -87,5 +80,5 @@ setup(
         "toolbox_server": ["bin/*"],
     },
     include_package_data=True,
-    cmdclass={"bdist_wheel": bdist_wheel} if bdist_wheel else {},
+    cmdclass={"bdist_wheel": bdist_wheel},
 )
