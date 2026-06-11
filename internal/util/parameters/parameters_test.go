@@ -828,6 +828,46 @@ func TestParametersParse(t *testing.T) {
 			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "[foo]"}},
 		},
 		{
+			name: "string with escape backticks containing backtick (injection prevention)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
+			},
+			in: map[string]any{
+				"my_string": "users` OR 1=1--",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "`users`` OR 1=1--`"}},
+		},
+		{
+			name: "string with escape double quotes containing double quote (injection prevention)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
+			},
+			in: map[string]any{
+				"my_string": `col" OR 1=1--`,
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `"col"" OR 1=1--"`}},
+		},
+		{
+			name: "string with escape single quotes containing single quote (injection prevention)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "single-quotes"),
+			},
+			in: map[string]any{
+				"my_string": "val' OR 1=1--",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "'val'' OR 1=1--'"}},
+		},
+		{
+			name: "string with escape square brackets containing closing bracket (injection prevention)",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
+			},
+			in: map[string]any{
+				"my_string": "col] OR 1=1--",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "[col]] OR 1=1--]"}},
+		},
+		{
 			name: "int",
 			params: parameters.Parameters{
 				parameters.NewIntParameter("my_int", "this param is an int"),
