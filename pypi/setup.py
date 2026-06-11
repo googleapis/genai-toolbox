@@ -21,7 +21,9 @@ import shutil
 from setuptools import setup, find_packages
 
 try:
-    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+    # Canonical path as of setuptools 70.1+; the older `wheel.bdist_wheel`
+    # import emits a DeprecationWarning and is slated for removal.
+    from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
 except ImportError:
     _bdist_wheel = None
 
