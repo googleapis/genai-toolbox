@@ -78,6 +78,10 @@ func (t MockTool) Manifest(map[string]sources.Source) (tools.Manifest, error) {
 	return t.manifest, nil
 }
 
+func (t MockTool) StaticManifest() tools.Manifest {
+	return t.manifest
+}
+
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	// defaulted to true
 	return !t.unauthorized

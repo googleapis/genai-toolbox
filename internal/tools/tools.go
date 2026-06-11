@@ -130,6 +130,7 @@ type Tool interface {
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest(map[string]sources.Source) (Manifest, error)
+	StaticManifest() Manifest
 	Authorized([]string) bool
 	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
@@ -255,6 +256,14 @@ func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
 // BaseTool method calling another would miss a concrete tool's override.
 func (b BaseTool[T]) Manifest(_ map[string]sources.Source) (Manifest, error) {
 	return b.metadata, nil
+}
+
+// StaticManifest returns the manifest baked at Initialize, with no source
+// resolution. Dynamic tools override Manifest/GetParameters to refine params
+// against a live source, but not this method, so it always reaches the baked
+// skeleton — used for offline generation (e.g. skills) where no source exists.
+func (b BaseTool[T]) StaticManifest() Manifest {
+	return b.metadata
 }
 
 func (b BaseTool[T]) GetParameters(_ map[string]sources.Source) (parameters.Parameters, error) {
