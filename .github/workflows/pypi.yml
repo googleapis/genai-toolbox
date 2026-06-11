@@ -30,6 +30,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.1.0
         with:
@@ -38,8 +43,15 @@ jobs:
       - name: Install build tooling
         run: python -m pip install --upgrade pip build pytest
 
+      - name: Build toolbox binary and stage it for the wheel
+        # setup.py now expects the binary pre-staged in src/toolbox_server/bin/
+        # instead of downloading from GCS at build time. Build for the host
+        # platform; setup.py's default platform tag matches.
+        run: |
+          go build -o pypi/src/toolbox_server/bin/toolbox .
+          chmod +x pypi/src/toolbox_server/bin/toolbox
+
       - name: Build wheel
-        # setup.py downloads the matching linux/amd64 GCS binary and embeds it
         working-directory: pypi
         run: python -m build --wheel
 

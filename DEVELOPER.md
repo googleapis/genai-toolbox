@@ -908,6 +908,17 @@ MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.np
 > instructions are in the file header). The retry is idempotent — already-
 > published packages are skipped.
 >
+> **PyPI releases** are automated through the same Exit Gate via the
+> `publish-pypi-to-ar` and `trigger-exit-gate-pypi` steps. Each release
+> builds five platform-tagged wheels (one per OS/arch) via
+> [pypi/setup.py](pypi/setup.py) with `TOOLBOX_PLATFORM` set per wheel,
+> uploads them all to `us-python.pkg.dev/oss-exit-gate-prod/mcp-toolbox--pypi`,
+> then drops a manifest at
+> `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/pypi/manifests/` so
+> Exit Gate publishes them to pypi.org via trusted publishing. PyPI-only
+> retries: [.ci/pypi_retry.cloudbuild.yaml](.ci/pypi_retry.cloudbuild.yaml).
+> Idempotency is handled by `twine upload --skip-existing`.
+>
 > The manual procedure below is retained as a fallback for when the automation
 > is broken.
 
