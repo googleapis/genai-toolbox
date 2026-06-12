@@ -207,10 +207,10 @@ func TestDatalineageToolEndpoints(t *testing.T) {
 		"direction": "UPSTREAM",
 	}
 	t.Log("Polling search lineage index for the new link with exponential backoff...")
-	// Poll up to 90 seconds for eventual consistency
-	links, err := pollSearchLineage(t, "my-datalineage-search-tool", reqBody, sourceFQN, targetFQN, 90*time.Second)
+	// Poll up to 3 minutes for eventual consistency
+	links, err := pollSearchLineage(t, "my-datalineage-search-tool", reqBody, sourceFQN, targetFQN, 3*time.Minute)
 	if err != nil {
-		t.Fatalf("failed to find the link in search index within 90s timeout: %v", err)
+		t.Fatalf("failed to find the link in search index within 3 minutes timeout: %v", err)
 	}
 
 	runDatalineageSearchUpstreamTest(t, links, sourceFQN, targetFQN)
@@ -377,7 +377,7 @@ func runDatalineageSearchWithProcessDetailsTest(t *testing.T, sourceFQN, targetF
 
 		// Poll for process details to appear (eventual consistency of joins in GCP backend)
 		startTime := time.Now()
-		timeout := 90 * time.Second
+		timeout := 3 * time.Minute
 		delay := 3 * time.Second
 		found := false
 
