@@ -30,6 +30,7 @@ import (
 	lineage "cloud.google.com/go/datacatalog/lineage/apiv1"
 	lineagepb "cloud.google.com/go/datacatalog/lineage/apiv1/lineagepb"
 	"github.com/google/uuid"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
@@ -54,7 +55,7 @@ func getDatalineageVars(t *testing.T) map[string]any {
 }
 
 func initLineageConnection(ctx context.Context) (*lineage.Client, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
