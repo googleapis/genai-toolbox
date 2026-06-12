@@ -83,7 +83,9 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 		_ = shutdown(ctx)
 	}()
 
-	parser := internal.ConfigParser{}
+	// skills-generate runs offline: source env vars are needed only to make the
+	// config YAML parse, never to connect, so unset placeholders resolve to "".
+	parser := internal.ConfigParser{AllowMissingEnvVars: true}
 	_, err = opts.LoadConfig(ctx, &parser)
 	if err != nil {
 		return err

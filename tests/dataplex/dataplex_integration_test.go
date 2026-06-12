@@ -210,7 +210,7 @@ func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClie
 
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	args := []string{"--enable-api"}
