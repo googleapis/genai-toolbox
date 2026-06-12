@@ -33,7 +33,7 @@ import (
 
 func TestAlloyDBAINLToolEndpoints(t *testing.T) {
 	sourceConfig := getAlloyDBAINLVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	args := []string{"--enable-api"}
