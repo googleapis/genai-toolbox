@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
+	if c.HttpMaxRequestBytes == 0 {
+		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
+	}
 	return c
 }
 
@@ -223,6 +226,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "http max request bytes",
+			args: []string{"--http-max-request-bytes", "2097152"},
+			want: withDefaults(server.ServerConfig{
+				HttpMaxRequestBytes: 2097152,
 			}),
 		},
 		{

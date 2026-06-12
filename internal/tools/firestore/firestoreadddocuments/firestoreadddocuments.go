@@ -21,7 +21,6 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	fsUtil "github.com/googleapis/mcp-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -66,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}

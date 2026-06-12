@@ -156,7 +156,7 @@ func TestInvokeValidation(t *testing.T) {
 		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -215,12 +215,15 @@ func TestManifest(t *testing.T) {
 		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != cfg.Description {
 		t.Errorf("manifest description mismatch: got %q, want %q", manifest.Description, cfg.Description)
 	}
@@ -254,7 +257,7 @@ func TestAnnotations(t *testing.T) {
 		},
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

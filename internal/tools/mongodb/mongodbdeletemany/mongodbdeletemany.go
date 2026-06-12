@@ -24,7 +24,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
@@ -67,7 +66,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}

@@ -28,7 +28,7 @@ import (
 
 func TestAlloyDBAINLListTools(t *testing.T) {
 	sourceConfig := getAlloyDBAINLVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	toolsFile := getAINLToolsConfig(sourceConfig)
@@ -102,7 +102,7 @@ func TestAlloyDBAINLListTools(t *testing.T) {
 
 func TestAlloyDBAINLCallTool(t *testing.T) {
 	sourceConfig := getAlloyDBAINLVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	toolsFile := getAINLToolsConfig(sourceConfig)

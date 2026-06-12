@@ -117,7 +117,7 @@ func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManag
 	}
 
 	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), toolset, toolsMap)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -272,7 +272,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
+	toolParams, err := tool.GetParameters(resourceMgr.GetSourcesMap())
+	if err != nil {
+		err = fmt.Errorf("error getting parameters for tool: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
