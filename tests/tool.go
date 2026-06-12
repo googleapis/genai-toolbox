@@ -235,7 +235,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
 		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
-		nullWant:                 "null",
+		nullWant:                 "[]",
 		supportOptionalNullParam: true,
 		supportArrayParam:        true,
 		supportClientAuth:        false,
@@ -305,7 +305,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCodeMCP: http.StatusOK,
 		},
 		{
-			name:              "invoke my-tool-by-name with nil response",
+			name:              "invoke my-tool-by-name with empty slice response",
 			toolName:          "my-tool-by-name",
 			enabled:           configs.supportOptionalNullParam,
 			requestHeader:     map[string]string{},
@@ -540,12 +540,12 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	// Resolve options
 	// Default values for TemplateParameterTestConfig
 	configs := &TemplateParameterTestConfig{
-		ddlWant:         "null",
+		ddlWant:         "[]",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
 		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		selectNameWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
-		selectEmptyWant: "null",
-		insert1Want:     "null",
+		selectEmptyWant: "[]",
+		insert1Want:     "[]",
 
 		nameFieldArray: `["name"]`,
 		nameColFilter:  "name",
@@ -763,9 +763,9 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	// Default values for ExecuteSqlTestConfig
 	configs := &ExecuteSqlTestConfig{
 		select1Statement: `"SELECT 1"`,
-		createWant:       "null",
-		dropWant:         "null",
-		selectEmptyWant:  "null",
+		createWant:       "[]",
+		dropWant:         "[]",
+		selectEmptyWant:  "[]",
 	}
 
 	// Apply provided options
@@ -1521,7 +1521,7 @@ func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 			name:           "invoke list_views with non-existent_view",
 			requestBody:    bytes.NewBuffer([]byte(`{"view_name": "non_existent_view"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           `null`,
+			want:           `[]`,
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -1601,7 +1601,7 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 			name:           "invoke list_schemas with non-existent schema",
 			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -1851,19 +1851,19 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 			name:           "filter by non-existent trigger_name",
 			requestBody:    bytes.NewBuffer([]byte(`{"trigger_name": "non_existent_trigger"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "filter by non-existent schema_name",
 			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "filter by non-existent table_name",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_name": "non_existent_table"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2027,13 +2027,13 @@ func RunPostgresListPublicationTablesTest(t *testing.T, ctx context.Context, poo
 			name:           "invoke list_publication_tables with non-existent table",
 			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "invoke list_publication_tables with non-existent publication",
 			requestBody:    bytes.NewBufferString(`{"publication_names": "non_existent_pub"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2122,7 +2122,7 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
@@ -2131,7 +2131,7 @@ func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 			clientSleepSecs:     1,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
@@ -2362,13 +2362,13 @@ func RunPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxpool
 			name:           "list_indexes with non-existent schema",
 			requestBody:    bytes.NewBufferString(`{"schema_name": "non_existent_schema"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "list_indexes with non-existent table in existing schema",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "non_existent_table"}`, schemaName)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 		{
 			name:           "list_indexes filter by index name",
@@ -2380,7 +2380,7 @@ func RunPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxpool
 			name:           "list_indexes filter by non-existent index name",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "index_name": "non_existent_idx"}`, schemaName, tableName)),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2475,7 +2475,7 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 			name:           "invoke list_sequences with non-existent sequence",
 			requestBody:    bytes.NewBufferString(`{"sequence_name": "non_existent_sequence"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2591,7 +2591,7 @@ func RunPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *pgxp
 			name:           "invoke list_pg_settings with non-existent setting",
 			requestBody:    bytes.NewBuffer([]byte(`{"setting_name": "non_existent_config_xyz"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           `null`,
+			want:           `[]`,
 		},
 	}
 
@@ -2881,7 +2881,7 @@ func RunPostgresListRolesTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 			name:           "list_roles non-existent role",
 			requestBody:    bytes.NewBufferString(`{"role_name": "non_existent_role_xyz"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []map[string]any{},
 		},
 	}
 
@@ -3223,7 +3223,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
@@ -3231,7 +3231,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
-			want:                []queryListDetails(nil),
+			want:                []queryListDetails{},
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
@@ -3326,9 +3326,11 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 			}
 
 			var got any
-			var details []queryListDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
-				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+			details := []queryListDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+				}
 			}
 			got = details
 
@@ -3382,7 +3384,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    false,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes pk table will not show",
@@ -3392,7 +3394,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    false,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes uk table will not show",
@@ -3402,7 +3404,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    true,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes non-unique key only table will show",
@@ -3462,7 +3464,7 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			newTableUniqueKey:    false,
 			newTableNonUniqueKey: false,
 			wantStatusCode:       http.StatusOK,
-			want:                 []listDetails(nil),
+			want:                 []listDetails{},
 		},
 		{
 			name:                 "invoke list_tables_missing_unique_indexes with the right database, show everything",
@@ -3577,9 +3579,11 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 			}
 
 			var got any
-			var details []listDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
-				t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
+			details := []listDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
+				}
 			}
 			got = details
 
@@ -3661,7 +3665,7 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			name:           "invoke list_table_stats with schema other than connected to, expected log error and nil results",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "somerandomdb_xyx")),
 			wantStatusCode: http.StatusInternalServerError,
-			want:           []tableStatsDetails(nil),
+			want:           []tableStatsDetails{},
 		},
 		{
 			name:           "invoke list_table_stats on 1 database and all tables, expected to have 2 result",
@@ -3679,7 +3683,7 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			name:           "invoke list_table_stats on 1 non-exist table on 1 database, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           []tableStatsDetails(nil),
+			want:           []tableStatsDetails{},
 		},
 	}
 
@@ -3758,9 +3762,11 @@ func RunMySQLListTableStatsTest(t *testing.T, ctx context.Context, pool *sql.DB,
 			}
 
 			var got any
-			var details []tableStatsDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
-				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			details := []tableStatsDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+				}
 			}
 			got = details
 
@@ -3839,19 +3845,19 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, high data_free threshold, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 1000000000}`, databaseName, tableNameParam)),
 			wantStatusCode: http.StatusOK,
-			want:           []tableFragmentationDetails(nil),
+			want:           []tableFragmentationDetails{},
 		},
 		{
 			name:           "invoke list_table_fragmentation on 1 non-exist database, no data_free threshold, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(`{"table_schema": "non_existent_database", "data_free_threshold_bytes": 0}`),
 			wantStatusCode: http.StatusOK,
-			want:           []tableFragmentationDetails(nil),
+			want:           []tableFragmentationDetails{},
 		},
 		{
 			name:           "invoke list_table_fragmentation on 1 non-exist table, no data_free threshold, expected to have 0 result",
 			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table", "data_free_threshold_bytes": 0}`),
 			wantStatusCode: http.StatusOK,
-			want:           []tableFragmentationDetails(nil),
+			want:           []tableFragmentationDetails{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -3906,9 +3912,11 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 			}
 
 			var got any
-			var details []tableFragmentationDetails
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil && resultString != "null" {
-				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			details := []tableFragmentationDetails{}
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+				}
 			}
 			got = details
 
@@ -5305,6 +5313,197 @@ func RunStatementToolsTest(t *testing.T, tools map[string]string) {
 			if resp.StatusCode != http.StatusOK {
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+		})
+	}
+}
+
+// SearchCatalogTestParams defines parameters for RunSearchCatalogToolTest
+type SearchCatalogTestParams struct {
+	ContainerParamName string // "databaseIds" or "datasetIds"
+	ContainerName      string // databaseName or datasetName
+	ProjectID          string // SpannerProject or BigqueryProject
+	TargetName         string // tableName
+	WantKey            string // "DisplayName"
+	AllowEmpty         bool   // true for Spanner, false for BigQuery
+	CheckValue         bool   // true for BigQuery, false for Spanner
+}
+
+// RunSearchCatalogToolTest tests the search catalog tool for Spanner or BigQuery
+func RunSearchCatalogToolTest(t *testing.T, params SearchCatalogTestParams) {
+	// Get ID token
+	idToken, err := GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-catalog-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-catalog-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with correct project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s\"], \"%s\":[\"%s\"]}", params.TargetName, params.ProjectID, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with non-existent project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s-%s\"], \"%s\":[\"%s\"]}", params.TargetName, params.ProjectID, uuid.NewString(), params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"%s\":[\"%s\"]}", params.TargetName, params.ContainerParamName, params.ContainerName))),
+			isErr:         false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				if result["result"] == nil && tc.isErr {
+					return
+				}
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+
+			var errorCheck map[string]any
+			if err := json.Unmarshal([]byte(resultStr), &errorCheck); err == nil {
+				if _, hasError := errorCheck["error"]; hasError {
+					if tc.isErr {
+						return
+					}
+					t.Fatalf("unexpected error object in result: %s", resultStr)
+				}
+			}
+
+			if tc.isErr && (resultStr == "" || resultStr == "[]") {
+				return
+			}
+
+			var entries []any
+			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+				t.Fatalf("error unmarshalling result string: %v. Raw string: %s", err, resultStr)
+			}
+
+			if !tc.isErr {
+				if len(entries) == 0 {
+					if params.AllowEmpty {
+						t.Logf("No entries found, skipping content verification")
+						return
+					}
+					t.Fatalf("expected entries, but got 0")
+				}
+
+				if !params.AllowEmpty && len(entries) != 1 {
+					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				}
+
+				entry, ok := entries[0].(map[string]interface{})
+				if !ok {
+					t.Fatalf("expected first entry to be a map, got %T", entries[0])
+				}
+
+				val, ok := entry[params.WantKey]
+				if !ok {
+					t.Fatalf("expected entry to have key '%s', but it was not found", params.WantKey)
+				}
+
+				if params.CheckValue {
+					if val != params.TargetName {
+						t.Fatalf("expected key '%s' to have value '%s', but got %s", params.WantKey, params.TargetName, val)
+					}
+				}
+			} else {
+				if len(entries) != 0 {
+					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
 			}
 		})
 	}

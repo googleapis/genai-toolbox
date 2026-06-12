@@ -18,10 +18,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -30,6 +29,14 @@ import (
 const listTablesType string = "clickhouse-list-tables"
 const databaseKey string = "database"
 
+// validIdentifier matches the ClickHouse unquoted identifier grammar: a letter
+// or underscore followed by letters, digits, or underscores. The `database`
+// parameter is interpolated directly into a `SHOW TABLES FROM` statement and
+// cannot be bound as a positional value, so restricting it to this character
+// set is the only safe option short of refactoring to use ClickHouse's
+// `system.tables` view.
+var validIdentifier = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
 func init() {
 	if !tools.Register(listTablesType, newListTablesConfig) {
 		panic(fmt.Sprintf("tool type %q already registered", listTablesType))
@@ -37,7 +44,7 @@ func init() {
 }
 
 func newListTablesConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -49,15 +56,11 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Parameters   parameters.Parameters  `yaml:"parameters"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Parameters       parameters.Parameters  `yaml:"parameters"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -66,50 +69,41 @@ func (cfg Config) ToolConfigType() string {
 	return listTablesType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	databaseParameter := parameters.NewStringParameter(databaseKey, "The database to list tables from.")
 	params := parameters.Parameters{databaseParameter}
 
-	allParameters, paramManifest, _ := parameters.ProcessParameters(nil, params)
-
-	t := Tool{
-		Config:    cfg,
-		AllParams: allParameters,
-		manifest:  tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+	allParameters, paramManifest, err := parameters.ProcessParameters(nil, params)
+	if err != nil {
+		return nil, err
 	}
-	return t, nil
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-	manifest  tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -120,8 +114,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a string", databaseKey), nil)
 	}
 
-	// Query to list all tables in the specified database
-	// Note: formatting identifier directly is risky if input is untrusted, but standard for this tool structure.
+	// The database name is interpolated directly into the `SHOW TABLES FROM`
+	// statement. Reject anything that is not a plain identifier so that a
+	// caller cannot smuggle additional clauses (LIKE, LIMIT, FORMAT,
+	// INTO OUTFILE, ...), quoted identifiers, or other expressions through
+	// this parameter. Without this check, an MCP client (or a prompt-injected
+	// LLM) could escape the intended scope of the tool and read arbitrary
+	// system tables, switch the output format to one the calling layer cannot
+	// parse safely, or chain a SHOW with an `INTO OUTFILE` write.
+	if !validIdentifier.MatchString(database) {
+		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter %q: must be a plain identifier matching %s", databaseKey, database, validIdentifier.String()), nil)
+	}
 	query := fmt.Sprintf("SHOW TABLES FROM %s", database)
 
 	out, err := source.RunSQL(ctx, query, nil)
@@ -144,32 +147,4 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		tables = append(tables, tableMap)
 	}
 	return tables, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

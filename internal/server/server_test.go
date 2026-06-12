@@ -50,6 +50,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Helper function to create temporary self-signed certs for the test
@@ -109,7 +110,7 @@ func TestServe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -668,7 +669,7 @@ func TestPRMEndpoint(t *testing.T) {
 	defer cancel()
 
 	// Setup telemetry and logging
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -950,7 +951,7 @@ func TestMCPAuthMiddleware(t *testing.T) {
 	defer cancel()
 
 	// Setup telemetry and logging
-	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -994,7 +995,14 @@ func TestMCPAuthMiddleware(t *testing.T) {
 			if mockRawResponse != "" {
 				_, _ = w.Write([]byte(mockRawResponse))
 			} else {
-				_ = json.NewEncoder(w).Encode(mockResponse)
+				respCopy := make(map[string]any)
+				for k, v := range mockResponse {
+					respCopy[k] = v
+				}
+				if _, hasIss := respCopy["iss"]; !hasIss {
+					respCopy["iss"] = "http://" + r.Host
+				}
+				_ = json.NewEncoder(w).Encode(respCopy)
 			}
 			return
 		}
@@ -1148,5 +1156,242 @@ func TestMCPAuthMiddleware(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestGoogleAuthConfigValidation(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "only clientId, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+clientId: my-client-id
+`,
+			wantError: false,
+		},
+		{
+			name: "only audience, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+audience: my-audience
+`,
+			wantError: true,
+		},
+		{
+			name: "only audience, mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+audience: my-audience
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+		{
+			name: "scopesRequired, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+scopesRequired:
+  - email
+`,
+			wantError: true,
+		},
+		{
+			name: "scopesRequired, mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+scopesRequired:
+  - email
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+		{
+			name: "both clientId and audience, mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-google-auth
+type: google
+clientId: my-client-id
+audience: my-audience
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestGenericAuthConfigValidation(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "valid mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+`,
+			wantError: false,
+		},
+		{
+			name: "valid mcpEnabled true",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+mcpEnabled: true
+`,
+			wantError: false,
+		},
+		{
+			name: "introspectionEndpoint, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+introspectionEndpoint: http://example.com/introspect
+`,
+			wantError: true,
+		},
+		{
+			name: "introspectionMethod, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+introspectionMethod: POST
+`,
+			wantError: true,
+		},
+		{
+			name: "introspectionParamName, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+introspectionParamName: token
+`,
+			wantError: true,
+		},
+		{
+			name: "scopesRequired, mcpEnabled false",
+			yaml: `
+kind: authService
+name: my-generic-auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+scopesRequired:
+  - email
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+type offlineSourceConfig struct {
+	initialized *bool
+}
+
+func (c offlineSourceConfig) SourceConfigType() string { return "offline-test-source" }
+
+func (c offlineSourceConfig) Initialize(context.Context, trace.Tracer) (sources.Source, error) {
+	*c.initialized = true
+	return nil, fmt.Errorf("source Initialize should not be called during offline init")
+}
+
+type offlineToolConfig struct {
+	name string
+}
+
+func (c offlineToolConfig) ToolConfigType() string { return "offline-test-tool" }
+
+func (c offlineToolConfig) Initialize() (tools.Tool, error) {
+	return testutils.NewMockTool(c.name, "offline tool", nil, false, false), nil
+}
+
+func TestInitializeOfflineConfigs(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	sourceInitialized := false
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		SourceConfigs: server.SourceConfigs{
+			"my-source": offlineSourceConfig{initialized: &sourceInitialized},
+		},
+		ToolConfigs: server.ToolConfigs{
+			"my-tool": offlineToolConfig{name: "my-tool"},
+		},
+	}
+
+	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	if err != nil {
+		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
+	}
+	if sourceInitialized {
+		t.Error("source Initialize was called during offline init")
+	}
+	if _, ok := toolsMap["my-tool"]; !ok {
+		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
+	}
+	// The implicit default ("") toolset should always be present.
+	if _, ok := toolsetsMap[""]; !ok {
+		t.Error("expected default toolset to be present")
 	}
 }

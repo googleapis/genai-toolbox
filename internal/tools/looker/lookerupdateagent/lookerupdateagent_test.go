@@ -15,6 +15,7 @@
 package lookerupdateagent_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -50,11 +51,13 @@ func TestParseFromYaml(t *testing.T) {
                                 `,
 			want: server.ToolConfigs{
 				"test_tool": lkr.Config{
-					Name:         "test_tool",
-					Type:         "looker-update-agent",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "test_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-update-agent",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -125,7 +128,7 @@ func (m MockSource) LookerApiSettings() *rtl.ApiSettings {
 	return &rtl.ApiSettings{}
 }
 
-func (m MockSource) GetLookerSDK(string) (*v4.LookerSDK, error) {
+func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, error) {
 	return &v4.LookerSDK{}, nil
 }
 
@@ -145,13 +148,15 @@ func TestInvokeValidation(t *testing.T) {
 	}
 
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-update-agent",
+		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -196,18 +201,23 @@ func TestInvokeValidation(t *testing.T) {
 
 func TestManifest(t *testing.T) {
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-update-agent",
+		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != cfg.Description {
 		t.Errorf("manifest description mismatch: got %q, want %q", manifest.Description, cfg.Description)
 	}
@@ -230,16 +240,18 @@ func TestManifest(t *testing.T) {
 func TestAnnotations(t *testing.T) {
 	readOnlyTrue := true
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-update-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-update-agent",
+		Source: "my-instance",
 		Annotations: &tools.ToolAnnotations{
 			ReadOnlyHint: &readOnlyTrue,
 		},
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

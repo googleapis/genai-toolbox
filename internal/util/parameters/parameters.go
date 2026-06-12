@@ -714,13 +714,17 @@ func (p *StringParameter) Parse(v any) (any, error) {
 func applyEscape(escape, v string) (any, error) {
 	switch escape {
 	case escapeBackticks:
-		return fmt.Sprintf("`%s`", v), nil
+		escaped := strings.ReplaceAll(v, "`", "``")
+		return fmt.Sprintf("`%s`", escaped), nil
 	case escapeDoubleQuotes:
-		return fmt.Sprintf(`"%s"`, v), nil
+		escaped := strings.ReplaceAll(v, `"`, `""`)
+		return fmt.Sprintf(`"%s"`, escaped), nil
 	case escapeSingleQuotes:
-		return fmt.Sprintf(`'%s'`, v), nil
+		escaped := strings.ReplaceAll(v, `'`, `''`)
+		return fmt.Sprintf(`'%s'`, escaped), nil
 	case escapeSquareBrackets:
-		return fmt.Sprintf("[%s]", v), nil
+		escaped := strings.ReplaceAll(v, "]", "]]")
+		return fmt.Sprintf("[%s]", escaped), nil
 	default:
 		return nil, fmt.Errorf("%s is not an allowed escaping delimiter", escape)
 	}

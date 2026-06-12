@@ -22,7 +22,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -115,13 +114,15 @@ func TestGenerateToolManifest(t *testing.T) {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
 			}
 
-			if got.Annotations != nil {
-				annotations, _ := json.Marshal(got.Annotations)
+			if tc.wantAnnotations != nil {
+				annotations, err := json.Marshal(got.Annotations)
+				if err != nil {
+					t.Fatalf("error marshaling annotations")
+				}
 				if diff := cmp.Diff(tc.wantAnnotations, annotations); diff != "" {
 					t.Fatalf("unexpected annotations (-want +got):\n%s", diff)
 				}
 			}
-
 		})
 	}
 }
@@ -229,14 +230,14 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
 
-	got, err := GenerateListToolsResult(toolset, toolsMap)
+	got, err := GenerateListToolsResult(nil, toolset, toolsMap)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
 	want := ListToolsResult{
 		Tools: []Tool{
 			Tool{
-				BaseMetadata: util.BaseMetadata{Name: "no_params"},
+				BaseMetadata: BaseMetadata{Name: "no_params"},
 				Description:  "",
 				ToolInputSchema: InputSchema{
 					Type:       "object",
@@ -245,7 +246,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 				},
 			},
 			Tool{
-				BaseMetadata: util.BaseMetadata{Name: "some_params"},
+				BaseMetadata: BaseMetadata{Name: "some_params"},
 				Description:  "",
 				ToolInputSchema: InputSchema{
 					Type: "object",
@@ -290,7 +291,7 @@ func TestGeneratePromptManifest(t *testing.T) {
 			description: "A test prompt.",
 			args:        prompts.Arguments{},
 			want: Prompt{
-				BaseMetadata: util.BaseMetadata{Name: "test-prompt"},
+				BaseMetadata: BaseMetadata{Name: "test-prompt"},
 				Description:  "A test prompt.",
 				Arguments:    []PromptArgument{},
 			},
@@ -304,11 +305,11 @@ func TestGeneratePromptManifest(t *testing.T) {
 				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
 			},
 			want: Prompt{
-				BaseMetadata: util.BaseMetadata{Name: "arg-prompt"},
+				BaseMetadata: BaseMetadata{Name: "arg-prompt"},
 				Description:  "Prompt with args.",
 				Arguments: []PromptArgument{
-					{BaseMetadata: util.BaseMetadata{Name: "param1"}, Description: "First param", Required: true},
-					{BaseMetadata: util.BaseMetadata{Name: "param2"}, Description: "Second param", Required: false},
+					{BaseMetadata: BaseMetadata{Name: "param1"}, Description: "First param", Required: true},
+					{BaseMetadata: BaseMetadata{Name: "param2"}, Description: "Second param", Required: false},
 				},
 			},
 		},
@@ -349,16 +350,16 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	want := ListPromptsResult{
 		Prompts: []Prompt{
 			Prompt{
-				BaseMetadata: util.BaseMetadata{Name: "prompt1"},
+				BaseMetadata: BaseMetadata{Name: "prompt1"},
 				Description:  "First test prompt",
 				Arguments:    []PromptArgument{},
 			},
 			Prompt{
-				BaseMetadata: util.BaseMetadata{Name: "prompt2"},
+				BaseMetadata: BaseMetadata{Name: "prompt2"},
 				Description:  "Second test prompt",
 				Arguments: []PromptArgument{
 					PromptArgument{
-						BaseMetadata: util.BaseMetadata{Name: "arg1"},
+						BaseMetadata: BaseMetadata{Name: "arg1"},
 						Description:  "Test argument",
 						Required:     true,
 					},

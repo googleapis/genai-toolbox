@@ -230,6 +230,36 @@ func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
 	return nil
 }
 
+const clientIPKey contextKey = "clientIP"
+
+// WithClientIP adds a client IP address into the context as a value
+func WithClientIP(ctx context.Context, clientIP string) context.Context {
+	return context.WithValue(ctx, clientIPKey, clientIP)
+}
+
+// ClientIPFromContext retrieves the client IP address or returns false if not present
+func ClientIPFromContext(ctx context.Context) (string, bool) {
+	if ip, ok := ctx.Value(clientIPKey).(string); ok {
+		return ip, true
+	}
+	return "", false
+}
+
+// ExtractClientIP retrieves the leftmost client IP from X-Forwarded-For or X-Real-IP header
+func ExtractClientIP(header http.Header) string {
+	if xff := header.Get("X-Forwarded-For"); xff != "" {
+		for _, ip := range strings.Split(xff, ",") {
+			if trimmed := strings.TrimSpace(ip); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	if xri := header.Get("X-Real-IP"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+	return ""
+}
+
 // TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
 type TelemetryAttributes struct {
 	ClientName    string
@@ -265,6 +295,38 @@ func WithSQLCommenterEnabled(ctx context.Context, enabled bool) context.Context 
 func SQLCommenterEnabledFromContext(ctx context.Context) bool {
 	if enabled, ok := ctx.Value(sqlCommenterEnabledKey).(bool); ok {
 		return enabled
+	}
+	return false
+}
+
+// toolboxVersionKey is the key used to store toolbox version within context
+const toolboxVersionKey contextKey = "toolboxVersion"
+
+// WithToolboxVersionKey adds a toolbox version into the context as a value
+func WithToolboxVersionKey(ctx context.Context, versionString string) context.Context {
+	return context.WithValue(ctx, toolboxVersionKey, versionString)
+}
+
+// ToolboxVersionFromContext retrieves the toolbox version or return an error
+func ToolboxVersionFromContext(ctx context.Context) (string, error) {
+	if v, ok := ctx.Value(toolboxVersionKey).(string); ok && v != "" {
+		return v, nil
+	} else {
+		return "", fmt.Errorf("unable to retrieve toolbox version")
+	}
+}
+
+const ignoreUnknownToolsKey contextKey = "ignoreUnknownTools"
+
+// WithIgnoreUnknownTools adds the ignore-unknown-tools flag to the context
+func WithIgnoreUnknownTools(ctx context.Context, ignore bool) context.Context {
+	return context.WithValue(ctx, ignoreUnknownToolsKey, ignore)
+}
+
+// IgnoreUnknownToolsFromContext retrieves the ignore-unknown-tools flag from context
+func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
+	if ignore, ok := ctx.Value(ignoreUnknownToolsKey).(bool); ok {
+		return ignore
 	}
 	return false
 }

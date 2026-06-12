@@ -18,17 +18,39 @@ import (
 	"fmt"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, params parameters.Parameters) Tool {
-	inputSchema, _ := generateParamManifest(params)
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations) Tool {
+	inputSchema, authParams := generateParamManifest(params)
+
+	var toolAnnotations *ToolAnnotations
+	if annotations != nil {
+		toolAnnotations = &ToolAnnotations{
+			DestructiveHint: annotations.DestructiveHint,
+			IdempotentHint:  annotations.IdempotentHint,
+			OpenWorldHint:   annotations.OpenWorldHint,
+			ReadOnlyHint:    annotations.ReadOnlyHint,
+		}
+	}
 	mcpManifest := Tool{
 		Name:            name,
 		Description:     desc,
 		ToolInputSchema: inputSchema,
+		Annotations:     toolAnnotations,
+	}
+	metadata := make(map[string]any)
+	if len(authInvoke) > 0 {
+		metadata["toolbox/authInvoke"] = authInvoke
+	}
+	if len(authParams) > 0 {
+		metadata["toolbox/authParam"] = authParams
+	}
+	if len(metadata) > 0 {
+		mcpManifest.Metadata = metadata
 	}
 	return mcpManifest
 }
@@ -68,14 +90,18 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
+func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(t.ToolNames))
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetParameters())
+		params, err := tool.GetParameters(srcs)
+		if err != nil {
+			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
+		}
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations())
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil

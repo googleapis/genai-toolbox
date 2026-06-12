@@ -83,7 +83,7 @@ func generateSkillMarkdown(skillName, skillDescription, additionalNotes string, 
 
 	for _, name := range toolNames {
 		tool := toolsMap[name]
-		manifest := tool.Manifest()
+		manifest := tool.StaticManifest()
 
 		parametersSchema, err := formatParameters(manifest.Parameters, envVars)
 		if err != nil {

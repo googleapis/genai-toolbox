@@ -20,6 +20,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -73,7 +74,11 @@ func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamV
 	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap, nil)
 }
 
-func (t MockTool) Manifest() tools.Manifest {
+func (t MockTool) Manifest(map[string]sources.Source) (tools.Manifest, error) {
+	return t.manifest, nil
+}
+
+func (t MockTool) StaticManifest() tools.Manifest {
 	return t.manifest
 }
 
@@ -87,8 +92,8 @@ func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error
 	return t.requireClientAuthorization, nil
 }
 
-func (t MockTool) GetParameters() parameters.Parameters {
-	return t.Params
+func (t MockTool) GetParameters(map[string]sources.Source) (parameters.Parameters, error) {
+	return t.Params, nil
 }
 
 func (t MockTool) GetName() string {

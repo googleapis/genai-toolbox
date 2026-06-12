@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -36,7 +36,7 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 		}
 	}
 	mcpManifest := Tool{
-		BaseMetadata: util.BaseMetadata{
+		BaseMetadata: BaseMetadata{
 			Name: name,
 		},
 		Description:     desc,
@@ -91,14 +91,18 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
+func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(t.ToolNames))
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations())
+		params, err := tool.GetParameters(srcs)
+		if err != nil {
+			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
+		}
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations())
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
@@ -109,14 +113,14 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 	mcpArgs := make([]PromptArgument, 0, len(args))
 	for _, arg := range args {
 		promptArg := PromptArgument{
-			BaseMetadata: util.BaseMetadata{Name: arg.GetName()},
+			BaseMetadata: BaseMetadata{Name: arg.GetName()},
 			Description:  arg.GetDesc(),
 			Required:     parameters.CheckParamRequired(arg.GetRequired(), arg.GetDefault()),
 		}
 		mcpArgs = append(mcpArgs, promptArg)
 	}
 	return Prompt{
-		BaseMetadata: util.BaseMetadata{Name: name},
+		BaseMetadata: BaseMetadata{Name: name},
 		Description:  desc,
 		Arguments:    mcpArgs,
 	}

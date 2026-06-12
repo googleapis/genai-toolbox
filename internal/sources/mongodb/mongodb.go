@@ -102,7 +102,7 @@ func parseData(ctx context.Context, cur *mongo.Cursor) ([]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var final []any
+	final := []any{}
 	for _, item := range data {
 		tmp, _ := bson.MarshalExtJSON(item, false, false)
 		var tmp2 any

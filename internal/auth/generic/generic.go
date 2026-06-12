@@ -16,6 +16,7 @@ package generic
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -56,6 +57,20 @@ func (cfg Config) AuthServiceConfigType() string {
 
 // Initialize a generic auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
+	if !cfg.McpEnabled {
+		if cfg.IntrospectionEndpoint != "" {
+			return nil, fmt.Errorf("`introspectionEndpoint` is not allowed when `mcpEnabled` is false")
+		}
+		if cfg.IntrospectionMethod != "" {
+			return nil, fmt.Errorf("`introspectionMethod` is not allowed when `mcpEnabled` is false")
+		}
+		if cfg.IntrospectionParamName != "" {
+			return nil, fmt.Errorf("`introspectionParamName` is not allowed when `mcpEnabled` is false")
+		}
+		if len(cfg.ScopesRequired) > 0 {
+			return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+		}
+	}
 	httpClient := newSecureHTTPClient()
 
 	// Discover OIDC endpoints
@@ -140,6 +155,10 @@ func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksUR
 		return "", "", "", err
 	}
 
+	if config.Issuer == "" {
+		return "", "", "", fmt.Errorf("issuer not found in config")
+	}
+
 	if config.JwksUri == "" {
 		return "", "", "", fmt.Errorf("jwks_uri not found in config")
 	}
@@ -156,7 +175,7 @@ func discoverOIDCConfig(client *http.Client, AuthorizationServer string) (jwksUR
 	return config.JwksUri, config.IntrospectionEndpoint, config.Issuer, nil
 }
 
-var _ auth.AuthService = AuthService{}
+var _ auth.MCPAuthService = AuthService{}
 
 // struct used to store auth service info
 type AuthService struct {
@@ -179,6 +198,18 @@ func (a AuthService) ToConfig() auth.AuthServiceConfig {
 // Returns the name of the auth service
 func (a AuthService) GetName() string {
 	return a.Name
+}
+
+func (a AuthService) IsMCPEnabled() bool {
+	return a.McpEnabled
+}
+
+func (a AuthService) GetScopesRequired() []string {
+	return a.ScopesRequired
+}
+
+func (a AuthService) GetAuthorizationServer() string {
+	return a.AuthorizationServer
 }
 
 // Verifies generic JWT access token inside the Authorization header
@@ -229,13 +260,7 @@ func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (ma
 }
 
 // MCPAuthError represents an error during MCP authentication validation.
-type MCPAuthError struct {
-	Code           int
-	Message        string
-	ScopesRequired []string
-}
-
-func (e *MCPAuthError) Error() string { return e.Message }
+type MCPAuthError = auth.MCPAuthError
 
 // ValidateMCPAuth handles MCP auth token validation
 func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[string]any, error) {
@@ -258,7 +283,20 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 }
 
 func isJWTFormat(token string) bool {
-	return strings.Count(token, ".") == 2
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return false
+	}
+	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		return false
+	}
+	var header map[string]any
+	if err := json.Unmarshal(headerBytes, &header); err != nil {
+		return false
+	}
+	_, hasAlg := header["alg"]
+	return hasAlg
 }
 
 // validateJwtToken validates a JWT token locally
@@ -364,7 +402,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		Scope    string          `json:"scope"`
 		Aud      json.RawMessage `json:"aud"`
 		Audience json.RawMessage `json:"audience"`
-		Exp      int64           `json:"exp"`
+		Exp      json.Number     `json:"exp"`
 		Iss      string          `json:"iss"`
 	}
 
@@ -372,15 +410,24 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		return nil, fmt.Errorf("failed to parse introspection response: %w", err)
 	}
 
-	if introspectResp.Active != nil && !*introspectResp.Active {
+	if introspectResp.Active == nil || !*introspectResp.Active {
 		logger.InfoContext(ctx, "token is not active")
 		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "token is not active", ScopesRequired: a.ScopesRequired}
 	}
 
+	var expVal int64
+	if introspectResp.Exp != "" {
+		expVal, err = introspectResp.Exp.Int64()
+		if err != nil {
+			logger.WarnContext(ctx, "failed to parse exp claim in introspection response: %v", err)
+			return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "invalid exp claim", ScopesRequired: a.ScopesRequired}
+		}
+	}
+
 	// Verify expiration (with 1 minute leeway)
 	const leeway = 60
-	if introspectResp.Exp > 0 && time.Now().Unix() > (introspectResp.Exp+leeway) {
-		logger.WarnContext(ctx, "token has expired: exp=%d, now=%d", introspectResp.Exp, time.Now().Unix())
+	if expVal > 0 && time.Now().Unix() > (expVal+leeway) {
+		logger.WarnContext(ctx, "token has expired: exp=%d, now=%d", expVal, time.Now().Unix())
 		return nil, &MCPAuthError{Code: http.StatusUnauthorized, Message: "token has expired", ScopesRequired: a.ScopesRequired}
 	}
 
@@ -414,7 +461,7 @@ func (a AuthService) validateOpaqueToken(ctx context.Context, tokenStr string) (
 		"active": introspectResp.Active,
 		"scope":  introspectResp.Scope,
 		"aud":    aud,
-		"exp":    introspectResp.Exp,
+		"exp":    expVal,
 		"iss":    introspectResp.Iss,
 	}
 	return claims, nil
@@ -428,11 +475,13 @@ func (a AuthService) validateClaims(ctx context.Context, iss string, aud []strin
 	}
 
 	// Validate issuer
-	if a.issuer != "" && iss != "" {
-		if iss != a.issuer {
-			logger.WarnContext(ctx, "issuer validation failed: expected %s, got %s", a.issuer, iss)
-			return &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
-		}
+	if iss == "" {
+		logger.WarnContext(ctx, "issuer validation failed: missing issuer in token")
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "missing issuer in token validation", ScopesRequired: a.ScopesRequired}
+	}
+	if iss != a.issuer {
+		logger.WarnContext(ctx, "issuer validation failed: expected %s, got %s", a.issuer, iss)
+		return &MCPAuthError{Code: http.StatusUnauthorized, Message: "issuer validation failed", ScopesRequired: a.ScopesRequired}
 	}
 
 	// Validate audience
@@ -453,7 +502,7 @@ func (a AuthService) validateClaims(ctx context.Context, iss string, aud []strin
 
 	// Check scopes
 	if len(a.ScopesRequired) > 0 {
-		tokenScopes := strings.Split(scopeStr, " ")
+		tokenScopes := strings.Fields(scopeStr)
 		scopeMap := make(map[string]bool)
 		for _, s := range tokenScopes {
 			scopeMap[s] = true

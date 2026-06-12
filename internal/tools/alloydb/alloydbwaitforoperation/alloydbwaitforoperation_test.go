@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	alloydbwaitforoperation "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 )
 
@@ -48,15 +49,17 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"wait-for-thing": alloydbwaitforoperation.Config{
-					Name:         "wait-for-thing",
-					Type:         "alloydb-wait-for-operation",
-					Source:       "some-source",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Delay:        "1s",
-					MaxDelay:     "5s",
-					Multiplier:   1.5,
-					MaxRetries:   5,
+					ConfigBase: tools.ConfigBase{
+						Name:         "wait-for-thing",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:       "alloydb-wait-for-operation",
+					Source:     "some-source",
+					Delay:      "1s",
+					MaxDelay:   "5s",
+					Multiplier: 1.5,
+					MaxRetries: 5,
 				},
 			},
 		},
