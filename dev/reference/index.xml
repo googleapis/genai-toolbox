@@ -29,6 +29,12 @@
  &lt;/tr&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;--http-max-request-bytes&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;Maximum MCP HTTP request body size in bytes.&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;10485760&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--ignore-unknown-tools&lt;/code&gt;&lt;/td&gt;
  &lt;td&gt;Log warnings and skip unknown/unsupported tool types instead of failing to start.&lt;/td&gt;
  &lt;td&gt;&lt;/td&gt;
