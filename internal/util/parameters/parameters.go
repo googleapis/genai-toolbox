@@ -595,8 +595,58 @@ type ParamAuthService struct {
 	Field string `yaml:"field"`
 }
 
+// StringParameterOption configures a StringParameter.
+type StringParameterOption func(*StringParameter)
+
+func applyStringParameterOptions(p *StringParameter, opts ...StringParameterOption) *StringParameter {
+	for _, opt := range opts {
+		opt(p)
+	}
+	return p
+}
+
+func WithStringParameterRequired(required bool) StringParameterOption {
+	return func(p *StringParameter) {
+		p.Required = &required
+	}
+}
+
+func WithStringParameterDefault(defaultV string) StringParameterOption {
+	return func(p *StringParameter) {
+		p.Default = &defaultV
+	}
+}
+
+func WithStringParameterEscape(escape string) StringParameterOption {
+	return func(p *StringParameter) {
+		p.Escape = &escape
+	}
+}
+
+func WithStringParameterAuth(authServices []ParamAuthService) StringParameterOption {
+	return func(p *StringParameter) {
+		p.AuthServices = authServices
+	}
+}
+
+func WithStringParameterAllowedValues(allowedValues []any) StringParameterOption {
+	return func(p *StringParameter) {
+		p.AllowedValues = allowedValues
+	}
+}
+
+func WithStringParameterExcludedValues(excludedValues []any) StringParameterOption {
+	return func(p *StringParameter) {
+		p.ExcludedValues = excludedValues
+	}
+}
+
 // NewStringParameter is a convenience function for initializing a StringParameter.
-func NewStringParameter(name string, desc string) *StringParameter {
+func NewStringParameter(name string, desc string, opts ...StringParameterOption) *StringParameter {
+	return applyStringParameterOptions(newStringParameter(name, desc), opts...)
+}
+
+func newStringParameter(name string, desc string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
@@ -608,80 +658,45 @@ func NewStringParameter(name string, desc string) *StringParameter {
 }
 
 // NewStringParameterWithDefault is a convenience function for initializing a StringParameter with default value.
-func NewStringParameterWithDefault(name string, defaultV, desc string) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Default: &defaultV,
-	}
+func NewStringParameterWithDefault(name string, defaultV, desc string, opts ...StringParameterOption) *StringParameter {
+	p := newStringParameter(name, desc)
+	p.Default = &defaultV
+	return applyStringParameterOptions(p, opts...)
 }
 
 // NewStringParameterWithEscape is a convenience function for initializing a StringParameter.
-func NewStringParameterWithEscape(name, desc, escape string) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Escape: &escape,
-	}
+func NewStringParameterWithEscape(name, desc, escape string, opts ...StringParameterOption) *StringParameter {
+	p := newStringParameter(name, desc)
+	p.Escape = &escape
+	return applyStringParameterOptions(p, opts...)
 }
 
 // NewStringParameterWithRequired is a convenience function for initializing a StringParameter.
-func NewStringParameterWithRequired(name string, desc string, required bool) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			Required:     &required,
-			AuthServices: nil,
-		},
-	}
+func NewStringParameterWithRequired(name string, desc string, required bool, opts ...StringParameterOption) *StringParameter {
+	p := newStringParameter(name, desc)
+	p.Required = &required
+	return applyStringParameterOptions(p, opts...)
 }
 
 // NewStringParameterWithAuth is a convenience function for initializing a StringParameter with a list of ParamAuthService.
-func NewStringParameterWithAuth(name string, desc string, authServices []ParamAuthService) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-	}
+func NewStringParameterWithAuth(name string, desc string, authServices []ParamAuthService, opts ...StringParameterOption) *StringParameter {
+	p := newStringParameter(name, desc)
+	p.AuthServices = authServices
+	return applyStringParameterOptions(p, opts...)
 }
 
 // NewStringParameterWithAllowedValues is a convenience function for initializing a StringParameter with a list of allowedValues
-func NewStringParameterWithAllowedValues(name string, desc string, allowedValues []any) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          TypeString,
-			Desc:          desc,
-			AllowedValues: allowedValues,
-			AuthServices:  nil,
-		},
-	}
+func NewStringParameterWithAllowedValues(name string, desc string, allowedValues []any, opts ...StringParameterOption) *StringParameter {
+	p := newStringParameter(name, desc)
+	p.AllowedValues = allowedValues
+	return applyStringParameterOptions(p, opts...)
 }
 
 // NewStringParameterWithExcludedValues is a convenience function for initializing a StringParameter with a list of excludedValues
-func NewStringParameterWithExcludedValues(name string, desc string, excludedValues []any) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           TypeString,
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-			AuthServices:   nil,
-		},
-	}
+func NewStringParameterWithExcludedValues(name string, desc string, excludedValues []any, opts ...StringParameterOption) *StringParameter {
+	p := newStringParameter(name, desc)
+	p.ExcludedValues = excludedValues
+	return applyStringParameterOptions(p, opts...)
 }
 
 var _ Parameter = &StringParameter{}

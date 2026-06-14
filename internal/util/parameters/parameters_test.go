@@ -742,6 +742,36 @@ func TestParametersParse(t *testing.T) {
 			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "foo"}},
 		},
 		{
+			name: "optional string allowed via option",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithRequired(
+					"my_string",
+					"this param is a string",
+					false,
+					parameters.WithStringParameterAllowedValues([]any{"foo", "bar"}),
+				),
+			},
+			in: map[string]any{
+				"my_string": "bar",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "bar"}},
+		},
+		{
+			name: "string default allowed via option",
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithDefault(
+					"my_string",
+					"foo",
+					"this param is a string",
+					parameters.WithStringParameterAllowedValues([]any{"foo"}),
+				),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "foo"}},
+		},
+		{
 			name: "string not allowed",
 			params: parameters.Parameters{
 				parameters.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
@@ -1717,6 +1747,16 @@ func TestParamManifest(t *testing.T) {
 		{
 			name: "string not required",
 			in:   parameters.NewStringParameterWithRequired("foo-string", "bar", false),
+			want: parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+		},
+		{
+			name: "string not required with allowed values",
+			in: parameters.NewStringParameterWithRequired(
+				"foo-string",
+				"bar",
+				false,
+				parameters.WithStringParameterAllowedValues([]any{"foo", "bar"}),
+			),
 			want: parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
