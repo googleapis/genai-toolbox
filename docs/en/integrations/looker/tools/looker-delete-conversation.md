@@ -1,5 +1,5 @@
 ---
-title: "looker-delete-conversation Tool"
+title: "looker-delete-conversation"
 type: docs
 weight: 1
 description: >

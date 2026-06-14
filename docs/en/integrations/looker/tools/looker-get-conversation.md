@@ -1,5 +1,5 @@
 ---
-title: "looker-get-conversation Tool"
+title: "looker-get-conversation"
 type: docs
 weight: 1
 description: >

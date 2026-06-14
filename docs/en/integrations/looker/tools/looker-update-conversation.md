@@ -1,5 +1,5 @@
 ---
-title: "looker-update-conversation Tool"
+title: "looker-update-conversation"
 type: docs
 weight: 1
 description: >
