@@ -27,7 +27,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/snowflakedb/gosnowflake"
+	_ "github.com/snowflakedb/gosnowflake/v2"
 )
 
 var (
@@ -154,7 +154,6 @@ func TestSnowflake(t *testing.T) {
 		tests.DisableArrayTest(),
 		tests.WithMyToolId3NameAliceWant(`[{"ID":"1","NAME":"Alice"},{"ID":"3","NAME":"Sid"}]`),
 		tests.WithMyToolById4Want(`[{"ID":"4","NAME":null}]`),
-		tests.WithNullWant("null"),
 	)
 	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want, tests.WithMcpMyToolId3NameAliceWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"ID\":\"1\",\"NAME\":\"Alice\"}"},{"type":"text","text":"{\"ID\":\"3\",\"NAME\":\"Sid\"}"}]}}`))
 

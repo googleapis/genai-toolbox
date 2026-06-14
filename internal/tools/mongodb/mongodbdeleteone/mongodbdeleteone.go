@@ -20,12 +20,10 @@ import (
 	"slices"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
@@ -38,7 +36,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -51,16 +49,14 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name          string                 `yaml:"name" validate:"required"`
-	Type          string                 `yaml:"type" validate:"required"`
-	Source        string                 `yaml:"source" validate:"required"`
-	AuthRequired  []string               `yaml:"authRequired" validate:"required"`
-	Description   string                 `yaml:"description" validate:"required"`
-	Database      string                 `yaml:"database" validate:"required"`
-	Collection    string                 `yaml:"collection" validate:"required"`
-	FilterPayload string                 `yaml:"filterPayload" validate:"required"`
-	FilterParams  parameters.Parameters  `yaml:"filterParams"`
-	Annotations   *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Database         string                 `yaml:"database" validate:"required"`
+	Collection       string                 `yaml:"collection" validate:"required"`
+	FilterPayload    string                 `yaml:"filterPayload" validate:"required"`
+	FilterParams     parameters.Parameters  `yaml:"filterParams"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -70,33 +66,29 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Create a slice for all parameters
+func (cfg Config) Initialize() (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	allParameters := slices.Concat(cfg.FilterParams)
 
-	// Verify no duplicate parameter names
-	err := parameters.CheckDuplicateParameters(allParameters)
-	if err != nil {
+	if err := parameters.CheckDuplicateParameters(allParameters); err != nil {
 		return nil, err
 	}
 
-	// Create Toolbox manifest
 	paramManifest := allParameters.Manifest()
-
 	if paramManifest == nil {
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
-
-	// finish tool setup
 	return Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -104,59 +96,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
-	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBDeleteOneFilter", t.FilterPayload, paramsMap)
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBDeleteOneFilter", t.Cfg.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating filter", err)
 	}
-	resp, err := source.DeleteOne(ctx, filterString, t.Database, t.Collection)
+	resp, err := source.DeleteOne(ctx, filterString, t.Cfg.Database, t.Cfg.Collection)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
 }

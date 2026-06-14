@@ -3,7 +3,9 @@ title: "dataplex-search-aspect-types"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-aspect-types" tool allows to to find aspect types relevant to the query.
+  A "dataplex-search-aspect-types" tool allows to find aspect types relevant to the query.
+aliases:
+  - /integrations/dataplex/tools/dataplex-search-aspect-types/
 ---
 
 ## About

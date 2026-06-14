@@ -80,7 +80,7 @@ export async function main() {
   
   const rootAgent = new LlmAgent({
     name: 'hotel_agent',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3-flash-preview',
     description: 'Agent for hotel bookings and administration.',
     instruction: systemPrompt,
     tools: tools,

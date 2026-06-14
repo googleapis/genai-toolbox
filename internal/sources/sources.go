@@ -24,6 +24,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// CloudPlatformScope is the OAuth2 scope for Google Cloud Platform services.
+const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
 // SourceConfigFactory defines the function signature for creating a SourceConfig.
 type SourceConfigFactory func(ctx context.Context, name string, decoder *yaml.Decoder) (SourceConfig, error)
 

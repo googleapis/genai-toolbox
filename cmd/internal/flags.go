@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -32,8 +33,10 @@ func PersistentFlags(parentCmd *cobra.Command, opts *ToolboxOptions) {
 	persistentFlags.Var(&opts.Cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	persistentFlags.Var(&opts.Cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 	persistentFlags.BoolVar(&opts.Cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
+	persistentFlags.StringVar(&opts.Cfg.TelemetryGCPProject, "telemetry-gcp-project", "", "Google Cloud project ID to use for telemetry-gcp. Defaults to `GOOGLE_CLOUD_PROJECT` if not set.")
 	persistentFlags.StringVar(&opts.Cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	persistentFlags.StringVar(&opts.Cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
+	persistentFlags.BoolVar(&opts.Cfg.SQLCommenter, "sql-commenter", false, "Enable appending SQLCommenter-format comments to SQL statements.")
 	persistentFlags.StringSliceVar(&opts.Cfg.UserAgentMetadata, "user-agent-metadata", []string{}, "Appends additional metadata to the User-Agent.")
 }
 
@@ -61,6 +64,8 @@ func ConfigFileFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVarP(&opts.Cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&opts.Cfg.Port, "port", "p", 5000, "Port the server will listen on.")
+	flags.StringVar(&opts.Cfg.CertFile, "tls-cert", "", "Path to TLS certificate file")
+	flags.StringVar(&opts.Cfg.KeyFile, "tls-key", "", "Path to TLS key file")
 	flags.BoolVar(&opts.Cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&opts.Cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
 	flags.BoolVar(&opts.Cfg.EnableAPI, "enable-api", false, "Enable the /api endpoint.")
@@ -68,4 +73,5 @@ func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVar(&opts.Cfg.McpPrmFile, "mcp-prm-file", "", "Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation.")
 	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	flags.Int64Var(&opts.Cfg.HttpMaxRequestBytes, "http-max-request-bytes", server.DefaultHTTPMaxRequestBytes, "Maximum MCP HTTP request body size in bytes.")
 }

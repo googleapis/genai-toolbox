@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firebird/firebirdsql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -59,12 +60,14 @@ func TestParseFromYamlFirebird(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": firebirdsql.Config{
-					Name:         "example_tool",
-					Type:         "firebird-sql",
-					Source:       "my-fdb-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "firebird-sql",
+					Source:    "my-fdb-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -127,12 +130,14 @@ func TestParseFromYamlWithTemplateParamsFirebird(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": firebirdsql.Config{
-					Name:         "example_tool",
-					Type:         "firebird-sql",
-					Source:       "my-fdb-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "firebird-sql",
+					Source:    "my-fdb-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "some description"),
 					},

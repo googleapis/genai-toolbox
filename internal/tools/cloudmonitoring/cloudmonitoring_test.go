@@ -20,24 +20,14 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
-	cloudmonitoringsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudmonitoring"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// mockIncompatibleSource is a source of a different type to test error paths.
-type mockIncompatibleSource struct{ sources.Source }
-
 func TestInitialize(t *testing.T) {
 	t.Parallel()
-	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Type: "cloud-monitoring"}}
-	srcs := map[string]sources.Source{
-		"my-monitoring-source": testSource,
-		"incompatible-source":  &mockIncompatibleSource{},
-	}
 
 	wantParams := parameters.Parameters{
 		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
@@ -53,11 +43,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "Success case with nil authRequired",
 			cfg: cloudmonitoring.Config{
-				Name:         "test-tool",
-				Type:         "cloud-monitoring-query-prometheus",
-				Source:       "my-monitoring-source",
-				Description:  "A test description.",
-				AuthRequired: nil,
+				ConfigBase: tools.ConfigBase{
+					Name:         "test-tool",
+					Description:  "A test description.",
+					AuthRequired: nil,
+				},
+				Type:   "cloud-monitoring-query-prometheus",
+				Source: "my-monitoring-source",
 			},
 			want: &tools.Manifest{
 				Description:  "A test description.",
@@ -68,11 +60,13 @@ func TestInitialize(t *testing.T) {
 		{
 			desc: "Success case with specified authRequired",
 			cfg: cloudmonitoring.Config{
-				Name:         "test-tool-with-auth",
-				Type:         "cloud-monitoring-query-prometheus",
-				Source:       "my-monitoring-source",
-				Description:  "Another test description.",
-				AuthRequired: []string{"google-auth-service"},
+				ConfigBase: tools.ConfigBase{
+					Name:         "test-tool-with-auth",
+					Description:  "Another test description.",
+					AuthRequired: []string{"google-auth-service"},
+				},
+				Type:   "cloud-monitoring-query-prometheus",
+				Source: "my-monitoring-source",
 			},
 			want: &tools.Manifest{
 				Description:  "Another test description.",
@@ -84,7 +78,7 @@ func TestInitialize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tool, err := tc.cfg.Initialize(srcs)
+			tool, err := tc.cfg.Initialize()
 
 			if tc.wantErr != "" {
 				if err == nil {
@@ -100,7 +94,10 @@ func TestInitialize(t *testing.T) {
 				t.Fatalf("Initialize() failed: %v", err)
 			}
 
-			got := tool.Manifest()
+			got, err := tool.Manifest(nil)
+			if err != nil {
+				t.Fatalf("Manifest() failed: %v", err)
+			}
 			if diff := cmp.Diff(tc.want, &got); diff != "" {
 				t.Errorf("Initialize() manifest mismatch (-want +got):\n%s", diff)
 			}
@@ -129,11 +126,13 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
-					Name:         "example_tool",
-					Type:         "cloud-monitoring-query-prometheus",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-monitoring-query-prometheus",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -151,11 +150,13 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
-					Name:         "example_tool",
-					Type:         "cloud-monitoring-query-prometheus",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "cloud-monitoring-query-prometheus",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -203,16 +204,6 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 			description: some description
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
-		},
-		{
-			desc: "missing description",
-			in: `
-			kind: tool
-			name: example_tool
-			type: cloud-monitoring-query-prometheus
-			source: my-instance
-			`,
-			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
 	for _, tc := range tcs {

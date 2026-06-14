@@ -20,7 +20,6 @@ import (
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/createbatch"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -39,11 +38,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	if err != nil {
 		return nil, err
 	}
-	return Config{baseCfg}, nil
+	return Config{Config: baseCfg}, nil
 }
 
 type Config struct {
 	createbatch.Config
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -55,8 +56,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	return createbatch.NewTool(cfg.Config, cfg, srcs, &SparkBatchBuilder{})
+func (cfg Config) Initialize() (tools.Tool, error) {
+	return createbatch.NewTool(cfg.Config, cfg, &SparkBatchBuilder{})
 }
 
 type SparkBatchBuilder struct{}

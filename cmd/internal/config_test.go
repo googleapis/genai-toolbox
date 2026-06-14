@@ -45,6 +45,7 @@ func TestParseEnv(t *testing.T) {
 		err          bool
 		errString    string
 		wantOptional []string
+		lenient      bool
 	}{
 		{
 			desc:      "without default without env",
@@ -52,6 +53,19 @@ func TestParseEnv(t *testing.T) {
 			want:      "",
 			err:       true,
 			errString: `environment variable not found: "FOO"`,
+		},
+		{
+			desc:    "without default without env, lenient",
+			in:      "${FOO}",
+			want:    "FOO",
+			lenient: true,
+		},
+		{
+			desc:    "missing required mixed with env, lenient",
+			in:      "project: ${PROJECT}, region: ${REGION}",
+			env:     map[string]string{"REGION": "us-central1"},
+			want:    "project: PROJECT, region: us-central1",
+			lenient: true,
 		},
 		{
 			desc: "without default with env",
@@ -108,7 +122,7 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			parser := &ConfigParser{}
+			parser := &ConfigParser{AllowMissingEnvVars: tc.lenient}
 			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {
@@ -184,7 +198,8 @@ func TestConvertConfig(t *testing.T) {
                     model: gemini-embedding-001
                     apiKey: some-key
                     dimension: 768`,
-			want: `kind: source
+			want: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -261,7 +276,8 @@ dimension: 768
             toolsets:
                 example_toolset:
                     - example_tool`,
-			want: `kind: tool
+			want: `
+kind: tool
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
@@ -382,7 +398,8 @@ tools:
             kind: embeddingModel
             name: gemini-model2
             type: gemini`,
-			want: `kind: source
+			want: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -478,7 +495,8 @@ type: gemini
 		},
 		{
 			desc: "no convertion needed",
-			in: `kind: source
+			in: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -503,7 +521,8 @@ kind: toolset
 name: example_toolset
 tools:
 - example_tool`,
-			want: `kind: source
+			want: `
+kind: source
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -534,13 +553,13 @@ tools:
 			desc:   "invalid source",
 			in:     `sources: invalid`,
 			isErr:  true,
-			errStr: `doc 1: invalid config format at key "sources": expected map`,
+			errStr: `doc 1: invalid config format at key "sources": expected nested format keys and type map`,
 		},
 		{
 			desc:   "invalid toolset",
 			in:     `toolsets: invalid`,
 			isErr:  true,
-			errStr: `doc 1: invalid config format at key "toolsets": expected map`,
+			errStr: `doc 1: invalid config format at key "toolsets": expected nested format keys and type map`,
 		},
 	}
 	for _, tc := range tcs {
@@ -619,15 +638,17 @@ func TestParseConfig(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 						},
-						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -741,15 +762,17 @@ func TestParseConfig(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 						},
-						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -922,12 +945,14 @@ func TestParseConfigWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -1028,12 +1053,14 @@ func TestParseConfigWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{"my-google-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-service"},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -1197,13 +1224,15 @@ func TestEnvVarReplacement(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
-						Name:         "example_tool",
-						Type:         "http",
-						Source:       "my-instance",
-						Method:       "GET",
-						Path:         "search?name=alice&pet=cat",
-						Description:  "some description",
-						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						},
+						Type:   "http",
+						Source: "my-instance",
+						Method: "GET",
+						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
 							parameters.NewStringParameterWithAuth("country", "some description",
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -1343,13 +1372,15 @@ func TestEnvVarReplacement(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
-						Name:         "example_tool",
-						Type:         "http",
-						Source:       "my-instance",
-						Method:       "GET",
-						Path:         "search?name=alice&pet=cat",
-						Description:  "some description",
-						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						},
+						Type:   "http",
+						Source: "my-instance",
+						Method: "GET",
+						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
 							parameters.NewStringParameterWithAuth("country", "some description",
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -1421,36 +1452,41 @@ func TestPrebuiltTools(t *testing.T) {
 	alloydb_omni_config, _ := prebuiltconfigs.Get("alloydb-omni")
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
-	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
-	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
-	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
-	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
 	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
+	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
+	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
+	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	conversationalanalytics_config, _ := prebuiltconfigs.Get("conversational-analytics-with-data-agent")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
+	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
+	elasticsearch_config, _ := prebuiltconfigs.Get("elasticsearch")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
-	mysql_config, _ := prebuiltconfigs.Get("mysql")
-	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
 	looker_dev_config, _ := prebuiltconfigs.Get("looker-dev")
 	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
+	mssql_config, _ := prebuiltconfigs.Get("mssql")
+	mysql_config, _ := prebuiltconfigs.Get("mysql")
+	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	oceanbase_config, _ := prebuiltconfigs.Get("oceanbase")
+	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
+	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	cloudstorage_config, _ := prebuiltconfigs.Get("cloud-storage")
+	singlestore_config, _ := prebuiltconfigs.Get("singlestore")
+	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
-	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
-	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
-	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
-	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
-	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
-	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
-	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
-	dataproc_config, _ := prebuiltconfigs.Get("dataproc")
-	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
-	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
-	oracle_config, _ := prebuiltconfigs.Get("oracledb")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1508,6 +1544,11 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
 	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
 
+	t.Setenv("CLOUD_GDA_PROJECT", "your_gcp_project_id")
+
+	t.Setenv("ELASTICSEARCH_HOST", "your_elasticsearch_host")
+	t.Setenv("ELASTICSEARCH_APIKEY", "your_api_key")
+
 	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
 	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
 
@@ -1557,6 +1598,8 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
 	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
+	t.Setenv("CLOUD_STORAGE_PROJECT", "your_gcp_project_id")
+
 	t.Setenv("SNOWFLAKE_ACCOUNT", "your_account")
 	t.Setenv("SNOWFLAKE_USER", "your_username")
 	t.Setenv("SNOWFLAKE_PASSWORD", "your_pass")
@@ -1573,6 +1616,18 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("ORACLE_USE_OCI", "false")
 	t.Setenv("ORACLE_WALLET", "your_path_to_oracldb_wallet")
 	t.Setenv("ORACLE_TNS_ADMIN", "your_path_to_tns_admin")
+
+	t.Setenv("OCEANBASE_HOST", "your_oceanbase_host")
+	t.Setenv("OCEANBASE_PORT", "your_oceanbase_port")
+	t.Setenv("OCEANBASE_DATABASE", "your_oceanbase_db")
+	t.Setenv("OCEANBASE_USER", "your_oceanbase_user")
+	t.Setenv("OCEANBASE_PASSWORD", "your_oceanbase_pass")
+
+	t.Setenv("SINGLESTORE_HOST", "your_singlestore_host")
+	t.Setenv("SINGLESTORE_PORT", "your_singlestore_port")
+	t.Setenv("SINGLESTORE_DATABASE", "your_singlestore_db")
+	t.Setenv("SINGLESTORE_USER", "your_singlestore_user")
+	t.Setenv("SINGLESTORE_PASSWORD", "your_singlestore_pass")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1749,7 +1804,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"vectorassist": {
 					Name:      "vectorassist",
-					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query"},
+					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query", "improve_query_recall", "list_specs", "get_spec", "delete_spec"},
 				},
 			},
 		},
@@ -1803,7 +1858,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"discovery": tools.ToolsetConfig{
 					Name:      "discovery",
-					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context"},
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
 				},
 			},
 		},
@@ -1929,6 +1984,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
+				},
 			},
 		},
 		{
@@ -1939,6 +1998,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
 				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "search_catalog"},
+				},
 			},
 		},
 		{
@@ -1947,7 +2010,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"mindsdb-tools": tools.ToolsetConfig{
 					Name:      "mindsdb-tools",
-					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
+					ToolNames: []string{"execute_sql", "parameterized_sql"},
 				},
 			},
 		},
@@ -2030,6 +2093,20 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
+			name: "cloud storage prebuilt tools",
+			in:   cloudstorage_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud-storage-buckets": tools.ToolsetConfig{
+					Name:      "cloud-storage-buckets",
+					ToolNames: []string{"list_buckets", "create_bucket", "get_bucket_metadata", "get_bucket_iam_policy", "delete_bucket"},
+				},
+				"cloud-storage-objects": tools.ToolsetConfig{
+					Name:      "cloud-storage-objects",
+					ToolNames: []string{"list_objects", "get_object_metadata", "read_object", "download_object", "write_object", "upload_object", "copy_object", "move_object", "delete_object"},
+				},
+			},
+		},
+		{
 			name: "Snowflake prebuilt tool",
 			in:   snowflake_config,
 			wantToolset: server.ToolsetConfigs{
@@ -2046,6 +2123,46 @@ func TestPrebuiltTools(t *testing.T) {
 				"oracle_database_tools": tools.ToolsetConfig{
 					Name:      "oracle_database_tools",
 					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
+				},
+			},
+		},
+		{
+			name: "Conversational Analytics with Data Agent prebuilt tools",
+			in:   conversationalanalytics_config,
+			wantToolset: server.ToolsetConfigs{
+				"conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "conversational_analytics_tools",
+					ToolNames: []string{"list_accessible_data_agents", "get_data_agent_info", "ask_data_agent"},
+				},
+			},
+		},
+		{
+			name: "Elasticsearch prebuilt tools",
+			in:   elasticsearch_config,
+			wantToolset: server.ToolsetConfigs{
+				"elasticsearch-tools": tools.ToolsetConfig{
+					Name:      "elasticsearch-tools",
+					ToolNames: []string{"execute_esql_query"},
+				},
+			},
+		},
+		{
+			name: "Oceanbase prebuilt tools",
+			in:   oceanbase_config,
+			wantToolset: server.ToolsetConfigs{
+				"oceanbase_database_tools": tools.ToolsetConfig{
+					Name:      "oceanbase_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "Singlestore prebuilt tools",
+			in:   singlestore_config,
+			wantToolset: server.ToolsetConfigs{
+				"singlestore-database-tools": tools.ToolsetConfig{
+					Name:      "singlestore-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
@@ -2080,18 +2197,18 @@ func TestPrebuiltTools(t *testing.T) {
 func TestMergeConfigs(t *testing.T) {
 	file1 := Config{
 		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
 		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
 		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
 	file2 := Config{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-		Tools:        server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+		Tools:        server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
 	}
 	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+		Tools:   server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 	}
 	fileMcp1 := Config{
 		AuthServices: server.AuthServiceConfigs{"generic1": generic.Config{Name: "generic1", McpEnabled: true}},
@@ -2113,7 +2230,7 @@ func TestMergeConfigs(t *testing.T) {
 			want: Config{
 				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:         server.PromptConfigs{},
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},

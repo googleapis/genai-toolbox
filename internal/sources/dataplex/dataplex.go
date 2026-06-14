@@ -64,13 +64,14 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
+	client, dataScanClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
 	if err != nil {
 		return nil, err
 	}
 	s := &Source{
-		Config: r,
-		Client: client,
+		Config:         r,
+		Client:         client,
+		DataScanClient: dataScanClient,
 	}
 
 	return s, nil
@@ -80,7 +81,8 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client *dataplexapi.CatalogClient
+	Client         *dataplexapi.CatalogClient
+	DataScanClient *dataplexapi.DataScanClient
 }
 
 func (s *Source) SourceType() string {
@@ -100,30 +102,38 @@ func (s *Source) CatalogClient() *dataplexapi.CatalogClient {
 	return s.Client
 }
 
+func (s *Source) GetDataScanClient() *dataplexapi.DataScanClient {
+	return s.DataScanClient
+}
+
 func initDataplexConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
 	name string,
 	project string,
-) (*dataplexapi.CatalogClient, error) {
+) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
-	return client, nil
+
+	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
+	}
+	return client, dataScanClient, nil
 }
 
 func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectTypes []string, entry string) (*dataplexpb.Entry, error) {
@@ -169,6 +179,9 @@ func (s *Source) searchRequest(ctx context.Context, query string, pageSize int, 
 }
 
 func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize int, orderBy string) ([]*dataplexpb.AspectType, error) {
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
 	q := query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype"
 	it, err := s.searchRequest(ctx, q, pageSize, orderBy, "")
 	if err != nil {
@@ -177,7 +190,7 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 
 	// Iterate through the search results and call GetAspectType for each result using the resource name
 	var results []*dataplexpb.AspectType
-	for {
+	for len(results) < pageSize {
 		entry, err := it.Next()
 
 		if err == iterator.Done {
@@ -221,13 +234,16 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 }
 
 func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, orderBy string, scope string) ([]*dataplexpb.SearchEntriesResult, error) {
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
 	it, err := s.searchRequest(ctx, query, pageSize, orderBy, scope)
 	if err != nil {
 		return nil, err
 	}
 
 	var results []*dataplexpb.SearchEntriesResult
-	for {
+	for len(results) < pageSize {
 		entry, err := it.Next()
 		if err == iterator.Done {
 			break
@@ -255,4 +271,34 @@ func (s *Source) LookupContext(ctx context.Context, name string, resources []str
 		return nil, err
 	}
 	return result, nil
+}
+
+func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, pageSize int, orderBy string) ([]*dataplexpb.DataScan, error) {
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
+	req := &dataplexpb.ListDataScansRequest{
+		Parent:   fmt.Sprintf("projects/%s/locations/-", s.ProjectID()),
+		Filter:   filter,
+		PageSize: int32(pageSize),
+		OrderBy:  orderBy,
+	}
+
+	it := s.GetDataScanClient().ListDataScans(ctx, req)
+
+	var results []*dataplexpb.DataScan
+	for len(results) < pageSize {
+		scan, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				return nil, fmt.Errorf("failed to list data scans: code=%s message=%s", st.Code(), st.Message())
+			}
+			return nil, fmt.Errorf("failed to list data scans: %w", err)
+		}
+		results = append(results, scan)
+	}
+	return results, nil
 }

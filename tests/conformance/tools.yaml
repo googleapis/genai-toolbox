@@ -1,0 +1,51 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+kind: source
+name: test-sqlite
+type: sqlite
+database: tests/conformance/test.db
+---
+kind: tool
+name: test_simple_text
+type: sqlite-sql
+source: test-sqlite
+description: Test simple text
+statement: SELECT 'This is a simple text response for testing.' AS text;
+---
+kind: tool
+name: test_error_handling
+type: sqlite-sql
+source: test-sqlite
+description: Test error handling
+statement: SELECT * FROM non_existent_table;
+---
+kind: prompt
+name: test_simple_prompt
+description: Test simple prompt
+messages:
+  - role: user
+    content: "This is a simple prompt for testing."
+---
+kind: prompt
+name: test_prompt_with_arguments
+description: Test prompt with arguments
+messages:
+  - role: user
+    content: "Prompt with arguments: arg1='{{.arg1}}', arg2='{{.arg2}}'"
+arguments:
+  - name: "arg1"
+    description: "First test argument"
+  - name: "arg2"
+    description: "Second test argument"

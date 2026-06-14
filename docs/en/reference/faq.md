@@ -15,6 +15,7 @@ For detailed instructions, check out these resources:
 
 - [Quickstart: How to Run Locally](../documentation/getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../documentation/deploy-to/cloud-run/_index.md)
+- To run Toolbox more securely or harden security, check out our [hardening guidelines](./cli.md#hardening-toolbox)
 
 [release-notes]: https://github.com/googleapis/mcp-toolbox/releases/
 
@@ -23,6 +24,15 @@ For detailed instructions, check out these resources:
 Nope! While some of the sources Toolbox connects to may require GCP credentials,
 Toolbox doesn't require them and can connect to a bunch of different resources
 that don't.
+
+## How do I configure Google Cloud telemetry with ADC when running locally?
+
+If you run Toolbox with `--telemetry-gcp`, make sure Application Default Credentials are available via `GOOGLE_APPLICATION_CREDENTIALS` (or other ADC-compatible setup) and specify a project ID either by:
+
+- setting `--telemetry-gcp-project`, or
+- setting `GOOGLE_CLOUD_PROJECT` environment variable.
+
+This avoids "no project found" errors when exporting telemetry to Google Cloud.
 
 ## Does Toolbox take contributions from external users?
 

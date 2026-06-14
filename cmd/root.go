@@ -87,6 +87,7 @@ func Execute() {
 	opts := internal.NewToolboxOptions()
 
 	if err := NewCommand(opts).Execute(); err != nil {
+		fmt.Fprintf(opts.IOStreams.ErrOut, "Error: %v\n", err)
 		exit := 1
 		os.Exit(exit)
 	}
@@ -118,6 +119,7 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	internal.ConfigFileFlags(flags, opts)
 	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
+	flags.BoolVar(&opts.Cfg.IgnoreUnknownTools, "ignore-unknown-tools", false, "Log warnings and skip unknown/unsupported tool types instead of failing to start.")
 	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
@@ -177,6 +179,7 @@ func validateReloadEdits(
 		ToolConfigs:           toolsFile.Tools,
 		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
@@ -475,6 +478,12 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		return errMsg
 	}
 
+	useTLS := opts.Cfg.CertFile != "" || opts.Cfg.KeyFile != ""
+	protocol := "http"
+	if useTLS {
+		protocol = "https"
+	}
+
 	// run server in background
 	srvErr := make(chan error)
 	if opts.Cfg.Stdio {
@@ -486,7 +495,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 			}
 		}()
 	} else {
-		err = s.Listen(ctx)
+		err = s.Listen(ctx, opts.Cfg.CertFile, opts.Cfg.KeyFile)
 		if err != nil {
 			errMsg := fmt.Errorf("toolbox failed to start listener: %w", err)
 			opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -494,7 +503,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 		}
 		opts.Logger.InfoContext(ctx, "Server ready to serve!")
 		if opts.Cfg.UI {
-			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://%s:%d/ui", opts.Cfg.Address, opts.Cfg.Port))
+			opts.Logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: %s://%s:%d/ui", protocol, opts.Cfg.Address, opts.Cfg.Port))
 		}
 
 		go func() {

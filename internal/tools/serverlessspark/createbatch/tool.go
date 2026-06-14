@@ -21,7 +21,6 @@ import (
 
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -33,43 +32,34 @@ type BatchBuilder interface {
 	BuildBatch(parameters.ParamValues) (*dataprocpb.Batch, error)
 }
 
-func NewTool(cfg Config, originalCfg tools.ToolConfig, srcs map[string]sources.Source, builder BatchBuilder) (*Tool, error) {
+func NewTool(cfg Config, originalCfg tools.ToolConfig, builder BatchBuilder) (*Tool, error) {
 	desc := cfg.Description
 	if desc == "" {
 		desc = fmt.Sprintf("Creates a Serverless Spark (aka Dataproc Serverless) %s operation.", cfg.Type)
 	}
 
 	allParameters := builder.Parameters()
-	inputSchema, _ := allParameters.McpManifest()
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: desc,
-		InputSchema: inputSchema,
-		Annotations: tools.NewDestructiveAnnotations(),
-	}
 
 	return &Tool{
-		Config:         cfg,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(nil, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: desc, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 		originalConfig: originalCfg,
 		Builder:        builder,
-		manifest:       tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
-		mcpManifest:    mcpManifest,
-		Parameters:     allParameters,
 	}, nil
 }
 
 type Tool struct {
-	Config
+	tools.BaseTool[Config]
 	originalConfig tools.ToolConfig
 	Builder        BatchBuilder
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
-	Parameters     parameters.Parameters
 }
 
 func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -82,12 +72,12 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 		return nil, util.NewAgentError("failed to build batch", err)
 	}
 
-	if t.RuntimeConfig != nil {
-		batch.RuntimeConfig = proto.Clone(t.RuntimeConfig).(*dataprocpb.RuntimeConfig)
+	if t.Cfg.RuntimeConfig != nil {
+		batch.RuntimeConfig = proto.Clone(t.Cfg.RuntimeConfig).(*dataprocpb.RuntimeConfig)
 	}
 
-	if t.EnvironmentConfig != nil {
-		batch.EnvironmentConfig = proto.Clone(t.EnvironmentConfig).(*dataprocpb.EnvironmentConfig)
+	if t.Cfg.EnvironmentConfig != nil {
+		batch.EnvironmentConfig = proto.Clone(t.Cfg.EnvironmentConfig).(*dataprocpb.EnvironmentConfig)
 	}
 
 	// Common override for version if present in params
@@ -106,38 +96,14 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	newParamValues, err := parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-	if err != nil {
-		return nil, util.NewClientServerError(fmt.Sprintf("error embedding parameters: %v", err), http.StatusInternalServerError, err)
-	}
-	return newParamValues, nil
-}
-
-func (t *Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t *Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t *Tool) Authorized(services []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, services)
-}
-
-func (t *Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
 func (t *Tool) ToConfig() tools.ToolConfig {
 	return t.originalConfig
 }
 
-func (t *Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t *Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	newParamValues, err := parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, nil)
+	if err != nil {
+		return nil, util.NewClientServerError(fmt.Sprintf("error embedding parameters: %v", err), http.StatusInternalServerError, err)
+	}
+	return newParamValues, nil
 }

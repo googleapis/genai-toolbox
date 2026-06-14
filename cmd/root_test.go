@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
+	if c.HttpMaxRequestBytes == 0 {
+		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
+	}
 	return c
 }
 
@@ -226,10 +229,31 @@ func TestServerConfigFlags(t *testing.T) {
 			}),
 		},
 		{
+			desc: "http max request bytes",
+			args: []string{"--http-max-request-bytes", "2097152"},
+			want: withDefaults(server.ServerConfig{
+				HttpMaxRequestBytes: 2097152,
+			}),
+		},
+		{
 			desc: "user agent metadata",
 			args: []string{"--user-agent-metadata", "foo,bar"},
 			want: withDefaults(server.ServerConfig{
 				UserAgentMetadata: []string{"foo", "bar"},
+			}),
+		},
+		{
+			desc: "cert file",
+			args: []string{"--tls-cert", "cert.pem"},
+			want: withDefaults(server.ServerConfig{
+				CertFile: "cert.pem",
+			}),
+		},
+		{
+			desc: "key file",
+			args: []string{"--tls-key", "key.pem"},
+			want: withDefaults(server.ServerConfig{
+				KeyFile: "key.pem",
 			}),
 		},
 	}
@@ -699,7 +723,7 @@ func TestFileLoadingErrors(t *testing.T) {
 }
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	// Setup custom config
 	customContent := `
 kind: tool
@@ -867,7 +891,7 @@ tools:
 }
 
 func TestDefaultConfigBehavior(t *testing.T) {
-	t.Setenv("SQLITE_DATABASE", "test.db")
+	t.Setenv("SQLITE_DATABASE", "\":memory:\"")
 	testCases := []struct {
 		desc      string
 		args      []string
@@ -939,4 +963,50 @@ func TestSubcommandWiring(t *testing.T) {
 			t.Errorf("Expected command name %q, got %q", tc.expectedName, cmd.Name())
 		}
 	}
+}
+
+func TestIgnoreUnknownToolsFlag(t *testing.T) {
+	invalidContent := `
+kind: tool
+name: invalid_tool
+type: unregistered-tool-type
+source: my-http
+description: "A tool with unregistered type"
+---
+kind: source
+name: my-http
+type: http
+baseUrl: http://example.com
+`
+	invalidFile := filepath.Join(t.TempDir(), "invalid.yaml")
+	if err := os.WriteFile(invalidFile, []byte(invalidContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("without ignore flag fails", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		defer cancel()
+		_, _, _, err := invokeCommandWithContext(ctx, []string{"--config", invalidFile})
+		if err == nil {
+			t.Fatalf("expected error due to unregistered tool type, got nil")
+		}
+		if !strings.Contains(err.Error(), "unknown tool type") {
+			t.Errorf("expected error containing 'unknown tool type', got: %v", err)
+		}
+	})
+
+	t.Run("with ignore flag succeeds and skips tool", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		defer cancel()
+		_, opts, output, err := invokeCommandWithContext(ctx, []string{"--config", invalidFile, "--ignore-unknown-tools"})
+		if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.Contains(output, "Server ready to serve!") {
+			t.Errorf("server did not start successfully. Output:\n%s", output)
+		}
+		if _, ok := opts.Cfg.ToolConfigs["invalid_tool"]; ok {
+			t.Errorf("expected 'invalid_tool' to be skipped and filtered out, but it was found in ToolConfigs")
+		}
+	})
 }

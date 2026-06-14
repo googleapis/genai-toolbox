@@ -155,18 +155,21 @@ Use the format: `Fixes #<issue_number> 🦕`
 1.  Create a new directory: `internal/sources/<newdb>`.
 2.  Define `Config` and `Source` structs in `internal/sources/<newdb>/<newdb>.go`.
 3.  Implement `SourceConfig` interface (`SourceConfigType`, `Initialize`).
-4.  Implement `Source` interface (`SourceType`).
+4.  Implement `Source` interface (`SourceType`, `ToConfig`).
 5.  Implement `init()` to register the source.
 6.  Add unit tests in `internal/sources/<newdb>/<newdb>_test.go`.
 
 ### Adding a New Tool
 
 1.  Create a new directory: `internal/tools/<newdb>/<toolname>`.
-2.  Define `Config` and `Tool` structs.
-3.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`).
-4.  Implement `Tool` interface (`Invoke`, `ParseParams`, `Manifest`, `McpManifest`, `Authorized`).
-5.  Implement `init()` to register the tool.
-6.  Add unit tests.
+2.  Define a `Config` struct that **embeds `tools.ConfigBase`** (with `yaml:",inline"`). This supplies the shared `name`, `description`, `authRequired`, and `scopesRequired` fields and their getters — add only tool-specific fields and do not redeclare the shared ones.
+3.  Define a `Tool` struct that **embeds `tools.BaseTool[Config]`**. Do *not* re-declare the boilerplate `Tool` methods (`GetName`, `GetDescription`, `Manifest`, `GetParameters`, `Authorized`, `RequiresClientAuthorization`, `GetAuthTokenHeaderName`, `EmbedParams`, etc.) — they are inherited from `BaseTool`.
+4.  Implement `ToolConfig` interface (`ToolConfigType`, `Initialize`). In `Initialize`, construct the tool via `tools.NewBaseTool(cfg, annotations, manifest, staticParameters)`.
+5.  Implement only the methods `BaseTool` does not provide: `Invoke` and `ToConfig`. Override an inherited method (e.g. `EmbedParams`, `RequiresClientAuthorization`, `GetAuthTokenHeaderName`) **only** when the tool's behavior differs from the default.
+6.  Implement `init()` to register the tool.
+7.  Add unit tests.
+
+Refer to `internal/tools/postgres/postgressql/postgressql.go` for the canonical pattern.
 
 ### Adding Documentation
 
@@ -214,6 +217,7 @@ When generating or editing documentation for this repository, you must strictly 
     *   `## Troubleshooting` (Optional)
     *   `## Additional Resources` (Optional)
 4.  **Shortcode Placement:** If you generate the `## Compatible Sources` section, you must include the `{{< compatible-sources >}}` shortcode beneath it.
+5.  **Title Convention:** The YAML frontmatter `title` must always be exactly the kebab-case name of the tool (e.g., `title: "arcadedb-execute-sql"`). Do **NOT** append the word "Tool" to the title (unlike source pages, which end with "Source").
 
 ##### Samples Architecture Constraints
 Sample code is aggregated visually in the UI via the Samples section, but the physical markdown files are distributed logically based on their scope.
@@ -223,10 +227,9 @@ Sample code is aggregated visually in the UI via the Samples section, but the ph
 
 ##### Samples Maintenance Rules
 
-1. **Filtering:** Always include `sample_filters` in the frontmatter. Use specific tags for:
-   * Data Source (e.g., `bigquery`, `alloydb`)
-   * Language (e.g., `python`, `js`, `go`)
-   * Tool Type (e.g., `mcp`, `sdk`)
+1. **Filtering (`sample_filters`):** Always include `sample_filters` in the frontmatter. You MUST use strict enums for filtering.
+   * **Source of Truth:** Always refer to `.hugo/data/filters.yaml` for the permitted list of Data Sources, Languages, Frameworks, and Categories.
+   * **Adding New Filters:** If your sample requires the addition of a new filter, add it to `.hugo/data/filters.yaml` using **Title Case** (capitalize the first letter of every word, with words separated by spaces). Do not use snake_case or lowercase.
 2. **Metadata:** Ensure `is_sample: true` is present to prevent the sample from being excluded from the Samples Gallery.
 
 ##### Prebuilt Config Constraints (`integrations/**/prebuilt-configs/*.md`)

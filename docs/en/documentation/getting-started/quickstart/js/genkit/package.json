@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@genkit-ai/googleai": "^1.18.0",
+    "@genkit-ai/google-genai": "^1.33.0",
     "@toolbox-sdk/core": "^1.0.0",
     "genkit": "^1.18.0"
   }

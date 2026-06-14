@@ -124,7 +124,7 @@ In this section, we will download and install the Toolbox binary.
     {{< /notice >}}
     <!-- {x-release-please-start-version} -->
     ```bash
-    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
+    export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
     export VERSION="0.30.0"
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/$OS/toolbox
     ```

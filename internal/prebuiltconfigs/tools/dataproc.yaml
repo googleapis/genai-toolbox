@@ -12,29 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  dataproc-source:
-    kind: dataproc
-    project: ${DATAPROC_PROJECT}
-    region: ${DATAPROC_REGION}
-
+kind: source
+name: dataproc-source
+type: dataproc
+project: ${DATAPROC_PROJECT}
+region: ${DATAPROC_REGION}
+---
+kind: tool
+name: list_clusters
+type: dataproc-list-clusters
+source: dataproc-source
+---
+kind: tool
+name: get_cluster
+type: dataproc-get-cluster
+source: dataproc-source
+---
+kind: tool
+name: list_jobs
+type: dataproc-list-jobs
+source: dataproc-source
+---
+kind: tool
+name: get_job
+type: dataproc-get-job
+source: dataproc-source
+---
+kind: toolset
+name: dataproc_tools
 tools:
-  list_clusters:
-    kind: dataproc-list-clusters
-    source: dataproc-source
-  get_cluster:
-    kind: dataproc-get-cluster
-    source: dataproc-source
-  list_jobs:
-    kind: dataproc-list-jobs
-    source: dataproc-source
-  get_job:
-    kind: dataproc-get-job
-    source: dataproc-source
-
-toolsets:
-  dataproc_tools:
-    - list_clusters
-    - get_cluster
-    - list_jobs
-    - get_job
+- list_clusters
+- get_cluster
+- list_jobs
+- get_job

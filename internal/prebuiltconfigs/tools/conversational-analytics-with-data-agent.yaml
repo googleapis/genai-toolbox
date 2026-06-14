@@ -12,42 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  conversational-analytics-source:
-    kind: "cloud-gemini-data-analytics"
-    projectId: ${CLOUD_GDA_PROJECT}
-    useClientOAuth: ${CLOUD_GDA_USE_CLIENT_OAUTH:false}
-
+kind: source
+name: conversational-analytics-source
+type: cloud-gemini-data-analytics
+projectId: ${CLOUD_GDA_PROJECT}
+useClientOAuth: ${CLOUD_GDA_USE_CLIENT_OAUTH:false}
+---
+kind: tool
+name: list_accessible_data_agents
+type: conversational-analytics-list-accessible-data-agents
+source: conversational-analytics-source
+location: ${CLOUD_GDA_LOCATION:global}
+description: |
+  List all available Data Agents that can be used for
+  conversational analytics in the current project.
+---
+kind: tool
+name: get_data_agent_info
+type: conversational-analytics-get-data-agent-info
+source: conversational-analytics-source
+location: ${CLOUD_GDA_LOCATION:global}
+description: |
+  Retrieve detailed information about a specific Data Agent
+  using its ID.
+---
+kind: tool
+name: ask_data_agent
+type: conversational-analytics-ask-data-agent
+source: conversational-analytics-source
+location: ${CLOUD_GDA_LOCATION:global}
+maxResults: ${CLOUD_GDA_MAX_RESULTS:50}
+description: |
+  Perform natural language data analysis and get insights by interacting
+  with a specific Data Agent. This tool allows for conversational
+  queries and provides detailed responses based on the agent's configured
+  data sources.
+---
+kind: toolset
+name: conversational_analytics_tools
 tools:
-  list-accessible-data-agents:
-    kind: conversational-analytics-list-accessible-data-agents
-    source: conversational-analytics-source
-    location: ${CLOUD_GDA_LOCATION:global}
-    description: |
-      List all available Data Agents that can be used for
-      conversational analytics in the current project.
-
-  get-data-agent-info:
-    kind: conversational-analytics-get-data-agent-info
-    source: conversational-analytics-source
-    location: ${CLOUD_GDA_LOCATION:global}
-    description: |
-      Retrieve detailed information about a specific Data Agent
-      using its ID.
-
-  ask-data-agent:
-    kind: conversational-analytics-ask-data-agent
-    source: conversational-analytics-source
-    location: ${CLOUD_GDA_LOCATION:global}
-    maxResults: ${CLOUD_GDA_MAX_RESULTS:50}
-    description: |
-      Perform natural language data analysis and get insights by interacting
-      with a specific Data Agent. This tool allows for conversational
-      queries and provides detailed responses based on the agent's configured
-      data sources.
-
-toolsets:
-  conversational_analytics_tools:
-    - list-accessible-data-agents
-    - get-data-agent-info
-    - ask-data-agent
+- list_accessible_data_agents
+- get_data_agent_info
+- ask_data_agent

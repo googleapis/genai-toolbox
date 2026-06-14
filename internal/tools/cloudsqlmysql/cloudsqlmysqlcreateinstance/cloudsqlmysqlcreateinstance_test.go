@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"create-instance-tool": cloudsqlmysqlcreateinstance.Config{
-					Name:         "create-instance-tool",
-					Type:         "cloud-sql-mysql-create-instance",
-					Description:  "a test description",
-					Source:       "a-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "create-instance-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-mysql-create-instance",
+					Source: "a-source",
 				},
 			},
 		},

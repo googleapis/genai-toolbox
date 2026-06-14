@@ -65,7 +65,6 @@ should work for macOS with small changes.
 
 2. Change to your MCP Toolbox directory and run the following:
     ```bash
-    cd $HOME/mcp-toolbox
     GOOS=windows \
     GOARCH=amd64 \
     CGO_ENABLED=1 \
@@ -79,6 +78,22 @@ should work for macOS with small changes.
 
 Now the toolbox.exe file is ready to use. Transfer it to your windows machine and test it.
 
+#### Compiling on Windows
+
+1. Download and install the zig 0.15.2 package for windows.
+
+2. Make sure that zig is in your path by typing `zig` at the command line. You should get
+   help data.
+
+3. Run the following commands from your mcp-toolbox folder in PowerShell.
+    ```powershell
+    $env:GOOS="windows"
+    $env:GOARCH="amd64"
+    $env:CGO_ENABLED=1
+    $env:CC="zig cc -target x86_64-windows-gnu"
+    $env:CXX="zig c++ -target x86_64-windows-gnu"
+    go build -o toolbox.exe
+    ```
 
 ### Tool Naming Conventions
 
@@ -217,31 +232,45 @@ implementation](https://github.com/googleapis/mcp-toolbox/tree/main/internal/too
 Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
 
 * **Create a new directory** under `internal/tools` for your tool type (e.g., `internal/tools/newdb/newdbtool`).
-* **Define a configuration struct** for your tool in a file named `newdbtool.go`.
-Create a `Config` struct and a `Tool` struct to store necessary parameters for
-tools.
+* **Define a `Config` struct** for your tool in a file named `newdbtool.go`.
+  **Embed [`tools.ConfigBase`](https://github.com/googleapis/mcp-toolbox/blob/main/internal/tools/tools.go)
+  with `yaml:",inline"`** so your tool inherits the shared `name`,
+  `description`, `authRequired`, and `scopesRequired` fields (and their getters)
+  for free. Add only the fields specific to your tool (e.g., `Type`, `Source`,
+  `Statement`, `Parameters`, `Annotations`). Do **not** redeclare the shared
+  fields.
+* **Define a `Tool` struct** that **embeds
+  [`tools.BaseTool[Config]`](https://github.com/googleapis/mcp-toolbox/blob/main/internal/tools/tools.go)**.
+  `BaseTool` provides default implementations of most of the `Tool` interface —
+  `GetName`, `GetDescription`, `GetAuthRequired`, `GetScopesRequired`,
+  `GetAnnotations`, `Manifest`, `GetParameters`, `Authorized`,
+  `RequiresClientAuthorization`, `GetAuthTokenHeaderName`, and `EmbedParams`.
+  **Do not re-declare these** — eliminating that boilerplate is the entire point
+  of embedding `BaseTool`.
+    
+  **Override an inherited method only when behavior differs from the default.**
+  For example, override `EmbedParams` to inject a vector formatter (see Vector
+  Search below), or override `RequiresClientAuthorization` /
+  `GetAuthTokenHeaderName` for tools that use client-side OAuth.
 * **Implement the
-  [`ToolConfig`](https://github.com/googleapis/mcp-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
-  interface**. This interface requires one method:
+  [`ToolConfig`](https://github.com/googleapis/mcp-toolbox/blob/main/internal/tools/tools.go)
+  interface**:
   * `ToolConfigType() string`: Returns a unique string identifier for your tool
     (e.g., `"newdb-tool"`).
-  * `Initialize(sources map[string]Source) (Tool, error)`: Creates a new
-    instance of your tool and validates that it can connect to the specified
-    data source.
-* **Implement the `Tool` interface**. This interface requires the following
-  methods:
-  * `Invoke(ctx context.Context, params map[string]any) ([]any, error)`:
-    Executes the operation on the database using the provided parameters.
-  * `ParseParams(data map[string]any, claims map[string]map[string]any)
-    (ParamValues, error)`: Parses and validates the input parameters.
-  * `Manifest() Manifest`: Returns a manifest describing the tool's capabilities
-    and parameters.
-  * `McpManifest() McpManifest`: Returns an MCP manifest describing the tool for
-    use with the Model Context Protocol.
-  * `Authorized(services []string) bool`: Checks if the tool is authorized to
-    run based on the provided authentication services.
+  * `Initialize(srcs map[string]sources.Source) (tools.Tool, error)`: Validates
+    the config, processes parameters, and returns your `Tool` constructed via
+    `tools.NewBaseTool(cfg, annotations, manifest, staticParameters)`.
+* **Implement only the two methods `BaseTool` does not provide**:
+  * `Invoke(ctx context.Context, sp tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError)`:
+    Executes the operation. Return typed errors (see [Error
+    Categorization](#error-categorization)).
+  * `ToConfig() tools.ToolConfig`: Returns the embedded `Cfg`.
 * **Implement `init()`** to register the new Tool.
 * **Implement Unit Tests** in a file named `newdbtool_test.go`.
+* **Implement Vector Search** if your new tool supports it. You must:
+  1. Validate that the vector embedding format can be injected successfully into your Tool's statement. If not, update `Tool.EmbedParams()` to pass in a vector formatter into `parameters.EmbedParams`.
+  1. Feel free to reuse existing vector [formatters](internal/embeddingmodels/embeddingmodels.go) or create new ones.
+  1. Add tests and documentation for vector injection and vector search. See the [BigQuery SQL tool](docs/en/integrations/bigquery/tools/bigquery-sql.md) for an example.
 
 #### Adding Integration Tests
 
@@ -308,8 +337,10 @@ When updating documentation, you must adhere to the structural constraints enfor
     2. **Integration-Specific:** `docs/en/integrations/<db>/samples/`. Must include an `_index.md` with strictly only frontmatter.
     3. **General:** `docs/en/samples/`.
   * **Frontmatter Requirements (Maintenance):** To ensure samples appear correctly in the Samples Section, you must provide the following tags:
-    * `is_sample: true` - Required for indexing.
-    * `sample_filters:` - A YAML array used for UI filtering (e.g., `[postgres, go, sql]`).
+    1. `is_sample: true` - Required for indexing.
+    2. **Filtering (`sample_filters`):** Always include `sample_filters` in the frontmatter. You MUST use strict enums for filtering.
+        * **Source of Truth:** Always refer to `.hugo/data/filters.yaml` for the permitted list of Data Sources, Languages, Frameworks, and Categories. All tags are validated via CI (`.ci/lint-docs-sample-filters.sh`).
+        * **Adding New Filters:** If your sample requires a new filter that is not currently listed, add it directly to `.hugo/data/filters.yaml`. You must use **Title Case** (capitalize the first letter of every word, with words separated by spaces). Never use snake_case or lowercase.
 * **Adding Top-Level Sections:** If you add a completely new top-level documentation directory (e.g., a new section alongside `integrations`, `documentation`), you **must** update the AI documentation layout files located at `.hugo/layouts/index.llms.txt` and `.hugo/layouts/index.llms-full.txt`. Specifically, update the "Diátaxis Narrative Framework" preamble so AI models understand the purpose of your new section.
 
 #### Adding Prebuilt Tools
@@ -363,6 +394,12 @@ Run the **tool page** linter to validate:
 # From the repository root
 ./.ci/lint-docs-tool-page.sh
 ```
+
+Run the **sample filters** linter to validate frontmatter tags:
+
+```bash
+# From the repository root
+bash .ci/lint-docs-sample-filters.sh
 
 ### Unit Tests
 
@@ -796,6 +833,7 @@ releases:
 * darwin/arm64
 * darwin/amd64
 * windows/amd64
+* windows/arm64
 
 #### Supported Container Images
 
@@ -850,3 +888,85 @@ Trigger pull request tests for external contributors by:
 * .github/release-please.yml - Creates GitHub releases
 * .github/ISSUE_TEMPLATE - templates for GitHub issues
 
+### How-to Release the npm Package
+
+MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server). To release a new version, follow these steps:
+
+**Pre-requisites**
+
+- **npm Account**: Create an account at [npmjs.com](https://npmjs.com) if you haven't already.
+- **2FA Setup:** Ensure Two-Factor Authentication is enabled on your npm account (required for publishing).
+- **Permissions:** Request Editor access to the `@toolbox-sdk/` organization by pinging the current maintainers.
+
+**Preparation**
+
+- You will be publishing packages for the following OS/Architecture combinations:
+  - `darwin/arm64` -> `server-darwin-arm64`
+  - `darwin/x64` -> `server-darwin-x64`
+  - `linux/x64` -> `server-linux-x64`
+  - `win32/arm64` -> `server-win32-arm64`
+  - `win32/x64` -> `server-win32-x64`
+
+**Phase A: Release Platform-Specific Packages**
+
+_Repeat the following steps for each of the 5 combinations listed above._
+
+1. **Navigate to the package directory:**
+   ```bash
+   cd npm/server-<os>-<arch>
+   ```
+2. **Verify versioning:**
+   - Verify that the `version.txt` file reflects the version of the toolbox binary to be released.
+   - Open `package.json` and verify that the `"version"` field reflects the target version.
+3. **Sync Lockfile:**
+   ```bash
+   npm install --force
+   ```
+4. **Clean Artifacts:** Remove any pre-existing binaries to ensure a clean pack.
+   ```bash
+   rm -rf bin/
+   ```
+5. **Pack and Publish:**
+   ```bash
+   npm pack .
+   npm publish --access public
+   ```
+6. **Verify:** Check the npm registry to ensure the version is live at `https://www.npmjs.com/package/@toolbox-sdk/server-<os>-<arch>` before moving to the next package.
+
+**Phase B: Release Main Package (@toolbox-sdk/server)**
+
+Once all platform-specific packages are live, release the main wrapper package.
+
+1. **Navigate to the main directory:**
+   ```bash
+   cd ../server
+   ```
+2. **Verify Versioning:**
+   - Open `package.json` and verify the `"version"` field reflects the target version.
+   - Verify that versions for dependencies in `"optionalDependencies"` match the new version for all 5 packages.
+3. **Sync Lockfile:** (Before this step, all 5 dep packages need to be published to npm)
+   ```bash
+   npm install --package-lock-only
+   ```
+   1. Ensure that a node module entry for each package is present in `package-lock.json`.
+   2. Ensure that the integrity hashes for all packages are updated. If not, delete the file and use the `Sync Lockfile` command to generate a new lockfile.
+4. **Pack and Publish:**
+   ```bash
+   npm pack .
+   npm publish --access public
+   ```
+5. **Verify:** Confirm the main package is live with the correct version at `https://www.npmjs.com/package/@toolbox-sdk/server`.
+
+**Committing changes to the repo**
+
+Once all packages have been successfully published, please create a Pull Request containing the updated `package-lock.json` files from all `npm/` subdirectories. Ensure that any additional changes made during the release process are also included in this PR. Finally, set the title of the PR to: `chore(main): release npm vX.Y.Z`.
+
+> [!IMPORTANT]
+> Do not commit the binaries to the repo.
+
+**Troubleshooting**
+
+- **Access Token Expired or Need Auth:** Run `npm login`. If the registry is not `https://registry.npmjs.org/`, update it via `npm config set registry https://registry.npmjs.org/` or by modifying your `.npmrc`.
+- **Version Mismatches:** Do not re-publish the same version. Increment the patch version and release the new version following the steps above.
+- **Deprecation (Preferred):** If a specific version is broken, mark it as deprecated: `npm deprecate <package_name>@<version> "critical bug fixed in vX.Y.Z"`.
+- **Unpublishing (Nuclear Option):** Only possible if published within the last 72 hours using `npm unpublish <package-name>@<version>`. Note that this permanently burns the version number.

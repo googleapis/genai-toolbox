@@ -129,7 +129,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 		return nil, fmt.Errorf("unable to get column types: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

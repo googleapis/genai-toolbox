@@ -12,32 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  dataplex-source:
-    kind: "dataplex"
-    project: ${DATAPLEX_PROJECT}
-
+kind: source
+name: dataplex-source
+type: dataplex
+project: ${DATAPLEX_PROJECT}
+---
+kind: tool
+name: search_entries
+type: dataplex-search-entries
+source: dataplex-source
+description: Searches for data assets (eg. table/dataset/view) in Catalog based on the provided search query.
+---
+kind: tool
+name: lookup_entry
+type: dataplex-lookup-entry
+source: dataplex-source
+description: Retrieves a specific metadata regarding a data asset (e.g. table/dataset/view) from Catalog
+---
+kind: tool
+name: search_aspect_types
+type: dataplex-search-aspect-types
+source: dataplex-source
+description: Search aspect types relevant to the query.
+---
+kind: tool
+name: lookup_context
+type: dataplex-lookup-context
+source: dataplex-source
+description: Retrieves rich metadata regarding one or more data assets along with their relationships.
+---
+kind: tool
+name: search_dq_scans
+type: dataplex-search-dq-scans
+source: dataplex-source
+description: Use this tool to search for data quality scans in Dataplex.
+---
+kind: toolset
+name: discovery
 tools:
-  search_entries:
-    kind: dataplex-search-entries
-    source: dataplex-source
-    description: Searches for data assets (eg. table/dataset/view) in Catalog based on the provided search query.
-  lookup_entry:
-    kind: dataplex-lookup-entry
-    source: dataplex-source
-    description: Retrieves a specific metadata regarding a data asset (e.g. table/dataset/view) from Catalog
-  search_aspect_types:
-    kind: dataplex-search-aspect-types
-    source: dataplex-source
-    description: Search aspect types relevant to the query.
-  lookup_context:
-    kind: dataplex-lookup-context
-    source: dataplex-source
-    description: Retrieves rich metadata regarding one or more data assets along with their relationships.
-
-toolsets:
-  discovery:
-    - search_entries
-    - lookup_entry
-    - search_aspect_types
-    - lookup_context
+- search_entries
+- lookup_entry
+- search_aspect_types
+- lookup_context
+- search_dq_scans
