@@ -41,7 +41,7 @@ steps:
       - "BUILD_ID=$BUILD_ID"
     script: |
       #!/usr/bin/env bash
-      bash .ci/trigger_exit_gate.sh
+      bash .ci/trigger_exit_gate.sh npm
 
 options:
   automapSubstitutions: true
