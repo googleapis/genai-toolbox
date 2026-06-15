@@ -57,7 +57,6 @@ The Cloud SQL for MySQL MCP server provides the following tools:
 |:-------------------------------------|:------------------------------------------------------------------------|
 | `execute_sql`                        | Use this tool to execute SQL.                                           |
 | `list_active_queries`                | Lists top N ongoing queries from processlist and innodb_trx.            |
-| `list_all_locks`                     | Lists all current locks on the database                                 |
 | `get_query_plan`                     | Provide information about how MySQL executes a SQL statement (EXPLAIN). |
 | `list_tables`                        | Lists detailed schema information for user-created tables.              |
 | `list_tables_missing_unique_indexes` | Find tables that do not have primary or unique key constraint.          |

@@ -20,7 +20,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlshowquerystats"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	mysqlshowquerystats "github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqlshowquerystats"
 )
 
 func TestParseFromYamlMySQLShowQueryStats(t *testing.T) {
@@ -39,7 +40,7 @@ func TestParseFromYamlMySQLShowQueryStats(t *testing.T) {
 			kind: tool
 			name: example_tool
 			type: mysql-show-query-stats
-			source: my-instance
+			source: my-mysql-instance
 			description: some description
 			authRequired:
 				- my-google-auth-service
@@ -47,11 +48,13 @@ func TestParseFromYamlMySQLShowQueryStats(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mysqlshowquerystats.Config{
-					Name:         "example_tool",
-					Type:         "mysql-show-query-stats",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "mysql-show-query-stats",
+					Source: "my-mysql-instance",
 				},
 			},
 		},

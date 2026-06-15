@@ -4056,6 +4056,7 @@ func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, dat
 		name           string
 		requestBody    io.Reader
 		wantStatusCode int
+		wantError      string		
 	}{
 		{
 			name:           "list query stats with default limit",
@@ -4075,7 +4076,8 @@ func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, dat
 		{
 			name:           "list query stats with with schema other than connected schema, expected error",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "some_random_db_name_foo_bar")),
-			wantStatusCode: http.StatusInternalServerError,
+			wantStatusCode: http.StatusOK,
+			wantError:      "SCHEMA_MATCH_FAILED",
 		},
 	}
 
@@ -4100,6 +4102,21 @@ func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, dat
 			var resultString string
 			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
 				resultString = string(bodyWrapper.Result)
+			}
+
+			if tc.wantError != "" {
+				var got map[string]any
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal error result: %v, resultString: %s", err, resultString)
+				}
+				errVal, ok := got["error"].(string)
+				if !ok {
+					t.Fatalf("expected error key in response, got: %v", got)
+				}
+				if !strings.Contains(errVal, tc.wantError) {
+					t.Fatalf("expected error containing %q, got: %q", tc.wantError, errVal)
+				}
+				return
 			}
 
 			var got []map[string]any
@@ -4184,6 +4201,7 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 		name           string
 		requestBody    io.Reader
 		wantStatusCode int
+		wantError      string
 	}{
 		{
 			name:           "list all locks with default limit",
@@ -4203,7 +4221,8 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 		{
 			name:           "list all locks with with schema other than connected schema, expected error",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, "some_random_db_name_foo_bar")),
-			wantStatusCode: http.StatusInternalServerError,
+			wantStatusCode: http.StatusOK,
+			wantError:      "SCHEMA_MATCH_FAILED",
 		},
 	}
 
@@ -4228,6 +4247,21 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 			var resultString string
 			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
 				resultString = string(bodyWrapper.Result)
+			}
+
+			if tc.wantError != "" {
+				var got map[string]any
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal error result: %v, resultString: %s", err, resultString)
+				}
+				errVal, ok := got["error"].(string)
+				if !ok {
+					t.Fatalf("expected error key in response, got: %v", got)
+				}
+				if !strings.Contains(errVal, tc.wantError) {
+					t.Fatalf("expected error containing %q, got: %q", tc.wantError, errVal)
+				}
+				return
 			}
 
 			var got []map[string]any

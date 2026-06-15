@@ -20,7 +20,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqllistalllocks"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	mysqllistalllocks "github.com/googleapis/mcp-toolbox/internal/tools/mysql/mysqllistalllocks"
 )
 
 func TestParseFromYamlMySQLListAllLocks(t *testing.T) {
@@ -39,7 +40,7 @@ func TestParseFromYamlMySQLListAllLocks(t *testing.T) {
 			kind: tool
 			name: example_tool
 			type: mysql-list-all-locks
-			source: my-instance
+			source: my-mysql-instance
 			description: some description
 			authRequired:
 				- my-google-auth-service
@@ -47,11 +48,13 @@ func TestParseFromYamlMySQLListAllLocks(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mysqllistalllocks.Config{
-					Name:         "example_tool",
-					Type:         "mysql-list-all-locks",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "mysql-list-all-locks",
+					Source: "my-mysql-instance",
 				},
 			},
 		},
