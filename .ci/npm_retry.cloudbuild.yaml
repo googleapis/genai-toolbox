@@ -1,0 +1,51 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Retry-only pipeline for the OSS Exit Gate npm publish steps. Use when the
+# npm portion of the versioned release fails after Go binaries are already in
+# GCS. Each platform package's prepack script downloads its binary from GCS by
+# version, and publish_npm_to_ar.sh's idempotency check skips packages already
+# in AR.
+#
+# Invoke after checking out the version's tag locally:
+#   git checkout v<X.Y.Z>
+#   gcloud builds submit \
+#     --config=.ci/npm_retry.cloudbuild.yaml \
+#     --region=us-central1 \
+#     --service-account=projects/database-toolbox/serviceAccounts/release@database-toolbox.iam.gserviceaccount.com \
+#     .
+
+steps:
+  - id: "publish-npm-to-ar"
+    name: node:20
+    script: |
+      #!/usr/bin/env bash
+      bash .ci/publish_npm_to_ar.sh
+
+  - id: "trigger-exit-gate"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    waitFor:
+      - "publish-npm-to-ar"
+    env:
+      - "BUILD_ID=$BUILD_ID"
+    script: |
+      #!/usr/bin/env bash
+      bash .ci/trigger_exit_gate.sh
+
+options:
+  automapSubstitutions: true
+  dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/run-release

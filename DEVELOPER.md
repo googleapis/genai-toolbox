@@ -890,7 +890,28 @@ Trigger pull request tests for external contributors by:
 
 ### How-to Release the npm Package
 
-MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server). To release a new version, follow these steps:
+MCP Toolbox is available as an npm package: [@toolbox-sdk/server](https://www.npmjs.com/package/@toolbox-sdk/server).
+
+> [!NOTE]
+> npm releases are automated through the **OSS Exit Gate** via the
+> `publish-npm-to-ar` and `trigger-exit-gate` steps in
+> [.ci/versioned.release.cloudbuild.yaml](.ci/versioned.release.cloudbuild.yaml).
+> The versioned release pipeline pushes all six packages to the Exit Gate
+> Artifact Registry (`us-npm.pkg.dev/oss-exit-gate-prod/mcp-toolbox--npm`) and
+> uploads a `publish_all: true` manifest to
+> `gs://oss-exit-gate-prod-projects-bucket/mcp-toolbox/npm/manifests/`, which
+> triggers Exit Gate to publish externally to npmjs.org.
+>
+> If the npm portion fails after the Go binaries are already in GCS, retry
+> just the npm steps without rebuilding binaries via
+> [.ci/npm_retry.cloudbuild.yaml](.ci/npm_retry.cloudbuild.yaml) (invocation
+> instructions are in the file header). The retry is idempotent — already-
+> published packages are skipped.
+>
+> The manual procedure below is retained as a fallback for when the automation
+> is broken.
+
+To release a new version manually, follow these steps:
 
 **Pre-requisites**
 
