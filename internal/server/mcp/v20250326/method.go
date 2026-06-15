@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
+
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -281,38 +281,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	}
 
 	// Auto-populate arguments from URL parameters
-	if urlParams, ok := util.UrlParamsFromContext(ctx); ok {
-		if data == nil {
-			data = make(map[string]any)
-		}
-		for name, val := range urlParams {
-			// Only inject if the client didn't supply it explicitly.
-			if _, exists := data[name]; !exists {
-				data[name] = val
-
-				// Attempt type conversion for known parameters
-				for _, p := range toolParams {
-					if p.GetName() == name {
-						switch p.GetType() {
-						case "integer":
-							if i, err := strconv.Atoi(val); err == nil {
-								data[name] = i
-							}
-						case "boolean":
-							if b, err := strconv.ParseBool(val); err == nil {
-								data[name] = b
-							}
-						case "float":
-							if f, err := strconv.ParseFloat(val, 64); err == nil {
-								data[name] = f
-							}
-						}
-						break
-					}
-				}
-			}
-		}
-	}
+	data = mcputil.AutoPopulateUrlParams(ctx, data, toolParams)
 
 	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
