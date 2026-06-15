@@ -76,46 +76,18 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault(studyInstanceUIDKey, "", "The UID of the DICOM study"),
-		parameters.NewStringParameterWithDefault(patientNameKey, "", "The name of the patient"),
-		parameters.NewStringParameterWithDefault(patientIDKey, "", "The ID of the patient"),
-		parameters.NewStringParameterWithDefault(accessionNumberKey, "", "The accession number of the series"),
-		parameters.NewStringParameterWithDefault(referringPhysicianNameKey, "", "The name of the referring physician"),
-		parameters.NewStringParameterWithDefault(studyDateKey, "", "The date of the study in the format `YYYYMMDD`. You can also specify a date range in the format `YYYYMMDD-YYYYMMDD`"),
-		parameters.NewStringParameterWithDefault(seriesInstanceUIDKey, "", "The UID of the DICOM series"),
-		parameters.NewStringParameterWithDefault(modalityKey, "", "The modality of the series"),
-		parameters.NewStringParameterWithDefault(sopInstanceUIDKey, "", "The UID of the SOP instance."),
-		parameters.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
-		parameters.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", parameters.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
-	}
-	if len(s.AllowedDICOMStores()) != 1 {
-		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
-	}
-
+	params := buildParams(false)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			allParameters,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -189,4 +161,50 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
+}
+
+// buildParams builds the tool's parameters. When the source pins exactly one store
+// (singleStore), the store param is omitted; otherwise it is included.
+func buildParams(singleStore bool) parameters.Parameters {
+	params := parameters.Parameters{
+		parameters.NewStringParameterWithDefault(studyInstanceUIDKey, "", "The UID of the DICOM study"),
+		parameters.NewStringParameterWithDefault(patientNameKey, "", "The name of the patient"),
+		parameters.NewStringParameterWithDefault(patientIDKey, "", "The ID of the patient"),
+		parameters.NewStringParameterWithDefault(accessionNumberKey, "", "The accession number of the series"),
+		parameters.NewStringParameterWithDefault(referringPhysicianNameKey, "", "The name of the referring physician"),
+		parameters.NewStringParameterWithDefault(studyDateKey, "", "The date of the study in the format `YYYYMMDD`. You can also specify a date range in the format `YYYYMMDD-YYYYMMDD`"),
+		parameters.NewStringParameterWithDefault(seriesInstanceUIDKey, "", "The UID of the DICOM series"),
+		parameters.NewStringParameterWithDefault(modalityKey, "", "The modality of the series"),
+		parameters.NewStringParameterWithDefault(sopInstanceUIDKey, "", "The UID of the SOP instance."),
+		parameters.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
+		parameters.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", parameters.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
+	}
+	if !singleStore {
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
+	}
+	return params
+}
+
+// resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildParams(len(s.AllowedDICOMStores()) == 1), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	allParameters, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

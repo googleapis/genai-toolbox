@@ -37,7 +37,7 @@ func newTestTool(t *testing.T, toolType string) cloudmonitoring.Tool {
 		Type:   toolType,
 		Source: "test-source",
 	}
-	toolIface, err := cfg.Initialize(nil)
+	toolIface, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() error = %v", err)
 	}

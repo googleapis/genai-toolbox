@@ -136,7 +136,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 				Type:   "cloud-storage-list-objects",
 				Source: "my-gcs",
 			}
-			tool, err := cfg.Initialize(nil)
+			tool, err := cfg.Initialize()
 			if err != nil {
 				t.Fatalf("failed to initialize tool: %v", err)
 			}
