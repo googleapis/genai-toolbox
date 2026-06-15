@@ -68,6 +68,7 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 
 		name := p.GetName()
 		if urlParams != nil {
+			// If the parameter is sourced from URL params, skip it in the MCP manifest
 			if _, exists := urlParams[name]; exists {
 				continue
 			}
