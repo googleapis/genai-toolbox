@@ -15,7 +15,7 @@ database.
 `mysql-get-query-plan` takes one input parameter `sql_statement` and gets the execution plan for the SQL
 statement against the `source`.
 
-## Security
+** Security **
 
 The tool runs the supplied statement as `EXPLAIN FORMAT=JSON <sql_statement>`.
 A plain `EXPLAIN` (without `ANALYZE`) only computes the query plan; it never
