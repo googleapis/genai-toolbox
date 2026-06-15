@@ -139,6 +139,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		authServicesMap[name] = a
 	}
+
+	for _, a := range authServicesMap {
+		if mSvc, ok := a.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+			if cfg.EnableAPI {
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
+			}
+		}
+	}
+
 	authServiceNames := make([]string, 0, len(authServicesMap))
 	for name := range authServicesMap {
 		authServiceNames = append(authServiceNames, name)
