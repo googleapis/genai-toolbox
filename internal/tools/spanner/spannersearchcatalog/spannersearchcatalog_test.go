@@ -114,7 +114,7 @@ func TestConfig_Initialize(t *testing.T) {
 		Source: "test-source",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestTool_Invoke(t *testing.T) {
 		Type:   "spanner-search-catalog",
 		Source: "test-source",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}

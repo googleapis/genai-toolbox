@@ -21,7 +21,6 @@ import (
 
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -66,7 +65,7 @@ func (c Config) ToolConfigType() string {
 }
 
 // Initialize implements tools.ToolConfig.
-func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (c Config) Initialize() (tools.Tool, error) {
 	if c.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", c.Name)
 	}

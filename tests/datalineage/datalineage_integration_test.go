@@ -30,6 +30,7 @@ import (
 	lineage "cloud.google.com/go/datacatalog/lineage/apiv1"
 	lineagepb "cloud.google.com/go/datacatalog/lineage/apiv1/lineagepb"
 	"github.com/google/uuid"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
@@ -54,7 +55,7 @@ func getDatalineageVars(t *testing.T) map[string]any {
 }
 
 func initLineageConnection(ctx context.Context) (*lineage.Client, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -164,7 +165,7 @@ func TestDatalineageToolEndpoints(t *testing.T) {
 	sourceConfig := getDatalineageVars(t)
 	project := sourceConfig["project"].(string)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
 	defer cancel()
 
 	args := []string{"--enable-api"}
@@ -207,10 +208,11 @@ func TestDatalineageToolEndpoints(t *testing.T) {
 		"direction": "UPSTREAM",
 	}
 	t.Log("Polling search lineage index for the new link with exponential backoff...")
-	// Poll up to 90 seconds for eventual consistency
-	links, err := pollSearchLineage(t, "my-datalineage-search-tool", reqBody, sourceFQN, targetFQN, 90*time.Second)
+	// Poll up to 3 minutes for eventual consistency
+	pollTimeout := 3 * time.Minute
+	links, err := pollSearchLineage(t, "my-datalineage-search-tool", reqBody, sourceFQN, targetFQN, pollTimeout)
 	if err != nil {
-		t.Fatalf("failed to find the link in search index within 90s timeout: %v", err)
+		t.Fatalf("failed to find the link in search index within %s timeout: %v", pollTimeout, err)
 	}
 
 	runDatalineageSearchUpstreamTest(t, links, sourceFQN, targetFQN)

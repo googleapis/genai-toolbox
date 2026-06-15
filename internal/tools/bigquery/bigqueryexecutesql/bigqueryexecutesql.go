@@ -75,63 +75,15 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	params, err := buildParams("", nil)
+	if err != nil {
+		return nil, err
 	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	var sqlDescriptionBuilder strings.Builder
-	switch s.BigQueryWriteMode() {
-	case bigqueryds.WriteModeBlocked:
-		sqlDescriptionBuilder.WriteString("The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail.")
-	case bigqueryds.WriteModeProtected:
-		sqlDescriptionBuilder.WriteString("The SQL to execute. Only SELECT statements and writes to the session's temporary dataset are allowed (e.g., `CREATE TEMP TABLE ...`).")
-	default: // WriteModeAllowed
-		sqlDescriptionBuilder.WriteString("The SQL to execute.")
-	}
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	if len(allowedDatasets) > 0 {
-		if len(allowedDatasets) == 1 {
-			datasetFQN := allowedDatasets[0]
-			parts := strings.Split(datasetFQN, ".")
-			if len(parts) < 2 {
-				return nil, fmt.Errorf("expected allowedDataset to have at least 2 parts (project.dataset): %s", datasetFQN)
-			}
-			datasetID := parts[1]
-			fmt.Fprintf(&sqlDescriptionBuilder, " The query must only access the `%s` dataset. "+
-				"To query a table within this dataset (e.g., `my_table`), "+
-				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetFQN, datasetID)
-		} else {
-			datasetIDs := []string{}
-			for _, ds := range allowedDatasets {
-				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-			}
-			fmt.Fprintf(&sqlDescriptionBuilder, " The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
-		}
-	}
-
-	sqlParameter := parameters.NewStringParameter("sql", sqlDescriptionBuilder.String())
-	dryRunParameter := parameters.NewBooleanParameterWithDefault(
-		"dry_run",
-		false,
-		"If set to true, the query will be validated and information about the execution will be returned "+
-			"without running the query. Defaults to false.",
-	)
-	params := parameters.Parameters{sqlParameter, dryRunParameter}
-
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -300,4 +252,70 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+// buildParams builds the tool's parameters from the source's write mode and allowed-dataset
+// configuration. Empty writeMode and a nil allow-list yield the plain skeleton.
+func buildParams(writeMode string, allowedDatasets []string) (parameters.Parameters, error) {
+	var sqlDescriptionBuilder strings.Builder
+	switch writeMode {
+	case bigqueryds.WriteModeBlocked:
+		sqlDescriptionBuilder.WriteString("The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail.")
+	case bigqueryds.WriteModeProtected:
+		sqlDescriptionBuilder.WriteString("The SQL to execute. Only SELECT statements and writes to the session's temporary dataset are allowed (e.g., `CREATE TEMP TABLE ...`).")
+	default: // WriteModeAllowed
+		sqlDescriptionBuilder.WriteString("The SQL to execute.")
+	}
+
+	if len(allowedDatasets) > 0 {
+		if len(allowedDatasets) == 1 {
+			datasetFQN := allowedDatasets[0]
+			parts := strings.Split(datasetFQN, ".")
+			if len(parts) < 2 {
+				return nil, fmt.Errorf("expected allowedDataset to have at least 2 parts (project.dataset): %s", datasetFQN)
+			}
+			datasetID := parts[1]
+			fmt.Fprintf(&sqlDescriptionBuilder, " The query must only access the `%s` dataset. "+
+				"To query a table within this dataset (e.g., `my_table`), "+
+				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetFQN, datasetID)
+		} else {
+			datasetIDs := []string{}
+			for _, ds := range allowedDatasets {
+				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+			}
+			fmt.Fprintf(&sqlDescriptionBuilder, " The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+		}
+	}
+
+	sqlParameter := parameters.NewStringParameter("sql", sqlDescriptionBuilder.String())
+	dryRunParameter := parameters.NewBooleanParameterWithDefault(
+		"dry_run",
+		false,
+		"If set to true, the query will be validated and information about the execution will be returned "+
+			"without running the query. Defaults to false.",
+	)
+	return parameters.Parameters{sqlParameter, dryRunParameter}, nil
+}
+
+// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryWriteMode(), s.BigQueryAllowedDatasets())
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	params, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: params.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

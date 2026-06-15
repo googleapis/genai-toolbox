@@ -20,7 +20,6 @@ import (
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/createbatch"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -57,8 +56,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	return createbatch.NewTool(cfg.Config, cfg, srcs, &PySparkBatchBuilder{})
+func (cfg Config) Initialize() (tools.Tool, error) {
+	return createbatch.NewTool(cfg.Config, cfg, &PySparkBatchBuilder{})
 }
 
 type PySparkBatchBuilder struct{}
