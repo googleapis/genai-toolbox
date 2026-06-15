@@ -22,8 +22,10 @@
 # Binaries (toolbox.<os>.<arch>) must be pre-staged in the workspace by an
 # earlier Cloud Build step. The retry pipeline downloads them from GCS first.
 #
-# Idempotency is handled by `twine upload --skip-existing` — already-uploaded
-# wheels are skipped, so re-running after a partial failure is safe.
+# AR doesn't support twine's `--skip-existing` flag. If this version already
+# has wheels in AR (e.g., from a prior run where Exit Gate failed to externally
+# publish and left the AR contents in place), twine will error. Manually clean
+# the AR version via `gcloud artifacts versions delete` before re-running.
 
 set -eo pipefail
 
@@ -77,5 +79,4 @@ build_wheel "toolbox.windows.arm64" "win_arm64"            "toolbox.exe"
 
 twine upload \
   --repository-url "${AR_URL}" \
-  --skip-existing \
   "${DIST_DIR}"/*.whl
