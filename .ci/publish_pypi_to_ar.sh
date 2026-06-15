@@ -25,7 +25,13 @@
 # AR doesn't support twine's `--skip-existing` flag. If this version already
 # has wheels in AR (e.g., from a prior run where Exit Gate failed to externally
 # publish and left the AR contents in place), twine will error. Manually clean
-# the AR version via `gcloud artifacts versions delete` before re-running.
+# the AR version before re-running:
+#
+#   gcloud artifacts versions delete <VERSION> \
+#     --package=toolbox-server \
+#     --repository=mcp-toolbox--pypi \
+#     --location=us \
+#     --project=oss-exit-gate-prod
 
 set -eo pipefail
 
