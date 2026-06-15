@@ -71,6 +71,15 @@
       ],
     },
     {
+      matchManagers: [
+        'npm',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      groupName: '{{depName}}',
+    },
+    {
       groupName: 'Pip',
       matchManagers: [
         'pip_requirements',
