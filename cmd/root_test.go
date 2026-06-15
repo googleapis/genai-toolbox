@@ -879,8 +879,15 @@ tools:
 				if _, ok := cfg.ToolsetConfigs["sqlite_database_tools"]; !ok {
 					return fmt.Errorf("expected toolset 'sqlite_database_tools' not found")
 				}
-				if len(cfg.ToolsetConfigs) != 1 {
-					return fmt.Errorf("expected exactly 1 toolset, got %d", len(cfg.ToolsetConfigs))
+				if len(cfg.ToolsetConfigs) != 2 {
+					var names []string
+					for k := range cfg.ToolsetConfigs {
+						names = append(names, k)
+					}
+					return fmt.Errorf("expected exactly 2 toolsets (including default), got %d: %v", len(cfg.ToolsetConfigs), names)
+				}
+				if _, ok := cfg.ToolsetConfigs[""]; !ok {
+					return fmt.Errorf("expected default toolset '' not found")
 				}
 				return nil
 			},
@@ -916,7 +923,7 @@ tools:
 				}
 				if tc.cfgCheck != nil {
 					if err := tc.cfgCheck(opts.Cfg); err != nil {
-						t.Errorf("config check failed: %v", err)
+						t.Errorf("config check failed: %v. Output:\n%s", err, output)
 					}
 				}
 			}

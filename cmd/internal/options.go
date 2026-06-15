@@ -206,13 +206,20 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		logger.InfoContext(ctx, logMsg)
 
 		for _, configName := range opts.PrebuiltConfigs {
-			sourceName := configName
-			toolsetName := ""
-			if strings.Contains(configName, "/") {
-				parts := strings.SplitN(configName, "/", 2)
-				sourceName = parts[0]
-				toolsetName = parts[1]
+			if !strings.Contains(configName, "/") {
+				for _, sep := range []string{".", ":", "@"} {
+					if strings.Contains(configName, sep) {
+						parts := strings.SplitN(configName, sep, 2)
+						if slices.Contains(prebuiltconfigs.GetPrebuiltSources(), parts[0]) {
+							errMsg := fmt.Errorf("invalid prebuilt config format '%s'. Did you mean '%s/%s'? Use '/' to specify a toolset", configName, parts[0], parts[1])
+							logger.ErrorContext(ctx, errMsg.Error())
+							return isCustomConfigured, errMsg
+						}
+					}
+				}
 			}
+
+			sourceName, toolsetName, _ := strings.Cut(configName, "/")
 
 			buf, err := prebuiltconfigs.Get(sourceName)
 			if err != nil {
@@ -231,7 +238,12 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 			if toolsetName != "" {
 				targetToolset, exists := parsed.Toolsets[toolsetName]
 				if !exists {
-					errMsg := fmt.Errorf("toolset '%s' not found in prebuilt configuration '%s'", toolsetName, sourceName)
+					var available []string
+					for k := range parsed.Toolsets {
+						available = append(available, k)
+					}
+					slices.Sort(available)
+					errMsg := fmt.Errorf("toolset '%s' not found in prebuilt configuration '%s'. Available toolsets: %s", toolsetName, sourceName, strings.Join(available, ", "))
 					logger.ErrorContext(ctx, errMsg.Error())
 					return isCustomConfigured, errMsg
 				}
@@ -273,7 +285,8 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		}
 		// prebuiltConfigs is already sorted above
 		for _, configName := range opts.PrebuiltConfigs {
-			opts.Cfg.Version += fmt.Sprintf("+%s.%s", tag, configName)
+			sanitizedConfigName := strings.ReplaceAll(configName, "/", ".")
+			opts.Cfg.Version += fmt.Sprintf("+%s.%s", tag, sanitizedConfigName)
 		}
 	}
 
