@@ -23,9 +23,9 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// AutoPopulateUrlParams injects bound URL query parameters into the data arguments
+// PopulateUrlParams injects bound URL query parameters into the data arguments
 // and performs automatic type conversion for integer, boolean, and float parameters.
-func AutoPopulateUrlParams(ctx context.Context, data map[string]any, toolParams parameters.Parameters) map[string]any {
+func PopulateUrlParams(ctx context.Context, data map[string]any, toolParams parameters.Parameters) map[string]any {
 	urlParams, ok := util.UrlParamsFromContext(ctx)
 	if !ok {
 		return data
