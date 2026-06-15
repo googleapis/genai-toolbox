@@ -214,8 +214,18 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, "tool invocation authorized")
 
+	limit := s.httpMaxRequestBytes
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+
 	var data map[string]any
 	if err = util.DecodeJSON(r.Body, &data); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			err = fmt.Errorf("request body exceeds %d bytes", limit)
+			s.logger.DebugContext(ctx, err.Error())
+			_ = render.Render(w, r, newErrResponse(err, http.StatusRequestEntityTooLarge))
+			return
+		}
 		render.Status(r, http.StatusBadRequest)
 		err = fmt.Errorf("request body was invalid JSON: %w", err)
 		s.logger.DebugContext(ctx, err.Error())
