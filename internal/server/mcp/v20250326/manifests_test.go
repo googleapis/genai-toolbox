@@ -108,7 +108,7 @@ func TestGenerateToolManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations)
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil)
 			gotM := got.Metadata
 			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
@@ -188,7 +188,7 @@ func TestParamManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSchema, gotAuthParam := generateParamManifest(tc.in)
+			gotSchema, gotAuthParam := generateParamManifest(tc.in, nil)
 			if diff := cmp.Diff(tc.wantSchema, gotSchema); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
@@ -230,7 +230,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
 
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap)
+	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
