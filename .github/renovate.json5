@@ -69,15 +69,10 @@
       matchManagers: [
         'npm',
       ],
-    },
-    {
-      matchManagers: [
-        'npm',
-      ],
       matchUpdateTypes: [
-        'major',
+        'minor',
+        'patch',
       ],
-      groupName: null,
     },
     {
       groupName: 'Pip',
