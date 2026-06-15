@@ -77,7 +77,7 @@
       matchUpdateTypes: [
         'major',
       ],
-      groupName: '{{depName}}',
+      groupName: null,
     },
     {
       groupName: 'Pip',
