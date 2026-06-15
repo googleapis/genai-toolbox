@@ -32,15 +32,22 @@ set -eo pipefail
 readonly AR_REGISTRY="https://us-npm.pkg.dev/oss-exit-gate-prod/mcp-toolbox--npm/"
 readonly AR_HOST="us-npm.pkg.dev"
 
-cat > .npmrc <<EOF
+# Write to $HOME so npm finds it as user config from inside any package dir.
+# A .npmrc at /workspace would be ignored — npm's per-project .npmrc must sit
+# next to package.json, and each platform package has its own package.json.
+cat > "$HOME/.npmrc" <<EOF
 @toolbox-sdk:registry=${AR_REGISTRY}
 //${AR_HOST}/:always-auth=true
 EOF
 
-npx --yes google-artifactregistry-auth
+# Run from $HOME so google-artifactregistry-auth finds the .npmrc above and
+# writes the short-lived AR auth token into it.
+(cd "$HOME" && npx --yes google-artifactregistry-auth)
 
 # Publishes the npm package at npm/${pkg} to the Exit Gate AR, unless that
 # exact version is already there (idempotency check makes retries safe).
+# --registry is passed explicitly so we don't depend on scope-config
+# resolution at publish time.
 publish_pkg() {
   local pkg="$1"
   local npm_name="@toolbox-sdk/${pkg}"
@@ -52,7 +59,7 @@ publish_pkg() {
     return
   fi
 
-  (cd "npm/${pkg}" && npm publish)
+  (cd "npm/${pkg}" && npm publish --registry "${AR_REGISTRY}")
 }
 
 # Stages a Cloud-Build-produced binary into a platform npm package and publishes
