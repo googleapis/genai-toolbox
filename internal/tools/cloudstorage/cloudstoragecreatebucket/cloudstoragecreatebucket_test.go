@@ -132,7 +132,7 @@ func initTool(t *testing.T) tools.Tool {
 		Type:   "cloud-storage-create-bucket",
 		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

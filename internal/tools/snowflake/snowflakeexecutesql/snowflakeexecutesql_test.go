@@ -76,7 +76,7 @@ func TestFailInitializeMissingDescription(t *testing.T) {
 		Type:       "snowflake-execute-sql",
 		Source:     "my-snowflake-source",
 	}
-	_, err := cfg.Initialize(nil)
+	_, err := cfg.Initialize()
 	if err == nil {
 		t.Fatalf("expect initialize to fail")
 	}

@@ -66,45 +66,58 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+func (cfg Config) Initialize() (tools.Tool, error) {
+	if cfg.Description == "" {
+		cfg.Description = "Restores a backup on a Cloud SQL instance."
 	}
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
+	params := buildParams("")
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
+}
 
-	project := s.GetDefaultProject()
-	var targetProjectParam parameters.Parameter
+// buildParams builds the tool's parameters. A non-empty project means the source has a
+// configured default project, which is baked into the project param; otherwise the plain form is used.
+func buildParams(project string) parameters.Parameters {
+	projectParam := parameters.NewStringParameter("target_project", "The project ID")
 	if project != "" {
-		targetProjectParam = parameters.NewStringParameterWithDefault("target_project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
-	} else {
-		targetProjectParam = parameters.NewStringParameter("target_project", "The project ID")
+		projectParam = parameters.NewStringParameterWithDefault("target_project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
 	}
-
-	allParameters := parameters.Parameters{
-		targetProjectParam,
+	return parameters.Parameters{
+		projectParam,
 		parameters.NewStringParameter("target_instance", "Cloud SQL instance ID of the target instance. This does not include the project ID."),
 		parameters.NewStringParameter("backup_id", "Identifier of the backup being restored. Can be a BackupRun ID, backup name, or BackupDR backup name. Use the full backup ID as provided, do not try to parse it"),
 		parameters.NewStringParameterWithRequired("source_project", "GCP project ID of the instance that the backup belongs to. Only required if the backup_id is a BackupRun ID.", false),
 		parameters.NewStringParameterWithRequired("source_instance", "Cloud SQL instance ID of the instance that the backup belongs to. Only required if the backup_id is a BackupRun ID.", false),
 	}
-	paramManifest := allParameters.Manifest()
+}
 
-	if cfg.Description == "" {
-		cfg.Description = "Restores a backup on a Cloud SQL instance."
+// resolveParams builds the tool's parameters using the source's configured default GCP project.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
 	}
+	return buildParams(s.GetDefaultProject()), nil
+}
 
-	return Tool{
-		BaseTool: tools.NewBaseTool(
-			cfg,
-			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-			allParameters,
-		),
-	}, nil
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	allParameters, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }
 
 // Tool represents the restore-backup tool.

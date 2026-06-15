@@ -230,7 +230,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
 
-	got, err := GenerateListToolsResult(toolset, toolsMap)
+	got, err := GenerateListToolsResult(nil, toolset, toolsMap)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
