@@ -16,6 +16,7 @@ package util
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -52,6 +53,16 @@ func AutoPopulateUrlParams(ctx context.Context, data map[string]any, toolParams 
 					case "float":
 						if f, err := strconv.ParseFloat(val, 64); err == nil {
 							data[name] = f
+						}
+					case "array":
+						var arr []any
+						if err := json.Unmarshal([]byte(val), &arr); err == nil {
+							data[name] = arr
+						}
+					case "map":
+						var m map[string]any
+						if err := json.Unmarshal([]byte(val), &m); err == nil {
+							data[name] = m
 						}
 					}
 					break

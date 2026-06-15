@@ -81,8 +81,23 @@ var urlBindingToolInputSchema = map[string]any{
 		"param3": map[string]any{"type": "boolean", "description": "A bound bool param"},
 		"param4": map[string]any{"type": "number", "description": "A bound float param"},
 		"param5": map[string]any{"type": "string", "description": "An unbound string param"},
+		"param6": map[string]any{
+			"type":        "array",
+			"description": "A bound array param",
+			"items": map[string]any{
+				"type":        "string",
+				"description": "item",
+			},
+		},
+		"param7": map[string]any{
+			"type":        "object",
+			"description": "A bound map param",
+			"additionalProperties": map[string]any{
+				"type": "string",
+			},
+		},
 	},
-	"required": []any{"param1", "param2", "param3", "param4", "param5"},
+	"required": []any{"param1", "param2", "param3", "param4", "param5", "param6", "param7"},
 }
 
 var prompt2Args = []any{
@@ -887,7 +902,7 @@ func TestMcpEndpoint(t *testing.T) {
 				},
 				{
 					name: "tools/list with URL param binding",
-					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
 					body: jsonrpc.JSONRPCRequest{
 						Jsonrpc: jsonrpcVersion,
 						Id:      "tools-list-url-binding",
@@ -939,7 +954,7 @@ func TestMcpEndpoint(t *testing.T) {
 				},
 				{
 					name: "tools/call with URL param binding",
-					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
 					body: jsonrpc.JSONRPCRequest{
 						Jsonrpc: jsonrpcVersion,
 						Id:      "tools-call-url-binding",
@@ -982,6 +997,14 @@ func TestMcpEndpoint(t *testing.T) {
 								map[string]any{
 									"type": "text",
 									"text": `"unbound-value"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `["a","b"]`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `{"k":"v"}`,
 								},
 							},
 						},

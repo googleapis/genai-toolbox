@@ -148,6 +148,8 @@ var MockToolUrlBinding = func() MockTool {
 			parameters.NewBooleanParameter("param3", "A bound bool param"),
 			parameters.NewFloatParameter("param4", "A bound float param"),
 			parameters.NewStringParameter("param5", "An unbound string param"),
+			parameters.NewArrayParameter("param6", "A bound array param", parameters.NewStringParameter("item", "item")),
+			parameters.NewMapParameter("param7", "A bound map param", parameters.TypeString),
 		}, false, false)
 	t.ReturnParamsInInvoke = true
 	return t
