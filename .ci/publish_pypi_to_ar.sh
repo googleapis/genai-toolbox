@@ -60,6 +60,12 @@ build_wheel() {
   cp "${src}" "${BIN_DIR}/${dest}"
   chmod +x "${BIN_DIR}/${dest}"
 
+  # Also wipe setuptools' build/ staging tree. It caches the previously-copied
+  # binary at build/lib/toolbox_server/bin/, which would otherwise be packaged
+  # into this iteration's wheel alongside the new binary (e.g., the Windows
+  # wheel would end up shipping both toolbox AND toolbox.exe).
+  rm -rf "${PYPI_DIR}/build"
+
   (cd "${PYPI_DIR}" && TOOLBOX_PLATFORM="${plat}" python -m build --wheel)
 }
 
