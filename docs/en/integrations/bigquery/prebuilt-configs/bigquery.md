@@ -43,3 +43,9 @@ description: "Details of the BigQuery prebuilt configuration."
     *   `list_dataset_ids`: Lists datasets.
     *   `list_table_ids`: Lists tables.
     *   `search_catalog`: Search for entries based on the provided query.
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_dataset_ids`, `list_table_ids`, `get_dataset_info`, `get_table_info`, `search_catalog`
+    *   `analytics`: Tools for analytics, query statistics, forecasting, and data insights.
+        *   **Tools:** `analyze_contribution`, `ask_data_insights`, `forecast`, `search_catalog`

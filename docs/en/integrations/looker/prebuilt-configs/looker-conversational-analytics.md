@@ -29,3 +29,7 @@ description: "Details of the Looker Conversational Analytics prebuilt configurat
     *   `ask_data_insights`: Ask a question of the data.
     *   `get_models`: Retrieves the list of LookML models.
     *   `get_explores`: Retrieves the list of explores in a model.
+
+*   **Toolsets:**
+    *   `looker_conversational_analytics_tools`: Tools for asking conversational questions and retrieving details about Looker models and explores.
+        *   **Tools:** `ask_data_insights`, `get_models`, `get_explores`

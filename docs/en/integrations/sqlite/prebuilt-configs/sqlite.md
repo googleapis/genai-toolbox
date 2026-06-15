@@ -15,3 +15,7 @@ description: "Details of the SQLite prebuilt configuration."
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+*   **Toolsets:**
+    *   `sqlite_database_tools`: Tools for executing SQL and listing tables in SQLite databases.
+        *   **Tools:** `execute_sql`, `list_tables`

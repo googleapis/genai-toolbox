@@ -12,3 +12,7 @@ description: "Details of the Elasticsearch prebuilt configuration."
     *   `ELASTICSEARCH_APIKEY`: The API key for authentication.
 *   **Tools:**
     *   `execute_esql_query`: Use this tool to execute ES|QL queries.
+
+*   **Toolsets:**
+    *   `elasticsearch-tools`: Tools for executing queries against Elasticsearch.
+        *   **Tools:** `execute_esql_query`

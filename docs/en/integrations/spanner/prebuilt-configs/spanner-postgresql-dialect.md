@@ -23,3 +23,9 @@ description: "Details of the Spanner (PostgreSQL dialect) prebuilt configuration
         interface for Spanner.
     *   `list_tables`: Lists tables in the database.
     *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `execute_sql_dql`, `list_tables`
+    *   `data_with_discovery`: Tools for executing queries, listing tables, and discovering catalog elements.
+        *   **Tools:** `execute_sql`, `execute_sql_dql`, `list_tables`, `search_catalog`

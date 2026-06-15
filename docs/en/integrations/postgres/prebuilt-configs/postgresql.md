@@ -52,3 +52,15 @@ description: "Details of the PostgreSQL prebuilt configuration."
         each database in the PostgreSQL server.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`, `list_views`, `list_schemas`, `list_triggers`, `list_indexes`, `list_sequences`, `list_stored_procedure`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `list_query_stats`, `get_query_plan`, `list_database_stats`, `list_active_queries`, `long_running_transactions`, `list_locks`
+    *   `health`: Tools for auditing database health, identifying bloat, vacuum configurations, and analyzing tables/indexes.
+        *   **Tools:** `list_top_bloated_tables`, `list_invalid_indexes`, `list_table_stats`, `get_column_cardinality`, `list_autovacuum_configurations`, `list_tablespaces`, `database_overview`, `list_pg_settings`
+    *   `view-config`: Tools for viewing and managing system-level configurations and parameters.
+        *   **Tools:** `list_available_extensions`, `list_installed_extensions`, `list_memory_configurations`, `list_pg_settings`, `database_overview`
+    *   `replication`: Tools for monitoring replication health, replication slots, publication tables, and cluster synchronization.
+        *   **Tools:** `replication_stats`, `list_replication_slots`, `list_publication_tables`, `list_roles`, `list_pg_settings`, `database_overview`

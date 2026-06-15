@@ -25,3 +25,7 @@ description: "Details of the Oracle prebuilt configuration."
     *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
     *   `list_tablespace_usage`: Lists tablespace usage.
     *   `list_invalid_objects`: Lists invalid objects.
+
+*   **Toolsets:**
+    *   `oracle_database_tools`: Tools for querying, listing tables, monitoring sessions, and managing Oracle databases.
+        *   **Tools:** `execute_sql`, `list_tables`, `list_active_sessions`, `get_query_plan`, `list_top_sql_by_resource`, `list_tablespace_usage`, `list_invalid_objects`

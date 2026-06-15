@@ -38,3 +38,7 @@ description: "Details of the Cloud SQL for PostgreSQL Admin prebuilt configurati
     *   `postgres_upgrade_precheck`: Performs a precheck for a major version upgrade of a Cloud SQL for PostgreSQL instance.
     *   `create_backup`: Creates a backup on a Cloud SQL instance.
     *   `restore_backup`: Restores a backup of a Cloud SQL instance.
+
+*   **Toolsets:**
+    *   `cloud_sql_postgres_admin_tools`: Tools for instance provisioning, lifecycle management, and administration in Cloud SQL PostgreSQL.
+        *   **Tools:** `create_instance`, `get_instance`, `list_instances`, `create_database`, `list_databases`, `create_user`, `wait_for_operation`, `postgres_upgrade_precheck`, `clone_instance`, `create_backup`, `restore_backup`

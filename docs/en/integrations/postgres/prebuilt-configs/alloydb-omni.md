@@ -50,3 +50,19 @@ description: "Details of the AlloyDB Omni prebuilt configuration."
         each database in the AlloyDB instance.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`, `list_views`, `list_schemas`, `list_triggers`, `list_indexes`, `list_sequences`, `list_stored_procedure`
+    *   `performance`: A collection of tools for Performance.
+        *   **Tools:** `execute_sql`, `get_query_plan`, `list_query_stats`, `get_column_cardinality`, `list_table_stats`, `list_database_stats`, `list_active_queries`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `database_overview`, `list_active_queries`, `long_running_transactions`, `list_locks`, `list_database_stats`, `list_pg_settings`
+    *   `optimize`: Tools for database performance optimization, extensions management, and memory configurations.
+        *   **Tools:** `list_pg_settings`, `list_memory_configurations`, `list_available_extensions`, `list_installed_extensions`, `list_autovacuum_configurations`, `list_columnar_configurations`, `list_columnar_recommended_columns`
+    *   `health`: Tools for auditing database health, identifying bloat, vacuum configurations, and analyzing tables/indexes.
+        *   **Tools:** `list_top_bloated_tables`, `list_invalid_indexes`, `list_table_stats`, `list_tablespaces`, `database_overview`, `list_autovacuum_configurations`
+    *   `replication`: Tools for monitoring replication health, replication slots, publication tables, and cluster synchronization.
+        *   **Tools:** `replication_stats`, `list_replication_slots`, `list_publication_tables`, `database_overview`
+    *   `access-control`: Tools for managing database users, roles, permissions, and security settings.
+        *   **Tools:** `list_roles`, `list_pg_settings`, `database_overview`

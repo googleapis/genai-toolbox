@@ -24,3 +24,13 @@ description: "Details of the Cloud SQL for SQL Server prebuilt configuration."
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+*   **Toolsets:**
+    *   `admin`: Tools for administering instances, databases, clusters, and users.
+        *   **Tools:** `create_instance`, `get_instance`, `list_instances`, `create_database`, `list_databases`, `create_user`, `wait_for_operation`
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `get_system_metrics`
+    *   `lifecycle`: Tools for managing the lifecycle of instances, including backups, restores, and upgrades.
+        *   **Tools:** `create_backup`, `restore_backup`, `clone_instance`, `list_instances`, `get_instance`, `wait_for_operation`

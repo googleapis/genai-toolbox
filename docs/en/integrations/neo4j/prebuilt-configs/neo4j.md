@@ -18,3 +18,7 @@ description: "Details of the Neo4j prebuilt configuration."
 *   **Tools:**
     *   `execute_cypher`: Executes a Cypher query.
     *   `get_schema`: Retrieves the schema of the Neo4j database.
+
+*   **Toolsets:**
+    *   `neo4j_database_tools`: Tools for executing Cypher queries and retrieving schema details in Neo4j databases.
+        *   **Tools:** `execute_cypher`, `get_schema`

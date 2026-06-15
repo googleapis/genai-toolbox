@@ -22,3 +22,9 @@ description: "Details of the Spanner (GoogleSQL dialect) prebuilt configuration.
     *   `list_tables`: Lists tables in the database.
     *   `list_graphs`: Lists graphs in the database.
     *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `execute_sql_dql`, `list_tables`, `list_graphs`
+    *   `data_with_discovery`: Tools for executing queries, listing tables, and discovering catalog elements.
+        *   **Tools:** `execute_sql`, `execute_sql_dql`, `list_tables`, `list_graphs`, `search_catalog`

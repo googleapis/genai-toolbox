@@ -16,3 +16,7 @@ description: "Details of the MindsDB prebuilt configuration."
 *   **Tools:**
     *   `mindsdb-execute-sql`: Execute SQL queries directly on MindsDB database.
     *   `mindsdb-sql`: Execute parameterized SQL queries on MindsDB database.
+
+*   **Toolsets:**
+    *   `mindsdb-tools`: Tools for interacting with MindsDB using SQL and parameterized queries.
+        *   **Tools:** `execute_sql`, `parameterized_sql`

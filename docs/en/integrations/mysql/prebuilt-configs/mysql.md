@@ -26,3 +26,9 @@ description: "Details of the MySQL prebuilt configuration."
         primary or unique key contraint.
     *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
     *   `list_table_stats`: Displays table statistics in MySQL.
+
+*   **Toolsets:**
+    *   `data`: Tools for executing queries, listing tables, views, schemas, and interacting with core data.
+        *   **Tools:** `execute_sql`, `list_tables`, `get_query_plan`, `list_active_queries`
+    *   `monitor`: Tools for checking system metrics, tracking active queries, identifying locks, and monitoring performance.
+        *   **Tools:** `get_query_plan`, `list_active_queries`, `list_table_fragmentation`, `list_table_stats`, `list_tables_missing_unique_indexes`

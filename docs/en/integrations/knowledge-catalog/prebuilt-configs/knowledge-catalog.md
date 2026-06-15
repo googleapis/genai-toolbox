@@ -21,3 +21,7 @@ aliases:
     *   `search_aspect_types`: Finds aspect types relevant to the
         query.
     *   `lookup_context`: Retrieves rich metadata regarding one or more data assets along with their relationships.
+
+*   **Toolsets:**
+    *   `discovery`: Tools for metadata discovery, data catalog search, and lookups.
+        *   **Tools:** `search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`
