@@ -22,7 +22,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -68,19 +67,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-// Initialize sets up and returns a new Tool instance based on the provided configuration and available sources.
-// It verifies that the specified source exists and is compatible, processes tool parameters, and constructs
-// the necessary manifests for tool operation. Returns an initialized Tool or an error if setup fails.
-//
-// Parameters:
-//
-//	srcs - a map of available sources, keyed by source name.
-//
-// Returns:
-//
-//	tools.Tool - the initialized tool instance.
-//	error      - an error if the source is missing, incompatible, or setup fails.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+// Initialize sets up and returns a new Tool instance based on the provided configuration.
+// It processes tool parameters and constructs the necessary manifests for tool operation.
+// Returns an initialized Tool or an error if setup fails.
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}

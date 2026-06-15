@@ -45,6 +45,7 @@ func TestParseEnv(t *testing.T) {
 		err          bool
 		errString    string
 		wantOptional []string
+		lenient      bool
 	}{
 		{
 			desc:      "without default without env",
@@ -52,6 +53,19 @@ func TestParseEnv(t *testing.T) {
 			want:      "",
 			err:       true,
 			errString: `environment variable not found: "FOO"`,
+		},
+		{
+			desc:    "without default without env, lenient",
+			in:      "${FOO}",
+			want:    "FOO",
+			lenient: true,
+		},
+		{
+			desc:    "missing required mixed with env, lenient",
+			in:      "project: ${PROJECT}, region: ${REGION}",
+			env:     map[string]string{"REGION": "us-central1"},
+			want:    "project: PROJECT, region: us-central1",
+			lenient: true,
 		},
 		{
 			desc: "without default with env",
@@ -108,7 +122,7 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			parser := &ConfigParser{}
+			parser := &ConfigParser{AllowMissingEnvVars: tc.lenient}
 			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {

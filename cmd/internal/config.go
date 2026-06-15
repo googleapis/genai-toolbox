@@ -45,6 +45,14 @@ type ConfigParser struct {
 	EnvVars         map[string]string
 	OptionalEnvVars []string
 	requiredEnvVars []string
+
+	// AllowMissingEnvVars, when true, substitutes the variable name for an unset
+	// required ${VAR} placeholder instead of erroring. Used by offline flows like
+	// skills-generate, where source env vars are needed only to satisfy config
+	// parsing/validation, never to connect. A non-empty placeholder is used (not
+	// "") so required string fields still pass validation. The served path leaves
+	// this false so missing config still fails fast.
+	AllowMissingEnvVars bool
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -89,6 +97,10 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 			value := parts[3]
 			p.EnvVars[variableName] = value
 			return value
+		}
+		if p.AllowMissingEnvVars {
+			p.EnvVars[variableName] = variableName
+			return variableName
 		}
 		err = fmt.Errorf("environment variable not found: %q", variableName)
 		return ""

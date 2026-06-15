@@ -21,7 +21,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/cockroachdb"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -49,8 +48,6 @@ type compatibleSource interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 }
 
-var compatibleSources = [...]string{cockroachdb.SourceType}
-
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
 	Type             string                 `yaml:"type" validate:"required"`
@@ -64,19 +61,9 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
-	}
-
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	_, ok = rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", resourceType, compatibleSources)
 	}
 
 	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
@@ -100,6 +87,25 @@ type Tool struct {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) validate(srcs map[string]sources.Source) error {
+	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	return err
+}
+
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	if err := t.validate(srcs); err != nil {
+		return nil, err
+	}
+	return t.BaseTool.GetParameters(srcs)
+}
+
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	if err := t.validate(srcs); err != nil {
+		return tools.Manifest{}, err
+	}
+	return t.BaseTool.Manifest(srcs)
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
