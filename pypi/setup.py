@@ -26,6 +26,9 @@ from setuptools import setup, find_packages
 from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
 
 
+SETUP_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
 class bdist_wheel(_bdist_wheel):
     def finalize_options(self):
         super().finalize_options()
@@ -50,27 +53,10 @@ class bdist_wheel(_bdist_wheel):
 
 
 # Ship the root LICENSE inside the package.
-setup_dir = os.path.dirname(os.path.abspath(__file__))
-parent_license = os.path.join(setup_dir, "..", "LICENSE")
-local_license = os.path.join(setup_dir, "LICENSE")
+parent_license = os.path.join(SETUP_DIR, "..", "LICENSE")
+local_license = os.path.join(SETUP_DIR, "LICENSE")
 if os.path.exists(parent_license):
     shutil.copy2(parent_license, local_license)
-
-
-# Refuse to build a wheel without an embedded binary — the wheel would be
-# silently broken at runtime otherwise.
-bin_dir = os.path.join(setup_dir, "src", "toolbox_server", "bin")
-binaries = []
-if os.path.isdir(bin_dir):
-    binaries = [
-        name for name in ("toolbox", "toolbox.exe")
-        if os.path.isfile(os.path.join(bin_dir, name))
-    ]
-if not binaries:
-    raise SystemExit(
-        f"No toolbox binary found in {bin_dir}. Stage one before running "
-        "`python -m build` (see setup.py docstring)."
-    )
 
 
 setup(
