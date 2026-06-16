@@ -21,7 +21,7 @@ description: >
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                           | `5000`      |
 |              | `--tls-cert`               | Path to the PEM-encoded TLS certificate file.                                                                                                                             |             |
 |              | `--tls-key`                | Path to the PEM-encoded TLS private key file.                                                                                                                             |             |
-|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
+|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., `<source>/<toolset>`) to load only that toolset. See [Prebuilt Tools Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values. |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                          |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                     |             |
 |              | `--telemetry-gcp-project`  | Google Cloud project ID used for `--telemetry-gcp`; defaults to `GOOGLE_CLOUD_PROJECT` if not set.                                                                        |             |
@@ -161,6 +161,9 @@ By default, traffic is unencrypted (HTTP). In production or shared networks, you
 ./toolbox --prebuilt alloydb-postgres,alloydb-postgres-admin
 # OR
 ./toolbox --prebuilt alloydb-postgres --prebuilt alloydb-postgres-admin
+
+# Server filtering a prebuilt configuration to load only a specific toolset
+./toolbox --prebuilt alloydb-postgres/monitor
 ```
 
 ### Tool Configuration Sources
@@ -182,7 +185,7 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 **Prebuilt Configurations:**
 
 - `--prebuilt`: Use one or more predefined configurations for specific database types (e.g.,
-  'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools 
+  'bigquery', 'postgres', 'spanner'), optionally appending a toolset name to filter the loaded tools (e.g., `alloydb-postgres/monitor`). See [Prebuilt Tools 
   Reference](../documentation/configuration/prebuilt-configs/_index.md) for allowed values.
 
 {{< notice tip >}}
