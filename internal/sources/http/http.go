@@ -98,10 +98,20 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("failed to parse BaseUrl %v", err)
 	}
 
+	allowedRanges, err := parseCIDRs(r.AllowedIPRanges)
+	if err != nil {
+		return nil, fmt.Errorf("invalid allowedIpRanges: %w", err)
+	}
+
+	customBlocked, err := parseCIDRs(r.CustomBlockedIPRanges)
+	if err != nil {
+		return nil, fmt.Errorf("invalid customBlockedIpRanges: %w", err)
+	}
+
 	guard := &SSRFGuard{
 		AllowPrivateNetworks: r.AllowPrivateNetworks,
-		AllowedRanges:        parseCIDRs(r.AllowedIPRanges),
-		CustomBlocked:        parseCIDRs(r.CustomBlockedIPRanges),
+		AllowedRanges:        allowedRanges,
+		CustomBlocked:        customBlocked,
 	}
 
 	// Quick fast-fail check for direct IP configurations in the YAML
@@ -253,7 +263,7 @@ func (g *SSRFGuard) IsIPBlocked(ip net.IP) bool {
 	return false
 }
 
-func parseCIDRs(list []string) []*net.IPNet {
+func parseCIDRs(list []string) ([]*net.IPNet, error) {
 	var nets []*net.IPNet
 	for _, entry := range list {
 		entry = strings.TrimSpace(entry)
@@ -271,11 +281,13 @@ func parseCIDRs(list []string) []*net.IPNet {
 				}
 			}
 		}
-		if _, ipNet, err := net.ParseCIDR(entry); err == nil {
-			nets = append(nets, ipNet)
+		_, ipNet, err := net.ParseCIDR(entry)
+		if err != nil {
+			return nil, fmt.Errorf("invalid CIDR or IP address %q: %w", entry, err)
 		}
+		nets = append(nets, ipNet)
 	}
-	return nets
+	return nets, nil
 }
 
 func createHTTPClient(duration time.Duration, tr *http.Transport, guard *SSRFGuard, res dnsResolver) (*http.Client, error) {

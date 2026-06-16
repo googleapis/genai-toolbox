@@ -238,6 +238,15 @@ func (m *mockResolver) LookupHost(ctx context.Context, host string) ([]string, e
 	return m.lookupFunc(ctx, host)
 }
 
+func mustParseCIDRs(t *testing.T, list []string) []*net.IPNet {
+	t.Helper()
+	nets, err := parseCIDRs(list)
+	if err != nil {
+		t.Fatalf("failed to parse CIDRs: %v", err)
+	}
+	return nets
+}
+
 func TestParseCIDRs(t *testing.T) {
 	input := []string{
 		"127.0.0.1",
@@ -245,7 +254,16 @@ func TestParseCIDRs(t *testing.T) {
 		"  ",
 		"192.168.1.1",
 	}
-	nets := parseCIDRs(input)
+	nets, err := parseCIDRs(input)
+	if err != nil {
+		t.Fatalf("unexpected error parsing valid CIDRs: %v", err)
+	}
+	// Test invalid CIDR error reporting
+	_, err = parseCIDRs([]string{"invalid-ip"})
+	if err == nil {
+		t.Error("expected error for invalid CIDR entry, got nil")
+	}
+
 	if len(nets) != 3 {
 		t.Fatalf("expected 3 parsed networks, got %d", len(nets))
 	}
@@ -263,8 +281,8 @@ func TestParseCIDRs(t *testing.T) {
 
 func TestSSRFGuard(t *testing.T) {
 	guard := &SSRFGuard{
-		AllowedRanges:        parseCIDRs([]string{"10.0.0.1"}),
-		CustomBlocked:        parseCIDRs([]string{"192.168.1.1"}),
+		AllowedRanges:        mustParseCIDRs(t, []string{"10.0.0.1"}),
+		CustomBlocked:        mustParseCIDRs(t, []string{"192.168.1.1"}),
 		AllowPrivateNetworks: false,
 	}
 
@@ -311,8 +329,8 @@ func TestSSRFGuard(t *testing.T) {
 
 	// Test with AllowPrivateNetworks = true
 	guardPrivate := &SSRFGuard{
-		AllowedRanges:        parseCIDRs([]string{"10.0.0.1"}),
-		CustomBlocked:        parseCIDRs([]string{"192.168.1.1"}),
+		AllowedRanges:        mustParseCIDRs(t, []string{"10.0.0.1"}),
+		CustomBlocked:        mustParseCIDRs(t, []string{"192.168.1.1"}),
 		AllowPrivateNetworks: true,
 	}
 	if guardPrivate.IsIPBlocked(net.ParseIP("127.0.0.1")) {
@@ -354,8 +372,8 @@ func TestSecureDialContextAndCheckRedirect(t *testing.T) {
 
 	guard := &SSRFGuard{
 		AllowPrivateNetworks: config.AllowPrivateNetworks,
-		AllowedRanges:        parseCIDRs(config.AllowedIPRanges),
-		CustomBlocked:        parseCIDRs(config.CustomBlockedIPRanges),
+		AllowedRanges:        mustParseCIDRs(t, config.AllowedIPRanges),
+		CustomBlocked:        mustParseCIDRs(t, config.CustomBlockedIPRanges),
 		Resolver:             mockRes,
 	}
 
@@ -418,7 +436,7 @@ func TestRedirectLoopbackIntegration(t *testing.T) {
 	// We allow 127.0.0.1 in AllowedIPRanges so the initial connection to the local redirect server succeeds.
 	guardDefault := &SSRFGuard{
 		AllowPrivateNetworks: false,
-		AllowedRanges:        parseCIDRs([]string{"127.0.0.1"}),
+		AllowedRanges:        mustParseCIDRs(t, []string{"127.0.0.1"}),
 	}
 	trDefault := &nethttp.Transport{}
 	clientDefault, err := createHTTPClient(5*time.Second, trDefault, guardDefault, nil)
@@ -437,7 +455,7 @@ func TestRedirectLoopbackIntegration(t *testing.T) {
 	// (it will fail to connect to 10.0.0.1, but the redirect itself should be followed).
 	guardBypass := &SSRFGuard{
 		AllowPrivateNetworks: true,
-		AllowedRanges:        parseCIDRs([]string{"127.0.0.1"}),
+		AllowedRanges:        mustParseCIDRs(t, []string{"127.0.0.1"}),
 	}
 	trBypass := &nethttp.Transport{}
 	clientBypass, err := createHTTPClient(5*time.Second, trBypass, guardBypass, nil)
