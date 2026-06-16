@@ -255,7 +255,7 @@ func (g *SSRFGuard) IsIPBlocked(ip net.IP) bool {
 
 	// Default strict RFC 1918 / Link-Local / Loopback protection
 	if !g.AllowPrivateNetworks {
-		if ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsUnspecified() {
+		if !ip.IsGlobalUnicast() || ip.IsPrivate() {
 			return true
 		}
 	}
