@@ -24,6 +24,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -185,15 +186,17 @@ func setupDataplexSearchDataQualityScan(t *testing.T, ctx context.Context, clien
 	}
 
 	return func(t *testing.T) {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cleanupCancel()
 		deleteDataScanReq := &dataplexpb.DeleteDataScanRequest{
 			Name: fmt.Sprintf("%s/dataScans/%s", parent, dataScanId),
 		}
-		op, err := client.DeleteDataScan(ctx, deleteDataScanReq)
+		op, err := client.DeleteDataScan(cleanupCtx, deleteDataScanReq)
 		if err != nil {
 			t.Errorf("Failed to delete data scan %s: %v", dataScanId, err)
 			return
 		}
-		if err := op.Wait(ctx); err != nil {
+		if err := op.Wait(cleanupCtx); err != nil {
 			t.Logf("Warning: Failed to wait for delete data scan %s: %v", dataScanId, err)
 		}
 	}
@@ -263,20 +266,38 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	dataProductId2 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataAssetId := fmt.Sprintf("param-data-asset-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
-	teardownTable1 := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
-	teardownAspectType1 := setupDataplexThirdPartyAspectType(t, ctx, dataplexClient, aspectTypeId)
-	teardownDataScan1 := setupDataplexSearchDataQualityScan(t, ctx, dataplexDataScanClient, dataScanId, datasetName, tableName)
+	teardownTable := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
+	teardownAspectType := setupDataplexThirdPartyAspectType(t, ctx, dataplexClient, aspectTypeId)
+	teardownDataScan := setupDataplexSearchDataQualityScan(t, ctx, dataplexDataScanClient, dataScanId, datasetName, tableName)
 	teardownDataProduct1 := setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId1)
 	teardownDataProduct2 := setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId2)
-	teardownDataAsset1 := setupDataplexDataAsset(t, ctx, dataplexDataProductClient, fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId1), dataAssetId, datasetName, tableName)
+	teardownDataAsset := setupDataplexDataAsset(t, ctx, dataplexDataProductClient, fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId1), dataAssetId, datasetName, tableName)
+
+	teardowns := []func(*testing.T){
+		teardownTable,
+		teardownAspectType,
+		teardownDataScan,
+		teardownDataProduct2,
+		// Sequence asset deletion before its parent data product to avoid API precondition failure
+		func(t *testing.T) {
+			teardownDataAsset(t)
+			teardownDataProduct1(t)
+		},
+	}
 
 	time.Sleep(2 * time.Minute) // wait for table and aspect type to be ingested
-	defer teardownTable1(t)
-	defer teardownAspectType1(t)
-	defer teardownDataScan1(t)
-	defer teardownDataProduct1(t)
-	defer teardownDataProduct2(t)
-	defer teardownDataAsset1(t)
+	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
+	defer func() {
+		var wg sync.WaitGroup
+		for _, fn := range teardowns {
+			wg.Add(1)
+			go func(cleanup func(*testing.T)) {
+				defer wg.Done()
+				cleanup(t)
+			}(fn)
+		}
+		wg.Wait()
+	}()
 
 	toolsFile := getDataplexToolsConfig(sourceConfig)
 
@@ -334,14 +355,17 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 	}
 
 	return func(t *testing.T) {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cleanupCancel()
+
 		// tear down table
 		dropSQL := fmt.Sprintf("drop table %s.%s", datasetName, tableName)
-		dropJob, err := client.Query(dropSQL).Run(ctx)
+		dropJob, err := client.Query(dropSQL).Run(cleanupCtx)
 		if err != nil {
 			t.Errorf("Failed to start drop table job for %s: %v", tableName, err)
 			return
 		}
-		dropStatus, err := dropJob.Wait(ctx)
+		dropStatus, err := dropJob.Wait(cleanupCtx)
 		if err != nil {
 			t.Errorf("Failed to wait for drop table job for %s: %v", tableName, err)
 			return
@@ -352,11 +376,11 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 
 		// tear down dataset
 		datasetToTeardown := client.Dataset(datasetName)
-		tablesIterator := datasetToTeardown.Tables(ctx)
+		tablesIterator := datasetToTeardown.Tables(cleanupCtx)
 		_, err = tablesIterator.Next()
 
 		if err == iterator.Done {
-			if err := datasetToTeardown.Delete(ctx); err != nil {
+			if err := datasetToTeardown.Delete(cleanupCtx); err != nil {
 				t.Errorf("Failed to delete dataset %s: %v", datasetName, err)
 			}
 		} else if err != nil {
@@ -382,15 +406,17 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 	}
 
 	teardown := func(t *testing.T) {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cleanupCancel()
 		deleteReq := &dataplexpb.DeleteDataProductRequest{
 			Name: fmt.Sprintf("%s/dataProducts/%s", parent, dataProductId),
 		}
-		op, err := client.DeleteDataProduct(ctx, deleteReq)
+		op, err := client.DeleteDataProduct(cleanupCtx, deleteReq)
 		if err != nil {
 			t.Errorf("Failed to initiate DeleteDataProduct for %s: %v", dataProductId, err)
 			return
 		}
-		err = op.Wait(ctx)
+		err = op.Wait(cleanupCtx)
 		if err != nil {
 			t.Logf("Warning: Failed to wait for DeleteDataProduct for %s: %v", dataProductId, err)
 		}
@@ -424,15 +450,17 @@ func setupDataplexDataAsset(t *testing.T, ctx context.Context, client *dataplex.
 	}
 
 	teardown := func(t *testing.T) {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cleanupCancel()
 		deleteReq := &dataplexpb.DeleteDataAssetRequest{
 			Name: fmt.Sprintf("%s/dataAssets/%s", parentProductPath, dataAssetId),
 		}
-		op, err := client.DeleteDataAsset(ctx, deleteReq)
+		op, err := client.DeleteDataAsset(cleanupCtx, deleteReq)
 		if err != nil {
 			t.Errorf("Failed to initiate DeleteDataAsset for %s: %v", dataAssetId, err)
 			return
 		}
-		err = op.Wait(ctx)
+		err = op.Wait(cleanupCtx)
 		if err != nil {
 			t.Logf("Warning: Failed to wait for DeleteDataAsset for %s: %v", dataAssetId, err)
 		}
@@ -471,11 +499,14 @@ func setupDataplexThirdPartyAspectType(t *testing.T, ctx context.Context, client
 	}
 
 	return func(t *testing.T) {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cleanupCancel()
+
 		// tear down aspect type
 		deleteAspectTypeReq := &dataplexpb.DeleteAspectTypeRequest{
 			Name: fmt.Sprintf("%s/aspectTypes/%s", parent, aspectTypeId),
 		}
-		if _, err := client.DeleteAspectType(ctx, deleteAspectTypeReq); err != nil {
+		if _, err := client.DeleteAspectType(cleanupCtx, deleteAspectTypeReq); err != nil {
 			t.Errorf("Failed to delete aspect type %s: %v", aspectTypeId, err)
 		}
 	}
