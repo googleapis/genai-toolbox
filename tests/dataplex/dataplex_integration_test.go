@@ -35,6 +35,8 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -265,6 +267,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	dataScanId := fmt.Sprintf("param-data-scan-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataProductId1 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataProductId2 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	dataProductId3 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataAssetId := fmt.Sprintf("param-data-asset-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
 	teardownTable := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
@@ -274,11 +277,16 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	teardownDataProduct2 := setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId2)
 	teardownDataAsset := setupDataplexDataAsset(t, ctx, dataplexDataProductClient, fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId1), dataAssetId, datasetName, tableName)
 
+	teardownDataProduct3 := func(t *testing.T) {
+		teardownDataProduct(t, dataplexDataProductClient, dataProductId3)
+	}
+
 	teardowns := []func(*testing.T){
 		teardownTable,
 		teardownAspectType,
 		teardownDataScan,
 		teardownDataProduct2,
+		teardownDataProduct3,
 		// Sequence asset deletion before its parent data product to avoid API precondition failure
 		func(t *testing.T) {
 			teardownDataAsset(t)
@@ -326,7 +334,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexGetDataProductToolInvokeTest(t, dataProductId1)
 	runDataplexListDataAssetsToolInvokeTest(t, dataProductId1, dataAssetId)
 	runDataplexGetDataAssetToolInvokeTest(t, dataProductId1, dataAssetId)
-	runDataplexCreateDataProductToolInvokeTest(t)
+	runDataplexCreateDataProductToolInvokeTest(t, dataProductId3)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -407,23 +415,6 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 		},
 	}
 
-	teardown := func(t *testing.T) {
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		defer cleanupCancel()
-		deleteReq := &dataplexpb.DeleteDataProductRequest{
-			Name: fmt.Sprintf("%s/dataProducts/%s", parent, dataProductId),
-		}
-		op, err := client.DeleteDataProduct(cleanupCtx, deleteReq)
-		if err != nil {
-			t.Errorf("Failed to initiate DeleteDataProduct for %s: %v", dataProductId, err)
-			return
-		}
-		err = op.Wait(cleanupCtx)
-		if err != nil {
-			t.Logf("Warning: Failed to wait for DeleteDataProduct for %s: %v", dataProductId, err)
-		}
-	}
-
 	op, err := client.CreateDataProduct(ctx, createReq)
 	if err != nil {
 		t.Fatalf("Failed to initiate CreateDataProduct for %s: %v", dataProductId, err)
@@ -431,11 +422,13 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 
 	_, err = op.Wait(ctx)
 	if err != nil {
-		teardown(t)
+		teardownDataProduct(t, client, dataProductId)
 		t.Fatalf("Failed to wait for CreateDataProduct for %s: %v", dataProductId, err)
 	}
 
-	return teardown
+	return func(t *testing.T) {
+		teardownDataProduct(t, client, dataProductId)
+	}
 }
 
 func setupDataplexDataAsset(t *testing.T, ctx context.Context, client *dataplex.DataProductClient, parentProductPath string, dataAssetId string, datasetName string, tableName string) func(*testing.T) {
@@ -624,6 +617,7 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"type":         DataplexGetDataAssetToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex get data asset tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-create-data-product-tool": map[string]any{
 				"type":        DataplexCreateDataProductToolType,
@@ -1919,30 +1913,38 @@ func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, d
 	}
 }
 
-func runDataplexCreateDataProductToolInvokeTest(t *testing.T) {
+func teardownDataProduct(t *testing.T, client *dataplex.DataProductClient, dataProductId string) {
+	cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cleanupCancel()
+	deleteReq := &dataplexpb.DeleteDataProductRequest{
+		Name: fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId),
+	}
+	op, err := client.DeleteDataProduct(cleanupCtx, deleteReq)
+	if err != nil {
+		if grpcstatus.Code(err) == grpccodes.NotFound {
+			t.Logf("Data Product %s was not found, skipping deletion", dataProductId)
+			return
+		}
+		t.Errorf("Failed to initiate DeleteDataProduct for %s: %v", dataProductId, err)
+		return
+	}
+	err = op.Wait(cleanupCtx)
+	if err != nil {
+		if grpcstatus.Code(err) == grpccodes.NotFound {
+			t.Logf("Data Product %s was not found during wait, skipping deletion", dataProductId)
+			return
+		}
+		t.Logf("Warning: Failed to wait for DeleteDataProduct for %s: %v", dataProductId, err)
+	}
+}
+
+func runDataplexCreateDataProductToolInvokeTest(t *testing.T, dataProductId string) {
 	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	ctx := context.Background()
-	dataplexDataProductClient, err := initDataplexDataProductConnection(ctx)
-	if err != nil {
-		t.Fatalf("unable to create Dataplex DataProduct connection: %s", err)
-	}
-	defer dataplexDataProductClient.Close()
-
-	dataProductId := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	fullDataProductId := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId)
-
-	defer func() {
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		defer cleanupCancel()
-		op, err := dataplexDataProductClient.DeleteDataProduct(cleanupCtx, &dataplexpb.DeleteDataProductRequest{Name: fullDataProductId})
-		if err == nil {
-			op.Wait(cleanupCtx)
-		}
-	}()
 
 	testCases := []struct {
 		name           string
@@ -2028,11 +2030,29 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T) {
 			}
 
 			var created bool
-			for i := 0; i < 24; i++ {
-				_, err := dataplexDataProductClient.GetDataProduct(ctx, &dataplexpb.GetDataProductRequest{Name: fullDataProductId})
+			// Poll the GET data product tool endpoint up to 12 times (every 5 seconds)
+			// to wait for the asynchronous LRO creation to complete (max 1 minutes).
+			for i := 0; i < 12; i++ {
+				getReqBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"name":"%s"}`, fullDataProductId)))
+				getReq, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke", getReqBody)
+				if err != nil {
+					t.Fatalf("unable to create request: %s", err)
+				}
+				getReq.Header.Add("Content-type", "application/json")
+				getReq.Header.Add("my-google-auth_token", idToken)
+				getResp, err := http.DefaultClient.Do(getReq)
+				if err == nil && getResp.StatusCode == 200 {
+					var getResult map[string]interface{}
+					if err := json.NewDecoder(getResp.Body).Decode(&getResult); err == nil {
+						if _, ok := getResult["error"]; !ok {
+							created = true
+							getResp.Body.Close()
+							break
+						}
+					}
+				}
 				if err == nil {
-					created = true
-					break
+					getResp.Body.Close()
 				}
 				time.Sleep(5 * time.Second)
 			}
