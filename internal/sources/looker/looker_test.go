@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package looker_test
+package looker
 
 import (
 	"context"
@@ -25,7 +25,6 @@ import (
 	toolboxlog "github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/looker"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -48,9 +47,9 @@ func TestParseFromYamlLooker(t *testing.T) {
 			client_secret: sdakl;jgflkasdfkfg
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-looker-instance": looker.Config{
+				"my-looker-instance": Config{
 					Name:               "my-looker-instance",
-					Type:               looker.SourceType,
+					Type:               SourceType,
 					BaseURL:            "http://example.looker.com/",
 					ClientId:           "jasdl;k;tjl",
 					ClientSecret:       "sdakl;jgflkasdfkfg",
@@ -138,7 +137,7 @@ func TestGetLookerSDK_ClientIPPropagation(t *testing.T) {
 	defer ts.Close()
 
 	// 2. Construct looker Config with UseClientOAuth = "true" pointing to the local test server
-	cfg := looker.Config{
+	cfg := Config{
 		Name:            "test-looker",
 		Type:            "looker",
 		BaseURL:         ts.URL,
@@ -162,7 +161,7 @@ func TestGetLookerSDK_ClientIPPropagation(t *testing.T) {
 		t.Fatalf("failed to initialize source: %v", err)
 	}
 
-	lookerSrc, ok := src.(*looker.Source)
+	lookerSrc, ok := src.(*Source)
 	if !ok {
 		t.Fatalf("source is not of type *looker.Source")
 	}
@@ -204,5 +203,67 @@ func TestGetLookerSDK_ClientIPPropagation(t *testing.T) {
 	}
 	if gotAuth := serverReceivedHeaders.Get("Authorization"); gotAuth != "mock-token-123" {
 		t.Errorf("expected Authorization header to be %q, got %q", "mock-token-123", gotAuth)
+	}
+}
+
+// TestGetLookerSDKProxyTransport verifies that the SDK returned for end-user
+// token requests is configured with a transport that honors proxy environment
+// variables (Proxy is wired to http.ProxyFromEnvironment). It reaches into the
+// unexported transportWithAuthHeader, so it lives in the internal test package.
+//
+// Behavior is asserted structurally rather than by setting proxy env vars and
+// issuing a request: http.ProxyFromEnvironment caches the environment the first
+// time it is invoked for the lifetime of the process, which makes env-based
+// proxy assertions order-dependent and flaky.
+func TestGetLookerSDKProxyTransport(t *testing.T) {
+	ctx := context.Background()
+	logger, err := toolboxlog.NewStdLogger(io.Discard, io.Discard, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to create logger: %v", err)
+	}
+	ctx = util.WithLogger(ctx, logger)
+	ctx = util.WithUserAgent(ctx, "test-agent")
+
+	cfg := Config{
+		Name:            "test-looker",
+		Type:            SourceType,
+		BaseURL:         "https://example.looker.com/",
+		UseClientOAuth:  "true",
+		Timeout:         "5s",
+		SslVerification: true,
+	}
+
+	src, err := cfg.Initialize(ctx, nil)
+	if err != nil {
+		t.Fatalf("failed to initialize source: %v", err)
+	}
+	lookerSrc, ok := src.(*Source)
+	if !ok {
+		t.Fatalf("source is not of type *looker.Source")
+	}
+
+	sdk, err := lookerSrc.GetLookerSDK(ctx, "mock-token-123")
+	if err != nil {
+		t.Fatalf("GetLookerSDK failed: %v", err)
+	}
+
+	authSession, ok := sdk.AuthSession.(*rtl.AuthSession)
+	if !ok {
+		t.Fatalf("SDK session is not *rtl.AuthSession")
+	}
+	wrapped, ok := authSession.Client.Transport.(*transportWithAuthHeader)
+	if !ok {
+		t.Fatalf("client transport is not *transportWithAuthHeader, got %T", authSession.Client.Transport)
+	}
+	base, ok := wrapped.Base.(*http.Transport)
+	if !ok {
+		t.Fatalf("base transport is not *http.Transport, got %T", wrapped.Base)
+	}
+	if base.Proxy == nil {
+		t.Errorf("expected base transport Proxy to be set so proxy env vars are honored, got nil")
+	}
+	// VerifySsl is true, so TLS verification should remain enabled.
+	if base.TLSClientConfig == nil || base.TLSClientConfig.InsecureSkipVerify {
+		t.Errorf("expected TLS verification to be enabled when SslVerification is true")
 	}
 }
