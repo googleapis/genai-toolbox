@@ -51,6 +51,7 @@ var (
 	DataplexGetDataProductToolType         = "dataplex-get-data-product"
 	DataplexListDataAssetsToolType         = "dataplex-list-data-assets"
 	DataplexGetDataAssetToolType           = "dataplex-get-data-asset"
+	DataplexCreateDataProductToolType      = "dataplex-create-data-product"
 	DataplexProject                        = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -325,6 +326,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexGetDataProductToolInvokeTest(t, dataProductId1)
 	runDataplexListDataAssetsToolInvokeTest(t, dataProductId1, dataAssetId)
 	runDataplexGetDataAssetToolInvokeTest(t, dataProductId1, dataAssetId)
+	runDataplexCreateDataProductToolInvokeTest(t)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -622,6 +624,16 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"type":         DataplexGetDataAssetToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex get data asset tool to test end to end functionality.",
+			},
+			"my-dataplex-create-data-product-tool": map[string]any{
+				"type":        DataplexCreateDataProductToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex create data product tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-create-data-product-tool": map[string]any{
+				"type":         DataplexCreateDataProductToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex create data product tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 		},
@@ -672,9 +684,9 @@ func runDataplexToolGetTest(t *testing.T) {
 			expectedParams: []string{"name", "filter", "pageSize", "orderBy"},
 		},
 		{
-			name:           "get my-dataplex-get-data-asset-tool",
-			toolName:       "my-dataplex-get-data-asset-tool",
-			expectedParams: []string{"name"},
+			name:           "get my-dataplex-create-data-product-tool",
+			toolName:       "my-dataplex-create-data-product-tool",
+			expectedParams: []string{"name", "displayName", "description", "ownerEmails", "accessGroups"},
 		},
 	}
 
@@ -1907,3 +1919,126 @@ func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, d
 	}
 }
 
+func runDataplexCreateDataProductToolInvokeTest(t *testing.T) {
+	idToken, err := tests.GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	ctx := context.Background()
+	dataplexDataProductClient, err := initDataplexDataProductConnection(ctx)
+	if err != nil {
+		t.Fatalf("unable to create Dataplex DataProduct connection: %s", err)
+	}
+	defer dataplexDataProductClient.Close()
+
+	dataProductId := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	fullDataProductId := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId)
+
+	defer func() {
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cleanupCancel()
+		op, err := dataplexDataProductClient.DeleteDataProduct(cleanupCtx, &dataplexpb.DeleteDataProductRequest{Name: fullDataProductId})
+		if err == nil {
+			op.Wait(cleanupCtx)
+		}
+	}()
+
+	testCases := []struct {
+		name           string
+		api            string
+		requestHeader  map[string]string
+		requestBody    io.Reader
+		wantStatusCode int
+		expectResult   bool
+	}{
+		{
+			name:          "Success - Create Data Product (Authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"name":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","serviceAccount":"%s"}]}`,
+				fullDataProductId, dataProductId, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 200,
+			expectResult:   true,
+		},
+		{
+			name:          "Failure - Create Data Product (Un-authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"name":"%s","displayName":"%s","ownerEmails":["%s"]}`,
+				fullDataProductId, dataProductId, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:          "Failure - Invalid Name Format",
+			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"name":"invalid-name-%s","displayName":"%s","ownerEmails":["%s"]}`,
+				dataProductId, dataProductId, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 200,
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+			}
+			if !tc.expectResult {
+				return
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			var invokeResp map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &invokeResp); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			opName, ok := invokeResp["operationName"].(string)
+			if !ok || opName == "" {
+				t.Fatalf("expected 'operationName' in response, got %v", invokeResp)
+			}
+
+			var created bool
+			for i := 0; i < 24; i++ {
+				_, err := dataplexDataProductClient.GetDataProduct(ctx, &dataplexpb.GetDataProductRequest{Name: fullDataProductId})
+				if err == nil {
+					created = true
+					break
+				}
+				time.Sleep(5 * time.Second)
+			}
+			if !created {
+				t.Fatalf("Data Product was not successfully created")
+			}
+		})
+	}
+}

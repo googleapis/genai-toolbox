@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"strings"
+
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/cenkalti/backoff/v5"
@@ -493,4 +495,59 @@ func (s *Source) GetDataAsset(ctx context.Context, name string) (*DataAsset, err
 	}, nil
 }
 
+func (s *Source) CreateDataProduct(
+	ctx context.Context,
+	name string,
+	displayName string,
+	description string,
+	ownerEmails []string,
+	accessGroups []AccessGroup,
+) (string, error) {
+	if s.GetDataProductClient() == nil {
+		return "", fmt.Errorf("dataplex data product client is not initialized")
+	}
 
+	parts := strings.Split(name, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "dataProducts" {
+		return "", fmt.Errorf("invalid data product name: %q", name)
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s", parts[1], parts[3])
+	dataProductId := parts[5]
+
+	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)
+	for _, ag := range accessGroups {
+		principal := &dataplexpb.DataProduct_Principal{}
+		if ag.GoogleGroup != "" {
+			principal.Type = &dataplexpb.DataProduct_Principal_GoogleGroup{
+				GoogleGroup: ag.GoogleGroup,
+			}
+		}
+		if ag.ServiceAccount != "" {
+			principal.ServiceAccount = &ag.ServiceAccount;
+		}
+		agMap[ag.ID] = &dataplexpb.DataProduct_AccessGroup{
+			Id:          ag.ID,
+			DisplayName: ag.DisplayName,
+			Description: ag.Description,
+			Principal:   principal,
+		}
+	}
+
+	req := &dataplexpb.CreateDataProductRequest{
+		Parent:        parent,
+		DataProductId: dataProductId,
+		DataProduct: &dataplexpb.DataProduct{
+			DisplayName:  displayName,
+			Description:  description,
+			OwnerEmails:  ownerEmails,
+			AccessGroups: agMap,
+		},
+	}
+
+	op, err := s.GetDataProductClient().CreateDataProduct(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
+	return op.Name(), nil
+}

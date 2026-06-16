@@ -71,6 +71,12 @@ type: dataplex-get-data-asset
 source: dataplex-source
 description: Retrieves specific metadata regarding a Data Asset.
 ---
+kind: tool
+name: create_data_product
+type: dataplex-create-data-product
+source: dataplex-source
+description: Creates a new Data Product.
+---
 kind: toolset
 name: discovery
 tools:
@@ -83,3 +89,4 @@ tools:
 - get_data_product
 - list_data_assets
 - get_data_asset
+- create_data_product

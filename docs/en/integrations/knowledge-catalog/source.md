@@ -403,4 +403,13 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 2. You must provide the full resource name of the Data Asset in the format `projects/{project}/locations/{location}/dataProducts/{dataProduct}/dataAssets/{dataAsset}`.
 ### Response
 1. Present the retrieved metadata for the Data Asset, including its name, resource, labels, and access group configurations.
+
+## Tool: create_data_product
+### Request
+1. Use this tool to create a new Data Product.
+2. You must provide the full resource name of the Data Product in the format `projects/{project}/locations/{location}/dataProducts/{dataProduct}`.
+3. You must provide `displayName` and `ownerEmails`.
+4. You can optionally provide `description` and `accessGroups`.
+### Response
+1. Present the operation name returned immediately by the LRO creation call.
 ```
