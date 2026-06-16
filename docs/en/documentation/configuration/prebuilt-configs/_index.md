@@ -10,6 +10,10 @@ Prebuilt configs are reusable, pre-packaged toolsets that are designed to extend
 the capabilities of agents. These configs are built to be generic and adaptable,
 allowing developers to interact with and take action on databases.
 
+{{< notice warning >}}
+Prebuilt tool configurations are intended for developer use cases and not production environments.
+{{< /notice >}}
+
 See guides, [Connect from your IDE](../../connect-to/ides/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
