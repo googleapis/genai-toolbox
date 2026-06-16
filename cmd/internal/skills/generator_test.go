@@ -38,7 +38,7 @@ func (m MockToolConfig) ToolConfigType() string {
 	return m.Type
 }
 
-func (m MockToolConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
+func (m MockToolConfig) Initialize() (tools.Tool, error) {
 	return nil, nil
 }
 

@@ -74,64 +74,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	inputDataDescription := "The data that contain the test and control data to analyze. Can be a fully qualified BigQuery table ID or a SQL query."
-	if len(allowedDatasets) > 0 {
-		datasetIDs := []string{}
-		for _, ds := range allowedDatasets {
-			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-		}
-		inputDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
-	}
-
-	inputDataParameter := parameters.NewStringParameter("input_data", inputDataDescription)
-	contributionMetricParameter := parameters.NewStringParameterWithEscape("contribution_metric",
-		`The name of the column that contains the metric to analyze.
-		Provides the expression to use to calculate the metric you are analyzing.
-		To calculate a summable metric, the expression must be in the form SUM(metric_column_name),
-		where metric_column_name is a numeric data type.
-
-		To calculate a summable ratio metric, the expression must be in the form
-		SUM(numerator_metric_column_name)/SUM(denominator_metric_column_name),
-		where numerator_metric_column_name and denominator_metric_column_name are numeric data types.
-
-		To calculate a summable by category metric, the expression must be in the form
-		SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name). The summed column must be a numeric data type.
-		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`, "single-quotes")
-	isTestColParameter := parameters.NewStringParameterWithEscape("is_test_col",
-		"The name of the column that identifies whether a row is in the test or control group.", "single-quotes")
-	dimensionIDColsParameter := parameters.NewArrayParameterWithRequired("dimension_id_cols",
-		"An array of column names that uniquely identify each dimension.", false, parameters.NewStringParameterWithEscape("dimension_id_col", "A dimension column name.", "single-quotes"))
-	topKInsightsParameter := parameters.NewIntParameterWithDefault("top_k_insights_by_apriori_support", 30,
-		"The number of top insights to return, ranked by apriori support.")
-	pruningMethodParameter := parameters.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
-		"The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.")
-
-	params := parameters.Parameters{
-		inputDataParameter,
-		contributionMetricParameter,
-		isTestColParameter,
-		dimensionIDColsParameter,
-		topKInsightsParameter,
-		pruningMethodParameter,
-	}
+	// params is the static skeleton (no source at init ⇒ no allowed-dataset restriction).
+	// Manifest/GetParameters re-resolve against the source lazily.
+	params := buildParams(nil)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -346,4 +296,70 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
+func buildParams(allowedDatasets []string) parameters.Parameters {
+	inputDataDescription := "The data that contain the test and control data to analyze. Can be a fully qualified BigQuery table ID or a SQL query."
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		inputDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
+
+	inputDataParameter := parameters.NewStringParameter("input_data", inputDataDescription)
+	contributionMetricParameter := parameters.NewStringParameterWithEscape("contribution_metric",
+		`The name of the column that contains the metric to analyze.
+		Provides the expression to use to calculate the metric you are analyzing.
+		To calculate a summable metric, the expression must be in the form SUM(metric_column_name),
+		where metric_column_name is a numeric data type.
+
+		To calculate a summable ratio metric, the expression must be in the form
+		SUM(numerator_metric_column_name)/SUM(denominator_metric_column_name),
+		where numerator_metric_column_name and denominator_metric_column_name are numeric data types.
+
+		To calculate a summable by category metric, the expression must be in the form
+		SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name). The summed column must be a numeric data type.
+		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`, "single-quotes")
+	isTestColParameter := parameters.NewStringParameterWithEscape("is_test_col",
+		"The name of the column that identifies whether a row is in the test or control group.", "single-quotes")
+	dimensionIDColsParameter := parameters.NewArrayParameterWithRequired("dimension_id_cols",
+		"An array of column names that uniquely identify each dimension.", false, parameters.NewStringParameterWithEscape("dimension_id_col", "A dimension column name.", "single-quotes"))
+	topKInsightsParameter := parameters.NewIntParameterWithDefault("top_k_insights_by_apriori_support", 30,
+		"The number of top insights to return, ranked by apriori support.")
+	pruningMethodParameter := parameters.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
+		"The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.")
+
+	return parameters.Parameters{
+		inputDataParameter,
+		contributionMetricParameter,
+		isTestColParameter,
+		dimensionIDColsParameter,
+		topKInsightsParameter,
+		pruningMethodParameter,
+	}
+}
+
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryAllowedDatasets()), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	params, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: params.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

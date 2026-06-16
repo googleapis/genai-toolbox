@@ -20,7 +20,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -35,7 +34,7 @@ type stubConfig struct {
 }
 
 func (stubConfig) ToolConfigType() string { return "stub" }
-func (stubConfig) Initialize(map[string]sources.Source) (tools.Tool, error) {
+func (stubConfig) Initialize() (tools.Tool, error) {
 	return nil, nil
 }
 
@@ -91,10 +90,18 @@ func TestBaseToolGetters(t *testing.T) {
 	if got == nil || got.ReadOnlyHint == nil || !*got.ReadOnlyHint {
 		t.Errorf("GetAnnotations() = %+v, want ReadOnlyHint=true", got)
 	}
-	if diff := cmp.Diff(wantManifest, b.Manifest()); diff != "" {
+	gotManifest, err := b.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() error = %v", err)
+	}
+	if diff := cmp.Diff(wantManifest, gotManifest); diff != "" {
 		t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
 	}
-	if p := b.GetParameters(); len(p) != 1 || p[0].GetName() != "p1" {
+	p, err := b.GetParameters(nil)
+	if err != nil {
+		t.Fatalf("GetParameters() error = %v", err)
+	}
+	if len(p) != 1 || p[0].GetName() != "p1" {
 		t.Errorf("GetParameters() = %+v, want one param named p1", p)
 	}
 	if diff := cmp.Diff([]string{"scope-a", "scope-b"}, b.GetScopesRequired()); diff != "" {

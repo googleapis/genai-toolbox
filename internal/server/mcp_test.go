@@ -974,6 +974,68 @@ func TestGetEndpoint(t *testing.T) {
 	}
 }
 
+func TestMcpRequestBodyLimit(t *testing.T) {
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	limit := int(DefaultHTTPMaxRequestBytes)
+	tooLarge := bytes.Repeat([]byte("x"), limit+1)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	errBody, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing error payload: %v", got)
+	}
+	wantMessage := fmt.Sprintf("request body exceeds %d bytes", DefaultHTTPMaxRequestBytes)
+	if errBody["message"] != wantMessage {
+		t.Fatalf("unexpected error message: got %v, want %s", errBody["message"], wantMessage)
+	}
+}
+
+func TestMcpRequestBodyLimitOverride(t *testing.T) {
+	customLimit := int64(1 << 20)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	tooLarge := bytes.Repeat([]byte("x"), int(customLimit)+1)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	errBody, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing error payload: %v", got)
+	}
+	wantMessage := fmt.Sprintf("request body exceeds %d bytes", customLimit)
+	if errBody["message"] != wantMessage {
+		t.Fatalf("unexpected error message: got %v, want %s", errBody["message"], wantMessage)
+	}
+}
+
 func TestSseEndpoint(t *testing.T) {
 	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
 	defer shutdown()

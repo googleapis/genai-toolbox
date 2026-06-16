@@ -32,6 +32,7 @@ import (
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	storageapi "cloud.google.com/go/storage"
 	"github.com/google/uuid"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
@@ -86,7 +87,7 @@ func initBigQueryConnection(ctx context.Context, project string) (*bigqueryapi.C
 }
 
 func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -207,7 +208,7 @@ func setupDataplexSearchDataQualityScan(t *testing.T, ctx context.Context, clien
 }
 
 func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}

@@ -19,6 +19,9 @@ You can now use `--prebuilt` along `--config`, `--configs`, or
 
 You can also combine multiple prebuilt configs.
 
+**Filtering Toolsets:**
+You can load a specific toolset from a prebuilt configuration by appending a `/` and the toolset name, for example: `--prebuilt=postgres/data` to only load the SQL tools.
+
 See [Usage Examples](../../../reference/cli.md#usage-examples).
 {{< /notice >}}
 
