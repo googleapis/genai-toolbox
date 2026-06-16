@@ -22,7 +22,6 @@ import (
 
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -63,16 +62,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-	_, ok = rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
+func (cfg Config) Initialize() (tools.Tool, error) {
 	scanID := parameters.NewStringParameter("scanId", "The unique ID of the Dataplex DataScan (e.g. 'nq-dq-12345...'). This is extracted from the target or name field of the creation operation.")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
 

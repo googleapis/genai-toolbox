@@ -21,7 +21,6 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -60,16 +59,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-	_, ok = rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
+func (cfg Config) Initialize() (tools.Tool, error) {
 	operationName := parameters.NewStringParameter("operationName", "The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{project}/locations/{location}/operations/{operation_id}.")
 
 	allParameters := parameters.Parameters{operationName}

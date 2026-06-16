@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -61,16 +60,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-	_, ok = rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
+func (cfg Config) Initialize() (tools.Tool, error) {
 	resourcePath := parameters.NewStringParameter("resourcePath", "The fully-qualified BigQuery resource path of the dataset or table to analyze. Format: //bigquery.googleapis.com/projects/{project}/datasets/{dataset} or //bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}.")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource or the published location of the asset in the catalog.")
 	publish := parameters.NewBooleanParameterWithDefault("publish", false, "Optional. If true, automatically publishes the results to the Knowledge Catalog upon successful completion. False by default.")
