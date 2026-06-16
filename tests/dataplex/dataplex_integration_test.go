@@ -35,6 +35,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
+	longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
 	grpccodes "google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 	"google.golang.org/api/googleapi"
@@ -268,6 +269,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	dataProductId1 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataProductId2 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataProductId3 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	dataProductId4 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataAssetId := fmt.Sprintf("param-data-asset-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
 	teardownTable := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
@@ -280,6 +282,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	teardownDataProduct3 := func(t *testing.T) {
 		teardownDataProduct(t, dataplexDataProductClient, dataProductId3)
 	}
+	teardownDataProduct4 := func(t *testing.T) {
+		teardownDataProduct(t, dataplexDataProductClient, dataProductId4)
+	}
 
 	teardowns := []func(*testing.T){
 		teardownTable,
@@ -287,6 +292,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		teardownDataScan,
 		teardownDataProduct2,
 		teardownDataProduct3,
+		teardownDataProduct4,
 		// Sequence asset deletion before its parent data product to avoid API precondition failure
 		func(t *testing.T) {
 			teardownDataAsset(t)
@@ -334,7 +340,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexGetDataProductToolInvokeTest(t, dataProductId1)
 	runDataplexListDataAssetsToolInvokeTest(t, dataProductId1, dataAssetId)
 	runDataplexGetDataAssetToolInvokeTest(t, dataProductId1, dataAssetId)
-	runDataplexCreateDataProductToolInvokeTest(t, dataProductId3)
+	runDataplexCreateDataProductToolInvokeTest(t, dataplexDataProductClient, dataProductId3, dataProductId4)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -1938,13 +1944,14 @@ func teardownDataProduct(t *testing.T, client *dataplex.DataProductClient, dataP
 	}
 }
 
-func runDataplexCreateDataProductToolInvokeTest(t *testing.T, dataProductId string) {
+func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.DataProductClient, dataProductIdAuth string, dataProductIdUnauth string) {
 	idToken, err := tests.GetGoogleIdToken(t)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	fullDataProductId := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId)
+	fullDataProductIdAuth := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductIdAuth)
+	fullDataProductIdUnauth := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductIdUnauth)
 
 	testCases := []struct {
 		name           string
@@ -1959,19 +1966,41 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, dataProductId stri
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"name":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","serviceAccount":"%s"}]}`,
-				fullDataProductId, dataProductId, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+				`{"name":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
+				fullDataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
 			))),
 			wantStatusCode: 200,
 			expectResult:   true,
 		},
 		{
-			name:          "Failure - Create Data Product (Un-authorized)",
+			name:          "Success - Create Data Product (Un-authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"name":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
+				fullDataProductIdUnauth, dataProductIdUnauth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 200,
+			expectResult:   true,
+		},
+		{
+			name:          "Failure - Without Authorization Token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"name":"%s","displayName":"%s","ownerEmails":["%s"]}`,
-				fullDataProductId, dataProductId, tests.ServiceAccountEmail,
+				fullDataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:          "Failure - Invalid Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"name":"%s","displayName":"%s","ownerEmails":["%s"]}`,
+				fullDataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
 			))),
 			wantStatusCode: 401,
 			expectResult:   false,
@@ -1982,7 +2011,7 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, dataProductId stri
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
 				`{"name":"invalid-name-%s","displayName":"%s","ownerEmails":["%s"]}`,
-				dataProductId, dataProductId, tests.ServiceAccountEmail,
+				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
 			))),
 			wantStatusCode: 200,
 			expectResult:   false,
@@ -2029,35 +2058,22 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, dataProductId stri
 				t.Fatalf("expected 'operationName' in response, got %v", invokeResp)
 			}
 
-			var created bool
-			// Poll the GET data product tool endpoint up to 12 times (every 5 seconds)
-			// to wait for the asynchronous LRO creation to complete (max 1 minutes).
+			var completed bool
+			// Poll the LRO operation status up to 12 times (every 5 seconds)
+			// to wait for the asynchronous creation to complete (max 1 minute).
 			for i := 0; i < 12; i++ {
-				getReqBody := bytes.NewBuffer([]byte(fmt.Sprintf(`{"name":"%s"}`, fullDataProductId)))
-				getReq, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke", getReqBody)
-				if err != nil {
-					t.Fatalf("unable to create request: %s", err)
-				}
-				getReq.Header.Add("Content-type", "application/json")
-				getReq.Header.Add("my-google-auth_token", idToken)
-				getResp, err := http.DefaultClient.Do(getReq)
-				if err == nil && getResp.StatusCode == 200 {
-					var getResult map[string]interface{}
-					if err := json.NewDecoder(getResp.Body).Decode(&getResult); err == nil {
-						if _, ok := getResult["error"]; !ok {
-							created = true
-							getResp.Body.Close()
-							break
-						}
+				op, err := client.GetOperation(context.Background(), &longrunningpb.GetOperationRequest{Name: opName})
+				if err == nil && op.GetDone() {
+					if op.GetError() != nil {
+						t.Fatalf("Data Product creation operation failed: %v", op.GetError())
 					}
-				}
-				if err == nil {
-					getResp.Body.Close()
+					completed = true
+					break
 				}
 				time.Sleep(5 * time.Second)
 			}
-			if !created {
-				t.Fatalf("Data Product was not successfully created")
+			if !completed {
+				t.Fatalf("Data Product creation operation did not complete in time")
 			}
 		})
 	}
