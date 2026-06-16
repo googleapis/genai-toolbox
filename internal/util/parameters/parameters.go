@@ -825,7 +825,7 @@ func NewIntParameterWithAllowedValues(name string, desc string, allowedValues []
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          TypeString,
+			Type:          TypeInt,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -838,7 +838,7 @@ func NewIntParameterWithExcludedValues(name string, desc string, excludedValues 
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:           name,
-			Type:           TypeString,
+			Type:           TypeInt,
 			Desc:           desc,
 			ExcludedValues: excludedValues,
 			AuthServices:   nil,
