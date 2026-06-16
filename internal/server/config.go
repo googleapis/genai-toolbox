@@ -95,6 +95,8 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
+	// HttpMaxRequestBytes caps MCP HTTP request bodies. Zero uses the default.
+	HttpMaxRequestBytes int64
 }
 
 type logFormat string

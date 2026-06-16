@@ -115,7 +115,7 @@ func initDataplexConnection(
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 	}

@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -72,4 +73,5 @@ func ServeFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVar(&opts.Cfg.McpPrmFile, "mcp-prm-file", "", "Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation.")
 	flags.StringSliceVar(&opts.Cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 	flags.StringSliceVar(&opts.Cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	flags.Int64Var(&opts.Cfg.HttpMaxRequestBytes, "http-max-request-bytes", server.DefaultHTTPMaxRequestBytes, "Maximum MCP HTTP request body size in bytes.")
 }

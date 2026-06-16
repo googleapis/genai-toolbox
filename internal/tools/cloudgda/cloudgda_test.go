@@ -164,13 +164,6 @@ func (f *fakeSource) RunQuery(ctx context.Context, token string, req *geminidata
 func TestInitialize(t *testing.T) {
 	t.Parallel()
 
-	// Minimal fake source
-	fake := &fakeSource{projectID: "test-project"}
-
-	srcs := map[string]sources.Source{
-		"gda-api-source": fake,
-	}
-
 	tcs := []struct {
 		desc string
 		cfg  cloudgdatool.Config
@@ -194,7 +187,7 @@ func TestInitialize(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			tool, err := tc.cfg.Initialize(srcs)
+			tool, err := tc.cfg.Initialize()
 			if err != nil {
 				t.Fatalf("did not expect an error but got: %v", err)
 			}
@@ -265,7 +258,7 @@ func TestInvoke(t *testing.T) {
 		},
 	}
 
-	tool, err := toolCfg.Initialize(srcs)
+	tool, err := toolCfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

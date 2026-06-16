@@ -96,7 +96,14 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		}
 	}
 
-	parsedParams, err := parameters.ParseParams(tool.GetParameters(), params, nil)
+	toolParams, err := tool.GetParameters(sourcesMap)
+	if err != nil {
+		errMsg := fmt.Errorf("error getting parameters for tool: %w", err)
+		opts.Logger.ErrorContext(ctx, errMsg.Error())
+		return errMsg
+	}
+
+	parsedParams, err := parameters.ParseParams(toolParams, params, nil)
 	if err != nil {
 		errMsg := fmt.Errorf("invalid parameters: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())

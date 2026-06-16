@@ -22,7 +22,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/dataproc"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -60,17 +59,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-
-	_, ok = rawS.(*dataproc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be `%s`", kind, dataproc.SourceType)
-	}
-
+func (cfg Config) Initialize() (tools.Tool, error) {
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Gets a Dataproc cluster"
@@ -100,6 +89,25 @@ type Tool struct {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) validate(srcs map[string]sources.Source) error {
+	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	return err
+}
+
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	if err := t.validate(srcs); err != nil {
+		return nil, err
+	}
+	return t.BaseTool.GetParameters(srcs)
+}
+
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	if err := t.validate(srcs); err != nil {
+		return tools.Manifest{}, err
+	}
+	return t.BaseTool.Manifest(srcs)
 }
 
 type compatibleSource interface {

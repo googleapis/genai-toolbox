@@ -19,7 +19,7 @@ host: ${ALLOYDB_OMNI_HOST:localhost}
 port: ${ALLOYDB_OMNI_PORT:5432}
 database: ${ALLOYDB_OMNI_DATABASE}
 user: ${ALLOYDB_OMNI_USER}
-password: ${ALLOYDB_OMNI_PASSWORD:}
+password: ${ALLOYDB_OMNI_PASSWORD}
 queryParams: ${ALLOYDB_OMNI_QUERY_PARAMS:}
 ---
 kind: tool
