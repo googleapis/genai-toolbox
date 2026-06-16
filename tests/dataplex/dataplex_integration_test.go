@@ -285,7 +285,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		},
 	}
 
-	time.Sleep(2 * time.Minute) // wait for table and aspect type to be ingested
+	time.Sleep(1*time.Minute) // wait for table and aspect type to be ingested
 	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
 	defer func() {
 		var wg sync.WaitGroup
@@ -1598,7 +1598,7 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataProductId))),
-			wantStatusCode: 500, // Tool validation fails with agent error mapped to 500
+			wantStatusCode: 200, // Tool validation returns AgentError which maps to 200
 			expectResult:   false,
 		},
 	}
@@ -1714,7 +1714,7 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-assets-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataProductId))),
-			wantStatusCode: 500,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 	}
@@ -1791,7 +1791,7 @@ func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, d
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	fullDataAssetId := fmt.Sprintf("projects/%s/locations/us-central1/dataProducts/%s/dataAssets/%s", DataplexProject, dataProductId, dataAssetId)
+	fullDataAssetId := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s/dataAssets/%s", DataplexProject, dataProductId, dataAssetId)
 
 	testCases := []struct {
 		name           string
@@ -1844,7 +1844,7 @@ func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, d
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-asset-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataAssetId))),
-			wantStatusCode: 500,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 	}
