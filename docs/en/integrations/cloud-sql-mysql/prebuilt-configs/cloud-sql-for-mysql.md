@@ -31,3 +31,4 @@ description: "Details of the Cloud SQL for MySQL prebuilt configuration."
         primary or unique key contraint.
     *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
     *   `list_table_stats`: Displays table statistics in MySQL.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (formerly known as Dataplex).

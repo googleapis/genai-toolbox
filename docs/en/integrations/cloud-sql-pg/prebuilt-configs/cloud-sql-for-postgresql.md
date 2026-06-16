@@ -57,3 +57,4 @@ description: "Details of the Cloud SQL for PostgreSQL prebuilt configuration."
         each database in the postgreSQL instance.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (formerly known as Dataplex).

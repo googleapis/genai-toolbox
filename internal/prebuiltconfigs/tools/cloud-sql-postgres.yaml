@@ -457,6 +457,12 @@ name: improve_query_recall
 type: vector-assist-improve-query-recall
 source: cloudsql-pg-source
 ---
+kind: tool
+name: search_catalog
+type: postgres-search-catalog
+source: cloudsql-pg-source
+description: Searches for data assets (eg. Postgres tables, views, or databases) in catalog based on the provided search query
+---
 kind: toolset
 name: admin
 tools:
@@ -491,6 +497,19 @@ tools:
 - list_indexes
 - list_sequences
 - list_stored_procedure
+---
+kind: toolset
+name: data_with_discovery
+tools:
+- execute_sql
+- list_tables
+- list_views
+- list_schemas
+- list_triggers
+- list_indexes
+- list_sequences
+- list_stored_procedure
+- search_catalog
 ---
 kind: toolset
 name: monitor

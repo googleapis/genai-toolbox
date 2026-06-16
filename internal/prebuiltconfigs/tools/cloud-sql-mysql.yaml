@@ -217,6 +217,12 @@ name: list_databases
 type: cloud-sql-list-databases
 source: cloud-sql-admin-source
 ---
+kind: tool
+name: search_catalog
+type: mysql-search-catalog
+source: cloud-sql-mysql-source
+description: Searches for data assets (eg. MySQL tables, views, or databases) in catalog based on the provided search query
+---
 kind: toolset
 name: admin
 tools:
@@ -235,6 +241,15 @@ tools:
 - list_tables
 - get_query_plan
 - list_active_queries
+---
+kind: toolset
+name: data_with_discovery
+tools:
+- execute_sql
+- list_tables
+- get_query_plan
+- list_active_queries
+- search_catalog
 ---
 kind: toolset
 name: monitor

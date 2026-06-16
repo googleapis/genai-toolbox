@@ -141,7 +141,7 @@ func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
 	toolsFile = tests.AddMSSQLExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMSSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLMSSQLToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
-	toolsFile = tests.AddMSSQLPrebuiltToolConfig(t, toolsFile)
+	toolsFile = addCloudSQLMSSQLSearchCatalogConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -169,6 +169,16 @@ func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
 
 	// Run specific MSSQL tool tests
 	tests.RunMSSQLListTablesTest(t, tableNameParam, tableNameAuth)
+
+	tests.RunSearchCatalogToolTest(t, tests.SearchCatalogTestParams{
+		ContainerParamName: "databaseIds",
+		ContainerName:      CloudSQLMSSQLDatabase,
+		ProjectID:          CloudSQLMSSQLProject,
+		TargetName:         tableNameParam,
+		WantKey:            "DisplayName",
+		AllowEmpty:         true,
+		CheckValue:         false,
+	})
 }
 
 // Test connection with different IP type
@@ -197,4 +207,52 @@ func TestCloudSQLMSSQLIpConnection(t *testing.T) {
 			}
 		})
 	}
+}
+
+func addCloudSQLMSSQLSearchCatalogConfig(t *testing.T, config map[string]any) map[string]any {
+	config = tests.AddMSSQLPrebuiltToolConfig(t, config)
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+	myInstanceConfig, ok := sources["my-instance"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get my-instance from sources")
+	}
+
+	// Create a copy of the source config with client OAuth enabled
+	oauthSourceConfig := make(map[string]any)
+	for k, v := range myInstanceConfig {
+		oauthSourceConfig[k] = v
+	}
+	oauthSourceConfig["useClientOAuth"] = true
+	sources["my-oauth-instance"] = oauthSourceConfig
+
+	// Add tools
+	tools["my-search-catalog-tool"] = map[string]any{
+		"type":        "mssql-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"type":        "mssql-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"type":        "mssql-search-catalog",
+		"source":      "my-oauth-instance",
+		"description": "Searches for data assets in catalog",
+	}
+
+	config["tools"] = tools
+	config["sources"] = sources
+	return config
 }

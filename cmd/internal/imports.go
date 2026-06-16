@@ -74,6 +74,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqllistdatabases"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlrestorebackup"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlsearchcatalog"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsqladmin/cloudsqladminexecutemany"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/cloudsqladmin/cloudsqladminsqlmany"

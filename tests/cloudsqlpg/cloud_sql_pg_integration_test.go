@@ -152,6 +152,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, CloudSQLPostgresToolType, insertStmt, searchStmt)
 
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
+	toolsFile = addCloudSQLPgSearchCatalogConfig(t, toolsFile)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -200,6 +201,16 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
 	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
+
+	tests.RunSearchCatalogToolTest(t, tests.SearchCatalogTestParams{
+		ContainerParamName: "databaseIds",
+		ContainerName:      CloudSQLPostgresDatabase,
+		ProjectID:          CloudSQLPostgresProject,
+		TargetName:         tableNameParam,
+		WantKey:            "DisplayName",
+		AllowEmpty:         true,
+		CheckValue:         false,
+	})
 }
 
 // Test connection with different IP type
@@ -295,4 +306,51 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 			}
 		})
 	}
+}
+
+func addCloudSQLPgSearchCatalogConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+	myInstanceConfig, ok := sources["my-instance"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get my-instance from sources")
+	}
+
+	// Create a copy of the source config with client OAuth enabled
+	oauthSourceConfig := make(map[string]any)
+	for k, v := range myInstanceConfig {
+		oauthSourceConfig[k] = v
+	}
+	oauthSourceConfig["useClientOAuth"] = true
+	sources["my-oauth-instance"] = oauthSourceConfig
+
+	// Add tools
+	tools["my-search-catalog-tool"] = map[string]any{
+		"type":        "postgres-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"type":        "postgres-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"type":        "postgres-search-catalog",
+		"source":      "my-oauth-instance",
+		"description": "Searches for data assets in catalog",
+	}
+
+	config["tools"] = tools
+	config["sources"] = sources
+	return config
 }

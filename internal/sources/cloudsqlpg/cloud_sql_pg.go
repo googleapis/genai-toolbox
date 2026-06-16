@@ -20,8 +20,10 @@ import (
 	"net"
 
 	"cloud.google.com/go/cloudsqlconn"
+	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -49,15 +51,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string         `yaml:"name" validate:"required"`
-	Type     string         `yaml:"type" validate:"required"`
-	Project  string         `yaml:"project" validate:"required"`
-	Region   string         `yaml:"region" validate:"required"`
-	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	Database string         `yaml:"database" validate:"required"`
-	User     string         `yaml:"user"`
-	Password string         `yaml:"password"`
+	Name           string         `yaml:"name" validate:"required"`
+	Type           string         `yaml:"type" validate:"required"`
+	Project        string         `yaml:"project" validate:"required"`
+	Region         string         `yaml:"region" validate:"required"`
+	Instance       string         `yaml:"instance" validate:"required"`
+	IPType         sources.IPType `yaml:"ipType" validate:"required"`
+	Database       string         `yaml:"database" validate:"required"`
+	User           string         `yaml:"user"`
+	Password       string         `yaml:"password"`
+	UseClientOAuth bool           `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -83,9 +86,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("failed to execute 'SELECT 1' after connection: %w", err)
 	}
 
+	onDataplexEvict := func(key string, value interface{}) {
+		if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
+			client.Close()
+		}
+	}
+
 	s := &Source{
 		Config: r,
 		Pool:   pool,
+		dataplexMgr: &searchcatalog.DataplexClientManager{
+			UseClientOAuth: r.UseClientOAuth,
+			Cache:          sources.NewCache(onDataplexEvict),
+		},
 	}
 	return s, nil
 }
@@ -94,7 +107,8 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Pool *pgxpool.Pool
+	Pool        *pgxpool.Pool
+	dataplexMgr *searchcatalog.DataplexClientManager
 }
 
 func (s *Source) SourceType() string {
@@ -212,4 +226,38 @@ func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name
 		return nil, err
 	}
 	return pool, nil
+}
+
+func (s *Source) ProjectID() string {
+	return s.Config.Project
+}
+
+func (s *Source) UseClientAuthorization() bool {
+	return s.Config.UseClientOAuth
+}
+
+func (s *Source) GetCatalogClient(ctx context.Context, tokenString string) (*dataplexapi.CatalogClient, error) {
+	return s.dataplexMgr.GetCatalogClient(ctx, tokenString)
+}
+
+func (s *Source) InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error) {
+	typeMap := map[string]string{
+		"cloudsql-postgresql-instance": "SERVICE",
+		"cloudsql-postgresql-database": "DATABASE",
+		"cloudsql-postgresql-schema":   "DATABASE_SCHEMA",
+		"cloudsql-postgresql-table":    "TABLE",
+		"cloudsql-postgresql-view":     "VIEW",
+	}
+	return searchcatalog.InvokeSearchCatalog(
+		ctx,
+		params,
+		tokenStr,
+		"CLOUD_SQL",
+		"databaseIds",
+		typeMap,
+		s.ProjectID(),
+		func(ctx context.Context, token string) (*dataplexapi.CatalogClient, error) {
+			return s.GetCatalogClient(ctx, token)
+		},
+	)
 }

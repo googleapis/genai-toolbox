@@ -10,6 +10,7 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
 - **Explore Schema** - List tables, views, indexes, and triggers
 - **Monitor Performance** - View active queries, bloat, and memory configurations
 - **Manage Extensions** - List available and installed extensions
+- **Search Catalog** - Search for data assets in Knowledge Catalog (Dataplex)
 
 For Cloud SQL infrastructure management, search the MCP store for the Cloud SQL for PostgreSQL Admin MCP Server.
 
@@ -47,6 +48,7 @@ Once configured, the MCP server will automatically provide Cloud SQL for Postgre
 
 *   "Show me the top 5 bloated tables."
 *   "List all installed extensions."
+*   "Search for tables related to customers in the catalog."
 *   "Explain the query plan for SELECT * FROM users."
 
 ## Server Capabilities
@@ -57,6 +59,7 @@ The Cloud SQL for PostgreSQL MCP server provides the following tools:
 |:---------------------------------|:---------------------------------------------------------------|
 | `execute_sql`                    | Use this tool to execute sql.                                  |
 | `list_tables`                    | Lists detailed schema information for user-created tables.     |
+| `search_catalog`                  | Searches for data assets in Knowledge Catalog (Dataplex).      |
 | `list_active_queries`            | List the top N currently running queries.                      |
 | `list_available_extensions`      | Discover all PostgreSQL extensions available for installation. |
 | `list_installed_extensions`      | List all installed PostgreSQL extensions.                      |
