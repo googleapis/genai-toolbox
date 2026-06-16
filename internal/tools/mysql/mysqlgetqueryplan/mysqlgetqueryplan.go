@@ -107,6 +107,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sqlStr))
 
+	// EXPLAIN (without ANALYZE) only computes the plan; it never executes the
+	// wrapped statement. The hardcoded FORMAT=JSON prefix also makes EXPLAIN
+	// ANALYZE unreachable, since MySQL's grammar requires ANALYZE to precede
+	// FORMAT=. Multi-statement input is rejected by the driver (multiStatements
+	// is off by default). Limiting the source to a least-privilege database user
+	// is the recommended control for the statements that EXPLAIN does plan.
 	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sqlStr)
 	result, err := source.RunSQL(ctx, query, nil)
 	if err != nil {
