@@ -702,7 +702,7 @@ func NormalizeEndpoint(raw string) string {
 	}
 	u, err := url.Parse(raw)
 	if err != nil || u.Host == "" {
-		return strings.TrimRight(raw, "/")
+		return raw
 	}
 	if u.Port() == "" {
 		if u.Scheme == "http" {
@@ -711,7 +711,9 @@ func NormalizeEndpoint(raw string) string {
 			u.Host = u.Hostname() + ":443"
 		}
 	}
-	u.Path = strings.TrimRight(u.Path, "/")
+	if u.Path == "/" {
+		u.Path = ""
+	}
 	return u.String()
 }
 

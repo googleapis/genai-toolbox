@@ -461,7 +461,8 @@ func TestNormalizeEndpoint(t *testing.T) {
 		{desc: "http with localhost and explicit port", in: "http://localhost:9050", want: "http://localhost:9050"},
 		{desc: "bare host defaults to https and port 443", in: "proxy.example.com", want: "https://proxy.example.com:443"},
 		{desc: "bare host with port keeps port and adds https", in: "host:8443", want: "https://host:8443"},
-		{desc: "trailing slash stripped", in: "https://proxy.example.com/", want: "https://proxy.example.com:443"},
+		{desc: "root trailing slash stripped", in: "https://proxy.example.com/", want: "https://proxy.example.com:443"},
+		{desc: "custom path trailing slash preserved", in: "https://proxy.example.com/custom/path/", want: "https://proxy.example.com:443/custom/path/"},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
