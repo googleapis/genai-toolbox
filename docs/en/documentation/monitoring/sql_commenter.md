@@ -3,11 +3,11 @@ title: "SQL Commenter"
 type: docs
 weight: 10
 description: >
-  Propagate application context into database query logs by appending SQLCommenter-format comments to executed SQL statements.
+  Propagate application context into database query logs by prepending SQLCommenter-format comments to executed SQL statements.
 ---
 
 [SQLCommenter](https://google.github.io/sqlcommenter/) is an open-source
-convention that propagates application context into the database by appending a
+convention that propagates application context into the database by prepending a
 structured comment to every SQL statement before it is executed. The comment is
 stripped before query planning, so it has no effect on results — but it shows up
 verbatim in database query logs and slow-query logs, letting you correlate a
@@ -19,19 +19,20 @@ Toolbox and the database-level logs emitted by your underlying database engine.
 
 ## Enabling SQL Commenter
 
-SQL Commenter is opt-in and disabled by default. Enable it with the
-`--sql-commenter` flag:
+SQL Commenter is opt-in and disabled by default. Enable it on a per-source basis by setting the `sqlCommenter` field to `true` in a source's configuration file:
 
-```bash
-./toolbox --sql-commenter
+```yaml
+sources:
+  - name: my-pg-source
+    type: postgres
+    # ...
+    sqlCommenter: true
 ```
 
-You can combine it with the OpenTelemetry exporter flags so that the
-`traceparent` attribute embedded in the SQL comment is part of the same
-distributed trace exported by Toolbox:
+If you are exporting telemetry using OpenTelemetry, the `traceparent` attribute embedded in the SQL comment will automatically be part of the same distributed trace exported by Toolbox:
 
 ```bash
-./toolbox --telemetry-otlp="127.0.0.1:4553" --sql-commenter
+./toolbox --telemetry-otlp="127.0.0.1:4553"
 ```
 
 ## Supported Sources
@@ -41,10 +42,9 @@ SQL Commenter is supported on the following database sources:
 * `alloydb-postgres`
 * `cloud-sql-postgres`
 * `cloud-sql-mysql`
-* `cloud-sql-mssql`
 * `postgres`
 * `mysql`
-* `mssql`
+* `sqlite`
 
 ## Comment Format
 
@@ -64,11 +64,11 @@ block. For example:
 | `traceparent`       | Active OpenTelemetry span context.                                                               | W3C Trace Context header tying the SQL statement to the distributed trace for this invocation. |
 | `server`            | Toolbox build (`genai-toolbox/<version>`).                                                       | Identifies the Toolbox server name and version that issued the query.                          |
 | `tool.name`         | The tool being invoked.                                                                          | The tool whose execution triggered the SQL.                                                    |
-| `db.system.name`    | The database engine (e.g. `postgresql`, `mysql`, `mssql`).                                       | Identifies the database backend.                                                               |
-| `client`            | MCP client `_meta["dev.mcp-toolbox/telemetry"]["client.name"]` + `["client.version"]`.           | Identifies the SDK or application that initiated the MCP request.                              |
-| `client.model`      | MCP client `_meta["dev.mcp-toolbox/telemetry"]["client.model"]`.                                 | The LLM model that produced the tool call.                                                     |
-| `client.user.id`    | MCP client `_meta["dev.mcp-toolbox/telemetry"]["client.user.id"]`.                               | End-user identifier supplied by the client.                                                    |
-| `client.agent.id`   | MCP client `_meta["dev.mcp-toolbox/telemetry"]["client.agent.id"]`.                              | Agent identifier supplied by the client.                                                       |
+| `db.system.name`    | The database engine (e.g. `postgresql`, `mysql`, `sqlite`).                                      | Identifies the database backend.                                                               |
+| `client`            | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.name"]` and/or `["client.version"]` (joined by `/`). | Identifies the ADK or application that initiated the MCP request.                              |
+| `client.model`      | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.model"]`.                                 | The LLM model that produced the tool call.                                                     |
+| `client.user.id`    | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.user.id"]`.                               | End-user identifier supplied by the client.                                                    |
+| `client.agent.id`   | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.agent.id"]`.                              | Agent identifier supplied by the client.                                                       |
 
 Client-supplied attributes (`client`, `client.model`, `client.user.id`,
 `client.agent.id`) are populated from the MCP request's

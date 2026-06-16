@@ -599,7 +599,7 @@ If `telemetry_enabled=True` but no provider is configured, OpenTelemetry's no-op
 
 In addition to the automatic instrumentation enabled by `telemetry_enabled=True`, you can attach **per-tool** telemetry attributes (such as the LLM model name, user ID, or agent ID) to outgoing invocations. These attributes are:
 
-* Sent to the Toolbox server in the MCP request `_meta` under the `dev.mcp-toolbox/telemetry` key, where they are available to server-side instrumentation (e.g., SQL Commenter on database tools).
+* Sent to the Toolbox server in the MCP request `params._meta` under the `dev.mcp-toolbox/telemetry` key, where they are available to server-side instrumentation (e.g., SQL Commenter on database tools).
 * Recorded as attributes on the client-side OpenTelemetry span for the invocation when telemetry is enabled.
 
 Use the `TelemetryAttributes` model and the `add_telemetry_attributes()` method on a loaded tool:
