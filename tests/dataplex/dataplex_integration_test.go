@@ -270,7 +270,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	teardowns = append(teardowns, setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId1))
 	teardowns = append(teardowns, setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId2))
 
-	time.Sleep(2 * time.Minute) // wait for table and aspect type to be ingested
+	time.Sleep(1*time.Minute) // wait for table and aspect type to be ingested
 	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
 	defer func() {
 		var wg sync.WaitGroup
@@ -1517,7 +1517,7 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataProductId))),
-			wantStatusCode: 500, // Tool validation fails with agent error mapped to 500
+			wantStatusCode: 200, // Tool validation returns AgentError which maps to 200
 			expectResult:   false,
 		},
 	}
@@ -1588,8 +1588,8 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 			if ag["googleGroup"] != tests.ServiceAccountEmail {
 				t.Errorf("expected googleGroup %q, got %q", tests.ServiceAccountEmail, ag["googleGroup"])
 			}
-			if ag["serviceAccount"] != "" {
-				t.Errorf("expected serviceAccount to be empty, got %q", ag["serviceAccount"])
+			if ag["serviceAccount"] != nil {
+				t.Errorf("expected serviceAccount to be nil, got %q", ag["serviceAccount"])
 			}
 		})
 	}
