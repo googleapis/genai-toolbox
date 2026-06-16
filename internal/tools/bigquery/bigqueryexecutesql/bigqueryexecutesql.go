@@ -186,20 +186,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			}
 		}
 
+		// Always run the parser to ensure we catch views/tables that the dry run might bypass
+		parsedTables, parseErr := bqutil.TableParser(sql, bqClient.Project())
+		if parseErr != nil {
+			return nil, util.NewAgentError("could not parse tables from query to validate against allowed datasets", parseErr)
+		}
+		for _, tableID := range parsedTables {
+			tableIDSet[tableID] = struct{}{}
+		}
+
 		var tableNames []string
-		if len(tableIDSet) > 0 {
-			for tableID := range tableIDSet {
-				tableNames = append(tableNames, tableID)
-			}
-		} else if statementType != "SELECT" {
-			// If dry run yields no tables, fall back to the parser for non-SELECT statements
-			// to catch unsafe operations like EXECUTE IMMEDIATE.
-			parsedTables, parseErr := bqutil.TableParser(sql, source.BigQueryClient().Project())
-			if parseErr != nil {
-				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.
-				return nil, util.NewAgentError("could not parse tables from query to validate against allowed datasets", parseErr)
-			}
-			tableNames = parsedTables
+		for tableID := range tableIDSet {
+			tableNames = append(tableNames, tableID)
 		}
 
 		for _, tableID := range tableNames {
