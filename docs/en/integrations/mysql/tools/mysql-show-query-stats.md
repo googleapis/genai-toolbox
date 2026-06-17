@@ -24,6 +24,7 @@ description: >
 This tool takes 2 optional input parameters:
 - `table_schema` (optional): The target database for query statistics. If not specified the results will be displayed for all databases. 
 - `limit` (optional): Max rows to return, default 10.
+- `connected_schema` (optional): The database user is connected to, the value is set from env variable `CLOUD_SQL_MYSQL_DATABASE` or `MYSQL_DATABASE`.
 
 ## Example
 
