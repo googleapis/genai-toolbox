@@ -12,17 +12,9 @@ aliases:
 ## About
 
 A `dataplex-search-dq-scans` tool returns data quality scans that match the given criteria.
-It's compatible with the following sources:
+## Compatible Sources
 
-- [dataplex](../../sources/dataplex.md)
-
-`dataplex-search-dq-scans` accepts the following optional parameters:
-
-- `filter` - Filter string to search/filter data quality scans. E.g. "display_name = \"my-scan\"".
-- `data_scan_id` - The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.
-- `table_name` - The name of the table to filter by. Maps to data.entity in the filter string. E.g. "//bigquery.googleapis.com/projects/P/datasets/D/tables/T".
-- `pageSize` - Number of returned data quality scans in the page. Defaults to `10`.
-- `orderBy` - Specifies the ordering of results.
+{{< compatible-sources >}}
 
 ## Requirements
 
@@ -45,6 +37,18 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-dq-scans` tool accepts the following optional parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| filter | string | false | Filter string to search/filter data quality scans (e.g. `display_name = "my-scan"`). |
+| data_scan_id | string | false | The resource name of the data scan to filter by (`projects/{project}/locations/{locationId}/dataScans/{dataScanId}`). |
+| table_name | string | false | The name of the table to filter by, mapping to `data.entity` (e.g. `//bigquery.googleapis.com/projects/P/datasets/D/tables/T`). |
+| pageSize | integer | false | Number of returned data quality scans in the page. Defaults to 10. |
+| orderBy | string | false | Specifies ordering of results. |
 
 ## Example
 

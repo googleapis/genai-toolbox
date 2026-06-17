@@ -1,17 +1,25 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-generate-data-insights"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Creates a new Dataplex Data Insights (documentation) scan template and triggers the initial asynchronous execution run to generate descriptions, relationships, and sample SQL queries for a table.
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-generate-data-insights/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-generate-data-insights` tool triggers the creation and run of a Dataplex Data Insights scan on a BigQuery table.
+
+Since the scan template creation is asynchronous, this tool returns a Long-Running Operation (LRO) resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`).
+To orchestrate this workflow, you must:
+1. Capture the `operation_id` from this tool's response.
+2. Poll the `dataplex-get-operation` tool with this ID until `done` is true.
+3. Extract the created scan ID (`scanId`) from the completed operation's response.
+4. Poll `dataplex-get-run-status` with the `scanId` until the job state is `SUCCEEDED`.
+5. Call `dataplex-get-data-insights` with the `scanId` to fetch the final results.
+
 
 ## Compatible Sources
 
@@ -37,33 +45,31 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-generate-data-insights` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the generated insights directly to the Dataplex Universal Catalog. Defaults to false. |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: generate_data_insights
+type: dataplex-generate-data-insights
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Trigger a new data insights scan.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-generate-data-insights".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

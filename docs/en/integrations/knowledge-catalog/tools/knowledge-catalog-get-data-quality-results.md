@@ -1,17 +1,21 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-get-data-quality-results"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Retrieves the final generated data quality results (overall score, dimension scores, rule passing details, and the failing rows debug SQL query) for a completed quality scan.
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-get-data-quality-results/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-get-data-quality-results` tool retrieves the results of a completed Data Quality scan.
+
+WARNING: You must verify the execution run has succeeded (via `dataplex-get-run-status`) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields `dataQualityResult` inside the returned DataScan.
+Note that the `failingRowsQuery` field inside the rules result is extremely useful for retrieving failed rows.
+
 
 ## Compatible Sources
 
@@ -37,33 +41,30 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-get-data-quality-results` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| scanId | string | true | The unique ID of the Dataplex quality scan (e.g. `nq-dq-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: get_data_quality_results
+type: dataplex-get-data-quality-results
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Fetch results of a completed data quality scan.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-get-data-quality-results".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
