@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -48,7 +47,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	CreateDataProduct(
 		ctx context.Context,
-		name string,
+		locationId string,
+		dataProductId string,
 		displayName string,
 		description string,
 		ownerEmails []string,
@@ -75,7 +75,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	name := parameters.NewStringParameter("name", "Required. The resource name of the Data Product in the format projects/{project}/locations/{location}/dataProducts/{dataProduct}.")
+	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the Data Product to create.")
 	displayName := parameters.NewStringParameter("displayName", "Required. The display name of the Data Product.")
 	description := parameters.NewStringParameterWithRequired("description", "Optional. The description of the Data Product.", false)
 	ownerEmails := parameters.NewArrayParameter(
@@ -90,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewMapParameter("accessGroup", "Access Group details (id, displayName, description, googleGroup, serviceAccount)", ""),
 	)
 
-	params := parameters.Parameters{name, displayName, description, ownerEmails, accessGroups}
+	params := parameters.Parameters{locationId, dataProductId, displayName, description, ownerEmails, accessGroups}
 
 	t := Tool{
 		Config:     cfg,
@@ -137,15 +138,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	name, ok := paramsMap["name"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'name' parameter: %v", paramsMap["name"]), nil)
+	locationId, ok := paramsMap["locationId"].(string)
+	if !ok || locationId == "" {
+		return nil, util.NewAgentError("locationId is required and must be a string", nil)
 	}
 
-	parts := strings.Split(name, "/")
-	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "dataProducts" {
-		err = fmt.Errorf("invalid name format: must be in the form projects/{project}/locations/{location}/dataProducts/{dataProduct}")
-		return nil, util.NewAgentError(err.Error(), err)
+	dataProductId, ok := paramsMap["dataProductId"].(string)
+	if !ok || dataProductId == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a string", nil)
 	}
 
 	displayName, ok := paramsMap["displayName"].(string)
@@ -203,7 +203,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	opName, err := source.CreateDataProduct(ctx, name, displayName, description, ownerEmails, accessGroups)
+	opName, err := source.CreateDataProduct(ctx, locationId, dataProductId, displayName, description, ownerEmails, accessGroups)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

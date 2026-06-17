@@ -14,7 +14,8 @@ A `dataplex-create-data-product` tool creates a new Data Product in Knowledge Ca
 
 `dataplex-create-data-product` accepts the following parameters:
 
-- `name` - Required. The resource name of the Data Product in the format `projects/{project}/locations/{location}/dataProducts/{dataProduct}`.
+- `locationId` - Required. The location ID (e.g., `us`, `us-central1`) where the Data Product should be created.
+- `dataProductId` - Required. The unique ID of the Data Product to create.
 - `displayName` - Required. The display name of the Data Product.
 - `description` - Optional. The description of the Data Product.
 - `ownerEmails` - Required. The list of owner emails for the Data Product.

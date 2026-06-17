@@ -686,7 +686,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-create-data-product-tool",
 			toolName:       "my-dataplex-create-data-product-tool",
-			expectedParams: []string{"name", "displayName", "description", "ownerEmails", "accessGroups"},
+			expectedParams: []string{"locationId", "dataProductId", "displayName", "description", "ownerEmails", "accessGroups"},
 		},
 	}
 
@@ -1949,10 +1949,6 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.D
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
-
-	fullDataProductIdAuth := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductIdAuth)
-	fullDataProductIdUnauth := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductIdUnauth)
-
 	testCases := []struct {
 		name           string
 		api            string
@@ -1966,8 +1962,8 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.D
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"name":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
-				fullDataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
+				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
 			))),
 			wantStatusCode: 200,
 			expectResult:   true,
@@ -1977,8 +1973,8 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.D
 			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-product-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"name":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
-				fullDataProductIdUnauth, dataProductIdUnauth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
+				dataProductIdUnauth, dataProductIdUnauth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
 			))),
 			wantStatusCode: 200,
 			expectResult:   true,
@@ -1988,8 +1984,8 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.D
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"name":"%s","displayName":"%s","ownerEmails":["%s"]}`,
-				fullDataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","ownerEmails":["%s"]}`,
+				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
 			))),
 			wantStatusCode: 401,
 			expectResult:   false,
@@ -1999,21 +1995,10 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.D
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"name":"%s","displayName":"%s","ownerEmails":["%s"]}`,
-				fullDataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
-			))),
-			wantStatusCode: 401,
-			expectResult:   false,
-		},
-		{
-			name:          "Failure - Invalid Name Format",
-			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-product-tool/invoke",
-			requestHeader: map[string]string{},
-			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"name":"invalid-name-%s","displayName":"%s","ownerEmails":["%s"]}`,
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","ownerEmails":["%s"]}`,
 				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
 			))),
-			wantStatusCode: 200,
+			wantStatusCode: 401,
 			expectResult:   false,
 		},
 	}

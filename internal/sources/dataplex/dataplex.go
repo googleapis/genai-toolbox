@@ -18,8 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"strings"
-
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/cenkalti/backoff/v5"
@@ -497,7 +495,8 @@ func (s *Source) GetDataAsset(ctx context.Context, name string) (*DataAsset, err
 
 func (s *Source) CreateDataProduct(
 	ctx context.Context,
-	name string,
+	locationId string,
+	dataProductId string,
 	displayName string,
 	description string,
 	ownerEmails []string,
@@ -507,12 +506,7 @@ func (s *Source) CreateDataProduct(
 		return "", fmt.Errorf("dataplex data product client is not initialized")
 	}
 
-	parts := strings.Split(name, "/")
-	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "dataProducts" {
-		return "", fmt.Errorf("invalid data product name: %q", name)
-	}
-	parent := fmt.Sprintf("projects/%s/locations/%s", parts[1], parts[3])
-	dataProductId := parts[5]
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationId)
 
 	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)
 	for _, ag := range accessGroups {
