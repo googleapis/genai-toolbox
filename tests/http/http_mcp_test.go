@@ -424,8 +424,9 @@ func getMCPHTTPSourceConfig(t *testing.T) map[string]any {
 	idToken = "Bearer " + idToken
 
 	return map[string]any{
-		"type":    HttpSourceType,
-		"headers": map[string]string{"Authorization": idToken},
+		"type":                 HttpSourceType,
+		"headers":              map[string]string{"Authorization": idToken},
+		"allowPrivateNetworks": true,
 	}
 }
 
