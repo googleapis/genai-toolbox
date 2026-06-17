@@ -1,17 +1,20 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-get-data-insights"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Retrieves the final generated data insights (descriptions, schema relationships, sample SQL queries) for a completed insights scan.
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-get-data-insights/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-get-data-insights` tool retrieves the final results of a completed Data Insights scan.
+
+WARNING: You must verify that the execution run has succeeded (via `dataplex-get-run-status`) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results only via the nested public GA fields `dataDocumentationResult.datasetResult` (for datasets) or `dataDocumentationResult.tableResult` (for tables). The top-level fields (like `dataDocumentationResult.queries`) are restricted and will be empty.
+
 
 ## Compatible Sources
 
@@ -37,33 +40,30 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-get-data-insights` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| scanId | string | true | The unique ID of the Dataplex scan (e.g. `nq-doc-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: get_data_insights
+type: dataplex-get-data-insights
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Retrieve results from a completed data insights scan.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-get-data-insights".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
