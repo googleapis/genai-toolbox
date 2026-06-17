@@ -12,9 +12,11 @@ aliases:
 
 A `dataplex-get-data-asset` tool retrieves detailed metadata for a specific Data Asset in Knowledge Catalog (formerly known as Dataplex).
 
-`dataplex-get-data-asset` requires the following parameter:
+`dataplex-get-data-asset` requires the following parameters:
 
-- `name` - The resource name of the Data Asset in the following form: `projects/{project}/locations/{location}/dataProducts/{dataProduct}/dataAssets/{dataAsset}`.
+- `locationId` - The location ID (e.g., `us`, `us-central1`) where the Data Product is located.
+- `dataProductId` - The unique ID of the parent Data Product.
+- `dataAssetId` - The unique ID of the Data Asset.
 
 ## Compatible Sources
 

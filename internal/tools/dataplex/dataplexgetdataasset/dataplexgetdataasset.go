@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -46,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetDataAsset(ctx context.Context, name string) (*dataplex.DataAsset, error)
+	GetDataAsset(ctx context.Context, locationId string, dataProductId string, dataAssetId string) (*dataplex.DataAsset, error)
 }
 
 type Config struct {
@@ -68,8 +67,10 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	name := parameters.NewStringParameter("name", "Required. The resource name of the Data Asset in the following form: projects/{project}/locations/{location}/dataProducts/{dataProduct}/dataAssets/{dataAsset}.")
-	params := parameters.Parameters{name}
+	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
+	dataAssetId := parameters.NewStringParameter("dataAssetId", "Required. The unique ID of the Data Asset.")
+	params := parameters.Parameters{locationId, dataProductId, dataAssetId}
 
 	t := Tool{
 		Config:     cfg,
@@ -116,22 +117,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	name, ok := paramsMap["name"].(string)
+	locationId, ok := paramsMap["locationId"].(string)
 	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'name' parameter: %v", paramsMap["name"]), nil)
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	}
+	dataProductId, ok := paramsMap["dataProductId"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
+	}
+	dataAssetId, ok := paramsMap["dataAssetId"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataAssetId' parameter: %v", paramsMap["dataAssetId"]), nil)
 	}
 
-	parts := strings.Split(name, "/")
-	if len(parts) < 8 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "dataProducts" || parts[6] != "dataAssets" {
-		err = fmt.Errorf("invalid name format: must be in the form projects/{project}/locations/{location}/dataProducts/{dataProduct}/dataAssets/{dataAsset}")
-		return nil, util.NewAgentError(err.Error(), err)
-	}
-
-	resp, err := source.GetDataAsset(ctx, name)
+	resp, err := source.GetDataAsset(ctx, locationId, dataProductId, dataAssetId)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
-
 	return resp, nil
 }
 
