@@ -49,8 +49,9 @@ type compatibleSource interface {
 
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
-	Type             string `yaml:"type" validate:"required"`
-	Source           string `yaml:"source" validate:"required"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -62,16 +63,16 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize() (tools.Tool, error) {
 	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to search/filter data quality scans. E.g. \"display_name = \\\"my-scan\\\"\"")
-	dataScanID := parameters.NewStringParameterWithDefault("data_scan_id", "", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.")
-	tableName := parameters.NewStringParameterWithDefault("table_name", "", "Optional. The name of the table to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"")
+	dataScanID := parameters.NewStringParameterWithDefault("dataScanId", "", "Optional. The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.")
+	resourcePath := parameters.NewStringParameterWithDefault("resourcePath", "", "Optional. The resource path of the table or storage bucket to filter by. Maps to data.entity in the filter string. E.g. \"//bigquery.googleapis.com/projects/P/datasets/D/tables/T\"")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Number of returned data quality scans in the page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Specifies the ordering of results.")
-	allParameters := parameters.Parameters{filter, dataScanID, tableName, pageSize, orderBy}
+	allParameters := parameters.Parameters{filter, dataScanID, resourcePath, pageSize, orderBy}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			nil,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
@@ -96,8 +97,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	paramsMap := params.AsMap()
 	filter, _ := paramsMap["filter"].(string)
-	dataScanID, _ := paramsMap["data_scan_id"].(string)
-	tableName, _ := paramsMap["table_name"].(string)
+	dataScanID, _ := paramsMap["dataScanId"].(string)
+	resourcePath, _ := paramsMap["resourcePath"].(string)
 	pageSize, _ := paramsMap["pageSize"].(int)
 	orderBy, _ := paramsMap["orderBy"].(string)
 
@@ -108,8 +109,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if dataScanID != "" {
 		filters = append(filters, fmt.Sprintf("name = %q", dataScanID))
 	}
-	if tableName != "" {
-		filters = append(filters, fmt.Sprintf("data.resource = %q", tableName))
+	if resourcePath != "" {
+		filters = append(filters, fmt.Sprintf("data.resource = %q", resourcePath))
 	}
 
 	finalFilter := strings.Join(filters, " AND ")
