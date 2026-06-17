@@ -50,6 +50,7 @@ type compatibleSource interface {
 	HttpDefaultHeaders() map[string]string
 	HttpBaseURL() string
 	HttpQueryParams() map[string]string
+	HttpForwardAuthorizationHeader() bool
 	RunRequest(context.Context, *http.Request) (any, error)
 }
 
@@ -294,6 +295,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Set request headers
 	for k, v := range allHeaders {
 		req.Header.Set(k, v)
+	}
+
+	// Forward the caller's Authorization header if configured and token is present
+	if source.HttpForwardAuthorizationHeader() && accessToken != "" {
+		req.Header.Set("Authorization", string(accessToken))
 	}
 
 	resp, err := source.RunRequest(ctx, req)

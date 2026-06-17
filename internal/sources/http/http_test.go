@@ -85,6 +85,25 @@ func TestParseFromYamlHttp(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "forward authorization header enabled",
+			in: `
+			kind: source
+			name: my-http-instance
+			type: http
+			baseUrl: http://test_server/
+			forwardAuthorizationHeader: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-http-instance": http.Config{
+					Name:                       "my-http-instance",
+					Type:                       http.SourceType,
+					BaseURL:                    "http://test_server/",
+					Timeout:                    "30s",
+					ForwardAuthorizationHeader: true,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
