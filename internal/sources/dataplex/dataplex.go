@@ -538,6 +538,8 @@ func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProduc
 	}, nil
 }
 
+// CreateDataProduct creates a new Data Product.
+// dataProductId is optional. If empty, the Dataplex backend will automatically generate a unique ID.
 func (s *Source) CreateDataProduct(
 	ctx context.Context,
 	locationId string,

@@ -76,7 +76,7 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the Data Product to create.")
+	dataProductId := parameters.NewStringParameterWithRequired("dataProductId", "Optional. The unique ID of the Data Product to create. If not specified, the backend will auto-generate an ID.", false)
 	displayName := parameters.NewStringParameter("displayName", "Required. The display name of the Data Product.")
 	description := parameters.NewStringParameterWithRequired("description", "Optional. The description of the Data Product.", false)
 	ownerEmails := parameters.NewArrayParameter(
@@ -143,10 +143,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("locationId is required and must be a string", nil)
 	}
 
-	dataProductId, ok := paramsMap["dataProductId"].(string)
-	if !ok || dataProductId == "" {
-		return nil, util.NewAgentError("dataProductId is required and must be a string", nil)
-	}
+	dataProductId, _ := paramsMap["dataProductId"].(string)
 
 	displayName, ok := paramsMap["displayName"].(string)
 	if !ok {

@@ -407,7 +407,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ## Tool: create_data_product
 ### Request
 1. Use this tool to create a new Data Product.
-2. You must provide `locationId` and `dataProductId`.
+2. You must provide `locationId`. You can optionally provide `dataProductId` (if not specified, the backend will auto-generate one).
 3. You must provide `displayName` and `ownerEmails`.
 4. You can optionally provide `description` and `accessGroups`.
 ### Response
