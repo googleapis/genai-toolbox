@@ -28,59 +28,67 @@ const PROTOCOL_VERSION = util.VERSION_DRAFT
 
 // methods that are supported.
 const (
-	INITIALIZE   = "initialize"
-	PING         = "ping"
-	TOOLS_LIST   = "tools/list"
-	TOOLS_CALL   = "tools/call"
-	PROMPTS_LIST = "prompts/list"
-	PROMPTS_GET  = "prompts/get"
+	SERVER_DISCOVER = "server/discover"
+	TOOLS_LIST      = "tools/list"
+	TOOLS_CALL      = "tools/call"
+	PROMPTS_LIST    = "prompts/list"
+	PROMPTS_GET     = "prompts/get"
 )
 
-/* Initialization */
-
-// Params to define MCP Client during initialize request.
-type InitializeParams struct {
-	// The latest version of the Model Context Protocol that the client supports.
-	// The client MAY decide to support older versions as well.
-	ProtocolVersion string             `json:"protocolVersion"`
-	Capabilities    ClientCapabilities `json:"capabilities"`
-	ClientInfo      Implementation     `json:"clientInfo"`
+/* Request Params */
+type RequestParams struct {
+	Meta *RequestMetaObject `json:"_meta"`
 }
 
-// InitializeRequest is sent from the client to the server when it first
-// connects, asking it to begin initialization.
-type InitializeRequest struct {
-	jsonrpc.Request
-	Params InitializeParams `json:"params"`
-}
-
-// InitializeResult is sent after receiving an initialize request from the
-// client.
-type InitializeResult struct {
-	jsonrpc.Result
-	// The version of the Model Context Protocol that the server wants to use.
-	// This may not match the version that the client requested. If the client cannot
-	// support this version, it MUST disconnect.
-	ProtocolVersion string             `json:"protocolVersion"`
-	Capabilities    ServerCapabilities `json:"capabilities"`
-	ServerInfo      Implementation     `json:"serverInfo"`
-	// Instructions describing how to use the server and its features.
-	//
-	// This can be used by clients to improve the LLM's understanding of
-	// available tools, resources, etc. It can be thought of like a "hint" to the model.
-	// For example, this information MAY be added to the system prompt.
-	Instructions string `json:"instructions,omitempty"`
-}
-
-// InitializedNotification is sent from the client to the server after
-// initialization has finished.
-type InitializedNotification struct {
-	jsonrpc.Notification
-}
-
-// ListChange represents whether the server supports notification for changes to the capabilities.
-type ListChanged struct {
-	ListChanged *bool `json:"listChanged,omitempty"`
+/**
+ * Represents the contents of a `_meta` field, which clients and servers use to attach additional metadata to their interactions.
+ *
+ * Certain key names are reserved by MCP for protocol-level metadata; implementations MUST NOT make assumptions about values at these keys. Additionally, specific schema definitions may reserve particular names for purpose-specific metadata, as declared in those definitions.
+ *
+ * Valid keys have two segments:
+ *
+ * **Prefix:**
+ * - Optional — if specified, MUST be a series of _labels_ separated by dots (`.`), followed by a slash (`/`).
+ * - Labels MUST start with a letter and end with a letter or digit. Interior characters may be letters, digits, or hyphens (`-`).
+ * - Implementations SHOULD use reverse DNS notation (e.g., `com.example/` rather than `example.com/`).
+ * - Any prefix where the second label is `modelcontextprotocol` or `mcp` is **reserved** for MCP use. For example: `io.modelcontextprotocol/`, `dev.mcp/`, `org.modelcontextprotocol.api/`, and `com.mcp.tools/` are all reserved. However, `com.example.mcp/` is NOT reserved, as the second label is `example`.
+ *
+ * **Name:**
+ * - Unless empty, MUST start and end with an alphanumeric character (`[a-z0-9A-Z]`).
+ * - Interior characters may be alphanumeric, hyphens (`-`), underscores (`_`), or dots (`.`).
+ */
+type RequestMetaObject struct {
+	// If specified, the caller is requesting out-of-band progress
+	// notifications for this request (as represented by
+	// notifications/progress). The value of this parameter is an
+	// opaque token that will be attached to any subsequent
+	// notifications. The receiver is not obligated to provide these
+	// notifications.
+	ProgressToken jsonrpc.ProgressToken `json:"progressToken,omitempty"`
+	/**
+	 * The MCP Protocol Version being used for this request. Required.
+	 *
+	 * For the HTTP transport, this value MUST match the `MCP-Protocol-Version`
+	 * header; otherwise the server MUST return a `400 Bad Request`. If the
+	 * server does not support the requested version, it MUST return an
+	 * UnsupportedProtocolVersionError.
+	 */
+	ProtocolVersion string `json:"io.modelcontextprotocol/protocolVersion"`
+	/**
+	 * Identifies the client software making the request. Required.
+	 *
+	 * The Implementation schema requires `name` and `version`; other
+	 * fields are optional.
+	 */
+	ClientInfo Implementation `json:"io.modelcontextprotocol/clientInfo"`
+	/**
+	 * The client's capabilities for this specific request. Required.
+	 *
+	 * Capabilities are declared per-request rather than once at initialization;
+	 * an empty object means the client supports no optional capabilities.
+	 * Servers MUST NOT infer capabilities from prior requests.
+	 */
+	MetaClientCapabilities *ClientCapabilities `json:"io.modelcontextprotocol/clientCapabilities"`
 }
 
 // ClientCapabilities represents capabilities a client may support. Known
@@ -95,12 +103,44 @@ type ClientCapabilities struct {
 	Sampling struct{} `json:"sampling,omitempty"`
 }
 
-// ServerCapabilities represents capabilities that a server may support. Known
-// capabilities are defined here, in this schema, but this is not a closed set: any
-// server can define its own, additional capabilities.
-type ServerCapabilities struct {
-	Tools   *ListChanged `json:"tools,omitempty"`
-	Prompts *ListChanged `json:"prompts,omitempty"`
+/* Discovery */
+
+/**
+ * A request from the client asking the server to advertise its supported
+ * protocol versions, capabilities, and other metadata. Servers **MUST**
+ * implement `server/discover`. Clients **MAY** call it but are not required
+ * to — version negotiation can also happen inline via per-request `_meta`.
+ */
+type DiscoverRequest struct {
+	jsonrpc.Request
+	Params RequestParams `json:"params,omitempty"`
+}
+
+// The result returned by the server for a {@link DiscoverRequest | server/discover} request.
+type DiscoverResult struct {
+	jsonrpc.Result
+	/**
+	 * MCP Protocol Versions this server supports. The client should choose a
+	 * version from this list for use in subsequent requests.
+	 */
+	SupportedVersions []string `json:"supportedVersions"`
+	/**
+	 * The capabilities of the server.
+	 */
+	Capabilities ServerCapabilities `json:"capabilities"`
+	/**
+	 * Information about the server software implementation.
+	 */
+	ServerInfo Implementation `json:"serverInfo"`
+	/**
+	 * Natural-language guidance describing the server and its features.
+	 *
+	 * This can be used by clients to improve an LLM's understanding of
+	 * available tools (e.g., by including it in a system prompt). It should
+	 * focus on information that helps the model use the server effectively
+	 * and should not duplicate information already in tool descriptions.
+	 */
+	Instructions string `json:"instructions,omitempty"`
 }
 
 // Base interface for metadata with name (identifier) and title (display name) properties.
@@ -123,6 +163,19 @@ type Implementation struct {
 	Version string `json:"version"`
 }
 
+// ServerCapabilities represents capabilities that a server may support. Known
+// capabilities are defined here, in this schema, but this is not a closed set: any
+// server can define its own, additional capabilities.
+type ServerCapabilities struct {
+	Tools   *ListChanged `json:"tools,omitempty"`
+	Prompts *ListChanged `json:"prompts,omitempty"`
+}
+
+// ListChange represents whether the server supports notification for changes to the capabilities.
+type ListChanged struct {
+	ListChanged *bool `json:"listChanged,omitempty"`
+}
+
 /* Empty result */
 
 // EmptyResult represents a response that indicates success but carries no data.
@@ -133,13 +186,17 @@ type EmptyResult jsonrpc.Result
 // Cursor is an opaque token used to represent a cursor for pagination.
 type Cursor string
 
+// Common params for paginated requests.
 type PaginatedRequest struct {
 	jsonrpc.Request
-	Params struct {
-		// An opaque token representing the current pagination position.
-		// If provided, the server should return results starting after this cursor.
-		Cursor Cursor `json:"cursor,omitempty"`
-	} `json:"params,omitempty"`
+	Params PaginatedRequestParams `json:"params,omitempty"`
+}
+
+type PaginatedRequestParams struct {
+	RequestParams
+	// An opaque token representing the current pagination position.
+	// If provided, the server should return results starting after this cursor.
+	Cursor Cursor `json:"cursor,omitempty"`
 }
 
 type PaginatedResult struct {
@@ -187,10 +244,20 @@ type InputSchema struct {
 // Used by the client to invoke a tool provided by the server.
 type CallToolRequest struct {
 	jsonrpc.Request
-	Params struct {
-		Name      string         `json:"name"`
-		Arguments map[string]any `json:"arguments,omitempty"`
-	} `json:"params,omitempty"`
+	Params CallToolRequestParams `json:"params,omitempty"`
+}
+
+// Parameters for a `tools/call` request.
+type CallToolRequestParams struct {
+	RequestParams
+	/**
+	 * The name of the tool.
+	 */
+	Name string `json:"name"`
+	/**
+	 * Arguments to use for the tool call.
+	 */
+	Arguments map[string]any `json:"arguments,omitempty"`
 }
 
 // The sender or recipient of messages and data in a conversation.
@@ -309,10 +376,14 @@ type ListPromptsResult struct {
 // Used by the client to get a prompt provided by the server.
 type GetPromptRequest struct {
 	jsonrpc.Request
-	Params struct {
-		Name      string         `json:"name"`
-		Arguments map[string]any `json:"arguments,omitempty"`
-	} `json:"params"`
+	Params GetPromptRequestParams `json:"params"`
+}
+
+// Parameters for a `prompts/get` request.
+type GetPromptRequestParams struct {
+	RequestParams
+	Name      string         `json:"name"`
+	Arguments map[string]any `json:"arguments,omitempty"`
 }
 
 // The server's response to a prompts/get request from the client.
