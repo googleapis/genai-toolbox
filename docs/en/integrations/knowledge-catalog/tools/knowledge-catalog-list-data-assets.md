@@ -12,9 +12,10 @@ aliases:
 
 A `dataplex-list-data-assets` tool retrieves a list of Data Assets associated with a specific Data Product in Knowledge Catalog (formerly known as Dataplex).
 
-`dataplex-list-data-assets` requires the following parameter:
+`dataplex-list-data-assets` requires the following parameters:
 
-- `name` - The resource name of the parent Data Product in the following form: `projects/{project}/locations/{location}/dataProducts/{dataProduct}`.
+- `locationId` - The location ID (e.g., `us`, `us-central1`) where the Data Product is located.
+- `dataProductId` - The unique ID of the parent Data Product.
 
 Optional parameters:
 
