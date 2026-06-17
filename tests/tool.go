@@ -4056,7 +4056,7 @@ func RunMySQLShowQueryStats(t *testing.T, ctx context.Context, pool *sql.DB, dat
 		name           string
 		requestBody    io.Reader
 		wantStatusCode int
-		wantError      string		
+		wantError      string
 	}{
 		{
 			name:           "list query stats with default limit",
