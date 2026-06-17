@@ -62,8 +62,8 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize() (tools.Tool, error) {
 	query := parameters.NewStringParameter("query", "The query against which aspect type should be matched.")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of returned aspect types in the search page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
+	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Optional. Number of returned aspect types in the search page.")
+	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Optional. Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
 	allParameters := parameters.Parameters{query, pageSize, orderBy}
 
 	return Tool{
