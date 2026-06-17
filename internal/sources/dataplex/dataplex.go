@@ -383,7 +383,8 @@ type AccessGroup struct {
 }
 
 type DataProduct struct {
-	Name         string            `json:"name"`
+	LocationID   string            `json:"locationId"`
+	DataProductID string            `json:"dataProductId"`
 	DisplayName  string            `json:"displayName"`
 	Description  string            `json:"description"`
 	OwnerEmails  []string          `json:"ownerEmails"`
@@ -392,10 +393,11 @@ type DataProduct struct {
 	AccessGroups []AccessGroup     `json:"accessGroups"`
 }
 
-func (s *Source) GetDataProduct(ctx context.Context, name string) (*DataProduct, error) {
+func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProductId string) (*DataProduct, error) {
 	if s.GetDataProductClient() == nil {
 		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
 	req := &dataplexpb.GetDataProductRequest{
 		Name: name,
 	}
@@ -415,8 +417,16 @@ func (s *Source) GetDataProduct(ctx context.Context, name string) (*DataProduct,
 		})
 	}
 
+	parts := strings.Split(resp.GetName(), "/")
+	var locId, prodId string
+	if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+		locId = parts[3]
+		prodId = parts[5]
+	}
+
 	return &DataProduct{
-		Name:         resp.GetName(),
+		LocationID:   locId,
+		DataProductID: prodId,
 		DisplayName:  resp.GetDisplayName(),
 		Description:  resp.GetDescription(),
 		OwnerEmails:  resp.GetOwnerEmails(),
