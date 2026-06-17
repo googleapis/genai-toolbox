@@ -97,7 +97,7 @@ func (s *Source) validateBucket(bucket string) error {
 		return nil
 	}
 	for _, b := range s.AllowedBuckets {
-		if b == "*" || b == bucket {
+		if b == bucket {
 			return nil
 		}
 	}
@@ -113,9 +113,6 @@ func (s *Source) validateLocalPath(p string) error {
 		return nil
 	}
 	for _, root := range s.AllowedLocalRoots {
-		if root == "*" {
-			return nil
-		}
 		if isUnderRoot(clean, root) {
 			return nil
 		}

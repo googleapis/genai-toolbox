@@ -16,6 +16,7 @@ package cloudstorage
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -150,12 +151,6 @@ func TestValidateBucket(t *testing.T) {
 			bucket:         "attacker-bucket",
 			wantErr:        true,
 		},
-		{
-			desc:           "wildcard allows any bucket",
-			allowedBuckets: []string{"*"},
-			bucket:         "any-bucket",
-			wantErr:        false,
-		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -174,6 +169,8 @@ func TestValidateBucket(t *testing.T) {
 }
 
 func TestValidateLocalPath(t *testing.T) {
+	base := t.TempDir()
+
 	tcs := []struct {
 		desc         string
 		allowedRoots []string
@@ -183,43 +180,37 @@ func TestValidateLocalPath(t *testing.T) {
 		{
 			desc:         "empty allowedLocalRoots succeeds",
 			allowedRoots: nil,
-			path:         "/var/tmp/file.txt",
-			wantErr:      false,
-		},
-		{
-			desc:         "wildcard allows any path",
-			allowedRoots: []string{"*"},
-			path:         "/var/tmp/file.txt",
+			path:         filepath.Join(base, "var", "tmp", "file.txt"),
 			wantErr:      false,
 		},
 		{
 			desc:         "under allowed root succeeds",
-			allowedRoots: []string{"/var/tmp", "/workspace"},
-			path:         "/workspace/file.txt",
+			allowedRoots: []string{filepath.Join(base, "var", "tmp"), filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace", "file.txt"),
 			wantErr:      false,
 		},
 		{
 			desc:         "exact match allowed root succeeds",
-			allowedRoots: []string{"/var/tmp", "/workspace"},
-			path:         "/workspace",
+			allowedRoots: []string{filepath.Join(base, "var", "tmp"), filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace"),
 			wantErr:      false,
 		},
 		{
 			desc:         "outside allowed root fails",
-			allowedRoots: []string{"/var/tmp", "/workspace"},
-			path:         "/etc/passwd",
+			allowedRoots: []string{filepath.Join(base, "var", "tmp"), filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "etc", "passwd"),
 			wantErr:      true,
 		},
 		{
 			desc:         "prefix check bypass fails (partial matching directory)",
-			allowedRoots: []string{"/workspace"},
-			path:         "/workspace-malicious/file.txt",
+			allowedRoots: []string{filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace-malicious", "file.txt"),
 			wantErr:      true,
 		},
 		{
 			desc:         "relative path is cleaned and validated",
-			allowedRoots: []string{"/workspace"},
-			path:         "/workspace/../etc/passwd",
+			allowedRoots: []string{filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace", "..", "etc", "passwd"),
 			wantErr:      true,
 		},
 	}
