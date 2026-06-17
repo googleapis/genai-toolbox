@@ -45,6 +45,7 @@ func TestParseEnv(t *testing.T) {
 		err          bool
 		errString    string
 		wantOptional []string
+		lenient      bool
 	}{
 		{
 			desc:      "without default without env",
@@ -52,6 +53,19 @@ func TestParseEnv(t *testing.T) {
 			want:      "",
 			err:       true,
 			errString: `environment variable not found: "FOO"`,
+		},
+		{
+			desc:    "without default without env, lenient",
+			in:      "${FOO}",
+			want:    "FOO",
+			lenient: true,
+		},
+		{
+			desc:    "missing required mixed with env, lenient",
+			in:      "project: ${PROJECT}, region: ${REGION}",
+			env:     map[string]string{"REGION": "us-central1"},
+			want:    "project: PROJECT, region: us-central1",
+			lenient: true,
 		},
 		{
 			desc: "without default with env",
@@ -108,7 +122,7 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			parser := &ConfigParser{}
+			parser := &ConfigParser{AllowMissingEnvVars: tc.lenient}
 			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {
@@ -624,15 +638,17 @@ func TestParseConfig(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 						},
-						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -746,15 +762,17 @@ func TestParseConfig(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:        "example_tool",
-						Type:        "postgres-sql",
-						Source:      "my-pg-instance",
-						Description: "some description",
-						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 						},
-						AuthRequired: []string{},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -927,12 +945,14 @@ func TestParseConfigWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -1033,12 +1053,14 @@ func TestParseConfigWithAuth(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
-						Name:         "example_tool",
-						Type:         "postgres-sql",
-						Source:       "my-pg-instance",
-						Description:  "some description",
-						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-						AuthRequired: []string{"my-google-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-service"},
+						},
+						Type:      "postgres-sql",
+						Source:    "my-pg-instance",
+						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
 							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
@@ -1202,13 +1224,15 @@ func TestEnvVarReplacement(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
-						Name:         "example_tool",
-						Type:         "http",
-						Source:       "my-instance",
-						Method:       "GET",
-						Path:         "search?name=alice&pet=cat",
-						Description:  "some description",
-						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						},
+						Type:   "http",
+						Source: "my-instance",
+						Method: "GET",
+						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
 							parameters.NewStringParameterWithAuth("country", "some description",
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -1348,13 +1372,15 @@ func TestEnvVarReplacement(t *testing.T) {
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
-						Name:         "example_tool",
-						Type:         "http",
-						Source:       "my-instance",
-						Method:       "GET",
-						Path:         "search?name=alice&pet=cat",
-						Description:  "some description",
-						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						ConfigBase: tools.ConfigBase{
+							Name:         "example_tool",
+							Description:  "some description",
+							AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						},
+						Type:   "http",
+						Source: "my-instance",
+						Method: "GET",
+						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
 							parameters.NewStringParameterWithAuth("country", "some description",
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -1778,7 +1804,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"vectorassist": {
 					Name:      "vectorassist",
-					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query"},
+					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query", "improve_query_recall", "list_specs", "get_spec", "delete_spec"},
 				},
 			},
 		},
@@ -1958,6 +1984,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
+				},
 			},
 		},
 		{
@@ -1967,6 +1997,10 @@ func TestPrebuiltTools(t *testing.T) {
 				"data": tools.ToolsetConfig{
 					Name:      "data",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+				"data_with_discovery": tools.ToolsetConfig{
+					Name:      "data_with_discovery",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "search_catalog"},
 				},
 			},
 		},
@@ -2163,18 +2197,18 @@ func TestPrebuiltTools(t *testing.T) {
 func TestMergeConfigs(t *testing.T) {
 	file1 := Config{
 		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}},
 		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
 		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
 	file2 := Config{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-		Tools:        server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+		Tools:        server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
 	}
 	fileWithConflicts := Config{
 		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+		Tools:   server.ToolConfigs{"tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 	}
 	fileMcp1 := Config{
 		AuthServices: server.AuthServiceConfigs{"generic1": generic.Config{Name: "generic1", McpEnabled: true}},
@@ -2196,7 +2230,7 @@ func TestMergeConfigs(t *testing.T) {
 			want: Config{
 				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
 				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:         server.PromptConfigs{},
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},

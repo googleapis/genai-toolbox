@@ -31,6 +31,7 @@ import (
 	dataplex "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/google/uuid"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
@@ -75,7 +76,7 @@ func initBigQueryConnection(ctx context.Context, project string) (*bigqueryapi.C
 }
 
 func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -196,7 +197,7 @@ func setupDataplexSearchDataQualityScan(t *testing.T, ctx context.Context, clien
 }
 
 func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -210,7 +211,7 @@ func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClie
 
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	args := []string{"--enable-api"}
@@ -529,6 +530,7 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 		wantStatusCode int
 		expectResult   bool
 		wantContentKey string
+		wantCount      int
 	}{
 		{
 			name:           "Success - Entry Found",
@@ -547,6 +549,16 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "dataplex_entry",
+		},
+		{
+			name:           "Success - Limit Results by PageSize",
+			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-entries-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte("{\"query\":\"system=bigquery\", \"pageSize\": 2}")),
+			wantStatusCode: 200,
+			expectResult:   true,
+			wantContentKey: "dataplex_entry",
+			wantCount:      2,
 		},
 		{
 			name:           "Success with Authorization - Entry Found",
@@ -626,8 +638,12 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 			}
 
 			if tc.expectResult {
-				if len(entries) != 1 {
-					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				wantCount := tc.wantCount
+				if wantCount == 0 {
+					wantCount = 1
+				}
+				if len(entries) != wantCount {
+					t.Fatalf("expected exactly %d entries, but got %d", wantCount, len(entries))
 				}
 				entry, ok := entries[0].(map[string]interface{})
 				if !ok {

@@ -17,6 +17,7 @@ assign_issues:
   - duwenxin99
   - anubhav756
   - twishabansal
+  - dishaprakash
 assign_issues_by:
   - labels:
     - 'product: alloydb'

@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	http "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -48,13 +49,15 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": http.Config{
-					Name:         "example_tool",
-					Type:         "http",
-					Source:       "my-instance",
-					Method:       "GET",
-					Path:         "search",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "http",
+					Source: "my-instance",
+					Method: "GET",
+					Path:   "search",
 				},
 			},
 		},
@@ -107,13 +110,15 @@ func TestParseFromYamlHTTP(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": http.Config{
-					Name:         "example_tool",
-					Type:         "http",
-					Source:       "my-instance",
-					Method:       "GET",
-					Path:         "{{.pathParam}}?name=alice&pet=cat",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "http",
+					Source: "my-instance",
+					Method: "GET",
+					Path:   "{{.pathParam}}?name=alice&pet=cat",
 					QueryParams: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
