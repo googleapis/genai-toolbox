@@ -441,6 +441,7 @@ func TestMcpEndpoint(t *testing.T) {
 		name           string
 		protocol       string
 		idHeader       bool
+		reqHeader      []string
 		initWant       map[string]any
 		invalidMethods []string
 		meta           map[string]any
@@ -483,9 +484,10 @@ func TestMcpEndpoint(t *testing.T) {
 			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:     "version 2025-06-18",
-			protocol: protocolVersion20250618,
-			idHeader: false,
+			name:      "version 2025-06-18",
+			protocol:  protocolVersion20250618,
+			idHeader:  false,
+			reqHeader: []string{"Mcp-Protocol-Version"},
 			initWant: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "mcp-initialize",
@@ -501,9 +503,10 @@ func TestMcpEndpoint(t *testing.T) {
 			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:     "version 2025-11-25",
-			protocol: protocolVersion20251125,
-			idHeader: false,
+			name:      "version 2025-11-25",
+			protocol:  protocolVersion20251125,
+			idHeader:  false,
+			reqHeader: []string{"Mcp-Protocol-Version"},
 			initWant: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "mcp-initialize",
@@ -522,6 +525,7 @@ func TestMcpEndpoint(t *testing.T) {
 			name:           "version DRAFT",
 			protocol:       protocolVersionDraft,
 			idHeader:       false,
+			reqHeader:      []string{"Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name"},
 			invalidMethods: []string{"ping"},
 			meta: map[string]any{
 				"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
@@ -539,20 +543,12 @@ func TestMcpEndpoint(t *testing.T) {
 			if len(vtc.initWant) != 0 {
 				sessionId = runInitializeLifecycle(t, ts, vtc.protocol, vtc.initWant, vtc.idHeader)
 			}
-
-			header := map[string]string{}
-			if sessionId != "" {
-				header["Mcp-Session-Id"] = sessionId
-			}
-			if vtc.protocol != protocolVersion20241105 && vtc.protocol != protocolVersion20250326 {
-				header["MCP-Protocol-Version"] = vtc.protocol
-			}
-
 			testCases := []*struct {
 				name           string
 				url            string
 				isErr          bool
-				body           any
+				body           jsonrpc.JSONRPCRequest
+				batchBody      []jsonrpc.JSONRPCRequest
 				methodName     string
 				wantStatusCode int
 				want           map[string]any
@@ -831,7 +827,7 @@ func TestMcpEndpoint(t *testing.T) {
 					name:  "batch requests",
 					url:   "/",
 					isErr: true,
-					body: []any{
+					batchBody: []jsonrpc.JSONRPCRequest{
 						jsonrpc.JSONRPCRequest{
 							Jsonrpc: "1.0",
 							Id:      "batch-requests1",
@@ -937,22 +933,41 @@ func TestMcpEndpoint(t *testing.T) {
 			for i := range testCases {
 				tc := *testCases[i]
 				t.Run(tc.name, func(t *testing.T) {
+					// add required header
+					header := map[string]string{}
+					if sessionId != "" {
+						header["Mcp-Session-Id"] = sessionId
+					}
+					if slices.Contains(vtc.reqHeader, "Mcp-Protocol-Version") {
+						header["Mcp-Protocol-Version"] = vtc.protocol
+					}
+					if slices.Contains(vtc.reqHeader, "Mcp-Method") {
+						header["Mcp-Method"] = tc.methodName
+					}
+					if slices.Contains(vtc.reqHeader, "Mcp-Name") && (tc.methodName == "tools/call" || tc.methodName == "prompts/get") {
+						params := tc.body.Params.(map[string]any)
+						header["Mcp-Name"] = params["name"].(string)
+					}
 					if vtc.meta != nil {
-						switch v := tc.body.(type) {
-						case jsonrpc.JSONRPCRequest:
-							if v.Params != nil {
-								v.Params.(map[string]any)["_meta"] = vtc.meta
-							} else {
-								v.Params = map[string]any{
-									"_meta": vtc.meta,
-								}
+						body := tc.body
+						if body.Params != nil {
+							body.Params.(map[string]any)["_meta"] = vtc.meta
+						} else {
+							body.Params = map[string]any{
+								"_meta": vtc.meta,
 							}
-							tc.body = v
 						}
+						tc.body = body
 					}
 					reqMarshal, err := json.Marshal(tc.body)
 					if err != nil {
 						t.Fatalf("unexpected error during marshaling of body")
+					}
+					if tc.batchBody != nil {
+						reqMarshal, err = json.Marshal(tc.batchBody)
+						if err != nil {
+							t.Fatalf("unexpected error during marshaling of body")
+						}
 					}
 
 					if vtc.protocol != protocolVersion20241105 && len(header) == 0 {
