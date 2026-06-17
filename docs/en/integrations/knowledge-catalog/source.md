@@ -392,7 +392,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ## Tool: list_data_assets
 ### Request
 1. Use this tool to retrieve all Data Assets under a specific Data Product.
-2. You must provide the full resource name of the parent Data Product in the format `projects/{project}/locations/{location}/dataProducts/{dataProduct}`.
+2. You must provide `locationId` and `dataProductId`.
 3. You can optionally filter the listed assets using `filter` or limit the response using `pageSize`.
 ### Response
 1. Present the retrieved list of Data Assets, including their names, resources, and labels.

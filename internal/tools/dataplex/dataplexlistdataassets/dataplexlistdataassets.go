@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -46,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	ListDataAssets(ctx context.Context, parent string, filter string, pageSize int, orderBy string) ([]*dataplex.DataAssetSummary, error)
+	ListDataAssets(ctx context.Context, locationId string, dataProductId string, filter string, pageSize int, orderBy string) ([]*dataplex.DataAssetSummary, error)
 }
 
 type Config struct {
@@ -68,11 +67,12 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	name := parameters.NewStringParameter("name", "Required. The resource name of the parent Data Product in the following form: projects/{project}/locations/{location}/dataProducts/{dataProduct}.")
+	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
 	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching accross all fields at once is not yet supported.")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Optional. Number of returned data assets in the page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Optional. Specifies the ordering of results.")
-	params := parameters.Parameters{name, filter, pageSize, orderBy}
+	params := parameters.Parameters{locationId, dataProductId, filter, pageSize, orderBy}
 
 	t := Tool{
 		Config:     cfg,
@@ -119,9 +119,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	name, ok := paramsMap["name"].(string)
+	locationId, ok := paramsMap["locationId"].(string)
 	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'name' parameter: %v", paramsMap["name"]), nil)
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	}
+	dataProductId, ok := paramsMap["dataProductId"].(string)
+	if !ok {
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
 	}
 	filter, ok := paramsMap["filter"].(string)
 	if !ok {
@@ -136,13 +140,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
 	}
 
-	parts := strings.Split(name, "/")
-	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "dataProducts" {
-		err = fmt.Errorf("invalid name format: must be in the form projects/{project}/locations/{location}/dataProducts/{dataProduct}")
-		return nil, util.NewAgentError(err.Error(), err)
-	}
-
-	resp, err := source.ListDataAssets(ctx, name, filter, pageSize, orderBy)
+	resp, err := source.ListDataAssets(ctx, locationId, dataProductId, filter, pageSize, orderBy)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

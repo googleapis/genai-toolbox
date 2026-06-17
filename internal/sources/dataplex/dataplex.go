@@ -437,14 +437,17 @@ func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProd
 }
 
 type DataAssetSummary struct {
-	Name     string            `json:"name"`
-	Resource string            `json:"resource"`
-	Labels   map[string]string `json:"labels"`
+	LocationID    string            `json:"locationId"`
+	DataProductID string            `json:"dataProductId"`
+	DataAsset     string            `json:"dataAsset"`
+	ResourceUri   string            `json:"resourceUri"`
+	Labels        map[string]string `json:"labels"`
 }
 
 func (s *Source) ListDataAssets(
 	ctx context.Context,
-	parent string,
+	locationId string,
+	dataProductId string,
 	filter string,
 	pageSize int,
 	orderBy string,
@@ -455,6 +458,7 @@ func (s *Source) ListDataAssets(
 	if pageSize <= 0 {
 		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
 	}
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
 	req := &dataplexpb.ListDataAssetsRequest{
 		Parent:   parent,
 		Filter:   filter,
@@ -476,10 +480,19 @@ func (s *Source) ListDataAssets(
 			}
 			return nil, fmt.Errorf("failed to list data assets: %w", err)
 		}
+		parts := strings.Split(asset.GetName(), "/")
+		var locId, prodId, assetId string
+		if len(parts) >= 8 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" && parts[6] == "dataAssets" {
+			locId = parts[3]
+			prodId = parts[5]
+			assetId = parts[7]
+		}
 		results = append(results, &DataAssetSummary{
-			Name:     asset.GetName(),
-			Resource: asset.GetResource(),
-			Labels:   asset.GetLabels(),
+			LocationID:    locId,
+			DataProductID: prodId,
+			DataAsset:     assetId,
+			ResourceUri:   asset.GetResource(),
+			Labels:        asset.GetLabels(),
 		})
 	}
 	return results, nil

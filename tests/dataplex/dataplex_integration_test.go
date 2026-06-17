@@ -668,7 +668,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-list-data-assets-tool",
 			toolName:       "my-dataplex-list-data-assets-tool",
-			expectedParams: []string{"name", "filter", "pageSize", "orderBy"},
+			expectedParams: []string{"locationId", "dataProductId", "filter", "pageSize", "orderBy"},
 		},
 	}
 
@@ -1679,43 +1679,44 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	parent := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId)
-
 	testCases := []struct {
-		name           string
-		api            string
-		requestHeader  map[string]string
-		requestBody    io.Reader
-		wantStatusCode int
-		expectResult   bool
-		wantContentKey string
-		wantValue      string
+		name              string
+		api               string
+		requestHeader     map[string]string
+		requestBody       io.Reader
+		wantStatusCode    int
+		expectResult      bool
+		wantLocationID    string
+		wantDataProductID string
+		wantDataAsset     string
 	}{
 		{
-			name:           "Success - List Data Assets (Authorized)",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
-			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", parent))),
-			wantStatusCode: 200,
-			expectResult:   true,
-			wantContentKey: "name",
-			wantValue:      fmt.Sprintf("%s/dataAssets/%s", parent, dataAssetId),
+			name:              "Success - List Data Assets (Authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
+			requestHeader:     map[string]string{"my-google-auth_token": idToken},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId,
+			wantDataAsset:     dataAssetId,
 		},
 		{
-			name:           "Success - List Data Assets (Un-authorized)",
-			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-assets-tool/invoke",
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", parent))),
-			wantStatusCode: 200,
-			expectResult:   true,
-			wantContentKey: "name",
-			wantValue:      fmt.Sprintf("%s/dataAssets/%s", parent, dataAssetId),
+			name:              "Success - List Data Assets (Un-authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-assets-tool/invoke",
+			requestHeader:     map[string]string{},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId,
+			wantDataAsset:     dataAssetId,
 		},
 		{
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", parent))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 		},
@@ -1723,16 +1724,8 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", parent))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
 			wantStatusCode: 401,
-			expectResult:   false,
-		},
-		{
-			name:           "Failure - Invalid Name Format",
-			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-assets-tool/invoke",
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataProductId))),
-			wantStatusCode: 200,
 			expectResult:   false,
 		},
 	}
@@ -1778,18 +1771,29 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 			if !ok {
 				t.Fatalf("expected entry to be a map, got %T", entries[0])
 			}
-			val, ok := entry[tc.wantContentKey].(string)
+			locID, ok := entry["locationId"].(string)
 			if !ok {
-				t.Fatalf("expected entry to have key '%s' as string, but it was not found or not a string in %v", tc.wantContentKey, entry)
+				t.Fatalf("expected entry to have key 'locationId' as string, but it was not found or not a string in %v", entry)
 			}
-			if tc.wantValue != "" && val != tc.wantValue {
-				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
+			if tc.wantLocationID != "" && locID != tc.wantLocationID {
+				t.Fatalf("expected locationId to be %q, got %q", tc.wantLocationID, locID)
+			}
+			prodID, ok := entry["dataProductId"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'dataProductId' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantDataProductID != "" && prodID != tc.wantDataProductID {
+				t.Fatalf("expected dataProductId to be %q, got %q", tc.wantDataProductID, prodID)
+			}
+			assetID, ok := entry["dataAsset"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'dataAsset' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantDataAsset != "" && assetID != tc.wantDataAsset {
+				t.Fatalf("expected dataAsset to be %q, got %q", tc.wantDataAsset, assetID)
 			}
 
 			// Assert output is cleaned
-			if entry["resource"] == "" {
-				t.Errorf("resource should not be empty")
-			}
 			if _, ok := entry["uid"]; ok {
 				t.Errorf("expected entry to NOT have 'uid' field, but it was found")
 			}
