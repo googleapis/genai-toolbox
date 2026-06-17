@@ -64,6 +64,7 @@ project: "my-project-id"
 instance: "my-instance"
 database: "my_db"
 # dialect: "googlesql"
+# useClientOAuth: false
 ```
 
 ## Reference
@@ -74,4 +75,5 @@ database: "my_db"
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                       |
 | instance  |  string  |     true     | Name of the Spanner instance.                                                                                       |
 | database  |  string  |     true     | Name of the database on the Spanner instance                                                                        |
-| dialect   |  string  |    false     | Name of the dialect type of the Spanner database, must be either `googlesql` or `postgresql`. Default: `googlesql`. |
+| dialect        |  string  |    false     | Name of the dialect type of the Spanner database, must be either `googlesql` or `postgresql`. Default: `googlesql`. |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorizing Catalog/Dataplex search requests. Defaults to `false`.   |

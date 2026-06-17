@@ -192,6 +192,54 @@ func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolType string) m
 	return config
 }
 
+// AddSearchCatalogConfig adds the search-catalog tool configuration for a given toolType and source
+func AddSearchCatalogConfig(t *testing.T, config map[string]any, toolType string) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+	myInstanceConfig, ok := sources["my-instance"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get my-instance from sources")
+	}
+
+	// Create a copy of the source config with client OAuth enabled
+	oauthSourceConfig := make(map[string]any)
+	for k, v := range myInstanceConfig {
+		oauthSourceConfig[k] = v
+	}
+	oauthSourceConfig["useClientOAuth"] = true
+	sources["my-oauth-source"] = oauthSourceConfig
+
+	// Add tools
+	tools["my-search-catalog-tool"] = map[string]any{
+		"type":        toolType,
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"type":        toolType,
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"type":        toolType,
+		"source":      "my-oauth-source",
+		"description": "Searches for data assets in catalog",
+	}
+
+	config["tools"] = tools
+	config["sources"] = sources
+	return config
+}
+
 func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]any {
 	var (
 		PostgresListSchemasToolType             = "postgres-list-schemas"

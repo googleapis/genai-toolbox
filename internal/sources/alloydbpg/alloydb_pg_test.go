@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
@@ -200,6 +201,71 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestExtractType(t *testing.T) {
+	typeMap := map[string]string{
+		"alloydb-cluster":  "CLUSTER",
+		"alloydb-database": "DATABASE",
+		"alloydb-instance": "INSTANCE",
+		"alloydb-table":    "TABLE",
+		"alloydb-view":     "VIEW",
+		"alloydb-schema":   "DATABASE_SCHEMA",
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		want string
+	}{
+		{
+			desc: "mapped type cluster",
+			in:   "projects/my-project/locations/global/entryTypes/alloydb-cluster",
+			want: "CLUSTER",
+		},
+		{
+			desc: "mapped type database",
+			in:   "projects/my-project/locations/global/entryTypes/alloydb-database",
+			want: "DATABASE",
+		},
+		{
+			desc: "mapped type instance",
+			in:   "projects/my-project/locations/global/entryTypes/alloydb-instance",
+			want: "INSTANCE",
+		},
+		{
+			desc: "mapped type table",
+			in:   "projects/my-project/locations/global/entryTypes/alloydb-table",
+			want: "TABLE",
+		},
+		{
+			desc: "mapped type view",
+			in:   "projects/my-project/locations/global/entryTypes/alloydb-view",
+			want: "VIEW",
+		},
+		{
+			desc: "mapped type schema",
+			in:   "projects/my-project/locations/global/entryTypes/alloydb-schema",
+			want: "DATABASE_SCHEMA",
+		},
+		{
+			desc: "no slash returns input",
+			in:   "alloydb-table",
+			want: "alloydb-table",
+		},
+		{
+			desc: "unknown type with slash returns empty",
+			in:   "projects/my-project/locations/global/entryTypes/unknown-type",
+			want: "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := searchcatalog.ExtractType(tc.in, typeMap)
+			if got != tc.want {
+				t.Errorf("ExtractType(%q) = %q, want %q", tc.in, got, tc.want)
 			}
 		})
 	}

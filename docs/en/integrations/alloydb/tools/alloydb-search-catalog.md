@@ -1,23 +1,23 @@
 ---
-title: "spanner-search-catalog"
+title: "alloydb-search-catalog"
 type: docs
 weight: 1
 description: >
-  A "spanner-search-catalog" tool allows to search for entries based on the provided query.
+  A "alloydb-search-catalog" tool allows to search for entries based on the provided query.
 ---
 
 ## About
 
-A `spanner-search-catalog` tool returns all entries in Knowledge Catalog (e.g.
-tables, views, databases) with system=Spanner that matches given user query.
+A `alloydb-search-catalog` tool returns all entries in Knowledge Catalog (e.g.
+tables, views, columns, databases, clusters, instances) with system=AlloyDB that matches given user query.
 
-`spanner-search-catalog` takes a required `prompt` parameter based on which
+`alloydb-search-catalog` takes a required `prompt` parameter based on which
 entries are filtered and returned to the user. It also optionally accepts
 following parameters:
 
-- `databaseIds` - The IDs of the spanner database.
+- `databaseIds` - The IDs of the postgres database.
 - `projectIds` - The IDs of the GCP project.
-- `types` - The type of the data. Accepted values are: DATABASE, TABLE, VIEW.
+- `types` - The type of the data. Accepted values are: DATABASE, COLUMN, TABLE, VIEW, CLUSTER, INSTANCE.
 - `pageSize` - Number of results in the search page. Defaults to `5`.
 
 ## Compatible Sources
@@ -51,15 +51,15 @@ applying IAM permissions and roles to an identity.
 ```yaml
 kind: tool
 name: search_catalog
-type: spanner-search-catalog
-source: spanner-source
-description: Searches for data assets (eg. Spanner tables, views, or databases) in Knowledge Catalog (formerly known as Dataplex) based on the provided search query
+type: alloydb-search-catalog
+source: alloydb-pg-source
+description: Searches for data assets (eg. AlloyDB tables, views, columns, databases, clusters or instances) in Catalog based on the provided search query
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| type        |                   string                   |     true     | Must be "spanner-search-catalog".                                                               |
+| type        |                   string                   |     true     | Must be "alloydb-search-catalog".                                                               |
 | source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

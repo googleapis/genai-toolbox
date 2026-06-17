@@ -168,6 +168,8 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
+	toolsFile = tests.AddSearchCatalogConfig(t, toolsFile, "alloydb-search-catalog")
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -215,6 +217,17 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
+
+	// Run search catalog test
+	tests.RunSearchCatalogToolTest(t, tests.SearchCatalogTestParams{
+		ContainerParamName: "databaseIds",
+		ContainerName:      AlloyDBPostgresCluster,
+		ProjectID:          AlloyDBPostgresProject,
+		TargetName:         "test-table",
+		WantKey:            "DisplayName",
+		AllowEmpty:         true,
+		CheckValue:         false,
+	})
 }
 
 func TestAlloyDBPgPrebuiltStatementTools(t *testing.T) {
