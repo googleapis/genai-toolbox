@@ -48,7 +48,7 @@ kind: tool
 name: get_query_plan
 type: mysql-get-query-plan
 source: cloud-sql-mysql-source
-description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evaluate new ones. Pass a single SQL statement in sql_statement; the tool returns its execution plan without running it."
 ---
 kind: tool
 name: list_tables
