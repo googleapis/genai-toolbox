@@ -148,8 +148,6 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		authServicesMap[name] = a
 	}
 
-
-
 	authServiceNames := make([]string, 0, len(authServicesMap))
 	for name := range authServicesMap {
 		authServiceNames = append(authServiceNames, name)
