@@ -54,6 +54,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/postgres"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/serverlessspark"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/scylladb"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/singlestore"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/snowflake"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/spanner"
