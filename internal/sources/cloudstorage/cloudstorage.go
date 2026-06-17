@@ -94,7 +94,7 @@ type Source struct {
 
 func (s *Source) validateBucket(bucket string) error {
 	if len(s.AllowedBuckets) == 0 {
-		return fmt.Errorf("bucket %q is not allowed: no allowed buckets configured for source %q", bucket, s.Name)
+		return nil
 	}
 	for _, b := range s.AllowedBuckets {
 		if b == "*" || b == bucket {
@@ -105,12 +105,12 @@ func (s *Source) validateBucket(bucket string) error {
 }
 
 func (s *Source) validateLocalPath(p string) error {
-	if len(s.AllowedLocalRoots) == 0 {
-		return fmt.Errorf("local path operations are disabled for source %q (no allowedLocalRoots configured)", s.Name)
-	}
 	clean, err := cloudstoragecommon.ValidateLocalPath(p)
 	if err != nil {
 		return err
+	}
+	if len(s.AllowedLocalRoots) == 0 {
+		return nil
 	}
 	for _, root := range s.AllowedLocalRoots {
 		if root == "*" {

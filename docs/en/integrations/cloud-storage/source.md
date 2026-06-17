@@ -99,5 +99,5 @@ allowedLocalRoots:
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------|
 | type      |  string  |     true     | Must be "cloud-storage".                                                        |
 | project   |  string  |     true     | Id of the GCP project the configured source is associated with (e.g. "my-project-id"). |
-| allowedBuckets | []string |    false     | List of GCS bucket names allowed for operations. If omitted, no buckets are allowed. Use `["*"]` to allow all buckets. |
-| allowedLocalRoots | []string |    false     | List of absolute local filesystem directories allowed for file uploads and downloads. If omitted, local filesystem transfers are disabled. Use `["*"]` to allow all paths. |
+| allowedBuckets | []string |    false     | List of GCS bucket names allowed for operations. If omitted, all buckets are allowed. |
+| allowedLocalRoots | []string |    false     | List of absolute local filesystem directories allowed for file uploads and downloads. If omitted, all paths are allowed. |

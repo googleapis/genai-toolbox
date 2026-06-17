@@ -133,10 +133,10 @@ func TestValidateBucket(t *testing.T) {
 		wantErr        bool
 	}{
 		{
-			desc:           "empty allowedBuckets fails",
+			desc:           "empty allowedBuckets succeeds",
 			allowedBuckets: nil,
 			bucket:         "my-bucket",
-			wantErr:        true,
+			wantErr:        false,
 		},
 		{
 			desc:           "allowed bucket succeeds",
@@ -181,10 +181,10 @@ func TestValidateLocalPath(t *testing.T) {
 		wantErr      bool
 	}{
 		{
-			desc:         "empty allowedLocalRoots fails",
+			desc:         "empty allowedLocalRoots succeeds",
 			allowedRoots: nil,
 			path:         "/var/tmp/file.txt",
-			wantErr:      true,
+			wantErr:      false,
 		},
 		{
 			desc:         "wildcard allows any path",
