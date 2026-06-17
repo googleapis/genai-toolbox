@@ -269,7 +269,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	teardowns = append(teardowns, setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId1))
 	teardowns = append(teardowns, setupDataplexDataProduct(t, ctx, dataplexDataProductClient, dataProductId2))
 
-	time.Sleep(2 * time.Minute) // wait for table and aspect type to be ingested
+	time.Sleep(1*time.Minute) // wait for table and aspect type to be ingested
 	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
 	defer func() {
 		var wg sync.WaitGroup
