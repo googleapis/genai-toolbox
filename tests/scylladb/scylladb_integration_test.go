@@ -60,9 +60,10 @@ func setupScyllaDBContainer(ctx context.Context, t *testing.T) (string, func()) 
 
 func getScyllaDBVars(host string) map[string]any {
 	return map[string]any{
-		"type":     ScyllaDBSourceType,
-		"hosts":    []string{host},
-		"keyspace": Keyspace,
+		"type":                     ScyllaDBSourceType,
+		"hosts":                    []string{host},
+		"keyspace":                 Keyspace,
+		"disableInitialHostLookup": true,
 	}
 }
 

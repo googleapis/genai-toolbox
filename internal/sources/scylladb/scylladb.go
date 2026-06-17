@@ -54,11 +54,16 @@ type Config struct {
 	Password     string   `yaml:"password"`
 	// LocalDC enables DC-aware token-aware load balancing. Required for
 	// ScyllaDB Cloud connections (e.g. "AWS_US_EAST_1").
-	LocalDC                string `yaml:"localDC"`
-	CAPath                 string `yaml:"caPath"`
-	CertPath               string `yaml:"certPath"`
-	KeyPath                string `yaml:"keyPath"`
-	EnableHostVerification bool   `yaml:"enableHostVerification"`
+	LocalDC string `yaml:"localDC"`
+	// DisableInitialHostLookup disables the initial host discovery step.
+	// Set to true when connecting through a proxy, port-forward, or in
+	// containerized environments where the cluster's internal IPs are not
+	// reachable from the client.
+	DisableInitialHostLookup bool   `yaml:"disableInitialHostLookup"`
+	CAPath                   string `yaml:"caPath"`
+	CertPath                 string `yaml:"certPath"`
+	KeyPath                  string `yaml:"keyPath"`
+	EnableHostVerification   bool   `yaml:"enableHostVerification"`
 }
 
 // Initialize implements sources.SourceConfig.
@@ -137,6 +142,7 @@ func initScyllaDBSession(ctx context.Context, tracer trace.Tracer, c Config) (*g
 	cluster := gocql.NewCluster(c.Hosts...)
 	cluster.ProtoVersion = c.ProtoVersion
 	cluster.Keyspace = c.Keyspace
+	cluster.DisableInitialHostLookup = c.DisableInitialHostLookup
 
 	// Configure DC-aware token-aware host selection policy.
 	// This is required for ScyllaDB Cloud and recommended for all multi-DC
