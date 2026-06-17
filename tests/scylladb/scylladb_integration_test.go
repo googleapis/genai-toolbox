@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -39,7 +38,7 @@ var (
 func setupScyllaDBContainer(ctx context.Context, t *testing.T) (string, func()) {
 	t.Helper()
 
-	container, err := tcscylladb.Run(ctx, "scylladb/scylla:6.2")
+	container, err := tcscylladb.Run(ctx, "scylladb/scylla:2026.1.5")
 	if err != nil {
 		t.Fatalf("failed to start scylladb container: %s", err)
 	}
@@ -174,9 +173,9 @@ func TestScyllaDB(t *testing.T) {
 	sourceConfig := getScyllaDBVars(host)
 
 	args := []string{"--enable-api"}
-	paramTableName := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	paramTableName := "param_table_" + uuid.New().String()[:8]
+	tableNameAuth := "auth_table_" + uuid.New().String()[:8]
+	tableNameTemplateParam := "tmpl_param_table_" + uuid.New().String()[:8]
 
 	err = initTable(paramTableName, session)
 	if err != nil {
