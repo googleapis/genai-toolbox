@@ -30,6 +30,7 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplex "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	storageapi "cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -47,6 +48,16 @@ var (
 	DataplexLookupEntryToolType            = "dataplex-lookup-entry"
 	DataplexSearchAspectTypesToolType      = "dataplex-search-aspect-types"
 	DataplexSearchDataQualityScansToolType = "dataplex-search-dq-scans"
+	DataplexGenerateDataProfileToolType    = "dataplex-generate-data-profile"
+	DataplexGetDataProfileToolType         = "dataplex-get-data-profile"
+	DataplexGetOperationToolType           = "dataplex-get-operation"
+	DataplexGetRunStatusToolType           = "dataplex-get-run-status"
+	DataplexGenerateDataInsightsToolType   = "dataplex-generate-data-insights"
+	DataplexGetDataInsightsToolType        = "dataplex-get-data-insights"
+	DataplexDiscoverMetadataToolType       = "dataplex-discover-metadata"
+	DataplexGetDiscoveryResultsToolType    = "dataplex-get-discovery-results"
+	DataplexCheckDataQualityToolType       = "dataplex-check-data-quality"
+	DataplexGetDataQualityResultsToolType  = "dataplex-get-data-quality-results"
 	DataplexProject                        = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -211,7 +222,7 @@ func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClie
 
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
 	defer cancel()
 
 	args := []string{"--enable-api"}
@@ -238,15 +249,18 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	tableName := fmt.Sprintf("param_table_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	aspectTypeId := fmt.Sprintf("param-aspect-type-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataScanId := fmt.Sprintf("param-data-scan-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	bucketName := fmt.Sprintf("temp-toolbox-test-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
 	teardownTable1 := setupBigQueryTable(t, ctx, bigqueryClient, datasetName, tableName)
 	teardownAspectType1 := setupDataplexThirdPartyAspectType(t, ctx, dataplexClient, aspectTypeId)
 	teardownDataScan1 := setupDataplexSearchDataQualityScan(t, ctx, dataplexDataScanClient, dataScanId, datasetName, tableName)
+	teardownBucket1 := setupGcsBucket(t, ctx, DataplexProject, bucketName)
 
 	time.Sleep(2 * time.Minute) // wait for table and aspect type to be ingested
 	defer teardownTable1(t)
 	defer teardownAspectType1(t)
 	defer teardownDataScan1(t)
+	defer teardownBucket1(t)
 
 	toolsFile := getDataplexToolsConfig(sourceConfig)
 
@@ -270,6 +284,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexSearchAspectTypesToolInvokeTest(t, aspectTypeId)
 	runDataplexLookupContextToolInvokeTest(t, tableName, datasetName)
 	runDataplexSearchDataQualityScansToolInvokeTest(t, dataScanId, tableName, datasetName)
+	runDataplexEnrichmentToolInvokeTest(t, tableName, datasetName, bucketName, dataplexDataScanClient)
 }
 
 func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetName string, tableName string) func(*testing.T) {
@@ -327,6 +342,28 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 			}
 		} else if err != nil {
 			t.Errorf("Failed to list tables in dataset %s to check emptiness: %v.", datasetName, err)
+		}
+	}
+}
+
+func setupGcsBucket(t *testing.T, ctx context.Context, project string, bucketName string) func(*testing.T) {
+	cred, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		t.Fatalf("failed to find default credentials: %v", err)
+	}
+	client, err := storageapi.NewClient(ctx, option.WithCredentials(cred))
+	if err != nil {
+		t.Fatalf("failed to create storage client: %v", err)
+	}
+
+	bucket := client.Bucket(bucketName)
+	if err := bucket.Create(ctx, project, &storageapi.BucketAttrs{Location: "us-central1"}); err != nil {
+		t.Fatalf("failed to create bucket %s: %v", bucketName, err)
+	}
+
+	return func(t *testing.T) {
+		if err := bucket.Delete(ctx); err != nil {
+			t.Logf("cleanup: failed to delete bucket %s: %v", bucketName, err)
 		}
 	}
 }
@@ -428,6 +465,56 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"description":  "Simple dataplex search dq scans tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"my-dataplex-generate-data-profile-tool": map[string]any{
+				"type":        DataplexGenerateDataProfileToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex generate data profile tool to test end to end functionality.",
+			},
+			"my-dataplex-get-data-profile-tool": map[string]any{
+				"type":        DataplexGetDataProfileToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get data profile tool to test end to end functionality.",
+			},
+			"my-dataplex-get-operation-tool": map[string]any{
+				"type":        DataplexGetOperationToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get operation tool to test end to end functionality.",
+			},
+			"my-dataplex-get-run-status-tool": map[string]any{
+				"type":        DataplexGetRunStatusToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get run status tool to test end to end functionality.",
+			},
+			"my-dataplex-generate-data-insights-tool": map[string]any{
+				"type":        DataplexGenerateDataInsightsToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex generate data insights tool to test end to end functionality.",
+			},
+			"my-dataplex-get-data-insights-tool": map[string]any{
+				"type":        DataplexGetDataInsightsToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get data insights tool to test end to end functionality.",
+			},
+			"my-dataplex-discover-metadata-tool": map[string]any{
+				"type":        DataplexDiscoverMetadataToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex discover metadata tool to test end to end functionality.",
+			},
+			"my-dataplex-get-discovery-results-tool": map[string]any{
+				"type":        DataplexGetDiscoveryResultsToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get discovery results tool to test end to end functionality.",
+			},
+			"my-dataplex-check-data-quality-tool": map[string]any{
+				"type":        DataplexCheckDataQualityToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex check data quality tool to test end to end functionality.",
+			},
+			"my-dataplex-get-data-quality-results-tool": map[string]any{
+				"type":        DataplexGetDataQualityResultsToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get data quality results tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -458,7 +545,57 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-search-dq-scans-tool",
 			toolName:       "my-dataplex-search-dq-scans-tool",
-			expectedParams: []string{"filter", "data_scan_id", "table_name", "pageSize", "orderBy"},
+			expectedParams: []string{"filter", "dataScanId", "resourcePath", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-generate-data-profile-tool",
+			toolName:       "my-dataplex-generate-data-profile-tool",
+			expectedParams: []string{"resourcePath", "location", "publish"},
+		},
+		{
+			name:           "get my-dataplex-get-data-profile-tool",
+			toolName:       "my-dataplex-get-data-profile-tool",
+			expectedParams: []string{"scanId", "location"},
+		},
+		{
+			name:           "get my-dataplex-get-operation-tool",
+			toolName:       "my-dataplex-get-operation-tool",
+			expectedParams: []string{"operationName"},
+		},
+		{
+			name:           "get my-dataplex-get-run-status-tool",
+			toolName:       "my-dataplex-get-run-status-tool",
+			expectedParams: []string{"scanId", "location"},
+		},
+		{
+			name:           "get my-dataplex-generate-data-insights-tool",
+			toolName:       "my-dataplex-generate-data-insights-tool",
+			expectedParams: []string{"resourcePath", "location", "publish"},
+		},
+		{
+			name:           "get my-dataplex-get-data-insights-tool",
+			toolName:       "my-dataplex-get-data-insights-tool",
+			expectedParams: []string{"scanId", "location"},
+		},
+		{
+			name:           "get my-dataplex-discover-metadata-tool",
+			toolName:       "my-dataplex-discover-metadata-tool",
+			expectedParams: []string{"resourcePath", "location"},
+		},
+		{
+			name:           "get my-dataplex-get-discovery-results-tool",
+			toolName:       "my-dataplex-get-discovery-results-tool",
+			expectedParams: []string{"scanId", "location"},
+		},
+		{
+			name:           "get my-dataplex-check-data-quality-tool",
+			toolName:       "my-dataplex-check-data-quality-tool",
+			expectedParams: []string{"resourcePath", "location", "specJSON", "publish"},
+		},
+		{
+			name:           "get my-dataplex-get-data-quality-results-tool",
+			toolName:       "my-dataplex-get-data-quality-results-tool",
+			expectedParams: []string{"scanId", "location"},
 		},
 	}
 
@@ -1097,7 +1234,7 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Success - Scan Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataScanId\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "name",
@@ -1106,7 +1243,7 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Success - Scan Found by Table Name",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"table_name\":\"%s\"}", fullTableName))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"resourcePath\":\"%s\"}", fullTableName))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "name",
@@ -1115,7 +1252,7 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Success with Authorization - Scan Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataScanId\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 200,
 			expectResult:   true,
 			wantContentKey: "name",
@@ -1124,7 +1261,7 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataScanId\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 			wantContentKey: "name",
@@ -1133,7 +1270,7 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"data_scan_id\":\"%s\"}", fullDataScanId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"dataScanId\":\"%s\"}", fullDataScanId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 			wantContentKey: "name",
@@ -1142,7 +1279,7 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 			name:           "Failure - Scan Not Found",
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-search-dq-scans-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"data_scan_id":"projects/pso-dev-ayala/locations/us-central1/dataScans/non-existent-scan"}`)),
+			requestBody:    bytes.NewBuffer([]byte(`{"dataScanId":"projects/pso-dev-ayala/locations/us-central1/dataScans/non-existent-scan"}`)),
 			wantStatusCode: 200,
 			expectResult:   false,
 			wantContentKey: "",
@@ -1201,6 +1338,231 @@ func runDataplexSearchDataQualityScansToolInvokeTest(t *testing.T, dataScanId st
 				if len(entries) != 0 {
 					t.Fatalf("expected 0 entries, but got %d", len(entries))
 				}
+			}
+		})
+	}
+}
+
+func runDataplexEnrichmentToolInvokeTest(t *testing.T, tableName string, datasetName string, bucketName string, client *dataplex.DataScanClient) {
+	ctx := context.Background()
+	tableResource := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetName, tableName)
+	bucketResource := fmt.Sprintf("//storage.googleapis.com/projects/%s/buckets/%s", DataplexProject, bucketName)
+
+	testCases := []struct {
+		name              string
+		generateToolName  string
+		generateReqBody   map[string]any
+		getResultToolName string
+	}{
+		{
+			name:             "Generate Data Profile Lifecycle",
+			generateToolName: "my-dataplex-generate-data-profile-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": tableResource,
+				"location":     "us-central1",
+				"publish":      false,
+			},
+			getResultToolName: "my-dataplex-get-data-profile-tool",
+		},
+		{
+			name:             "Generate Data Insights Lifecycle",
+			generateToolName: "my-dataplex-generate-data-insights-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": tableResource,
+				"location":     "us-central1",
+				"publish":      false,
+			},
+			getResultToolName: "my-dataplex-get-data-insights-tool",
+		},
+		{
+			name:             "Discover Metadata Lifecycle",
+			generateToolName: "my-dataplex-discover-metadata-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": bucketResource,
+				"location":     "us-central1",
+			},
+			getResultToolName: "my-dataplex-get-discovery-results-tool",
+		},
+		{
+			name:             "Check Data Quality Lifecycle",
+			generateToolName: "my-dataplex-check-data-quality-tool",
+			generateReqBody: map[string]any{
+				"resourcePath": tableResource,
+				"location":     "us-central1",
+				"specJSON":     `{"rules": [{"column": "col1", "dimension": "COMPLETENESS", "nonNullExpectation": {}}]}`,
+				"publish":      false,
+			},
+			getResultToolName: "my-dataplex-get-data-quality-results-tool",
+		},
+	}
+
+	getOpURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-operation-tool/invoke"
+	runStatusURL := "http://127.0.0.1:5000/api/tool/my-dataplex-get-run-status-tool/invoke"
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Step 1: Invoke Generate/Discover/Check Tool
+			generateURL := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.generateToolName)
+			reqBytes, _ := json.Marshal(tc.generateReqBody)
+			resp, err := http.Post(generateURL, "application/json", bytes.NewBuffer(reqBytes))
+			if err != nil {
+				t.Fatalf("failed to invoke %s: %v", tc.generateToolName, err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("%s response status got %d, want 200. Body: %s", tc.generateToolName, resp.StatusCode, string(body))
+			}
+
+			var invokeResult map[string]any
+			if err := json.NewDecoder(resp.Body).Decode(&invokeResult); err != nil {
+				t.Fatalf("failed to decode response from %s: %v", tc.generateToolName, err)
+			}
+			resultStr, ok := invokeResult["result"].(string)
+			if !ok || resultStr == "" {
+				t.Fatalf("expected string result from %s, got: %v", tc.generateToolName, invokeResult)
+			}
+
+			var resMap map[string]string
+			if err := json.Unmarshal([]byte(resultStr), &resMap); err != nil {
+				t.Fatalf("failed to unmarshal generate tool result: %v. Raw result: %s", err, resultStr)
+			}
+			operationName := resMap["operation_id"]
+			if operationName == "" {
+				t.Fatalf("operation_id was empty in generate tool result: %s", resultStr)
+			}
+			if !strings.Contains(operationName, "/operations/") {
+				t.Fatalf("expected operation name in result, got: %s", operationName)
+			}
+
+			// Step 2: Poll Operation Status
+			opReqBody := map[string]any{"operationName": operationName}
+			opReqBytes, _ := json.Marshal(opReqBody)
+
+			var scanID string
+			var opDone bool
+			for i := 0; i < 90; i++ {
+				opResp, err := http.Post(getOpURL, "application/json", bytes.NewBuffer(opReqBytes))
+				if err != nil {
+					t.Fatalf("failed to invoke get_operation: %v", err)
+				}
+				if opResp.StatusCode != http.StatusOK {
+					body, _ := io.ReadAll(opResp.Body)
+					opResp.Body.Close()
+					t.Fatalf("get_operation response status got %d, want 200. Body: %s", opResp.StatusCode, string(body))
+				}
+				var opResult map[string]any
+				if err := json.NewDecoder(opResp.Body).Decode(&opResult); err != nil {
+					opResp.Body.Close()
+					t.Fatalf("failed to decode response from get_operation: %v", err)
+				}
+				opResp.Body.Close()
+
+				opResultStr, ok := opResult["result"].(string)
+				if !ok {
+					t.Fatalf("get_operation returned invalid result field: %v", opResult)
+				}
+				var innerOp map[string]any
+				if err := json.Unmarshal([]byte(opResultStr), &innerOp); err != nil {
+					t.Fatalf("failed to unmarshal inner operation details: %v", err)
+				}
+
+				if done, _ := innerOp["done"].(bool); done {
+					opDone = true
+					responseMap, ok := innerOp["response"].(map[string]any)
+					if !ok {
+						t.Fatalf("operation done but response missing or invalid: %s", opResultStr)
+					}
+					name, ok := responseMap["name"].(string)
+					if !ok {
+						t.Fatalf("DataScan response missing name: %v", responseMap)
+					}
+					parts := strings.Split(name, "/")
+					scanID = parts[len(parts)-1]
+					break
+				}
+				time.Sleep(5 * time.Second)
+			}
+
+			if !opDone {
+				t.Fatalf("timed out waiting for scan template creation LRO to finish: %s", operationName)
+			}
+			if scanID == "" {
+				t.Fatalf("scanID was empty after operation completed")
+			}
+
+			// Ensure DataScan is cleaned up from Dataplex
+			defer func() {
+				parent := fmt.Sprintf("projects/%s/locations/us-central1", DataplexProject)
+				deleteReq := &dataplexpb.DeleteDataScanRequest{
+					Name: fmt.Sprintf("%s/dataScans/%s", parent, scanID),
+				}
+				op, err := client.DeleteDataScan(ctx, deleteReq)
+				if err != nil {
+					t.Logf("cleanup: failed to delete scan template %s: %v", scanID, err)
+					return
+				}
+				if err := op.Wait(ctx); err != nil {
+					t.Logf("cleanup: wait for delete scan template %s failed: %v", scanID, err)
+				}
+				t.Logf("cleanup: successfully deleted scan template %s", scanID)
+			}()
+
+			// Step 3: Get Run Status
+			runReqBody := map[string]any{"scanId": scanID, "location": "us-central1"}
+			runReqBytes, _ := json.Marshal(runReqBody)
+			runResp, err := http.Post(runStatusURL, "application/json", bytes.NewBuffer(runReqBytes))
+			if err != nil {
+				t.Fatalf("failed to invoke get_run_status: %v", err)
+			}
+			defer runResp.Body.Close()
+
+			if runResp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(runResp.Body)
+				t.Fatalf("get_run_status response status got %d, want 200. Body: %s", runResp.StatusCode, string(body))
+			}
+
+			var runResult map[string]any
+			if err := json.NewDecoder(runResp.Body).Decode(&runResult); err != nil {
+				t.Fatalf("failed to decode response from get_run_status: %v", err)
+			}
+			runResultStr, _ := runResult["result"].(string)
+
+			var jobStatus map[string]any
+			if err := json.Unmarshal([]byte(runResultStr), &jobStatus); err != nil {
+				t.Fatalf("get_run_status returned invalid JSON: %v. Raw: %s", err, runResultStr)
+			}
+
+			// Step 4: Get Profile / Insights / Discovery / Quality Results
+			getResultURL := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.getResultToolName)
+			resultReqBody := map[string]any{"scanId": scanID, "location": "us-central1"}
+			resultReqBytes, _ := json.Marshal(resultReqBody)
+			resultResp, err := http.Post(getResultURL, "application/json", bytes.NewBuffer(resultReqBytes))
+			if err != nil {
+				t.Fatalf("failed to invoke %s: %v", tc.getResultToolName, err)
+			}
+			defer resultResp.Body.Close()
+
+			if resultResp.StatusCode != http.StatusOK {
+				body, _ := io.ReadAll(resultResp.Body)
+				t.Fatalf("%s response status got %d, want 200. Body: %s", tc.getResultToolName, resultResp.StatusCode, string(body))
+			}
+
+			var innerResult map[string]any
+			if err := json.NewDecoder(resultResp.Body).Decode(&innerResult); err != nil {
+				t.Fatalf("failed to decode response from %s: %v", tc.getResultToolName, err)
+			}
+			innerResultStr, _ := innerResult["result"].(string)
+
+			var scanData map[string]any
+			if err := json.Unmarshal([]byte(innerResultStr), &scanData); err != nil {
+				t.Fatalf("%s returned invalid JSON: %v. Raw: %s", tc.getResultToolName, err, innerResultStr)
+			}
+
+			expectedScanName := fmt.Sprintf("projects/%s/locations/us-central1/dataScans/%s", DataplexProject, scanID)
+			if scanData["name"] != expectedScanName {
+				t.Fatalf("expected scan name %s, got: %s", expectedScanName, scanData["name"])
 			}
 		})
 	}
