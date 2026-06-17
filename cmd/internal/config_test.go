@@ -1860,6 +1860,10 @@ func TestPrebuiltTools(t *testing.T) {
 					Name:      "discovery",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
 				},
+				"enrich": tools.ToolsetConfig{
+					Name:      "enrich",
+					ToolNames: []string{"search_entries", "lookup_entry", "lookup_context", "generate_data_insights", "get_data_insights", "generate_data_profile", "get_data_profile", "discover_metadata", "get_discovery_results", "check_data_quality", "get_data_quality_results", "get_operation", "get_run_status"},
+				},
 			},
 		},
 		{

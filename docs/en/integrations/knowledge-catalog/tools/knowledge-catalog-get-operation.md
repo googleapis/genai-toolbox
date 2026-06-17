@@ -1,17 +1,20 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-get-operation"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Retrieves the status of an asynchronous Dataplex Long-Running Operation (LRO).
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-get-operation/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-get-operation` tool retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
+
+Poll this tool until the `done` field from the response is `true`. Once completed, the `response` field will contain the created DataScan resource, from which you can extract the `scanId` (the last part of the `name` field, e.g. `nq-doc-1234`) to pass to `get_run_status` and get results.
+WARNING: This only tracks the creation of the scan template, NOT the actual background execution.
+
 
 ## Compatible Sources
 
@@ -37,33 +40,29 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-get-operation` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| operationName | string | true | The full operation resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`). |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: get_operation
+type: dataplex-get-operation
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Check the status of a long-running scan template creation.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-get-operation".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

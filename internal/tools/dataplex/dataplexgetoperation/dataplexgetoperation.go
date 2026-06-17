@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexsearchentries
+package dataplexgetoperation
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "dataplex-search-entries"
+const resourceType string = "dataplex-get-operation"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	SearchEntries(context.Context, string, int, string, string) ([]*dataplexpb.SearchEntriesResult, error)
+	GetOperation(ctx context.Context, opName string) (map[string]any, error)
 }
 
 type Config struct {
@@ -53,7 +53,6 @@ type Config struct {
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
@@ -61,16 +60,9 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize() (tools.Tool, error) {
-	query := parameters.NewStringParameter("query",
-		"A query string for searching entries, following Dataplex search syntax. "+
-			"Supports logical operators (AND, OR, NOT) and grouping. "+
-			"For example, to find a table that might have been renamed, you could use 'type:table (name:books OR fiction)'. "+
-			"This can be more efficient than multiple separate calls."+
-			"Warning: Performing broad searches without specific filters (e.g., type:table) can be slow and consume significant resources. When performing exploratory searches, always use the pageSize parameter to limit the number of results returned.")
-	scope := parameters.NewStringParameterWithDefault("scope", "", "Optional. A scope limits the search space to a particular project or organization. It must be in the format: organizations/<org_id> or projects/<project_id> or projects/<project_number>.")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Optional. Number of results in the search page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Optional. Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	allParameters := parameters.Parameters{query, scope, pageSize, orderBy}
+	operationName := parameters.NewStringParameter("operationName", "The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{project}/locations/{location}/operations/{operation_id}.")
+
+	allParameters := parameters.Parameters{operationName}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -82,7 +74,6 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	}, nil
 }
 
-// validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
@@ -98,26 +89,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
+
 	paramsMap := params.AsMap()
-	query, ok := paramsMap["query"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'query' parameter: %v", paramsMap["query"]), nil)
+	operationName, _ := paramsMap["operationName"].(string)
+
+	if operationName == "" {
+		return nil, util.NewAgentError("operationName parameter is required", nil)
 	}
-	pageSize, ok := paramsMap["pageSize"].(int)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'pageSize' parameter: %v", paramsMap["pageSize"]), nil)
-	}
-	orderBy, ok := paramsMap["orderBy"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
-	}
-	scope, ok := paramsMap["scope"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'scope' parameter: %v", paramsMap["scope"]), nil)
-	}
-	resp, err := source.SearchEntries(ctx, query, pageSize, orderBy, scope)
+
+	resp, err := source.GetOperation(ctx, operationName)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
-	return resp, nil
+
+	jsonBytes, err := json.Marshal(resp)
+	if err != nil {
+		return nil, util.NewClientServerError("failed to marshal response to JSON", http.StatusInternalServerError, err)
+	}
+
+	return json.RawMessage(jsonBytes), nil
 }

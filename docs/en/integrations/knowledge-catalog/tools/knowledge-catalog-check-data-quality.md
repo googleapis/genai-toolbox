@@ -1,17 +1,19 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-check-data-quality"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Creates a new Dataplex Data Quality scan template for a specified BigQuery table and triggers the initial asynchronous execution run using custom defined quality rules.
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-check-data-quality/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-check-data-quality` tool triggers a new Data Quality scan to evaluate rules (e.g. non-null, value range limits, custom SQL assertions) against table rows.
+
+Since scan template creation is asynchronous, this tool returns an LRO name. You must poll `dataplex-get-operation` with this ID until it is done, extract the `scanId`, and poll `dataplex-get-run-status` with the `scanId` until the job is `SUCCEEDED` before calling `dataplex-get-data-quality-results` to fetch results.
+
 
 ## Compatible Sources
 
@@ -37,33 +39,32 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-check-data-quality` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the quality results directly to the Dataplex Universal Catalog. Defaults to false. |
+| specJSON | string | true | A raw JSON string defining the quality checks rules (e.g. `{"rules": [{"column": "age", "nonNullExpectation": {}}]}`, maps directly to `dataplexpb.DataQualitySpec`). |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: check_data_quality
+type: dataplex-check-data-quality
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Trigger a new data quality scan.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-check-data-quality".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
