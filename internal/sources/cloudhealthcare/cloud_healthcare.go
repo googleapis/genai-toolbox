@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -289,7 +290,30 @@ func (s *Source) getService(tokenStr string) (*healthcare.Service, error) {
 	return svc, nil
 }
 
-func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, error) {
+var allowedFHIRHosts = map[string]struct{}{
+	"healthcare.googleapis.com":      {},
+	"healthcare.mtls.googleapis.com": {},
+}
+
+func validateFHIRPageURL(pageURL string) error {
+	parsed, err := url.Parse(pageURL)
+	if err != nil {
+		return fmt.Errorf("invalid pageURL %q: %w", pageURL, err)
+	}
+	if parsed.Scheme != "https" {
+		return fmt.Errorf("pageURL must use the https scheme, got %q", parsed.Scheme)
+	}
+	if _, ok := allowedFHIRHosts[parsed.Hostname()]; !ok {
+		return fmt.Errorf("pageURL host %q is not a Cloud Healthcare API endpoint", parsed.Hostname())
+	}
+	return nil
+}
+
+func (s *Source) FHIRFetchPage(ctx context.Context, pageURL, tokenStr string) (any, error) {
+	if err := validateFHIRPageURL(pageURL); err != nil {
+		return nil, err
+	}
+
 	var httpClient *http.Client
 	if s.UseClientAuthorization() {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
@@ -303,8 +327,11 @@ func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, 
 			return nil, fmt.Errorf("failed to create default http client: %w", err)
 		}
 	}
+	httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return validateFHIRPageURL(req.URL.String())
+	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", pageURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
 	}
@@ -312,7 +339,7 @@ func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, 
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get fhir page from %q: %w", url, err)
+		return nil, fmt.Errorf("failed to get fhir page from %q: %w", pageURL, err)
 	}
 	defer resp.Body.Close()
 	return parseResults(resp)
