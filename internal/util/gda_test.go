@@ -103,7 +103,7 @@ func TestGetGDAEndpoint(t *testing.T) {
 
 func TestNewGDAClient(t *testing.T) {
 	ctx := context.Background()
-	
+
 	// Should be able to create a client with no options (uses ADC)
 	client, err := NewGDAClient(ctx, option.WithoutAuthentication())
 	if err != nil {

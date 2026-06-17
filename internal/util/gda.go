@@ -79,4 +79,3 @@ func getMTLSMode() string {
 	}
 	return strings.ToLower(mode)
 }
-
