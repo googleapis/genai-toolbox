@@ -36,7 +36,7 @@ func PersistentFlags(parentCmd *cobra.Command, opts *ToolboxOptions) {
 	persistentFlags.StringVar(&opts.Cfg.TelemetryGCPProject, "telemetry-gcp-project", "", "Google Cloud project ID to use for telemetry-gcp. Defaults to `GOOGLE_CLOUD_PROJECT` if not set.")
 	persistentFlags.StringVar(&opts.Cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	persistentFlags.StringVar(&opts.Cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	persistentFlags.BoolVar(&opts.Cfg.SQLCommenter, "sql-commenter", false, "Enable appending SQLCommenter-format comments to SQL statements.")
+	persistentFlags.BoolVar(&opts.Cfg.SQLCommenter, "sql-commenter", false, "Enable prepending SQLCommenter-format comments to SQL statements.")
 	persistentFlags.StringSliceVar(&opts.Cfg.UserAgentMetadata, "user-agent-metadata", []string{}, "Appends additional metadata to the User-Agent.")
 }
 
