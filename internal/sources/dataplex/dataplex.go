@@ -17,6 +17,7 @@ package dataplex
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
@@ -315,10 +316,11 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 }
 
 type DataProductSummary struct {
-	Name        string   `json:"name"`
-	DisplayName string   `json:"displayName"`
-	OwnerEmails []string `json:"ownerEmails"`
-	AssetCount  int32    `json:"assetCount"`
+	LocationID    string   `json:"locationId"`
+	DataProductID string   `json:"dataProductId"`
+	DisplayName   string   `json:"displayName"`
+	OwnerEmails   []string `json:"ownerEmails"`
+	AssetCount    int32    `json:"assetCount"`
 }
 
 func (s *Source) ListDataProducts(
@@ -355,11 +357,18 @@ func (s *Source) ListDataProducts(
 			}
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
+		parts := strings.Split(dp.GetName(), "/")
+		var locationId, dataProductId string
+		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+			locationId = parts[3]
+			dataProductId = parts[5]
+		}
 		results = append(results, &DataProductSummary{
-			Name:        dp.GetName(),
-			DisplayName: dp.GetDisplayName(),
-			OwnerEmails: dp.GetOwnerEmails(),
-			AssetCount:  dp.GetAssetCount(),
+			LocationID:    locationId,
+			DataProductID: dataProductId,
+			DisplayName:   dp.GetDisplayName(),
+			OwnerEmails:   dp.GetOwnerEmails(),
+			AssetCount:    dp.GetAssetCount(),
 		})
 	}
 	return results, nil
@@ -374,19 +383,21 @@ type AccessGroup struct {
 }
 
 type DataProduct struct {
-	Name         string            `json:"name"`
-	DisplayName  string            `json:"displayName"`
-	Description  string            `json:"description"`
-	OwnerEmails  []string          `json:"ownerEmails"`
-	AssetCount   int32             `json:"assetCount"`
-	Labels       map[string]string `json:"labels"`
-	AccessGroups []AccessGroup     `json:"accessGroups"`
+	LocationID    string            `json:"locationId"`
+	DataProductID string            `json:"dataProductId"`
+	DisplayName   string            `json:"displayName"`
+	Description   string            `json:"description"`
+	OwnerEmails   []string          `json:"ownerEmails"`
+	AssetCount    int32             `json:"assetCount"`
+	Labels        map[string]string `json:"labels"`
+	AccessGroups  []AccessGroup     `json:"accessGroups"`
 }
 
-func (s *Source) GetDataProduct(ctx context.Context, name string) (*DataProduct, error) {
+func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProductId string) (*DataProduct, error) {
 	if s.GetDataProductClient() == nil {
 		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
 	req := &dataplexpb.GetDataProductRequest{
 		Name: name,
 	}
@@ -406,14 +417,22 @@ func (s *Source) GetDataProduct(ctx context.Context, name string) (*DataProduct,
 		})
 	}
 
+	parts := strings.Split(resp.GetName(), "/")
+	var locId, prodId string
+	if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+		locId = parts[3]
+		prodId = parts[5]
+	}
+
 	return &DataProduct{
-		Name:         resp.GetName(),
-		DisplayName:  resp.GetDisplayName(),
-		Description:  resp.GetDescription(),
-		OwnerEmails:  resp.GetOwnerEmails(),
-		AssetCount:   resp.GetAssetCount(),
-		Labels:       resp.GetLabels(),
-		AccessGroups: accessGroups,
+		LocationID:    locId,
+		DataProductID: prodId,
+		DisplayName:   resp.GetDisplayName(),
+		Description:   resp.GetDescription(),
+		OwnerEmails:   resp.GetOwnerEmails(),
+		AssetCount:    resp.GetAssetCount(),
+		Labels:        resp.GetLabels(),
+		AccessGroups:  accessGroups,
 	}, nil
 }
 

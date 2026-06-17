@@ -12,9 +12,10 @@ aliases:
 
 A `dataplex-get-data-product` tool retrieves detailed metadata for a specific Data Product in Knowledge Catalog (formerly known as Dataplex).
 
-`dataplex-get-data-product` requires the following parameter:
+`dataplex-get-data-product` requires the following parameters:
 
-- `name` - The resource name of the Data Product in the following form: `projects/{project}/locations/{location}/dataProducts/{dataProduct}`.
+- `locationId` - The location ID (e.g., `us`, `us-central1`) where the Data Product is located.
+- `dataProductId` - The unique ID of the Data Product.
 
 ## Compatible Sources
 

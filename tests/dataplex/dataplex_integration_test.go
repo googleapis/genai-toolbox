@@ -284,7 +284,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		},
 	}
 
-	time.Sleep(1*time.Minute) // wait for table and aspect type to be ingested
+	time.Sleep(1 * time.Minute) // wait for table and aspect type to be ingested
 	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
 	defer func() {
 		var wg sync.WaitGroup
@@ -663,7 +663,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-get-data-product-tool",
 			toolName:       "my-dataplex-get-data-product-tool",
-			expectedParams: []string{"name"},
+			expectedParams: []string{"locationId", "dataProductId"},
 		},
 		{
 			name:           "get my-dataplex-list-data-assets-tool",
@@ -1422,36 +1422,35 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	fullDataProductId1 := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId1)
-
 	testCases := []struct {
-		name           string
-		api            string
-		requestHeader  map[string]string
-		requestBody    io.Reader
-		wantStatusCode int
-		expectResult   bool
-		wantContentKey string
-		wantValue      string
+		name              string
+		api               string
+		requestHeader     map[string]string
+		requestBody       io.Reader
+		wantStatusCode    int
+		expectResult      bool
+		wantLocationID    string
+		wantDataProductID string
 	}{
 		{
-			name:           "Success - Filter Extracts One Product (Authorized)",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-products-tool/invoke",
-			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"filter\":\"display_name:\\\"%s\\\"\"}", dataProductId1))),
-			wantStatusCode: 200,
-			expectResult:   true,
-			wantContentKey: "name",
-			wantValue:      fullDataProductId1,
+			name:              "Success - Filter Extracts One Product (Authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-products-tool/invoke",
+			requestHeader:     map[string]string{"my-google-auth_token": idToken},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"filter\":\"display_name:\\\"%s\\\"\"}", dataProductId1))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId1,
 		},
 		{
-			name:           "Success - PageSize Limits to One (Un-authorized)",
-			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-products-tool/invoke",
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"pageSize\":1, \"filter\":\"display_name:\\\"%s\\\" OR display_name:\\\"%s\\\"\"}", dataProductId1, dataProductId2))),
-			wantStatusCode: 200,
-			expectResult:   true,
-			wantContentKey: "name",
+			name:              "Success - PageSize Limits to One (Un-authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-products-tool/invoke",
+			requestHeader:     map[string]string{},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"pageSize\":1, \"filter\":\"display_name:\\\"%s\\\" OR display_name:\\\"%s\\\"\"}", dataProductId1, dataProductId2))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: "",
 		},
 		{
 			name:           "Failure - Invalid Authorization Token",
@@ -1512,12 +1511,19 @@ func runDataplexListDataProductsToolInvokeTest(t *testing.T, dataProductId1 stri
 			if !ok {
 				t.Fatalf("expected entry to be a map, got %T", entries[0])
 			}
-			val, ok := entry[tc.wantContentKey].(string)
+			locID, ok := entry["locationId"].(string)
 			if !ok {
-				t.Fatalf("expected entry to have key '%s' as string, but it was not found or not a string in %v", tc.wantContentKey, entry)
+				t.Fatalf("expected entry to have key 'locationId' as string, but it was not found or not a string in %v", entry)
 			}
-			if tc.wantValue != "" && val != tc.wantValue {
-				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
+			if tc.wantLocationID != "" && locID != tc.wantLocationID {
+				t.Fatalf("expected locationId to be %q, got %q", tc.wantLocationID, locID)
+			}
+			prodID, ok := entry["dataProductId"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'dataProductId' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantDataProductID != "" && prodID != tc.wantDataProductID {
+				t.Fatalf("expected dataProductId to be %q, got %q", tc.wantDataProductID, prodID)
 			}
 			// Assert raw SDK fields are cleaned/removed
 			if _, ok := entry["uid"]; ok {
@@ -1539,43 +1545,41 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	fullDataProductId := fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId)
-
 	testCases := []struct {
-		name           string
-		api            string
-		requestHeader  map[string]string
-		requestBody    io.Reader
-		wantStatusCode int
-		expectResult   bool
-		wantContentKey string
-		wantValue      string
+		name              string
+		api               string
+		requestHeader     map[string]string
+		requestBody       io.Reader
+		wantStatusCode    int
+		expectResult      bool
+		wantLocationID    string
+		wantDataProductID string
 	}{
 		{
-			name:           "Success - Get Product (Authorized)",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
-			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
-			wantStatusCode: 200,
-			expectResult:   true,
-			wantContentKey: "name",
-			wantValue:      fullDataProductId,
+			name:              "Success - Get Product (Authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
+			requestHeader:     map[string]string{"my-google-auth_token": idToken},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId,
 		},
 		{
-			name:           "Success - Get Product (Un-authorized)",
-			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
-			wantStatusCode: 200,
-			expectResult:   true,
-			wantContentKey: "name",
-			wantValue:      fullDataProductId,
+			name:              "Success - Get Product (Un-authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
+			requestHeader:     map[string]string{},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId,
 		},
 		{
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 		},
@@ -1583,16 +1587,8 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-product-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"%s\"}", fullDataProductId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
 			wantStatusCode: 401,
-			expectResult:   false,
-		},
-		{
-			name:           "Failure - Invalid Name Format",
-			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-product-tool/invoke",
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"invalid-name-%s\"}", dataProductId))),
-			wantStatusCode: 200, // Tool validation returns AgentError which maps to 200
 			expectResult:   false,
 		},
 	}
@@ -1631,12 +1627,19 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 				t.Fatalf("error unmarshalling result string: %v", err)
 			}
 
-			val, ok := entry[tc.wantContentKey].(string)
+			locID, ok := entry["locationId"].(string)
 			if !ok {
-				t.Fatalf("expected entry to have key '%s' as string, but it was not found or not a string in %v", tc.wantContentKey, entry)
+				t.Fatalf("expected entry to have key 'locationId' as string, but it was not found or not a string in %v", entry)
 			}
-			if tc.wantValue != "" && val != tc.wantValue {
-				t.Fatalf("expected entry %s to be %q, got %q", tc.wantContentKey, tc.wantValue, val)
+			if tc.wantLocationID != "" && locID != tc.wantLocationID {
+				t.Fatalf("expected locationId to be %q, got %q", tc.wantLocationID, locID)
+			}
+			prodID, ok := entry["dataProductId"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'dataProductId' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantDataProductID != "" && prodID != tc.wantDataProductID {
+				t.Fatalf("expected dataProductId to be %q, got %q", tc.wantDataProductID, prodID)
 			}
 			// Additionally assert key fields are populated
 			if entry["displayName"] == "" {
