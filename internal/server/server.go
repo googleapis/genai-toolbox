@@ -74,6 +74,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]prompts.Promptset,
 	error,
 ) {
+	if cfg.EnableAPI {
+		for _, sc := range cfg.AuthServiceConfigs {
+			if sc.IsMCPEnabled() {
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
+			}
+		}
+	}
+
 	metadataStr := cfg.Version
 	if len(cfg.UserAgentMetadata) > 0 {
 		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
@@ -140,13 +148,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		authServicesMap[name] = a
 	}
 
-	for _, a := range authServicesMap {
-		if mSvc, ok := a.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
-			if cfg.EnableAPI {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
-			}
-		}
-	}
+
 
 	authServiceNames := make([]string, 0, len(authServicesMap))
 	for name := range authServicesMap {
