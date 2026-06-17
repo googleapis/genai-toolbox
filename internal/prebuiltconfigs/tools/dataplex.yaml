@@ -47,6 +47,181 @@ type: dataplex-search-dq-scans
 source: dataplex-source
 description: Use this tool to search for data quality scans in Dataplex.
 ---
+kind: tool
+name: generate_data_insights
+type: dataplex-generate-data-insights
+source: dataplex-source
+description: >-
+  Creates a new Dataplex Data Documentation scan template for the specified BigQuery
+  resource and triggers the initial asynchronous execution run. Since scan template
+  creation is asynchronous, this tool returns a Long-Running Operation (LRO) resource name
+  (format: projects/{project}/locations/{location}/operations/{operation_id}).
+  Once the scan template creation LRO is successfully completed, the backend automatically
+  spawns a background execution job (DataScanJob) to generate the descriptions and sample queries.
+
+  To successfully orchestrate the metadata enrichment workflow, the agent MUST follow these steps:
+  1. Capture the 'operation_id' (the 'name' field) from the response of this tool.
+  2. Poll the 'get_operation' tool using this 'operation_id' until 'done' is true and it succeeds.
+  3. From the completed operation's response, extract the created DataScan ID ('scanId', e.g. 'nq-doc-1234').
+  4. Use the 'get_run_status' tool with this 'scanId' to monitor the background execution job. Poll
+     until the returned job state is 'SUCCEEDED'.
+  5. Once the job is successful, call the 'get_data_insights' tool with the 'scanId' to fetch
+     the final generated SQL queries and descriptions.
+---
+kind: tool
+name: get_data_insights
+type: dataplex-get-data-insights
+source: dataplex-source
+description: >-
+  Retrieves the final generated data insights (descriptions, schema relationships,
+  sample SQL queries) for a completed scan. WARNING: You must verify the execution
+  run has succeeded (via get_run_status tool) before calling this tool, otherwise the
+  insights will be empty. CRITICAL: Access the results ONLY via the nested public GA
+  fields 'dataDocumentationResult.datasetResult' (for datasets) or
+  'dataDocumentationResult.tableResult' (for tables). The top-level fields (like
+  'dataDocumentationResult.queries') are restricted and will be empty.
+---
+kind: tool
+name: get_operation
+type: dataplex-get-operation
+source: dataplex-source
+description: >-
+  Retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
+  Poll this tool until the 'done' field from the tool's response is true. Once completed, the 'response' field will
+  contain the created DataScan resource, from which you can extract the 'scanId'
+  (the last part of the 'name' field, e.g. 'nq-doc-1234') to pass to get_run_status
+  and get_data_insights. WARNING: This only tracks the creation of the scan, NOT
+  its execution.
+---
+kind: tool
+name: get_run_status
+type: dataplex-get-run-status
+source: dataplex-source
+description: >-
+  Retrieves the execution status of the latest background job run (DataScanJob)
+  for the specified Dataplex scan. Use this tool to poll the progress of the
+  insights generation. Wait until the returned 'state' from the tool's response is 'SUCCEEDED' before
+  calling get_data_insights. Typical execution takes 2-5 minutes. If the state
+  is 'FAILED', check the error details.
+---
+kind: tool
+name: generate_data_profile
+type: dataplex-generate-data-profile
+source: dataplex-source
+description: >-
+  Creates a new Dataplex Data Profile scan template for the specified BigQuery table
+  and triggers the initial asynchronous execution run. This scan automatically analyzes
+  the table columns to compute statistical profiles (min, max, mean, standard deviation,
+  null ratios, distinct ratios, quantiles, and top N most frequent values). These profiles
+  help users and agents understand the distribution, shape, and cleanliness of their data.
+
+  Since scan template creation is asynchronous, this tool returns a Long-Running Operation (LRO)
+  resource name (format: projects/{project}/locations/{location}/operations/{operation_id}).
+  Once the scan template creation LRO is successfully completed, the backend automatically
+  spawns a background execution job (DataScanJob) to generate the profile statistics.
+
+  To successfully orchestrate the data profiling workflow, the agent MUST follow these steps:
+  1. Capture the 'operation_id' (the 'name' field) from the response of this tool.
+  2. Poll the 'get_operation' tool using this 'operation_id' until the 'done' field from the tool's response is true.
+  3. From the completed operation's response, extract the created DataScan ID ('scanId', e.g. 'nq-prof-1234').
+  4. Use the 'get_run_status' tool with this 'scanId' to monitor the background execution job. Poll
+     until the returned 'state' from the tool's response is 'SUCCEEDED'.
+  5. Once the job is successful, call the 'get_data_profile' tool with the 'scanId' to fetch
+     the final generated profile results.
+---
+kind: tool
+name: get_data_profile
+type: dataplex-get-data-profile
+source: dataplex-source
+description: >-
+  Retrieves the final generated data profile results (overall row counts, column-level statistics,
+  null ratios, distinct ratios, cardinality, quartiles, and top N frequent values) for a completed
+  profiling scan. This data enables agents and developers to perform data quality audits, detect anomalies,
+  and understand schema distributions.
+
+  WARNING: You must verify the execution run has succeeded (via get_run_status) before calling this tool,
+  otherwise the results will be empty.
+  CRITICAL: Access the results via the nested public fields 'dataProfileResult.profile.fields' inside the returned DataScan.
+---
+kind: tool
+name: discover_metadata
+type: dataplex-discover-metadata
+source: dataplex-source
+description: >-
+  Creates a new Dataplex Data Discovery scan template for the specified Cloud Storage bucket
+  and triggers the initial asynchronous execution run. This scan automatically crawls the files in GCS,
+  infers their schemas, formats (e.g. CSV, JSON, Parquet), and partitions, and automatically registers
+  and publishes them as structured external tables (or BigLake tables) in BigQuery and as metadata assets
+  in the Dataplex Universal Catalog. This enables raw GCS files to be queryable via standard BigQuery SQL immediately.
+
+  Since scan template creation is asynchronous, this tool returns a Long-Running Operation (LRO)
+  resource name (format: projects/{project}/locations/{location}/operations/{operation_id}).
+  Once the scan template creation LRO is successfully completed, the backend automatically
+  spawns a background execution job (DataScanJob) to discover and publish the metadata.
+
+  To successfully orchestrate the data discovery workflow, the agent MUST follow these steps:
+  1. Capture the 'operation_id' (the 'name' field) from the response of this tool.
+  2. Poll the 'get_operation' tool using this 'operation_id' until the 'done' field from the tool's response is true.
+  3. From the completed operation's response, extract the created DataScan ID ('scanId', e.g. 'nq-disc-1234').
+  4. Use the 'get_run_status' tool with this 'scanId' to monitor the background execution job. Poll
+     until the returned 'state' from the tool's response is 'SUCCEEDED'.
+  5. Once the job is successful, call the 'get_discovery_results' tool with the 'scanId' to fetch
+     the final discovery results and publishing statistics.
+---
+kind: tool
+name: get_discovery_results
+type: dataplex-get-discovery-results
+source: dataplex-source
+description: >-
+  Retrieves the final generated data discovery results (publishing metadata showing exactly which
+  BigQuery dataset the discovered GCS tables were registered to, along with audit statistics like
+  scanned GCS file counts, total processed bytes, and the number of tables created, updated, or deleted
+  in BigQuery) for a completed discovery scan.
+
+  WARNING: You must verify the execution run has succeeded (via get_run_status) before calling this tool,
+  otherwise the results will be empty.
+  CRITICAL: Access the results via the nested public fields 'dataDiscoveryResult.bigqueryPublishing'
+  and 'dataDiscoveryResult.scanStatistics' inside the returned DataScan.
+---
+kind: tool
+name: check_data_quality
+type: dataplex-check-data-quality
+source: dataplex-source
+description: >-
+  Creates a new Dataplex Data Quality scan template for the specified BigQuery table
+  and triggers the initial asynchronous execution run. This scan evaluates custom defined quality rules
+  (such as non-null completeness checks, value range limits, pattern matches, or custom SQL assertions)
+  against your data to verify its integrity and correctness.
+
+  Since scan template creation is asynchronous, this tool returns a Long-Running Operation (LRO)
+  resource name (format: projects/{project}/locations/{location}/operations/{operation_id}).
+  Once the scan template creation LRO is successfully completed, the backend automatically
+  spawns a background execution job (DataScanJob) to run the quality rules.
+
+  To successfully orchestrate the data quality workflow, the agent MUST follow these steps:
+  1. Capture the 'operation_id' (the 'name' field) from the response of this tool.
+  2. Poll the 'get_operation' tool using this 'operation_id' until the 'done' field from the tool's response is true.
+  3. From the completed operation's response, extract the created DataScan ID ('scanId', e.g. 'nq-dq-1234').
+  4. Use the 'get_run_status' tool with this 'scanId' to monitor the background execution job. Poll
+     until the returned 'state' from the tool's response is 'SUCCEEDED'.
+  5. Once the job is successful, call the 'get_data_quality_results' tool with the 'scanId' to fetch
+     the final quality checks scores and results.
+---
+kind: tool
+name: get_data_quality_results
+type: dataplex-get-data-quality-results
+source: dataplex-source
+description: >-
+  Retrieves the final generated data quality results (overall rule passing status, overall score,
+  dimension-level scores like COMPLETENESS, column-level scores, and rule evaluation details)
+  for a completed data quality scan. It also returns the exact SQL query that can be executed to
+  retrieve the specific rows that failed any of the quality checks, enabling immediate debugging.
+
+  WARNING: You must verify the execution run has succeeded (via get_run_status) before calling this tool,
+  otherwise the results will be empty.
+  CRITICAL: Access the results via the nested public fields 'dataQualityResult' inside the returned DataScan.
+  Note that the 'failingRowsQuery' field inside the rules result is extremely useful for retrieving failed rows.
+---
 kind: toolset
 name: discovery
 tools:
@@ -55,3 +230,20 @@ tools:
 - search_aspect_types
 - lookup_context
 - search_dq_scans
+---
+kind: toolset
+name: enrich
+tools:
+- search_entries
+- lookup_entry
+- lookup_context
+- generate_data_insights
+- get_data_insights
+- generate_data_profile
+- get_data_profile
+- discover_metadata
+- get_discovery_results
+- check_data_quality
+- get_data_quality_results
+- get_operation
+- get_run_status

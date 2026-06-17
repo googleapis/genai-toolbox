@@ -1,17 +1,19 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-discover-metadata"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Creates a new Dataplex Data Discovery scan template for a specified Cloud Storage bucket and triggers the initial asynchronous execution run to crawl files, infer schemas, and register tables in BigQuery.
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-discover-metadata/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-discover-metadata` tool triggers a new Data Discovery scan to automatically crawl GCS directories, infer schemas/partitions, and publish them as BigQuery tables.
+
+Since scan template creation is asynchronous, this tool returns an LRO name. You must poll `dataplex-get-operation` with this ID until it is done, extract the `scanId`, and poll `dataplex-get-run-status` with the `scanId` until the job is `SUCCEEDED` before calling `dataplex-get-discovery-results` to fetch results.
+
 
 ## Compatible Sources
 
@@ -37,33 +39,30 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-discover-metadata` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| resourcePath | string | true | The resource path of the target Cloud Storage bucket (format: `//storage.googleapis.com/{bucket_name}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: discover_metadata
+type: dataplex-discover-metadata
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Trigger a new metadata discovery scan.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-discover-metadata".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

@@ -1,17 +1,19 @@
 ---
-title: "dataplex-search-entries"
+title: "dataplex-get-run-status"
 type: docs
 weight: 1
 description: >
-  A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+  Retrieves the execution status of the background job run (DataScanJob) for a specified Dataplex scan.
 aliases:
-  - /integrations/dataplex/tools/dataplex-search-entries/
+  - /integrations/dataplex/tools/dataplex-get-run-status/
 ---
 
 ## About
 
-A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
-tables, views, models) that matches given user query.
+A `dataplex-get-run-status` tool retrieves the execution status of the latest background job run for a specified scan.
+
+Use this tool to poll the progress of the insights, profiling, discovery, or quality scan execution. Wait until the returned `state` is `SUCCEEDED` before fetching results. Typical execution takes 2-5 minutes. If the state is `FAILED`, check the error details.
+
 
 ## Compatible Sources
 
@@ -37,33 +39,31 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
-[dataplex-docs]: https://cloud.google.com/dataplex
 
 ## Parameters
 
-The `dataplex-search-entries` tool accepts the following parameters:
+The `dataplex-get-run-status` tool accepts the following parameters:
 
 | **field** | **type** | **required** | **description** |
 | --------- | :------: | :----------: | --------------- |
-| query | string | true | The search query string to filter entries. |
-| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
-| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
-| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
+| scanId | string | true | The unique ID of the Dataplex scan template (e.g. `nq-prof-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+| jobId | string | false | Optional. A specific job run ID. If omitted, returns status for the latest job run. |
 
 ## Example
 
 ```yaml
 kind: tool
-name: search_entries
-type: dataplex-search-entries
+name: get_run_status
+type: dataplex-get-run-status
 source: my-dataplex-source
-description: Use this tool to get all the entries based on the provided query.
+description: Monitor the background execution run of a Dataplex scan.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| type        |  string  |     true     | Must be "dataplex-get-run-status".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
