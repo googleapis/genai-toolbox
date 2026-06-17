@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/mcp-toolbox/internal/sources/postgres"
@@ -76,8 +75,6 @@ var _ compatibleSource = &alloydbpg.Source{}
 var _ compatibleSource = &cloudsqlpg.Source{}
 var _ compatibleSource = &postgres.Source{}
 
-var compatibleSources = [...]string{alloydbpg.SourceType, cloudsqlpg.SourceType, postgres.SourceType}
-
 type Config struct {
 	tools.ConfigBase `yaml:",inline"`
 	Type             string                 `yaml:"type" validate:"required"`
@@ -91,19 +88,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be one of %q", resourceType, compatibleSources)
-	}
-
+func (cfg Config) Initialize() (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithRequired("role_name", "Optional: The owner name to filter the stored procedures by. Defaults to NULL.", false),
 		parameters.NewStringParameterWithRequired("schema_name", "Optional: The schema name to filter the stored procedures by. Defaults to NULL.", false),
@@ -121,7 +106,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
-		pool: s.PostgresPool(),
 	}, nil
 }
 
@@ -129,10 +113,14 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	tools.BaseTool[Config]
-	pool *pgxpool.Pool
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.StaticParameters, paramsMap)
@@ -141,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	sliceParams := newParams.AsSlice()
 
-	results, err := t.pool.Query(ctx, listStoredProcedure, sliceParams...)
+	results, err := source.PostgresPool().Query(ctx, listStoredProcedure, sliceParams...)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}

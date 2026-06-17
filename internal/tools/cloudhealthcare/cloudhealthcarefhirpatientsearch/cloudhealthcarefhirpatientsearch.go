@@ -86,55 +86,18 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault(activeKey, "", "Whether the patient record is active. Use true or false"),
-		parameters.NewStringParameterWithDefault(cityKey, "", "The city of the patient's address"),
-		parameters.NewStringParameterWithDefault(countryKey, "", "The country of the patient's address"),
-		parameters.NewStringParameterWithDefault(postalCodeKey, "", "The postal code of the patient's address"),
-		parameters.NewStringParameterWithDefault(stateKey, "", "The state of the patient's address"),
-		parameters.NewStringParameterWithDefault(addressSubstringKey, "", "A substring to search for in any address field"),
-		parameters.NewStringParameterWithDefault(birthDateRangeKey, "", "A date range for the patient's birthdate in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
-		parameters.NewStringParameterWithDefault(deathDateRangeKey, "", "A date range for the patient's death date in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
-		parameters.NewStringParameterWithDefault(deceasedKey, "", "Whether the patient is deceased. Use true or false"),
-		parameters.NewStringParameterWithDefault(emailKey, "", "The patient's email address"),
-		parameters.NewStringParameterWithDefault(genderKey, "", "The patient's gender. Must be one of 'male', 'female', 'other', or 'unknown'"),
-		parameters.NewStringParameterWithDefault(addressUseKey, "", "The use of the patient's address. Must be one of 'home', 'work', 'temp', 'old', or 'billing'"),
-		parameters.NewStringParameterWithDefault(nameKey, "", "The patient's name. Can be a family name, given name, or both"),
-		parameters.NewStringParameterWithDefault(givenNameKey, "", "A portion of the given name of the patient"),
-		parameters.NewStringParameterWithDefault(familyNameKey, "", "A portion of the family name of the patient"),
-		parameters.NewStringParameterWithDefault(phoneKey, "", "The patient's phone number"),
-		parameters.NewStringParameterWithDefault(languageKey, "", "The patient's preferred language. Must be a valid BCP-47 code (e.g. 'en-US', 'es')"),
-		parameters.NewStringParameterWithDefault(identifierKey, "", "An identifier for the patient"),
-		parameters.NewBooleanParameterWithDefault(summaryKey, true, "Requests the server to return a subset of the resource. Return a limited subset of elements from the resource. Enabled by default to reduce response size. Use get-fhir-resource tool to get full resource details (preferred) or set to false to disable."),
-	}
-
-	if len(s.AllowedFHIRStores()) != 1 {
-		allParameters = append(allParameters, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
-	}
-
+	params := buildParams(false)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			allParameters,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -248,4 +211,58 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
+}
+
+// buildParams builds the tool's parameters. When the source pins exactly one store
+// (singleStore), the store param is omitted; otherwise it is included.
+func buildParams(singleStore bool) parameters.Parameters {
+	params := parameters.Parameters{
+		parameters.NewStringParameterWithDefault(activeKey, "", "Whether the patient record is active. Use true or false"),
+		parameters.NewStringParameterWithDefault(cityKey, "", "The city of the patient's address"),
+		parameters.NewStringParameterWithDefault(countryKey, "", "The country of the patient's address"),
+		parameters.NewStringParameterWithDefault(postalCodeKey, "", "The postal code of the patient's address"),
+		parameters.NewStringParameterWithDefault(stateKey, "", "The state of the patient's address"),
+		parameters.NewStringParameterWithDefault(addressSubstringKey, "", "A substring to search for in any address field"),
+		parameters.NewStringParameterWithDefault(birthDateRangeKey, "", "A date range for the patient's birthdate in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
+		parameters.NewStringParameterWithDefault(deathDateRangeKey, "", "A date range for the patient's death date in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
+		parameters.NewStringParameterWithDefault(deceasedKey, "", "Whether the patient is deceased. Use true or false"),
+		parameters.NewStringParameterWithDefault(emailKey, "", "The patient's email address"),
+		parameters.NewStringParameterWithDefault(genderKey, "", "The patient's gender. Must be one of 'male', 'female', 'other', or 'unknown'"),
+		parameters.NewStringParameterWithDefault(addressUseKey, "", "The use of the patient's address. Must be one of 'home', 'work', 'temp', 'old', or 'billing'"),
+		parameters.NewStringParameterWithDefault(nameKey, "", "The patient's name. Can be a family name, given name, or both"),
+		parameters.NewStringParameterWithDefault(givenNameKey, "", "A portion of the given name of the patient"),
+		parameters.NewStringParameterWithDefault(familyNameKey, "", "A portion of the family name of the patient"),
+		parameters.NewStringParameterWithDefault(phoneKey, "", "The patient's phone number"),
+		parameters.NewStringParameterWithDefault(languageKey, "", "The patient's preferred language. Must be a valid BCP-47 code (e.g. 'en-US', 'es')"),
+		parameters.NewStringParameterWithDefault(identifierKey, "", "An identifier for the patient"),
+		parameters.NewBooleanParameterWithDefault(summaryKey, true, "Requests the server to return a subset of the resource. Return a limited subset of elements from the resource. Enabled by default to reduce response size. Use get-fhir-resource tool to get full resource details (preferred) or set to false to disable."),
+	}
+	if !singleStore {
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+	}
+	return params
+}
+
+// resolveParams builds the tool's parameters using the source's configured FHIR/DICOM stores.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildParams(len(s.AllowedFHIRStores()) == 1), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	allParameters, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

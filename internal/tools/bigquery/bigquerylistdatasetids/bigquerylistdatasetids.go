@@ -68,37 +68,12 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	var projectParameter parameters.Parameter
-	var projectParameterDescription string
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	if len(allowedDatasets) > 0 {
-		projectParameterDescription = "This parameter will be ignored. The list of datasets is restricted to a pre-configured list; No need to provide a project ID."
-	} else {
-		projectParameterDescription = "The Google Cloud project to list dataset ids."
-	}
-
-	projectParameter = parameters.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), projectParameterDescription)
-
-	params := parameters.Parameters{projectParameter}
-
+	params := buildParams(nil, "")
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -177,4 +152,38 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+// buildParams builds the tool's parameters from the source's allowed-dataset configuration.
+// A nil allow-list and empty default project yield the plain skeleton.
+func buildParams(allowedDatasets []string, defaultProject string) parameters.Parameters {
+	projectParameterDescription := "The Google Cloud project to list dataset ids."
+	if len(allowedDatasets) > 0 {
+		projectParameterDescription = "This parameter will be ignored. The list of datasets is restricted to a pre-configured list; No need to provide a project ID."
+	}
+	projectParameter := parameters.NewStringParameterWithDefault(projectKey, defaultProject, projectParameterDescription)
+	return parameters.Parameters{projectParameter}
+}
+
+// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryAllowedDatasets(), s.BigQueryProject()), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	params, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: params.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }
