@@ -4144,7 +4144,7 @@ func RunMySQLListAllLocks(t *testing.T, ctx context.Context, pool *sql.DB, datab
 	testTableName := "test_list_table_stats_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	createTableStmt := fmt.Sprintf(`
         CREATE TABLE %s (
-            id SERIAL PRIMARY KEY,
+            id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100),
             email VARCHAR(100)
         )
