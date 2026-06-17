@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -254,6 +255,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("failed to create GDA client", http.StatusInternalServerError, err)
 	}
+	client.Timeout = 330 * time.Second
 
 	// Call the streaming API
 	response, err := getStream(ctx, client, caURL, payload, headers)
