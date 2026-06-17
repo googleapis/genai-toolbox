@@ -22,4 +22,10 @@ telemetry data.&lt;/p&gt;
 &lt;li&gt;&lt;code&gt;Connectors&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Example of setting up the classes of pipeline components (in this example, we
-don&amp;rsquo;t use connectors):&lt;/p&gt;</description></item></channel></rss>
+don&amp;rsquo;t use connectors):&lt;/p&gt;</description></item><item><title>SQL Commenter</title><link>https://mcp-toolbox.dev/dev/documentation/monitoring/sql_commenter/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/documentation/monitoring/sql_commenter/</guid><description>&lt;p&gt;&lt;a href="https://google.github.io/sqlcommenter/"&gt;SQLCommenter&lt;/a&gt; is an open-source
+convention that propagates application context into the database by prepending a
+structured comment to every SQL statement before it is executed. The comment is
+stripped before query planning, so it has no effect on results — but it shows up
+verbatim in database query logs and slow-query logs, letting you correlate a
+specific SQL statement back to the MCP client, LLM tool invocation, model, user,
+agent, and distributed trace that triggered it.&lt;/p&gt;</description></item></channel></rss>

@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-17T01:52:55Z
+**GENERATED ON:** 2026-06-17T19:49:30Z
 
 ---
 ### System Directives for AI Models
@@ -5250,6 +5250,49 @@ async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as too
 
 {{< notice note >}}
 If `telemetry_enabled=True` but no provider is configured, OpenTelemetry's no-op implementation is used — no data is exported and there is zero overhead. The optional `[telemetry]` extra must be installed for `telemetry_enabled=True` to have any effect; if it is not installed the flag is silently ignored.
+{{< /notice >}}
+
+### Per-call Telemetry Attributes
+
+In addition to the automatic instrumentation enabled by `telemetry_enabled=True`, you can attach **per-tool** telemetry attributes (such as the LLM model name, user ID, or agent ID) to outgoing invocations. These attributes are:
+
+* Sent to the Toolbox server in the MCP request `params._meta` under the `dev.mcp-toolbox/telemetry` key, where they are available to server-side instrumentation (e.g., SQL Commenter on database tools).
+* Recorded as attributes on the client-side OpenTelemetry span for the invocation when telemetry is enabled.
+
+Use the `TelemetryAttributes` model and the `add_telemetry_attributes()` method on a loaded tool:
+
+```py
+from toolbox_core import ToolboxClient, TelemetryAttributes
+
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = await toolbox.load_tool("my-tool")
+
+    attrs = TelemetryAttributes(
+        llm_model="gemini-2.5-pro",
+        user_id="user-123",
+        agent_id="agent-abc",
+    )
+    instrumented_tool = tool.add_telemetry_attributes(attrs)
+
+    result = await instrumented_tool(param="value")
+```
+
+The same method is available on `ToolboxSyncTool` for synchronous usage.
+
+#### Fields and Wire Mapping
+
+`TelemetryAttributes` exposes three optional fields, which serialize to OpenTelemetry-style keys on the wire:
+
+| Python field | Span/Meta key |
+| :--- | :--- |
+| `llm_model` | `client.model` |
+| `user_id` | `client.user.id` |
+| `agent_id` | `client.agent.id` |
+
+{{< notice tip >}}
+* `add_telemetry_attributes()` returns a **new tool instance**; the original tool is left untouched (the same immutable pattern as `bind_param` and `add_auth_token_getter`).
+* Calling `add_telemetry_attributes()` a second time **replaces** the previous attributes rather than merging with them. Pass a single `TelemetryAttributes` bundle with all fields you want sent.
+* Unset fields and empty strings are dropped before the payload is sent, so they will not appear as empty values on the server.
 {{< /notice >}}
 
 
@@ -13458,16 +13501,29 @@ deployment will time out.
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
-    If you are using a VPC network, use the command below:
+    If you are using a VPC network, use the command below. The
+    `--network default` and `--subnet default` values are examples for the
+    default VPC network and the default subnet in the Cloud Run region. If your
+    database uses a different VPC network or subnet, replace these values. To
+    find the values for your project, run:
 
     ```bash
+    gcloud compute networks list
+    gcloud compute networks subnets list --regions=us-central1
+    ```
+
+    For more information, see [Direct VPC egress with a VPC
+    network](https://cloud.google.com/run/docs/configuring/vpc-direct-vpc).
+
+    ```bash
+    # Replace default values if your database uses a different VPC network
+    # or subnet.
     gcloud run deploy toolbox \
         --image $IMAGE \
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
-        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
@@ -13506,13 +13562,14 @@ origins permitted to access the server.
     If you are using a VPC network, use the command below:
 
     ```bash
+    # Replace default values if your database uses a different VPC network
+    # or subnet.
     gcloud run deploy toolbox \
         --image $IMAGE \
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
-        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
@@ -13618,6 +13675,7 @@ contain the specific error message needed to diagnose the problem.
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
 
 - **Cloud Run Connections via IAP:** Currently we do not support Cloud Run connections via [IAP](https://docs.cloud.google.com/iap/docs/concepts-overview). Please disable IAP if you are using it.
+
 
 
 
@@ -14037,6 +14095,7 @@ Understanding the internal state of your system is critical when deploying AI ag
 
 * **[Telemetry](telemetry/index.md)**: Learn how to configure logging levels and understand the core metrics and traces emitted by the Toolbox server.
 * **[Export Telemetry](export_telemetry.md)**: Discover how to deploy and configure an OpenTelemetry (OTel) Collector.
+* **[SQL Commenter](sql_commenter.md)**: Propagate application context into database query logs by prepending SQLCommenter-format comments to executed SQL statements.
 
 
 
@@ -14415,6 +14474,7 @@ The following flags are used to determine Toolbox's telemetry configuration:
 | `--telemetry-gcp-project`  | string   | Google Cloud project ID used for `--telemetry-gcp`. If unset, Toolbox falls back to `GOOGLE_CLOUD_PROJECT` when available.                                                                              |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "127.0.0.1:4318"). To pass an insecure endpoint here, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`. |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                                                                                                            |
+| `--sql-commenter`          | bool     | Enable prepending [SQLCommenter](../sql_commenter.md)-format comments to executed SQL statements. Default is `false`.                                                                                       |
 
 In addition to the flags noted above, you can also make additional configuration
 for OpenTelemetry via the [General SDK Configuration][sdk-configuration] through
@@ -14587,6 +14647,102 @@ directly from Toolbox without running a local Collector.
 
 Toolbox will now export traces and metrics directly to Agnost. No local
 Collector is required.
+
+
+
+
+========================================================================
+## SQL Commenter
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Documentation > Monitoring & Observability > SQL Commenter
+**URL:** https://mcp-toolbox.dev/dev/documentation/monitoring/sql_commenter/
+**Description:** Propagate application context into database query logs by prepending SQLCommenter-format comments to executed SQL statements.
+
+
+
+[SQLCommenter](https://google.github.io/sqlcommenter/) is an open-source
+convention that propagates application context into the database by prepending a
+structured comment to every SQL statement before it is executed. The comment is
+stripped before query planning, so it has no effect on results — but it shows up
+verbatim in database query logs and slow-query logs, letting you correlate a
+specific SQL statement back to the MCP client, LLM tool invocation, model, user,
+agent, and distributed trace that triggered it.
+
+This closes the observability gap between the application-level traces emitted by
+Toolbox and the database-level logs emitted by your underlying database engine.
+
+## Enabling SQL Commenter
+
+SQL Commenter is opt-in and disabled by default. Enable it on a per-source basis by setting the `sqlCommenter` field to `true` in a source's configuration file:
+
+```yaml
+sources:
+  - name: my-pg-source
+    type: postgres
+    # ...
+    sqlCommenter: true
+```
+
+If you are exporting telemetry using OpenTelemetry, the `traceparent` attribute embedded in the SQL comment will automatically be part of the same distributed trace exported by Toolbox:
+
+```bash
+./toolbox --telemetry-otlp="127.0.0.1:4553"
+```
+
+## Supported Sources
+
+SQL Commenter is supported on the following database sources:
+
+* `alloydb-postgres`
+* `cloud-sql-postgres`
+* `cloud-sql-mysql`
+* `postgres`
+* `mysql`
+* `sqlite`
+
+## Comment Format
+
+When enabled, Toolbox prepends a SQLCommenter-format comment to every SQL
+statement executed against a supported source. Keys are sorted alphabetically,
+values are URL-encoded, and pairs are joined by commas inside a `/* … */`
+block. For example:
+
+```sql
+/*client='toolbox-langchain-python%2Fv0.1.0',client.model='gemini-2.5-flash',db.system.name='postgresql',server='genai-toolbox%2F1.1.0',tool.name='search_user',traceparent='00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01'*/ SELECT * FROM users WHERE id = $1;
+```
+
+## Attributes
+
+| **Attribute**       | **Source**                                                                                       | **Description**                                                                                |
+|---------------------|--------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
+| `traceparent`       | Active OpenTelemetry span context.                                                               | W3C Trace Context header tying the SQL statement to the distributed trace for this invocation. |
+| `server`            | Toolbox build (`genai-toolbox/<version>`).                                                       | Identifies the Toolbox server name and version that issued the query.                          |
+| `tool.name`         | The tool being invoked.                                                                          | The tool whose execution triggered the SQL.                                                    |
+| `db.system.name`    | The database engine (e.g. `postgresql`, `mysql`, `sqlite`).                                      | Identifies the database backend.                                                               |
+| `client`            | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.name"]` and/or `["client.version"]` (joined by `/`). | Identifies the ADK or application that initiated the MCP request.                              |
+| `client.model`      | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.model"]`.                                 | The LLM model that produced the tool call.                                                     |
+| `client.user.id`    | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.user.id"]`.                               | End-user identifier supplied by the client.                                                    |
+| `client.agent.id`   | MCP client `params._meta["dev.mcp-toolbox/telemetry"]["client.agent.id"]`.                              | Agent identifier supplied by the client.                                                       |
+
+Client-supplied attributes (`client`, `client.model`, `client.user.id`,
+`client.agent.id`) are populated from the MCP request's
+`params._meta["dev.mcp-toolbox/telemetry"]` field. Attributes that are not
+provided by the client or not applicable in the current context are omitted
+from the comment.
+
+## Populating Client Attributes from SDKs
+
+Toolbox SDKs that support the `dev.mcp-toolbox/telemetry` meta field will
+populate `client.*` attributes automatically. With the Python SDK, you can
+attach per-tool attributes such as model name, user ID, and agent ID using
+`TelemetryAttributes`. See [Per-call Telemetry Attributes](../../connect-to/toolbox-sdks/python-sdk/core/#per-call-telemetry-attributes)
+for details.
+
+{{< notice tip >}}
+The comment is plain text in your database logs. To follow a slow query back to
+its trace, take the `traceparent` value and search your tracing backend for the
+matching trace ID (the second segment of the W3C `traceparent`).
+{{< /notice >}}
 
 
 

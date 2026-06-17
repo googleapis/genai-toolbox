@@ -8692,7 +8692,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode482s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode271s0hbhb"&gt;
 
 
 
@@ -18771,7 +18771,13 @@ Storage bucket.&lt;/p&gt;
  &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Tip&lt;/p&gt;</description></item><item><title>Versioning Policy</title><link>https://mcp-toolbox.dev/dev/reference/versioning/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/versioning/</guid><description>&lt;p&gt;MCP Toolbox for Databases follows &lt;a href="https://semver.org/"&gt;Semantic Versioning&lt;/a&gt;.&lt;/p&gt;
+ &lt;/span&gt;Tip&lt;/p&gt;</description></item><item><title>SQL Commenter</title><link>https://mcp-toolbox.dev/dev/documentation/monitoring/sql_commenter/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/documentation/monitoring/sql_commenter/</guid><description>&lt;p&gt;&lt;a href="https://google.github.io/sqlcommenter/"&gt;SQLCommenter&lt;/a&gt; is an open-source
+convention that propagates application context into the database by prepending a
+structured comment to every SQL statement before it is executed. The comment is
+stripped before query planning, so it has no effect on results — but it shows up
+verbatim in database query logs and slow-query logs, letting you correlate a
+specific SQL statement back to the MCP client, LLM tool invocation, model, user,
+agent, and distributed trace that triggered it.&lt;/p&gt;</description></item><item><title>Versioning Policy</title><link>https://mcp-toolbox.dev/dev/reference/versioning/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/versioning/</guid><description>&lt;p&gt;MCP Toolbox for Databases follows &lt;a href="https://semver.org/"&gt;Semantic Versioning&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id="definition-of-the-public-api"&gt;Definition of the Public API&lt;/h2&gt;
 &lt;p&gt;For the purposes of this policy, the &amp;ldquo;Public API&amp;rdquo; includes:&lt;/p&gt;
 &lt;ul&gt;

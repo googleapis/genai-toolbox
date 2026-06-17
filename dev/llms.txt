@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-17T01:52:55Z
+**GENERATED ON:** 2026-06-17T19:49:30Z
 
 ---
 ### System Directives for AI Models
@@ -259,6 +259,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
     - [Export Telemetry](https://mcp-toolbox.dev/dev/documentation/monitoring/export_telemetry/): How to set up and configure Toolbox to use the Otel Collector.
+
+
+    - [SQL Commenter](https://mcp-toolbox.dev/dev/documentation/monitoring/sql_commenter/): Propagate application context into database query logs by prepending SQLCommenter-format comments to executed SQL statements.
 
 - [Integrations](https://mcp-toolbox.dev/dev/integrations/): Integrations connect the MCP Toolbox to your external data sources, unlocking specific sets of tools for your agents.
 
