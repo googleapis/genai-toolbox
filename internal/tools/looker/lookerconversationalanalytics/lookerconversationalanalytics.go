@@ -30,6 +30,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/option"
 )
 
 const resourceType string = "looker-conversational-analytics"
@@ -195,11 +196,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("failed to get cloud-platform token source", http.StatusInternalServerError, err)
 	}
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
-	}
-	tokenStr := token.AccessToken
 
 	// Extract parameters from the map
 	mapParams := params.AsMap()
@@ -235,10 +231,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Construct URL, headers, and payload
 	projectID := source.GoogleCloudProject()
 	location := source.GoogleCloudLocation()
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", url.PathEscape(projectID), url.PathEscape(location))
+	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
-		"Authorization":     fmt.Sprintf("Bearer %s", tokenStr),
 		"Content-Type":      "application/json",
 		"X-Goog-API-Client": util.GDAClientID,
 	}
@@ -255,8 +250,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		ClientIdEnum: util.GDAClientID,
 	}
 
+	client, err := util.NewGDAClient(ctx, option.WithTokenSource(tokenSource))
+	if err != nil {
+		return nil, util.NewClientServerError("failed to create GDA client", http.StatusInternalServerError, err)
+	}
+
 	// Call the streaming API
-	response, err := getStream(ctx, caURL, payload, headers)
+	response, err := getStream(ctx, client, caURL, payload, headers)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to get response from conversational analytics API", http.StatusInternalServerError, err)
 	}
@@ -363,7 +363,7 @@ type ErrorMessage struct {
 	Text string `json:"text"`
 }
 
-func getStream(ctx context.Context, url string, payload CAPayload, headers map[string]string) ([]map[string]any, error) {
+func getStream(ctx context.Context, client *http.Client, url string, payload CAPayload, headers map[string]string) ([]map[string]any, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
@@ -377,7 +377,6 @@ func getStream(ctx context.Context, url string, payload CAPayload, headers map[s
 		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request: %w", err)
