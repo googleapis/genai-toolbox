@@ -25,6 +25,7 @@ This tool takes 3 optional input parameters:
 - `table_schema` (optional): The target database for active locks. If not specified the results will be displayed for all databases. 
 - `table_name` (optional): Name of the table to be checked. Check all tables visible to the current user if not specified.
 - `limit` (optional): Max rows to return, default 10.
+- `connected_schema` (optional): The database user is connected to, the value is set from env variable `CLOUD_SQL_MYSQL_DATABASE` or `MYSQL_DATABASE`.
 
 ## Example
 
