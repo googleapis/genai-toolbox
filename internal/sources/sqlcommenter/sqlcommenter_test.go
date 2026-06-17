@@ -28,7 +28,7 @@ func sqlCommenterCtx() context.Context {
 	return util.WithSQLCommenterEnabled(context.Background(), true)
 }
 
-func TestAppendComment_SQLCommenterDisabled(t *testing.T) {
+func TestPrependComment_SQLCommenterDisabled(t *testing.T) {
 	// SQL commenter not enabled in context — statement should be unchanged
 	ctx := context.Background()
 	ctx = util.WithUserAgent(ctx, "1.1.0")
@@ -37,17 +37,17 @@ func TestAppendComment_SQLCommenterDisabled(t *testing.T) {
 	})
 
 	stmt := "SELECT * FROM users"
-	result := AppendComment(ctx, stmt, "postgresql", nil)
+	result := PrependComment(ctx, stmt, "postgresql", nil)
 
 	if result != stmt {
 		t.Errorf("expected unchanged statement when sql-commenter disabled, got: %s", result)
 	}
 }
 
-// TestAppendComment_SourceOverride verifies the priority between the global
+// TestPrependComment_SourceOverride verifies the priority between the global
 // sql-commenter flag (from context) and the per-source `sqlCommenter` setting.
 // The per-source value wins when set; otherwise the global flag is used.
-func TestAppendComment_SourceOverride(t *testing.T) {
+func TestPrependComment_SourceOverride(t *testing.T) {
 	boolPtr := func(b bool) *bool { return &b }
 	stmt := "SELECT 1"
 
@@ -68,7 +68,7 @@ func TestAppendComment_SourceOverride(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := util.WithSQLCommenterEnabled(context.Background(), tc.global)
-			result := AppendComment(ctx, stmt, "postgresql", tc.sourceOverride)
+			result := PrependComment(ctx, stmt, "postgresql", tc.sourceOverride)
 
 			gotComment := strings.HasPrefix(result, "/*")
 			if gotComment != tc.wantComment {
@@ -81,10 +81,10 @@ func TestAppendComment_SourceOverride(t *testing.T) {
 	}
 }
 
-func TestAppendComment_EmptyContext(t *testing.T) {
+func TestPrependComment_EmptyContext(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	stmt := "SELECT * FROM users"
-	result := AppendComment(ctx, stmt, "", nil)
+	result := PrependComment(ctx, stmt, "", nil)
 
 	// No attributes available, statement should be unchanged
 	if result != stmt {
@@ -92,10 +92,10 @@ func TestAppendComment_EmptyContext(t *testing.T) {
 	}
 }
 
-func TestAppendComment_OnlyDbSystemName(t *testing.T) {
+func TestPrependComment_OnlyDbSystemName(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	stmt := "SELECT * FROM users"
-	result := AppendComment(ctx, stmt, "postgresql", nil)
+	result := PrependComment(ctx, stmt, "postgresql", nil)
 
 	expected := "/*db.system.name='postgresql'*/ SELECT * FROM users"
 	if result != expected {
@@ -103,7 +103,7 @@ func TestAppendComment_OnlyDbSystemName(t *testing.T) {
 	}
 }
 
-func TestAppendComment_ServerSideAttributes(t *testing.T) {
+func TestPrependComment_ServerSideAttributes(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithUserAgent(ctx, "1.1.0")
 	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{
@@ -111,7 +111,7 @@ func TestAppendComment_ServerSideAttributes(t *testing.T) {
 	})
 
 	stmt := "SELECT * FROM hotels"
-	result := AppendComment(ctx, stmt, "postgresql", nil)
+	result := PrependComment(ctx, stmt, "postgresql", nil)
 
 	// Should contain server, tool.name, db.system.name
 	if !strings.Contains(result, "/*") || !strings.Contains(result, "*/") {
@@ -132,7 +132,7 @@ func TestAppendComment_ServerSideAttributes(t *testing.T) {
 	}
 }
 
-func TestAppendComment_FullAttributes(t *testing.T) {
+func TestPrependComment_FullAttributes(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithUserAgent(ctx, "1.1.0")
 	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{
@@ -147,7 +147,7 @@ func TestAppendComment_FullAttributes(t *testing.T) {
 	})
 
 	stmt := "SELECT * FROM users"
-	result := AppendComment(ctx, stmt, "postgresql", nil)
+	result := PrependComment(ctx, stmt, "postgresql", nil)
 
 	// Verify all expected key='value' pairs are present
 	expectedPairs := []string{
@@ -166,7 +166,7 @@ func TestAppendComment_FullAttributes(t *testing.T) {
 	}
 }
 
-func TestAppendComment_AlphabeticalOrder(t *testing.T) {
+func TestPrependComment_AlphabeticalOrder(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithUserAgent(ctx, "1.0.0")
 	ctx = util.WithGenAIMetricAttrs(ctx, &util.GenAIMetricAttrs{
@@ -179,7 +179,7 @@ func TestAppendComment_AlphabeticalOrder(t *testing.T) {
 	})
 
 	stmt := "SELECT 1"
-	result := AppendComment(ctx, stmt, "postgresql", nil)
+	result := PrependComment(ctx, stmt, "postgresql", nil)
 
 	// Extract the comment part
 	commentStart := strings.Index(result, "/*")
@@ -200,7 +200,7 @@ func TestAppendComment_AlphabeticalOrder(t *testing.T) {
 	}
 }
 
-func TestAppendComment_URLEncoding(t *testing.T) {
+func TestPrependComment_URLEncoding(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithTelemetryAttributes(ctx, &util.TelemetryAttributes{
 		ClientName:    "my client/special",
@@ -208,7 +208,7 @@ func TestAppendComment_URLEncoding(t *testing.T) {
 	})
 
 	stmt := "SELECT 1"
-	result := AppendComment(ctx, stmt, "", nil)
+	result := PrependComment(ctx, stmt, "", nil)
 
 	// The client value "my client/special/v1.0" should be URL-encoded
 	if !strings.Contains(result, "client='"+url.QueryEscape("my client/special/v1.0")+"'") {
@@ -216,7 +216,7 @@ func TestAppendComment_URLEncoding(t *testing.T) {
 	}
 }
 
-func TestAppendComment_PartialClientAttributes(t *testing.T) {
+func TestPrependComment_PartialClientAttributes(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithTelemetryAttributes(ctx, &util.TelemetryAttributes{
 		ClientName: "test-client",
@@ -224,19 +224,19 @@ func TestAppendComment_PartialClientAttributes(t *testing.T) {
 	})
 
 	stmt := "SELECT 1"
-	result := AppendComment(ctx, stmt, "", nil)
+	result := PrependComment(ctx, stmt, "", nil)
 
 	if !strings.Contains(result, "client='test-client'") {
 		t.Errorf("expected client with name only, got: %s", result)
 	}
 }
 
-func TestAppendComment_EmptyTelemetryAttributes(t *testing.T) {
+func TestPrependComment_EmptyTelemetryAttributes(t *testing.T) {
 	ctx := sqlCommenterCtx()
 	ctx = util.WithTelemetryAttributes(ctx, &util.TelemetryAttributes{})
 
 	stmt := "SELECT 1"
-	result := AppendComment(ctx, stmt, "postgresql", nil)
+	result := PrependComment(ctx, stmt, "postgresql", nil)
 
 	// Should only have db.system.name since all telemetry attrs are empty
 	if !strings.Contains(result, "db.system.name='postgresql'") {

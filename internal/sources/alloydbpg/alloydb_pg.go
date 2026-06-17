@@ -105,7 +105,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
-	statement = sqlcommenter.AppendComment(ctx, statement, SourceType, s.SQLCommenter)
+	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.Pool.Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

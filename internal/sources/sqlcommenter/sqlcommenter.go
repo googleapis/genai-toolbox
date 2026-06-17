@@ -25,22 +25,22 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// AppendComment appends a SQLCommenter-format comment to the given SQL statement.
+// PrependComment prepends a SQLCommenter-format comment to the given SQL statement.
 // It gathers attributes from the context (trace, server, client, tool metadata)
-// and the provided dbSystemName, then appends them as key='value' pairs sorted
+// and the provided dbSystemName, then prepends them as key='value' pairs sorted
 // alphabetically.
 //
 // sourceOverride is the per-source `sqlCommenter` setting from tools.yaml. When
 // non-nil it takes priority over the global sql-commenter flag; when nil the
 // global flag (from context) is used.
-func AppendComment(ctx context.Context, statement string, dbSystemName string, sourceOverride *bool) string {
+func PrependComment(ctx context.Context, statement string, dbSystemName string, sourceOverride *bool) string {
 	// Per-source config wins when set; otherwise fall back to the global flag.
 	enabled := util.SQLCommenterEnabledFromContext(ctx)
 	if sourceOverride != nil {
 		enabled = *sourceOverride
 	}
 
-	// Only append SQL comments when sql-commenter is enabled
+	// Only prepend SQL comments when sql-commenter is enabled
 	if !enabled {
 		return statement
 	}
