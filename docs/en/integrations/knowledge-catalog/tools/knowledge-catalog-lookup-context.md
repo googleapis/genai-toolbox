@@ -18,7 +18,9 @@ A `dataplex-lookup-context` tool provides rich metadata of one or more data asse
 
 {{< compatible-sources >}}
 
-## IAM Permissions
+## Requirements
+
+### IAM Permissions
 
 Knowledge Catalog (formerly known as Dataplex) uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your

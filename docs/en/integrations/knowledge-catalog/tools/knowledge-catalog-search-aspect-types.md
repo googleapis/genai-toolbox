@@ -17,17 +17,9 @@ aspect types based on search query.
 
 {{< compatible-sources >}}
 
-## Parameters
+## Requirements
 
-The `dataplex-search-aspect-types` tool accepts the following parameters:
-
-| **field** | **type** | **required** | **description** |
-| --------- | :------: | :----------: | --------------- |
-| query | string | false | Optional. Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all available aspect types. |
-| pageSize | integer | false | Number of returned aspect types in the search page. Defaults to 5. |
-| orderBy | string | false | Specifies ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
-
-## IAM Permissions
+### IAM Permissions
 
 Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Knowledge Catalog resources. Toolbox will use your
@@ -46,6 +38,16 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-aspect-types` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| query | string | false | Optional. Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all available aspect types. |
+| pageSize | integer | false | Number of returned aspect types in the search page. Defaults to 5. |
+| orderBy | string | false | Specifies ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
 
 ## Example
 

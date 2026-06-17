@@ -16,19 +16,9 @@ A `dataplex-search-dq-scans` tool returns data quality scans that match the give
 
 {{< compatible-sources >}}
 
-## Parameters
+## Requirements
 
-The `dataplex-search-dq-scans` tool accepts the following optional parameters:
-
-| **field** | **type** | **required** | **description** |
-| --------- | :------: | :----------: | --------------- |
-| filter | string | false | Filter string to search/filter data quality scans (e.g. `display_name = "my-scan"`). |
-| data_scan_id | string | false | The resource name of the data scan to filter by (`projects/{project}/locations/{locationId}/dataScans/{dataScanId}`). |
-| table_name | string | false | The name of the table to filter by, mapping to `data.entity` (e.g. `//bigquery.googleapis.com/projects/P/datasets/D/tables/T`). |
-| pageSize | integer | false | Number of returned data quality scans in the page. Defaults to 10. |
-| orderBy | string | false | Specifies ordering of results. |
-
-## IAM Permissions
+### IAM Permissions
 
 Dataplex uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to Dataplex resources. Toolbox will use your
@@ -47,6 +37,18 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-dq-scans` tool accepts the following optional parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| filter | string | false | Filter string to search/filter data quality scans (e.g. `display_name = "my-scan"`). |
+| data_scan_id | string | false | The resource name of the data scan to filter by (`projects/{project}/locations/{locationId}/dataScans/{dataScanId}`). |
+| table_name | string | false | The name of the table to filter by, mapping to `data.entity` (e.g. `//bigquery.googleapis.com/projects/P/datasets/D/tables/T`). |
+| pageSize | integer | false | Number of returned data quality scans in the page. Defaults to 10. |
+| orderBy | string | false | Specifies ordering of results. |
 
 ## Example
 
