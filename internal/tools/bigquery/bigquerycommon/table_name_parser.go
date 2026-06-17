@@ -68,6 +68,8 @@ var datasetLevelInformationSchemaViews = map[string]bool{
 	"referential_constraints": true,
 	"search_indexes":          true,
 	"vector_indexes":          true,
+	"materialized_views":      true,
+	"table_snapshots":         true,
 }
 
 var tableFollowsKeywords = map[string]bool{

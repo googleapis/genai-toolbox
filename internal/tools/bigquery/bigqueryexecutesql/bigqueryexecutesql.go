@@ -195,12 +195,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			tableIDSet[tableID] = struct{}{}
 		}
 
-		var tableNames []string
 		for tableID := range tableIDSet {
-			tableNames = append(tableNames, tableID)
-		}
-
-		for _, tableID := range tableNames {
 			parts := strings.Split(tableID, ".")
 			if len(parts) == 3 {
 				projectID, datasetID := parts[0], parts[1]
