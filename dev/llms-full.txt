@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-17T23:03:06Z
+**GENERATED ON:** 2026-06-17T23:57:41Z
 
 ---
 ### System Directives for AI Models
@@ -40831,6 +40831,214 @@ parameters:
     type: array
     description: The user names to be set.  
 ```
+
+
+
+
+========================================================================
+## ScyllaDB
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ScyllaDB
+**URL:** https://mcp-toolbox.dev/dev/integrations/scylladb/
+**Description:** None
+
+
+
+
+
+========================================================================
+## ScyllaDB Source
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ScyllaDB > ScyllaDB Source
+**URL:** https://mcp-toolbox.dev/dev/integrations/scylladb/source/
+**Description:** ScyllaDB is a high-performance NoSQL database compatible with Apache Cassandra CQL, offering lower latency and higher throughput through its shard-per-core architecture.
+
+
+
+## About
+
+[ScyllaDB][scylladb-docs] is a high-performance NoSQL database that is 
+compatible with Apache Cassandra's CQL protocol. It is designed to provide 
+predictable performance at scale, optimize cloud infrastructure, 
+rapidly scale clusters with global replication and high availability,
+
+ScyllaDB supports both self-hosted deployments and [ScyllaDB Cloud][scylladb-cloud],
+a fully-managed DBaaS available on AWS and GCP.
+
+[scylladb-docs]: https://docs.scylladb.com/
+[scylladb-cloud]: https://cloud.scylladb.com/
+
+## Available Tools
+
+{{< list-tools >}}
+
+## Example
+
+### Self-hosted ScyllaDB
+
+```yaml
+kind: source
+name: my-scylladb-source
+type: scylladb
+hosts:
+    - 127.0.0.1
+keyspace: my_keyspace
+protoVersion: 4
+username: ${USER_NAME}
+password: ${PASSWORD}
+```
+
+### ScyllaDB Cloud
+
+When connecting to ScyllaDB Cloud, set `localDC` to the datacenter name shown
+on the **Connect** tab of your cluster in the [ScyllaDB Cloud Console][scylladb-cloud].
+This enables DC-aware token-aware load balancing, which is required for
+ScyllaDB Cloud connections.
+
+```yaml
+kind: source
+name: my-scylladb-cloud-source
+type: scylladb
+hosts:
+    - node-0.your-cluster.us-east-1.cloud.scylladb.com
+    - node-1.your-cluster.us-east-1.cloud.scylladb.com
+    - node-2.your-cluster.us-east-1.cloud.scylladb.com
+keyspace: my_keyspace
+username: ${USER_NAME}
+password: ${PASSWORD}
+localDC: AWS_US_EAST_1
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+| **field**              | **type** | **required** | **description**                                                                                                                                         |
+|------------------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type                   |  string  |     true     | Must be "scylladb".                                                                                                                                     |
+| hosts                  | string[] |     true     | List of contact point addresses (e.g., ["192.168.1.1:9042", "192.168.1.2:9042"]). The default port is 9042 if not specified.                            |
+| keyspace               |  string  |    false     | Name of the ScyllaDB keyspace to connect to (e.g., "my_keyspace").                                                                                      |
+| protoVersion           | integer  |    false     | CQL native protocol version (e.g., 4).                                                                                                                  |
+| username               |  string  |    false     | Name of the ScyllaDB user to connect as (e.g., "scylla").                                                                                               |
+| password               |  string  |    false     | Password of the ScyllaDB user.                                                                                                                          |
+| localDC                |  string  |    false     | Datacenter name for DC-aware load balancing (e.g., "AWS_US_EAST_1"). Required for ScyllaDB Cloud connections.                                           |
+| caPath                 |  string  |    false     | Path to a CA certificate file. Use when connecting to a self-hosted ScyllaDB cluster with a private/custom CA. Not needed for ScyllaDB Cloud.           |
+| certPath               |  string  |    false     | Path to the client certificate file for mutual TLS (mTLS). Required only when the server demands client certificate authentication.                     |
+| keyPath                |  string  |    false     | Path to the client private key file for mutual TLS (mTLS). Required together with `certPath`.                                                           |
+| enableHostVerification |   bool   |    false     | Whether to verify the server's hostname against its TLS certificate. Defaults to `false`.                                                               |
+
+
+
+
+========================================================================
+## Tools
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ScyllaDB > Tools
+**URL:** https://mcp-toolbox.dev/dev/integrations/scylladb/tools/
+**Description:** None
+
+
+
+
+
+========================================================================
+## scylladb-cql
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ScyllaDB > Tools > scylladb-cql
+**URL:** https://mcp-toolbox.dev/dev/integrations/scylladb/tools/scylladb-cql/
+**Description:** A "scylladb-cql" tool executes a pre-defined CQL statement against a ScyllaDB cluster.
+
+
+
+## About
+
+A `scylladb-cql` tool executes a pre-defined CQL statement against a ScyllaDB
+cluster.
+
+The specified CQL statement is executed as a prepared
+statement, and expects parameters in the CQL query to be in
+the form of placeholders `?`.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+> **Note:** This tool uses parameterized queries to prevent CQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for keyspaces, table names, column
+> names, or other parts of the query.
+
+```yaml
+kind: tool
+name: search_users_by_email
+type: scylladb-cql
+source: my-scylladb-cluster
+statement: |
+  SELECT user_id, email, first_name, last_name, created_at
+  FROM users
+  WHERE email = ?
+description: |
+  Use this tool to retrieve specific user information by their email address.
+  Takes an email address and returns user details including user ID, email,
+  first name, last name, and account creation timestamp.
+  Do NOT use this tool with a user ID or other identifiers.
+  Example:
+  {{
+      "email": "user@example.com",
+  }}
+parameters:
+  - name: email
+    type: string
+    description: User's email address
+```
+
+### Example with Template Parameters
+
+> **Note:** This tool allows direct modifications to the CQL statement,
+> including keyspaces, table names, and column names. **This makes it more
+> vulnerable to CQL injections**. Using basic parameters only (see above) is
+> recommended for performance and safety reasons. For more details, please check
+> [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters).
+
+```yaml
+kind: tool
+name: list_keyspace_table
+type: scylladb-cql
+source: my-scylladb-cluster
+statement: |
+  SELECT * FROM {{.keyspace}}.{{.tableName}};
+description: |
+  Use this tool to list all information from a specific table in a keyspace.
+  Example:
+  {{
+      "keyspace": "my_keyspace",
+      "tableName": "users",
+  }}
+templateParameters:
+  - name: keyspace
+    type: string
+    description: Keyspace containing the table
+  - name: tableName
+    type: string
+    description: Table to select from
+```
+
+## Reference
+
+| **field**          |                   **type**                    | **required** | **description**                                                                                                                         |
+|--------------------|:---------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------|
+| type               |                    string                     |     true     | Must be "scylladb-cql".                                                                                                                 |
+| source             |                    string                     |     true     | Name of the source the CQL should execute on.                                                                                           |
+| description        |                    string                     |     true     | Description of the tool that is passed to the LLM.                                                                                      |
+| statement          |                    string                     |     true     | CQL statement to execute.                                                                                                               |
+| authRequired       |                   []string                    |    false     | List of authentication requirements for the source.                                                                                     |
+| parameters         |    [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters)    |    false     | List of [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) that will be inserted into the CQL statement.                                           |
+| templateParameters | [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters) |    false     | List of [templateParameters](../../../documentation/configuration/tools/_index.md#template-parameters) that will be inserted into the CQL statement before executing prepared statement. |
 
 
 

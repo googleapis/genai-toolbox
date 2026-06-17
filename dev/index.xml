@@ -8692,7 +8692,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode242s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode559s0hbhb"&gt;
 
 
 
@@ -10145,7 +10145,49 @@ SET, GET, HGETALL) and subsequent elements are its arguments.&lt;/p&gt;
 &lt;h3 id="dynamic-command-parameters"&gt;Dynamic Command Parameters&lt;/h3&gt;
 &lt;p&gt;Command arguments can be templated using the &lt;code&gt;$variableName&lt;/code&gt; annotation. The
 array type parameters will be expanded once into multiple arguments. Take the
-following config for example:&lt;/p&gt;</description></item><item><title>serverless-spark-get-batch</title><link>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+following config for example:&lt;/p&gt;</description></item><item><title>scylladb-cql</title><link>https://mcp-toolbox.dev/dev/integrations/scylladb/tools/scylladb-cql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/scylladb/tools/scylladb-cql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;scylladb-cql&lt;/code&gt; tool executes a pre-defined CQL statement against a ScyllaDB
+cluster.&lt;/p&gt;
+&lt;p&gt;The specified CQL statement is executed as a prepared
+statement, and expects parameters in the CQL query to be in
+the form of placeholders &lt;code&gt;?&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/scylladb/source/"&gt;ScyllaDB Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; This tool uses parameterized queries to prevent CQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for keyspaces, table names, column
+names, or other parts of the query.&lt;/p&gt;</description></item><item><title>serverless-spark-get-batch</title><link>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;serverless-spark-get-batch&lt;/code&gt; tool allows you to retrieve a specific
 Serverless Spark batch job.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;serverless-spark-list-batches&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
@@ -14245,7 +14287,78 @@ the &lt;a href="https://redis.io/docs/"&gt;official Redis website&lt;/a&gt;.&lt;
 &lt;h3 id="redis"&gt;Redis&lt;/h3&gt;
 &lt;p&gt;&lt;a href="https://cloud.google.com/memorystore/docs/redis/about-redis-auth"&gt;AUTH string&lt;/a&gt; is a password for connection to Redis. If you have the
 &lt;code&gt;requirepass&lt;/code&gt; directive set in your Redis configuration, incoming client
-connections must authenticate in order to connect.&lt;/p&gt;</description></item><item><title>Serverless for Apache Spark Source</title><link>https://mcp-toolbox.dev/dev/integrations/serverless-spark/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/serverless-spark/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+connections must authenticate in order to connect.&lt;/p&gt;</description></item><item><title>ScyllaDB Source</title><link>https://mcp-toolbox.dev/dev/integrations/scylladb/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/scylladb/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://docs.scylladb.com/"&gt;ScyllaDB&lt;/a&gt; is a high-performance NoSQL database that is
+compatible with Apache Cassandra&amp;rsquo;s CQL protocol. It is designed to provide
+predictable performance at scale, optimize cloud infrastructure,
+rapidly scale clusters with global replication and high availability,&lt;/p&gt;
+&lt;p&gt;ScyllaDB supports both self-hosted deployments and &lt;a href="https://cloud.scylladb.com/"&gt;ScyllaDB Cloud&lt;/a&gt;,
+a fully-managed DBaaS available on AWS and GCP.&lt;/p&gt;
+&lt;h2 id="available-tools"&gt;Available Tools&lt;/h2&gt;
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+ &lt;h3&gt;ScyllaDB Source Tools&lt;/h3&gt;
+ 
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Tool Name&lt;/th&gt;
+ &lt;th&gt;Description&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/scylladb/tools/scylladb-cql/"&gt;&lt;strong&gt;scylladb-cql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;scylladb-cql&amp;#34; tool executes a pre-defined CQL statement against a ScyllaDB cluster.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+
+
+
+
+
+
+
+
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;h3 id="self-hosted-scylladb"&gt;Self-hosted ScyllaDB&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-scylladb-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;scylladb&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;hosts&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="m"&gt;127.0.0.1&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;keyspace&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my_keyspace&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;protoVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;username&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;${USER_NAME}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;password&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;${PASSWORD}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="scylladb-cloud"&gt;ScyllaDB Cloud&lt;/h3&gt;
+&lt;p&gt;When connecting to ScyllaDB Cloud, set &lt;code&gt;localDC&lt;/code&gt; to the datacenter name shown
+on the &lt;strong&gt;Connect&lt;/strong&gt; tab of your cluster in the &lt;a href="https://cloud.scylladb.com/"&gt;ScyllaDB Cloud Console&lt;/a&gt;.
+This enables DC-aware token-aware load balancing, which is required for
+ScyllaDB Cloud connections.&lt;/p&gt;</description></item><item><title>Serverless for Apache Spark Source</title><link>https://mcp-toolbox.dev/dev/integrations/serverless-spark/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/serverless-spark/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;a href="https://cloud.google.com/dataproc-serverless/docs/overview"&gt;Serverless for Apache
 Spark&lt;/a&gt; source allows
 Toolbox to interact with Spark batches hosted on Google Cloud Serverless for

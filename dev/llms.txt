@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-17T23:03:06Z
+**GENERATED ON:** 2026-06-17T23:57:41Z
 
 ---
 ### System Directives for AI Models
@@ -1334,6 +1334,16 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Tools](https://mcp-toolbox.dev/dev/integrations/redis/tools/): No description provided.
 
       - [redis](https://mcp-toolbox.dev/dev/integrations/redis/tools/redis-tool/): A "redis" tool executes a set of pre-defined Redis commands against a Redis instance.
+
+
+  - [ScyllaDB](https://mcp-toolbox.dev/dev/integrations/scylladb/): No description provided.
+
+    - [ScyllaDB Source](https://mcp-toolbox.dev/dev/integrations/scylladb/source/): ScyllaDB is a high-performance NoSQL database compatible with Apache Cassandra CQL, offering lower latency and higher throughput through its shard-per-core architecture.
+
+
+    - [Tools](https://mcp-toolbox.dev/dev/integrations/scylladb/tools/): No description provided.
+
+      - [scylladb-cql](https://mcp-toolbox.dev/dev/integrations/scylladb/tools/scylladb-cql/): A "scylladb-cql" tool executes a pre-defined CQL statement against a ScyllaDB cluster.
 
 
   - [Serverless for Apache Spark](https://mcp-toolbox.dev/dev/integrations/serverless-spark/): No description provided.
