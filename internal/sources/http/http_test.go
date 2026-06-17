@@ -433,10 +433,10 @@ func TestRedirectLoopbackIntegration(t *testing.T) {
 	defer redirectServer.Close()
 
 	// 1. With SSRF protection enabled (default), redirecting to private IP must fail.
-	// We allow 127.0.0.1 in AllowedIPRanges so the initial connection to the local redirect server succeeds.
+	// We allow 127.0.0.1 and ::1 in AllowedIPRanges so the initial connection to the local redirect server succeeds.
 	guardDefault := &SSRFGuard{
 		AllowPrivateNetworks: false,
-		AllowedRanges:        mustParseCIDRs(t, []string{"127.0.0.1"}),
+		AllowedRanges:        mustParseCIDRs(t, []string{"127.0.0.1", "::1"}),
 	}
 	trDefault := &nethttp.Transport{}
 	clientDefault, err := createHTTPClient(5*time.Second, trDefault, guardDefault, nil)
@@ -455,7 +455,7 @@ func TestRedirectLoopbackIntegration(t *testing.T) {
 	// (it will fail to connect to 10.0.0.1, but the redirect itself should be followed).
 	guardBypass := &SSRFGuard{
 		AllowPrivateNetworks: true,
-		AllowedRanges:        mustParseCIDRs(t, []string{"127.0.0.1"}),
+		AllowedRanges:        mustParseCIDRs(t, []string{"127.0.0.1", "::1"}),
 	}
 	trBypass := &nethttp.Transport{}
 	clientBypass, err := createHTTPClient(5*time.Second, trBypass, guardBypass, nil)

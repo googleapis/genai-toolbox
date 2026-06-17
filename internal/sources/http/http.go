@@ -77,7 +77,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to parse Timeout string as time.Duration: %s", err)
 	}
 
-	tr := http.DefaultTransport.(*http.Transport).Clone()
+	var tr *http.Transport
+	if defaultTr, ok := http.DefaultTransport.(*http.Transport); ok {
+		tr = defaultTr.Clone()
+	} else {
+		tr = &http.Transport{}
+	}
 
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
