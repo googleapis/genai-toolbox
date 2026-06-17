@@ -40,6 +40,8 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 	if err := json.Unmarshal(body, &notification); err != nil {
 		return fmt.Errorf("invalid notification request: %w", err)
 	}
+	// Since we do not enforce notifications, we do not need to check the
+	// `Mcp-Method` header here
 	return nil
 }
 
