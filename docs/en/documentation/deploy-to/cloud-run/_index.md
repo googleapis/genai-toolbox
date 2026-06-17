@@ -125,16 +125,29 @@ deployment will time out.
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
-    If you are using a VPC network, use the command below:
+    If you are using a VPC network, use the command below. The
+    `--network default` and `--subnet default` values are examples for the
+    default VPC network and the default subnet in the Cloud Run region. If your
+    database uses a different VPC network or subnet, replace these values. To
+    find the values for your project, run:
 
     ```bash
+    gcloud compute networks list
+    gcloud compute networks subnets list --regions=us-central1
+    ```
+
+    For more information, see [Direct VPC egress with a VPC
+    network](https://cloud.google.com/run/docs/configuring/vpc-direct-vpc).
+
+    ```bash
+    # Replace default values if your database uses a different VPC network
+    # or subnet.
     gcloud run deploy toolbox \
         --image $IMAGE \
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
-        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
@@ -173,13 +186,14 @@ origins permitted to access the server.
     If you are using a VPC network, use the command below:
 
     ```bash
+    # Replace default values if your database uses a different VPC network
+    # or subnet.
     gcloud run deploy toolbox \
         --image $IMAGE \
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--config=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
-        # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
