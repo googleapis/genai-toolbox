@@ -302,8 +302,8 @@ func (s *Source) validateFHIRPageURL(pageURL string) error {
 		return fmt.Errorf("URL scheme must be https, got %q", parsed.Scheme)
 	}
 
-	host := parsed.Host
-	if h, _, err := net.SplitHostPort(parsed.Host); err == nil {
+	host := strings.ToLower(parsed.Host)
+	if h, _, err := net.SplitHostPort(host); err == nil {
 		host = h
 	}
 	if host != "healthcare.googleapis.com" {
