@@ -594,3 +594,46 @@ async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as too
 {{< notice note >}}
 If `telemetry_enabled=True` but no provider is configured, OpenTelemetry's no-op implementation is used — no data is exported and there is zero overhead. The optional `[telemetry]` extra must be installed for `telemetry_enabled=True` to have any effect; if it is not installed the flag is silently ignored.
 {{< /notice >}}
+
+### Per-call Telemetry Attributes
+
+In addition to the automatic instrumentation enabled by `telemetry_enabled=True`, you can attach **per-tool** telemetry attributes (such as the LLM model name, user ID, or agent ID) to outgoing invocations. These attributes are:
+
+* Sent to the Toolbox server in the MCP request `params._meta` under the `dev.mcp-toolbox/telemetry` key, where they are available to server-side instrumentation (e.g., SQL Commenter on database tools).
+* Recorded as attributes on the client-side OpenTelemetry span for the invocation when telemetry is enabled.
+
+Use the `TelemetryAttributes` model and the `add_telemetry_attributes()` method on a loaded tool:
+
+```py
+from toolbox_core import ToolboxClient, TelemetryAttributes
+
+async with ToolboxClient("http://127.0.0.1:5000", telemetry_enabled=True) as toolbox:
+    tool = await toolbox.load_tool("my-tool")
+
+    attrs = TelemetryAttributes(
+        llm_model="gemini-2.5-pro",
+        user_id="user-123",
+        agent_id="agent-abc",
+    )
+    instrumented_tool = tool.add_telemetry_attributes(attrs)
+
+    result = await instrumented_tool(param="value")
+```
+
+The same method is available on `ToolboxSyncTool` for synchronous usage.
+
+#### Fields and Wire Mapping
+
+`TelemetryAttributes` exposes three optional fields, which serialize to OpenTelemetry-style keys on the wire:
+
+| Python field | Span/Meta key |
+| :--- | :--- |
+| `llm_model` | `client.model` |
+| `user_id` | `client.user.id` |
+| `agent_id` | `client.agent.id` |
+
+{{< notice tip >}}
+* `add_telemetry_attributes()` returns a **new tool instance**; the original tool is left untouched (the same immutable pattern as `bind_param` and `add_auth_token_getter`).
+* Calling `add_telemetry_attributes()` a second time **replaces** the previous attributes rather than merging with them. Pass a single `TelemetryAttributes` bundle with all fields you want sent.
+* Unset fields and empty strings are dropped before the payload is sent, so they will not appear as empty values on the server.
+{{< /notice >}}

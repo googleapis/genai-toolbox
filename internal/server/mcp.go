@@ -492,12 +492,19 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx = util.WithUserAgent(ctx, s.version)
 	ctx = util.WithSQLCommenterEnabled(ctx, s.sqlCommenterEnabled)
 
+	limit := s.httpMaxRequestBytes
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		// The id cannot be determined from an unreadable body. Per JSON-RPC 2.0,
 		// the response id MUST be null in that case.
 		// See https://www.jsonrpc.org/specification#response_object
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			err = fmt.Errorf("request body exceeds %d bytes", limit)
+		}
 		s.logger.DebugContext(ctx, err.Error())
 		render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil))
 		return
@@ -540,7 +547,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// check if client have `MCP-Protocol-Version` header
 	// Only supported for v2025-06-18+.
-	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
+	headerProtocolVersion := r.Header.Get("Mcp-Protocol-Version")
 	if headerProtocolVersion != "" {
 		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
 			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)

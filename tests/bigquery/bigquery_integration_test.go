@@ -2977,14 +2977,14 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 			historyData:    allowedTableUnquoted,
 			timestampCol:   "ts', horizon => 5) --",
 			wantStatusCode: http.StatusOK,
-			wantInError:    `invalid column name for 'timestamp_col': "'ts', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
+			wantInError:    `invalid column name for 'timestamp_col': "'ts'', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 		{
 			name:           "invoke with SQL injection in data_col",
 			historyData:    allowedTableUnquoted,
 			dataCol:        "data', horizon => 5) --",
 			wantStatusCode: http.StatusOK,
-			wantInError:    `invalid column name for 'data_col': "'data', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
+			wantInError:    `invalid column name for 'data_col': "'data'', horizon => 5) --'"; must match [a-zA-Z_][a-zA-Z0-9_]*`,
 		},
 	}
 

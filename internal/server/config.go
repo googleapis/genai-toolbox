@@ -73,7 +73,7 @@ type ServerConfig struct {
 	TelemetryGCPProject string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
-	// SQLCommenter enables appending SQLCommenter-format comments to SQL statements.
+	// SQLCommenter enables prepending SQLCommenter-format comments to SQL statements.
 	SQLCommenter bool
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
@@ -95,6 +95,8 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
+	// HttpMaxRequestBytes caps MCP HTTP request bodies. Zero uses the default.
+	HttpMaxRequestBytes int64
 }
 
 type logFormat string

@@ -45,6 +45,7 @@ func TestParseEnv(t *testing.T) {
 		err          bool
 		errString    string
 		wantOptional []string
+		lenient      bool
 	}{
 		{
 			desc:      "without default without env",
@@ -52,6 +53,19 @@ func TestParseEnv(t *testing.T) {
 			want:      "",
 			err:       true,
 			errString: `environment variable not found: "FOO"`,
+		},
+		{
+			desc:    "without default without env, lenient",
+			in:      "${FOO}",
+			want:    "FOO",
+			lenient: true,
+		},
+		{
+			desc:    "missing required mixed with env, lenient",
+			in:      "project: ${PROJECT}, region: ${REGION}",
+			env:     map[string]string{"REGION": "us-central1"},
+			want:    "project: PROJECT, region: us-central1",
+			lenient: true,
 		},
 		{
 			desc: "without default with env",
@@ -108,7 +122,7 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			parser := &ConfigParser{}
+			parser := &ConfigParser{AllowMissingEnvVars: tc.lenient}
 			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {
@@ -1845,6 +1859,10 @@ func TestPrebuiltTools(t *testing.T) {
 				"discovery": tools.ToolsetConfig{
 					Name:      "discovery",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
+				},
+				"enrich": tools.ToolsetConfig{
+					Name:      "enrich",
+					ToolNames: []string{"search_entries", "lookup_entry", "lookup_context", "generate_data_insights", "get_data_insights", "generate_data_profile", "get_data_profile", "discover_metadata", "get_discovery_results", "check_data_quality", "get_data_quality_results", "get_operation", "get_run_status"},
 				},
 			},
 		},

@@ -25,7 +25,6 @@ import (
 	"text/template"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -76,28 +75,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
-
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be `http`", resourceType)
-	}
-
-	// Combine Source and Tool headers.
-	// In case of conflict, Tool header overrides Source header
-	combinedHeaders := make(map[string]string)
-	maps.Copy(combinedHeaders, s.HttpDefaultHeaders())
-	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.PathParams, cfg.QueryParams, cfg.BodyParams, cfg.HeaderParams)
@@ -115,8 +96,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
-
 	// finish tool setup
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -125,7 +104,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),
-		Headers: combinedHeaders,
 	}, nil
 }
 
@@ -134,7 +112,6 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	tools.BaseTool[Config]
-	Headers map[string]string
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -284,6 +261,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
+	// Combine Source and Tool headers.
+	// In case of conflict, Tool header overrides Source header
+	combinedHeaders := make(map[string]string)
+	maps.Copy(combinedHeaders, source.HttpDefaultHeaders())
+	maps.Copy(combinedHeaders, t.Cfg.Headers)
+
 	paramsMap := params.AsMap()
 
 	// Calculate request body
@@ -304,7 +287,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Calculate request headers
-	allHeaders, err := getHeaders(t.Cfg.HeaderParams, t.Headers, paramsMap)
+	allHeaders, err := getHeaders(t.Cfg.HeaderParams, combinedHeaders, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating request headers", err)
 	}

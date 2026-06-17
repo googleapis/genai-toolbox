@@ -24,7 +24,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	es "github.com/googleapis/mcp-toolbox/internal/sources/elasticsearch"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
@@ -73,7 +72,7 @@ type Tool struct {
 
 var _ tools.Tool = Tool{}
 
-func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (c Config) Initialize() (tools.Tool, error) {
 	if c.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", c.Name)
 	}

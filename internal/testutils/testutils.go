@@ -22,10 +22,17 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
+
+// MockVersionString is used as a temporary version string in tests
+const MockVersionString = "0.0.0"
 
 // formatYaml is a utility function for stripping out tabs in multiline strings
 func FormatYaml(in string) []byte {
@@ -109,4 +116,75 @@ func WaitForString(ctx context.Context, re *regexp.Regexp, pr io.ReadCloser) (st
 			sb.WriteString(o.s)
 		}
 	}
+}
+
+var MockTool1 = NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
+
+var MockTool2 = NewMockTool(
+	"some_params",
+	"",
+	parameters.Parameters{
+		parameters.NewIntParameter("param1", "This is the first parameter."),
+		parameters.NewIntParameter("param2", "This is the second parameter."),
+	}, false, false)
+
+var MockTool3 = NewMockTool(
+	"array_param", "some description",
+	parameters.Parameters{
+		parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
+	}, false, false)
+
+var MockTool4 = NewMockTool("unauthorized_tool", "", []parameters.Parameter{}, true, false)
+
+var MockTool5 = NewMockTool("require_client_auth_tool", "", []parameters.Parameter{}, false, true)
+
+var MockPrompt1 = NewMockPrompt("prompt1", "", prompts.Arguments{})
+
+var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
+	{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
+})
+
+// SetUpResources setups resources to test against
+func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
+	toolsMap := make(map[string]tools.Tool)
+	var allTools []string
+	for _, tool := range mockTools {
+		toolsMap[tool.Name] = tool
+		allTools = append(allTools, tool.Name)
+	}
+
+	toolsets := make(map[string]tools.Toolset)
+	if len(allTools) > 0 {
+		for name, l := range map[string][]string{
+			"":           allTools,
+			"tool1_only": {allTools[0]},
+			"tool2_only": {allTools[1]},
+		} {
+			tc := tools.ToolsetConfig{Name: name, ToolNames: l}
+			m, err := tc.Initialize(MockVersionString, toolsMap)
+			if err != nil {
+				t.Fatalf("unable to initialize toolset %q: %s", name, err)
+			}
+			toolsets[name] = m
+		}
+	}
+
+	promptsMap := make(map[string]prompts.Prompt)
+	var allPrompts []string
+	for _, prompt := range mockPrompts {
+		promptsMap[prompt.Name] = prompt
+		allPrompts = append(allPrompts, prompt.Name)
+	}
+
+	promptsets := make(map[string]prompts.Promptset)
+	if len(allPrompts) > 0 {
+		psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
+		ps, err := psc.Initialize(MockVersionString, promptsMap)
+		if err != nil {
+			t.Fatalf("unable to initialize default promptset: %s", err)
+		}
+		promptsets[""] = ps
+	}
+
+	return toolsMap, toolsets, promptsMap, promptsets
 }

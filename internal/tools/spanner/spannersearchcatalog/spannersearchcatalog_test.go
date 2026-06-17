@@ -50,11 +50,13 @@ func TestParseFromYamlSpannerSearch(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": spannersearchcatalog.Config{
-					Name:         "example_tool",
-					Type:         "spanner-search-catalog",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "spanner-search-catalog",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -104,13 +106,15 @@ func (m mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestConfig_Initialize(t *testing.T) {
 	cfg := spannersearchcatalog.Config{
-		Name:        "test-tool",
-		Type:        "spanner-search-catalog",
-		Source:      "test-source",
-		Description: "Test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-tool",
+			Description: "Test description",
+		},
+		Type:   "spanner-search-catalog",
+		Source: "test-source",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
@@ -136,11 +140,13 @@ func TestTool_Invoke(t *testing.T) {
 	sourceProvider := mockSourceProvider{source: mockSource}
 
 	cfg := spannersearchcatalog.Config{
-		Name:   "test-tool",
+		ConfigBase: tools.ConfigBase{
+			Name: "test-tool",
+		},
 		Type:   "spanner-search-catalog",
 		Source: "test-source",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize failed: %v", err)
 	}
