@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-16T21:41:54Z
+**GENERATED ON:** 2026-06-17T01:52:55Z
 
 ---
 ### System Directives for AI Models
@@ -29833,6 +29833,732 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 
 
 ========================================================================
+## dataplex-check-data-quality
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-check-data-quality
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-check-data-quality/
+**Description:** Creates a new Dataplex Data Quality scan template for a specified BigQuery table and triggers the initial asynchronous execution run using custom defined quality rules.
+
+
+
+## About
+
+A `dataplex-check-data-quality` tool triggers a new Data Quality scan to evaluate rules (e.g. non-null, value range limits, custom SQL assertions) against table rows.
+
+Since scan template creation is asynchronous, this tool returns an LRO name. You must poll `dataplex-get-operation` with this ID until it is done, extract the `scanId`, and poll `dataplex-get-run-status` with the `scanId` until the job is `SUCCEEDED` before calling `dataplex-get-data-quality-results` to fetch results.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-check-data-quality` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the quality results directly to the Dataplex Universal Catalog. Defaults to false. |
+| specJSON | string | true | A raw JSON string defining the quality checks rules (e.g. `{"rules": [{"column": "age", "nonNullExpectation": {}}]}`, maps directly to `dataplexpb.DataQualitySpec`). |
+
+## Example
+
+```yaml
+kind: tool
+name: check_data_quality
+type: dataplex-check-data-quality
+source: my-dataplex-source
+description: Trigger a new data quality scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-check-data-quality".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-discover-metadata
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-discover-metadata
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-discover-metadata/
+**Description:** Creates a new Dataplex Data Discovery scan template for a specified Cloud Storage bucket and triggers the initial asynchronous execution run to crawl files, infer schemas, and register tables in BigQuery.
+
+
+
+## About
+
+A `dataplex-discover-metadata` tool triggers a new Data Discovery scan to automatically crawl GCS directories, infer schemas/partitions, and publish them as BigQuery tables.
+
+Since scan template creation is asynchronous, this tool returns an LRO name. You must poll `dataplex-get-operation` with this ID until it is done, extract the `scanId`, and poll `dataplex-get-run-status` with the `scanId` until the job is `SUCCEEDED` before calling `dataplex-get-discovery-results` to fetch results.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-discover-metadata` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resourcePath | string | true | The resource path of the target Cloud Storage bucket (format: `//storage.googleapis.com/{bucket_name}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+
+## Example
+
+```yaml
+kind: tool
+name: discover_metadata
+type: dataplex-discover-metadata
+source: my-dataplex-source
+description: Trigger a new metadata discovery scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-discover-metadata".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-generate-data-insights
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-generate-data-insights
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-insights/
+**Description:** Creates a new Dataplex Data Insights (documentation) scan template and triggers the initial asynchronous execution run to generate descriptions, relationships, and sample SQL queries for a table.
+
+
+
+## About
+
+A `dataplex-generate-data-insights` tool triggers the creation and run of a Dataplex Data Insights scan on a BigQuery table.
+
+Since the scan template creation is asynchronous, this tool returns a Long-Running Operation (LRO) resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`).
+To orchestrate this workflow, you must:
+1. Capture the `operation_id` from this tool's response.
+2. Poll the `dataplex-get-operation` tool with this ID until `done` is true.
+3. Extract the created scan ID (`scanId`) from the completed operation's response.
+4. Poll `dataplex-get-run-status` with the `scanId` until the job state is `SUCCEEDED`.
+5. Call `dataplex-get-data-insights` with the `scanId` to fetch the final results.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-generate-data-insights` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the generated insights directly to the Dataplex Universal Catalog. Defaults to false. |
+
+## Example
+
+```yaml
+kind: tool
+name: generate_data_insights
+type: dataplex-generate-data-insights
+source: my-dataplex-source
+description: Trigger a new data insights scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-generate-data-insights".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-generate-data-profile
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-generate-data-profile
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-profile/
+**Description:** Creates a new Dataplex Data Profile scan template for a specified BigQuery table and triggers the initial asynchronous execution run.
+
+
+
+## About
+
+A `dataplex-generate-data-profile` tool triggers a new Data Profile scan to compute statistical profiles (min, max, mean, null ratios, distinct ratios, quantiles, etc.) on table columns.
+
+Since scan template creation is asynchronous, this tool returns an LRO name. You must poll `dataplex-get-operation` with this ID until it is done, extract the `scanId`, and poll `dataplex-get-run-status` with the `scanId` until the job is `SUCCEEDED` before calling `dataplex-get-data-profile` to fetch results.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-generate-data-profile` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resourcePath | string | true | The resource path of the target BigQuery table (format: `projects/{project}/datasets/{dataset}/tables/{table}`). |
+| location | string | true | The Google Cloud region where the scan should be executed (e.g. `us-central1`). |
+| publish | boolean | false | If true, publishes the profile results directly to the Dataplex Universal Catalog. Defaults to false. |
+
+## Example
+
+```yaml
+kind: tool
+name: generate_data_profile
+type: dataplex-generate-data-profile
+source: my-dataplex-source
+description: Trigger a new data profiling scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-generate-data-profile".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-get-data-insights
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-get-data-insights
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/
+**Description:** Retrieves the final generated data insights (descriptions, schema relationships, sample SQL queries) for a completed insights scan.
+
+
+
+## About
+
+A `dataplex-get-data-insights` tool retrieves the final results of a completed Data Insights scan.
+
+WARNING: You must verify that the execution run has succeeded (via `dataplex-get-run-status`) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results only via the nested public GA fields `dataDocumentationResult.datasetResult` (for datasets) or `dataDocumentationResult.tableResult` (for tables). The top-level fields (like `dataDocumentationResult.queries`) are restricted and will be empty.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-get-data-insights` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex scan (e.g. `nq-doc-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+
+## Example
+
+```yaml
+kind: tool
+name: get_data_insights
+type: dataplex-get-data-insights
+source: my-dataplex-source
+description: Retrieve results from a completed data insights scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-get-data-insights".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-get-data-profile
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-get-data-profile
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/
+**Description:** Retrieves the final generated data profile results (overall row counts, column-level statistics, quartiles, and frequent values) for a completed profiling scan.
+
+
+
+## About
+
+A `dataplex-get-data-profile` tool retrieves the results of a completed Data Profile scan.
+
+WARNING: You must verify the execution run has succeeded (via `dataplex-get-run-status`) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields `dataProfileResult.profile.fields` inside the returned DataScan.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-get-data-profile` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex profile scan (e.g. `nq-prof-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+
+## Example
+
+```yaml
+kind: tool
+name: get_data_profile
+type: dataplex-get-data-profile
+source: my-dataplex-source
+description: Fetch results of a completed data profile scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-get-data-profile".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-get-data-quality-results
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-get-data-quality-results
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-quality-results/
+**Description:** Retrieves the final generated data quality results (overall score, dimension scores, rule passing details, and the failing rows debug SQL query) for a completed quality scan.
+
+
+
+## About
+
+A `dataplex-get-data-quality-results` tool retrieves the results of a completed Data Quality scan.
+
+WARNING: You must verify the execution run has succeeded (via `dataplex-get-run-status`) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields `dataQualityResult` inside the returned DataScan.
+Note that the `failingRowsQuery` field inside the rules result is extremely useful for retrieving failed rows.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-get-data-quality-results` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex quality scan (e.g. `nq-dq-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+
+## Example
+
+```yaml
+kind: tool
+name: get_data_quality_results
+type: dataplex-get-data-quality-results
+source: my-dataplex-source
+description: Fetch results of a completed data quality scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-get-data-quality-results".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-get-discovery-results
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-get-discovery-results
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-discovery-results/
+**Description:** Retrieves the final generated data discovery results (publishing metadata showing registered BigQuery tables, scanned file counts, and processed bytes) for a completed discovery scan.
+
+
+
+## About
+
+A `dataplex-get-discovery-results` tool retrieves the results of a completed Data Discovery scan.
+
+WARNING: You must verify the execution run has succeeded (via `dataplex-get-run-status`) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields `dataDiscoveryResult.bigqueryPublishing` and `dataDiscoveryResult.scanStatistics` inside the returned DataScan.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-get-discovery-results` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex discovery scan (e.g. `nq-disc-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+
+## Example
+
+```yaml
+kind: tool
+name: get_discovery_results
+type: dataplex-get-discovery-results
+source: my-dataplex-source
+description: Fetch results of a completed metadata discovery scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-get-discovery-results".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-get-operation
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-get-operation
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-operation/
+**Description:** Retrieves the status of an asynchronous Dataplex Long-Running Operation (LRO).
+
+
+
+## About
+
+A `dataplex-get-operation` tool retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
+
+Poll this tool until the `done` field from the response is `true`. Once completed, the `response` field will contain the created DataScan resource, from which you can extract the `scanId` (the last part of the `name` field, e.g. `nq-doc-1234`) to pass to `get_run_status` and get results.
+WARNING: This only tracks the creation of the scan template, NOT the actual background execution.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-get-operation` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| operationName | string | true | The full operation resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`). |
+
+## Example
+
+```yaml
+kind: tool
+name: get_operation
+type: dataplex-get-operation
+source: my-dataplex-source
+description: Check the status of a long-running scan template creation.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-get-operation".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
+## dataplex-get-run-status
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-get-run-status
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-run-status/
+**Description:** Retrieves the execution status of the background job run (DataScanJob) for a specified Dataplex scan.
+
+
+
+## About
+
+A `dataplex-get-run-status` tool retrieves the execution status of the latest background job run for a specified scan.
+
+Use this tool to poll the progress of the insights, profiling, discovery, or quality scan execution. Wait until the returned `state` is `SUCCEEDED` before fetching results. Typical execution takes 2-5 minutes. If the state is `FAILED`, check the error details.
+
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-get-run-status` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| scanId | string | true | The unique ID of the Dataplex scan template (e.g. `nq-prof-12345`). |
+| location | string | true | The Google Cloud region where the scan was created (e.g. `us-central1`). |
+| jobId | string | false | Optional. A specific job run ID. If omitted, returns status for the latest job run. |
+
+## Example
+
+```yaml
+kind: tool
+name: get_run_status
+type: dataplex-get-run-status
+source: my-dataplex-source
+description: Monitor the background execution run of a Dataplex scan.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "dataplex-get-run-status".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
 ## dataplex-lookup-context
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-lookup-context
@@ -29845,11 +30571,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 
 A `dataplex-lookup-context` tool provides rich metadata of one or more data assets along with their relationships.
 
-`dataplex-lookup-context` takes a required `name` parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required `resources`
-parameter which is a list of resource names for which metadata is needed in the 
-following form: projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}
+`dataplex-lookup-context` takes a required `resources` parameter which is a list of up to 10 resource names for which metadata is needed in the following form: `projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}`. All resources must belong to the same Google Cloud location.
 
 ## Compatible Sources
 
@@ -29883,6 +30605,14 @@ rather than an access denied error.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex/docs
+
+## Parameters
+
+The `dataplex-lookup-context` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| resources | list of strings | true | A list of up to 10 resource names for which metadata is needed (format: `projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}`). |
 
 ## Example
 
@@ -29918,24 +30648,6 @@ description: Use this tool to retrieve rich metadata regarding one or more data 
 
 A `dataplex-lookup-entry` tool returns details of a particular entry in Knowledge Catalog.
 
-`dataplex-lookup-entry` takes a required `name` parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required `entry`
-parameter which is the resource name of the entry in the following form:
-projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
-It also optionally accepts following parameters:
-
-- `view` - View to control which parts of an entry the service should return.
-    It takes integer values from 1-4 corresponding to type of view - BASIC,
-    FULL, CUSTOM, ALL
-- `aspectTypes` - Limits the aspects returned to the provided aspect types in
-    the format
-    `projects/{project}/locations/{location}/aspectTypes/{aspectType}`. It only
-    works for CUSTOM view.
-- `paths` - Limits the aspects returned to those associated with the provided
-    paths within the Entry. It only works for CUSTOM view.
-
-
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -29960,6 +30672,16 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-lookup-entry` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| entry | string | true | The resource name of the Entry (format: `projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}`). |
+| view | integer | false | View to control which parts of an entry to return (1=BASIC, 2=FULL, 3=CUSTOM, 4=ALL). Defaults to 2. |
+| aspectTypes | list of strings | false | Limits the aspects returned to the provided aspect types (format: `projects/{project}/locations/{location}/aspectTypes/{aspectType}`). Only works for CUSTOM view (3). |
 
 ## Example
 
@@ -29996,15 +30718,6 @@ description: Use this tool to retrieve a specific entry in Knowledge Catalog.
 A `dataplex-search-aspect-types` tool allows to fetch the metadata template of
 aspect types based on search query.
 
-`dataplex-search-aspect-types` accepts following parameters optionally:
-
-- `query` - Narrows down the search of aspect types to value of this parameter.
-  If not provided, it fetches all aspect types available to the user.
-- `pageSize` - Number of returned aspect types in the search page. Defaults to `5`.
-- `orderBy` - Specifies the ordering of results. Supported values are: relevance
-  (default), last_modified_timestamp, last_modified_timestamp asc.
-
-
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -30030,6 +30743,16 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-aspect-types` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| query | string | false | Optional. Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all available aspect types. |
+| pageSize | integer | false | Number of returned aspect types in the search page. Defaults to 5. |
+| orderBy | string | false | Specifies ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
 
 ## Example
 
@@ -30064,17 +30787,9 @@ description: Use this tool to find aspect types relevant to the query.
 ## About
 
 A `dataplex-search-dq-scans` tool returns data quality scans that match the given criteria.
-It's compatible with the following sources:
+## Compatible Sources
 
-- [dataplex](../../sources/dataplex.md)
-
-`dataplex-search-dq-scans` accepts the following optional parameters:
-
-- `filter` - Filter string to search/filter data quality scans. E.g. "display_name = \"my-scan\"".
-- `data_scan_id` - The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.
-- `table_name` - The name of the table to filter by. Maps to data.entity in the filter string. E.g. "//bigquery.googleapis.com/projects/P/datasets/D/tables/T".
-- `pageSize` - Number of returned data quality scans in the page. Defaults to `10`.
-- `orderBy` - Specifies the ordering of results.
+{{< compatible-sources >}}
 
 ## Requirements
 
@@ -30097,6 +30812,18 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-dq-scans` tool accepts the following optional parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| filter | string | false | Filter string to search/filter data quality scans (e.g. `display_name = "my-scan"`). |
+| data_scan_id | string | false | The resource name of the data scan to filter by (`projects/{project}/locations/{locationId}/dataScans/{dataScanId}`). |
+| table_name | string | false | The name of the table to filter by, mapping to `data.entity` (e.g. `//bigquery.googleapis.com/projects/P/datasets/D/tables/T`). |
+| pageSize | integer | false | Number of returned data quality scans in the page. Defaults to 10. |
+| orderBy | string | false | Specifies ordering of results. |
 
 ## Example
 
@@ -30133,18 +30860,6 @@ description: Use this tool to search for data quality scans.
 A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
 tables, views, models) that matches given user query.
 
-`dataplex-search-entries` takes a required `query` parameter based on which
-entries are filtered and returned to the user. It also optionally accepts
-following parameters:
-
-- `scope` - A scope limits the search space to a particular project or organization.
-  It must be in the format: organizations/<org_id> or projects/<project_id>
-  or projects/<project_number>.
-- `pageSize` - Number of results in the search page. Defaults to `5`.
-- `orderBy` - Specifies the ordering of results. Supported values are: relevance
-  (default), last_modified_timestamp, last_modified_timestamp asc.
-
-
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -30170,6 +30885,17 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-entries` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| query | string | true | The search query string to filter entries. |
+| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
+| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
+| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
 
 ## Example
 
@@ -30223,9 +30949,23 @@ description: Use this tool to get all the entries based on the provided query.
 *   **Tools:**
     *   `search_entries`: Searches for entries in Knowledge Catalog.
     *   `lookup_entry`: Retrieves a specific entry from Knowledge Catalog.
-    *   `search_aspect_types`: Finds aspect types relevant to the
-        query.
+    *   `search_aspect_types`: Finds aspect types relevant to the query.
     *   `lookup_context`: Retrieves rich metadata regarding one or more data assets along with their relationships.
+    *   `search_dq_scans`: Search for data quality scans in Dataplex.
+    *   `generate_data_insights`: Creates a new Dataplex Data Documentation scan template and triggers the run.
+    *   `get_data_insights`: Retrieves the final generated data insights for a completed scan.
+    *   `generate_data_profile`: Creates a new Dataplex Data Profile scan template and triggers the run.
+    *   `get_data_profile`: Retrieves the final generated data profile results.
+    *   `discover_metadata`: Creates a new Dataplex Data Discovery scan template and triggers the run.
+    *   `get_discovery_results`: Retrieves the final generated data discovery results.
+    *   `check_data_quality`: Creates a new Dataplex Data Quality scan template and triggers the run.
+    *   `get_data_quality_results`: Retrieves the final generated data quality results.
+    *   `get_operation`: Retrieves the status of a Dataplex long-running operation.
+    *   `get_run_status`: Retrieves the execution status of the latest background job run.
+*   **Toolsets:**
+    *   `discovery`: Metadata discovery and search toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`).
+    *   `enrich`: Metadata enrichment pipeline orchestration and execution toolset (`search_entries`, `lookup_entry`, `lookup_context`, `generate_data_insights`, `get_data_insights`, `generate_data_profile`, `get_data_profile`, `discover_metadata`, `get_discovery_results`, `check_data_quality`, `get_data_quality_results`, `get_operation`, `get_run_status`).
+
 
 
 
