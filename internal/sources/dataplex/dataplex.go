@@ -17,6 +17,7 @@ package dataplex
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
@@ -315,10 +316,11 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 }
 
 type DataProductSummary struct {
-	Name        string   `json:"name"`
-	DisplayName string   `json:"displayName"`
-	OwnerEmails []string `json:"ownerEmails"`
-	AssetCount  int32    `json:"assetCount"`
+	LocationID    string   `json:"locationId"`
+	DataProductID string   `json:"dataProductId"`
+	DisplayName   string   `json:"displayName"`
+	OwnerEmails   []string `json:"ownerEmails"`
+	AssetCount    int32    `json:"assetCount"`
 }
 
 func (s *Source) ListDataProducts(
@@ -355,11 +357,18 @@ func (s *Source) ListDataProducts(
 			}
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
+		parts := strings.Split(dp.GetName(), "/")
+		var locationId, dataProductId string
+		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+			locationId = parts[3]
+			dataProductId = parts[5]
+		}
 		results = append(results, &DataProductSummary{
-			Name:        dp.GetName(),
-			DisplayName: dp.GetDisplayName(),
-			OwnerEmails: dp.GetOwnerEmails(),
-			AssetCount:  dp.GetAssetCount(),
+			LocationID:    locationId,
+			DataProductID: dataProductId,
+			DisplayName:   dp.GetDisplayName(),
+			OwnerEmails:   dp.GetOwnerEmails(),
+			AssetCount:    dp.GetAssetCount(),
 		})
 	}
 	return results, nil
