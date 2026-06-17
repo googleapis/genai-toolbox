@@ -114,13 +114,15 @@ func TestGenerateToolManifest(t *testing.T) {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
 			}
 
-			if got.Annotations != nil {
-				annotations, _ := json.Marshal(got.Annotations)
+			if tc.wantAnnotations != nil {
+				annotations, err := json.Marshal(got.Annotations)
+				if err != nil {
+					t.Fatalf("error marshaling annotations")
+				}
 				if diff := cmp.Diff(tc.wantAnnotations, annotations); diff != "" {
 					t.Fatalf("unexpected annotations (-want +got):\n%s", diff)
 				}
 			}
-
 		})
 	}
 }
@@ -228,7 +230,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
 
-	got, err := GenerateListToolsResult(toolset, toolsMap)
+	got, err := GenerateListToolsResult(nil, toolset, toolsMap)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}

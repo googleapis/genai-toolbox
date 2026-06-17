@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/conversationalanalytics/conversationalanalyticslistaccessibledataagents"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlConversationalAnalyticsListDataAgents(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": conversationalanalyticslistaccessibledataagents.Config{
-					Name:         "example_tool",
-					Type:         "conversational-analytics-list-accessible-data-agents",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "conversational-analytics-list-accessible-data-agents",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -65,13 +68,15 @@ func TestParseFromYamlConversationalAnalyticsListDataAgents(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": conversationalanalyticslistaccessibledataagents.Config{
-					Name:        "example_tool",
-					Type:        "conversational-analytics-list-accessible-data-agents",
-					Source:      "my-instance",
-					Description: "some description",
-					AuthRequired: []string{
-						"my-google-auth",
+					ConfigBase: tools.ConfigBase{
+						Name:        "example_tool",
+						Description: "some description",
+						AuthRequired: []string{
+							"my-google-auth",
+						},
 					},
+					Type:   "conversational-analytics-list-accessible-data-agents",
+					Source: "my-instance",
 				},
 			},
 		},

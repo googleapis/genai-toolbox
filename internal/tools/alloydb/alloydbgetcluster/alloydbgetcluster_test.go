@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	alloydbgetcluster "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbgetcluster"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"get-my-cluster": alloydbgetcluster.Config{
-					Name:         "get-my-cluster",
-					Type:         "alloydb-get-cluster",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-my-cluster",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "alloydb-get-cluster",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"get-my-cluster-auth": alloydbgetcluster.Config{
-					Name:         "get-my-cluster-auth",
-					Type:         "alloydb-get-cluster",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-my-cluster-auth",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "alloydb-get-cluster",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},

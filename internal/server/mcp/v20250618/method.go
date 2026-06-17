@@ -23,9 +23,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -116,7 +117,7 @@ func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManag
 	}
 
 	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), toolset, toolsMap)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -228,8 +229,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 			var claims map[string]any
 			var err error
 
-			cfg := aS.ToConfig()
-			if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
+			if mSvc, ok := aS.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 				claims = util.AuthTokenClaimsFromContext(ctx)
 			} else {
 				claims, err = aS.GetClaimsFromHeader(ctx, header)
@@ -267,7 +267,16 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
-	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
+	if err := mcputil.ValidateScopes(ctx, tool.GetScopesRequired(), authServices); err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	toolParams, err := tool.GetParameters(resourceMgr.GetSourcesMap())
+	if err != nil {
+		err = fmt.Errorf("error getting parameters for tool: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err

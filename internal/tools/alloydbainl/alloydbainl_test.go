@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/alloydbainl"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -55,12 +56,14 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": alloydbainl.Config{
-					Name:         "example_tool",
-					Type:         "alloydb-ai-nl",
-					Source:       "my-alloydb-instance",
-					Description:  "AlloyDB natural language query tool",
-					NLConfig:     "my_nl_config",
-					AuthRequired: []string{"my-google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "AlloyDB natural language query tool",
+						AuthRequired: []string{"my-google-auth-service"},
+					},
+					Type:     "alloydb-ai-nl",
+					Source:   "my-alloydb-instance",
+					NLConfig: "my_nl_config",
 					NLConfigParameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
@@ -96,12 +99,14 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"complex_tool": alloydbainl.Config{
-					Name:         "complex_tool",
-					Type:         "alloydb-ai-nl",
-					Source:       "my-alloydb-instance",
-					Description:  "AlloyDB natural language query tool with multiple parameters",
-					NLConfig:     "complex_nl_config",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "complex_tool",
+						Description:  "AlloyDB natural language query tool with multiple parameters",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:     "alloydb-ai-nl",
+					Source:   "my-alloydb-instance",
+					NLConfig: "complex_nl_config",
 					NLConfigParameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),

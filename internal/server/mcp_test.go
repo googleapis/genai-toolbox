@@ -82,9 +82,9 @@ var prompt2Args = []any{
 }
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -427,9 +427,9 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -454,7 +454,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -471,7 +471,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -488,7 +488,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -505,7 +505,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -788,6 +788,7 @@ func TestMcpEndpoint(t *testing.T) {
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
+						"id":      nil,
 						"error": map[string]any{
 							"code":    -32600.0,
 							"message": "not supporting batch requests",
@@ -899,10 +900,6 @@ func TestMcpEndpoint(t *testing.T) {
 						if err := json.Unmarshal(body, &got); err != nil {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
 						}
-						// for decode failure, a random uuid is generated in server
-						if tc.want["id"] == nil {
-							tc.want["id"] = got["id"]
-						}
 						if !reflect.DeepEqual(got, tc.want) {
 							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
 						}
@@ -974,6 +971,68 @@ func TestGetEndpoint(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected error during request: %s", err)
+	}
+}
+
+func TestMcpRequestBodyLimit(t *testing.T) {
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	limit := int(DefaultHTTPMaxRequestBytes)
+	tooLarge := bytes.Repeat([]byte("x"), limit+1)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	errBody, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing error payload: %v", got)
+	}
+	wantMessage := fmt.Sprintf("request body exceeds %d bytes", DefaultHTTPMaxRequestBytes)
+	if errBody["message"] != wantMessage {
+		t.Fatalf("unexpected error message: got %v, want %s", errBody["message"], wantMessage)
+	}
+}
+
+func TestMcpRequestBodyLimitOverride(t *testing.T) {
+	customLimit := int64(1 << 20)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	tooLarge := bytes.Repeat([]byte("x"), int(customLimit)+1)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	errBody, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing error payload: %v", got)
+	}
+	wantMessage := fmt.Sprintf("request body exceeds %d bytes", customLimit)
+	if errBody["message"] != wantMessage {
+		t.Fatalf("unexpected error message: got %v, want %s", errBody["message"], wantMessage)
 	}
 }
 
@@ -1094,9 +1153,9 @@ func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mockTools := []testutils.MockTool{tool1, tool2, tool3}
-	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
@@ -1108,7 +1167,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "", "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
@@ -1119,7 +1178,7 @@ func TestStdioSession(t *testing.T) {
 		}
 	}()
 
-	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
@@ -1129,7 +1188,7 @@ func TestStdioSession(t *testing.T) {
 	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	server := &Server{
-		version:         fakeVersionString,
+		version:         testutils.MockVersionString,
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
