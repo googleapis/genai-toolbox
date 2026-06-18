@@ -948,8 +948,8 @@ _Repeat the following steps for each of the 5 combinations listed above._
    cd npm/server-<os>-<arch>
    ```
 2. **Verify versioning:**
-   - Verify that the `version.txt` file reflects the version of the toolbox binary to be released.
-   - Open `package.json` and verify that the `"version"` field reflects the target version.
+   - The toolbox binary version is sourced from `cmd/version.txt` at the repo root (the release-please `versionFile`); `downloadBinary.js` reads it from there during `prepack`. Verify it reflects the version to be released.
+   - Open `package.json` and verify that the `"version"` field matches `cmd/version.txt`.
 3. **Sync Lockfile:**
    ```bash
    npm install --force

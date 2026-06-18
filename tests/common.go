@@ -466,6 +466,16 @@ func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]
 		"source":      "my-instance",
 		"description": "Gets the query plan for a SQL statement.",
 	}
+	tools["show_query_stats"] = map[string]any{
+		"type":        "mysql-show-query-stats",
+		"source":      "my-instance",
+		"description": "Lists query statistics in the database.",
+	}
+	tools["list_all_locks"] = map[string]any{
+		"type":        "mysql-list-all-locks",
+		"source":      "my-instance",
+		"description": "Lists all table, row locks in the database.",
+	}
 	config["tools"] = tools
 	return config
 }
