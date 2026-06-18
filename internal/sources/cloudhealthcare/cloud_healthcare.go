@@ -45,7 +45,6 @@ var allowedFHIRHosts = map[string]struct{}{
 	"healthcare.mtls.googleapis.com": {},
 }
 
-
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -298,6 +297,10 @@ func (s *Source) getService(tokenStr string) (*healthcare.Service, error) {
 	return svc, nil
 }
 
+func isAlphanumeric(c byte) bool {
+	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+}
+
 func isValidAPIVersion(v string) bool {
 	if len(v) < 2 || v[0] != 'v' {
 		return false
@@ -307,8 +310,7 @@ func isValidAPIVersion(v string) bool {
 		return false
 	}
 	for i := 2; i < len(v); i++ {
-		c := v[i]
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+		if !isAlphanumeric(v[i]) {
 			return false
 		}
 	}
