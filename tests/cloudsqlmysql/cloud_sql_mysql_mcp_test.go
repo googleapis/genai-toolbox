@@ -162,8 +162,8 @@ func TestCloudSQLMySQLMCPListTools(t *testing.T) {
 				"type": "object",
 				"properties": map[string]any{
 					"connected_schema": map[string]any{"description": "(Optional) The database user is connected to, the value is set from env variable CLOUD_SQL_MYSQL_DATABASE or MYSQL_DATABASE", "type": "string"},
-					"limit":            map[string]any{"default": float64(10), "description": "Optional: The maximum number of rows to return.", "type": "integer"},
-					"table_schema":     map[string]any{"default": "", "description": "Optional: The database name to query. If this parameter is omitted or empty, it will query the connected database.", "type": "string"},
+					"limit":            map[string]any{"default": float64(10), "description": "(Optional) Max rows to return, default is 10", "type": "integer"},
+					"table_schema":     map[string]any{"default": "", "description": "(Optional) The database where query statistics is to be executed. Check all queries visible to the current user if not specified", "type": "string"},
 				},
 				"required": []any{},
 			},
