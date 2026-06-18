@@ -63,6 +63,9 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Bucket           *string                `yaml:"bucket,omitempty"`
+	Prefix           *string                `yaml:"prefix,omitempty"`
+	Delimiter        *string                `yaml:"delimiter,omitempty"`
 }
 
 // validate interface
@@ -76,13 +79,23 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
+	if cfg.Bucket != nil && *cfg.Bucket == "" {
+		return nil, fmt.Errorf("bucket cannot be empty for tool %q", cfg.Name)
+	}
 
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from.")
-	prefixParam := parameters.NewStringParameter(prefixKey, "Filter results to objects whose names begin with this prefix.", parameters.WithStringDefault(""))
-	delimiterParam := parameters.NewStringParameter(delimiterKey, "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.", parameters.WithStringDefault(""))
 	maxResultsParam := parameters.NewIntParameter(maxResultsKey, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.", parameters.WithIntDefault(0))
 	pageTokenParam := parameters.NewStringParameter(pageTokenKey, "A previously-returned page token for retrieving the next page of results.", parameters.WithStringDefault(""))
-	allParameters := parameters.Parameters{bucketParam, prefixParam, delimiterParam, maxResultsParam, pageTokenParam}
+	allParameters := parameters.Parameters{}
+	if cfg.Bucket == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from."))
+	}
+	if cfg.Prefix == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(prefixKey, "Filter results to objects whose names begin with this prefix.", parameters.WithStringDefault("")))
+	}
+	if cfg.Delimiter == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(delimiterKey, "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.", parameters.WithStringDefault("")))
+	}
+	allParameters = append(allParameters, maxResultsParam, pageTokenParam)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -112,12 +125,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	mapParams := params.AsMap()
-	bucket, ok := mapParams[bucketKey].(string)
-	if !ok || bucket == "" {
+	bucket := cloudstoragecommon.ResolveString(t.Cfg.Bucket, mapParams, bucketKey)
+	if bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
-	prefix, _ := mapParams[prefixKey].(string)
-	delimiter, _ := mapParams[delimiterKey].(string)
+	prefix := cloudstoragecommon.ResolveString(t.Cfg.Prefix, mapParams, prefixKey)
+	delimiter := cloudstoragecommon.ResolveString(t.Cfg.Delimiter, mapParams, delimiterKey)
 	pageToken, _ := mapParams[pageTokenKey].(string)
 	maxResults, _ := mapParams[maxResultsKey].(int)
 	if maxResults < 0 {

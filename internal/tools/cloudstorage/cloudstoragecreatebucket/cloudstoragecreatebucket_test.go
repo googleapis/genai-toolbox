@@ -83,6 +83,33 @@ func TestParseFromYamlCloudStorageCreateBucket(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable parameters",
+			in: `
+			kind: tool
+			name: configured_create_bucket
+			type: cloud-storage-create-bucket
+			source: prod-gcs
+			description: Create configured bucket
+			project: baked-project
+			location: US
+			uniform_bucket_level_access: true
+			`,
+			want: server.ToolConfigs{
+				"configured_create_bucket": cloudstoragecreatebucket.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_create_bucket",
+						Description:  "Create configured bucket",
+						AuthRequired: []string{},
+					},
+					Type:                     "cloud-storage-create-bucket",
+					Source:                   "prod-gcs",
+					Project:                  strPtr("baked-project"),
+					Location:                 strPtr("US"),
+					UniformBucketLevelAccess: boolPtr(true),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -97,17 +124,27 @@ func TestParseFromYamlCloudStorageCreateBucket(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 type mockSource struct {
 	sources.Source
 	called                      bool
 	gotBucket                   string
+	gotProject                  string
 	gotLocation                 string
 	gotUniformBucketLevelAccess bool
 }
 
-func (m *mockSource) CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
+func (m *mockSource) CreateBucket(ctx context.Context, bucket, project, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
 	m.called = true
 	m.gotBucket = bucket
+	m.gotProject = project
 	m.gotLocation = location
 	m.gotUniformBucketLevelAccess = uniformBucketLevelAccess
 	return map[string]any{"bucket": bucket, "created": true}, nil
@@ -143,17 +180,19 @@ func TestInvokeValidationAndForwarding(t *testing.T) {
 	tcs := []struct {
 		desc        string
 		bucket      any
+		project     any
 		location    any
 		uniform     any
 		wantErr     bool
 		wantCalled  bool
 		wantBucket  string
+		wantProject string
 		wantLoc     string
 		wantUniform bool
 		wantSubstr  string
 	}{
 		{desc: "missing bucket", bucket: "", location: "US", uniform: false, wantErr: true, wantSubstr: "bucket"},
-		{desc: "happy path", bucket: "b", location: "EU", uniform: true, wantCalled: true, wantBucket: "b", wantLoc: "EU", wantUniform: true},
+		{desc: "happy path", bucket: "b", project: "override-project", location: "EU", uniform: true, wantCalled: true, wantBucket: "b", wantProject: "override-project", wantLoc: "EU", wantUniform: true},
 		{desc: "omitted location", bucket: "b", uniform: false, wantCalled: true, wantBucket: "b"},
 	}
 	for _, tc := range tcs {
@@ -163,6 +202,7 @@ func TestInvokeValidationAndForwarding(t *testing.T) {
 			resourceMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{
 				{Name: "bucket", Value: tc.bucket},
+				{Name: "project", Value: tc.project},
 				{Name: "uniform_bucket_level_access", Value: tc.uniform},
 			}
 			if tc.location != nil {
@@ -190,9 +230,92 @@ func TestInvokeValidationAndForwarding(t *testing.T) {
 			if src.called != tc.wantCalled {
 				t.Errorf("called = %v, want %v", src.called, tc.wantCalled)
 			}
-			if src.gotBucket != tc.wantBucket || src.gotLocation != tc.wantLoc || src.gotUniformBucketLevelAccess != tc.wantUniform {
-				t.Errorf("forwarded params = (%q, %q, %v)", src.gotBucket, src.gotLocation, src.gotUniformBucketLevelAccess)
+			if src.gotBucket != tc.wantBucket || src.gotProject != tc.wantProject || src.gotLocation != tc.wantLoc || src.gotUniformBucketLevelAccess != tc.wantUniform {
+				t.Errorf("forwarded params = (%q, %q, %q, %v)", src.gotBucket, src.gotProject, src.gotLocation, src.gotUniformBucketLevelAccess)
 			}
 		})
 	}
+}
+
+func TestConfiguredParametersHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragecreatebucket.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "create_bucket_tool",
+			Description: "Create bucket",
+		},
+		Type:                     "cloud-storage-create-bucket",
+		Source:                   "my-gcs",
+		Project:                  strPtr("baked-project"),
+		Location:                 strPtr("US"),
+		UniformBucketLevelAccess: boolPtr(true),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{{Name: "bucket", Value: "b"}}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotProject != "baked-project" || src.gotLocation != "US" || !src.gotUniformBucketLevelAccess {
+		t.Fatalf("forwarded project/location/uniform = %q/%q/%v, want baked-project/US/true", src.gotProject, src.gotLocation, src.gotUniformBucketLevelAccess)
+	}
+}
+
+func TestUnsetParametersRemainVisible(t *testing.T) {
+	tool := initTool(t)
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "project", "location", "uniform_bucket_level_access"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredProjectHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragecreatebucket.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "create_bucket_tool",
+			Description: "Create bucket",
+		},
+		Type:    "cloud-storage-create-bucket",
+		Source:  "my-gcs",
+		Project: strPtr(""),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "location", "uniform_bucket_level_access"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "bucket", Value: "b"},
+		{Name: "location", Value: ""},
+		{Name: "uniform_bucket_level_access", Value: false},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotProject != "" {
+		t.Fatalf("project forwarded = %q, want empty source fallback marker", src.gotProject)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

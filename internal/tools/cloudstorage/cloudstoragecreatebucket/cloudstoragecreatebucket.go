@@ -29,6 +29,7 @@ import (
 const resourceType string = "cloud-storage-create-bucket"
 
 const (
+	projectKey                  = "project"
 	bucketKey                   = "bucket"
 	locationKey                 = "location"
 	uniformBucketLevelAccessKey = "uniform_bucket_level_access"
@@ -49,14 +50,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error)
+	CreateBucket(ctx context.Context, bucket, project, location string, uniformBucketLevelAccess bool) (map[string]any, error)
 }
 
 type Config struct {
-	tools.ConfigBase `yaml:",inline"`
-	Type             string                 `yaml:"type" validate:"required"`
-	Source           string                 `yaml:"source" validate:"required"`
-	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	tools.ConfigBase         `yaml:",inline"`
+	Type                     string                 `yaml:"type" validate:"required"`
+	Source                   string                 `yaml:"source" validate:"required"`
+	Annotations              *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Project                  *string                `yaml:"project,omitempty"`
+	Location                 *string                `yaml:"location,omitempty"`
+	UniformBucketLevelAccess *bool                  `yaml:"uniform_bucket_level_access,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -71,9 +75,16 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to create.")
-	locationParam := parameters.NewStringParameter(locationKey, "Location for the bucket, e.g. 'US', 'EU', or 'us-central1'. Omit to use the Cloud Storage service default.", parameters.WithStringRequired(false))
-	uniformAccessParam := parameters.NewBooleanParameter(uniformBucketLevelAccessKey, "Whether to enable uniform bucket-level access on the bucket.", parameters.WithBooleanDefault(false))
-	allParameters := parameters.Parameters{bucketParam, locationParam, uniformAccessParam}
+	allParameters := parameters.Parameters{bucketParam}
+	if cfg.Project == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(projectKey, "Project ID to create the bucket in. When empty, the source's configured project is used.", parameters.WithStringDefault("")))
+	}
+	if cfg.Location == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(locationKey, "Location for the bucket, e.g. 'US', 'EU', or 'us-central1'. Omit to use the Cloud Storage service default.", parameters.WithStringRequired(false)))
+	}
+	if cfg.UniformBucketLevelAccess == nil {
+		allParameters = append(allParameters, parameters.NewBooleanParameter(uniformBucketLevelAccessKey, "Whether to enable uniform bucket-level access on the bucket.", parameters.WithBooleanDefault(false)))
+	}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -106,10 +117,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok || bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
-	location, _ := mapParams[locationKey].(string)
-	uniformBucketLevelAccess, _ := mapParams[uniformBucketLevelAccessKey].(bool)
+	project := cloudstoragecommon.ResolveString(t.Cfg.Project, mapParams, projectKey)
+	location := cloudstoragecommon.ResolveString(t.Cfg.Location, mapParams, locationKey)
+	uniformBucketLevelAccess := cloudstoragecommon.ResolveBool(t.Cfg.UniformBucketLevelAccess, mapParams, uniformBucketLevelAccessKey)
 
-	resp, err := source.CreateBucket(ctx, bucket, location, uniformBucketLevelAccess)
+	resp, err := source.CreateBucket(ctx, bucket, project, location, uniformBucketLevelAccess)
 	if err != nil {
 		return nil, cloudstoragecommon.ProcessGCSError(err)
 	}

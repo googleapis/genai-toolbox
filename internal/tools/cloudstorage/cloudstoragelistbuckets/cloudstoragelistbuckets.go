@@ -62,6 +62,8 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Project          *string                `yaml:"project,omitempty"`
+	Prefix           *string                `yaml:"prefix,omitempty"`
 }
 
 // validate interface
@@ -76,11 +78,16 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	projectParam := parameters.NewStringParameter(projectKey, "Project ID to list buckets in. When empty, the source's configured project is used.", parameters.WithStringDefault(""))
-	prefixParam := parameters.NewStringParameter(prefixKey, "Filter results to buckets whose names begin with this prefix.", parameters.WithStringDefault(""))
 	maxResultsParam := parameters.NewIntParameter(maxResultsKey, "Maximum number of buckets to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.", parameters.WithIntDefault(0))
 	pageTokenParam := parameters.NewStringParameter(pageTokenKey, "A previously-returned page token for retrieving the next page of results.", parameters.WithStringDefault(""))
-	allParameters := parameters.Parameters{projectParam, prefixParam, maxResultsParam, pageTokenParam}
+	allParameters := parameters.Parameters{}
+	if cfg.Project == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(projectKey, "Project ID to list buckets in. When empty, the source's configured project is used.", parameters.WithStringDefault("")))
+	}
+	if cfg.Prefix == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(prefixKey, "Filter results to buckets whose names begin with this prefix.", parameters.WithStringDefault("")))
+	}
+	allParameters = append(allParameters, maxResultsParam, pageTokenParam)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -110,8 +117,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	mapParams := params.AsMap()
-	project, _ := mapParams[projectKey].(string)
-	prefix, _ := mapParams[prefixKey].(string)
+	project := cloudstoragecommon.ResolveString(t.Cfg.Project, mapParams, projectKey)
+	prefix := cloudstoragecommon.ResolveString(t.Cfg.Prefix, mapParams, prefixKey)
 	pageToken, _ := mapParams[pageTokenKey].(string)
 	maxResults, _ := mapParams[maxResultsKey].(int)
 	if maxResults < 0 {
