@@ -240,6 +240,10 @@ tools:
 kind: toolset
 name: data-products
 tools:
+- search_entries
+- lookup_entry
+- search_aspect_types
+- lookup_context
 - list_data_products
 ---
 kind: toolset
