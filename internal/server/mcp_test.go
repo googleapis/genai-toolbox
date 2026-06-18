@@ -73,6 +73,33 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
+var urlBindingToolInputSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"param1": map[string]any{"type": "string", "description": "A bound string param"},
+		"param2": map[string]any{"type": "integer", "description": "A bound int param"},
+		"param3": map[string]any{"type": "boolean", "description": "A bound bool param"},
+		"param4": map[string]any{"type": "number", "description": "A bound float param"},
+		"param5": map[string]any{"type": "string", "description": "An unbound string param"},
+		"param6": map[string]any{
+			"type":        "array",
+			"description": "A bound array param",
+			"items": map[string]any{
+				"type":        "string",
+				"description": "item",
+			},
+		},
+		"param7": map[string]any{
+			"type":        "object",
+			"description": "A bound map param",
+			"additionalProperties": map[string]any{
+				"type": "string",
+			},
+		},
+	},
+	"required": []any{"param1", "param2", "param3", "param4", "param5", "param6", "param7"},
+}
+
 var prompt2Args = []any{
 	map[string]any{
 		"name":        "arg1",
@@ -427,7 +454,7 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
@@ -594,6 +621,11 @@ func TestMcpEndpoint(t *testing.T) {
 								map[string]any{
 									"name":        "require_client_auth_tool",
 									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "url_binding_tool",
+									"description": "A tool for testing URL param binding",
+									"inputSchema": urlBindingToolInputSchema,
 								},
 							},
 						},
@@ -865,6 +897,116 @@ func TestMcpEndpoint(t *testing.T) {
 						"error": map[string]any{
 							"code":    -32600.0,
 							"message": "missing access token in the 'Authorization' header",
+						},
+					},
+				},
+				{
+					name: "tools/list with URL param binding",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-list-url-binding",
+						Request: jsonrpc.Request{
+							Method: "tools/list",
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-list-url-binding",
+						"result": map[string]any{
+							"tools": []any{
+								map[string]any{
+									"name":        "no_params",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "some_params",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "array_param",
+									"description": "some description",
+									"inputSchema": tool3InputSchema,
+								},
+								map[string]any{
+									"name":        "unauthorized_tool",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "require_client_auth_tool",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "url_binding_tool",
+									"description": "A tool for testing URL param binding",
+									"inputSchema": map[string]any{
+										"type": "object",
+										"properties": map[string]any{
+											"param5": map[string]any{"type": "string", "description": "An unbound string param"},
+										},
+										"required": []any{"param5"},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					name: "tools/call with URL param binding",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-url-binding",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "url_binding_tool",
+							"arguments": map[string]any{
+								"param5": "unbound-value",
+							},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-url-binding",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `"url_binding_tool"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `"bound-string"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `42`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `true`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `3.14`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `"unbound-value"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `["a","b"]`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `{"k":"v"}`,
+								},
+							},
 						},
 					},
 				},
