@@ -108,6 +108,22 @@ func (s *Source) MySQLDatabase() string {
 	return s.Database
 }
 
+func (s *Source) PerformanceSchemaEnabled(ctx context.Context) (bool, error) {
+	var name, value string
+	if err := s.MySQLPool().QueryRowContext(ctx, "SHOW VARIABLES LIKE 'performance_schema'").Scan(&name, &value); err != nil {
+		return false, err
+	}
+	return value == "ON", nil
+}
+
+func (s *Source) RetrieveSourceVersion(ctx context.Context) (string, error) {
+	var version string
+	if err := s.MySQLPool().QueryRowContext(ctx, "SELECT VERSION()").Scan(&version); err != nil {
+		return "", err
+	}
+	return version, nil
+}
+
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
 	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.MySQLPool().QueryContext(ctx, statement, params...)

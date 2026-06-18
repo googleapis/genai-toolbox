@@ -9,7 +9,7 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
 - **Query Data** - Execute SQL queries and analyze query plans
 - **Explore Schema** - List tables and view schema details
 - **Database Maintenance** - Check for fragmentation and missing indexes
-- **Monitor Performance** - View active queries
+- **Monitor Performance** - View active queries, query stats and list all locks
 
 For Cloud SQL infrastructure management, search the MCP store for the Cloud SQL for MySQL Admin MCP Server.
 
@@ -62,6 +62,8 @@ The Cloud SQL for MySQL MCP server provides the following tools:
 | `list_tables_missing_unique_indexes` | Find tables that do not have primary or unique key constraint.          |
 | `list_table_fragmentation`           | List table fragmentation in MySQL.                                      |
 | `list_table_stats`                   | List table statistics in MySQL.                                         |
+| `list_all_locks`                     | List all active locks in MySQL.                                         |
+| `show_query_stats`                   | Show query statistics in MySQL.                                         |
 
 ## Custom MCP Server Configuration
 

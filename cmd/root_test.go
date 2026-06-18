@@ -1051,3 +1051,32 @@ baseUrl: http://example.com
 		}
 	})
 }
+
+func TestMCPAuthEnableAPIClashCLI(t *testing.T) {
+	tempDir := t.TempDir()
+	configFile := filepath.Join(tempDir, "config.yaml")
+	configContent := `
+authServices:
+  generic1:
+    type: generic
+    audience: aud
+    mcpEnabled: true
+    authorizationServer: https://example.com/oauth
+`
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write temp config file: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	cmd := NewCommand(opts)
+	cmd.SetArgs([]string{"--config", configFile, "--enable-api"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when running with MCP Auth and --enable-api, got nil")
+	}
+	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
+		t.Errorf("unexpected error: %v", err)
+	}
+}
