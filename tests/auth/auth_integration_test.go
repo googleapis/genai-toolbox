@@ -399,16 +399,10 @@ func TestGoogleOAuthValidation(t *testing.T) {
 	}
 }
 
-// TestGoogleOAuthValidationNoClientID tests validation of Google access token using type: google without clientId
-func TestGoogleOAuthValidationNoClientID(t *testing.T) {
+// TestGoogleOAuthValidationNoClientIDOrAudienceFails tests that initialization fails when neither clientId nor audience is configured with mcpEnabled: true.
+func TestGoogleOAuthValidationNoClientIDOrAudienceFails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
-	// Get access token
-	accessToken, err := sources.GetIAMAccessToken(ctx)
-	if err != nil {
-		t.Errorf("error getting access token from ADC: %s", err)
-	}
 
 	toolsFile := map[string]any{
 		"sources": map[string]any{},
@@ -430,25 +424,10 @@ func TestGoogleOAuthValidationNoClientID(t *testing.T) {
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	expectedErrPattern := regexp.MustCompile(`audience.*or.*clientId.*is required when.*mcpEnabled.*is true`)
+	out, err := testutils.WaitForString(waitCtx, expectedErrPattern, cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
-		t.Fatalf("toolbox didn't start successfully: %s", err)
-	}
-
-	api := "http://127.0.0.1:5007/mcp/sse"
-
-	req, _ := http.NewRequest(http.MethodGet, api, nil)
-	req.Header.Add("Authorization", "Bearer "+accessToken)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("unable to send request: %s", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+		t.Fatalf("expected toolbox to fail with validation error, but it did not: %s", err)
 	}
 }

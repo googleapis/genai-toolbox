@@ -70,14 +70,25 @@ func TestInitialize_Validation(t *testing.T) {
 			wantError: true,
 		},
 		{
-			name: "scopesRequired, mcpEnabled true (allowed)",
+			name: "scopesRequired, mcpEnabled true, with audience (allowed)",
+			config: Config{
+				Name:           "google-auth",
+				Type:           "google",
+				ScopesRequired: []string{"scope"},
+				Audience:       "my-audience",
+				McpEnabled:     true,
+			},
+			wantError: false,
+		},
+		{
+			name: "scopesRequired, mcpEnabled true, without audience or clientID (disallowed)",
 			config: Config{
 				Name:           "google-auth",
 				Type:           "google",
 				ScopesRequired: []string{"scope"},
 				McpEnabled:     true,
 			},
-			wantError: false,
+			wantError: true,
 		},
 		{
 			name: "both clientID and audience, mcpEnabled true",
@@ -98,6 +109,15 @@ func TestInitialize_Validation(t *testing.T) {
 				McpEnabled: false,
 			},
 			wantError: false,
+		},
+		{
+			name: "neither clientID nor audience, mcpEnabled true (disallowed)",
+			config: Config{
+				Name:       "google-auth",
+				Type:       "google",
+				McpEnabled: true,
+			},
+			wantError: true,
 		},
 	}
 
