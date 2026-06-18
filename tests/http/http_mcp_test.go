@@ -15,6 +15,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -615,6 +616,9 @@ func TestHTTPCallTool(t *testing.T) {
 	// Run Query Parameter Tests
 	runQueryParamMCPInvokeTest(t)
 
+	// Run URL Parameter Binding Tests
+	runURLParamMCPBindingTest(t)
+
 	// Use shared helper for standard database tools
 	t.Run("use shared RunMCPToolInvokeTest", func(t *testing.T) {
 		tests.RunMCPToolInvokeTest(t, `"hello world"`,
@@ -622,6 +626,87 @@ func TestHTTPCallTool(t *testing.T) {
 			tests.WithMyToolById4Want(`{"id":4,"name":null}`),
 			tests.WithNullWant("[]"),
 		)
+	})
+}
+
+func runURLParamMCPBindingTest(t *testing.T) {
+	t.Run("tools/list with URL param filters schema", func(t *testing.T) {
+		headers := tests.NewMCPRequestHeader(t, nil)
+		req := tests.MCPListToolsRequest{
+			Jsonrpc: "2.0",
+			Id:      "1",
+			Method:  "tools/list",
+		}
+		reqBody, err := json.Marshal(req)
+		if err != nil {
+			t.Fatalf("failed to marshal list tools request: %v", err)
+		}
+
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp?id=4", bytes.NewBuffer(reqBody), headers)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected status 200, got %d: %s", resp.StatusCode, string(respBody))
+		}
+
+		var mcpResp tests.MCPListToolsResponse
+		if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+			t.Fatalf("failed to parse list tools response: %v\nraw body: %s", err, string(respBody))
+		}
+
+		var myToolByID *tests.MCPToolManifest
+		for _, tool := range mcpResp.Result.Tools {
+			if tool.Name == "my-tool-by-id" {
+				myToolByID = &tool
+				break
+			}
+		}
+
+		if myToolByID == nil {
+			t.Fatalf("tool my-tool-by-id not found in tools list")
+		}
+
+		properties, ok := myToolByID.InputSchema["properties"].(map[string]any)
+		if !ok {
+			t.Fatalf("missing or invalid properties in inputSchema: %v", myToolByID.InputSchema)
+		}
+
+		if len(properties) != 0 {
+			t.Fatalf("expected properties to be empty (filtered by URL params), got: %v", properties)
+		}
+	})
+
+	t.Run("tools/call with URL param injects bound parameter", func(t *testing.T) {
+		headers := tests.NewMCPRequestHeader(t, nil)
+		// We call "my-tool-by-id" without passing any "id" argument in the JSON-RPC request body,
+		// because "id=4" is passed as a URL query param.
+		req := tests.NewMCPCallToolRequest("2", "my-tool-by-id", map[string]any{})
+		reqBody, err := json.Marshal(req)
+		if err != nil {
+			t.Fatalf("failed to marshal call tool request: %v", err)
+		}
+
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/mcp?id=4", bytes.NewBuffer(reqBody), headers)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected status 200, got %d: %s", resp.StatusCode, string(respBody))
+		}
+
+		var mcpResp tests.MCPCallToolResponse
+		if err := json.Unmarshal(respBody, &mcpResp); err != nil {
+			t.Fatalf("failed to parse call tool response: %v\nraw body: %s", err, string(respBody))
+		}
+
+		if mcpResp.Result.IsError {
+			t.Fatalf("expected success, got error: %v", mcpResp.Result)
+		}
+
+		if len(mcpResp.Result.Content) == 0 {
+			t.Fatalf("expected content in result, got empty: %v", mcpResp.Result)
+		}
+
+		gotText := mcpResp.Result.Content[0].Text
+		wantText := `{"id":4,"name":null}`
+		if !strings.Contains(gotText, wantText) {
+			t.Fatalf("unexpected response text: got %q, want it to contain %q", gotText, wantText)
+		}
 	})
 }
 
