@@ -41,6 +41,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/goccy/go-yaml v1.19.2
+	github.com/gocql/gocql v1.17.3
 	github.com/godror/godror v0.50.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-cmp v0.7.0
@@ -59,6 +60,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/cockroachdb v0.42.0
 	github.com/testcontainers/testcontainers-go/modules/couchbase v0.42.0
+	github.com/testcontainers/testcontainers-go/modules/scylladb v0.42.0
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.333.0
 	github.com/valkey-io/valkey-go v1.0.75
@@ -80,6 +82,8 @@ require (
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.52.0
 )
+
+replace github.com/gocql/gocql => github.com/scylladb/gocql v1.17.3
 
 require (
 	github.com/ClickHouse/ch-go v0.71.0 // indirect
