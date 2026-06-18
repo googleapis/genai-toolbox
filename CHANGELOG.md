@@ -6,9 +6,6 @@
 ### Features
 
 * **auth/google:** Require audience or clientId for mcpEnabled ([#3450](https://github.com/googleapis/mcp-toolbox/issues/3450)) ([59f7b6e](https://github.com/googleapis/mcp-toolbox/commit/59f7b6e8eaceffca042cb7e2f2b6e5e9284b6bc3))
-* **ci:** Automate npm publishing via OSS Exit Gate ([#3391](https://github.com/googleapis/mcp-toolbox/issues/3391)) ([5b2845d](https://github.com/googleapis/mcp-toolbox/commit/5b2845da6f6b0ad646ea2cf8862a27af64843145))
-* **ci:** Automate PyPI publishing via OSS Exit Gate ([#3430](https://github.com/googleapis/mcp-toolbox/issues/3430)) ([8ff5668](https://github.com/googleapis/mcp-toolbox/commit/8ff56686b9c1ec2094aefc4e90912bd0a3e34aa7))
-* **dataplex:** Add tools to support metadata enrichment workflow ([#3270](https://github.com/googleapis/mcp-toolbox/issues/3270)) ([05289aa](https://github.com/googleapis/mcp-toolbox/commit/05289aaa022e35996038b061f07eb43574e38bd2))
 * Enable per source level flags for sql commenter ([#3465](https://github.com/googleapis/mcp-toolbox/issues/3465)) ([ecce6b7](https://github.com/googleapis/mcp-toolbox/commit/ecce6b7bb551b947b0951cd684cce627a4b6cf1b))
 * **mcp:** Add URL parameter binding for HTTP transport ([#3112](https://github.com/googleapis/mcp-toolbox/issues/3112)) ([0cc7b37](https://github.com/googleapis/mcp-toolbox/commit/0cc7b37b733b6a99dad5281af4024b26d730106a))
 * **scylladb:** Adding support for ScyllaDB source and tool ([#3119](https://github.com/googleapis/mcp-toolbox/issues/3119)) ([2dada83](https://github.com/googleapis/mcp-toolbox/commit/2dada8306c8737e445c4f8cd3d213b72713c1834))
@@ -17,6 +14,7 @@
 * **skills:** Tolerate missing env vars during offline skills-generate ([#3399](https://github.com/googleapis/mcp-toolbox/issues/3399)) ([ea5d3e5](https://github.com/googleapis/mcp-toolbox/commit/ea5d3e5b9e60bf808e10d21b522954d76f7741b6))
 * **source/cloud-storage:** Restrict bucket and local path access ([#3454](https://github.com/googleapis/mcp-toolbox/issues/3454)) ([2c3ca5d](https://github.com/googleapis/mcp-toolbox/commit/2c3ca5d256158e32c1386cb061b9cc3cb6c119a1))
 * **tools/bigquery:** Add per tool query label in BigQuery jobs ([#1975](https://github.com/googleapis/mcp-toolbox/issues/1975)) ([3f6a49f](https://github.com/googleapis/mcp-toolbox/commit/3f6a49f93116b8805e5082916f1babf39e6da749))
+* **tools/dataplex:** Add tools to support metadata enrichment workflow ([#3270](https://github.com/googleapis/mcp-toolbox/issues/3270)) ([05289aa](https://github.com/googleapis/mcp-toolbox/commit/05289aaa022e35996038b061f07eb43574e38bd2))
 * **tools/mysql:** Add show-query-stats and list-all-locks tools for MySQL and Cloud SQL MySQL source ([#2954](https://github.com/googleapis/mcp-toolbox/issues/2954)) ([a9693bd](https://github.com/googleapis/mcp-toolbox/commit/a9693bd804e37bab8d4f261434d82bb538563976))
 * **tools:** Decouple tool initialization from sources ([#3355](https://github.com/googleapis/mcp-toolbox/issues/3355)) ([32a24e3](https://github.com/googleapis/mcp-toolbox/commit/32a24e35b5bf107bcf5e89af2a9b7af3740747ee))
 
@@ -25,13 +23,8 @@
 
 * **auth/dataplex:** Fix failing source with service account credentials ([#3369](https://github.com/googleapis/mcp-toolbox/issues/3369)) ([ba4deef](https://github.com/googleapis/mcp-toolbox/commit/ba4deef140358e5876d73d355d664f629f7aeccc))
 * **bigquery:** Wire maximumBytesBilled into prebuilt config ([#3385](https://github.com/googleapis/mcp-toolbox/issues/3385)) ([4abbf6e](https://github.com/googleapis/mcp-toolbox/commit/4abbf6e82cc4af4c1903d9143337c965987475a9))
-* Bound MCP HTTP body size ([#3216](https://github.com/googleapis/mcp-toolbox/issues/3216)) ([d4f4342](https://github.com/googleapis/mcp-toolbox/commit/d4f434251392fb597779a90a12c63d21533ea187)), closes [#3103](https://github.com/googleapis/mcp-toolbox/issues/3103)
-* **ci:** Write npm .npmrc to $HOME and pass --registry to npm publish ([#3431](https://github.com/googleapis/mcp-toolbox/issues/3431)) ([f02dbab](https://github.com/googleapis/mcp-toolbox/commit/f02dbab5ae98388dc77485c539f1259a066a944a))
-* **config:** Add doc/line context to parse errors ([#2957](https://github.com/googleapis/mcp-toolbox/issues/2957)) ([4b097da](https://github.com/googleapis/mcp-toolbox/commit/4b097daa2143817e55a9e557e8c1dea054bfc7b8)), closes [#2927](https://github.com/googleapis/mcp-toolbox/issues/2927)
-* **deps:** Bump fast-uri to 3.1.2 to fix path normalization bypass ([#3425](https://github.com/googleapis/mcp-toolbox/issues/3425)) ([6ff34e4](https://github.com/googleapis/mcp-toolbox/commit/6ff34e43c531f20a7a5bf71a5c7c88702aa31cf7))
-* **deps:** Bump picomatch to 2.3.2 to fix regex method injection ([#3426](https://github.com/googleapis/mcp-toolbox/issues/3426)) ([e4e1300](https://github.com/googleapis/mcp-toolbox/commit/e4e13009d5a15e2a95ba95cd8c3a6db330ab8586))
-* **deps:** Bump picomatch to 4.0.4 to fix regex method injection ([#3429](https://github.com/googleapis/mcp-toolbox/issues/3429)) ([e40b70f](https://github.com/googleapis/mcp-toolbox/commit/e40b70f9f95a189ff9bc3cb43da2793206b13d1f))
-* **deps:** Patch npm audit vulnerabilities in JS doc samples ([#3442](https://github.com/googleapis/mcp-toolbox/issues/3442)) ([78d011a](https://github.com/googleapis/mcp-toolbox/commit/78d011adfd92948d9828673196013764f02ea288))
+* Bound MCP HTTP body size ([#3216](https://github.com/googleapis/mcp-toolbox/issues/3216)) ([d4f4342](https://github.com/googleapis/mcp-toolbox/commit/d4f434251392fb597779a90a12c63d21533ea187)) 
+* **config:** Add doc/line context to parse errors ([#2957](https://github.com/googleapis/mcp-toolbox/issues/2957)) ([4b097da](https://github.com/googleapis/mcp-toolbox/commit/4b097daa2143817e55a9e557e8c1dea054bfc7b8))
 * Escape delimiter characters in applyEscape to prevent SQL injection ([#2811](https://github.com/googleapis/mcp-toolbox/issues/2811)) ([932519a](https://github.com/googleapis/mcp-toolbox/commit/932519a9551861bf5f18787dc43b20d06350343f))
 * **npm:** Source binary version from cmd/version.txt ([#3417](https://github.com/googleapis/mcp-toolbox/issues/3417)) ([6ffbdec](https://github.com/googleapis/mcp-toolbox/commit/6ffbdecaea98db5c16dc9eeca8fb73e4bbc48102))
 * **prebuilt/alloydb-omni:** Require password env var explicitly ([#3398](https://github.com/googleapis/mcp-toolbox/issues/3398)) ([fcbe3e7](https://github.com/googleapis/mcp-toolbox/commit/fcbe3e70d3d4e671e97e424187dba907d7c5b10b))
@@ -43,7 +36,6 @@
 * **tool/bigquery-execute-sql:** Prevent dataset restriction bypass ([#3452](https://github.com/googleapis/mcp-toolbox/issues/3452)) ([ca6d5e3](https://github.com/googleapis/mcp-toolbox/commit/ca6d5e35160f3a51ab4fc6683e0a19a77851aebd))
 * **tool/mysql-get-query-plan:** Prevent query execution bypass and statement injection ([#3235](https://github.com/googleapis/mcp-toolbox/issues/3235)) ([7ed1e7b](https://github.com/googleapis/mcp-toolbox/commit/7ed1e7b88c0a19ba36ac90824966607f828ee576))
 * **tool/spanner-sql,tool/spanner-execute-sql:** Use read-only annotations when readOnly is set ([#3338](https://github.com/googleapis/mcp-toolbox/issues/3338)) ([8bde0ec](https://github.com/googleapis/mcp-toolbox/commit/8bde0ec08f8bf455f319523b4faacf32bdbc65ff))
-* Update escape in bigquery_integration_test.go ([#3392](https://github.com/googleapis/mcp-toolbox/issues/3392)) ([6392824](https://github.com/googleapis/mcp-toolbox/commit/63928241a51fd87112a206ff9f3c265dceaee948))
 
 ## [1.4.0](https://github.com/googleapis/mcp-toolbox/compare/v1.3.0...v1.4.0) (2026-06-04)
 
