@@ -325,7 +325,8 @@ func (s *Source) validateFHIRPageURL(pageURL string) (string, error) {
 		return "", fmt.Errorf("URL scheme must be https, got %q", parsed.Scheme)
 	}
 
-	host := strings.ToLower(parsed.Host)
+	parsed.Host = strings.ToLower(parsed.Host)
+	host := parsed.Host
 	if h, _, err := net.SplitHostPort(host); err == nil {
 		host = h
 	}
@@ -398,6 +399,14 @@ func (s *Source) FHIRFetchPage(ctx context.Context, pageURL, tokenStr string) (a
 		if err != nil {
 			return nil, fmt.Errorf("failed to create default http client: %w", err)
 		}
+	}
+
+	httpClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return fmt.Errorf("stopped after 10 redirects")
+		}
+		_, err := s.validateFHIRPageURL(req.URL.String())
+		return err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", cleanedURL, nil)

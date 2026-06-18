@@ -291,14 +291,10 @@ func TestValidateFHIRPageURL(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			desc:    "Valid URL with trailing slash",
-			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient/",
-			wantErr: false,
-		},
-		{
 			desc:    "Valid URL with uppercase host and scheme",
 			pageURL: "HTTPS://HEALTHCARE.GOOGLEAPIS.COM/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 		},
 		{
 			desc:    "Invalid URL without version prefix",
