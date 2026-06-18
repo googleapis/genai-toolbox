@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"unicode/utf8"
 
 	"cloud.google.com/go/storage"
@@ -60,9 +61,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name    string `yaml:"name" validate:"required"`
-	Type    string `yaml:"type" validate:"required"`
-	Project string `yaml:"project" validate:"required"`
+	Name              string   `yaml:"name" validate:"required"`
+	Type              string   `yaml:"type" validate:"required"`
+	Project           string   `yaml:"project" validate:"required"`
+	AllowedBuckets    []string `yaml:"allowedBuckets,omitempty"`
+	AllowedLocalRoots []string `yaml:"allowedLocalRoots,omitempty"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -89,6 +92,50 @@ type Source struct {
 	client *storage.Client
 }
 
+func (s *Source) validateBucket(bucket string) error {
+	if len(s.AllowedBuckets) == 0 {
+		return nil
+	}
+	for _, b := range s.AllowedBuckets {
+		if b == bucket {
+			return nil
+		}
+	}
+	return fmt.Errorf("bucket %q is not allowed by source %q configuration", bucket, s.Name)
+}
+
+func (s *Source) validateLocalPath(p string) error {
+	clean, err := cloudstoragecommon.ValidateLocalPath(p)
+	if err != nil {
+		return err
+	}
+	if len(s.AllowedLocalRoots) == 0 {
+		return nil
+	}
+	for _, root := range s.AllowedLocalRoots {
+		if isUnderRoot(clean, root) {
+			return nil
+		}
+	}
+	return fmt.Errorf("local path %q is not under any allowed local roots for source %q", p, s.Name)
+}
+
+func isUnderRoot(target, root string) bool {
+	target = filepath.Clean(target)
+	root = filepath.Clean(root)
+	if target == root {
+		return true
+	}
+	if root == string(filepath.Separator) {
+		return true
+	}
+	sep := string(filepath.Separator)
+	if !strings.HasSuffix(root, sep) {
+		root += sep
+	}
+	return strings.HasPrefix(target, root)
+}
+
 func (s *Source) SourceType() string {
 	return SourceType
 }
@@ -112,6 +159,9 @@ func (s *Source) GetProjectID() string {
 // (common prefixes when a delimiter is set), and "nextPageToken" (empty when
 // there are no more results).
 func (s *Source) ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxResults int, pageToken string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	it := s.client.Bucket(bucket).Objects(ctx, &storage.Query{
 		Prefix:    prefix,
 		Delimiter: delimiter,
@@ -161,6 +211,9 @@ func (s *Source) ListObjects(ctx context.Context, bucket, prefix, delimiter stri
 // resources, images, blobs), expand this to detect content type and return
 // binary payloads natively.
 func (s *Source) ReadObject(ctx context.Context, bucket, object string, offset, length int64) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	reader, err := s.client.Bucket(bucket).Object(object).NewRangeReader(ctx, offset, length)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open object %q in bucket %q: %w", object, bucket, err)
@@ -224,6 +277,9 @@ func (s *Source) ListBuckets(ctx context.Context, project, prefix string, maxRes
 // its freshly-read metadata. When location is empty, Cloud Storage applies its
 // service default.
 func (s *Source) CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	attrs := &storage.BucketAttrs{Location: location}
 	if uniformBucketLevelAccess {
 		attrs.UniformBucketLevelAccess = storage.UniformBucketLevelAccess{Enabled: true}
@@ -247,6 +303,9 @@ func (s *Source) CreateBucket(ctx context.Context, bucket, location string, unif
 
 // GetBucketMetadata returns raw bucket metadata from the Cloud Storage client.
 func (s *Source) GetBucketMetadata(ctx context.Context, bucket string) (*storage.BucketAttrs, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	attrs, err := s.client.Bucket(bucket).Attrs(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metadata for bucket %q: %w", bucket, err)
@@ -257,6 +316,9 @@ func (s *Source) GetBucketMetadata(ctx context.Context, bucket string) (*storage
 // GetBucketIAMPolicy returns bucket IAM bindings in a stable, agent-friendly
 // shape while preserving conditional bindings when present.
 func (s *Source) GetBucketIAMPolicy(ctx context.Context, bucket string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	policy, err := s.client.Bucket(bucket).IAM().Policy(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get IAM policy for bucket %q: %w", bucket, err)
@@ -296,6 +358,9 @@ func (s *Source) GetBucketIAMPolicy(ctx context.Context, bucket string) (map[str
 // callers the full field set the GCS client exposes (name, size, contentType,
 // hashes, timestamps, user metadata, etc.) without a curated subset.
 func (s *Source) GetObjectMetadata(ctx context.Context, bucket, object string) (*storage.ObjectAttrs, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	attrs, err := s.client.Bucket(bucket).Object(object).Attrs(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get metadata for object %q in bucket %q: %w", object, bucket, err)
@@ -309,6 +374,12 @@ func (s *Source) GetObjectMetadata(ctx context.Context, bucket, object string) (
 // is false, a pre-existing destination returns cloudstoragecommon.ErrDestinationExists
 // (mapped to AgentError so the caller can retry with overwrite=true).
 func (s *Source) DownloadObject(ctx context.Context, bucket, object, destination string, overwrite bool) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
+	if err := s.validateLocalPath(destination); err != nil {
+		return nil, err
+	}
 	reader, err := s.client.Bucket(bucket).Object(object).NewReader(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open object %q in bucket %q: %w", object, bucket, err)
@@ -351,6 +422,12 @@ func (s *Source) DownloadObject(ctx context.Context, bucket, object, destination
 // The returned contentType is the post-Close value from w.Attrs(), i.e. what
 // GCS actually recorded.
 func (s *Source) UploadObject(ctx context.Context, bucket, object, source, contentType string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
+	if err := s.validateLocalPath(source); err != nil {
+		return nil, err
+	}
 	f, err := os.Open(source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open source %q: %w", source, err)
@@ -393,6 +470,9 @@ func (s *Source) UploadObject(ctx context.Context, bucket, object, source, conte
 // from the first 512 bytes. The returned contentType is the post-Close value
 // from w.Attrs(), i.e. what GCS actually recorded.
 func (s *Source) WriteObject(ctx context.Context, bucket, object, content, contentType string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	w := s.client.Bucket(bucket).Object(object).NewWriter(ctx)
 	if contentType != "" {
 		w.ContentType = contentType
@@ -424,6 +504,12 @@ func (s *Source) WriteObject(ctx context.Context, bucket, object, content, conte
 // in the same bucket or a different bucket. Existing destination objects are
 // replaced, matching Cloud Storage's copy semantics without preconditions.
 func (s *Source) CopyObject(ctx context.Context, sourceBucket, sourceObject, destinationBucket, destinationObject string) (map[string]any, error) {
+	if err := s.validateBucket(sourceBucket); err != nil {
+		return nil, err
+	}
+	if err := s.validateBucket(destinationBucket); err != nil {
+		return nil, err
+	}
 	src := s.client.Bucket(sourceBucket).Object(sourceObject)
 	dst := s.client.Bucket(destinationBucket).Object(destinationObject)
 
@@ -446,6 +532,9 @@ func (s *Source) CopyObject(ctx context.Context, sourceBucket, sourceObject, des
 // Cloud Storage's native move API. Cross-bucket moves should be modeled as
 // CopyObject followed by DeleteObject.
 func (s *Source) MoveObject(ctx context.Context, bucket, sourceObject, destinationObject string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	attrs, err := s.client.Bucket(bucket).Object(sourceObject).Move(ctx, storage.MoveObjectDestination{Object: destinationObject})
 	if err != nil {
 		return nil, fmt.Errorf("failed to move %q to %q in bucket %q: %w", sourceObject, destinationObject, bucket, err)
@@ -462,6 +551,9 @@ func (s *Source) MoveObject(ctx context.Context, bucket, sourceObject, destinati
 
 // DeleteObject deletes a GCS object.
 func (s *Source) DeleteObject(ctx context.Context, bucket, object string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	if err := s.client.Bucket(bucket).Object(object).Delete(ctx); err != nil {
 		return nil, fmt.Errorf("failed to delete object %q in bucket %q: %w", object, bucket, err)
 	}
@@ -475,6 +567,9 @@ func (s *Source) DeleteObject(ctx context.Context, bucket, object string) (map[s
 
 // DeleteBucket deletes an empty Cloud Storage bucket.
 func (s *Source) DeleteBucket(ctx context.Context, bucket string) (map[string]any, error) {
+	if err := s.validateBucket(bucket); err != nil {
+		return nil, err
+	}
 	if err := s.client.Bucket(bucket).Delete(ctx); err != nil {
 		return nil, fmt.Errorf("failed to delete bucket %q: %w", bucket, err)
 	}

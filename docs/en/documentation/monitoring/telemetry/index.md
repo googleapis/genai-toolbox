@@ -372,6 +372,7 @@ The following flags are used to determine Toolbox's telemetry configuration:
 | `--telemetry-gcp-project`  | string   | Google Cloud project ID used for `--telemetry-gcp`. If unset, Toolbox falls back to `GOOGLE_CLOUD_PROJECT` when available.                                                                              |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "127.0.0.1:4318"). To pass an insecure endpoint here, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`. |
 | `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                                                                                                            |
+| `--sql-commenter`          | bool     | Enable prepending [SQLCommenter](../sql_commenter.md)-format comments to executed SQL statements. Default is `false`.                                                                                       |
 
 In addition to the flags noted above, you can also make additional configuration
 for OpenTelemetry via the [General SDK Configuration][sdk-configuration] through
