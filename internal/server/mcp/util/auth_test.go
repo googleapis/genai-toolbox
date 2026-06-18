@@ -49,6 +49,10 @@ func (c mockAuthServiceConfig) AuthServiceConfigType() string {
 	return "mock"
 }
 
+func (c mockAuthServiceConfig) IsMCPEnabled() bool {
+	return false
+}
+
 func (c mockAuthServiceConfig) Initialize() (auth.AuthService, error) {
 	return nil, nil
 }

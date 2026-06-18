@@ -108,7 +108,7 @@ func TestMcpAuth(t *testing.T) {
 			},
 		},
 	}
-	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5000"}
+	args := []string{"--toolbox-url=http://127.0.0.1:5000"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -367,7 +367,7 @@ func TestGoogleOAuthValidation(t *testing.T) {
 		"tools": map[string]any{},
 	}
 
-	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5006", "--port=5006"}
+	args := []string{"--toolbox-url=http://127.0.0.1:5006", "--port=5006"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -415,7 +415,7 @@ func TestGoogleOAuthValidationNoClientIDOrAudienceFails(t *testing.T) {
 		"tools": map[string]any{},
 	}
 
-	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5007", "--port=5007"}
+	args := []string{"--toolbox-url=http://127.0.0.1:5007", "--port=5007"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)

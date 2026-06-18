@@ -1395,3 +1395,57 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 		t.Error("expected default toolset to be present")
 	}
 }
+
+type mockClashAuthConfig struct{}
+
+var _ auth.AuthServiceConfig = mockClashAuthConfig{}
+var _ auth.MCPAuthService = mockClashAuthService{}
+
+func (c mockClashAuthConfig) AuthServiceConfigType() string { return "mock-clash" }
+func (c mockClashAuthConfig) IsMCPEnabled() bool            { return true }
+func (c mockClashAuthConfig) Initialize() (auth.AuthService, error) {
+	return mockClashAuthService{}, nil
+}
+
+type mockClashAuthService struct{}
+
+func (s mockClashAuthService) AuthServiceType() string { return "mock-clash" }
+func (s mockClashAuthService) GetName() string         { return "mock-clash" }
+func (s mockClashAuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (map[string]any, error) {
+	return nil, nil
+}
+func (s mockClashAuthService) ToConfig() auth.AuthServiceConfig { return mockClashAuthConfig{} }
+func (s mockClashAuthService) IsMCPEnabled() bool               { return true }
+func (s mockClashAuthService) GetScopesRequired() []string      { return nil }
+func (s mockClashAuthService) GetAuthorizationServer() string   { return "mock-auth-server" }
+func (s mockClashAuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[string]any, error) {
+	return nil, nil
+}
+
+func TestMCPAuthEnableAPIClash(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	cfg := server.ServerConfig{
+		Version:   "0.0.0",
+		EnableAPI: true,
+		AuthServiceConfigs: map[string]auth.AuthServiceConfig{
+			"mock-clash": mockClashAuthConfig{},
+		},
+	}
+
+	_, err = server.NewServer(ctx, cfg)
+	if err == nil {
+		t.Fatal("expected error when starting server with MCP Auth and EnableAPI both enabled, got nil")
+	}
+	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}

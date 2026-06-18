@@ -24,8 +24,8 @@ import (
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations) Tool {
-	inputSchema, authParams := generateParamManifest(params)
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, urlParams map[string]string) Tool {
+	inputSchema, authParams := generateParamManifest(params, urlParams)
 	var toolAnnotations *ToolAnnotations
 	if annotations != nil {
 		toolAnnotations = &ToolAnnotations{
@@ -57,7 +57,7 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 }
 
 // generateParamManifest generates the input schema and get authParam
-func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]string) {
+func generateParamManifest(ps parameters.Parameters, urlParams map[string]string) (InputSchema, map[string][]string) {
 	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)
 	authParam := make(map[string][]string)
@@ -69,6 +69,13 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 		}
 
 		name := p.GetName()
+		if urlParams != nil {
+			// If the parameter is sourced from URL params, skip it in the MCP manifest
+			if _, exists := urlParams[name]; exists {
+				continue
+			}
+		}
+
 		paramManifest, authParamList := p.McpManifest()
 		defaultV := p.GetDefault()
 		if defaultV != nil {
@@ -91,7 +98,7 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool) (ListToolsResult, error) {
+func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
 	mcpManifest := make([]Tool, 0, len(t.ToolNames))
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
@@ -102,7 +109,7 @@ func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, to
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations())
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
