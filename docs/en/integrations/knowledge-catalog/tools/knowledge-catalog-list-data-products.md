@@ -14,12 +14,6 @@ A `dataplex-list-data-products` tool lists all Data Products in Knowledge Catalo
 
 View the [Data Products usage guide][usage-guide] for more information.
 
-`dataplex-list-data-products` optionally accepts the following parameters:
-
-- `filter` - Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`.
-- `pageSize` - Number of returned data products in the page. Defaults to `10`.
-- `orderBy` - Specifies the ordering of results.
-
 [usage-guide]: https://docs.cloud.google.com/dataplex/docs/use-data-products
 
 ## Compatible Sources
@@ -47,6 +41,16 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-list-data-products` tool has the following optional parameters:
+
+| **field** | **type** | **required** | **description**                                                                                                                                                                         |
+| --------- | :------: | :----------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| filter    |  string  |    false     | Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`. |
+| pageSize  | integer  |    false     | Number of returned data products in the page. Defaults to `10`.                                                                                                                         |
+| orderBy   |  string  |    false     | Specifies the ordering of results.                                                                                                                                                      |
 
 ## Example
 
