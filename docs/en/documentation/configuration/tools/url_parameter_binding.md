@@ -8,11 +8,11 @@ description: >
 
 ## About
 
-URL Parameter Binding is a transport-level feature for the SSE (HTTP) transport that allows you to bind specific arguments to tools at the connection level. This is useful for creating scoped connections for generic MCP clients where you want to restrict the client to a specific database, project, or instance without hardcoding these values in the server configuration for all users, or requiring the client to provide them.
+URL Parameter Binding is a transport-level feature for HTTP-based transports (such as SSE or standard HTTP POST endpoints) that allows you to bind specific arguments to tools at the connection or request level. This is useful for creating scoped connections for generic MCP clients where you want to restrict the client to a specific database, project, or instance without hardcoding these values in the server configuration for all users, or requiring the client to provide them.
 
 ## How It Works
 
-When an MCP client connects to the server via SSE with query parameters (e.g., `http://localhost:5000/mcp/sse?project=my-project`):
+When an MCP client connects or sends requests to the server via HTTP with query parameters (e.g., `http://localhost:5000/mcp/sse?project=my-project` or `http://localhost:5000/mcp?project=my-project`):
 
 1. **Schema Filtering**: The server automatically removes the bound parameters (like `project`) from the `inputSchema` of all tools returned by the `tools/list` endpoint. The client will not see these parameters and will not be prompted to provide them.
 2. **Argument Injection**: When the client calls any tool via `tools/call`, the server automatically injects the bound values from the URL into the tool arguments before execution.
@@ -26,9 +26,11 @@ This effectively abstracts the bound parameters from the client, presenting a dy
 
 Assume you have a tool that requires a `project` parameter.
 
-### 1. Connect with Scoping
+### 1. Connect or Request with Scoping
 
-The client connects to the SSE endpoint with the parameter in the URL:
+The client connects to the SSE endpoint or sends a request to the standard HTTP POST endpoint with the parameter in the URL.
+
+For SSE, the client establishes a connection:
 
 ```bash
 curl -N "http://localhost:5000/mcp/sse?project=my-project"
@@ -39,6 +41,14 @@ The server returns the message endpoint with the session ID and the preserved pa
 ```text
 event: endpoint
 data: http://localhost:5000/mcp?sessionId=xyz&project=my-project
+```
+
+For standard HTTP POST requests, the client directly includes query parameters in the request URL:
+
+```bash
+curl -X POST "http://localhost:5000/mcp?project=my-project" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}'
 ```
 
 ### 2. List Tools
