@@ -12,11 +12,15 @@ aliases:
 
 A `dataplex-list-data-products` tool lists all Data Products in Knowledge Catalog (formerly known as Dataplex) across all locations (globally).
 
+View the [Data Products usage guide][usage-guide] for more information.
+
 `dataplex-list-data-products` optionally accepts the following parameters:
 
 - `filter` - Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`.
 - `pageSize` - Number of returned data products in the page. Defaults to `10`.
 - `orderBy` - Specifies the ordering of results.
+
+[usage-guide]: https://docs.cloud.google.com/dataplex/docs/use-data-products
 
 ## Compatible Sources
 
