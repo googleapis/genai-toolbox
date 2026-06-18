@@ -59,6 +59,7 @@ type Config struct {
 	Database      string            `yaml:"database" validate:"required"`
 	QueryParams   map[string]string `yaml:"queryParams"`
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
+	SQLCommenter  *bool             `yaml:"sqlCommenter"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -103,7 +104,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
-	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.PostgresPool().Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

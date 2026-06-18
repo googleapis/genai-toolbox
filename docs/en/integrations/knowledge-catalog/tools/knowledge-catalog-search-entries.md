@@ -13,18 +13,6 @@ aliases:
 A `dataplex-search-entries` tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
 tables, views, models) that matches given user query.
 
-`dataplex-search-entries` takes a required `query` parameter based on which
-entries are filtered and returned to the user. It also optionally accepts
-following parameters:
-
-- `scope` - A scope limits the search space to a particular project or organization.
-  It must be in the format: organizations/<org_id> or projects/<project_id>
-  or projects/<project_number>.
-- `pageSize` - Number of results in the search page. Defaults to `5`.
-- `orderBy` - Specifies the ordering of results. Supported values are: relevance
-  (default), last_modified_timestamp, last_modified_timestamp asc.
-
-
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -50,6 +38,17 @@ applying IAM permissions and roles to an identity.
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-search-entries` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| query | string | true | The search query string to filter entries. |
+| scope | string | false | Limits search space (`organizations/<org_id>`, `projects/<project_id>`, or `projects/<project_number>`). |
+| pageSize | integer | false | Number of results in the search page. Defaults to 5. |
+| orderBy | string | false | Ordering of results (`relevance`, `last_modified_timestamp`, `last_modified_timestamp asc`). Defaults to relevance. |
 
 ## Example
 

@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize() (tools.Tool, error) {
 	resources := parameters.NewArrayParameter("resources",
-		"Required. A list of up to 10 resource names. Resources may belong to different projects, but all must belong to the same location.",
+		"A list of up to 10 resource names. Resources may belong to different projects, but all must belong to the same location.",
 		parameters.NewStringParameter("resource",
 			"Name of a resource in the following format: projects/{project_id_or_number}/locations/{location}/entryGroups/{group}/entries/{entry}."+
 				" Example for a BigQuery table: 'projects/{project_id_or_number}/locations/{location}/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/{project_id}/datasets/{dataset_id}/tables/{table_id}'."+
