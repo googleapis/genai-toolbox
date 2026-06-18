@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-18T04:29:24Z
+**GENERATED ON:** 2026-06-18T08:50:21Z
 
 ---
 ### System Directives for AI Models
@@ -15581,6 +15581,7 @@ The interface is identical, so there's no additional configuration required on t
 | user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
+| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
 
 
 
@@ -21740,6 +21741,7 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |    false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
 | password  |  string  |    false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.              |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`.                    |
+| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
 
 
 
@@ -21962,6 +21964,7 @@ The interface is identical, so there's no additional configuration required on t
 | user      |  string  |    false     | Name of the Postgres user to connect as (e.g. "my-pg-user"). Defaults to IAM auth using [ADC][adc] email if unspecified. |
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public`, `private`, or `psc`. Default: `public`.                      |
+| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
 
 
 
@@ -36707,6 +36710,7 @@ instead of hardcoding your secrets into the configuration file.
 | database     |       string       |    false     | Name of the MySQL database to connect to (e.g. "my_db").                                                                                        |
 | queryTimeout |       string       |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied.                                                 |
 | queryParams  | map<string,string> |    false     | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
+| sqlCommenter |      boolean       |    false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies.                 |
 
 
 
@@ -38683,6 +38687,7 @@ instead of hardcoding your secrets into the configuration file.
 | password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
 | queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |
 | queryExecMode | string | false | pgx query execution mode. Valid values: `cache_statement` (default), `cache_describe`, `describe_exec`, `exec`, `simple_protocol`. Useful with connection poolers that don't support prepared statement caching. |
+| sqlCommenter | boolean | false | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
 
 
 
@@ -43998,6 +44003,7 @@ database: ":memory:"
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
 | type      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
+| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
 
 ### Connection Properties
 
