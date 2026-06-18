@@ -77,10 +77,15 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		return nil, err
 	}
 
+	defaultAnnotations := tools.NewDestructiveAnnotations
+	if cfg.ReadOnly {
+		defaultAnnotations = tools.NewReadOnlyAnnotations
+	}
+
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.GetAnnotationsOrDefault(cfg.Annotations, defaultAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 			allParameters,
 		),

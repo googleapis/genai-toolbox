@@ -71,10 +71,15 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
 	params := parameters.Parameters{sqlParameter}
 
+	defaultAnnotations := tools.NewDestructiveAnnotations
+	if cfg.ReadOnly {
+		defaultAnnotations = tools.NewReadOnlyAnnotations
+	}
+
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.GetAnnotationsOrDefault(cfg.Annotations, defaultAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			params,
 		),
