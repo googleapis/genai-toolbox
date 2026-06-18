@@ -177,26 +177,63 @@ func TestValidateFHIRPageURL(t *testing.T) {
 		desc    string
 		pageURL string
 		wantErr bool
+		wantURL string
 	}{
 		{
 			desc:    "Valid URL v1",
 			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Valid URL mTLS",
+			pageURL: "https://healthcare.mtls.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.mtls.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 		},
 		{
 			desc:    "Valid URL v1beta1",
 			pageURL: "https://healthcare.googleapis.com/v1beta1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store2/fhir/Patient?_count=10",
 			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1beta1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store2/fhir/Patient?_count=10",
 		},
 		{
 			desc:    "Valid URL with port",
 			pageURL: "https://healthcare.googleapis.com:443/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com:443/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Valid URL with trailing slash",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient/",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 		},
 		{
 			desc:    "Invalid scheme",
 			pageURL: "http://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 			wantErr: true,
+		},
+		{
+			desc:    "Invalid version v0",
+			pageURL: "https://healthcare.googleapis.com/v0/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Invalid version v1.0",
+			pageURL: "https://healthcare.googleapis.com/v1.0/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Missing version prefix (projects as part 0)",
+			pageURL: "https://healthcare.googleapis.com/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Valid version v2",
+			pageURL: "https://healthcare.googleapis.com/v2/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v2/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
 		},
 		{
 			desc:    "Invalid host",
@@ -272,9 +309,12 @@ func TestValidateFHIRPageURL(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := src.validateFHIRPageURL(tc.pageURL)
+			gotURL, err := src.validateFHIRPageURL(tc.pageURL)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("validateFHIRPageURL(%q) err = %v, wantErr = %v", tc.pageURL, err, tc.wantErr)
+			}
+			if err == nil && gotURL != tc.wantURL {
+				t.Errorf("validateFHIRPageURL(%q) gotURL = %q, wantURL = %q", tc.pageURL, gotURL, tc.wantURL)
 			}
 		})
 	}
@@ -295,19 +335,24 @@ func TestValidateFHIRPageURLNoAllowedStores(t *testing.T) {
 		desc    string
 		pageURL string
 		wantErr bool
+		wantURL string
 	}{
 		{
 			desc:    "Valid URL with storeX",
 			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/storeX/fhir/Patient",
 			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/storeX/fhir/Patient",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := src.validateFHIRPageURL(tc.pageURL)
+			gotURL, err := src.validateFHIRPageURL(tc.pageURL)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("validateFHIRPageURL(%q) err = %v, wantErr = %v", tc.pageURL, err, tc.wantErr)
+			}
+			if err == nil && gotURL != tc.wantURL {
+				t.Errorf("validateFHIRPageURL(%q) gotURL = %q, wantURL = %q", tc.pageURL, gotURL, tc.wantURL)
 			}
 		})
 	}

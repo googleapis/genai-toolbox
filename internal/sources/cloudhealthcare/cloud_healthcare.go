@@ -40,6 +40,12 @@ import (
 
 const SourceType string = "cloud-healthcare"
 
+var allowedFHIRHosts = map[string]struct{}{
+	"healthcare.googleapis.com":      {},
+	"healthcare.mtls.googleapis.com": {},
+}
+
+
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -292,22 +298,39 @@ func (s *Source) getService(tokenStr string) (*healthcare.Service, error) {
 	return svc, nil
 }
 
-func (s *Source) validateFHIRPageURL(pageURL string) error {
+func isValidAPIVersion(v string) bool {
+	if len(v) < 2 || v[0] != 'v' {
+		return false
+	}
+	// The character after 'v' must be a digit '1'-'9'
+	if v[1] < '1' || v[1] > '9' {
+		return false
+	}
+	for i := 2; i < len(v); i++ {
+		c := v[i]
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Source) validateFHIRPageURL(pageURL string) (string, error) {
 	parsed, err := url.Parse(pageURL)
 	if err != nil {
-		return fmt.Errorf("invalid page URL: %w", err)
+		return "", fmt.Errorf("invalid page URL: %w", err)
 	}
 
 	if parsed.Scheme != "https" {
-		return fmt.Errorf("URL scheme must be https, got %q", parsed.Scheme)
+		return "", fmt.Errorf("URL scheme must be https, got %q", parsed.Scheme)
 	}
 
 	host := strings.ToLower(parsed.Host)
 	if h, _, err := net.SplitHostPort(host); err == nil {
 		host = h
 	}
-	if host != "healthcare.googleapis.com" {
-		return fmt.Errorf("URL host must be healthcare.googleapis.com, got %q", host)
+	if _, ok := allowedFHIRHosts[host]; !ok {
+		return "", fmt.Errorf("URL host must be an allowed FHIR host, got %q", host)
 	}
 
 	// Clean and split path
@@ -318,42 +341,48 @@ func (s *Source) validateFHIRPageURL(pageURL string) error {
 
 	// Page URL format Reference: https://docs.cloud.google.com/healthcare-api/docs/how-tos/fhir-search#using_the_search_method_with_get
 	if len(parts) < 10 {
-		return fmt.Errorf("invalid FHIR URL path structure: path too short")
+		return "", fmt.Errorf("invalid FHIR URL path structure: path too short")
+	}
+
+	if !isValidAPIVersion(parts[0]) {
+		return "", fmt.Errorf("invalid API version prefix: %q", parts[0])
 	}
 
 	if parts[1] != "projects" {
-		return fmt.Errorf("invalid path: expected 'projects', got %q", parts[1])
+		return "", fmt.Errorf("invalid path: expected 'projects', got %q", parts[1])
 	}
 	if parts[2] != s.Project() {
-		return fmt.Errorf("invalid project %q: must match source project %q", parts[2], s.Project())
+		return "", fmt.Errorf("invalid project %q: must match source project %q", parts[2], s.Project())
 	}
 	if parts[3] != "locations" {
-		return fmt.Errorf("invalid path: expected 'locations', got %q", parts[3])
+		return "", fmt.Errorf("invalid path: expected 'locations', got %q", parts[3])
 	}
 	if parts[4] != s.Region() {
-		return fmt.Errorf("invalid location/region %q: must match source region %q", parts[4], s.Region())
+		return "", fmt.Errorf("invalid location/region %q: must match source region %q", parts[4], s.Region())
 	}
 	if parts[5] != "datasets" {
-		return fmt.Errorf("invalid path: expected 'datasets', got %q", parts[5])
+		return "", fmt.Errorf("invalid path: expected 'datasets', got %q", parts[5])
 	}
 	if parts[6] != s.DatasetID() {
-		return fmt.Errorf("invalid dataset ID %q: must match source dataset %q", parts[6], s.DatasetID())
+		return "", fmt.Errorf("invalid dataset ID %q: must match source dataset %q", parts[6], s.DatasetID())
 	}
 	if parts[7] != "fhirStores" {
-		return fmt.Errorf("invalid path: expected 'fhirStores', got %q", parts[7])
+		return "", fmt.Errorf("invalid path: expected 'fhirStores', got %q", parts[7])
 	}
 	if !s.IsFHIRStoreAllowed(parts[8]) {
-		return fmt.Errorf("fhir store ID %q is not allowed by this source", parts[8])
+		return "", fmt.Errorf("fhir store ID %q is not allowed by this source", parts[8])
 	}
 	if parts[9] != "fhir" {
-		return fmt.Errorf("invalid path: expected 'fhir', got %q", parts[9])
+		return "", fmt.Errorf("invalid path: expected 'fhir', got %q", parts[9])
 	}
 
-	return nil
+	parsed.Path = cleanPath
+	return parsed.String(), nil
 }
 
-func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, error) {
-	if err := s.validateFHIRPageURL(url); err != nil {
+func (s *Source) FHIRFetchPage(ctx context.Context, pageURL, tokenStr string) (any, error) {
+	cleanedURL, err := s.validateFHIRPageURL(pageURL)
+	if err != nil {
 		return nil, fmt.Errorf("url validation failed: %w", err)
 	}
 
@@ -371,7 +400,7 @@ func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, 
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", cleanedURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http request: %w", err)
 	}
@@ -379,7 +408,7 @@ func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, 
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get fhir page from %q: %w", url, err)
+		return nil, fmt.Errorf("failed to get fhir page from %q: %w", cleanedURL, err)
 	}
 	defer resp.Body.Close()
 	return parseResults(resp)
