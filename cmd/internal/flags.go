@@ -52,7 +52,7 @@ func ConfigFileFlags(parentCmd *cobra.Command, flags *pflag.FlagSet, opts *Toolb
 	flags.StringVar(&opts.ConfigFolder, "config-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config, or --configs.")
 	flags.StringVar(&opts.ConfigFolder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
 	_ = flags.MarkDeprecated("tools-folder", "please use --config-folder instead") // DEPRECATED
-	parentCmd.MarkFlagsMutuallyExclusive("config", "configs", "config-folder")
+	parentCmd.MarkFlagsMutuallyExclusive("config", "configs", "config-folder", "tools-file", "tools-files", "tools-folder")
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
 		"Use a prebuilt tool configuration by source type. Allowed: '%s'. Can be specified multiple times.",
