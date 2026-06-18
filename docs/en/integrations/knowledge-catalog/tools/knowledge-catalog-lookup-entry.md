@@ -12,24 +12,6 @@ aliases:
 
 A `dataplex-lookup-entry` tool returns details of a particular entry in Knowledge Catalog.
 
-`dataplex-lookup-entry` takes a required `name` parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required `entry`
-parameter which is the resource name of the entry in the following form:
-projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
-It also optionally accepts following parameters:
-
-- `view` - View to control which parts of an entry the service should return.
-    It takes integer values from 1-4 corresponding to type of view - BASIC,
-    FULL, CUSTOM, ALL
-- `aspectTypes` - Limits the aspects returned to the provided aspect types in
-    the format
-    `projects/{project}/locations/{location}/aspectTypes/{aspectType}`. It only
-    works for CUSTOM view.
-- `paths` - Limits the aspects returned to those associated with the provided
-    paths within the Entry. It only works for CUSTOM view.
-
-
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -54,6 +36,16 @@ applying IAM permissions and roles to an identity.
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 [iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+
+## Parameters
+
+The `dataplex-lookup-entry` tool accepts the following parameters:
+
+| **field** | **type** | **required** | **description** |
+| --------- | :------: | :----------: | --------------- |
+| entry | string | true | The resource name of the Entry (format: `projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}`). |
+| view | integer | false | View to control which parts of an entry to return (1=BASIC, 2=FULL, 3=CUSTOM, 4=ALL). Defaults to 2. |
+| aspectTypes | list of strings | false | Limits the aspects returned to the provided aspect types (format: `projects/{project}/locations/{location}/aspectTypes/{aspectType}`). Only works for CUSTOM view (3). |
 
 ## Example
 
