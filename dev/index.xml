@@ -8692,7 +8692,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode564s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode176s0hbhb"&gt;
 
 
 
@@ -18890,7 +18890,8 @@ structured comment to every SQL statement before it is executed. The comment is
 stripped before query planning, so it has no effect on results — but it shows up
 verbatim in database query logs and slow-query logs, letting you correlate a
 specific SQL statement back to the MCP client, LLM tool invocation, model, user,
-agent, and distributed trace that triggered it.&lt;/p&gt;</description></item><item><title>Versioning Policy</title><link>https://mcp-toolbox.dev/dev/reference/versioning/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/versioning/</guid><description>&lt;p&gt;MCP Toolbox for Databases follows &lt;a href="https://semver.org/"&gt;Semantic Versioning&lt;/a&gt;.&lt;/p&gt;
+agent, and distributed trace that triggered it.&lt;/p&gt;</description></item><item><title>URL Parameter Binding</title><link>https://mcp-toolbox.dev/dev/documentation/configuration/tools/url_parameter_binding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/documentation/configuration/tools/url_parameter_binding/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;URL Parameter Binding is a transport-level feature for HTTP-based transports (such as SSE or standard HTTP POST endpoints) that allows you to bind specific arguments to tools at the connection or request level. This is useful for creating scoped connections for generic MCP clients where you want to restrict the client to a specific database, project, or instance without hardcoding these values in the server configuration for all users, or requiring the client to provide them.&lt;/p&gt;</description></item><item><title>Versioning Policy</title><link>https://mcp-toolbox.dev/dev/reference/versioning/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/reference/versioning/</guid><description>&lt;p&gt;MCP Toolbox for Databases follows &lt;a href="https://semver.org/"&gt;Semantic Versioning&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id="definition-of-the-public-api"&gt;Definition of the Public API&lt;/h2&gt;
 &lt;p&gt;For the purposes of this policy, the &amp;ldquo;Public API&amp;rdquo; includes:&lt;/p&gt;
 &lt;ul&gt;

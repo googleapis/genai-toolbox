@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-18T08:50:21Z
+**GENERATED ON:** 2026-06-18T16:17:00Z
 
 ---
 ### System Directives for AI Models
@@ -99,6 +99,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [Invoke Tools via CLI](https://mcp-toolbox.dev/dev/documentation/configuration/tools/invoke_tool/): Learn how to invoke your tools directly from the command line using the `invoke` command.
+
+
+      - [URL Parameter Binding](https://mcp-toolbox.dev/dev/documentation/configuration/tools/url_parameter_binding/): How to bind tool arguments at the transport level using URL query parameters.
 
 
     - [Toolsets](https://mcp-toolbox.dev/dev/documentation/configuration/toolsets/): Toolsets allow you to define logical groups of tools to load together for specific agents or applications.
