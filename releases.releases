@@ -1,6 +1,7 @@
 <a class="dropdown-item" href="/">latest</a>
 
 <a class="dropdown-item" href="https://mcp-toolbox.dev/dev/">dev</a>
+  <a class="dropdown-item" href="https://mcp-toolbox.dev/v1.5.0/">v1.5.0</a>
   <a class="dropdown-item" href="https://mcp-toolbox.dev/v1.4.0/">v1.4.0</a>
   <a class="dropdown-item" href="https://mcp-toolbox.dev/v1.3.0/">v1.3.0</a>
   <a class="dropdown-item" href="https://mcp-toolbox.dev/v1.2.0/">v1.2.0</a>
@@ -8,5 +9,4 @@
   <a class="dropdown-item" href="https://mcp-toolbox.dev/v1.0.0/">v1.0.0</a>
   <a class="dropdown-item" href="https://mcp-toolbox.dev/v0.32.0/">v0.32.0</a>
   <a class="dropdown-item" href="https://mcp-toolbox.dev/v0.31.0/">v0.31.0</a>
-  <a class="dropdown-item" href="https://mcp-toolbox.dev/v0.30.0/">v0.30.0</a>
   
