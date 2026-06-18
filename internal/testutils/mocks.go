@@ -35,6 +35,7 @@ type MockTool struct {
 	unauthorized               bool
 	requireClientAuthorization bool
 	authRequired               []string
+	ReturnParamsInInvoke       bool
 }
 
 var _ tools.Tool = MockTool{}
@@ -56,8 +57,13 @@ func NewMockTool(name, desc string, params []parameters.Parameter, unauthorized,
 	}
 }
 
-func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, util.ToolboxError) {
+func (t MockTool) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
 	mock := []any{t.Name}
+	if t.ReturnParamsInInvoke && len(params) > 0 {
+		for _, p := range params {
+			mock = append(mock, p.Value)
+		}
+	}
 	return mock, nil
 }
 
