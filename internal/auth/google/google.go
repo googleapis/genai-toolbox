@@ -48,9 +48,17 @@ func (cfg Config) AuthServiceConfigType() string {
 	return AuthServiceType
 }
 
+func (cfg Config) IsMCPEnabled() bool {
+	return cfg.McpEnabled
+}
+
 // Initialize a Google auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
-	if !cfg.McpEnabled {
+	if cfg.McpEnabled {
+		if cfg.Audience == "" && cfg.ClientID == "" {
+			return nil, fmt.Errorf("`audience` or `clientId` is required when `mcpEnabled` is true")
+		}
+	} else {
 		if cfg.Audience != "" {
 			return nil, fmt.Errorf("`audience` is not allowed when `mcpEnabled` is false")
 		}
