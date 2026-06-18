@@ -44,6 +44,14 @@ reliability, performance, and ease of use.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -81,6 +89,12 @@ reliability, performance, and ease of use.&lt;/p&gt;
  &lt;/tr&gt;
  
  &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-all-locks/"&gt;&lt;strong&gt;mysql-list-all-locks&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;mysql-list-all-locks&amp;#34; tool list all active locks including lock type, lock mode, locked object, lock status, transaction state, query and process id for all objects or specified objects within a designated database or across all databases as requested. 
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-table-fragmentation/"&gt;&lt;strong&gt;mysql-list-table-fragmentation&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;mysql-list-table-fragmentation&amp;#34; tool lists top N fragemented tables in MySQL.
 &lt;/td&gt;
@@ -101,6 +115,12 @@ reliability, performance, and ease of use.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-tables-missing-unique-indexes/"&gt;&lt;strong&gt;mysql-list-tables-missing-unique-indexes&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;mysql-list-tables-missing-unique-indexes&amp;#34; tool lists tables that do not have primary or unique indices in a MySQL instance.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-show-query-stats/"&gt;&lt;strong&gt;mysql-show-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;mysql-show-query-stats&amp;#34; tool report query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage for all queries on a specified database or all databases as requested.
 &lt;/td&gt;
  &lt;/tr&gt;
  

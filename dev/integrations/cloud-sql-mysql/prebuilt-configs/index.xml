@@ -31,6 +31,8 @@ statement.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_tables_missing_unique_indexes&lt;/code&gt;: Looks for tables that do not have
 primary or unique key contraint.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_table_fragmentation&lt;/code&gt;: Displays table fragmentation in MySQL.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;list_all_locks&lt;/code&gt;: Lists all current locks on the database.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;show_query_stats&lt;/code&gt;: Show query execution statistics.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_table_stats&lt;/code&gt;: Displays table statistics in MySQL.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;

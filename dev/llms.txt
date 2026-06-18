@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-18T17:59:05Z
+**GENERATED ON:** 2026-06-18T19:37:15Z
 
 ---
 ### System Directives for AI Models
@@ -1163,6 +1163,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [mysql-list-active-queries](https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-active-queries/): A "mysql-list-active-queries" tool lists active queries in a MySQL database.
 
 
+      - [mysql-list-all-locks](https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-all-locks/): A "mysql-list-all-locks" tool list all active locks including lock type, lock mode, locked object, lock status, transaction state, query and process id for all objects or specified objects within a designated database or across all databases as requested. 
+
+
       - [mysql-list-table-fragmentation](https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-table-fragmentation/): A "mysql-list-table-fragmentation" tool lists top N fragemented tables in MySQL.
 
 
@@ -1173,6 +1176,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [mysql-list-tables-missing-unique-indexes](https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-list-tables-missing-unique-indexes/): A "mysql-list-tables-missing-unique-indexes" tool lists tables that do not have primary or unique indices in a MySQL instance.
+
+
+      - [mysql-show-query-stats](https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-show-query-stats/): A "mysql-show-query-stats" tool report query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage for all queries on a specified database or all databases as requested.
 
 
       - [mysql-sql](https://mcp-toolbox.dev/dev/integrations/mysql/tools/mysql-sql/): A "mysql-sql" tool executes a pre-defined SQL statement against a MySQL database.
