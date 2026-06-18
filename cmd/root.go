@@ -37,7 +37,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal/serve"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/skills"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -456,17 +455,27 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	// Validate ToolboxUrl if MCP Auth is enabled
+	var mcpAuthEnabled bool
 	for _, authSvc := range opts.Cfg.AuthServiceConfigs {
-		if genCfg, ok := authSvc.(generic.Config); ok && genCfg.McpEnabled {
-			if opts.Cfg.ToolboxUrl == "" {
-				opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
-			}
-			if opts.Cfg.ToolboxUrl == "" {
-				errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
-				opts.Logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
+		if authSvc.IsMCPEnabled() {
+			mcpAuthEnabled = true
 			break
+		}
+	}
+
+	if mcpAuthEnabled {
+		if opts.Cfg.EnableAPI {
+			errMsg := fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (--enable-api)")
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		if opts.Cfg.ToolboxUrl == "" {
+			opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
+		}
+		if opts.Cfg.ToolboxUrl == "" {
+			errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
 		}
 	}
 
