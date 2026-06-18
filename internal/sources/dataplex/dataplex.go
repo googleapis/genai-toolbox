@@ -41,6 +41,7 @@ const SourceType string = "dataplex"
 
 // CloudPlatformScope is a broad scope for Google Cloud Platform services.
 const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
 var operationNameRegex = regexp.MustCompile(`^projects/[^/]+/locations/[^/]+/operations/[^/]+$`)
 
 // validate interface
