@@ -803,6 +803,12 @@ names, or other parts of the query.&lt;/p&gt;</description></item><item><title>C
  &lt;/tr&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;--http-max-request-bytes&lt;/code&gt;&lt;/td&gt;
+ &lt;td&gt;Maximum MCP HTTP request body size in bytes.&lt;/td&gt;
+ &lt;td&gt;&lt;code&gt;10485760&lt;/code&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ &lt;tr&gt;
+ &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--ignore-unknown-tools&lt;/code&gt;&lt;/td&gt;
  &lt;td&gt;Log warnings and skip unknown/unsupported tool types instead of failing to start.&lt;/td&gt;
  &lt;td&gt;&lt;/td&gt;
@@ -846,7 +852,7 @@ names, or other parts of the query.&lt;/p&gt;</description></item><item><title>C
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--prebuilt&lt;/code&gt;&lt;/td&gt;
- &lt;td&gt;Use one or more prebuilt tool configuration by source type. See &lt;a href="https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/"&gt;Prebuilt Tools Reference&lt;/a&gt; for allowed values.&lt;/td&gt;
+ &lt;td&gt;Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., &lt;code&gt;&amp;lt;source&amp;gt;/&amp;lt;toolset&amp;gt;&lt;/code&gt;) to load only that toolset. See &lt;a href="https://mcp-toolbox.dev/documentation/configuration/prebuilt-configs/"&gt;Prebuilt Tools Reference&lt;/a&gt; for allowed values.&lt;/td&gt;
  &lt;td&gt;&lt;/td&gt;
  &lt;/tr&gt;
  &lt;tr&gt;
@@ -3411,13 +3417,173 @@ server&amp;rsquo;s system &lt;code&gt;PATH&lt;/code&gt;.&lt;/p&gt;</description>
 &lt;/ul&gt;
 &lt;h2 id="parameters"&gt;Parameters&lt;/h2&gt;
 &lt;h3 id="locations-array-of-strings-required"&gt;&lt;code&gt;locations&lt;/code&gt; (Array of Strings, Required)&lt;/h3&gt;
-&lt;p&gt;The locations to search in (e.g., &lt;code&gt;['us', 'eu', 'global']&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>dataplex-lookup-context</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;The locations to search in (e.g., &lt;code&gt;['us', 'eu', 'global']&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>dataplex-check-data-quality</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-check-data-quality/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-check-data-quality/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-check-data-quality&lt;/code&gt; tool triggers a new Data Quality scan to evaluate rules (e.g. non-null, value range limits, custom SQL assertions) against table rows.&lt;/p&gt;
+&lt;p&gt;Since scan template creation is asynchronous, this tool returns an LRO name. You must poll &lt;code&gt;dataplex-get-operation&lt;/code&gt; with this ID until it is done, extract the &lt;code&gt;scanId&lt;/code&gt;, and poll &lt;code&gt;dataplex-get-run-status&lt;/code&gt; with the &lt;code&gt;scanId&lt;/code&gt; until the job is &lt;code&gt;SUCCEEDED&lt;/code&gt; before calling &lt;code&gt;dataplex-get-data-quality-results&lt;/code&gt; to fetch results.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-discover-metadata</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-discover-metadata/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-discover-metadata/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-discover-metadata&lt;/code&gt; tool triggers a new Data Discovery scan to automatically crawl GCS directories, infer schemas/partitions, and publish them as BigQuery tables.&lt;/p&gt;
+&lt;p&gt;Since scan template creation is asynchronous, this tool returns an LRO name. You must poll &lt;code&gt;dataplex-get-operation&lt;/code&gt; with this ID until it is done, extract the &lt;code&gt;scanId&lt;/code&gt;, and poll &lt;code&gt;dataplex-get-run-status&lt;/code&gt; with the &lt;code&gt;scanId&lt;/code&gt; until the job is &lt;code&gt;SUCCEEDED&lt;/code&gt; before calling &lt;code&gt;dataplex-get-discovery-results&lt;/code&gt; to fetch results.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-generate-data-insights</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-insights/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-insights/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-generate-data-insights&lt;/code&gt; tool triggers the creation and run of a Dataplex Data Insights scan on a BigQuery table.&lt;/p&gt;
+&lt;p&gt;Since the scan template creation is asynchronous, this tool returns a Long-Running Operation (LRO) resource name (format: &lt;code&gt;projects/{project}/locations/{location}/operations/{operation_id}&lt;/code&gt;).
+To orchestrate this workflow, you must:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Capture the &lt;code&gt;operation_id&lt;/code&gt; from this tool&amp;rsquo;s response.&lt;/li&gt;
+&lt;li&gt;Poll the &lt;code&gt;dataplex-get-operation&lt;/code&gt; tool with this ID until &lt;code&gt;done&lt;/code&gt; is true.&lt;/li&gt;
+&lt;li&gt;Extract the created scan ID (&lt;code&gt;scanId&lt;/code&gt;) from the completed operation&amp;rsquo;s response.&lt;/li&gt;
+&lt;li&gt;Poll &lt;code&gt;dataplex-get-run-status&lt;/code&gt; with the &lt;code&gt;scanId&lt;/code&gt; until the job state is &lt;code&gt;SUCCEEDED&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Call &lt;code&gt;dataplex-get-data-insights&lt;/code&gt; with the &lt;code&gt;scanId&lt;/code&gt; to fetch the final results.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-generate-data-profile</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-profile/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-profile/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-generate-data-profile&lt;/code&gt; tool triggers a new Data Profile scan to compute statistical profiles (min, max, mean, null ratios, distinct ratios, quantiles, etc.) on table columns.&lt;/p&gt;
+&lt;p&gt;Since scan template creation is asynchronous, this tool returns an LRO name. You must poll &lt;code&gt;dataplex-get-operation&lt;/code&gt; with this ID until it is done, extract the &lt;code&gt;scanId&lt;/code&gt;, and poll &lt;code&gt;dataplex-get-run-status&lt;/code&gt; with the &lt;code&gt;scanId&lt;/code&gt; until the job is &lt;code&gt;SUCCEEDED&lt;/code&gt; before calling &lt;code&gt;dataplex-get-data-profile&lt;/code&gt; to fetch results.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-data-insights</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-data-insights&lt;/code&gt; tool retrieves the final results of a completed Data Insights scan.&lt;/p&gt;
+&lt;p&gt;WARNING: You must verify that the execution run has succeeded (via &lt;code&gt;dataplex-get-run-status&lt;/code&gt;) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results only via the nested public GA fields &lt;code&gt;dataDocumentationResult.datasetResult&lt;/code&gt; (for datasets) or &lt;code&gt;dataDocumentationResult.tableResult&lt;/code&gt; (for tables). The top-level fields (like &lt;code&gt;dataDocumentationResult.queries&lt;/code&gt;) are restricted and will be empty.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-data-profile</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-data-profile&lt;/code&gt; tool retrieves the results of a completed Data Profile scan.&lt;/p&gt;
+&lt;p&gt;WARNING: You must verify the execution run has succeeded (via &lt;code&gt;dataplex-get-run-status&lt;/code&gt;) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields &lt;code&gt;dataProfileResult.profile.fields&lt;/code&gt; inside the returned DataScan.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].&lt;/p&gt;</description></item><item><title>dataplex-get-data-quality-results</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-quality-results/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-quality-results/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-data-quality-results&lt;/code&gt; tool retrieves the results of a completed Data Quality scan.&lt;/p&gt;
+&lt;p&gt;WARNING: You must verify the execution run has succeeded (via &lt;code&gt;dataplex-get-run-status&lt;/code&gt;) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields &lt;code&gt;dataQualityResult&lt;/code&gt; inside the returned DataScan.
+Note that the &lt;code&gt;failingRowsQuery&lt;/code&gt; field inside the rules result is extremely useful for retrieving failed rows.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-discovery-results</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-discovery-results/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-discovery-results/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-discovery-results&lt;/code&gt; tool retrieves the results of a completed Data Discovery scan.&lt;/p&gt;
+&lt;p&gt;WARNING: You must verify the execution run has succeeded (via &lt;code&gt;dataplex-get-run-status&lt;/code&gt;) before calling this tool, otherwise the results will be empty.
+CRITICAL: Access the results via the nested public fields &lt;code&gt;dataDiscoveryResult.bigqueryPublishing&lt;/code&gt; and &lt;code&gt;dataDiscoveryResult.scanStatistics&lt;/code&gt; inside the returned DataScan.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].&lt;/p&gt;</description></item><item><title>dataplex-get-operation</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-operation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-operation/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-operation&lt;/code&gt; tool retrieves the status of a Dataplex long-running operation (LRO) like scan creation.&lt;/p&gt;
+&lt;p&gt;Poll this tool until the &lt;code&gt;done&lt;/code&gt; field from the response is &lt;code&gt;true&lt;/code&gt;. Once completed, the &lt;code&gt;response&lt;/code&gt; field will contain the created DataScan resource, from which you can extract the &lt;code&gt;scanId&lt;/code&gt; (the last part of the &lt;code&gt;name&lt;/code&gt; field, e.g. &lt;code&gt;nq-doc-1234&lt;/code&gt;) to pass to &lt;code&gt;get_run_status&lt;/code&gt; and get results.
+WARNING: This only tracks the creation of the scan template, NOT the actual background execution.&lt;/p&gt;</description></item><item><title>dataplex-get-run-status</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-run-status/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-run-status/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-run-status&lt;/code&gt; tool retrieves the execution status of the latest background job run for a specified scan.&lt;/p&gt;
+&lt;p&gt;Use this tool to poll the progress of the insights, profiling, discovery, or quality scan execution. Wait until the returned &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;SUCCEEDED&lt;/code&gt; before fetching results. Typical execution takes 2-5 minutes. If the state is &lt;code&gt;FAILED&lt;/code&gt;, check the error details.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-lookup-context</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-lookup-context&lt;/code&gt; tool provides rich metadata of one or more data assets along with their relationships.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;dataplex-lookup-context&lt;/code&gt; takes a required &lt;code&gt;name&lt;/code&gt; parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required &lt;code&gt;resources&lt;/code&gt;
-parameter which is a list of resource names for which metadata is needed in the
-following form: projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;dataplex-lookup-context&lt;/code&gt; takes a required &lt;code&gt;resources&lt;/code&gt; parameter which is a list of up to 10 resource names for which metadata is needed in the following form: &lt;code&gt;projects/{project}/locations/{location}/entryGroups/{group}/entries/{entry}&lt;/code&gt;. All resources must belong to the same Google Cloud location.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
 
@@ -3425,25 +3591,37 @@ following form: projects/{project}/locations/{location}/entryGroups/{group}/entr
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-lookup-entry</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-entry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-entry/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog (formerly known as Dataplex) uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex/docs"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-lookup-entry</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-entry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-entry/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-lookup-entry&lt;/code&gt; tool returns details of a particular entry in Knowledge Catalog.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;dataplex-lookup-entry&lt;/code&gt; takes a required &lt;code&gt;name&lt;/code&gt; parameter which contains the
-project and location to which the request should be attributed in the following
-form: projects/{project}/locations/{location} and also a required &lt;code&gt;entry&lt;/code&gt;
-parameter which is the resource name of the entry in the following form:
-projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
-It also optionally accepts following parameters:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;view&lt;/code&gt; - View to control which parts of an entry the service should return.
-It takes integer values from 1-4 corresponding to type of view - BASIC,
-FULL, CUSTOM, ALL&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;aspectTypes&lt;/code&gt; - Limits the aspects returned to the provided aspect types in
-the format
-&lt;code&gt;projects/{project}/locations/{location}/aspectTypes/{aspectType}&lt;/code&gt;. It only
-works for CUSTOM view.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;paths&lt;/code&gt; - Limits the aspects returned to those associated with the provided
-paths within the Entry. It only works for CUSTOM view.&lt;/li&gt;
-&lt;/ul&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
 
@@ -3451,17 +3629,38 @@ paths within the Entry. It only works for CUSTOM view.&lt;/li&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-search-aspect-types</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-aspect-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-aspect-types/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].&lt;/p&gt;</description></item><item><title>dataplex-search-aspect-types</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-aspect-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-aspect-types/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-search-aspect-types&lt;/code&gt; tool allows to fetch the metadata template of
 aspect types based on search query.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;dataplex-search-aspect-types&lt;/code&gt; accepts following parameters optionally:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;query&lt;/code&gt; - Narrows down the search of aspect types to value of this parameter.
-If not provided, it fetches all aspect types available to the user.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;pageSize&lt;/code&gt; - Number of returned aspect types in the search page. Defaults to &lt;code&gt;5&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;orderBy&lt;/code&gt; - Specifies the ordering of results. Supported values are: relevance
-(default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li&gt;
-&lt;/ul&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
 
@@ -3469,39 +3668,81 @@ If not provided, it fetches all aspect types available to the user.&lt;/li&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-search-dq-scans</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-dq-scans/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-dq-scans/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
-&lt;p&gt;A &lt;code&gt;dataplex-search-dq-scans&lt;/code&gt; tool returns data quality scans that match the given criteria.
-It&amp;rsquo;s compatible with the following sources:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="../../sources/dataplex.md"&gt;dataplex&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;code&gt;dataplex-search-dq-scans&lt;/code&gt; accepts the following optional parameters:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;filter&lt;/code&gt; - Filter string to search/filter data quality scans. E.g. &amp;ldquo;display_name = &amp;quot;my-scan&amp;quot;&amp;rdquo;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;data_scan_id&lt;/code&gt; - The resource name of the data scan to filter by: projects/{project}/locations/{locationId}/dataScans/{dataScanId}.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;table_name&lt;/code&gt; - The name of the table to filter by. Maps to data.entity in the filter string. E.g. &amp;ldquo;//bigquery.googleapis.com/projects/P/datasets/D/tables/T&amp;rdquo;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;pageSize&lt;/code&gt; - Number of returned data quality scans in the page. Defaults to &lt;code&gt;10&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;orderBy&lt;/code&gt; - Specifies the ordering of results.&lt;/li&gt;
-&lt;/ul&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-search-dq-scans</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-dq-scans/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-dq-scans/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-search-dq-scans&lt;/code&gt; tool returns data quality scans that match the given criteria.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
 &lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
 &lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
 &lt;p&gt;Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
 user and group access to Dataplex resources. Toolbox will use your
 &lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
-interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Dataplex&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-search-entries</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Dataplex&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In addition to &lt;a href="https://cloud.google.com/docs/authentication/provide-credentials-adc"&gt;setting the ADC for your server&lt;/a&gt;, you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See &lt;a href="https://cloud.google.com/dataplex/docs/iam-permissions"&gt;Dataplex Universal Catalog IAM permissions&lt;/a&gt;
+and &lt;a href="https://cloud.google.com/dataplex/docs/iam-roles"&gt;Dataplex Universal Catalog IAM roles&lt;/a&gt; for more information on
+applying IAM permissions and roles to an identity.&lt;/p&gt;</description></item><item><title>dataplex-search-entries</title><link>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-search-entries&lt;/code&gt; tool returns all entries in Knowledge Catalog (formerly known as Dataplex) (e.g.
 tables, views, models) that matches given user query.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;dataplex-search-entries&lt;/code&gt; takes a required &lt;code&gt;query&lt;/code&gt; parameter based on which
-entries are filtered and returned to the user. It also optionally accepts
-following parameters:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;scope&lt;/code&gt; - A scope limits the search space to a particular project or organization.
-It must be in the format: organizations/&amp;lt;org_id&amp;gt; or projects/&amp;lt;project_id&amp;gt;
-or projects/&amp;lt;project_number&amp;gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;pageSize&lt;/code&gt; - Number of results in the search page. Defaults to &lt;code&gt;5&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;orderBy&lt;/code&gt; - Specifies the ordering of results. Supported values are: relevance
-(default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li&gt;
-&lt;/ul&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
 
@@ -3509,7 +3750,36 @@ or projects/&amp;lt;project_number&amp;gt;.&lt;/li&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataproc-get-cluster</title><link>https://mcp-toolbox.dev/integrations/dataproc/tools/dataproc-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/dataproc/tools/dataproc-get-cluster/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataproc-get-cluster</title><link>https://mcp-toolbox.dev/integrations/dataproc/tools/dataproc-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/dataproc/tools/dataproc-get-cluster/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataproc-get-cluster&lt;/code&gt; tool retrieves a specific Dataproc cluster from a
 Google Cloud Dataproc source.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;dataproc-get-cluster&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
@@ -8422,7 +8692,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode376s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode371s0hbhb"&gt;
 
 
 
@@ -8770,86 +9040,11 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p&g
 database.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;mysql-get-query-plan&lt;/code&gt; takes one input parameter &lt;code&gt;sql_statement&lt;/code&gt; and gets the execution plan for the SQL
 statement against the &lt;code&gt;source&lt;/code&gt;.&lt;/p&gt;
-&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-
-
-
-
-
-&lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
-
- &lt;table&gt;
- &lt;thead&gt;
- &lt;tr&gt;
- &lt;th&gt;Source Name&lt;/th&gt;
- &lt;/tr&gt;
- &lt;/thead&gt;
- &lt;tbody&gt;
- 
- 
- &lt;tr&gt;
- &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/source/"&gt;MySQL Source&lt;/a&gt;&lt;/td&gt;
- &lt;/tr&gt;
- 
-
- 
-
- 
- 
- 
- 
- 
- 
-
- 
- &lt;tr&gt;
- &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/cloud-sql-mysql/source/"&gt;Cloud SQL for MySQL Source&lt;/a&gt;&lt;/td&gt;
- &lt;/tr&gt;
- 
- 
- 
- &lt;/tbody&gt;
- &lt;/table&gt;
-&lt;/div&gt;
-
-&lt;h2 id="example"&gt;Example&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;get_query_plan_tool&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;mysql-get-query-plan&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-mysql-instance&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to get the execution plan for a sql statement.&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="reference"&gt;Reference&lt;/h2&gt;
-&lt;table&gt;
- &lt;thead&gt;
- &lt;tr&gt;
- &lt;th&gt;&lt;strong&gt;field&lt;/strong&gt;&lt;/th&gt;
- &lt;th style="text-align: center"&gt;&lt;strong&gt;type&lt;/strong&gt;&lt;/th&gt;
- &lt;th style="text-align: center"&gt;&lt;strong&gt;required&lt;/strong&gt;&lt;/th&gt;
- &lt;th&gt;&lt;strong&gt;description&lt;/strong&gt;&lt;/th&gt;
- &lt;/tr&gt;
- &lt;/thead&gt;
- &lt;tbody&gt;
- &lt;tr&gt;
- &lt;td&gt;type&lt;/td&gt;
- &lt;td style="text-align: center"&gt;string&lt;/td&gt;
- &lt;td style="text-align: center"&gt;true&lt;/td&gt;
- &lt;td&gt;Must be &amp;ldquo;mysql-get-query-plan&amp;rdquo;.&lt;/td&gt;
- &lt;/tr&gt;
- &lt;tr&gt;
- &lt;td&gt;source&lt;/td&gt;
- &lt;td style="text-align: center"&gt;string&lt;/td&gt;
- &lt;td style="text-align: center"&gt;true&lt;/td&gt;
- &lt;td&gt;Name of the source the SQL should execute on.&lt;/td&gt;
- &lt;/tr&gt;
- &lt;tr&gt;
- &lt;td&gt;description&lt;/td&gt;
- &lt;td style="text-align: center"&gt;string&lt;/td&gt;
- &lt;td style="text-align: center"&gt;true&lt;/td&gt;
- &lt;td&gt;Description of the tool that is passed to the LLM.&lt;/td&gt;
- &lt;/tr&gt;
- &lt;/tbody&gt;
-&lt;/table&gt;</description></item><item><title>mysql-list-active-queries</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-active-queries/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;** Security **&lt;/p&gt;
+&lt;p&gt;The tool runs the supplied statement as &lt;code&gt;EXPLAIN FORMAT=JSON &amp;lt;sql_statement&amp;gt;&lt;/code&gt;.
+A plain &lt;code&gt;EXPLAIN&lt;/code&gt; (without &lt;code&gt;ANALYZE&lt;/code&gt;) only computes the query plan; it never
+executes the wrapped statement, so &lt;code&gt;SELECT&lt;/code&gt;, &lt;code&gt;INSERT&lt;/code&gt;, &lt;code&gt;UPDATE&lt;/code&gt;, and &lt;code&gt;DELETE&lt;/code&gt;
+inputs all return a plan without side effects.&lt;/p&gt;</description></item><item><title>mysql-list-active-queries</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-active-queries/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;mysql-list-active-queries&lt;/code&gt; tool retrieves information about active queries in
 a MySQL database.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;mysql-list-active-queries&lt;/code&gt; outputs detailed information as JSON for current
@@ -8867,7 +9062,9 @@ long in seconds, default &lt;code&gt;0&lt;/code&gt;.&lt;/li&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>mysql-list-table-fragmentation</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-table-fragmentation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-table-fragmentation/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>mysql-list-all-locks</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-all-locks/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-all-locks/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;mysql-list-all-locks&lt;/code&gt; tool retrieves active database locks by joining performance_schema.data_locks with information_schema.innodb_trx, providing a comprehensive view of blocked threads, transaction states, and the specific queries causing contention.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mysql-list-all-locks&lt;/code&gt; outputs a detailed view of data locks including lock type, lock mode, lock status, transaction state, current operation and query for all threads running on specified object or all objects in a database. The output is a JSON formatted array of top 10 data locks ordered by longest running transaction time.&lt;/p&gt;</description></item><item><title>mysql-list-table-fragmentation</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-table-fragmentation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-table-fragmentation/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;mysql-list-table-fragmentation&lt;/code&gt; tool checks table fragmentation of MySQL
 tables by calculating the size of the data and index files in bytes and
 comparing with free space allocated to each table. This tool calculates
@@ -8903,7 +9100,9 @@ Search all visible tables in all visible databases if not specified.&lt;/li&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>mysql-sql</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>mysql-show-query-stats</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-show-query-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-show-query-stats/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;mysql-show-query-stats&lt;/code&gt; tool retrieves a database level query statistics from performance_schema.events_statements_summary_by_digest to identify slow and inefficient queries and provides necessary data to perform effective query tuning.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mysql-show-query-stats&lt;/code&gt; outputs detailed query statistics including total latency, average latency, maximum latency, total rows sent, total rows examined, full table scan count, inefficient index usage count and last executed timestamp. The output format is JSON array of top 10 queries ranked by total latency.&lt;/p&gt;</description></item><item><title>mysql-sql</title><link>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/mysql/tools/mysql-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;mysql-sql&lt;/code&gt; tool executes a pre-defined SQL statement against a MySQL
 database.&lt;/p&gt;
 &lt;p&gt;The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html"&gt;prepared statement&lt;/a&gt;,
@@ -9950,7 +10149,49 @@ SET, GET, HGETALL) and subsequent elements are its arguments.&lt;/p&gt;
 &lt;h3 id="dynamic-command-parameters"&gt;Dynamic Command Parameters&lt;/h3&gt;
 &lt;p&gt;Command arguments can be templated using the &lt;code&gt;$variableName&lt;/code&gt; annotation. The
 array type parameters will be expanded once into multiple arguments. Take the
-following config for example:&lt;/p&gt;</description></item><item><title>serverless-spark-get-batch</title><link>https://mcp-toolbox.dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+following config for example:&lt;/p&gt;</description></item><item><title>scylladb-cql</title><link>https://mcp-toolbox.dev/integrations/scylladb/tools/scylladb-cql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/scylladb/tools/scylladb-cql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;scylladb-cql&lt;/code&gt; tool executes a pre-defined CQL statement against a ScyllaDB
+cluster.&lt;/p&gt;
+&lt;p&gt;The specified CQL statement is executed as a prepared
+statement, and expects parameters in the CQL query to be in
+the form of placeholders &lt;code&gt;?&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/scylladb/source/"&gt;ScyllaDB Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; This tool uses parameterized queries to prevent CQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for keyspaces, table names, column
+names, or other parts of the query.&lt;/p&gt;</description></item><item><title>serverless-spark-get-batch</title><link>https://mcp-toolbox.dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/serverless-spark/tools/serverless-spark-get-batch/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;serverless-spark-get-batch&lt;/code&gt; tool allows you to retrieve a specific
 Serverless Spark batch job.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;serverless-spark-list-batches&lt;/code&gt; accepts the following parameters:&lt;/p&gt;
@@ -11214,6 +11455,14 @@ to a database by following these instructions&lt;/a&gt;.&lt;/p&gt;
  
  
 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
@@ -13081,6 +13330,14 @@ features with a focus on performance and reliability.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
  
 
@@ -13120,6 +13377,12 @@ features with a focus on performance and reliability.&lt;/p&gt;
  &lt;/tr&gt;
  
  &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-all-locks/"&gt;&lt;strong&gt;mysql-list-all-locks&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;mysql-list-all-locks&amp;#34; tool list all active locks including lock type, lock mode, locked object, lock status, transaction state, query and process id for all objects or specified objects within a designated database or across all databases as requested. 
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-table-fragmentation/"&gt;&lt;strong&gt;mysql-list-table-fragmentation&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;mysql-list-table-fragmentation&amp;#34; tool lists top N fragemented tables in MySQL.
 &lt;/td&gt;
@@ -13140,6 +13403,12 @@ features with a focus on performance and reliability.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-tables-missing-unique-indexes/"&gt;&lt;strong&gt;mysql-list-tables-missing-unique-indexes&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;mysql-list-tables-missing-unique-indexes&amp;#34; tool lists tables that do not have primary or unique indices in a MySQL instance.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-show-query-stats/"&gt;&lt;strong&gt;mysql-show-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;mysql-show-query-stats&amp;#34; tool report query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage for all queries on a specified database or all databases as requested.
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -13454,6 +13723,14 @@ reliability, performance, and ease of use.&lt;/p&gt;
  
  
  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -13491,6 +13768,12 @@ reliability, performance, and ease of use.&lt;/p&gt;
  &lt;/tr&gt;
  
  &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-all-locks/"&gt;&lt;strong&gt;mysql-list-all-locks&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;mysql-list-all-locks&amp;#34; tool list all active locks including lock type, lock mode, locked object, lock status, transaction state, query and process id for all objects or specified objects within a designated database or across all databases as requested. 
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-table-fragmentation/"&gt;&lt;strong&gt;mysql-list-table-fragmentation&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;mysql-list-table-fragmentation&amp;#34; tool lists top N fragemented tables in MySQL.
 &lt;/td&gt;
@@ -13511,6 +13794,12 @@ reliability, performance, and ease of use.&lt;/p&gt;
  &lt;tr&gt;
  &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-list-tables-missing-unique-indexes/"&gt;&lt;strong&gt;mysql-list-tables-missing-unique-indexes&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
  &lt;td&gt;A &amp;#34;mysql-list-tables-missing-unique-indexes&amp;#34; tool lists tables that do not have primary or unique indices in a MySQL instance.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/mysql/tools/mysql-show-query-stats/"&gt;&lt;strong&gt;mysql-show-query-stats&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;mysql-show-query-stats&amp;#34; tool report query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage for all queries on a specified database or all databases as requested.
 &lt;/td&gt;
  &lt;/tr&gt;
  
@@ -14050,7 +14339,78 @@ the &lt;a href="https://redis.io/docs/"&gt;official Redis website&lt;/a&gt;.&lt;
 &lt;h3 id="redis"&gt;Redis&lt;/h3&gt;
 &lt;p&gt;&lt;a href="https://cloud.google.com/memorystore/docs/redis/about-redis-auth"&gt;AUTH string&lt;/a&gt; is a password for connection to Redis. If you have the
 &lt;code&gt;requirepass&lt;/code&gt; directive set in your Redis configuration, incoming client
-connections must authenticate in order to connect.&lt;/p&gt;</description></item><item><title>Serverless for Apache Spark Source</title><link>https://mcp-toolbox.dev/integrations/serverless-spark/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/serverless-spark/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+connections must authenticate in order to connect.&lt;/p&gt;</description></item><item><title>ScyllaDB Source</title><link>https://mcp-toolbox.dev/integrations/scylladb/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/scylladb/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://docs.scylladb.com/"&gt;ScyllaDB&lt;/a&gt; is a high-performance NoSQL database that is
+compatible with Apache Cassandra&amp;rsquo;s CQL protocol. It is designed to provide
+predictable performance at scale, optimize cloud infrastructure,
+rapidly scale clusters with global replication and high availability,&lt;/p&gt;
+&lt;p&gt;ScyllaDB supports both self-hosted deployments and &lt;a href="https://cloud.scylladb.com/"&gt;ScyllaDB Cloud&lt;/a&gt;,
+a fully-managed DBaaS available on AWS and GCP.&lt;/p&gt;
+&lt;h2 id="available-tools"&gt;Available Tools&lt;/h2&gt;
+
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+ &lt;h3&gt;ScyllaDB Source Tools&lt;/h3&gt;
+ 
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Tool Name&lt;/th&gt;
+ &lt;th&gt;Description&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/integrations/scylladb/tools/scylladb-cql/"&gt;&lt;strong&gt;scylladb-cql&lt;/strong&gt;&lt;/a&gt;&lt;/td&gt;
+ &lt;td&gt;A &amp;#34;scylladb-cql&amp;#34; tool executes a pre-defined CQL statement against a ScyllaDB cluster.
+&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+
+
+
+
+
+
+
+
+
+&lt;h2 id="example"&gt;Example&lt;/h2&gt;
+&lt;h3 id="self-hosted-scylladb"&gt;Self-hosted ScyllaDB&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-scylladb-source&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;scylladb&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;hosts&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="m"&gt;127.0.0.1&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;keyspace&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my_keyspace&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;protoVersion&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;username&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;${USER_NAME}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;password&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;${PASSWORD}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id="scylladb-cloud"&gt;ScyllaDB Cloud&lt;/h3&gt;
+&lt;p&gt;When connecting to ScyllaDB Cloud, set &lt;code&gt;localDC&lt;/code&gt; to the datacenter name shown
+on the &lt;strong&gt;Connect&lt;/strong&gt; tab of your cluster in the &lt;a href="https://cloud.scylladb.com/"&gt;ScyllaDB Cloud Console&lt;/a&gt;.
+This enables DC-aware token-aware load balancing, which is required for
+ScyllaDB Cloud connections.&lt;/p&gt;</description></item><item><title>Serverless for Apache Spark Source</title><link>https://mcp-toolbox.dev/integrations/serverless-spark/source/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/serverless-spark/source/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;a href="https://cloud.google.com/dataproc-serverless/docs/overview"&gt;Serverless for Apache
 Spark&lt;/a&gt; source allows
 Toolbox to interact with Spark batches hosted on Google Cloud Serverless for
@@ -18576,7 +18936,14 @@ Storage bucket.&lt;/p&gt;
  &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Tip&lt;/p&gt;</description></item><item><title>Versioning Policy</title><link>https://mcp-toolbox.dev/reference/versioning/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/reference/versioning/</guid><description>&lt;p&gt;MCP Toolbox for Databases follows &lt;a href="https://semver.org/"&gt;Semantic Versioning&lt;/a&gt;.&lt;/p&gt;
+ &lt;/span&gt;Tip&lt;/p&gt;</description></item><item><title>SQL Commenter</title><link>https://mcp-toolbox.dev/documentation/monitoring/sql_commenter/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/documentation/monitoring/sql_commenter/</guid><description>&lt;p&gt;&lt;a href="https://google.github.io/sqlcommenter/"&gt;SQLCommenter&lt;/a&gt; is an open-source
+convention that propagates application context into the database by prepending a
+structured comment to every SQL statement before it is executed. The comment is
+stripped before query planning, so it has no effect on results — but it shows up
+verbatim in database query logs and slow-query logs, letting you correlate a
+specific SQL statement back to the MCP client, LLM tool invocation, model, user,
+agent, and distributed trace that triggered it.&lt;/p&gt;</description></item><item><title>URL Parameter Binding</title><link>https://mcp-toolbox.dev/documentation/configuration/tools/url_parameter_binding/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/documentation/configuration/tools/url_parameter_binding/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;URL Parameter Binding is a transport-level feature for HTTP-based transports (such as SSE or standard HTTP POST endpoints) that allows you to bind specific arguments to tools at the connection or request level. This is useful for creating scoped connections for generic MCP clients where you want to restrict the client to a specific database, project, or instance without hardcoding these values in the server configuration for all users, or requiring the client to provide them.&lt;/p&gt;</description></item><item><title>Versioning Policy</title><link>https://mcp-toolbox.dev/reference/versioning/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/reference/versioning/</guid><description>&lt;p&gt;MCP Toolbox for Databases follows &lt;a href="https://semver.org/"&gt;Semantic Versioning&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 id="definition-of-the-public-api"&gt;Definition of the Public API&lt;/h2&gt;
 &lt;p&gt;For the purposes of this policy, the &amp;ldquo;Public API&amp;rdquo; includes:&lt;/p&gt;
 &lt;ul&gt;
@@ -18880,6 +19247,9 @@ use for authentication.&lt;/li&gt;
 to impersonate when making BigQuery and Dataplex API calls. The
 authenticated principal must have &lt;code&gt;roles/iam.serviceAccountTokenCreator&lt;/code&gt;
 on the target service account.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;BIGQUERY_MAXIMUM_BYTES_BILLED&lt;/code&gt;: (Optional) Per-query bytes scanned cap
+(in bytes). Queries that exceed this limit fail before executing and
+cost nothing.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Permissions:&lt;/strong&gt;
@@ -18966,6 +19336,8 @@ statement.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_tables_missing_unique_indexes&lt;/code&gt;: Looks for tables that do not have
 primary or unique key contraint.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_table_fragmentation&lt;/code&gt;: Displays table fragmentation in MySQL.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;list_all_locks&lt;/code&gt;: Lists all current locks on the database.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;show_query_stats&lt;/code&gt;: Show query execution statistics.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_table_stats&lt;/code&gt;: Displays table statistics in MySQL.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
@@ -19772,9 +20144,25 @@ entries.&lt;/li&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;search_entries&lt;/code&gt;: Searches for entries in Knowledge Catalog.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;lookup_entry&lt;/code&gt;: Retrieves a specific entry from Knowledge Catalog.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;search_aspect_types&lt;/code&gt;: Finds aspect types relevant to the
-query.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;search_aspect_types&lt;/code&gt;: Finds aspect types relevant to the query.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;lookup_context&lt;/code&gt;: Retrieves rich metadata regarding one or more data assets along with their relationships.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;search_dq_scans&lt;/code&gt;: Search for data quality scans in Dataplex.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;generate_data_insights&lt;/code&gt;: Creates a new Dataplex Data Documentation scan template and triggers the run.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_data_insights&lt;/code&gt;: Retrieves the final generated data insights for a completed scan.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;generate_data_profile&lt;/code&gt;: Creates a new Dataplex Data Profile scan template and triggers the run.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_data_profile&lt;/code&gt;: Retrieves the final generated data profile results.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;discover_metadata&lt;/code&gt;: Creates a new Dataplex Data Discovery scan template and triggers the run.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_discovery_results&lt;/code&gt;: Retrieves the final generated data discovery results.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;check_data_quality&lt;/code&gt;: Creates a new Dataplex Data Quality scan template and triggers the run.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_data_quality_results&lt;/code&gt;: Retrieves the final generated data quality results.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_operation&lt;/code&gt;: Retrieves the status of a Dataplex long-running operation.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_run_status&lt;/code&gt;: Retrieves the execution status of the latest background job run.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Toolsets:&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;discovery&lt;/code&gt;: Metadata discovery and search toolset (&lt;code&gt;search_entries&lt;/code&gt;, &lt;code&gt;lookup_entry&lt;/code&gt;, &lt;code&gt;search_aspect_types&lt;/code&gt;, &lt;code&gt;lookup_context&lt;/code&gt;, &lt;code&gt;search_dq_scans&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;enrich&lt;/code&gt;: Metadata enrichment pipeline orchestration and execution toolset (&lt;code&gt;search_entries&lt;/code&gt;, &lt;code&gt;lookup_entry&lt;/code&gt;, &lt;code&gt;lookup_context&lt;/code&gt;, &lt;code&gt;generate_data_insights&lt;/code&gt;, &lt;code&gt;get_data_insights&lt;/code&gt;, &lt;code&gt;generate_data_profile&lt;/code&gt;, &lt;code&gt;get_data_profile&lt;/code&gt;, &lt;code&gt;discover_metadata&lt;/code&gt;, &lt;code&gt;get_discovery_results&lt;/code&gt;, &lt;code&gt;check_data_quality&lt;/code&gt;, &lt;code&gt;get_data_quality_results&lt;/code&gt;, &lt;code&gt;get_operation&lt;/code&gt;, &lt;code&gt;get_run_status&lt;/code&gt;).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;</description></item><item><title>Looker</title><link>https://mcp-toolbox.dev/integrations/looker/prebuilt-configs/looker/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/integrations/looker/prebuilt-configs/looker/</guid><description>&lt;h2 id="looker"&gt;Looker&lt;/h2&gt;
@@ -19977,6 +20365,8 @@ statement.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_tables_missing_unique_indexes&lt;/code&gt;: Looks for tables that do not have
 primary or unique key contraint.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_table_fragmentation&lt;/code&gt;: Displays table fragmentation in MySQL.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;list_all_locks&lt;/code&gt;: Lists all current locks on the database.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;show_query_stats&lt;/code&gt;: Show query execution statistics.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_table_stats&lt;/code&gt;: Displays table statistics in MySQL.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
