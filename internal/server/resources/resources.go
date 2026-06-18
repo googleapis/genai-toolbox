@@ -119,6 +119,16 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 	r.promptsets = promptsetsMap
 }
 
+func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	copiedMap := make(map[string]sources.Source, len(r.sources))
+	for k, v := range r.sources {
+		copiedMap[k] = v
+	}
+	return copiedMap
+}
+
 func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

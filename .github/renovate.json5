@@ -69,6 +69,10 @@
       matchManagers: [
         'npm',
       ],
+      matchUpdateTypes: [
+        'minor',
+        'patch',
+      ],
     },
     {
       groupName: 'Pip',

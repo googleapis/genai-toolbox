@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cassandra/cassandracql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -59,12 +60,14 @@ func TestParseFromYamlCassandra(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
-					Name:         "example_tool",
-					Type:         "cassandra-cql",
-					Source:       "my-cassandra-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "cassandra-cql",
+					Source:    "my-cassandra-instance",
+					Statement: "SELECT * FROM CQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -109,12 +112,14 @@ func TestParseFromYamlCassandra(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
-					Name:         "example_tool",
-					Type:         "cassandra-cql",
-					Source:       "my-cassandra-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "cassandra-cql",
+					Source:    "my-cassandra-instance",
+					Statement: "SELECT * FROM CQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -140,12 +145,14 @@ func TestParseFromYamlCassandra(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
-					Name:               "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
 					Type:               "cassandra-cql",
 					Source:             "my-cassandra-instance",
-					Description:        "some description",
 					Statement:          "SELECT * FROM CQL_STATEMENT;\n",
-					AuthRequired:       []string{},
 					Parameters:         nil,
 					TemplateParameters: nil,
 				},

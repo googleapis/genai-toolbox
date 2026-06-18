@@ -29,90 +29,17 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
-	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
-
-// fakeVersionString is used as a temporary version string in tests
-const fakeVersionString = "0.0.0"
 
 var (
 	_ tools.Tool     = testutils.MockTool{}
 	_ prompts.Prompt = testutils.MockPrompt{}
 )
 
-var tool1 = testutils.NewMockTool("no_params", "", []parameters.Parameter{}, false, false)
-
-var tool2 = testutils.NewMockTool(
-	"some_params",
-	"",
-	parameters.Parameters{
-		parameters.NewIntParameter("param1", "This is the first parameter."),
-		parameters.NewIntParameter("param2", "This is the second parameter."),
-	}, false, false)
-
-var tool3 = testutils.NewMockTool(
-	"array_param", "some description",
-	parameters.Parameters{
-		parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
-	}, false, false)
-
-var tool4 = testutils.NewMockTool("unauthorized_tool", "", []parameters.Parameter{}, true, false)
-
-var tool5 = testutils.NewMockTool("require_client_auth_tool", "", []parameters.Parameter{}, false, true)
-
-var prompt1 = testutils.NewMockPrompt("prompt1", "", prompts.Arguments{})
-
-var prompt2 = testutils.NewMockPrompt("prompt2", "", prompts.Arguments{
-	{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
-})
-
-// setUpResources setups resources to test against
-func setUpResources(t *testing.T, mockTools []testutils.MockTool, mockPrompts []testutils.MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
-	toolsMap := make(map[string]tools.Tool)
-	var allTools []string
-	for _, tool := range mockTools {
-		toolsMap[tool.Name] = tool
-		allTools = append(allTools, tool.Name)
-	}
-
-	toolsets := make(map[string]tools.Toolset)
-	for name, l := range map[string][]string{
-		"":           allTools,
-		"tool1_only": {allTools[0]},
-		"tool2_only": {allTools[1]},
-	} {
-		tc := tools.ToolsetConfig{Name: name, ToolNames: l}
-		m, err := tc.Initialize(fakeVersionString, toolsMap)
-		if err != nil {
-			t.Fatalf("unable to initialize toolset %q: %s", name, err)
-		}
-		toolsets[name] = m
-	}
-
-	promptsMap := make(map[string]prompts.Prompt)
-	var allPrompts []string
-	for _, prompt := range mockPrompts {
-		promptsMap[prompt.Name] = prompt
-		allPrompts = append(allPrompts, prompt.Name)
-	}
-
-	promptsets := make(map[string]prompts.Promptset)
-	if len(allPrompts) > 0 {
-		psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
-		ps, err := psc.Initialize(fakeVersionString, promptsMap)
-		if err != nil {
-			t.Fatalf("unable to initialize default promptset: %s", err)
-		}
-		promptsets[""] = ps
-	}
-
-	return toolsMap, toolsets, promptsMap, promptsets
-}
-
 // setUpServer create a new server with tools, toolsets, prompts, and promptsets.
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset, opts ...func(*Server)) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -120,12 +47,12 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "", "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
 
-	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
@@ -135,11 +62,17 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
-		version:         fakeVersionString,
+		version:         testutils.MockVersionString,
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+	}
+	for _, opt := range opts {
+		opt(&server)
+	}
+	if server.httpMaxRequestBytes == 0 {
+		server.httpMaxRequestBytes = DefaultHTTPMaxRequestBytes
 	}
 
 	var r chi.Router
@@ -203,4 +136,10 @@ func runRequest(ts *httptest.Server, method, path string, body io.Reader, header
 	defer resp.Body.Close()
 
 	return resp, respBody, nil
+}
+
+func withHTTPMaxRequestBytes(limit int64) func(*Server) {
+	return func(s *Server) {
+		s.httpMaxRequestBytes = limit
+	}
 }

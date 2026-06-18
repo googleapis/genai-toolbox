@@ -44,57 +44,85 @@ func TestGenerateToolManifest(t *testing.T) {
 		desc            string
 		name            string
 		description     string
+		authInvoke      []string
 		params          parameters.Parameters
 		annotations     *tools.ToolAnnotations
+		wantMetadata    map[string]any
 		wantAnnotations []byte
 	}{
 		{
-			desc:        "basic manifest without metadata",
-			name:        "basic",
-			description: "foo bar",
-			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
-			annotations: nil,
+			desc:         "basic manifest without metadata",
+			name:         "basic",
+			description:  "foo bar",
+			authInvoke:   []string{},
+			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
+			annotations:  nil,
+			wantMetadata: nil,
 		},
 		{
 			desc:            "basic manifest without metadata with annotations",
 			name:            "basic",
 			description:     "foo bar",
+			authInvoke:      []string{},
 			params:          parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
 			annotations:     &tools.ToolAnnotations{ReadOnlyHint: &trueVal, DestructiveHint: &falseVal},
+			wantMetadata:    nil,
 			wantAnnotations: []byte(`{"readOnlyHint":true,"destructiveHint":false}`),
 		},
 		{
-			desc:        "with auth invoke metadata",
-			name:        "basic",
-			description: "foo bar",
-			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
-			annotations: nil,
+			desc:         "with auth invoke metadata",
+			name:         "basic",
+			description:  "foo bar",
+			authInvoke:   []string{"auth1", "auth2"},
+			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
+			annotations:  nil,
+			wantMetadata: map[string]any{"toolbox/authInvoke": []string{"auth1", "auth2"}},
 		},
 		{
 			desc:        "with auth param metadata",
 			name:        "basic",
 			description: "foo bar",
+			authInvoke:  []string{},
 			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
 			annotations: nil,
+			wantMetadata: map[string]any{
+				"toolbox/authParam": map[string][]string{
+					"string-param": {"my-google-auth-service", "other-auth-service"},
+				},
+			},
 		},
 		{
 			desc:        "with auth invoke and auth param metadata",
 			name:        "basic",
 			description: "foo bar",
+			authInvoke:  []string{"auth1", "auth2"},
 			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
 			annotations: nil,
+			wantMetadata: map[string]any{
+				"toolbox/authInvoke": []string{"auth1", "auth2"},
+				"toolbox/authParam": map[string][]string{
+					"string-param": {"my-google-auth-service", "other-auth-service"},
+				},
+			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generateToolManifest(tc.name, tc.description, tc.params, tc.annotations)
-			if got.Annotations != nil {
-				annotations, _ := json.Marshal(got.Annotations)
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil)
+			gotM := got.Metadata
+			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
+				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
+			}
+
+			if tc.wantAnnotations != nil {
+				annotations, err := json.Marshal(got.Annotations)
+				if err != nil {
+					t.Fatalf("error marshaling annotations")
+				}
 				if diff := cmp.Diff(tc.wantAnnotations, annotations); diff != "" {
 					t.Fatalf("unexpected annotations (-want +got):\n%s", diff)
 				}
 			}
-
 		})
 	}
 }
@@ -112,6 +140,7 @@ func TestParamManifest(t *testing.T) {
 	tcs := []struct {
 		name          string
 		in            parameters.Parameters
+		urlParams     map[string]string
 		wantSchema    InputSchema
 		wantAuthParam map[string][]string
 	}{
@@ -157,10 +186,28 @@ func TestParamManifest(t *testing.T) {
 				"foo-string3-auth": []string{"my-google-auth-service", "other-auth-service"},
 			},
 		},
+		{
+			name: "urlParams is not nil, skips matched params",
+			in: parameters.Parameters{
+				parameters.NewStringParameter("foo-string", "bar"),
+				parameters.NewIntParameter("foo-int", "bar"),
+			},
+			urlParams: map[string]string{
+				"foo-string": "url-val",
+			},
+			wantSchema: InputSchema{
+				Type: "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"foo-int": {Type: "integer", Description: "bar"},
+				},
+				Required: []string{"foo-int"},
+			},
+			wantAuthParam: map[string][]string{},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSchema, gotAuthParam := generateParamManifest(tc.in)
+			gotSchema, gotAuthParam := generateParamManifest(tc.in, tc.urlParams)
 			if diff := cmp.Diff(tc.wantSchema, gotSchema); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
@@ -202,7 +249,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
 
-	got, err := GenerateListToolsResult(toolset, toolsMap)
+	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}

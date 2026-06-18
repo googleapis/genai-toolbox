@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/vectorassistmodifyspec"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"modify-spec-tool": vectorassistmodifyspec.Config{
-					Name:         "modify-spec-tool",
-					Type:         "vector-assist-modify-spec",
-					Source:       "a-source",
-					Description:  "a test description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "modify-spec-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "vector-assist-modify-spec",
+					Source: "a-source",
 				},
 			},
 		},

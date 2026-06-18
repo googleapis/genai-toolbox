@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	cloudsqlgetinstances "github.com/googleapis/mcp-toolbox/internal/tools/cloudsql/cloudsqlgetinstances"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"get-instances": cloudsqlgetinstances.Config{
-					Name:         "get-instances",
-					Type:         "cloud-sql-get-instance",
-					Description:  "A tool to get cloud sql instances",
-					Source:       "my-gcp-source",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get-instances",
+						Description:  "A tool to get cloud sql instances",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-sql-get-instance",
+					Source: "my-gcp-source",
 				},
 			},
 		},

@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	lhv "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerhealthvacuum"
 )
 
@@ -45,11 +46,13 @@ func TestParseFromYamlLookerHealthVacuum(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": lhv.Config{
-					Name:         "example_tool",
-					Type:         "looker-health-vacuum",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-health-vacuum",
+					Source: "my-instance",
 				},
 			},
 		},

@@ -45,6 +45,12 @@ type: spanner-list-graphs
 source: spanner-source
 description: Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema).
 ---
+kind: tool
+name: search_catalog
+type: spanner-search-catalog
+source: spanner-source
+description: Searches for data assets (eg. Spanner instances, tables, views, or databases) in catalog based on the provided search query
+---
 kind: toolset
 name: data
 tools:
@@ -52,3 +58,13 @@ tools:
 - execute_sql_dql
 - list_tables
 - list_graphs
+---
+kind: toolset
+name: data_with_discovery
+tools:
+- execute_sql
+- execute_sql_dql
+- list_tables
+- list_graphs
+- search_catalog
+

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -51,11 +52,13 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "clickhouse-list-databases",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "clickhouse-list-databases",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -76,12 +79,13 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 
 func TestListDatabasesToolParseParams(t *testing.T) {
 	tool := Tool{
-		Config: Config{
-			Parameters: parameters.Parameters{},
+		BaseTool: tools.BaseTool[Config]{
+			StaticParameters: parameters.Parameters{},
 		},
 	}
 
-	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{}, map[string]map[string]any{})
+	toolParams, _ := tool.GetParameters(nil)
+	params, err := parameters.ParseParams(toolParams, map[string]any{}, map[string]map[string]any{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
