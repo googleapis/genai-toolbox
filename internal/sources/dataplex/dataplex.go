@@ -548,9 +548,9 @@ func (s *Source) CreateDataProduct(
 	description string,
 	ownerEmails []string,
 	accessGroups []AccessGroup,
-) (string, error) {
+) (string, string, error) {
 	if s.GetDataProductClient() == nil {
-		return "", fmt.Errorf("dataplex data product client is not initialized")
+		return "", "", fmt.Errorf("dataplex data product client is not initialized")
 	}
 
 	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationId)
@@ -587,8 +587,13 @@ func (s *Source) CreateDataProduct(
 
 	op, err := s.GetDataProductClient().CreateDataProduct(ctx, req)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return op.Name(), nil
+	opName := op.Name()
+	parts := strings.Split(opName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
+		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+	}
+	return parts[3], parts[5], nil
 }

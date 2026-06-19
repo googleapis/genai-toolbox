@@ -395,14 +395,14 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 2. You must provide `locationId` and `dataProductId`.
 3. You can optionally filter the listed assets using `filter` or limit the response using `pageSize`.
 ### Response
-1. Present the retrieved list of Data Assets, including their names, resources, and labels.
+1. Present the retrieved list of Data Assets, including their IDs, resources, and labels.
 
 ## Tool: get_data_asset
 ### Request
 1. Use this tool to retrieve detailed metadata for a specific Data Asset.
 2. You must provide `locationId`, `dataProductId`, and `dataAssetId`.
 ### Response
-1. Present the retrieved metadata for the Data Asset, including its name, resource, labels, and access group configurations.
+1. Present the retrieved metadata for the Data Asset, including its ID, resource, labels, and access group configurations.
 
 ## Tool: create_data_product
 ### Request
@@ -411,5 +411,5 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 3. You must provide `displayName` and `ownerEmails`.
 4. You can optionally provide `description` and `accessGroups`.
 ### Response
-1. Present the operation name returned immediately by the LRO creation call.
+1. Present the location ID and operation ID returned immediately by the LRO creation call.
 ```

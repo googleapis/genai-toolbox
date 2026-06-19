@@ -2055,10 +2055,16 @@ func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.D
 				t.Fatalf("error unmarshalling result string: %v", err)
 			}
 
-			opName, ok := invokeResp["operationName"].(string)
-			if !ok || opName == "" {
-				t.Fatalf("expected 'operationName' in response, got %v", invokeResp)
+			opId, ok := invokeResp["operationId"].(string)
+			if !ok || opId == "" {
+				t.Fatalf("expected 'operationId' in response, got %v", invokeResp)
 			}
+			locId, ok := invokeResp["locationId"].(string)
+			if !ok || locId == "" {
+				t.Fatalf("expected 'locationId' in response, got %v", invokeResp)
+			}
+
+			opName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", DataplexProject, locId, opId)
 
 			var completed bool
 			// Poll the LRO operation status up to 12 times (every 5 seconds)

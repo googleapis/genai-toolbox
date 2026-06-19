@@ -53,7 +53,7 @@ type compatibleSource interface {
 		description string,
 		ownerEmails []string,
 		accessGroups []dataplex.AccessGroup,
-	) (string, error)
+	) (string, string, error)
 }
 
 type Config struct {
@@ -200,13 +200,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	opName, err := source.CreateDataProduct(ctx, locationId, dataProductId, displayName, description, ownerEmails, accessGroups)
+	locId, opId, err := source.CreateDataProduct(ctx, locationId, dataProductId, displayName, description, ownerEmails, accessGroups)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 
 	return map[string]string{
-		"operationName": opName,
+		"locationId":  locId,
+		"operationId": opId,
 	}, nil
 }
 
