@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/impersonate"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	grpcstatus "google.golang.org/grpc/status"
@@ -38,6 +39,9 @@ import (
 )
 
 const SourceType string = "dataplex"
+
+// CloudPlatformScope is a broad scope for Google Cloud Platform services.
+const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 
 var operationNameRegex = regexp.MustCompile(`^projects/[^/]+/locations/[^/]+/operations/[^/]+$`)
 
@@ -60,9 +64,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// Dataplex configs
-	Name    string `yaml:"name" validate:"required"`
-	Type    string `yaml:"type" validate:"required"`
-	Project string `yaml:"project" validate:"required"`
+	Name                      string   `yaml:"name" validate:"required"`
+	Type                      string   `yaml:"type" validate:"required"`
+	Project                   string   `yaml:"project" validate:"required"`
+	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount" validate:"omitempty,email"`
+	Scopes                    []string `yaml:"scopes"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -72,7 +78,7 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, dataScanClient, dataProductClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
+	client, dataScanClient, dataProductClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project, r.ImpersonateServiceAccount, r.Scopes)
 	if err != nil {
 		return nil, err
 	}
@@ -125,30 +131,60 @@ func initDataplexConnection(
 	tracer trace.Tracer,
 	name string,
 	project string,
+	impersonateServiceAccount string,
+	scopes []string,
 ) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, *dataplexapi.DataProductClient, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+
+	var opts []option.ClientOption
+
+	credScopes := scopes
+	if len(credScopes) == 0 {
+		credScopes = []string{CloudPlatformScope}
+	}
+
+	if impersonateServiceAccount != "" {
+		// Create impersonated credentials token source
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: impersonateServiceAccount,
+			Scopes:          credScopes,
+		})
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q for project %q: %w", impersonateServiceAccount, project, err)
+		}
+		opts = []option.ClientOption{
+			option.WithUserAgent(userAgent),
+			option.WithTokenSource(ts),
+		}
+	} else {
+		// Use default credentials
+		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
+		}
+		opts = []option.ClientOption{
+			option.WithUserAgent(userAgent),
+			option.WithCredentials(cred),
+		}
+	}
+
+	client, err := dataplexapi.NewCatalogClient(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 
-	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
 	}
 
-	dataProductClient, err := dataplexapi.NewDataProductClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	dataProductClient, err := dataplexapi.NewDataProductClient(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataProduct client for project %q: %w", project, err)
 	}

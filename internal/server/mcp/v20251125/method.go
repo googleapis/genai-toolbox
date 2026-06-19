@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -44,7 +45,7 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
-		return toolsListHandler(id, resourceMgr, toolset, body)
+		return toolsListHandler(ctx, id, resourceMgr, toolset, body)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
@@ -109,15 +110,16 @@ func pingHandler(id jsonrpc.RequestId) (any, error) {
 	}, nil
 }
 
-func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
+	urlParams, _ := util.UrlParamsFromContext(ctx)
 	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), toolset, toolsMap)
+	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), toolset, toolsMap, urlParams)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -276,6 +278,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 		err = fmt.Errorf("error getting parameters for tool: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
+
+	// Auto-populate arguments from URL parameters
+	data = mcputil.PopulateUrlParams(ctx, data, toolParams)
+
 	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
