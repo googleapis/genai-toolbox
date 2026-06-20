@@ -30,6 +30,7 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	grpcstatus "google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 )
 
 const SourceType string = "dataplex"
@@ -586,6 +587,77 @@ func (s *Source) CreateDataProduct(
 	}
 
 	op, err := s.GetDataProductClient().CreateDataProduct(ctx, req)
+	if err != nil {
+		return "", "", err
+	}
+
+	opName := op.Name()
+	parts := strings.Split(opName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
+		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+	}
+	return parts[3], parts[5], nil
+}
+
+// UpdateDataProduct updates an existing Data Product.
+func (s *Source) UpdateDataProduct(
+	ctx context.Context,
+	locationId string,
+	dataProductId string,
+	description string,
+	displayName string,
+	ownerEmails []string,
+	accessGroups []AccessGroup,
+	updateMask []string,
+) (string, string, error) {
+	if s.GetDataProductClient() == nil {
+		return "", "", fmt.Errorf("dataplex data product client is not initialized")
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+
+	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)
+	if len(accessGroups) > 0 {
+		for _, ag := range accessGroups {
+			principal := &dataplexpb.DataProduct_Principal{}
+			if ag.GoogleGroup != "" {
+				principal.Type = &dataplexpb.DataProduct_Principal_GoogleGroup{
+					GoogleGroup: ag.GoogleGroup,
+				}
+			}
+			if ag.ServiceAccount != "" {
+				principal.ServiceAccount = &ag.ServiceAccount
+			}
+			agMap[ag.ID] = &dataplexpb.DataProduct_AccessGroup{
+				Id:          ag.ID,
+				DisplayName: ag.DisplayName,
+				Description: ag.Description,
+				Principal:   principal,
+			}
+		}
+	}
+
+	req := &dataplexpb.UpdateDataProductRequest{
+		DataProduct: &dataplexpb.DataProduct{
+			Name:         name,
+			DisplayName:  displayName,
+			Description:  description,
+			OwnerEmails:  ownerEmails,
+			AccessGroups: agMap,
+		},
+	}
+
+	if len(updateMask) > 0 {
+		var snakeMask []string
+		for _, path := range updateMask {
+			snakeMask = append(snakeMask, util.SnakeFromCamelCase(path))
+		}
+		req.UpdateMask = &fieldmaskpb.FieldMask{
+			Paths: snakeMask,
+		}
+	}
+
+	op, err := s.GetDataProductClient().UpdateDataProduct(ctx, req)
 	if err != nil {
 		return "", "", err
 	}

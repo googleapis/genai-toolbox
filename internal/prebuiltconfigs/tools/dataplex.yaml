@@ -77,6 +77,12 @@ type: dataplex-create-data-product
 source: dataplex-source
 description: Creates a new Data Product.
 ---
+kind: tool
+name: update_data_product
+type: dataplex-update-data-product
+source: dataplex-source
+description: Updates an existing Data Product.
+---
 kind: toolset
 name: discovery
 tools:
@@ -90,3 +96,4 @@ tools:
 - list_data_assets
 - get_data_asset
 - create_data_product
+- update_data_product

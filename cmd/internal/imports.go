@@ -123,6 +123,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexsearchdqscans"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexsearchentries"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexupdatedataproduct"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataprocgetcluster"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataprocgetjob"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataproclistclusters"

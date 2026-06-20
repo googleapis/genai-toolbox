@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"unicode"
 
 	"github.com/go-playground/validator/v10"
 	yaml "github.com/goccy/go-yaml"
@@ -314,4 +315,17 @@ func ToolboxVersionFromContext(ctx context.Context) (string, error) {
 	} else {
 		return "", fmt.Errorf("unable to retrieve toolbox version")
 	}
+}
+
+// SnakeFromCamelCase converts a camelCase or PascalCase string to snake_case.
+// If the string is already in snake_case, it is returned unchanged.
+func SnakeFromCamelCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && unicode.IsUpper(r) {
+			result.WriteRune('_')
+		}
+		result.WriteRune(unicode.ToLower(r))
+	}
+	return result.String()
 }
