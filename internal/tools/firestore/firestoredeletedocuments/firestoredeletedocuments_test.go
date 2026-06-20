@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoredeletedocuments"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"delete_docs_tool": firestoredeletedocuments.Config{
-					Name:         "delete_docs_tool",
-					Type:         "firestore-delete-documents",
-					Source:       "my-firestore-instance",
-					Description:  "Delete documents from Firestore by paths",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "delete_docs_tool",
+						Description:  "Delete documents from Firestore by paths",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-delete-documents",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_delete_docs": firestoredeletedocuments.Config{
-					Name:         "secure_delete_docs",
-					Type:         "firestore-delete-documents",
-					Source:       "prod-firestore",
-					Description:  "Delete documents with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_delete_docs",
+						Description:  "Delete documents with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-delete-documents",
+					Source: "prod-firestore",
 				},
 			},
 		},
@@ -119,25 +124,31 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"delete_user_docs": firestoredeletedocuments.Config{
-			Name:         "delete_user_docs",
-			Type:         "firestore-delete-documents",
-			Source:       "users-firestore",
-			Description:  "Delete user documents",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "delete_user_docs",
+				Description:  "Delete user documents",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-delete-documents",
+			Source: "users-firestore",
 		},
 		"delete_product_docs": firestoredeletedocuments.Config{
-			Name:         "delete_product_docs",
-			Type:         "firestore-delete-documents",
-			Source:       "products-firestore",
-			Description:  "Delete product documents",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "delete_product_docs",
+				Description:  "Delete product documents",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-delete-documents",
+			Source: "products-firestore",
 		},
 		"delete_order_docs": firestoredeletedocuments.Config{
-			Name:         "delete_order_docs",
-			Type:         "firestore-delete-documents",
-			Source:       "orders-firestore",
-			Description:  "Delete order documents",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "delete_order_docs",
+				Description:  "Delete order documents",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-delete-documents",
+			Source: "orders-firestore",
 		},
 	}
 

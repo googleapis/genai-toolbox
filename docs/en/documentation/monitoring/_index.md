@@ -10,3 +10,4 @@ Understanding the internal state of your system is critical when deploying AI ag
 
 * **[Telemetry](telemetry/index.md)**: Learn how to configure logging levels and understand the core metrics and traces emitted by the Toolbox server.
 * **[Export Telemetry](export_telemetry.md)**: Discover how to deploy and configure an OpenTelemetry (OTel) Collector.
+* **[SQL Commenter](sql_commenter.md)**: Propagate application context into database query logs by prepending SQLCommenter-format comments to executed SQL statements.

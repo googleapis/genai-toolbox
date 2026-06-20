@@ -66,3 +66,4 @@ instead of hardcoding your secrets into the configuration file.
 | password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
 | queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |
 | queryExecMode | string | false | pgx query execution mode. Valid values: `cache_statement` (default), `cache_describe`, `describe_exec`, `exec`, `simple_protocol`. Useful with connection poolers that don't support prepared statement caching. |
+| sqlCommenter | boolean | false | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |

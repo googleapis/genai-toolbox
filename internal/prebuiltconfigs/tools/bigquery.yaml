@@ -21,6 +21,7 @@ useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
 scopes: ${BIGQUERY_SCOPES:}
 maxQueryResultRows: ${BIGQUERY_MAX_QUERY_RESULT_ROWS:50}
 impersonateServiceAccount: ${BIGQUERY_IMPERSONATE_SERVICE_ACCOUNT:}
+maximumBytesBilled: ${BIGQUERY_MAXIMUM_BYTES_BILLED:0}
 ---
 kind: tool
 name: analyze_contribution

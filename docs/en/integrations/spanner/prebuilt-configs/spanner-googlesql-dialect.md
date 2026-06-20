@@ -21,3 +21,4 @@ description: "Details of the Spanner (GoogleSQL dialect) prebuilt configuration.
     *   `execute_sql_dql`: Executes a DQL SQL query.
     *   `list_tables`: Lists tables in the database.
     *   `list_graphs`: Lists graphs in the database.
+    *   `search_catalog`: Searches for data assets in Knowledge Catalog (Dataplex).

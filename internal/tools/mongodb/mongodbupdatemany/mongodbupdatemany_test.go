@@ -62,10 +62,13 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdatemany.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-update-many",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
 					FilterPayload: "{ name: {{json .name}} }\n",
@@ -88,8 +91,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					Description: "some description",
-					Canonical:   false,
+					Canonical: false,
 				},
 			},
 		},
@@ -119,10 +121,13 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdatemany.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-update-many",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
 					FilterPayload: "{ name: {{json .name}} }\n",
@@ -145,8 +150,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					Description: "some description",
-					Canonical:   true,
+					Canonical: true,
 				},
 			},
 		},
@@ -176,10 +180,13 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbupdatemany.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-update-many",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
 					FilterPayload: "{ name: {{json .name}} }\n",
@@ -202,8 +209,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 							},
 						},
 					},
-					Description: "some description",
-					Canonical:   false,
+					Canonical: false,
 				},
 			},
 		},

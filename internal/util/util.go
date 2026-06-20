@@ -315,3 +315,34 @@ func ToolboxVersionFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("unable to retrieve toolbox version")
 	}
 }
+
+const ignoreUnknownToolsKey contextKey = "ignoreUnknownTools"
+
+// WithIgnoreUnknownTools adds the ignore-unknown-tools flag to the context
+func WithIgnoreUnknownTools(ctx context.Context, ignore bool) context.Context {
+	return context.WithValue(ctx, ignoreUnknownToolsKey, ignore)
+}
+
+// IgnoreUnknownToolsFromContext retrieves the ignore-unknown-tools flag from context
+func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
+	if ignore, ok := ctx.Value(ignoreUnknownToolsKey).(bool); ok {
+		return ignore
+	}
+	return false
+}
+
+// urlParamsKey is the key used to store URL parameters within context
+const urlParamsKey contextKey = "urlParams"
+
+// WithUrlParams adds URL parameters into the context as a value
+func WithUrlParams(ctx context.Context, params map[string]string) context.Context {
+	return context.WithValue(ctx, urlParamsKey, params)
+}
+
+// UrlParamsFromContext retrieves URL parameters from context
+func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
+	if params, ok := ctx.Value(urlParamsKey).(map[string]string); ok {
+		return params, true
+	}
+	return nil, false
+}
