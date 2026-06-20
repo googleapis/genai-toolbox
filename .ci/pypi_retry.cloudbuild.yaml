@@ -1,0 +1,67 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Retry-only pipeline for the OSS Exit Gate PyPI publish steps. Use when the
+# PyPI portion of the versioned release fails after Go binaries are already in
+# GCS. The fetch-binaries step downloads the five platform binaries from GCS
+# by version into the workspace, then publish_pypi_to_ar.sh builds and
+# uploads the wheels (twine's --skip-existing makes uploads idempotent).
+#
+# Invoke after checking out the version's tag locally:
+#   git checkout v<X.Y.Z>
+#   gcloud builds submit \
+#     --config=.ci/pypi_retry.cloudbuild.yaml \
+#     --region=us-central1 \
+#     --service-account=projects/database-toolbox/serviceAccounts/release@database-toolbox.iam.gserviceaccount.com \
+#     .
+
+steps:
+  - id: "fetch-binaries"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    script: |
+      #!/usr/bin/env bash
+      set -eo pipefail
+      VERSION="v$(cat ./cmd/version.txt)"
+      BUCKET="gs://mcp-toolbox-for-databases/${VERSION}"
+
+      gcloud storage cp "${BUCKET}/linux/amd64/toolbox"       toolbox.linux.amd64
+      gcloud storage cp "${BUCKET}/darwin/arm64/toolbox"      toolbox.darwin.arm64
+      gcloud storage cp "${BUCKET}/darwin/amd64/toolbox"      toolbox.darwin.amd64
+      gcloud storage cp "${BUCKET}/windows/amd64/toolbox.exe" toolbox.windows.amd64
+      gcloud storage cp "${BUCKET}/windows/arm64/toolbox.exe" toolbox.windows.arm64
+
+  - id: "publish-pypi-to-ar"
+    name: python:3.12
+    waitFor:
+      - "fetch-binaries"
+    script: |
+      #!/usr/bin/env bash
+      bash .ci/publish_pypi_to_ar.sh
+
+  - id: "trigger-exit-gate-pypi"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    waitFor:
+      - "publish-pypi-to-ar"
+    env:
+      - "BUILD_ID=$BUILD_ID"
+    script: |
+      #!/usr/bin/env bash
+      bash .ci/trigger_exit_gate.sh pypi
+
+options:
+  automapSubstitutions: true
+  dynamicSubstitutions: true
+  logging: CLOUD_LOGGING_ONLY
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/run-release

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoreadddocuments"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"add_docs_tool": firestoreadddocuments.Config{
-					Name:         "add_docs_tool",
-					Type:         "firestore-add-documents",
-					Source:       "my-firestore-instance",
-					Description:  "Add documents to Firestore collections",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "add_docs_tool",
+						Description:  "Add documents to Firestore collections",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-add-documents",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_add_docs": firestoreadddocuments.Config{
-					Name:         "secure_add_docs",
-					Type:         "firestore-add-documents",
-					Source:       "prod-firestore",
-					Description:  "Add documents with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_add_docs",
+						Description:  "Add documents with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-add-documents",
+					Source: "prod-firestore",
 				},
 			},
 		},
@@ -119,25 +124,31 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"add_user_docs": firestoreadddocuments.Config{
-			Name:         "add_user_docs",
-			Type:         "firestore-add-documents",
-			Source:       "users-firestore",
-			Description:  "Add user documents",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "add_user_docs",
+				Description:  "Add user documents",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-add-documents",
+			Source: "users-firestore",
 		},
 		"add_product_docs": firestoreadddocuments.Config{
-			Name:         "add_product_docs",
-			Type:         "firestore-add-documents",
-			Source:       "products-firestore",
-			Description:  "Add product documents",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "add_product_docs",
+				Description:  "Add product documents",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-add-documents",
+			Source: "products-firestore",
 		},
 		"add_order_docs": firestoreadddocuments.Config{
-			Name:         "add_order_docs",
-			Type:         "firestore-add-documents",
-			Source:       "orders-firestore",
-			Description:  "Add order documents",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "add_order_docs",
+				Description:  "Add order documents",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-add-documents",
+			Source: "orders-firestore",
 		},
 	}
 	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))

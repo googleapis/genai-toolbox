@@ -1,5 +1,69 @@
 # Changelog
 
+## [1.5.0](https://github.com/googleapis/mcp-toolbox/compare/v1.4.0...v1.5.0) (2026-06-18)
+
+
+### Features
+
+* **auth/google:** Require audience or clientId for mcpEnabled ([#3450](https://github.com/googleapis/mcp-toolbox/issues/3450)) ([59f7b6e](https://github.com/googleapis/mcp-toolbox/commit/59f7b6e8eaceffca042cb7e2f2b6e5e9284b6bc3))
+* Enable per source level flags for sql commenter ([#3465](https://github.com/googleapis/mcp-toolbox/issues/3465)) ([ecce6b7](https://github.com/googleapis/mcp-toolbox/commit/ecce6b7bb551b947b0951cd684cce627a4b6cf1b))
+* **mcp:** Add URL parameter binding for HTTP transport ([#3112](https://github.com/googleapis/mcp-toolbox/issues/3112)) ([0cc7b37](https://github.com/googleapis/mcp-toolbox/commit/0cc7b37b733b6a99dad5281af4024b26d730106a))
+* **scylladb:** Adding support for ScyllaDB source and tool ([#3119](https://github.com/googleapis/mcp-toolbox/issues/3119)) ([2dada83](https://github.com/googleapis/mcp-toolbox/commit/2dada8306c8737e445c4f8cd3d213b72713c1834))
+* **server:** Add support for toolset filtering in prebuilt CLI flag ([#3245](https://github.com/googleapis/mcp-toolbox/issues/3245)) ([7cc4f65](https://github.com/googleapis/mcp-toolbox/commit/7cc4f65a8e767e0da37cf21f0ff2568b38d32b8e))
+* **skills:** Generate skills offline without live source connections ([#3388](https://github.com/googleapis/mcp-toolbox/issues/3388)) ([4c860b6](https://github.com/googleapis/mcp-toolbox/commit/4c860b66b03f0ebf86205e73cd8521ad90ccebe4))
+* **skills:** Tolerate missing env vars during offline skills-generate ([#3399](https://github.com/googleapis/mcp-toolbox/issues/3399)) ([ea5d3e5](https://github.com/googleapis/mcp-toolbox/commit/ea5d3e5b9e60bf808e10d21b522954d76f7741b6))
+* **source/cloud-storage:** Restrict bucket and local path access ([#3454](https://github.com/googleapis/mcp-toolbox/issues/3454)) ([2c3ca5d](https://github.com/googleapis/mcp-toolbox/commit/2c3ca5d256158e32c1386cb061b9cc3cb6c119a1))
+* **tools/bigquery:** Add per tool query label in BigQuery jobs ([#1975](https://github.com/googleapis/mcp-toolbox/issues/1975)) ([3f6a49f](https://github.com/googleapis/mcp-toolbox/commit/3f6a49f93116b8805e5082916f1babf39e6da749))
+* **tools/dataplex:** Add tools to support metadata enrichment workflow ([#3270](https://github.com/googleapis/mcp-toolbox/issues/3270)) ([05289aa](https://github.com/googleapis/mcp-toolbox/commit/05289aaa022e35996038b061f07eb43574e38bd2))
+* **tools/mysql:** Add show-query-stats and list-all-locks tools for MySQL and Cloud SQL MySQL source ([#2954](https://github.com/googleapis/mcp-toolbox/issues/2954)) ([a9693bd](https://github.com/googleapis/mcp-toolbox/commit/a9693bd804e37bab8d4f261434d82bb538563976))
+* **tools:** Decouple tool initialization from sources ([#3355](https://github.com/googleapis/mcp-toolbox/issues/3355)) ([32a24e3](https://github.com/googleapis/mcp-toolbox/commit/32a24e35b5bf107bcf5e89af2a9b7af3740747ee))
+
+
+### Bug Fixes
+
+* **auth/dataplex:** Fix failing source with service account credentials ([#3369](https://github.com/googleapis/mcp-toolbox/issues/3369)) ([ba4deef](https://github.com/googleapis/mcp-toolbox/commit/ba4deef140358e5876d73d355d664f629f7aeccc))
+* **bigquery:** Wire maximumBytesBilled into prebuilt config ([#3385](https://github.com/googleapis/mcp-toolbox/issues/3385)) ([4abbf6e](https://github.com/googleapis/mcp-toolbox/commit/4abbf6e82cc4af4c1903d9143337c965987475a9))
+* Bound MCP HTTP body size ([#3216](https://github.com/googleapis/mcp-toolbox/issues/3216)) ([d4f4342](https://github.com/googleapis/mcp-toolbox/commit/d4f434251392fb597779a90a12c63d21533ea187)) 
+* **config:** Add doc/line context to parse errors ([#2957](https://github.com/googleapis/mcp-toolbox/issues/2957)) ([4b097da](https://github.com/googleapis/mcp-toolbox/commit/4b097daa2143817e55a9e557e8c1dea054bfc7b8))
+* Escape delimiter characters in applyEscape to prevent SQL injection ([#2811](https://github.com/googleapis/mcp-toolbox/issues/2811)) ([932519a](https://github.com/googleapis/mcp-toolbox/commit/932519a9551861bf5f18787dc43b20d06350343f))
+* **npm:** Source binary version from cmd/version.txt ([#3417](https://github.com/googleapis/mcp-toolbox/issues/3417)) ([6ffbdec](https://github.com/googleapis/mcp-toolbox/commit/6ffbdecaea98db5c16dc9eeca8fb73e4bbc48102))
+* **prebuilt/alloydb-omni:** Require password env var explicitly ([#3398](https://github.com/googleapis/mcp-toolbox/issues/3398)) ([fcbe3e7](https://github.com/googleapis/mcp-toolbox/commit/fcbe3e70d3d4e671e97e424187dba907d7c5b10b))
+* **server:** Fail if MCP auth is enabled together with enable-api ([#3435](https://github.com/googleapis/mcp-toolbox/issues/3435)) ([a6ff910](https://github.com/googleapis/mcp-toolbox/commit/a6ff910a602adece11f0a6581d6211e5927f7182))
+* **server:** Return errors instead of panicking in InitializeConfigs ([#3397](https://github.com/googleapis/mcp-toolbox/issues/3397)) ([f48b01d](https://github.com/googleapis/mcp-toolbox/commit/f48b01dc1775e4583a06689a2e67fb06e5dd3c68))
+* **source/cloudhealthcare:** Validate pageURL parameter to prevent SSRF ([#3453](https://github.com/googleapis/mcp-toolbox/issues/3453)) ([9abf47d](https://github.com/googleapis/mcp-toolbox/commit/9abf47d55c04e3593cf68191d94ef6086c07debc))
+* **source/dataplex,source/datalineage:** Specify cloud-platform scope for default credentials ([#3376](https://github.com/googleapis/mcp-toolbox/issues/3376)) ([13e8c36](https://github.com/googleapis/mcp-toolbox/commit/13e8c364de6fa598f1864134eff5b756340c8358))
+* **source/http:** Implement SSRF guard ([#3448](https://github.com/googleapis/mcp-toolbox/issues/3448)) ([24d7d29](https://github.com/googleapis/mcp-toolbox/commit/24d7d29b7483d68450d34ace9f0b826caefa2af3))
+* **tool/bigquery-execute-sql:** Prevent dataset restriction bypass ([#3452](https://github.com/googleapis/mcp-toolbox/issues/3452)) ([ca6d5e3](https://github.com/googleapis/mcp-toolbox/commit/ca6d5e35160f3a51ab4fc6683e0a19a77851aebd))
+* **tool/mysql-get-query-plan:** Prevent query execution bypass and statement injection ([#3235](https://github.com/googleapis/mcp-toolbox/issues/3235)) ([7ed1e7b](https://github.com/googleapis/mcp-toolbox/commit/7ed1e7b88c0a19ba36ac90824966607f828ee576))
+* **tool/spanner-sql,tool/spanner-execute-sql:** Use read-only annotations when readOnly is set ([#3338](https://github.com/googleapis/mcp-toolbox/issues/3338)) ([8bde0ec](https://github.com/googleapis/mcp-toolbox/commit/8bde0ec08f8bf455f319523b4faacf32bdbc65ff))
+
+## [1.4.0](https://github.com/googleapis/mcp-toolbox/compare/v1.3.0...v1.4.0) (2026-06-04)
+
+
+### Features
+
+* **ci:** Add support for windows/arm64 binary distribution ([#3231](https://github.com/googleapis/mcp-toolbox/issues/3231)) ([10abf3b](https://github.com/googleapis/mcp-toolbox/commit/10abf3b9e195a03f535e3807b7df9883899ef7c0))
+* **datalineage:** Add Data Lineage integration ([#3285](https://github.com/googleapis/mcp-toolbox/issues/3285)) ([19353c3](https://github.com/googleapis/mcp-toolbox/commit/19353c37e17ab1f3599cafa04337a32a7baec1c3))
+* **server:** Ignore unknown tools at startup with `--ignore-unknown-tools` flag ([#3353](https://github.com/googleapis/mcp-toolbox/issues/3353)) ([5f0304f](https://github.com/googleapis/mcp-toolbox/commit/5f0304f71231cce322ab2a3e458af07b392a06fc))
+* **tools/cloudsqlpg:** Add remaining vector assist tools for Cloud SQL Postgres ([#3203](https://github.com/googleapis/mcp-toolbox/issues/3203)) ([b514cbd](https://github.com/googleapis/mcp-toolbox/commit/b514cbd7be2dbf49276f2327059194f9e7dc1be1))
+* **tools/spanner-search-catalog:** Implement search_catalog tool ([#3140](https://github.com/googleapis/mcp-toolbox/issues/3140)) ([defc086](https://github.com/googleapis/mcp-toolbox/commit/defc0860c8876fcd465728ac6ce41de8262ed572))
+
+
+### Bug Fixes
+
+* **auth/generic:** Enforce issuer presence in opaque token validation ([#3360](https://github.com/googleapis/mcp-toolbox/issues/3360)) ([1d8df0d](https://github.com/googleapis/mcp-toolbox/commit/1d8df0df590383ba56091b6e4d7c37ab7d7d9749))
+* **auth:** Separate Google and Generic MCP OAuth verification ([#3341](https://github.com/googleapis/mcp-toolbox/issues/3341)) ([dfd66ee](https://github.com/googleapis/mcp-toolbox/commit/dfd66ee7de6fe9750d932d30bf3b67a2f4d2a176))
+* **mcp:** Support annotations and metadata within Tools to earlier MCP schemas ([#3300](https://github.com/googleapis/mcp-toolbox/issues/3300)) ([9a88c72](https://github.com/googleapis/mcp-toolbox/commit/9a88c72792563e4868c82a4f3be55e6af25c1477))
+* **oracle:** Remove trailing semicolons from prebuilt tools ([#3215](https://github.com/googleapis/mcp-toolbox/issues/3215)) ([fcad02d](https://github.com/googleapis/mcp-toolbox/commit/fcad02de73ffe9c6ecf29572f0f92674aacbe493))
+* **server/auth:** Centralize tool scopes validation ([#3335](https://github.com/googleapis/mcp-toolbox/issues/3335)) ([adce4ab](https://github.com/googleapis/mcp-toolbox/commit/adce4abb27327aae4e9736581df7a544b55c939e))
+* **server:** Return null id for batch request rejection ([#3333](https://github.com/googleapis/mcp-toolbox/issues/3333)) ([0b18d58](https://github.com/googleapis/mcp-toolbox/commit/0b18d58aea131baceb1c70f300879de8ecdf569e))
+* **source/dataplex:** Limit search results to pageSize ([#3323](https://github.com/googleapis/mcp-toolbox/issues/3323)) ([905c1f6](https://github.com/googleapis/mcp-toolbox/commit/905c1f68fcdb848d014aeaed3193af2f94fac507)), closes [#3308](https://github.com/googleapis/mcp-toolbox/issues/3308)
+* **telemetry:** Allow GCP project override ([#2960](https://github.com/googleapis/mcp-toolbox/issues/2960)) ([3c83ba5](https://github.com/googleapis/mcp-toolbox/commit/3c83ba5ab1d2ab38369e0b5c47396fabf6ecabef))
+* **tool/bigquery:** Prevent `allowedDatasets` bypass in forecast query ([#3324](https://github.com/googleapis/mcp-toolbox/issues/3324)) ([45df461](https://github.com/googleapis/mcp-toolbox/commit/45df461e84e4a8ca6706f30f9a31096828f846eb))
+* **tool/clickhouse:** Handle ignored ProcessParameters error ([#3340](https://github.com/googleapis/mcp-toolbox/issues/3340)) ([ddfd887](https://github.com/googleapis/mcp-toolbox/commit/ddfd88717dd1ce2c2706cc35785e481e8794479a))
+* **tools/clickhouse,tools/bigquery:** Validate identifier parameters to prevent injection ([#3219](https://github.com/googleapis/mcp-toolbox/issues/3219)) ([2f45f75](https://github.com/googleapis/mcp-toolbox/commit/2f45f75525ac1b5dbbe3056e07441ef9a3bd6680))
+* **tools/looker:** Escape filter values for unquoted parameters ([#3289](https://github.com/googleapis/mcp-toolbox/issues/3289)) ([1711156](https://github.com/googleapis/mcp-toolbox/commit/17111562dc2585c7372798f7f18e5ff3d32d21fe))
+
 ## [1.3.0](https://github.com/googleapis/mcp-toolbox/compare/v1.2.0...v1.3.0) (2026-05-21)
 
 

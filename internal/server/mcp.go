@@ -32,7 +32,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -454,7 +454,10 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if toolsetName != "" {
 		toolsetURL = fmt.Sprintf("/%s", toolsetName)
 	}
-	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s?sessionId=%s", proto, r.Host, toolsetURL, sessionId)
+	// attach url query params to message endpoint
+	q := r.URL.Query()
+	q.Set("sessionId", sessionId)
+	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s?%s", proto, r.Host, toolsetURL, q.Encode())
 	s.logger.DebugContext(ctx, fmt.Sprintf("sending endpoint event: %s", messageEndpoint))
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()
@@ -492,13 +495,35 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx = util.WithUserAgent(ctx, s.version)
 	ctx = util.WithSQLCommenterEnabled(ctx, s.sqlCommenterEnabled)
 
+	queryParams := r.URL.Query()
+	urlParams := make(map[string]string)
+	for k, v := range queryParams {
+		if k == "sessionId" {
+			continue
+		}
+		if len(v) > 0 {
+			urlParams[k] = v[0]
+		}
+	}
+	if len(urlParams) > 0 {
+		ctx = util.WithUrlParams(ctx, urlParams)
+	}
+
+	limit := s.httpMaxRequestBytes
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		// The id cannot be determined from an unreadable body. Per JSON-RPC 2.0,
+		// the response id MUST be null in that case.
+		// See https://www.jsonrpc.org/specification#response_object
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			err = fmt.Errorf("request body exceeds %d bytes", limit)
+		}
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil))
 		return
 	}
 
@@ -539,7 +564,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// check if client have `MCP-Protocol-Version` header
 	// Only supported for v2025-06-18+.
-	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
+	headerProtocolVersion := r.Header.Get("Mcp-Protocol-Version")
 	if headerProtocolVersion != "" {
 		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
 			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)
@@ -605,7 +630,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			if errors.As(err, &clientServerErr) {
 				w.WriteHeader(clientServerErr.Code)
 			}
-			var mcpErr *generic.MCPAuthError
+			var mcpErr *auth.MCPAuthError
 			if errors.As(err, &mcpErr) {
 				switch mcpErr.Code {
 				case http.StatusForbidden:
@@ -639,18 +664,19 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage jsonrpc.BaseMessage
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		// The id cannot be determined from an undecodable body (batch or parse
+		// error). Per JSON-RPC 2.0, the response id MUST be null in that case.
+		// See https://www.jsonrpc.org/specification#response_object
 
 		// check if user is sending a batch request
 		var a []any
 		unmarshalErr := json.Unmarshal(body, &a)
 		if unmarshalErr == nil {
 			err = fmt.Errorf("not supporting batch requests")
-			return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", jsonrpc.NewError(nil, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 
-		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+		return "", jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
 	// Check if method is present
@@ -858,15 +884,10 @@ func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
 	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-		cfg := authSvc.ToConfig()
-		if genCfg, ok := cfg.(generic.Config); ok {
-			if genCfg.McpEnabled {
-				server = genCfg.AuthorizationServer
-				if genCfg.ScopesRequired != nil {
-					scopes = genCfg.ScopesRequired
-				}
-				break
-			}
+		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+			server = mSvc.GetAuthorizationServer()
+			scopes = mSvc.GetScopesRequired()
+			break
 		}
 	}
 
