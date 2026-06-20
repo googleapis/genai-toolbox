@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminquerylogs"
 )
 
@@ -43,11 +44,13 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudloggingadminquerylogs.Config{
-					Name:         "example_tool",
-					Type:         "cloud-logging-admin-query-logs",
-					Source:       "my-logging-admin-source",
-					Description:  "query logs",
-					AuthRequired: []string{"my-google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "query logs",
+						AuthRequired: []string{"my-google-auth-service"},
+					},
+					Type:   "cloud-logging-admin-query-logs",
+					Source: "my-logging-admin-source",
 				},
 			},
 		},
@@ -95,16 +98,6 @@ func TestFailParseFromYaml(t *testing.T) {
 			description: some description
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
-		},
-		{
-			desc: "missing description",
-			in: `
-			kind: tool
-			name: example_tool
-			type: cloud-logging-admin-query-logs
-			source: my-instance
-			`,
-			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
 	for _, tc := range tcs {

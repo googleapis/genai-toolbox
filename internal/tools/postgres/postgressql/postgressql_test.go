@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -59,12 +60,14 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
-					Name:         "example_tool",
-					Type:         "postgres-sql",
-					Source:       "my-pg-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "postgres-sql",
+					Source:    "my-pg-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameterWithAuth("country", "some description",
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
@@ -127,12 +130,14 @@ func TestParseFromYamlWithTemplateParamsPostgres(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
-					Name:         "example_tool",
-					Type:         "postgres-sql",
-					Source:       "my-pg-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:      "postgres-sql",
+					Source:    "my-pg-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "some description"),
 					},

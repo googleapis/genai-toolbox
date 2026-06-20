@@ -49,15 +49,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string         `yaml:"name" validate:"required"`
-	Type     string         `yaml:"type" validate:"required"`
-	Project  string         `yaml:"project" validate:"required"`
-	Region   string         `yaml:"region" validate:"required"`
-	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
-	Database string         `yaml:"database" validate:"required"`
-	User     string         `yaml:"user"`
-	Password string         `yaml:"password"`
+	Name         string         `yaml:"name" validate:"required"`
+	Type         string         `yaml:"type" validate:"required"`
+	Project      string         `yaml:"project" validate:"required"`
+	Region       string         `yaml:"region" validate:"required"`
+	Instance     string         `yaml:"instance" validate:"required"`
+	IPType       sources.IPType `yaml:"ipType" validate:"required"`
+	Database     string         `yaml:"database" validate:"required"`
+	User         string         `yaml:"user"`
+	Password     string         `yaml:"password"`
+	SQLCommenter *bool          `yaml:"sqlCommenter"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -110,7 +111,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
-	statement = sqlcommenter.AppendComment(ctx, statement, SourceType)
+	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.PostgresPool().Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)

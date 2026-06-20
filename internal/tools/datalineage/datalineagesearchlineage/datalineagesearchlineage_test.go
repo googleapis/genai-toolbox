@@ -52,11 +52,13 @@ func TestParseFromYamlDatalineageSearchLineage(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"search_tool": datalineagesearchlineage.Config{
-					Name:         "search_tool",
-					Type:         "datalineage-search-lineage",
-					Source:       "my-lineage",
-					Description:  "Search lineage links",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "search_tool",
+						Description:  "Search lineage links",
+						AuthRequired: []string{},
+					},
+					Type:   "datalineage-search-lineage",
+					Source: "my-lineage",
 				},
 			},
 		},
@@ -126,12 +128,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvoke(t *testing.T) {
 	cfg := datalineagesearchlineage.Config{
-		Name:        "search_tool",
-		Type:        "datalineage-search-lineage",
-		Source:      "my-lineage",
-		Description: "Search",
+		ConfigBase: tools.ConfigBase{
+			Name:        "search_tool",
+			Description: "Search",
+		},
+		Type:   "datalineage-search-lineage",
+		Source: "my-lineage",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

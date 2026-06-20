@@ -116,3 +116,26 @@ func TestValidColumnName(t *testing.T) {
 		}
 	}
 }
+
+func TestStripSingleQuotes(t *testing.T) {
+	tcs := []struct {
+		in   string
+		want string
+	}{
+		{"'hello'", "hello"},
+		{"hello", "hello"},
+		{"'hello", "'hello"},
+		{"hello'", "hello'"},
+		{"''", ""},
+		{"'", "'"},
+		{"", ""},
+		{"'a'", "a"},
+		{"'abc'", "abc"},
+		{"''abc''", "'abc'"},
+	}
+	for _, tc := range tcs {
+		if got := bigquerycommon.StripSingleQuotes(tc.in); got != tc.want {
+			t.Errorf("StripSingleQuotes(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
