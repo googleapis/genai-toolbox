@@ -91,6 +91,26 @@ func TestParseFromYamlOracle(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "tnsAlias and TnsAdmin specified with explicit useOCI=true, no user/password (passwordless)",
+			in: `
+			kind: source
+			name: my-oracle-tns-passwordless
+			type: oracle
+			tnsAlias: FINANCE_DB
+			tnsAdmin: /opt/oracle/network/admin
+			useOCI: true 
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-oracle-tns-passwordless": Config{
+					Name:     "my-oracle-tns-passwordless",
+					Type:     SourceType,
+					TnsAlias: "FINANCE_DB",
+					TnsAdmin: "/opt/oracle/network/admin",
+					UseOCI:   true,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -131,6 +151,13 @@ func TestBuildGoOraConnString(t *testing.T) {
 			password:    "tiger",
 			connectBase: "dbhost:1521/ORCL",
 			want:        "oracle://scott:tiger@dbhost:1521/ORCL",
+		},
+		{
+			name:        "no_user_password",
+			user:        "",
+			password:    "",
+			connectBase: "dbhost:1521/ORCL",
+			want:        "oracle://dbhost:1521/ORCL",
 		},
 		{
 			name:        "does_not_double_encode_percent_encoded_user",
@@ -215,7 +242,7 @@ func TestFailParseFromYaml(t *testing.T) {
 			serviceName: ORCL
 			user: my_user
 			`,
-			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling source: unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: must provide both 'user' and 'password' unless using OCI driver with a wallet ('tnsAdmin')",
 		},
 		{
 			desc: "missing connection method fields (validate fails)",
