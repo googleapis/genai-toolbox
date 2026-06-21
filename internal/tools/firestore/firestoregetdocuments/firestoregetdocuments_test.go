@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoregetdocuments"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"get_docs_tool": firestoregetdocuments.Config{
-					Name:         "get_docs_tool",
-					Type:         "firestore-get-documents",
-					Source:       "my-firestore-instance",
-					Description:  "Retrieve documents from Firestore by paths",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get_docs_tool",
+						Description:  "Retrieve documents from Firestore by paths",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-get-documents",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_get_docs": firestoregetdocuments.Config{
-					Name:         "secure_get_docs",
-					Type:         "firestore-get-documents",
-					Source:       "prod-firestore",
-					Description:  "Get documents with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_get_docs",
+						Description:  "Get documents with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-get-documents",
+					Source: "prod-firestore",
 				},
 			},
 		},
@@ -119,25 +124,31 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"get_user_docs": firestoregetdocuments.Config{
-			Name:         "get_user_docs",
-			Type:         "firestore-get-documents",
-			Source:       "users-firestore",
-			Description:  "Get user documents",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "get_user_docs",
+				Description:  "Get user documents",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-get-documents",
+			Source: "users-firestore",
 		},
 		"get_product_docs": firestoregetdocuments.Config{
-			Name:         "get_product_docs",
-			Type:         "firestore-get-documents",
-			Source:       "products-firestore",
-			Description:  "Get product documents",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "get_product_docs",
+				Description:  "Get product documents",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-get-documents",
+			Source: "products-firestore",
 		},
 		"get_order_docs": firestoregetdocuments.Config{
-			Name:         "get_order_docs",
-			Type:         "firestore-get-documents",
-			Source:       "orders-firestore",
-			Description:  "Get order documents",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "get_order_docs",
+				Description:  "Get order documents",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-get-documents",
+			Source: "orders-firestore",
 		},
 	}
 

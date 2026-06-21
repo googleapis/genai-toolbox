@@ -17,6 +17,8 @@ package tools
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 )
 
 type ToolsetConfig struct {
@@ -56,6 +58,20 @@ type ToolsetManifest struct {
 	ToolsManifest map[string]Manifest `json:"tools"`
 }
 
+// BuildManifest resolves the manifest for every tool in the toolset against the
+// provided sources, returning an error if any tool's manifest cannot be built.
+func (t Toolset) BuildManifest(srcs map[string]sources.Source) (ToolsetManifest, error) {
+	toolsManifest := make(map[string]Manifest, len(t.Tools))
+	for _, tool := range t.Tools {
+		m, err := (*tool).Manifest(srcs)
+		if err != nil {
+			return ToolsetManifest{}, fmt.Errorf("error generating manifest for tool %q: %w", (*tool).GetName(), err)
+		}
+		toolsManifest[(*tool).GetName()] = m
+	}
+	return ToolsetManifest{ServerVersion: t.Manifest.ServerVersion, ToolsManifest: toolsManifest}, nil
+}
+
 func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool) (Toolset, error) {
 	// finish toolset setup
 	// Check each declared tool name exists
@@ -64,7 +80,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 		Tools:         make([]*Tool, 0, len(t.ToolNames)),
 		Manifest: ToolsetManifest{
 			ServerVersion: serverVersion,
-			ToolsManifest: make(map[string]Manifest),
 		},
 		toolNameSet: make(map[string]struct{}, len(t.ToolNames)),
 	}
@@ -77,7 +92,6 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 			return toolset, fmt.Errorf("tool does not exist: %s", toolName)
 		}
 		toolset.Tools = append(toolset.Tools, &tool)
-		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
 		toolset.toolNameSet[toolName] = struct{}{}
 	}
 	return toolset, nil

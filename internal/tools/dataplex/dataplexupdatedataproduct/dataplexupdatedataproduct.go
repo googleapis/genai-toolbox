@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -69,7 +68,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "The location to update the data product in.")
 	dataProductId := parameters.NewStringParameter("dataProductId", "The data product ID.")
 	description := parameters.NewStringParameterWithRequired("description", "Optional. Description of the data product.", false)
@@ -96,11 +95,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{locationId, dataProductId, description, displayName, ownerEmails, accessGroups, updateMask}
 
 	t := Tool{
-		BaseTool: tools.NewBaseTool(cfg, cfg.Annotations, tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		}, params),
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{
+				Description:  cfg.Description,
+				Parameters:   params.Manifest(),
+				AuthRequired: cfg.AuthRequired,
+			},
+			params,
+		),
 	}
 	return t, nil
 }

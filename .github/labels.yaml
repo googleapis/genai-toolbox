@@ -16,6 +16,11 @@
   color: ededed
   description: ""
 
+- name: wontfix
+  color: ededed
+  description: Issues that we are not planning to fix but would like to keep
+    track of.
+
 - name: 'type: bug'
   color: db4437
   description: Error or flaw in code with unintended results or allowing sub-optimal

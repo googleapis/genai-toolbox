@@ -162,6 +162,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	toolsFile = addTemplateParamConfig(t, toolsFile)
 	toolsFile = addSpannerListTablesConfig(t, toolsFile)
 	toolsFile = addSpannerListGraphsConfig(t, toolsFile)
+	toolsFile = addSpannerSearchCatalogConfig(t, toolsFile)
 
 	// Set up table for semantic search
 	vectorTableName, tearDownVectorTable := setupSpannerVectorTable(t, ctx, adminClient, dbString)
@@ -214,6 +215,15 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runSpannerListTablesTest(t, tableNameParam, tableNameAuth, tableNameTemplateParam)
 	runSpannerListGraphsTest(t, graphName)
+	tests.RunSearchCatalogToolTest(t, tests.SearchCatalogTestParams{
+		ContainerParamName: "databaseIds",
+		ContainerName:      SpannerDatabase,
+		ProjectID:          SpannerProject,
+		TargetName:         tableNameParam,
+		WantKey:            "DisplayName",
+		AllowEmpty:         true,
+		CheckValue:         false,
+	})
 	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }
 
@@ -392,6 +402,54 @@ func addSpannerListTablesConfig(t *testing.T, config map[string]any) map[string]
 	}
 
 	config["tools"] = tools
+	return config
+}
+
+// addSpannerSearchCatalogConfig adds the spanner-search-catalog tool configuration
+func addSpannerSearchCatalogConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+	myInstanceConfig, ok := sources["my-instance"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get my-instance from sources")
+	}
+
+	// Create a copy of the source config with client OAuth enabled
+	oauthSourceConfig := make(map[string]any)
+	for k, v := range myInstanceConfig {
+		oauthSourceConfig[k] = v
+	}
+	oauthSourceConfig["useClientOAuth"] = true
+	sources["my-oauth-instance"] = oauthSourceConfig
+
+	// Add tools
+	tools["my-search-catalog-tool"] = map[string]any{
+		"type":        "spanner-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"type":        "spanner-search-catalog",
+		"source":      "my-instance",
+		"description": "Searches for data assets in catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"type":        "spanner-search-catalog",
+		"source":      "my-oauth-instance",
+		"description": "Searches for data assets in catalog",
+	}
+
+	config["tools"] = tools
+	config["sources"] = sources
 	return config
 }
 

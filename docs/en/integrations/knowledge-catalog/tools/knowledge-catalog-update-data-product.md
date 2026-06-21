@@ -12,6 +12,10 @@ aliases:
 
 A `dataplex-update-data-product` tool updates an existing Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation's location ID and operation ID.
 
+View the [Data Products guide][guide] for more information.
+
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
+
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -64,8 +68,8 @@ description: Use this tool to update a Data Product.
 
 ## Reference
 
-| **field**   | **type** | **required** | **description** |
-|-------------|:--------:|:------------:|-----------------|
-| type        |  string  |     true     | Must be "dataplex-update-data-product". |
-| source      |  string  |     true     | Name of the source the tool should execute on. |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-update-data-product".            |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |

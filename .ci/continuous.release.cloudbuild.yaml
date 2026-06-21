@@ -293,6 +293,57 @@ steps:
         export VERSION=$(cat ./cmd/version.txt)
         go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
 
+  - id: "build-windows-arm64"
+    name: golang:1
+    waitFor:
+      - "install-dependencies"
+      - "install-zig"
+    env:
+      - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=windows'
+      - 'GOARCH=arm64'
+      - 'CC=/zig-tools/zig cc -target aarch64-windows-gnu'
+      - 'CXX=/zig-tools/zig c++ -target aarch64-windows-gnu'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+    script: |
+        #!/usr/bin/env bash
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.arm64
+
+  - id: "store-windows-arm64"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    waitFor:
+      - "build-windows-arm64"
+    script: |
+        #!/usr/bin/env bash
+        gcloud storage cp toolbox.windows.arm64 gs://$_BUCKET_NAME/$REF_NAME/windows/arm64/toolbox.exe
+
+  - id: "build-windows-arm64-geminicli"
+    name: golang:1
+    waitFor:
+      - "install-dependencies"
+      - "install-zig"
+    env:
+      - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=windows'
+      - 'GOARCH=arm64'
+      - 'CC=/zig-tools/zig cc -target aarch64-windows-gnu'
+      - 'CXX=/zig-tools/zig c++ -target aarch64-windows-gnu'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        go build -ldflags "-X github.com/googleapis/mcp-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.arm64
+
 options:
   automapSubstitutions: true
   dynamicSubstitutions: true

@@ -51,11 +51,13 @@ func TestParseFromYamlCloudStorageUploadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"upload_tool": cloudstorageuploadobject.Config{
-					Name:         "upload_tool",
-					Type:         "cloud-storage-upload-object",
-					Source:       "my-gcs",
-					Description:  "Upload a local file to Cloud Storage",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "upload_tool",
+						Description:  "Upload a local file to Cloud Storage",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-upload-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -72,11 +74,13 @@ func TestParseFromYamlCloudStorageUploadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_upload": cloudstorageuploadobject.Config{
-					Name:         "secure_upload",
-					Type:         "cloud-storage-upload-object",
-					Source:       "prod-gcs",
-					Description:  "Upload with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_upload",
+						Description:  "Upload with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-upload-object",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -119,12 +123,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstorageuploadobject.Config{
-		Name:        "upload_tool",
-		Type:        "cloud-storage-upload-object",
-		Source:      "my-gcs",
-		Description: "Upload",
+		ConfigBase: tools.ConfigBase{
+			Name:        "upload_tool",
+			Description: "Upload",
+		},
+		Type:   "cloud-storage-upload-object",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

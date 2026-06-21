@@ -1,7 +1,7 @@
 ---
 title: "dataplex-get-data-asset"
 type: docs
-weight: 2
+weight: 1
 description: >
   A "dataplex-get-data-asset" tool retrieve specific metadata regarding a Data Asset.
 aliases:
@@ -12,11 +12,9 @@ aliases:
 
 A `dataplex-get-data-asset` tool retrieves detailed metadata for a specific Data Asset in Knowledge Catalog (formerly known as Dataplex).
 
-`dataplex-get-data-asset` requires the following parameters:
+View the [Data Products guide][guide] for more information.
 
-- `locationId` - The location ID (e.g., `us`, `us-central1`) where the Data Product is located.
-- `dataProductId` - The unique ID of the parent Data Product.
-- `dataAssetId` - The unique ID of the Data Asset.
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
 
 ## Compatible Sources
 
@@ -44,6 +42,16 @@ applying IAM permissions and roles to an identity.
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
 
+## Parameters
+
+The `dataplex-get-data-asset` tool has the following parameters:
+
+| **field**     | **type** | **required** | **description**                                                 |
+| ------------- | -------- | ------------ | --------------------------------------------------------------- |
+| locationId    | string   | true         | The location ID (e.g. `us`, `us-central1`) of the Data Product. |
+| dataProductId | string   | true         | The unique ID of the parent Data Product.                       |
+| dataAssetId   | string   | true         | The unique ID of the Data Asset.                                |
+
 ## Example
 
 ```yaml
@@ -57,7 +65,7 @@ description: Use this tool to retrieve a Data Asset.
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-get-data-asset".                 |
-| source      |  string  |     true     | Name of the source the tool should execute on.     |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-get-data-asset".                 |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
