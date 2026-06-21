@@ -304,3 +304,79 @@ func TestRunSQLExecutesDML(t *testing.T) {
 			"DML path may not have been executed")
 	}
 }
+
+func TestIsPLSQLBlock(t *testing.T) {
+	t.Parallel()
+
+	tcs := []struct {
+		name string
+		sql  string
+		want bool
+	}{
+		{
+			name: "simple_begin",
+			sql:  "BEGIN NULL; END;",
+			want: true,
+		},
+		{
+			name: "simple_declare",
+			sql:  "DECLARE x NUMBER; BEGIN NULL; END;",
+			want: true,
+		},
+		{
+			name: "lowercase_begin",
+			sql:  "begin null; end;",
+			want: true,
+		},
+		{
+			name: "whitespace_prefix",
+			sql:  "  \n\t  BEGIN null; end;",
+			want: true,
+		},
+		{
+			name: "single_line_comment",
+			sql:  "-- comment\nBEGIN null; end;",
+			want: true,
+		},
+		{
+			name: "multi_line_comment",
+			sql:  "/* comment */ BEGIN null; end;",
+			want: true,
+		},
+		{
+			name: "nested_comments",
+			sql:  "/* comment */\n-- comment\n/* comment */\nDECLARE x NUMBER;",
+			want: true,
+		},
+		{
+			name: "standard_select",
+			sql:  "SELECT * FROM users",
+			want: false,
+		},
+		{
+			name: "select_with_comments",
+			sql:  "/* comment */ SELECT * FROM users",
+			want: false,
+		},
+		{
+			name: "empty_query",
+			sql:  "   ",
+			want: false,
+		},
+		{
+			name: "only_comments",
+			sql:  "/* comment */\n-- comment",
+			want: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := isPLSQLBlock(tc.sql)
+			if got != tc.want {
+				t.Fatalf("isPLSQLBlock() = %t, want %t for sql:\n%s", got, tc.want, tc.sql)
+			}
+		})
+	}
+}
