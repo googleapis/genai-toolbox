@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgresdatabaseoverview"
 )
 
@@ -47,11 +48,13 @@ func TestParseFromYamlPostgresDatabaseOverview(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgresdatabaseoverview.Config{
-					Name:         "example_tool",
-					Type:         "postgres-database-overview",
-					Source:       "my-postgres-instance",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "postgres-database-overview",
+					Source: "my-postgres-instance",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYamlPostgresDatabaseOverview(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgresdatabaseoverview.Config{
-					Name:         "example_tool",
-					Type:         "postgres-database-overview",
-					Source:       "my-postgres-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "postgres-database-overview",
+					Source: "my-postgres-instance",
 				},
 			},
 		},

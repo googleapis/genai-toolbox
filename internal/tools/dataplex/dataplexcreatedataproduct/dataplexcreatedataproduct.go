@@ -19,9 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -37,7 +35,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -57,24 +55,19 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
-// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
 	dataProductId := parameters.NewStringParameterWithRequired("dataProductId", "Optional. The unique ID of the Data Product to create. If not specified, the backend will auto-generate an ID.", false)
 	displayName := parameters.NewStringParameter("displayName", "Required. The display name of the Data Product.")
@@ -94,45 +87,32 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{locationId, dataProductId, displayName, description, ownerEmails, accessGroups}
 
 	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		},
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{
+				Description:  cfg.Description,
+				Parameters:   params.Manifest(),
+				AuthRequired: cfg.AuthRequired,
+			},
+			params,
+		),
 	}
 	return t, nil
 }
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters
-	manifest   tools.Manifest
+	tools.BaseTool[Config]
 }
 
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewDestructiveAnnotations)
-}
+var _ tools.Tool = Tool{}
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -209,32 +189,4 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		"locationId":  locId,
 		"operationId": opId,
 	}, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

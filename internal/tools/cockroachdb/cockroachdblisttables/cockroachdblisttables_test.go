@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cockroachdb/cockroachdblisttables"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_tables_tool": cockroachdblisttables.Config{
-					Name:         "list_tables_tool",
-					Type:         "cockroachdb-list-tables",
-					Source:       "my-crdb-instance",
-					Description:  "List tables in CockroachDB",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_tables_tool",
+						Description:  "List tables in CockroachDB",
+						AuthRequired: []string{},
+					},
+					Type:   "cockroachdb-list-tables",
+					Source: "my-crdb-instance",
 				},
 			},
 		},
@@ -69,10 +72,12 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 
 func TestCockroachDBListTablesToolConfigType(t *testing.T) {
 	cfg := cockroachdblisttables.Config{
-		Name:        "test-tool",
-		Type:        "cockroachdb-list-tables",
-		Source:      "test-source",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-tool",
+			Description: "test description",
+		},
+		Type:   "cockroachdb-list-tables",
+		Source: "test-source",
 	}
 
 	if cfg.ToolConfigType() != "cockroachdb-list-tables" {

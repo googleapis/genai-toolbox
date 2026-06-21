@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -53,12 +54,14 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "neo4j-cypher",
-					Source:       "my-neo4j-instance",
-					Description:  "some tool description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Statement:    "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "neo4j-cypher",
+					Source:    "my-neo4j-instance",
+					Statement: "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("country", "country parameter description"),
 					},

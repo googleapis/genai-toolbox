@@ -1,7 +1,7 @@
 ---
 title: "dataplex-list-data-assets"
 type: docs
-weight: 2
+weight: 1
 description: >
   A "dataplex-list-data-assets" tool allows to list Data Assets under a Data Product.
 aliases:
@@ -12,16 +12,9 @@ aliases:
 
 A `dataplex-list-data-assets` tool retrieves a list of Data Assets associated with a specific Data Product in Knowledge Catalog (formerly known as Dataplex).
 
-`dataplex-list-data-assets` requires the following parameters:
+View the [Data Products guide][guide] for more information.
 
-- `locationId` - The location ID (e.g., `us`, `us-central1`) where the Data Product is located.
-- `dataProductId` - The unique ID of the parent Data Product.
-
-Optional parameters:
-
-- `filter` - Filter string to list data assets.
-- `pageSize` - Number of returned data assets in the page.
-- `orderBy` - Specifies the ordering of results.
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
 
 ## Compatible Sources
 
@@ -49,6 +42,18 @@ applying IAM permissions and roles to an identity.
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
 
+## Parameters
+
+The `dataplex-list-data-assets` tool has the following parameters:
+
+| **field**     | **type** | **required** | **description**                                                 |
+| ------------- | -------- | ------------ | --------------------------------------------------------------- |
+| locationId    | string   | true         | The location ID (e.g. `us`, `us-central1`) of the Data Product. |
+| dataProductId | string   | true         | The unique ID of the parent Data Product.                       |
+| filter        | string   | false        | Filter string to list data assets.                              |
+| pageSize      | integer  | false        | Number of returned data assets in the page.                     |
+| orderBy       | string   | false        | Specifies the ordering of results.                              |
+
 ## Example
 
 ```yaml
@@ -62,7 +67,7 @@ description: Use this tool to list Data Assets under a Data Product.
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-list-data-assets".               |
-| source      |  string  |     true     | Name of the source the tool should execute on.     |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-list-data-assets".               |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |

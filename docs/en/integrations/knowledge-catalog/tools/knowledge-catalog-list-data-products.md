@@ -12,11 +12,9 @@ aliases:
 
 A `dataplex-list-data-products` tool lists all Data Products in Knowledge Catalog (formerly known as Dataplex) across all locations (globally).
 
-`dataplex-list-data-products` optionally accepts the following parameters:
+View the [Data Products guide][guide] for more information.
 
-- `filter` - Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`.
-- `pageSize` - Number of returned data products in the page. Defaults to `10`.
-- `orderBy` - Specifies the ordering of results.
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
 
 ## Compatible Sources
 
@@ -44,6 +42,16 @@ applying IAM permissions and roles to an identity.
 [iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
 [dataplex-docs]: https://cloud.google.com/dataplex
 
+## Parameters
+
+The `dataplex-list-data-products` tool has the following optional parameters:
+
+| **field** | **type** | **required** | **description**                                                                                                                                                                         |
+| --------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filter    | string   | false        | Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`. |
+| pageSize  | integer  | false        | Number of returned data products in the page. Defaults to `10`.                                                                                                                         |
+| orderBy   | string   | false        | Specifies the ordering of results.                                                                                                                                                      |
+
 ## Example
 
 ```yaml
@@ -57,7 +65,7 @@ description: Use this tool to list Data Products.
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-list-data-products".             |
-| source      |  string  |     true     | Name of the source the tool should execute on.     |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-list-data-products".             |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |

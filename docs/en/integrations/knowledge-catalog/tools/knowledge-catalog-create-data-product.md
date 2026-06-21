@@ -12,6 +12,10 @@ aliases:
 
 A `dataplex-create-data-product` tool creates a new Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation's location ID and operation ID.
 
+View the [Data Products guide][guide] for more information.
+
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
+
 ## Compatible Sources
 
 {{< compatible-sources >}}
@@ -64,7 +68,7 @@ description: Use this tool to create a Data Product.
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-create-data-product".            |
-| source      |  string  |     true     | Name of the source the tool should execute on.     |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-create-data-product".            |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
