@@ -307,18 +307,18 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	teardownBucket := setupGcsBucket(t, ctx, DataplexProject, bucketName)
 
 	teardowns := []func(*testing.T){
-		teardownTable1,
-		teardownTable2,
 		teardownAspectType,
 		teardownDataScan,
 		teardownDataProduct3,
 		teardownDataProduct4,
+
 		// Sequence asset deletion before its parent data product to avoid API precondition failure
 		func(t *testing.T) {
+			teardownTable1(t)
 			teardownDataAsset1(t)
 			teardownDataProduct1(t)
-		},
-		func(t *testing.T) {
+
+			teardownTable2(t)
 			teardownDataAsset(t, dataplexDataProductClient, dataProductId2, dataAssetId2)
 			teardownDataAsset(t, dataplexDataProductClient, dataProductId2, dataAssetId3)
 			teardownDataProduct2(t)
@@ -326,7 +326,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 		teardownBucket,
 	}
 
-	time.Sleep(30 * time.Second) // wait for table and aspect type to be ingested
+	time.Sleep(1 * time.Minute) // wait for table and aspect type to be ingested
 	// Execute teardowns concurrently using a WaitGroup to minimize overall test cleanup duration
 	defer func() {
 		var wg sync.WaitGroup
