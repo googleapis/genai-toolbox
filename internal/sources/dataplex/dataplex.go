@@ -543,12 +543,12 @@ func (s *Source) ListDataAssets(
 }
 
 type DataAsset struct {
-	LocationID         string                                             `json:"locationId"`
-	DataProductID      string                                             `json:"dataProductId"`
-	DataAssetID        string                                             `json:"dataAssetId"`
-	ResourceURI        string                                             `json:"resourceUri"`
-	Labels             map[string]string                                  `json:"labels"`
-	AccessGroupConfigs map[string]*dataplexpb.DataAsset_AccessGroupConfig `json:"accessGroupConfigs"`
+	LocationID         string              `json:"locationId"`
+	DataProductID      string              `json:"dataProductId"`
+	DataAssetID        string              `json:"dataAssetId"`
+	ResourceURI        string              `json:"resourceUri"`
+	Labels             map[string]string   `json:"labels"`
+	AccessGroupConfigs map[string][]string `json:"accessGroupConfigs"`
 }
 
 func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProductId string, dataAssetId string) (*DataAsset, error) {
@@ -572,13 +572,18 @@ func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProduc
 		assetId = parts[7]
 	}
 
+	configs := make(map[string][]string)
+	for k, v := range resp.GetAccessGroupConfigs() {
+		configs[k] = v.GetIamRoles()
+	}
+
 	return &DataAsset{
 		LocationID:         locId,
 		DataProductID:      prodId,
 		DataAssetID:        assetId,
 		ResourceURI:        resp.GetResource(),
 		Labels:             resp.GetLabels(),
-		AccessGroupConfigs: resp.GetAccessGroupConfigs(),
+		AccessGroupConfigs: configs,
 	}, nil
 }
 
@@ -699,6 +704,51 @@ func (s *Source) UpdateDataProduct(
 	}
 
 	op, err := s.GetDataProductClient().UpdateDataProduct(ctx, req)
+	if err != nil {
+		return "", "", err
+	}
+
+	opName := op.Name()
+	parts := strings.Split(opName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
+		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+	}
+	return parts[3], parts[5], nil
+}
+
+func (s *Source) CreateDataAsset(
+	ctx context.Context,
+	locationId string,
+	dataProductId string,
+	dataAssetId string,
+	resourceUri string,
+	labels map[string]string,
+	accessGroupConfigs map[string][]string,
+) (string, string, error) {
+	if s.GetDataProductClient() == nil {
+		return "", "", fmt.Errorf("dataplex data product client is not initialized")
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+
+	agcMap := make(map[string]*dataplexpb.DataAsset_AccessGroupConfig)
+	for k, v := range accessGroupConfigs {
+		agcMap[k] = &dataplexpb.DataAsset_AccessGroupConfig{
+			IamRoles: v,
+		}
+	}
+
+	req := &dataplexpb.CreateDataAssetRequest{
+		Parent:      parent,
+		DataAssetId: dataAssetId,
+		DataAsset: &dataplexpb.DataAsset{
+			Resource:           resourceUri,
+			Labels:             labels,
+			AccessGroupConfigs: agcMap,
+		},
+	}
+
+	op, err := s.GetDataProductClient().CreateDataAsset(ctx, req)
 	if err != nil {
 		return "", "", err
 	}

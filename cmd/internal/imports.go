@@ -160,6 +160,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataform/dataformcompilelocal"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/datalineage/datalineagesearchlineage"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcheckdataquality"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcreatedataasset"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcreatedataproduct"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexdiscovermetadata"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgeneratedatainsights"

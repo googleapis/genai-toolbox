@@ -84,6 +84,12 @@ source: dataplex-source
 description: Updates an existing Data Product.
 ---
 kind: tool
+name: create_data_asset
+type: dataplex-create-data-asset
+source: dataplex-source
+description: Creates a new Data Asset under a Data Product.
+---
+kind: tool
 name: generate_data_insights
 type: dataplex-generate-data-insights
 source: dataplex-source
@@ -280,6 +286,7 @@ tools:
 - get_data_asset
 - create_data_product
 - update_data_product
+- create_data_asset
 ---
 kind: toolset
 name: enrich

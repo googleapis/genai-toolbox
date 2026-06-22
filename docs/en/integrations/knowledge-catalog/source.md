@@ -411,5 +411,24 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 3. You must provide `displayName` and `ownerEmails`.
 4. You can optionally provide `description` and `accessGroups`.
 ### Response
-1. Present the location ID and operation ID returned immediately by the LRO creation call.
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: update_data_product
+### Request
+1. Use this tool to update an existing Data Product.
+2. You must provide `locationId` and `dataProductId`.
+3. You can optionally provide `displayName`, `description`, `ownerEmails`, `accessGroups`, and `updateMask`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: create_data_asset
+### Request
+1. Use this tool to create a new Data Asset under a Data Product.
+2. You must provide `locationId`, `dataProductId`, `dataAssetId`, and `resourceUri`.
+3. You can optionally provide `labels` and `accessGroupConfigs`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
 ```
