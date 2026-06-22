@@ -34,6 +34,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/invoke"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/migrate"
+	"github.com/googleapis/mcp-toolbox/cmd/internal/proxy"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/serve"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/skills"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -126,6 +127,12 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	// Register subcommands
 	cmd.AddCommand(invoke.NewCommand(opts))
 	cmd.AddCommand(skills.NewCommand(opts))
+	cmd.AddCommand(proxy.NewCommand(proxy.CommandOptions{
+		In:      opts.IOStreams.In,
+		Out:     opts.IOStreams.Out,
+		Version: opts.Cfg.Version,
+		Setup:   opts.Setup,
+	}))
 	cmd.AddCommand(serve.NewCommand(opts))
 	cmd.AddCommand(migrate.NewCommand(opts))
 
