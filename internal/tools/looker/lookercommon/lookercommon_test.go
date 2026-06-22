@@ -390,5 +390,76 @@ func TestRequestRunInlineQuery2(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect result: diff %v", diff)
 	}
+}
 
+func TestProcessQueryArgsWithFilterExpression(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	tcs := []struct {
+		desc             string
+		filterExpression any
+		wantVal          *string
+		wantErr          bool
+	}{
+		{
+			desc:             "filter expression is nil",
+			filterExpression: nil,
+			wantVal:          nil,
+			wantErr:          false,
+		},
+		{
+			desc:             "filter expression is valid string",
+			filterExpression: "matches_filter(${order.order_month}, `24 months`)",
+			wantVal:          func() *string { s := "matches_filter(${order.order_month}, `24 months`)"; return &s }(),
+			wantErr:          false,
+		},
+		{
+			desc:             "filter expression is not a string",
+			filterExpression: 123,
+			wantVal:          nil,
+			wantErr:          true,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			params := parameters.ParamValues{
+				{Name: "model", Value: "marketing"},
+				{Name: "explore", Value: "cohort_marketing_performance"},
+				{Name: "fields", Value: []any{"view.channel"}},
+				{Name: "filters", Value: map[string]any{}},
+				{Name: "pivots", Value: []any{}},
+				{Name: "sorts", Value: []any{}},
+				{Name: "limit", Value: 10},
+				{Name: "tz", Value: "Etc/UTC"},
+			}
+			if tc.filterExpression != nil {
+				params = append(params, parameters.ParamValue{Name: "filter_expression", Value: tc.filterExpression})
+			}
+			wq, err := lookercommon.ProcessQueryArgs(ctx, params)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if wq.FilterExpression == nil && tc.wantVal != nil {
+				t.Fatalf("expected FilterExpression %v, got nil", *tc.wantVal)
+			}
+			if wq.FilterExpression != nil && tc.wantVal == nil {
+				t.Fatalf("expected FilterExpression nil, got %v", *wq.FilterExpression)
+			}
+			if wq.FilterExpression != nil && tc.wantVal != nil {
+				if *wq.FilterExpression != *tc.wantVal {
+					t.Fatalf("expected FilterExpression %v, got %v", *tc.wantVal, *wq.FilterExpression)
+				}
+			}
+		})
+	}
 }

@@ -45,13 +45,27 @@ func TestParseEnv(t *testing.T) {
 		err          bool
 		errString    string
 		wantOptional []string
+		lenient      bool
 	}{
 		{
 			desc:      "without default without env",
 			in:        "${FOO}",
 			want:      "",
 			err:       true,
-			errString: `environment variable not found: "FOO"`,
+			errString: `environment variable not found: "FOO" (line 1, column 1)`,
+		},
+		{
+			desc:    "without default without env, lenient",
+			in:      "${FOO}",
+			want:    "FOO",
+			lenient: true,
+		},
+		{
+			desc:    "missing required mixed with env, lenient",
+			in:      "project: ${PROJECT}, region: ${REGION}",
+			env:     map[string]string{"REGION": "us-central1"},
+			want:    "project: PROJECT, region: us-central1",
+			lenient: true,
 		},
 		{
 			desc: "without default with env",
@@ -108,7 +122,7 @@ func TestParseEnv(t *testing.T) {
 					t.Setenv(k, v)
 				}
 			}
-			parser := &ConfigParser{}
+			parser := &ConfigParser{AllowMissingEnvVars: tc.lenient}
 			got, err := parser.parseEnv(tc.in)
 			if tc.err {
 				if err == nil {
@@ -1808,7 +1822,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
 				},
 				"lifecycle": tools.ToolsetConfig{
 					Name:      "lifecycle",
@@ -1845,6 +1859,10 @@ func TestPrebuiltTools(t *testing.T) {
 				"discovery": tools.ToolsetConfig{
 					Name:      "discovery",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
+				},
+				"enrich": tools.ToolsetConfig{
+					Name:      "enrich",
+					ToolNames: []string{"search_entries", "lookup_entry", "lookup_context", "generate_data_insights", "get_data_insights", "generate_data_profile", "get_data_profile", "discover_metadata", "get_discovery_results", "check_data_quality", "get_data_quality_results", "get_operation", "get_run_status"},
 				},
 			},
 		},
@@ -1892,7 +1910,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"monitor": tools.ToolsetConfig{
 					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes"},
+					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
 				},
 			},
 		},

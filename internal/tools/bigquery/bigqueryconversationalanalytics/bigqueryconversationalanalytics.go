@@ -122,37 +122,12 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	tableRefsDescription := `A JSON string of a list of BigQuery tables to use as context. Each object in the list must contain 'projectId', 'datasetId', and 'tableId'. Example: '[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'.`
-	if len(allowedDatasets) > 0 {
-		datasetIDs := []string{}
-		for _, ds := range allowedDatasets {
-			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-		}
-		tableRefsDescription += fmt.Sprintf(" The tables must only be from datasets in the following list: %s.", strings.Join(datasetIDs, ", "))
-	}
-	userQueryParameter := parameters.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
-	tableRefsParameter := parameters.NewStringParameter("table_references", tableRefsDescription)
-
-	params := parameters.Parameters{userQueryParameter, tableRefsParameter}
-
+	params := buildParams(nil)
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
@@ -443,4 +418,41 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+// resolveParams builds the tool's parameters using the source's allowed-dataset configuration.
+func buildParams(allowedDatasets []string) parameters.Parameters {
+	tableRefsDescription := `A JSON string of a list of BigQuery tables to use as context. Each object in the list must contain 'projectId', 'datasetId', and 'tableId'. Example: '[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'.`
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		tableRefsDescription += fmt.Sprintf(" The tables must only be from datasets in the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
+	userQueryParameter := parameters.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
+	tableRefsParameter := parameters.NewStringParameter("table_references", tableRefsDescription)
+	return parameters.Parameters{userQueryParameter, tableRefsParameter}
+}
+
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.BigQueryAllowedDatasets()), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	params, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: params.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

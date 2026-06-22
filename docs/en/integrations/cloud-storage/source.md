@@ -86,6 +86,11 @@ kind: source
 name: my-gcs-source
 type: "cloud-storage"
 project: "my-project-id"
+allowedBuckets:
+  - "my-app-bucket"
+  - "my-backup-bucket"
+allowedLocalRoots:
+  - "/workspace"
 ```
 
 ## Reference
@@ -94,3 +99,5 @@ project: "my-project-id"
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------|
 | type      |  string  |     true     | Must be "cloud-storage".                                                        |
 | project   |  string  |     true     | Id of the GCP project the configured source is associated with (e.g. "my-project-id"). |
+| allowedBuckets | []string |    false     | List of GCS bucket names allowed for operations. If omitted, all buckets are allowed. |
+| allowedLocalRoots | []string |    false     | List of absolute local filesystem directories allowed for file uploads and downloads. If omitted, all paths are allowed. |

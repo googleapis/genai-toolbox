@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -108,7 +107,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional: A specific schema name to filter by"),
 		parameters.NewStringParameterWithRequired("table_name", "Optional: A specific table name to filter by", false),

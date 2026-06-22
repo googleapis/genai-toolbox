@@ -65,45 +65,19 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	project := s.GetDefaultProject()
-	var projectParam parameters.Parameter
-	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
-	} else {
-		projectParam = parameters.NewStringParameter("project", "The GCP project ID.")
-	}
-
-	allParameters := parameters.Parameters{
-		projectParam,
-		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
-		parameters.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
-		parameters.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
-		parameters.NewStringParameterWithRequired("password", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType.", false),
-		parameters.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", parameters.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
-		parameters.NewStringParameter("userType", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN and ALLOYDB_IAM_USER. ALLOYDB_IAM_USER is recommended."),
-	}
+func (cfg Config) Initialize() (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "Creates a new AlloyDB user within a cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned. Always ask the user for the type of user to create. ALLOYDB_IAM_USER is recommended."
 	}
 
+	params := buildParams("")
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			allParameters,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 	}, nil
 }
@@ -185,4 +159,45 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	}
 
 	return source.UseClientAuthorization(), nil
+}
+
+// buildParams builds the tool's parameters. A non-empty project means the source has a
+// configured default project, which is baked into the project param; otherwise the plain form is used.
+func buildParams(project string) parameters.Parameters {
+	projectParam := parameters.NewStringParameter("project", "The GCP project ID.")
+	if project != "" {
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	}
+	return parameters.Parameters{
+		projectParam,
+		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		parameters.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
+		parameters.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
+		parameters.NewStringParameterWithRequired("password", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType.", false),
+		parameters.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", parameters.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
+		parameters.NewStringParameter("userType", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN and ALLOYDB_IAM_USER. ALLOYDB_IAM_USER is recommended."),
+	}
+}
+
+// resolveParams builds the tool's parameters using the source's configured default GCP project.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.GetDefaultProject()), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	allParameters, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }
