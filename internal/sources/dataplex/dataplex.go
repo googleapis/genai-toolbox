@@ -596,9 +596,9 @@ func (s *Source) CreateDataProduct(
 	description string,
 	ownerEmails []string,
 	accessGroups []AccessGroup,
-) (string, string, error) {
+) (map[string]string, error) {
 	if s.GetDataProductClient() == nil {
-		return "", "", fmt.Errorf("dataplex data product client is not initialized")
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
 
 	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationId)
@@ -635,15 +635,18 @@ func (s *Source) CreateDataProduct(
 
 	op, err := s.GetDataProductClient().CreateDataProduct(ctx, req)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	opName := op.Name()
 	parts := strings.Split(opName, "/")
 	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
-		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+		return nil, fmt.Errorf("invalid operation name: %q", opName)
 	}
-	return parts[3], parts[5], nil
+	return map[string]string{
+		"locationId":  parts[3],
+		"operationId": parts[5],
+	}, nil
 }
 
 func (s *Source) UpdateDataProduct(
@@ -655,9 +658,9 @@ func (s *Source) UpdateDataProduct(
 	ownerEmails []string,
 	accessGroups []AccessGroup,
 	updateMask []string,
-) (string, string, error) {
+) (map[string]string, error) {
 	if s.GetDataProductClient() == nil {
-		return "", "", fmt.Errorf("dataplex data product client is not initialized")
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
 
 	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
@@ -705,15 +708,18 @@ func (s *Source) UpdateDataProduct(
 
 	op, err := s.GetDataProductClient().UpdateDataProduct(ctx, req)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	opName := op.Name()
 	parts := strings.Split(opName, "/")
 	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
-		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+		return nil, fmt.Errorf("invalid operation name: %q", opName)
 	}
-	return parts[3], parts[5], nil
+	return map[string]string{
+		"locationId":  parts[3],
+		"operationId": parts[5],
+	}, nil
 }
 
 func (s *Source) CreateDataAsset(
@@ -724,9 +730,9 @@ func (s *Source) CreateDataAsset(
 	resourceUri string,
 	labels map[string]string,
 	accessGroupConfigs map[string][]string,
-) (string, string, error) {
+) (map[string]string, error) {
 	if s.GetDataProductClient() == nil {
-		return "", "", fmt.Errorf("dataplex data product client is not initialized")
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
 
 	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
@@ -750,15 +756,74 @@ func (s *Source) CreateDataAsset(
 
 	op, err := s.GetDataProductClient().CreateDataAsset(ctx, req)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	opName := op.Name()
 	parts := strings.Split(opName, "/")
 	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
-		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+		return nil, fmt.Errorf("invalid operation name: %q", opName)
 	}
-	return parts[3], parts[5], nil
+	return map[string]string{
+		"locationId":  parts[3],
+		"operationId": parts[5],
+	}, nil
+}
+
+func (s *Source) UpdateDataAsset(
+	ctx context.Context,
+	locationId string,
+	dataProductId string,
+	dataAssetId string,
+	labels map[string]string,
+	accessGroupConfigs map[string][]string,
+	updateMask []string,
+) (map[string]string, error) {
+	if s.GetDataProductClient() == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationId, dataProductId, dataAssetId)
+
+	agcMap := make(map[string]*dataplexpb.DataAsset_AccessGroupConfig)
+	for k, v := range accessGroupConfigs {
+		agcMap[k] = &dataplexpb.DataAsset_AccessGroupConfig{
+			IamRoles: v,
+		}
+	}
+
+	req := &dataplexpb.UpdateDataAssetRequest{
+		DataAsset: &dataplexpb.DataAsset{
+			Name:               name,
+			Labels:             labels,
+			AccessGroupConfigs: agcMap,
+		},
+	}
+
+	if len(updateMask) > 0 {
+		var snakeMask []string
+		for _, path := range updateMask {
+			snakeMask = append(snakeMask, util.SnakeFromCamelCase(path))
+		}
+		req.UpdateMask = &fieldmaskpb.FieldMask{
+			Paths: snakeMask,
+		}
+	}
+
+	op, err := s.GetDataProductClient().UpdateDataAsset(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	opName := op.Name()
+	parts := strings.Split(opName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
+		return nil, fmt.Errorf("invalid operation name: %q", opName)
+	}
+	return map[string]string{
+		"locationId":  parts[3],
+		"operationId": parts[5],
+	}, nil
 }
 
 func (s *Source) GenerateDataInsights(ctx context.Context, location, resourcePath string, publish bool) (string, error) {

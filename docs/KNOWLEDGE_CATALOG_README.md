@@ -49,6 +49,7 @@ Once configured, the MCP server will automatically provide Knowledge Catalog cap
 *   "Create a new Data Product named 'my-product' with owner 'user@example.com'."
 *   "Update the display name of Data Product 'my-product' to 'Updated Product'."
 *   "Create a new Data Asset under 'my-product' with resource '//bigquery.googleapis.com/projects/my-project/datasets/my-dataset/tables/my-table'."
+*   "Update the labels of Data Asset 'my-asset' under Data Product 'my-product' to have 'env: prod'."
 
 ## Server Capabilities
 
@@ -68,6 +69,7 @@ The Knowledge Catalog MCP server provides the following tools:
 | `create_data_product` | Create a new Data Product.                                                                                                   |
 | `update_data_product` | Update an existing Data Product.                                                                                             |
 | `create_data_asset`   | Create a new Data Asset.                                                                                                     |
+| `update_data_asset`   | Update an existing Data Asset.                                                                                               |
 
 ## Custom MCP Server Configuration
 

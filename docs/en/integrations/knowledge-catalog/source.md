@@ -407,9 +407,8 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ## Tool: create_data_product
 ### Request
 1. Use this tool to create a new Data Product.
-2. You must provide `locationId`. You can optionally provide `dataProductId` (if not specified, the backend will auto-generate one).
-3. You must provide `displayName` and `ownerEmails`.
-4. You can optionally provide `description` and `accessGroups`.
+2. You must provide `locationId`, `displayName`, and `ownerEmails`.
+3. You can optionally provide `dataProductId` (if not specified, the backend will auto-generate one), `description` and `accessGroups`.
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
@@ -428,6 +427,15 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 1. Use this tool to create a new Data Asset under a Data Product.
 2. You must provide `locationId`, `dataProductId`, `dataAssetId`, and `resourceUri`.
 3. You can optionally provide `labels` and `accessGroupConfigs`.
+### Response
+1. Present the location ID and operation ID returned immediately by the tool call.
+2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+
+## Tool: update_data_asset
+### Request
+1. Use this tool to update an existing Data Asset under a Data Product.
+2. You must provide `locationId`, `dataProductId`, and `dataAssetId`.
+3. You can optionally provide `labels`, `accessGroupConfigs`, and `updateMask`.
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexupdatedataproduct
+package dataplexupdatedataasset
 
 import (
 	"context"
@@ -20,13 +20,12 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "dataplex-update-data-product"
+const resourceType string = "dataplex-update-data-asset"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -43,14 +42,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	UpdateDataProduct(
+	UpdateDataAsset(
 		ctx context.Context,
 		locationId string,
 		dataProductId string,
-		description string,
-		displayName string,
-		ownerEmails []string,
-		accessGroups []dataplex.AccessGroup,
+		dataAssetId string,
+		labels map[string]string,
+		accessGroupConfigs map[string][]string,
 		updateMask []string,
 	) (map[string]string, error)
 }
@@ -69,30 +67,14 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize() (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "The location to update the data product in.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "The data product ID.")
-	description := parameters.NewStringParameterWithRequired("description", "Optional. Description of the data product.", false)
-	displayName := parameters.NewStringParameterWithRequired("displayName", "Optional. Display name of the data product.", false)
-	ownerEmails := parameters.NewArrayParameterWithRequired(
-		"ownerEmails",
-		"Optional. The email addresses of the owners of the data product.",
-		false,
-		parameters.NewStringParameter("email", "Owner email address"),
-	)
-	accessGroups := parameters.NewArrayParameterWithRequired(
-		"accessGroups",
-		"Optional. List of access groups to associate with the Data Product.",
-		false,
-		parameters.NewMapParameter("accessGroup", "Access Group details (id, displayName, description, googleGroup, serviceAccount)", ""),
-	)
-	updateMask := parameters.NewArrayParameterWithRequired(
-		"updateMask",
-		"Optional. The fields to update. If not specified, all fields provided will be updated.",
-		false,
-		parameters.NewStringParameter("field", "Field path to update"),
-	)
+	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the parent Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
+	dataAssetId := parameters.NewStringParameter("dataAssetId", "Required. The unique ID of the Data Asset to update.")
+	labels := parameters.NewMapParameterWithRequired("labels", "Optional. The labels associated with the Data Asset.", false, "string")
+	accessGroupConfigs := parameters.NewMapParameterWithRequired("accessGroupConfigs", "Optional. Map of access group configurations to associate with the Data Asset. Each key represents the access group ID, and the value is a list of string IAM role names (e.g. {'test-group': ['roles/bigquery.dataViewer']}). To find the list of supported roles that can be granted on the resource, refer to the IAM Roles documentation or use the roles:queryGrantableRoles API method (https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles).", false, "")
+	updateMask := parameters.NewArrayParameter("updateMask", "Optional. The list of fields to update. If not specified, all non-empty fields will be updated.", parameters.NewStringParameter("", ""))
 
-	params := parameters.Parameters{locationId, dataProductId, description, displayName, ownerEmails, accessGroups, updateMask}
+	params := parameters.Parameters{locationId, dataProductId, dataAssetId, labels, accessGroupConfigs, updateMask}
 
 	t := Tool{
 		BaseTool: tools.NewBaseTool(
@@ -136,52 +118,39 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("dataProductId is required and must be a string", nil)
 	}
 
-	description, _ := paramsMap["description"].(string)
-	displayName, _ := paramsMap["displayName"].(string)
+	dataAssetId, ok := paramsMap["dataAssetId"].(string)
+	if !ok || dataAssetId == "" {
+		return nil, util.NewAgentError("dataAssetId is required and must be a string", nil)
+	}
 
-	var ownerEmails []string
-	if rawOwners, ok := paramsMap["ownerEmails"].([]any); ok {
-		for _, o := range rawOwners {
-			email, ok := o.(string)
+	var labels map[string]string
+	if rawLabels, ok := paramsMap["labels"].(map[string]any); ok {
+		labels = make(map[string]string)
+		for k, v := range rawLabels {
+			sVal, ok := v.(string)
 			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid owner email type: expected string, got %T", o), nil)
+				return nil, util.NewAgentError(fmt.Sprintf("invalid label value type for key %q: expected string, got %T", k, v), nil)
 			}
-			ownerEmails = append(ownerEmails, email)
+			labels[k] = sVal
 		}
 	}
 
-	var accessGroups []dataplex.AccessGroup
-	if rawGroups, ok := paramsMap["accessGroups"].([]any); ok {
-		for _, rawG := range rawGroups {
-			gMap, ok := rawG.(map[string]any)
+	accessGroupConfigs := make(map[string][]string)
+	if rawConfigs, ok := paramsMap["accessGroupConfigs"].(map[string]any); ok {
+		for k, v := range rawConfigs {
+			rawRoles, ok := v.([]any)
 			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid accessGroup item: expected map, got %T", rawG), nil)
+				return nil, util.NewAgentError(fmt.Sprintf("invalid accessGroupConfigs value type for key %q: expected array, got %T", k, v), nil)
 			}
-			id, _ := gMap["id"].(string)
-			dispName, _ := gMap["displayName"].(string)
-			desc, _ := gMap["description"].(string)
-			googleGroup, _ := gMap["googleGroup"].(string)
-			serviceAccount, _ := gMap["serviceAccount"].(string)
-
-			if id == "" {
-				return nil, util.NewAgentError("access group 'id' is required", nil)
+			var roles []string
+			for _, r := range rawRoles {
+				sRole, ok := r.(string)
+				if !ok {
+					return nil, util.NewAgentError(fmt.Sprintf("invalid iamRole in group %q: expected string, got %T", k, r), nil)
+				}
+				roles = append(roles, sRole)
 			}
-
-			if dispName == "" {
-				return nil, util.NewAgentError("access group 'displayName' is required", nil)
-			}
-
-			if googleGroup == "" && serviceAccount == "" {
-				return nil, util.NewAgentError("at least one of access group 'googleGroup' or 'serviceAccount' is required", nil)
-			}
-
-			accessGroups = append(accessGroups, dataplex.AccessGroup{
-				ID:             id,
-				DisplayName:    dispName,
-				Description:    desc,
-				GoogleGroup:    googleGroup,
-				ServiceAccount: serviceAccount,
-			})
+			accessGroupConfigs[k] = roles
 		}
 	}
 
@@ -194,7 +163,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	resp, err := source.UpdateDataProduct(ctx, locationId, dataProductId, description, displayName, ownerEmails, accessGroups, updateMask)
+	resp, err := source.UpdateDataAsset(ctx, locationId, dataProductId, dataAssetId, labels, accessGroupConfigs, updateMask)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

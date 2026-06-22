@@ -50,7 +50,7 @@ type compatibleSource interface {
 		resourceUri string,
 		labels map[string]string,
 		accessGroupConfigs map[string][]string,
-	) (string, string, error)
+	) (map[string]string, error)
 }
 
 type Config struct {
@@ -159,13 +159,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	locId, opId, err := source.CreateDataAsset(ctx, locationId, dataProductId, dataAssetId, resourceUri, labels, accessGroupConfigs)
+	resp, err := source.CreateDataAsset(ctx, locationId, dataProductId, dataAssetId, resourceUri, labels, accessGroupConfigs)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
 
-	return map[string]string{
-		"locationId":  locId,
-		"operationId": opId,
-	}, nil
+	return resp, nil
 }

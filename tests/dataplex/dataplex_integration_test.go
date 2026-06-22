@@ -58,6 +58,7 @@ var (
 	DataplexGetDataAssetToolType           = "dataplex-get-data-asset"
 	DataplexCreateDataProductToolType      = "dataplex-create-data-product"
 	DataplexCreateDataAssetToolType        = "dataplex-create-data-asset"
+	DataplexUpdateDataAssetToolType        = "dataplex-update-data-asset"
 	DataplexUpdateDataProductToolType      = "dataplex-update-data-product"
 	DataplexGenerateDataProfileToolType    = "dataplex-generate-data-profile"
 	DataplexGetDataProfileToolType         = "dataplex-get-data-profile"
@@ -368,6 +369,7 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexCreateDataProductToolInvokeTest(t, dataplexDataProductClient, dataProductId3, dataProductId4)
 	runDataplexUpdateDataProductToolInvokeTest(t, dataplexDataProductClient, dataProductId1)
 	runDataplexCreateDataAssetToolInvokeTest(t, dataplexDataProductClient, dataProductId2, dataAssetId2, dataAssetId3, datasetName1, tableName1, datasetName2, tableName2)
+	runDataplexUpdateDataAssetToolInvokeTest(t, dataplexDataProductClient, dataProductId1, dataAssetId1)
 	runDataplexEnrichmentToolInvokeTest(t, tableName1, datasetName1, bucketName, dataplexDataScanClient)
 }
 
@@ -462,7 +464,10 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
 	ownerEmail := tests.ServiceAccountEmail
 	if ownerEmail == "" {
-		t.Errorf("Service account email is required, but tests.ServiceAccountEmail was empty")
+		t.Fatalf("Service account email is required, but tests.ServiceAccountEmail is empty.")
+	}
+	if !strings.HasSuffix(ownerEmail, ".gserviceaccount.com") {
+		t.Fatalf("Service account email %q is invalid. Dataplex Data Product integration tests require a service account email ending with '.gserviceaccount.com' to validate access groups.", ownerEmail)
 	}
 	createReq := &dataplexpb.CreateDataProductRequest{
 		Parent:        parent,
@@ -755,6 +760,17 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"description":  "Simple dataplex create data asset tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"my-dataplex-update-data-asset-tool": map[string]any{
+				"type":        DataplexUpdateDataAssetToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex update data asset tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-update-data-asset-tool": map[string]any{
+				"type":         DataplexUpdateDataAssetToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex update data asset tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
 			"my-dataplex-generate-data-profile-tool": map[string]any{
 				"type":        DataplexGenerateDataProfileToolType,
 				"source":      "my-dataplex-instance",
@@ -921,6 +937,11 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-create-data-asset-tool",
 			toolName:       "my-dataplex-create-data-asset-tool",
 			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "resourceUri", "labels", "accessGroupConfigs"},
+		},
+		{
+			name:           "get my-dataplex-update-data-asset-tool",
+			toolName:       "my-dataplex-update-data-asset-tool",
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "labels", "accessGroupConfigs", "updateMask"},
 		},
 	}
 
@@ -2576,6 +2597,175 @@ func runDataplexCreateDataAssetToolInvokeTest(
 				time.Sleep(5 * time.Second)
 			}
 			t.Fatalf("Data Asset creation operation did not complete in time")
+		})
+	}
+}
+
+func runDataplexUpdateDataAssetToolInvokeTest(
+	t *testing.T,
+	client *dataplex.DataProductClient,
+	dataProductId string,
+	dataAssetId string,
+) {
+	idToken, err := tests.GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	testCases := []struct {
+		name               string
+		api                string
+		requestHeader      map[string]string
+		requestBody        io.Reader
+		wantStatusCode     int
+		expectResult       bool
+		expectedEnvLabel   string
+		expectedViewerRole string
+	}{
+		{
+			name:          "Success - Update Data Asset (Authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-update-data-asset-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","labels":{"env":"prod"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]},"updateMask":["labels","accessGroupConfigs"]}`,
+				dataProductId, dataAssetId,
+			))),
+			wantStatusCode:     200,
+			expectResult:       true,
+			expectedEnvLabel:   "prod",
+			expectedViewerRole: "roles/bigquery.dataViewer",
+		},
+		{
+			name:          "Success - Update Data Asset (Un-authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-update-data-asset-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","labels":{"env":"prod-unauth"},"accessGroupConfigs":{"test-group":["roles/bigquery.metadataViewer"]},"updateMask":["labels"]}`,
+				dataProductId, dataAssetId,
+			))),
+			wantStatusCode:     200,
+			expectResult:       true,
+			expectedEnvLabel:   "prod-unauth",
+			expectedViewerRole: "roles/bigquery.dataViewer", // should remain dataViewer (omitted from updateMask)
+		},
+		{
+			name:          "Failure - Without Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-update-data-asset-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","labels":{"env":"prod"}}`,
+				dataProductId, dataAssetId,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:          "Failure - Invalid Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-update-data-asset-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","labels":{"env":"prod"}}`,
+				dataProductId, dataAssetId,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("error creating request: %s", err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Set(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("error sending request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not %d, got %d. Body: %s", tc.wantStatusCode, resp.StatusCode, string(body))
+			}
+			if !tc.expectResult {
+				return
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			var invokeResp map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &invokeResp); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			opId, ok := invokeResp["operationId"].(string)
+			if !ok || opId == "" {
+				t.Fatalf("expected 'operationId' in response, got %v", invokeResp)
+			}
+			locId, ok := invokeResp["locationId"].(string)
+			if !ok || locId == "" {
+				t.Fatalf("expected 'locationId' in response, got %v", invokeResp)
+			}
+
+			opName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", DataplexProject, locId, opId)
+
+			// Poll the operation status up to 12 times (every 5 seconds)
+			// to wait for the asynchronous update to complete (max 1 minute).
+			var completed bool
+			for i := 0; i < 12; i++ {
+				op, err := client.GetOperation(context.Background(), &longrunningpb.GetOperationRequest{Name: opName})
+				if err == nil && op.GetDone() {
+					if op.GetError() != nil {
+						t.Fatalf("Data Asset update operation failed: %v", op.GetError())
+					}
+					completed = true
+					break
+				}
+				time.Sleep(5 * time.Second)
+			}
+			if !completed {
+				t.Fatalf("Data Asset update operation did not complete in time")
+			}
+
+			// Verify fields
+			daName := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", DataplexProject, locId, dataProductId, dataAssetId)
+			da, err := client.GetDataAsset(context.Background(), &dataplexpb.GetDataAssetRequest{Name: daName})
+			if err != nil {
+				t.Fatalf("failed to retrieve updated Data Asset %s: %v", daName, err)
+			}
+
+			// Verify labels
+			if da.GetLabels()["env"] != tc.expectedEnvLabel {
+				t.Errorf("expected label 'env' to be %q, got %q", tc.expectedEnvLabel, da.GetLabels()["env"])
+			}
+
+			// Verify accessGroupConfigs
+			agc := da.GetAccessGroupConfigs()
+			if tc.expectedViewerRole != "" {
+				if len(agc) != 1 || agc["test-group"] == nil {
+					t.Errorf("expected accessGroupConfigs to have test-group, got %v", agc)
+				} else {
+					roles := agc["test-group"].GetIamRoles()
+					if len(roles) != 1 || roles[0] != tc.expectedViewerRole {
+						t.Errorf("expected test-group roles to be [%q], got %v", tc.expectedViewerRole, roles)
+					}
+				}
+			} else {
+				if len(agc) != 0 {
+					t.Errorf("expected accessGroupConfigs to be empty, got %v", agc)
+				}
+			}
 		})
 	}
 }
