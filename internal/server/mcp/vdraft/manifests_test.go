@@ -155,8 +155,8 @@ func TestParamManifest(t *testing.T) {
 				parameters.NewMapParameter("foo-map-any", "a map of any", ""),
 			},
 			wantSchema: InputSchema{
-				Schema:     "https://json-schema.org/draft/2020-12/schema",
-				Type:       "object",
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
 				Properties: map[string]parameters.ParameterMcpManifest{
 					"foo-string":       {Type: "string", Description: "bar", Default: "foo"},
 					"foo-string2":      {Type: "string", Description: "bar"},
