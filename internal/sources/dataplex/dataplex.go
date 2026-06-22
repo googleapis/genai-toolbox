@@ -87,7 +87,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Config:            r,
 		Client:            client,
 		DataScanClient:    dataScanClient,
-		dataProductClient: dataProductClient,
+		DataProductClient: dataProductClient,
 	}
 
 	return s, nil
@@ -99,7 +99,7 @@ type Source struct {
 	Config
 	Client            *dataplexapi.CatalogClient
 	DataScanClient    *dataplexapi.DataScanClient
-	dataProductClient *dataplexapi.DataProductClient
+	DataProductClient *dataplexapi.DataProductClient
 }
 
 func (s *Source) SourceType() string {
@@ -124,7 +124,7 @@ func (s *Source) GetDataScanClient() *dataplexapi.DataScanClient {
 }
 
 func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
-	return s.dataProductClient
+	return s.DataProductClient
 }
 
 func initDataplexConnection(
@@ -874,27 +874,50 @@ func (s *Source) GetDataScan(ctx context.Context, location, scanID string) (*dat
 	return s.DataScanClient.GetDataScan(ctx, req)
 }
 
-func (s *Source) GetOperation(ctx context.Context, opName string) (map[string]any, error) {
-	if !operationNameRegex.MatchString(opName) {
-		return nil, fmt.Errorf("invalid operation name format: %q (expected projects/*/locations/*/operations/*)", opName)
+func (s *Source) GetOperation(ctx context.Context, locationId, operationId string) (map[string]any, error) {
+	if locationId == "" {
+		return nil, fmt.Errorf("locationId cannot be empty")
 	}
+	if operationId == "" {
+		return nil, fmt.Errorf("operationId cannot be empty")
+	}
+	opName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", s.ProjectID(), locationId, operationId)
 
 	req := &longrunningpb.GetOperationRequest{
 		Name: opName,
 	}
-	op, err := s.DataScanClient.LROClient.GetOperation(ctx, req)
-
-	bytes, err := protojson.Marshal(op)
+	op, err := s.CatalogClient().GetOperation(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal operation to JSON: %w", err)
+		return nil, err
 	}
 
-	var opData map[string]any
-	if err := json.Unmarshal(bytes, &opData); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal operation JSON to map: %w", err)
+	res := map[string]any{
+		"done": op.GetDone(),
+	}
+	if op.GetError() != nil {
+		errBytes, err := protojson.Marshal(op.GetError())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal operation error to JSON: %w", err)
+		}
+		var errData map[string]any
+		if err := json.Unmarshal(errBytes, &errData); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal operation error JSON to map: %w", err)
+		}
+		res["error"] = errData
+	}
+	if op.GetResponse() != nil {
+		respBytes, err := protojson.Marshal(op.GetResponse())
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal operation response to JSON: %w", err)
+		}
+		var respData map[string]any
+		if err := json.Unmarshal(respBytes, &respData); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal operation response JSON to map: %w", err)
+		}
+		res["response"] = respData
 	}
 
-	return opData, nil
+	return res, nil
 }
 
 func (s *Source) GetJobStatus(ctx context.Context, location, scanID, jobID string) (*dataplexpb.DataScanJob, error) {

@@ -866,7 +866,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-get-operation-tool",
 			toolName:       "my-dataplex-get-operation-tool",
-			expectedParams: []string{"operationName"},
+			expectedParams: []string{"locationId", "operationId"},
 		},
 		{
 			name:           "get my-dataplex-get-run-status-tool",
@@ -2864,7 +2864,14 @@ func runDataplexEnrichmentToolInvokeTest(t *testing.T, tableName string, dataset
 			}
 
 			// Step 2: Poll Operation Status
-			opReqBody := map[string]any{"operationName": operationName}
+			partsOp := strings.Split(operationName, "/")
+			if len(partsOp) < 6 || partsOp[2] != "locations" || partsOp[4] != "operations" {
+				t.Fatalf("invalid operation name format: %s", operationName)
+			}
+			opReqBody := map[string]any{
+				"locationId":  partsOp[3],
+				"operationId": partsOp[5],
+			}
 			opReqBytes, _ := json.Marshal(opReqBody)
 
 			var scanID string

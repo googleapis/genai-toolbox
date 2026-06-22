@@ -10,10 +10,11 @@ aliases:
 
 ## About
 
-A `dataplex-get-operation` tool retrieves the status of a Dataplex long-running operation (LRO) like scan creation.
+A `dataplex-get-operation` tool retrieves the status of a Dataplex long-running operation (LRO) (such as scan creation, data product creation/update, or data asset creation/update).
 
-Poll this tool until the `done` field from the response is `true`. Once completed, the `response` field will contain the created DataScan resource, from which you can extract the `scanId` (the last part of the `name` field, e.g. `nq-doc-1234`) to pass to `get_run_status` and get results.
-WARNING: This only tracks the creation of the scan template, NOT the actual background execution.
+Poll this tool until the `done` field from the response is `true`. Once completed, the `response` field will contain the details of the created or updated resource (such as `DataScan`, `DataProduct`, or `DataAsset`). 
+For scan template creation, you can extract the `scanId` (the last part of the `name` field, e.g. `nq-doc-1234`) to pass to `get_run_status` and retrieve execution results.
+WARNING: For scans, this only tracks the creation of the scan template, NOT the actual background execution.
 
 
 ## Compatible Sources
@@ -45,9 +46,10 @@ applying IAM permissions and roles to an identity.
 
 The `dataplex-get-operation` tool accepts the following parameters:
 
-| **field** | **type** | **required** | **description** |
-| --------- | :------: | :----------: | --------------- |
-| operationName | string | true | The full operation resource name (format: `projects/{project}/locations/{location}/operations/{operation_id}`). |
+| **field**   | **type** | **required** | **description**                                                                                                                                                                          |
+|-------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| locationId  |  string  |     true     | The location ID of the operation (e.g. `us` or `us-central1`). If you only have a fully-qualified operation name string, this is the part after `/locations/` and before `/operations/`. |
+| operationId |  string  |     true     | The operation ID. If you only have a fully-qualified operation name string, this is the last part after `/operations/`.                                                                  |
 
 ## Example
 

@@ -412,6 +412,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+3. Once completed successfully, the created Data Product resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: update_data_product
 ### Request
@@ -421,6 +422,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+3. Once completed successfully, the updated Data Product resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: create_data_asset
 ### Request
@@ -430,6 +432,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+3. Once completed successfully, the created Data Asset resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: update_data_asset
 ### Request
@@ -439,4 +442,13 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
+3. Once completed successfully, the updated Data Asset resource details can be found inside the `response` block of the final `get_operation` result.
+
+## Tool: get_operation
+### Request
+1. Use this tool to retrieve the status of an asynchronous long-running operation (LRO) like scan creation or data product/asset creation/updation.
+2. You must provide `locationId` and `operationId`. If you have a fully-qualified operation name string, extract the `locationId` (the part after '/locations/' and before '/operations/') and `operationId` (the last part after '/operations/').
+### Response
+1. Present whether the operation is done (`done: true` or `done: false`).
+2. Once the operation is completed (`done: true`), the response will contain either the `error` block (if it failed) or the `response` block containing the created or updated resource (like `DataScan`, `DataProduct`, or `DataAsset`).
 ```
