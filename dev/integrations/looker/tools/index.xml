@@ -3004,12 +3004,13 @@ Looker personal folder.&lt;/p&gt;
  &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>looker-query</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-query/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-query/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;looker-query&lt;/code&gt; tool runs a query using the Looker
 semantic model.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;looker-query&lt;/code&gt; takes eight parameters:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;looker-query&lt;/code&gt; takes nine parameters:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;the &lt;code&gt;model&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;the &lt;code&gt;explore&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;the &lt;code&gt;fields&lt;/code&gt; list&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;filters&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;an optional &lt;code&gt;filter_expression&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;pivots&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;sorts&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional &lt;code&gt;limit&lt;/code&gt;&lt;/li&gt;
@@ -3020,12 +3021,13 @@ System Activity. In the History explore, use the field API Client Name
 to find MCP Toolbox queries.&lt;/p&gt;</description></item><item><title>looker-query-sql</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-query-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-query-sql/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;looker-query-sql&lt;/code&gt; generates a sql query using the Looker
 semantic model.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;looker-query-sql&lt;/code&gt; takes eight parameters:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;looker-query-sql&lt;/code&gt; takes nine parameters:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;the &lt;code&gt;model&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;the &lt;code&gt;explore&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;the &lt;code&gt;fields&lt;/code&gt; list&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;filters&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;an optional &lt;code&gt;filter_expression&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;pivots&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;sorts&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional &lt;code&gt;limit&lt;/code&gt;&lt;/li&gt;
@@ -3036,12 +3038,13 @@ System Activity. In the History explore, use the field API Client Name
 to find MCP Toolbox queries.&lt;/p&gt;</description></item><item><title>looker-query-url</title><link>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-query-url/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-query-url/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;The &lt;code&gt;looker-query-url&lt;/code&gt; generates a url link to an explore in
 Looker so the query can be investigated further.&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;looker-query-url&lt;/code&gt; takes nine parameters:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;looker-query-url&lt;/code&gt; takes ten parameters:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;the &lt;code&gt;model&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;the &lt;code&gt;explore&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;the &lt;code&gt;fields&lt;/code&gt; list&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;filters&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;an optional &lt;code&gt;filter_expression&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;pivots&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional set of &lt;code&gt;sorts&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;an optional &lt;code&gt;limit&lt;/code&gt;&lt;/li&gt;
@@ -3091,7 +3094,7 @@ Looker so the query can be investigated further.&lt;/p&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Parameters:
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; All query parameters (e.g., `model_name`, `explore_name`, `fields`, `pivots`,
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; `filters`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; `filters`, `filter_expression`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; Additionally, it accepts an optional `vis_config` parameter:
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sd"&gt; - vis_config (optional): A JSON object that controls the default visualization
