@@ -95,11 +95,19 @@ jobs:
         working-directory: .hugo
 
       - name: Deploy to root
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .hugo/public
-          publish_branch: cloudflare-pages
-          keep_files: true
-          allow_empty_commit: true
-          commit_message: "deploy: docs to root for ${{ steps.get_version.outputs.VERSION }}"
+        run: |
+          cd $GITHUB_WORKSPACE
+          git clone --branch cloudflare-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git cf-pages-root-temp
+          cd cf-pages-root-temp
+          # Delete older pagefind search indexes
+          rm -rf pagefind
+          
+          # Copy over the fresh root build
+          cp -r ../.hugo/public/* .
+          
+          # Commit and push the clean build
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          
+          git diff-index --quiet HEAD || git commit -m "deploy: docs to root for ${{ steps.get_version.outputs.VERSION }}" && git push origin cloudflare-pages
