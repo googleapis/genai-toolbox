@@ -137,6 +137,7 @@ func GetQueryParameters() parameters.Parameters {
 	)
 	limitParameter := parameters.NewIntParameterWithDefault("limit", 500, "The row limit.")
 	tzParameter := parameters.NewStringParameterWithRequired("tz", "The query timezone.", false)
+	filterExpressionParameter := parameters.NewStringParameterWithRequired("filter_expression", "An optional filter expression string.", false)
 
 	return parameters.Parameters{
 		modelParameter,
@@ -147,6 +148,7 @@ func GetQueryParameters() parameters.Parameters {
 		sortsParameter,
 		limitParameter,
 		tzParameter,
+		filterExpressionParameter,
 	}
 }
 
@@ -329,15 +331,25 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		tz = tzname
 	}
 
+	var filterExpressionPtr *string
+	if val, ok := paramsMap["filter_expression"]; ok && val != nil {
+		if strVal, ok := val.(string); ok {
+			filterExpressionPtr = &strVal
+		} else {
+			return nil, fmt.Errorf("'filter_expression' must be a string, got %T", val)
+		}
+	}
+
 	wq := v4.WriteQuery{
-		Model:         paramsMap["model"].(string),
-		View:          paramsMap["explore"].(string),
-		Fields:        &fields,
-		Pivots:        &pivots,
-		Filters:       &filters,
-		Sorts:         &sorts,
-		QueryTimezone: &tz,
-		Limit:         &limit,
+		Model:            paramsMap["model"].(string),
+		View:             paramsMap["explore"].(string),
+		Fields:           &fields,
+		Pivots:           &pivots,
+		Filters:          &filters,
+		Sorts:            &sorts,
+		QueryTimezone:    &tz,
+		Limit:            &limit,
+		FilterExpression: filterExpressionPtr,
 	}
 	return &wq, nil
 }
