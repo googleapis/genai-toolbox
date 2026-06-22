@@ -121,7 +121,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 		Parameters: parameters.Parameters{},
 	}
 
-	tool, err := config.Initialize()
+	tool, err := config.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("Expected no error, got: %v", err)
 	}

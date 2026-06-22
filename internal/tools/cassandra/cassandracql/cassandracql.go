@@ -65,7 +65,7 @@ func (c Config) ToolConfigType() string {
 }
 
 // Initialize implements tools.ToolConfig.
-func (c Config) Initialize() (tools.Tool, error) {
+func (c Config) Initialize(context.Context) (tools.Tool, error) {
 	if c.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", c.Name)
 	}

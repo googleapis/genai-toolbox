@@ -90,7 +90,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("table_names", "", "Optional: Filters by a comma-separated list of table names."),
 		parameters.NewStringParameterWithDefault("publication_names", "", "Optional: Filters by a comma-separated list of publication names."),

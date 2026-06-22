@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "Creates a new AlloyDB user within a cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned. Always ask the user for the type of user to create. ALLOYDB_IAM_USER is recommended."

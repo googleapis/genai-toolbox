@@ -60,7 +60,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	query := parameters.NewStringParameter("query",
 		"A query string for searching entries, following Dataplex search syntax. "+
 			"Supports logical operators (AND, OR, NOT) and grouping. "+

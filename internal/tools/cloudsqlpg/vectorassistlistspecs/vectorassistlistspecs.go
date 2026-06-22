@@ -66,7 +66,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithRequired("table_name", "Table name to list vector specifications for.", true),
 		parameters.NewStringParameterWithRequired("column_name", "Column name to list vector specifications for.", false),

@@ -126,7 +126,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("database_name", "", "Optional: A specific database name pattern to search for."),
 		parameters.NewBooleanParameterWithDefault("include_templates", false, "Optional: Whether to include template databases in the results."),
