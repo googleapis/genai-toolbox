@@ -277,6 +277,24 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	res, err := tool.Invoke(ctx, s.ResourceMgr, params, accessToken)
+	
+	// Apply PII masking if a policy is configured and no error occurred during invocation
+	if err == nil {
+		piiPolicyName := tool.GetPiiPolicy()
+		if piiPolicyName != "" {
+			if engine, ok := s.ResourceMgr.GetPiiPolicy(piiPolicyName); ok {
+				var maskErr error
+				res, maskErr = engine.Mask(res, claimsFromAuth)
+				if maskErr != nil {
+					err = fmt.Errorf("error applying PII mask: %w", maskErr)
+					s.logger.ErrorContext(ctx, "PII masking failed", "policy", piiPolicyName, "error", maskErr)
+				}
+			} else {
+				err = fmt.Errorf("configured PII policy %q not found", piiPolicyName)
+				s.logger.ErrorContext(ctx, "PII policy not found", "policy", piiPolicyName)
+			}
+		}
+	}
 
 	// Determine what error to return to the users.
 	if err != nil {

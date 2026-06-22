@@ -164,14 +164,14 @@ func (t Tool) ToConfig() tools.ToolConfig {
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("name", "The name of the instance"),
-		parameters.NewStringParameterWithDefault("databaseVersion", "SQLSERVER_2022_STANDARD", "The database version for SQL Server. If not specified, defaults to SQLSERVER_2022_STANDARD."),
+		parameters.NewStringParameter("databaseVersion", "The database version for SQL Server. If not specified, defaults to SQLSERVER_2022_STANDARD.", parameters.WithStringDefault("SQLSERVER_2022_STANDARD")),
 		parameters.NewStringParameter("rootPassword", "The root password for the instance"),
-		parameters.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
+		parameters.NewStringParameter("editionPreset", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`.", parameters.WithStringDefault("Development")),
 	}
 }
 

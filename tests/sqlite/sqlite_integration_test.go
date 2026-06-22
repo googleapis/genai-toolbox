@@ -270,3 +270,130 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 		})
 	}
 }
+
+func TestSQLitePIIMasking(t *testing.T) {
+	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SQLiteDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer teardownDb(t)
+	defer db.Close()
+
+	sourceConfig := getSQLiteVars(t)
+	sourceConfig["database"] = sqliteDb
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// Create a table and insert data
+	tableName := "pii_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createStmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, email TEXT, ssn TEXT, salary INTEGER);", tableName)
+	insertStmt := fmt.Sprintf("INSERT INTO %s (email, ssn, salary) VALUES (?, ?, ?);", tableName)
+	params := []any{"john.doe@example.com", "123-45-6789", 100000}
+	setupSQLiteTestDB(t, ctx, db, createStmt, insertStmt, tableName, params)
+
+	toolConfig := map[string]any{
+		"tools": map[string]any{
+			"my-pii-tool": map[string]any{
+				"type":        "sqlite-execute-sql",
+				"source":      "my-instance",
+				"description": "Tool to execute SQL statements with PII masking",
+				"piiPolicy":   "gdpr-policy",
+			},
+		},
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"piiPolicies": map[string]any{
+			"gdpr-policy": map[string]any{
+				"defaultTier": "full_mask",
+				"tiers": []any{
+					map[string]any{
+						"name":   "admin",
+						"action": "unmask",
+						"matchClaims": map[string]any{
+							"role": []string{"admin"},
+						},
+					},
+					map[string]any{
+						"name":   "analyst",
+						"action": "partial_mask",
+						"matchClaims": map[string]any{
+							"role": []string{"analyst"},
+						},
+					},
+				},
+				"rules": []any{
+					map[string]any{
+						"type":    "EMAIL",
+						"pattern": `\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b`,
+					},
+					map[string]any{
+						"type":    "SSN",
+						"pattern": `\b\d{3}-\d{2}-\d{4}\b`,
+					},
+				},
+			},
+		},
+	}
+
+	args := []string{"--enable-api"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolConfig, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Table-driven test cases
+	testCases := []struct {
+		name       string
+		headers    map[string]string
+		sql        string
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name:       "default user gets fully masked data",
+			headers:    map[string]string{}, // No role claim
+			sql:        fmt.Sprintf("SELECT * FROM %s WHERE id = 1", tableName),
+			wantStatus: 200,
+			wantBody:   "[REDACTED:EMAIL]", 
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			api := "http://127.0.0.1:5000/api/tool/my-pii-tool/invoke"
+			reqBody := strings.NewReader(fmt.Sprintf(`{"sql":"%s"}`, tc.sql))
+			req, err := http.NewRequest("POST", api, reqBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			for k, v := range tc.headers {
+				req.Header.Set(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unable to read response: %s", err)
+			}
+			if resp.StatusCode != tc.wantStatus {
+				t.Fatalf("unexpected status: %d, body: %s", resp.StatusCode, string(bodyBytes))
+			}
+			if tc.wantBody != "" && !strings.Contains(string(bodyBytes), tc.wantBody) {
+				t.Fatalf("expected body to contain %q, got: %s", tc.wantBody, string(bodyBytes))
+			}
+		})
+	}
+}

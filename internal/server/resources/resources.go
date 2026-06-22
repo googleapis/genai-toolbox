@@ -19,6 +19,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/pii"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -34,6 +35,7 @@ type ResourceManager struct {
 	toolsets        map[string]tools.Toolset
 	prompts         map[string]prompts.Prompt
 	promptsets      map[string]prompts.Promptset
+	piiPolicies     map[string]*pii.Engine
 }
 
 func NewResourceManager(
@@ -42,6 +44,7 @@ func NewResourceManager(
 	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
 	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
+	piiPoliciesMap map[string]*pii.Engine,
 
 ) *ResourceManager {
 	resourceMgr := &ResourceManager{
@@ -53,6 +56,7 @@ func NewResourceManager(
 		toolsets:        toolsetsMap,
 		prompts:         promptsMap,
 		promptsets:      promptsetsMap,
+		piiPolicies:     piiPoliciesMap,
 	}
 
 	return resourceMgr
@@ -107,7 +111,14 @@ func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset,
 	return promptset, ok
 }
 
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
+func (r *ResourceManager) GetPiiPolicy(policyName string) (*pii.Engine, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	policy, ok := r.piiPolicies[policyName]
+	return policy, ok
+}
+
+func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset, piiPoliciesMap map[string]*pii.Engine) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
@@ -117,6 +128,7 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 	r.toolsets = toolsetsMap
 	r.prompts = promptsMap
 	r.promptsets = promptsetsMap
+	r.piiPolicies = piiPoliciesMap
 }
 
 func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {

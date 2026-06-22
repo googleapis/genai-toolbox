@@ -106,7 +106,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("error getting logger", http.StatusInternalServerError, err)
 	}
-	logger.DebugContext(ctx, "executing %s tool query: %s", resourceType, newStatement)
+	logger.DebugContext(ctx, "executing tool query", "resource_type", resourceType, "query", newStatement)
 
 	isReadOnly := true
 	if t.Cfg.ReadOnly != nil {

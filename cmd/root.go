@@ -40,6 +40,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/pii"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -138,14 +139,14 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, piiPoliciesMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, piiPoliciesMap)
 
 	return nil
 }
@@ -153,7 +154,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 // validateReloadEdits checks that the reloaded config configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile internal.Config,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, map[string]*pii.Engine, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -178,17 +179,18 @@ func validateReloadEdits(
 		ToolConfigs:           toolsFile.Tools,
 		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		PiiPolicyConfigs:      toolsFile.PiiPolicies,
 		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, piiPoliciesMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, piiPoliciesMap, nil
 }
 
 // Helper to check if a file has a newer ModTime than stored in the map
@@ -382,7 +384,7 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 
 			err = handleDynamicReload(ctx, reloadedConfig, s)
 			if err != nil {
-				errMsg := fmt.Errorf("unable to parse reloaded config at %q: %w", reloadedConfig, err)
+				errMsg := fmt.Errorf("unable to parse reloaded config at %v: %w", reloadedConfig, err)
 				logger.WarnContext(ctx, errMsg.Error())
 				continue
 			}

@@ -156,17 +156,19 @@ Example: {"field": "age", "op": ">", "value": 18}`
 		"JSON string specifying the field and direction to order by (e.g., {\"field\": \"name\", \"direction\": \"ASCENDING\"}). Leave empty if not specified",
 	)
 
-	limitParameter := parameters.NewIntParameterWithDefault(
+	limitParameter := parameters.NewIntParameter(
 		limitKey,
-		defaultLimit,
-		"The maximum number of documents to return",
-	)
 
-	analyzeQueryParameter := parameters.NewBooleanParameterWithDefault(
+		"The maximum number of documents to return", parameters.WithIntDefault(
+
+			defaultLimit))
+
+	analyzeQueryParameter := parameters.NewBooleanParameter(
 		analyzeQueryKey,
-		defaultAnalyze,
-		"If true, returns query explain metrics including execution statistics",
-	)
+
+		"If true, returns query explain metrics including execution statistics", parameters.WithBooleanDefault(
+
+			defaultAnalyze))
 
 	return parameters.Parameters{
 		collectionPathParameter,

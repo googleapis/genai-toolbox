@@ -136,14 +136,14 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("instance", "Cloud SQL instance ID. This does not include the project ID."),
-		// Location and backup_description are optional.
-		parameters.NewStringParameterWithRequired("location", "Location of the backup run.", false),
-		parameters.NewStringParameterWithRequired("backup_description", "The description of this backup run.", false),
+
+		parameters.NewStringParameter("location", "Location of the backup run.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("backup_description", "The description of this backup run.", parameters.WithStringRequired(false)),
 	}
 }
 

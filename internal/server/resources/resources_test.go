@@ -56,7 +56,7 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, nil)
 
 	gotSource, _ := resMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -97,7 +97,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, nil)
 	gotSource, _ = resMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)

@@ -303,6 +303,24 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	executionStart := time.Now()
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	executionDuration := time.Since(executionStart).Seconds()
+	
+	// Apply PII masking if a policy is configured and no error occurred during invocation
+	if err == nil {
+		piiPolicyName := tool.GetPiiPolicy()
+		if piiPolicyName != "" {
+			if engine, ok := resourceMgr.GetPiiPolicy(piiPolicyName); ok {
+				var maskErr error
+				results, maskErr = engine.Mask(results, claimsFromAuth)
+				if maskErr != nil {
+					err = fmt.Errorf("error applying PII mask: %w", maskErr)
+					logger.ErrorContext(ctx, "PII masking failed", "policy", piiPolicyName, "error", maskErr)
+				}
+			} else {
+				err = fmt.Errorf("configured PII policy %q not found", piiPolicyName)
+				logger.ErrorContext(ctx, "PII policy not found", "policy", piiPolicyName)
+			}
+		}
+	}
 
 	// Record tool execution duration metric
 	if instrumentationErr == nil {

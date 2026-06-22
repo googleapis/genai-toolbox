@@ -304,6 +304,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	opts.Cfg.ToolConfigs = finalConfig.Tools
 	opts.Cfg.ToolsetConfigs = finalConfig.Toolsets
 	opts.Cfg.PromptConfigs = finalConfig.Prompts
+	opts.Cfg.PiiPolicyConfigs = finalConfig.PiiPolicies
 
 	return isCustomConfigured, nil
 }

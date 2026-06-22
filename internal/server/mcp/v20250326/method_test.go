@@ -168,7 +168,7 @@ func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
 
 	tests := []struct {
 		name        string
@@ -257,7 +257,7 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool5,
 	}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
 
 	tests := []struct {
 		name        string
@@ -385,7 +385,7 @@ func TestPromptsListHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -454,7 +454,7 @@ func TestPromptsGetHandler(t *testing.T) {
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest

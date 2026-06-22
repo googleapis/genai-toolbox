@@ -83,7 +83,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{},
-			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
 				"toolbox/authParam": map[string][]string{
@@ -96,7 +96,7 @@ func TestGenerateToolManifest(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{"auth1", "auth2"},
-			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter", parameters.WithStringAuth(authServices))},
 			annotations: nil,
 			wantMetadata: map[string]any{
 				"toolbox/authInvoke": []string{"auth1", "auth2"},
@@ -147,9 +147,9 @@ func TestParamManifest(t *testing.T) {
 		{
 			name: "all types",
 			in: parameters.Parameters{
-				parameters.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+				parameters.NewStringParameter("foo-string", "bar", parameters.WithStringDefault("foo")),
 				parameters.NewStringParameter("foo-string2", "bar"),
-				parameters.NewStringParameterWithAuth("foo-string3-auth", "bar", authServices),
+				parameters.NewStringParameter("foo-string3-auth", "bar", parameters.WithStringAuth(authServices)),
 				parameters.NewIntParameter("foo-int2", "bar"),
 				parameters.NewFloatParameter("foo-float", "bar"),
 				parameters.NewArrayParameter("foo-array2", "bar", parameters.NewStringParameter("foo-string", "bar")),
@@ -321,7 +321,7 @@ func TestGeneratePromptManifest(t *testing.T) {
 			description: "Prompt with args.",
 			args: prompts.Arguments{
 				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewIntParameter("param2", "Second param", parameters.WithIntRequired(false))},
 			},
 			want: Prompt{
 				BaseMetadata: BaseMetadata{Name: "arg-prompt"},

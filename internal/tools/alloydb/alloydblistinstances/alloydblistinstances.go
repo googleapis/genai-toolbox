@@ -139,12 +139,12 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The GCP project ID to list instances for.")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
-		parameters.NewStringParameterWithDefault("location", "-", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')"),
-		parameters.NewStringParameterWithDefault("cluster", "-", "Optional: The ID of the cluster to list instances from. Use '-' to get results for all clusters.(Default: '-')"),
+		parameters.NewStringParameter("location", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')", parameters.WithStringDefault("-")),
+		parameters.NewStringParameter("cluster", "Optional: The ID of the cluster to list instances from. Use '-' to get results for all clusters.(Default: '-')", parameters.WithStringDefault("-")),
 	}
 }
 

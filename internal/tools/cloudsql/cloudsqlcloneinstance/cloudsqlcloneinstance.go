@@ -143,16 +143,16 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("sourceInstanceName", "The name of the instance to be cloned."),
 		parameters.NewStringParameter("destinationInstanceName", "The name of the new instance that will be created by cloning the source instance."),
-		// point in time, preferred zone and preferred secondary zone are optional
-		parameters.NewStringParameterWithRequired("pointInTime", "The timestamp in RFC 3339 format to which the source instance should be cloned.", false),
-		parameters.NewStringParameterWithRequired("preferredZone", "The preferred zone for the new instance.", false),
-		parameters.NewStringParameterWithRequired("preferredSecondaryZone", "The preferred secondary zone for the new instance.", false),
+
+		parameters.NewStringParameter("pointInTime", "The timestamp in RFC 3339 format to which the source instance should be cloned.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("preferredZone", "The preferred zone for the new instance.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("preferredSecondaryZone", "The preferred secondary zone for the new instance.", parameters.WithStringRequired(false)),
 	}
 }
 

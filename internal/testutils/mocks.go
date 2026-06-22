@@ -126,6 +126,10 @@ func (t MockTool) GetScopesRequired() []string {
 	return nil
 }
 
+func (t MockTool) GetPiiPolicy() string {
+	return ""
+}
+
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
 	Name        string

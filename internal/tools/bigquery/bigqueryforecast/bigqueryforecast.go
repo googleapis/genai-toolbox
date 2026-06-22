@@ -283,14 +283,15 @@ func buildParams(allowedDatasets []string) parameters.Parameters {
 	}
 
 	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
-	timestampColumnNameParameter := parameters.NewStringParameterWithEscape("timestamp_col",
-		"The name of the time series timestamp column.", "single-quotes")
-	dataColumnNameParameter := parameters.NewStringParameterWithEscape("data_col",
-		"The name of the time series data column.", "single-quotes")
-	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
-		"An array of the time series id column names.",
-		parameters.NewStringParameterWithEscape("id_col", "The name of time series id column.", "single-quotes"))
-	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
+	timestampColumnNameParameter := parameters.NewStringParameter("timestamp_col", "The name of the time series timestamp column.", parameters.WithStringEscape(
+		"single-quotes"))
+
+	dataColumnNameParameter := parameters.NewStringParameter("data_col", "The name of the time series data column.", parameters.WithStringEscape(
+		"single-quotes"))
+
+	idColumnNameParameter := parameters.NewArrayParameter("id_cols", "An array of the time series id column names.", parameters.NewStringParameter("id_col", "The name of time series id column.", parameters.WithStringEscape("single-quotes")), parameters.WithArrayDefault([]any{}))
+
+	horizonParameter := parameters.NewIntParameter("horizon", "The number of forecasting steps.", parameters.WithIntDefault(10))
 	return parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
 }

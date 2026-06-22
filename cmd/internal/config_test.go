@@ -955,8 +955,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1063,8 +1063,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1234,9 +1234,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Method: "GET",
 						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},
@@ -1382,9 +1382,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Method: "GET",
 						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},
@@ -2237,6 +2237,7 @@ func TestMergeConfigs(t *testing.T) {
 				Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:         server.PromptConfigs{},
+				PiiPolicies:     make(server.PiiPolicyConfigs),
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 			},
 			wantErr: false,
@@ -2262,6 +2263,7 @@ func TestMergeConfigs(t *testing.T) {
 				Tools:           file1.Tools,
 				Toolsets:        file1.Toolsets,
 				Prompts:         server.PromptConfigs{},
+				PiiPolicies:     make(server.PiiPolicyConfigs),
 			},
 		},
 		{
@@ -2274,6 +2276,7 @@ func TestMergeConfigs(t *testing.T) {
 				Tools:           make(server.ToolConfigs),
 				Toolsets:        make(server.ToolsetConfigs),
 				Prompts:         server.PromptConfigs{},
+				PiiPolicies:     make(server.PiiPolicyConfigs),
 			},
 		},
 	}

@@ -161,7 +161,7 @@ func buildParams(allowedDatasets []string, defaultProject string) parameters.Par
 	if len(allowedDatasets) > 0 {
 		projectParameterDescription = "This parameter will be ignored. The list of datasets is restricted to a pre-configured list; No need to provide a project ID."
 	}
-	projectParameter := parameters.NewStringParameterWithDefault(projectKey, defaultProject, projectParameterDescription)
+	projectParameter := parameters.NewStringParameter(projectKey, projectParameterDescription, parameters.WithStringDefault(defaultProject))
 	return parameters.Parameters{projectParameter}
 }
 

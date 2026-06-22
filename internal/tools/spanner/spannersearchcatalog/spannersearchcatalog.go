@@ -65,28 +65,31 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize() (tools.Tool, error) {
 	prompt := parameters.NewStringParameter("prompt", "Prompt representing search intention. Do not rewrite the prompt.")
 
-	databaseIds := parameters.NewArrayParameterWithDefault(
+	databaseIds := parameters.NewArrayParameter(
 		"databaseIds",
-		[]any{},
+
 		"Array of database IDs.",
-		parameters.NewStringParameter("databaseId", "The IDs of the spanner database."),
-	)
+		parameters.NewStringParameter("databaseId", "The IDs of the spanner database."), parameters.WithArrayDefault(
 
-	projectIds := parameters.NewArrayParameterWithDefault(
+			[]any{}))
+
+	projectIds := parameters.NewArrayParameter(
 		"projectIds",
-		[]any{},
+
 		"Array of project IDs.",
-		parameters.NewStringParameter("projectId", "The IDs of the GCP project."),
-	)
+		parameters.NewStringParameter("projectId", "The IDs of the GCP project."), parameters.WithArrayDefault(
 
-	types := parameters.NewArrayParameterWithDefault(
+			[]any{}))
+
+	types := parameters.NewArrayParameter(
 		"types",
-		[]any{},
-		"Array of data types to filter by.",
-		parameters.NewStringParameter("type", "The type of the data. Accepted values are: SERVICE, DATABASE, TABLE, VIEW."),
-	)
 
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
+		"Array of data types to filter by.",
+		parameters.NewStringParameter("type", "The type of the data. Accepted values are: SERVICE, DATABASE, TABLE, VIEW."), parameters.WithArrayDefault(
+
+			[]any{}))
+
+	pageSize := parameters.NewIntParameter("pageSize", "Number of results in the search page.", parameters.WithIntDefault(5))
 
 	params := parameters.Parameters{prompt, databaseIds, projectIds, types, pageSize}
 

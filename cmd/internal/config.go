@@ -39,6 +39,8 @@ type Config struct {
 	Tools           server.ToolConfigs           `yaml:"tools"`
 	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Promptsets      server.PromptsetConfigs      `yaml:"promptsets"`
+	PiiPolicies     server.PiiPolicyConfigs      `yaml:"piiPolicies"`
 }
 
 type ConfigParser struct {
@@ -150,7 +152,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, config.Promptsets, config.PiiPolicies, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -180,7 +182,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "piiPolicies"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -217,6 +219,8 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "piiPolicies":
+					key = "piiPolicy"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
@@ -316,6 +320,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 		Tools:           make(server.ToolConfigs),
 		Toolsets:        make(server.ToolsetConfigs),
 		Prompts:         make(server.PromptConfigs),
+		PiiPolicies:     make(server.PiiPolicyConfigs),
 	}
 
 	var conflicts []string
@@ -376,11 +381,20 @@ func mergeConfigs(files ...Config) (Config, error) {
 				merged.Prompts[name] = prompt
 			}
 		}
+
+		// Check for conflicts and merge PII policies
+		for name, piiPolicy := range file.PiiPolicies {
+			if _, exists := merged.PiiPolicies[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("piiPolicy '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.PiiPolicies[name] = piiPolicy
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset, prompt and piiPolicy has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	// Ensure only one authService has mcpEnabled = true
