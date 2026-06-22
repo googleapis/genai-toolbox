@@ -238,11 +238,16 @@ type Tool struct {
 }
 
 type InputSchema struct {
-	Type                 string                                     `json:"type"`
-	Properties           map[string]parameters.ParameterMcpManifest `json:"properties"`
-	Required             []string                                   `json:"required"`
 	Schema               string                                     `json:"$schema,omitempty"`
+	Type                 string                                     `json:"type,omitempty"`
+	Properties           map[string]parameters.ParameterMcpManifest `json:"properties,omitempty"`
+	Required             []string                                   `json:"required,omitempty"`
 	AdditionalProperties any                                        `json:"additionalProperties,omitempty"`
+	AnyOf                []*parameters.ParameterMcpManifest         `json:"anyOf,omitempty"`
+	OneOf                []*parameters.ParameterMcpManifest         `json:"oneOf,omitempty"`
+	AllOf                []*parameters.ParameterMcpManifest         `json:"allOf,omitempty"`
+	Not                  *parameters.ParameterMcpManifest           `json:"not,omitempty"`
+	Enum                 []any                                      `json:"enum,omitempty"`
 }
 
 // Used by the client to invoke a tool provided by the server.

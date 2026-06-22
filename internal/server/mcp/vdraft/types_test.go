@@ -140,3 +140,252 @@ func TestInputSchema_AdvancedJSONSchema(t *testing.T) {
 		t.Errorf("unmarshaled schema mismatch\ngot:  %#v\nwant: %#v", gotResult, input)
 	}
 }
+
+func TestInputSchema_TopLevelComposition(t *testing.T) {
+	input := InputSchema{
+		Schema: "https://json-schema.org/draft/2020-12/schema",
+		OneOf: []*parameters.ParameterMcpManifest{
+			{
+				Type: "object",
+				Properties: map[string]*parameters.ParameterMcpManifest{
+					"action": {Type: "string", Enum: []any{"create"}},
+					"data":   {Type: "string"},
+				},
+				Required: []string{"action", "data"},
+			},
+			{
+				Type: "object",
+				Properties: map[string]*parameters.ParameterMcpManifest{
+					"action": {Type: "string", Enum: []any{"delete"}},
+					"id":     {Type: "integer"},
+				},
+				Required: []string{"action", "id"},
+			},
+		},
+	}
+
+	// Test Marshal
+	gotBytes, err := json.Marshal(input)
+	if err != nil {
+		t.Fatalf("failed to marshal InputSchema: %s", err)
+	}
+
+	// Verify that standard flat object fields (like type, properties, required) are omitted from the JSON because of omitempty tags
+	var rawMap map[string]any
+	if err := json.Unmarshal(gotBytes, &rawMap); err != nil {
+		t.Fatalf("failed to unmarshal JSON into map: %s", err)
+	}
+	if _, ok := rawMap["type"]; ok {
+		t.Error("expected 'type' field to be omitted from top-level union InputSchema JSON")
+	}
+	if _, ok := rawMap["properties"]; ok {
+		t.Error("expected 'properties' field to be omitted from top-level union InputSchema JSON")
+	}
+	if _, ok := rawMap["required"]; ok {
+		t.Error("expected 'required' field to be omitted from top-level union InputSchema JSON")
+	}
+
+	// Test Unmarshal
+	var gotResult InputSchema
+	if err := json.Unmarshal(gotBytes, &gotResult); err != nil {
+		t.Fatalf("failed to unmarshal InputSchema: %s", err)
+	}
+
+	// Verify that the original structure is perfectly preserved
+	if !reflect.DeepEqual(gotResult, input) {
+		t.Errorf("unmarshaled schema mismatch\ngot:  %#v\nwant: %#v", gotResult, input)
+	}
+}
+
+func TestInputSchema_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name  string
+		input InputSchema
+	}{
+		{
+			name: "top-level not constraint",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Not: &parameters.ParameterMcpManifest{
+					Type: "array",
+				},
+			},
+		},
+		{
+			name: "top-level enum list of constant objects",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Enum: []any{
+					map[string]any{"action": "ping"},
+					map[string]any{"action": "status"},
+				},
+			},
+		},
+		{
+			name: "hybrid schema - base properties with anyOf composition",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"base_param": {Type: "string"},
+				},
+				Required: []string{"base_param"},
+				AnyOf: []*parameters.ParameterMcpManifest{
+					{
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"extra_string": {Type: "string"},
+						},
+						Required: []string{"extra_string"},
+					},
+					{
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"extra_number": {Type: "integer"},
+						},
+						Required: []string{"extra_number"},
+					},
+				},
+			},
+		},
+		{
+			name: "deeply nested composition",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				AllOf: []*parameters.ParameterMcpManifest{
+					{
+						Type: "object",
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"level1": {
+								Type: "object",
+								Properties: map[string]*parameters.ParameterMcpManifest{
+									"level2": {
+										AnyOf: []*parameters.ParameterMcpManifest{
+											{Type: "string"},
+											{
+												Type: "array",
+												Items: &parameters.ParameterMcpManifest{
+													Type: "integer",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Test Marshal
+			gotBytes, err := json.Marshal(tc.input)
+			if err != nil {
+				t.Fatalf("failed to marshal InputSchema: %s", err)
+			}
+
+			// Test Unmarshal
+			var gotResult InputSchema
+			if err := json.Unmarshal(gotBytes, &gotResult); err != nil {
+				t.Fatalf("failed to unmarshal InputSchema: %s", err)
+			}
+
+			// Verify structural preservation
+			if !reflect.DeepEqual(gotResult, tc.input) {
+				t.Errorf("unmarshaled schema mismatch\ngot:  %#v\nwant: %#v", gotResult, tc.input)
+			}
+		})
+	}
+}
+
+func TestCallToolResult_EdgeCases(t *testing.T) {
+	type CustomStruct struct {
+		FieldA string `json:"field_a"`
+		FieldB int    `json:"field_b"`
+	}
+
+	tests := []struct {
+		name          string
+		input         CallToolResult
+		wantJSON      string
+		wantUnmarshal any
+	}{
+		{
+			name: "structuredContent is nil",
+			input: CallToolResult{
+				StructuredContent: nil,
+			},
+			wantJSON:      `{"content":null}`,
+			wantUnmarshal: nil,
+		},
+		{
+			name: "structuredContent is empty string",
+			input: CallToolResult{
+				StructuredContent: "",
+			},
+			wantJSON:      `{"content":null,"structuredContent":""}`,
+			wantUnmarshal: "",
+		},
+		{
+			name: "structuredContent is boolean",
+			input: CallToolResult{
+				StructuredContent: true,
+			},
+			wantJSON:      `{"content":null,"structuredContent":true}`,
+			wantUnmarshal: true,
+		},
+		{
+			name: "structuredContent is complex nested mixed types",
+			input: CallToolResult{
+				StructuredContent: []any{
+					map[string]any{"nested_map": []any{float64(1), "two"}},
+					"flat_string",
+				},
+			},
+			wantJSON: `{"content":null,"structuredContent":[{"nested_map":[1,"two"]},"flat_string"]}`,
+			wantUnmarshal: []any{
+				map[string]any{"nested_map": []any{float64(1), "two"}},
+				"flat_string",
+			},
+		},
+		{
+			name: "structuredContent is custom Go struct",
+			input: CallToolResult{
+				StructuredContent: CustomStruct{
+					FieldA: "hello",
+					FieldB: 42,
+				},
+			},
+			wantJSON: `{"content":null,"structuredContent":{"field_a":"hello","field_b":42}}`,
+			wantUnmarshal: map[string]any{
+				"field_a": "hello",
+				"field_b": float64(42),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Test Marshal
+			gotBytes, err := json.Marshal(tc.input)
+			if err != nil {
+				t.Fatalf("failed to marshal CallToolResult: %s", err)
+			}
+			if string(gotBytes) != tc.wantJSON {
+				t.Errorf("got JSON = %s, want %s", string(gotBytes), tc.wantJSON)
+			}
+
+			// Test Unmarshal
+			var gotResult CallToolResult
+			if err := json.Unmarshal(gotBytes, &gotResult); err != nil {
+				t.Fatalf("failed to unmarshal CallToolResult: %s", err)
+			}
+			if !reflect.DeepEqual(gotResult.StructuredContent, tc.wantUnmarshal) {
+				t.Errorf("got StructuredContent = %#v, want %#v", gotResult.StructuredContent, tc.wantUnmarshal)
+			}
+		})
+	}
+}
+
+
