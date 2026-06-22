@@ -787,15 +787,19 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	}
 
 	// Set request ID
-	if baseMessage.Id != nil {
-		span.SetAttributes(attribute.String("jsonrpc.request.id", fmt.Sprintf("%v", baseMessage.Id)))
+	if baseMessage.HasId {
+		idStr := "null"
+		if baseMessage.Id != nil {
+			idStr = fmt.Sprintf("%v", baseMessage.Id)
+		}
+		span.SetAttributes(attribute.String("jsonrpc.request.id", idStr))
 	}
 
 	// Set toolset name
 	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
 	// Check if message is a notification
-	if baseMessage.Id == nil {
+	if !baseMessage.HasId {
 		err := mcp.NotificationHandler(ctx, body)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())

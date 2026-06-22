@@ -560,9 +560,9 @@ func TestMcpEndpoint(t *testing.T) {
 				{
 					name: "basic notification",
 					url:  "/",
-					body: jsonrpc.JSONRPCRequest{
+					body: jsonrpc.JSONRPCNotification{
 						Jsonrpc: jsonrpcVersion,
-						Request: jsonrpc.Request{
+						Notification: jsonrpc.Notification{
 							Method: "notification",
 						},
 					},
@@ -599,6 +599,50 @@ func TestMcpEndpoint(t *testing.T) {
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"id":      "tools-list",
+						"result": map[string]any{
+							"tools": []any{
+								map[string]any{
+									"name":        "no_params",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "some_params",
+									"inputSchema": tool2InputSchema,
+								},
+								map[string]any{
+									"name":        "array_param",
+									"description": "some description",
+									"inputSchema": tool3InputSchema,
+								},
+								map[string]any{
+									"name":        "unauthorized_tool",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "require_client_auth_tool",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "url_binding_tool",
+									"description": "A tool for testing URL param binding",
+									"inputSchema": urlBindingToolInputSchema,
+								},
+							},
+						},
+					},
+				},
+				{
+					name: "tools/list with null id",
+					url:  "/",
+					body: map[string]any{
+						"jsonrpc": jsonrpcVersion,
+						"id":      nil,
+						"method":  "tools/list",
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      nil,
 						"result": map[string]any{
 							"tools": []any{
 								map[string]any{

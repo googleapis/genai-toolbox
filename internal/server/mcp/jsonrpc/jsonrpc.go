@@ -14,6 +14,11 @@
 
 package jsonrpc
 
+import (
+	"bytes"
+	"encoding/json"
+)
+
 // JSONRPC_VERSION is the version of JSON-RPC used by MCP.
 const JSONRPC_VERSION = "2.0"
 
@@ -138,6 +143,34 @@ type BaseMessage struct {
 	Jsonrpc string    `json:"jsonrpc"`
 	Method  string    `json:"method"`
 	Id      RequestId `json:"id,omitempty"`
+	HasId   bool      `json:"-"`
+}
+
+// UnmarshalJSON records whether the id field was present so explicit
+// JSON-RPC null ids can be distinguished from notifications.
+func (m *BaseMessage) UnmarshalJSON(data []byte) error {
+	type baseMessageAlias BaseMessage
+	var raw struct {
+		baseMessageAlias
+		Id json.RawMessage `json:"id"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	*m = BaseMessage(raw.baseMessageAlias)
+	if raw.Id == nil {
+		return nil
+	}
+	m.HasId = true
+	if bytes.Equal(raw.Id, []byte("null")) {
+		m.Id = nil
+		return nil
+	}
+
+	decoder := json.NewDecoder(bytes.NewReader(raw.Id))
+	decoder.UseNumber()
+	return decoder.Decode(&m.Id)
 }
 
 // NewError is the standard JSONRPC response sent back when an error has been encountered.
