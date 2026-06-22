@@ -115,30 +115,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	project := s.GetDefaultProject()
-	var projectParam parameters.Parameter
-	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
-	} else {
-		projectParam = parameters.NewStringParameter("project", "The project ID")
-	}
-
-	allParameters := parameters.Parameters{
-		projectParam,
-		parameters.NewStringParameter("location", "The location ID"),
-		parameters.NewStringParameter("operation", "The operation ID"),
-	}
+func (cfg Config) Initialize() (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
@@ -176,12 +153,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		maxRetries = 10
 	}
 
+	params := buildParams("")
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
-			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-			allParameters,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 		Delay:      delay,
 		MaxDelay:   maxDelay,
@@ -274,4 +252,41 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	}
 
 	return source.UseClientAuthorization(), nil
+}
+
+// buildParams builds the tool's parameters. A non-empty project means the source has a
+// configured default project, which is baked into the project param; otherwise the plain form is used.
+func buildParams(project string) parameters.Parameters {
+	projectParam := parameters.NewStringParameter("project", "The project ID")
+	if project != "" {
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	}
+	return parameters.Parameters{
+		projectParam,
+		parameters.NewStringParameter("location", "The location ID"),
+		parameters.NewStringParameter("operation", "The operation ID"),
+	}
+}
+
+// resolveParams builds the tool's parameters using the source's configured default GCP project.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	return buildParams(s.GetDefaultProject()), nil
+}
+
+// GetParameters returns the tool's parameters, resolved against the source.
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
+}
+
+// Manifest returns the tool's manifest, resolved against the source.
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	allParameters, err := t.resolveParams(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	return tools.Manifest{Description: t.Cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: t.Cfg.AuthRequired}, nil
 }

@@ -330,3 +330,19 @@ func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
 	}
 	return false
 }
+
+// urlParamsKey is the key used to store URL parameters within context
+const urlParamsKey contextKey = "urlParams"
+
+// WithUrlParams adds URL parameters into the context as a value
+func WithUrlParams(ctx context.Context, params map[string]string) context.Context {
+	return context.WithValue(ctx, urlParamsKey, params)
+}
+
+// UrlParamsFromContext retrieves URL parameters from context
+func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
+	if params, ok := ctx.Value(urlParamsKey).(map[string]string); ok {
+		return params, true
+	}
+	return nil, false
+}

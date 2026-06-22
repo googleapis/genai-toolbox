@@ -18,6 +18,9 @@ description: "Details of the BigQuery prebuilt configuration."
         to impersonate when making BigQuery and Dataplex API calls. The
         authenticated principal must have `roles/iam.serviceAccountTokenCreator`
         on the target service account.
+    *   `BIGQUERY_MAXIMUM_BYTES_BILLED`: (Optional) Per-query bytes scanned cap
+        (in bytes). Queries that exceed this limit fail before executing and
+        cost nothing.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
         metadata.

@@ -296,3 +296,67 @@ func TestToolInvokeEndpoint(t *testing.T) {
 		})
 	}
 }
+
+func TestApiRequestBodyLimit(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	limit := int(DefaultHTTPMaxRequestBytes)
+	tooLarge := []byte(fmt.Sprintf(`{"param":"%s"}`, strings.Repeat("x", limit)))
+	resp, body, err := runRequest(ts, http.MethodPost, fmt.Sprintf("/tool/%s/invoke", testutils.MockTool1.Name), bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusRequestEntityTooLarge {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusRequestEntityTooLarge)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	if got["status"] != http.StatusText(http.StatusRequestEntityTooLarge) {
+		t.Fatalf("unexpected status text: got %v, want %s", got["status"], http.StatusText(http.StatusRequestEntityTooLarge))
+	}
+	wantError := fmt.Sprintf("request body exceeds %d bytes", DefaultHTTPMaxRequestBytes)
+	if got["error"] != wantError {
+		t.Fatalf("unexpected error message: got %v, want %s", got["error"], wantError)
+	}
+}
+
+func TestApiRequestBodyLimitOverride(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, toolsets, _, _ := testutils.SetUpResources(t, mockTools, nil)
+	customLimit := int64(1 << 20)
+	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	tooLarge := []byte(fmt.Sprintf(`{"param":"%s"}`, strings.Repeat("x", int(customLimit))))
+	resp, body, err := runRequest(ts, http.MethodPost, fmt.Sprintf("/tool/%s/invoke", testutils.MockTool1.Name), bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusRequestEntityTooLarge {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusRequestEntityTooLarge)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	if got["status"] != http.StatusText(http.StatusRequestEntityTooLarge) {
+		t.Fatalf("unexpected status text: got %v, want %s", got["status"], http.StatusText(http.StatusRequestEntityTooLarge))
+	}
+	wantError := fmt.Sprintf("request body exceeds %d bytes", customLimit)
+	if got["error"] != wantError {
+		t.Fatalf("unexpected error message: got %v, want %s", got["error"], wantError)
+	}
+}

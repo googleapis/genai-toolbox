@@ -15,13 +15,23 @@
 package bigqueryexecutesql_test
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
+	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	bqutil "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryexecutesql"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/option"
 )
 
 func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
@@ -68,5 +78,209 @@ func TestParseFromYamlBigQueryExecuteSql(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestInvokeDatasetRestrictions(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && strings.Contains(r.URL.Path, "/jobs") {
+			var body struct {
+				Configuration struct {
+					DryRun bool `json:"dryRun"`
+					Query  struct {
+						Query string `json:"query"`
+					} `json:"query"`
+				} `json:"configuration"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			if body.Configuration.DryRun {
+				var referencedTables []map[string]any
+				query := body.Configuration.Query.Query
+				if strings.Contains(query, "allowed_dataset.my_table") {
+					referencedTables = append(referencedTables, map[string]any{
+						"projectId": "test-project",
+						"datasetId": "allowed_dataset",
+						"tableId":   "my_table",
+					})
+				}
+				if strings.Contains(query, "forbidden_dataset.my_table") {
+					referencedTables = append(referencedTables, map[string]any{
+						"projectId": "test-project",
+						"datasetId": "forbidden_dataset",
+						"tableId":   "my_table",
+					})
+				}
+
+				resp := map[string]any{
+					"kind": "bigquery#job",
+					"jobReference": map[string]string{
+						"projectId": "test-project",
+						"jobId":     "mock-job-id",
+					},
+					"status": map[string]any{
+						"state": "DONE",
+					},
+					"configuration": map[string]any{
+						"query": map[string]any{
+							"query": query,
+						},
+					},
+					"statistics": map[string]any{
+						"creationTime": "123456789",
+						"startTime":    "123456789",
+						"endTime":      "123456789",
+						"query": map[string]any{
+							"statementType":    "SELECT",
+							"referencedTables": referencedTables,
+						},
+					},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(resp)
+				return
+			}
+		}
+
+		http.Error(w, "not implemented", http.StatusNotFound)
+	}))
+	defer mockServer.Close()
+
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("failed to create context with logger: %v", err)
+	}
+
+	bqClient, err := bigqueryapi.NewClient(ctx, "test-project", option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery client: %v", err)
+	}
+
+	restService, err := bigqueryrestapi.NewService(ctx, option.WithEndpoint(mockServer.URL), option.WithoutAuthentication())
+	if err != nil {
+		t.Fatalf("failed to create mocked BigQuery REST service: %v", err)
+	}
+
+	testSrc := &bqutil.MockSource{
+		Client:          bqClient,
+		Service:         restService,
+		AllowedDatasets: []string{"test-project.allowed_dataset"},
+	}
+
+	cfg := bigqueryexecutesql.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "execute_sql_tool",
+			Description: "Execute SQL",
+		},
+		Type:   "bigquery-execute-sql",
+		Source: "my-bq-source",
+	}
+	sourcesMap := map[string]sources.Source{
+		"my-bq-source": testSrc,
+	}
+	tool, err := cfg.Initialize()
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	executeSqlTool, ok := tool.(bigqueryexecutesql.Tool)
+	if !ok {
+		t.Fatalf("expected bigqueryexecutesql.Tool, got %T", tool)
+	}
+
+	tcs := []struct {
+		desc    string
+		sql     string
+		wantErr bool
+		wantSub string
+	}{
+		{
+			desc:    "simple query without tables",
+			sql:     "SELECT 1 + 1",
+			wantErr: false,
+		},
+		{
+			desc:    "querying allowed dataset table",
+			sql:     "SELECT * FROM allowed_dataset.my_table",
+			wantErr: false,
+		},
+		{
+			desc:    "querying forbidden dataset table",
+			sql:     "SELECT * FROM forbidden_dataset.my_table",
+			wantErr: true,
+			wantSub: "query accesses dataset 'test-project.forbidden_dataset', which is not in the allowed list",
+		},
+		{
+			desc:    "querying allowed dataset INFORMATION_SCHEMA tables",
+			sql:     "SELECT * FROM allowed_dataset.INFORMATION_SCHEMA.TABLES",
+			wantErr: false,
+		},
+		{
+			desc:    "querying forbidden dataset INFORMATION_SCHEMA tables",
+			sql:     "SELECT * FROM forbidden_dataset.INFORMATION_SCHEMA.TABLES",
+			wantErr: true,
+			wantSub: "query accesses dataset 'test-project.forbidden_dataset', which is not in the allowed list",
+		},
+		{
+			desc:    "querying regional INFORMATION_SCHEMA schemata",
+			sql:     "SELECT * FROM region-us.INFORMATION_SCHEMA.SCHEMATA",
+			wantErr: true,
+			wantSub: "querying non-dataset-level INFORMATION_SCHEMA view \"SCHEMATA\" is not allowed when dataset restrictions are in place",
+		},
+		{
+			desc:    "querying project-level INFORMATION_SCHEMA schemata",
+			sql:     "SELECT * FROM INFORMATION_SCHEMA.SCHEMATA",
+			wantErr: true,
+			wantSub: "querying non-dataset-level INFORMATION_SCHEMA view \"SCHEMATA\" is not allowed when dataset restrictions are in place",
+		},
+		{
+			desc:    "querying mixed allowed table and forbidden INFORMATION_SCHEMA view",
+			sql:     "SELECT * FROM allowed_dataset.my_table JOIN forbidden_dataset.INFORMATION_SCHEMA.TABLES ON true",
+			wantErr: true,
+			wantSub: "query accesses dataset 'test-project.forbidden_dataset', which is not in the allowed list",
+		},
+		{
+			desc:    "querying EXTERNAL_QUERY",
+			sql:     "SELECT * FROM EXTERNAL_QUERY('my-connection', 'SELECT 1')",
+			wantErr: true,
+			wantSub: "EXTERNAL_QUERY is not allowed when dataset restrictions are in place",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			provider := &bqutil.MockSourceProvider{Source: testSrc}
+
+			data := map[string]any{
+				"sql":     tc.sql,
+				"dry_run": true,
+			}
+
+			params, err := executeSqlTool.GetParameters(sourcesMap)
+			if err != nil {
+				t.Fatalf("failed to get parameters: %v", err)
+			}
+			paramVals, err := parameters.ParseParams(params, data, nil)
+			if err != nil {
+				t.Fatalf("unexpected error parsing parameters: %v", err)
+			}
+
+			_, err = tool.Invoke(ctx, provider, paramVals, "")
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.wantSub) {
+					t.Errorf("expected error to contain %q, got %v", tc.wantSub, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
 }

@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -137,25 +136,9 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
-	}
-
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
-	}
-
-	if s.GoogleCloudProject() == "" {
-		return nil, fmt.Errorf("project must be defined for source to use with %q tool", resourceType)
 	}
 
 	userQueryParameter := parameters.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
@@ -173,13 +156,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	params := parameters.Parameters{userQueryParameter, exploreRefsParameter}
 
-	// Get cloud-platform token source for Gemini Data Analytics API during initialization
-	ctx := context.Background()
-	ts, err := s.GoogleCloudTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
-	}
-
 	// finish tool setup
 	t := Tool{
 		BaseTool: tools.NewBaseTool(
@@ -188,7 +164,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			params,
 		),
-		TokenSource: ts,
 	}
 	return t, nil
 }
@@ -198,7 +173,6 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	tools.BaseTool[Config]
-	TokenSource oauth2.TokenSource
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -211,18 +185,21 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	var tokenStr string
+	if source.GoogleCloudProject() == "" {
+		return nil, util.NewClientServerError(fmt.Sprintf("project must be defined for source to use with %q tool", resourceType), http.StatusInternalServerError, nil)
+	}
 
 	// Get credentials for the API call
 	// Use cloud-platform token source for Gemini Data Analytics API
-	if t.TokenSource == nil {
-		return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
+	tokenSource, err := source.GoogleCloudTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, util.NewClientServerError("failed to get cloud-platform token source", http.StatusInternalServerError, err)
 	}
-	token, err := t.TokenSource.Token()
+	token, err := tokenSource.Token()
 	if err != nil {
 		return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
 	}
-	tokenStr = token.AccessToken
+	tokenStr := token.AccessToken
 
 	// Extract parameters from the map
 	mapParams := params.AsMap()

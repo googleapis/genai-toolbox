@@ -39,7 +39,7 @@ var (
 )
 
 // setUpServer create a new server with tools, toolsets, prompts, and promptsets.
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset, opts ...func(*Server)) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -67,6 +67,12 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
+	}
+	for _, opt := range opts {
+		opt(&server)
+	}
+	if server.httpMaxRequestBytes == 0 {
+		server.httpMaxRequestBytes = DefaultHTTPMaxRequestBytes
 	}
 
 	var r chi.Router
@@ -130,4 +136,10 @@ func runRequest(ts *httptest.Server, method, path string, body io.Reader, header
 	defer resp.Body.Close()
 
 	return resp, respBody, nil
+}
+
+func withHTTPMaxRequestBytes(limit int64) func(*Server) {
+	return func(s *Server) {
+		s.httpMaxRequestBytes = limit
+	}
 }

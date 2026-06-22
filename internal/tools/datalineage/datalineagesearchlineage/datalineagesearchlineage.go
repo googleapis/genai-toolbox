@@ -22,7 +22,6 @@ import (
 
 	lineagepb "cloud.google.com/go/datacatalog/lineage/apiv1/lineagepb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -77,7 +76,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize() (tools.Tool, error) {
 	locations := parameters.NewArrayParameter(
 		"locations",
 		"Required. The locations to search in. Must contain at least 1 location. The first location will be used to initiate the search.",

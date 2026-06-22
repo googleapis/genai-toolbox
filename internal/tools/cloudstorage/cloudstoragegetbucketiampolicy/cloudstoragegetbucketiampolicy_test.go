@@ -127,7 +127,7 @@ func TestInvokeValidation(t *testing.T) {
 		Type:   "cloud-storage-get-bucket-iam-policy",
 		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

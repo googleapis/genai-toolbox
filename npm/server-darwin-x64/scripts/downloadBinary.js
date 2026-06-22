@@ -24,7 +24,7 @@ if (args.length < 2) {
 const [targetPlatform, targetArch] = args;
 
 // 2. Determine Version
-const version = fs.readFileSync(path.join(process.cwd(), 'version.txt'), 'utf8').trim(); 
+const version = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'cmd', 'version.txt'), 'utf8').trim();
 
 // 3. Construct URL
 const gcsPlatform = PLATFORM_MAP[targetPlatform];
