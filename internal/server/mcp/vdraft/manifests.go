@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -121,18 +121,16 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 		mcpArgs = append(mcpArgs, promptArg)
 	}
 	return Prompt{
-		BaseMetadata: BaseMetadata{
-			Name: name,
-		},
-		Description: desc,
-		Arguments:   mcpArgs,
+		BaseMetadata: BaseMetadata{Name: name},
+		Description:  desc,
+		Arguments:    mcpArgs,
 	}
 }
 
-// GenerateListPromptsResult generates prompts/list method result according to mcp schema
-func GenerateListPromptsResult(t prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
-	mcpManifest := make([]Prompt, 0, len(t.PromptNames))
-	for _, promptName := range t.PromptNames {
+// GenerateListPromptsResult generates the list/prompts result
+func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
+	for _, promptName := range p.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
