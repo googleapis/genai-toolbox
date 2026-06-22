@@ -75,6 +75,36 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
+var draftBasicInputSchema = map[string]any{
+	"$schema":    "https://json-schema.org/draft/2020-12/schema",
+	"type":       "object",
+	"properties": map[string]any{},
+	"required":   []any{},
+}
+
+var draftTool2InputSchema = map[string]any{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type":    "object",
+	"properties": map[string]any{
+		"param1": map[string]any{"type": "integer", "description": "This is the first parameter."},
+		"param2": map[string]any{"type": "integer", "description": "This is the second parameter."},
+	},
+	"required": []any{"param1", "param2"},
+}
+
+var draftTool3InputSchema = map[string]any{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type":    "object",
+	"properties": map[string]any{
+		"my_array": map[string]any{
+			"type":        "array",
+			"description": "this param is an array of strings",
+			"items":       map[string]any{"type": "string", "description": "string item"},
+		},
+	},
+	"required": []any{"my_array"},
+}
+
 var prompt2Args = []any{
 	map[string]any{
 		"name":        "arg1",
@@ -543,6 +573,15 @@ func TestMcpEndpoint(t *testing.T) {
 			if len(vtc.initWant) != 0 {
 				sessionId = runInitializeLifecycle(t, ts, vtc.protocol, vtc.initWant, vtc.idHeader)
 			}
+			expectedBasicSchema := basicInputSchema
+			expectedTool2Schema := tool2InputSchema
+			expectedTool3Schema := tool3InputSchema
+			if vtc.protocol == protocolVersionDraft {
+				expectedBasicSchema = draftBasicInputSchema
+				expectedTool2Schema = draftTool2InputSchema
+				expectedTool3Schema = draftTool3InputSchema
+			}
+
 			testCases := []*struct {
 				name           string
 				url            string
@@ -627,24 +666,24 @@ func TestMcpEndpoint(t *testing.T) {
 							"tools": []any{
 								map[string]any{
 									"name":        "no_params",
-									"inputSchema": basicInputSchema,
+									"inputSchema": expectedBasicSchema,
 								},
 								map[string]any{
 									"name":        "some_params",
-									"inputSchema": tool2InputSchema,
+									"inputSchema": expectedTool2Schema,
 								},
 								map[string]any{
 									"name":        "array_param",
 									"description": "some description",
-									"inputSchema": tool3InputSchema,
+									"inputSchema": expectedTool3Schema,
 								},
 								map[string]any{
 									"name":        "unauthorized_tool",
-									"inputSchema": basicInputSchema,
+									"inputSchema": expectedBasicSchema,
 								},
 								map[string]any{
 									"name":        "require_client_auth_tool",
-									"inputSchema": basicInputSchema,
+									"inputSchema": expectedBasicSchema,
 								},
 							},
 						},
@@ -731,7 +770,7 @@ func TestMcpEndpoint(t *testing.T) {
 							"tools": []any{
 								map[string]any{
 									"name":        "no_params",
-									"inputSchema": basicInputSchema,
+									"inputSchema": expectedBasicSchema,
 								},
 							},
 						},
