@@ -22,6 +22,11 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
+// OutputSchemaProvider defines an interface for tools that supply a custom output schema.
+type OutputSchemaProvider interface {
+	GetOutputSchema() map[string]any
+}
+
 // generateToolManifest generates Tool for list tools result
 func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, outputSchema map[string]any) Tool {
 	inputSchema, authParams := generateParamManifest(params)
@@ -100,7 +105,7 @@ func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (L
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
 		var outputSchema map[string]any
-		if osp, ok := tool.(interface{ GetOutputSchema() map[string]any }); ok {
+		if osp, ok := tool.(OutputSchemaProvider); ok {
 			outputSchema = osp.GetOutputSchema()
 		}
 		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations(), outputSchema)
