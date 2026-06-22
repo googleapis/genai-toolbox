@@ -78,8 +78,6 @@ var tool3InputSchema = map[string]any{
 var draftBasicInputSchema = map[string]any{
 	"$schema":    "https://json-schema.org/draft/2020-12/schema",
 	"type":       "object",
-	"properties": map[string]any{},
-	"required":   []any{},
 }
 
 var draftTool2InputSchema = map[string]any{
