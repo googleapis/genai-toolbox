@@ -247,6 +247,9 @@ type InputSchema struct {
 	OneOf                []*parameters.ParameterMcpManifest         `json:"oneOf,omitempty"`
 	AllOf                []*parameters.ParameterMcpManifest         `json:"allOf,omitempty"`
 	Not                  *parameters.ParameterMcpManifest           `json:"not,omitempty"`
+	If                   *parameters.ParameterMcpManifest           `json:"if,omitempty"`
+	Then                 *parameters.ParameterMcpManifest           `json:"then,omitempty"`
+	Else                 *parameters.ParameterMcpManifest           `json:"else,omitempty"`
 	Enum                 []any                                      `json:"enum,omitempty"`
 }
 

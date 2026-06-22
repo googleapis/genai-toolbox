@@ -17,6 +17,7 @@ package vdraft
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -553,6 +554,100 @@ func (m mockToolWithOneOfEchoInvoke) Invoke(ctx context.Context, s tools.SourceP
 	return val, nil
 }
 
+type mockCompositeParameter struct {
+	*parameters.StringParameter
+	manifest parameters.ParameterMcpManifest
+}
+
+func (p mockCompositeParameter) McpManifest() (parameters.ParameterMcpManifest, []string) {
+	return p.manifest, nil
+}
+
+func (p mockCompositeParameter) Parse(v any) (any, error) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("expected object, got %T", v)
+	}
+
+	// allOf constraint: must contain "id" (number)
+	idVal, hasId := m["id"]
+	if !hasId {
+		return nil, fmt.Errorf("missing required field 'id' (allOf constraint)")
+	}
+	switch idVal.(type) {
+	case float64, int, int64, json.Number:
+		// valid
+	default:
+		return nil, fmt.Errorf("field 'id' must be a number, got %T", idVal)
+	}
+
+	// anyOf constraint: must contain either "email" (string) or "phone" (string)
+	emailVal, hasEmail := m["email"]
+	phoneVal, hasPhone := m["phone"]
+	if !hasEmail && !hasPhone {
+		return nil, fmt.Errorf("must provide either 'email' or 'phone' (anyOf constraint)")
+	}
+	if hasEmail {
+		if _, ok := emailVal.(string); !ok {
+			return nil, fmt.Errorf("field 'email' must be a string, got %T", emailVal)
+		}
+	}
+	if hasPhone {
+		if _, ok := phoneVal.(string); !ok {
+			return nil, fmt.Errorf("field 'phone' must be a string, got %T", phoneVal)
+		}
+	}
+
+	return m, nil
+}
+
+type mockToolWithCompositeEchoInvoke struct {
+	tools.Tool
+}
+
+func (m mockToolWithCompositeEchoInvoke) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+	val := params.AsMap()["composite_param"]
+	return val, nil
+}
+
+type mockContradictoryParameter struct {
+	*parameters.StringParameter
+	manifest parameters.ParameterMcpManifest
+}
+
+func (p mockContradictoryParameter) McpManifest() (parameters.ParameterMcpManifest, []string) {
+	return p.manifest, nil
+}
+
+func (p mockContradictoryParameter) Parse(v any) (any, error) {
+	m, ok := v.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("expected object, got %T", v)
+	}
+
+	// allOf constraint: must contain "id"
+	_, hasId := m["id"]
+	if !hasId {
+		return nil, fmt.Errorf("missing required field 'id' (allOf constraint)")
+	}
+
+	// not constraint: must NOT contain "id"
+	if hasId {
+		return nil, fmt.Errorf("must not contain field 'id' (not constraint)")
+	}
+
+	return m, nil
+}
+
+type mockToolWithContradictoryEchoInvoke struct {
+	tools.Tool
+}
+
+func (m mockToolWithContradictoryEchoInvoke) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+	val := params.AsMap()["contradictory_param"]
+	return val, nil
+}
+
 func TestToolsCallHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -608,6 +703,70 @@ func TestToolsCallHandler(t *testing.T) {
 	}
 	toolsMap["oneof_tool"] = oneOfTool
 	allTools = append(allTools, "oneof_tool")
+
+	// Register our composite_tool with mockCompositeParameter
+	stringParam3 := parameters.NewStringParameter("composite_param", "a composite parameter")
+	compositeParam := mockCompositeParameter{
+		StringParameter: stringParam3,
+		manifest: parameters.ParameterMcpManifest{
+			Type: "object",
+			AllOf: []*parameters.ParameterMcpManifest{
+				{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"id": {Type: "integer"},
+					},
+					Required: []string{"id"},
+				},
+			},
+			AnyOf: []*parameters.ParameterMcpManifest{
+				{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"email": {Type: "string"},
+					},
+					Required: []string{"email"},
+				},
+				{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"phone": {Type: "string"},
+					},
+					Required: []string{"phone"},
+				},
+			},
+		},
+	}
+	compositeTool := mockToolWithCompositeEchoInvoke{
+		Tool: testutils.NewMockTool("composite_tool", "", parameters.Parameters{compositeParam}, false, false),
+	}
+	toolsMap["composite_tool"] = compositeTool
+	allTools = append(allTools, "composite_tool")
+
+	// Register our contradictory_tool with mockContradictoryParameter
+	stringParam4 := parameters.NewStringParameter("contradictory_param", "a contradictory parameter")
+	contradictoryParam := mockContradictoryParameter{
+		StringParameter: stringParam4,
+		manifest: parameters.ParameterMcpManifest{
+			Type: "object",
+			AllOf: []*parameters.ParameterMcpManifest{
+				{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"id": {Type: "integer"},
+					},
+					Required: []string{"id"},
+				},
+			},
+			Not: &parameters.ParameterMcpManifest{
+				Properties: map[string]*parameters.ParameterMcpManifest{
+					"id": {Type: "integer"},
+				},
+				Required: []string{"id"},
+			},
+		},
+	}
+	contradictoryTool := mockToolWithContradictoryEchoInvoke{
+		Tool: testutils.NewMockTool("contradictory_tool", "", parameters.Parameters{contradictoryParam}, false, false),
+	}
+	toolsMap["contradictory_tool"] = contradictoryTool
+	allTools = append(allTools, "contradictory_tool")
 
 	toolsets := make(map[string]tools.Toolset)
 	tc := tools.ToolsetConfig{Name: "", ToolNames: allTools}
@@ -931,6 +1090,155 @@ func TestToolsCallHandler(t *testing.T) {
 			context:     ctxLogger,
 			wantErr:     true,
 			errContains: "neither a valid color nor null",
+		},
+		{
+			name: "successful invocation - composite_tool with id and email",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "composite_tool",
+					Arguments: map[string]any{
+						"composite_param": map[string]any{
+							"id":    float64(123),
+							"email": "test@example.com",
+						},
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"composite_tool"}},
+			context:     ctxLogger,
+			wantErr:     false,
+			wantContent: []TextContent{{Type: "text", Text: `{"email":"test@example.com","id":123}`}},
+		},
+		{
+			name: "failed invocation - composite_tool missing id (fails allOf)",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "composite_tool",
+					Arguments: map[string]any{
+						"composite_param": map[string]any{
+							"email": "test@example.com",
+						},
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"composite_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "missing required field 'id' (allOf constraint)",
+		},
+		{
+			name: "failed invocation - composite_tool missing email and phone (fails anyOf)",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "composite_tool",
+					Arguments: map[string]any{
+						"composite_param": map[string]any{
+							"id": float64(123),
+						},
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"composite_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "must provide either 'email' or 'phone' (anyOf constraint)",
+		},
+		{
+			name: "failed invocation - contradictory_tool missing id (fails allOf)",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "contradictory_tool",
+					Arguments: map[string]any{
+						"contradictory_param": map[string]any{},
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"contradictory_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "missing required field 'id' (allOf constraint)",
+		},
+		{
+			name: "failed invocation - contradictory_tool has id (fails not)",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "contradictory_tool",
+					Arguments: map[string]any{
+						"contradictory_param": map[string]any{
+							"id": float64(123),
+						},
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"contradictory_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "must not contain field 'id' (not constraint)",
 		},
 	}
 

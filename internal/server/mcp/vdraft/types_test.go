@@ -203,6 +203,131 @@ func TestInputSchema_EdgeCases(t *testing.T) {
 		input InputSchema
 	}{
 		{
+			name: "simultaneous anyOf and allOf composition",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
+				AllOf: []*parameters.ParameterMcpManifest{
+					{
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"base_id": {Type: "string"},
+						},
+						Required: []string{"base_id"},
+					},
+				},
+				AnyOf: []*parameters.ParameterMcpManifest{
+					{
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"token": {Type: "string"},
+						},
+						Required: []string{"token"},
+					},
+					{
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"api_key": {Type: "string"},
+						},
+						Required: []string{"api_key"},
+					},
+				},
+			},
+		},
+		{
+			name: "nested conditional validation inside properties",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"connection_config": {
+						Type: "object",
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"ssl":      {Type: "boolean"},
+							"ssl_cert": {Type: "string"},
+						},
+						If: &parameters.ParameterMcpManifest{
+							Properties: map[string]*parameters.ParameterMcpManifest{
+								"ssl": {Enum: []any{true}},
+							},
+						},
+						Then: &parameters.ParameterMcpManifest{
+							Required: []string{"ssl_cert"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "conditional validation with if and then only",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"ssl_enabled": {Type: "boolean"},
+					"cert_path":   {Type: "string"},
+				},
+				If: &parameters.ParameterMcpManifest{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"ssl_enabled": {Enum: []any{true}},
+					},
+				},
+				Then: &parameters.ParameterMcpManifest{
+					Required: []string{"cert_path"},
+				},
+			},
+		},
+		{
+			name: "chained if-else-if conditional validation",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"auth_type": {Type: "string", Enum: []any{"basic", "oauth", "none"}},
+					"username":  {Type: "string"},
+					"token":     {Type: "string"},
+				},
+				If: &parameters.ParameterMcpManifest{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"auth_type": {Enum: []any{"basic"}},
+					},
+				},
+				Then: &parameters.ParameterMcpManifest{
+					Required: []string{"username"},
+				},
+				Else: &parameters.ParameterMcpManifest{
+					If: &parameters.ParameterMcpManifest{
+						Properties: map[string]*parameters.ParameterMcpManifest{
+							"auth_type": {Enum: []any{"oauth"}},
+						},
+					},
+					Then: &parameters.ParameterMcpManifest{
+						Required: []string{"token"},
+					},
+				},
+			},
+		},
+		{
+			name: "top-level conditional validation (if-then-else)",
+			input: InputSchema{
+				Schema: "https://json-schema.org/draft/2020-12/schema",
+				Type:   "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"auth_method": {Type: "string", Enum: []any{"password", "token"}},
+					"password":    {Type: "string"},
+					"token":       {Type: "string"},
+				},
+				If: &parameters.ParameterMcpManifest{
+					Properties: map[string]*parameters.ParameterMcpManifest{
+						"auth_method": {Enum: []any{"password"}},
+					},
+				},
+				Then: &parameters.ParameterMcpManifest{
+					Required: []string{"password"},
+				},
+				Else: &parameters.ParameterMcpManifest{
+					Required: []string{"token"},
+				},
+			},
+		},
+		{
 			name: "top-level not constraint",
 			input: InputSchema{
 				Schema: "https://json-schema.org/draft/2020-12/schema",
@@ -387,5 +512,3 @@ func TestCallToolResult_EdgeCases(t *testing.T) {
 		})
 	}
 }
-
-

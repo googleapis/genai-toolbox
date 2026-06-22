@@ -465,6 +465,9 @@ type ParameterMcpManifest struct {
 	OneOf                []*ParameterMcpManifest          `json:"oneOf,omitempty"`
 	AllOf                []*ParameterMcpManifest          `json:"allOf,omitempty"`
 	Not                  *ParameterMcpManifest            `json:"not,omitempty"`
+	If                   *ParameterMcpManifest            `json:"if,omitempty"`
+	Then                 *ParameterMcpManifest            `json:"then,omitempty"`
+	Else                 *ParameterMcpManifest            `json:"else,omitempty"`
 	Properties           map[string]*ParameterMcpManifest `json:"properties,omitempty"`
 	Required             []string                         `json:"required,omitempty"`
 	Enum                 []any                            `json:"enum,omitempty"`
