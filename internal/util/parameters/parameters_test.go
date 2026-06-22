@@ -2324,3 +2324,31 @@ func TestCheckParamRequired(t *testing.T) {
 		})
 	}
 }
+
+// TestParseTypeErrorIncludesValue verifies that ArrayParameter.Parse and
+// MapParameter.Parse report the original input value in the error message, not
+// the zero value of the assertion target (nil) that is produced when a Go
+// two-result type assertion fails.
+func TestParseTypeErrorIncludesValue(t *testing.T) {
+	t.Run("ArrayParameter", func(t *testing.T) {
+		p := parameters.NewArrayParameter("arr", "test array", parameters.NewStringParameter("s", "item"))
+		_, err := p.Parse("not-an-array")
+		if err == nil {
+			t.Fatal("expected an error for wrong type, got nil")
+		}
+		if !strings.Contains(err.Error(), "not-an-array") {
+			t.Errorf("error should include the original value; got: %q", err.Error())
+		}
+	})
+
+	t.Run("MapParameter", func(t *testing.T) {
+		p := parameters.NewMapParameter("m", "test map", "string")
+		_, err := p.Parse("bad")
+		if err == nil {
+			t.Fatal("expected an error for wrong type, got nil")
+		}
+		if !strings.Contains(err.Error(), "bad") {
+			t.Errorf("error should include the original value; got: %q", err.Error())
+		}
+	})
+}
