@@ -32,17 +32,17 @@ type GroupConfig struct {
 }
 
 // Group is an initialized group and the source of truth from which the legacy
-// toolset and promptset views are derived (see ToToolset and ToPromptset).
+// toolset and promptset views are derived (see ToToolset and ToPromptset). It
+// holds the fully-initialized toolset and promptset so the derived views retain
+// their O(1) lookup sets instead of being rebuilt on every projection.
 type Group struct {
 	GroupConfig
-	Tools           []*tools.Tool
-	ToolsManifest   tools.ToolsetManifest
-	Prompts         []*prompts.Prompt
-	PromptsManifest prompts.PromptsetManifest
+	toolset   tools.Toolset
+	promptset prompts.Promptset
 }
 
 // Initialize validates the declared tools and prompts against the provided maps
-// and builds the derived tool/prompt slices and manifests. It delegates to
+// and builds the derived toolset and promptset. It delegates to
 // tools.ToolsetConfig.Initialize and prompts.PromptsetConfig.Initialize so that
 // validation and manifest-building stay identical to the legacy types.
 func (gc GroupConfig) Initialize(serverVersion string, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt) (Group, error) {
@@ -59,36 +59,17 @@ func (gc GroupConfig) Initialize(serverVersion string, toolsMap map[string]tools
 		return Group{}, err
 	}
 
-	return Group{
-		GroupConfig:     gc,
-		Tools:           toolset.Tools,
-		ToolsManifest:   toolset.Manifest,
-		Prompts:         promptset.Prompts,
-		PromptsManifest: promptset.Manifest,
-	}, nil
+	return Group{GroupConfig: gc, toolset: toolset, promptset: promptset}, nil
 }
 
 // ToToolset returns the derived toolset view, keyed by the group's name, so that
 // existing toolset call sites keep working unchanged.
 func (g Group) ToToolset() tools.Toolset {
-	return tools.Toolset{
-		ToolsetConfig: tools.ToolsetConfig{Name: g.Name, ToolNames: g.ToolNames},
-		Tools:         g.Tools,
-		Manifest:      g.ToolsManifest,
-	}
+	return g.toolset
 }
 
 // ToPromptset returns the derived promptset view, keyed by the group's name, so
 // that prompts scope to the connected group.
 func (g Group) ToPromptset() prompts.Promptset {
-	promptNameSet := make(map[string]struct{}, len(g.PromptNames))
-	for _, name := range g.PromptNames {
-		promptNameSet[name] = struct{}{}
-	}
-	return prompts.Promptset{
-		PromptsetConfig: prompts.PromptsetConfig{Name: g.Name, PromptNames: g.PromptNames},
-		Prompts:         g.Prompts,
-		Manifest:        g.PromptsManifest,
-		PromptNameSet:   promptNameSet,
-	}
+	return g.promptset
 }

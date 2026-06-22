@@ -15,6 +15,7 @@
 package group_test
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -116,7 +117,6 @@ func TestGroupConfig_Initialize(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			g, err := tc.config.Initialize(serverVersion, toolsMap, promptsMap)
@@ -132,23 +132,24 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if got := toolNames(g.Tools); !equalStrings(got, tc.wantTools) {
+			ts := g.ToToolset()
+			if got := toolNames(ts.Tools); !slices.Equal(got, tc.wantTools) {
 				t.Errorf("tools = %v, want %v", got, tc.wantTools)
 			}
-			if len(g.Prompts) != len(tc.wantPrompts) {
-				t.Errorf("got %d prompts, want %d", len(g.Prompts), len(tc.wantPrompts))
-			}
 			ps := g.ToPromptset()
+			if len(ps.Prompts) != len(tc.wantPrompts) {
+				t.Errorf("got %d prompts, want %d", len(ps.Prompts), len(tc.wantPrompts))
+			}
 			for _, name := range tc.wantPrompts {
 				if !ps.ContainsPrompt(name) {
 					t.Errorf("derived promptset missing prompt %q", name)
 				}
 			}
-			if g.ToolsManifest.ServerVersion != serverVersion {
-				t.Errorf("tools manifest server version = %q, want %q", g.ToolsManifest.ServerVersion, serverVersion)
+			if ts.Manifest.ServerVersion != serverVersion {
+				t.Errorf("tools manifest server version = %q, want %q", ts.Manifest.ServerVersion, serverVersion)
 			}
-			if g.PromptsManifest.ServerVersion != serverVersion {
-				t.Errorf("prompts manifest server version = %q, want %q", g.PromptsManifest.ServerVersion, serverVersion)
+			if ps.Manifest.ServerVersion != serverVersion {
+				t.Errorf("prompts manifest server version = %q, want %q", ps.Manifest.ServerVersion, serverVersion)
 			}
 		})
 	}
@@ -197,16 +198,4 @@ func toolNames(ts []*tools.Tool) []string {
 		names = append(names, (*t).GetName())
 	}
 	return names
-}
-
-func equalStrings(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
 }
