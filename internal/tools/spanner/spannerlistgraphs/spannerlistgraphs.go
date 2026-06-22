@@ -63,7 +63,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault(

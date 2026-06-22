@@ -89,12 +89,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	// initialize and validate the sources from configs
@@ -274,12 +274,12 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 ) {
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
@@ -307,7 +307,7 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize()
+			t, err := tc.Initialize(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 			}

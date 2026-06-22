@@ -149,7 +149,7 @@ func TestConfig_Initialize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool, err := tt.config.Initialize()
+			tool, err := tt.config.Initialize(context.Background())
 
 			if tt.wantErr {
 				if err == nil {

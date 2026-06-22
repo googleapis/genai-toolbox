@@ -60,7 +60,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	resourcePath := parameters.NewStringParameter("resourcePath", "The BigQuery table or Cloud Storage path to check. For BigQuery: accepts raw table name (e.g. 'my_table'), dataset.table (e.g. 'my_dataset.my_table'), or fully-qualified path (e.g. '//bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}'). For Cloud Storage: accepts raw bucket name (e.g. 'my-bucket'), gs:// URI (e.g. 'gs://my-bucket'), or fully-qualified path (e.g. '//storage.googleapis.com/projects/{project}/buckets/{bucket}').")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1').")
 	specJSON := parameters.NewStringParameter("specJSON", "A JSON-serialized string of the Dataplex DataQualitySpec proto message containing the rules and optional configuration. Example format: {\"rules\": [{\"column\": \"my_col\", \"dimension\": \"COMPLETENESS\", \"nonNullExpectation\": {}}], \"catalogPublishingEnabled\": false}")

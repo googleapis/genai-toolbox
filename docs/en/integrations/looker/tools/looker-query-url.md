@@ -11,17 +11,18 @@ description: >
 The `looker-query-url` generates a url link to an explore in
 Looker so the query can be investigated further.
 
-`looker-query-url` takes nine parameters:
+`looker-query-url` takes ten parameters:
 
 1. the `model`
 2. the `explore`
 3. the `fields` list
 4. an optional set of `filters`
-5. an optional set of `pivots`
-6. an optional set of `sorts`
-7. an optional `limit`
-8. an optional `tz`
-9. an optional `vis_config`
+5. an optional `filter_expression`
+6. an optional set of `pivots`
+7. an optional set of `sorts`
+8. an optional `limit`
+9. an optional `tz`
+10. an optional `vis_config`
 
 ## Compatible Sources
 
@@ -41,7 +42,7 @@ description: |
 
   Parameters:
   All query parameters (e.g., `model_name`, `explore_name`, `fields`, `pivots`,
-  `filters`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
+  `filters`, `filter_expression`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
 
   Additionally, it accepts an optional `vis_config` parameter:
   - vis_config (optional): A JSON object that controls the default visualization
