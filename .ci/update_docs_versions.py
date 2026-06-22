@@ -53,7 +53,7 @@ def update_toml_file(file_path, version, remove_oldest):
         content = f.read()
 
     # Check if version already exists
-    version_pattern = f'version\\s*=\\s*"{version}"'
+    version_pattern = f'version\\s*=\\s*"{re.escape(version)}"'
     if re.search(version_pattern, content):
         print(f"Version {version} already exists in {os.path.basename(file_path)}. No change needed.")
         return
