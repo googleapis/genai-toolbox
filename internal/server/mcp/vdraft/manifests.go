@@ -1,4 +1,4 @@
-// Copyright 2026 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations) Tool {
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, outputSchema map[string]any) Tool {
 	inputSchema, authParams := generateParamManifest(params)
 	var toolAnnotations *ToolAnnotations
 	if annotations != nil {
@@ -38,9 +38,10 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 		BaseMetadata: BaseMetadata{
 			Name: name,
 		},
-		Description:     desc,
-		ToolInputSchema: inputSchema,
-		Annotations:     toolAnnotations,
+		Description:      desc,
+		ToolInputSchema:  inputSchema,
+		ToolOutputSchema: outputSchema,
+		Annotations:      toolAnnotations,
 	}
 	metadata := make(map[string]any)
 	if len(authInvoke) > 0 {
@@ -83,6 +84,7 @@ func generateParamManifest(ps parameters.Parameters) (InputSchema, map[string][]
 		}
 	}
 	return InputSchema{
+		Schema:     "https://json-schema.org/draft/2020-12/schema",
 		Type:       "object",
 		Properties: properties,
 		Required:   required,
@@ -97,7 +99,11 @@ func GenerateListToolsResult(t tools.Toolset, toolsMap map[string]tools.Tool) (L
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations())
+		var outputSchema map[string]any
+		if osp, ok := tool.(interface{ GetOutputSchema() map[string]any }); ok {
+			outputSchema = osp.GetOutputSchema()
+		}
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), tool.GetParameters(), tool.GetAnnotations(), outputSchema)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
@@ -115,16 +121,18 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 		mcpArgs = append(mcpArgs, promptArg)
 	}
 	return Prompt{
-		BaseMetadata: BaseMetadata{Name: name},
-		Description:  desc,
-		Arguments:    mcpArgs,
+		BaseMetadata: BaseMetadata{
+			Name: name,
+		},
+		Description: desc,
+		Arguments:   mcpArgs,
 	}
 }
 
-// GenerateListPromptsResult generates the list/prompts result
-func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
-	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
-	for _, promptName := range p.PromptNames {
+// GenerateListPromptsResult generates prompts/list method result according to mcp schema
+func GenerateListPromptsResult(t prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(t.PromptNames))
+	for _, promptName := range t.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)

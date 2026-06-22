@@ -74,7 +74,8 @@ type MCPListToolsResponse struct {
 
 // MCPToolManifest is a copy of tools.McpManifest used for integration testing purposes
 type MCPToolManifest struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description,omitempty"`
-	InputSchema map[string]any `json:"inputSchema,omitempty"`
+	Name         string         `json:"name"`
+	Description  string         `json:"description,omitempty"`
+	InputSchema  map[string]any `json:"inputSchema,omitempty"`
+	OutputSchema map[string]any `json:"outputSchema,omitempty"`
 }

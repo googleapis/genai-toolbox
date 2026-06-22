@@ -456,11 +456,18 @@ type ParameterManifest struct {
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
 type ParameterMcpManifest struct {
-	Type                 string                `json:"type"`
-	Description          string                `json:"description"`
-	Items                *ParameterMcpManifest `json:"items,omitempty"`
-	Default              any                   `json:"default,omitempty"`
-	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
+	Type                 string                           `json:"type,omitempty"`
+	Description          string                           `json:"description,omitempty"`
+	Items                *ParameterMcpManifest            `json:"items,omitempty"`
+	Default              any                              `json:"default,omitempty"`
+	AdditionalProperties any                              `json:"additionalProperties,omitempty"`
+	AnyOf                []*ParameterMcpManifest          `json:"anyOf,omitempty"`
+	OneOf                []*ParameterMcpManifest          `json:"oneOf,omitempty"`
+	AllOf                []*ParameterMcpManifest          `json:"allOf,omitempty"`
+	Not                  *ParameterMcpManifest            `json:"not,omitempty"`
+	Properties           map[string]*ParameterMcpManifest `json:"properties,omitempty"`
+	Required             []string                         `json:"required,omitempty"`
+	Enum                 []any                            `json:"enum,omitempty"`
 }
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.

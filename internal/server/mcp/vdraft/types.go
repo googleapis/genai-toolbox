@@ -229,6 +229,8 @@ type Tool struct {
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+	// A JSON Schema object defining the expected output for the tool.
+	ToolOutputSchema map[string]any `json:"outputSchema,omitempty"`
 	// Optional additional tool information.
 	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 	// See [General fields: `_meta`](/specification/2025-11-25/basic/index#_meta) for notes on `_meta` usage.
@@ -236,9 +238,11 @@ type Tool struct {
 }
 
 type InputSchema struct {
-	Type       string                                     `json:"type"`
-	Properties map[string]parameters.ParameterMcpManifest `json:"properties"`
-	Required   []string                                   `json:"required"`
+	Type                 string                                     `json:"type"`
+	Properties           map[string]parameters.ParameterMcpManifest `json:"properties"`
+	Required             []string                                   `json:"required"`
+	Schema               string                                     `json:"$schema,omitempty"`
+	AdditionalProperties any                                        `json:"additionalProperties,omitempty"`
 }
 
 // Used by the client to invoke a tool provided by the server.
@@ -324,8 +328,8 @@ type CallToolResult struct {
 	// server does not support tool calls, or any other exceptional conditions,
 	// should be reported as an MCP error response.
 	IsError bool `json:"isError,omitempty"`
-	// An optional JSON object that represents the structured result of the tool call.
-	StructuredContent map[string]any `json:"structuredContent,omitempty"`
+	// An optional JSON value that represents the structured result of the tool call.
+	StructuredContent any `json:"structuredContent,omitempty"`
 }
 
 // Additional properties describing a Tool to clients.

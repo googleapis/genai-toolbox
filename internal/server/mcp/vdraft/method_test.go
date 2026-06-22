@@ -22,12 +22,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 // Dummy JSONRPC ID for testing
@@ -530,6 +532,27 @@ func TestToolsListHandler(t *testing.T) {
 	}
 }
 
+type mockToolWithEchoInvoke struct {
+	tools.Tool
+}
+
+func (m mockToolWithEchoInvoke) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+	val := params.AsMap()["advanced_param"]
+	return val, nil
+}
+
+type mockToolWithOneOfEchoInvoke struct {
+	tools.Tool
+}
+
+func (m mockToolWithOneOfEchoInvoke) Invoke(ctx context.Context, s tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
+	val := params.AsMap()["oneof_param"]
+	if val == nil {
+		return "nil-value", nil
+	}
+	return val, nil
+}
+
 func TestToolsCallHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -544,8 +567,57 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+
+	toolsMap := make(map[string]tools.Tool)
+	var allTools []string
+	for _, tool := range mockTools {
+		toolsMap[tool.Name] = tool
+		allTools = append(allTools, tool.Name)
+	}
+
+	// Register our advanced_tool with mockAdvancedParameter
+	stringParam := parameters.NewStringParameter("advanced_param", "an advanced parameter")
+	advancedParam := mockAdvancedParameter{
+		StringParameter: stringParam,
+		manifest: parameters.ParameterMcpManifest{
+			AnyOf: []*parameters.ParameterMcpManifest{
+				{Type: "string"},
+				{Type: "integer"},
+			},
+		},
+	}
+	advancedTool := mockToolWithEchoInvoke{
+		Tool: testutils.NewMockTool("advanced_tool", "", parameters.Parameters{advancedParam}, false, false),
+	}
+	toolsMap["advanced_tool"] = advancedTool
+	allTools = append(allTools, "advanced_tool")
+
+	// Register our oneof_tool with mockOneOfParameter
+	stringParam2 := parameters.NewStringParameterWithRequired("oneof_param", "a oneOf parameter", false)
+	oneOfParam := mockOneOfParameter{
+		StringParameter: stringParam2,
+		manifest: parameters.ParameterMcpManifest{
+			OneOf: []*parameters.ParameterMcpManifest{
+				{Type: "string", Enum: []any{"red", "green", "blue"}},
+				{Type: "null"},
+			},
+		},
+	}
+	oneOfTool := mockToolWithOneOfEchoInvoke{
+		Tool: testutils.NewMockTool("oneof_tool", "", parameters.Parameters{oneOfParam}, false, false),
+	}
+	toolsMap["oneof_tool"] = oneOfTool
+	allTools = append(allTools, "oneof_tool")
+
+	toolsets := make(map[string]tools.Toolset)
+	tc := tools.ToolsetConfig{Name: "", ToolNames: allTools}
+	ts, err := tc.Initialize("test-version", toolsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize toolset: %s", err)
+	}
+	toolsets[""] = ts
+
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, nil, nil)
 
 	tests := []struct {
 		name        string
@@ -555,6 +627,7 @@ func TestToolsCallHandler(t *testing.T) {
 		context     context.Context
 		wantErr     bool
 		errContains string
+		wantContent []TextContent
 	}{
 		{
 			name:        "invalid json body",
@@ -663,6 +736,202 @@ func TestToolsCallHandler(t *testing.T) {
 			context: ctxLogger,
 			wantErr: false,
 		},
+		{
+			name: "successful invocation - advanced_tool with string",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "advanced_tool",
+					Arguments: map[string]any{
+						"advanced_param": "hello",
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"advanced_tool"}},
+			context:     ctxLogger,
+			wantErr:     false,
+			wantContent: []TextContent{{Type: "text", Text: `"hello"`}},
+		},
+		{
+			name: "successful invocation - advanced_tool with number",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "advanced_tool",
+					Arguments: map[string]any{
+						"advanced_param": 42.0,
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"advanced_tool"}},
+			context:     ctxLogger,
+			wantErr:     false,
+			wantContent: []TextContent{{Type: "text", Text: `42`}},
+		},
+		{
+			name: "failed invocation - advanced_tool with invalid boolean type",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "advanced_tool",
+					Arguments: map[string]any{
+						"advanced_param": true,
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"advanced_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "neither a string nor a number",
+		},
+		{
+			name: "successful invocation - oneof_tool with valid enum color",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "oneof_tool",
+					Arguments: map[string]any{
+						"oneof_param": "red",
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"oneof_tool"}},
+			context:     ctxLogger,
+			wantErr:     false,
+			wantContent: []TextContent{{Type: "text", Text: `"red"`}},
+		},
+		{
+			name: "successful invocation - oneof_tool with null value (nil)",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "oneof_tool",
+					Arguments: map[string]any{
+						"oneof_param": nil,
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"oneof_tool"}},
+			context:     ctxLogger,
+			wantErr:     false,
+			wantContent: []TextContent{{Type: "text", Text: `"nil-value"`}},
+		},
+		{
+			name: "failed invocation - oneof_tool with invalid enum color",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "oneof_tool",
+					Arguments: map[string]any{
+						"oneof_param": "yellow",
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"oneof_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "value \"yellow\" is not one of the allowed colors",
+		},
+		{
+			name: "failed invocation - oneof_tool with invalid type (integer)",
+			body: CallToolRequest{
+				Request: jsonrpc.Request{
+					Method: "tools/call",
+				},
+				Params: CallToolRequestParams{
+					Name: "oneof_tool",
+					Arguments: map[string]any{
+						"oneof_param": 123,
+					},
+					RequestParams: RequestParams{
+						Meta: &RequestMetaObject{
+							ProtocolVersion: PROTOCOL_VERSION,
+							ClientInfo: Implementation{
+								BaseMetadata: BaseMetadata{Name: "TestClient"},
+								Version:      "1.0",
+							},
+							MetaClientCapabilities: &ClientCapabilities{},
+						},
+					},
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{TOOLS_CALL}, "Mcp-Name": []string{"oneof_tool"}},
+			context:     ctxLogger,
+			wantErr:     true,
+			errContains: "neither a valid color nor null",
+		},
 	}
 
 	for _, tt := range tests {
@@ -690,6 +959,19 @@ func TestToolsCallHandler(t *testing.T) {
 				}
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
+				}
+				if tt.wantContent != nil {
+					resp, ok := got.(jsonrpc.JSONRPCResponse)
+					if !ok {
+						t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+					}
+					result, ok := resp.Result.(CallToolResult)
+					if !ok {
+						t.Fatalf("expected CallToolResult, got %T", resp.Result)
+					}
+					if diff := cmp.Diff(result.Content, tt.wantContent); diff != "" {
+						t.Errorf("unexpected Content (-want +got):\n%s", diff)
+					}
 				}
 			}
 		})

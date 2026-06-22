@@ -16,6 +16,7 @@ package vdraft
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"slices"
 	"testing"
@@ -108,7 +109,7 @@ func TestGenerateToolManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations)
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil)
 			gotM := got.Metadata
 			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
@@ -154,7 +155,8 @@ func TestParamManifest(t *testing.T) {
 				parameters.NewMapParameter("foo-map-any", "a map of any", ""),
 			},
 			wantSchema: InputSchema{
-				Type: "object",
+				Schema:     "https://json-schema.org/draft/2020-12/schema",
+				Type:       "object",
 				Properties: map[string]parameters.ParameterMcpManifest{
 					"foo-string":       {Type: "string", Description: "bar", Default: "foo"},
 					"foo-string2":      {Type: "string", Description: "bar"},
@@ -238,6 +240,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 				BaseMetadata: BaseMetadata{Name: "no_params"},
 				Description:  "",
 				ToolInputSchema: InputSchema{
+					Schema:     "https://json-schema.org/draft/2020-12/schema",
 					Type:       "object",
 					Properties: map[string]parameters.ParameterMcpManifest{},
 					Required:   []string{},
@@ -247,7 +250,8 @@ func TestGenerateListToolsResult(t *testing.T) {
 				BaseMetadata: BaseMetadata{Name: "some_params"},
 				Description:  "",
 				ToolInputSchema: InputSchema{
-					Type: "object",
+					Schema: "https://json-schema.org/draft/2020-12/schema",
+					Type:   "object",
 					Properties: map[string]parameters.ParameterMcpManifest{
 						"param1": parameters.ParameterMcpManifest{
 							Type:                 "integer",
@@ -365,6 +369,121 @@ func TestGenerateListPromptsResult(t *testing.T) {
 			},
 		},
 	}
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
+	}
+}
+
+type mockAdvancedParameter struct {
+	*parameters.StringParameter
+	manifest parameters.ParameterMcpManifest
+}
+
+func (p mockAdvancedParameter) McpManifest() (parameters.ParameterMcpManifest, []string) {
+	return p.manifest, nil
+}
+
+func (p mockAdvancedParameter) Parse(v any) (any, error) {
+	// Accept either a string or a number (float/int)
+	if s, ok := v.(string); ok {
+		return s, nil
+	}
+	switch num := v.(type) {
+	case json.Number:
+		f, err := num.Float64()
+		if err != nil {
+			return nil, err
+		}
+		return f, nil
+	case float64:
+		return num, nil
+	case int:
+		return float64(num), nil
+	case int64:
+		return float64(num), nil
+	}
+	return nil, fmt.Errorf("value %v of type %T is neither a string nor a number", v, v)
+}
+
+type mockOneOfParameter struct {
+	*parameters.StringParameter
+	manifest parameters.ParameterMcpManifest
+}
+
+func (p mockOneOfParameter) McpManifest() (parameters.ParameterMcpManifest, []string) {
+	return p.manifest, nil
+}
+
+func (p mockOneOfParameter) Parse(v any) (any, error) {
+	// Handle nil (null in JSON)
+	if v == nil {
+		return nil, nil
+	}
+	if s, ok := v.(string); ok {
+		for _, color := range []string{"red", "green", "blue"} {
+			if s == color {
+				return s, nil
+			}
+		}
+		return nil, fmt.Errorf("value %q is not one of the allowed colors", s)
+	}
+	return nil, fmt.Errorf("value %v of type %T is neither a valid color nor null", v, v)
+}
+
+func TestGenerateListToolsResult_AdvancedSchema(t *testing.T) {
+	stringParam := parameters.NewStringParameter("advanced_param", "an advanced parameter")
+	advancedParam := mockAdvancedParameter{
+		StringParameter: stringParam,
+		manifest: parameters.ParameterMcpManifest{
+			AnyOf: []*parameters.ParameterMcpManifest{
+				{Type: "string"},
+				{Type: "integer"},
+			},
+		},
+	}
+
+	tool := testutils.NewMockTool("advanced_tool", "A tool with advanced schema parameters", parameters.Parameters{advancedParam}, false, false)
+
+	toolsMap := map[string]tools.Tool{
+		tool.GetName(): tool,
+	}
+
+	tc := tools.ToolsetConfig{
+		Name:      "test-toolset",
+		ToolNames: []string{"advanced_tool"},
+	}
+	toolset, err := tc.Initialize("test-version", toolsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize toolset: %s", err)
+	}
+
+	got, err := GenerateListToolsResult(toolset, toolsMap)
+	if err != nil {
+		t.Fatalf("unable to generate list tools result: %s", err)
+	}
+
+	want := ListToolsResult{
+		Tools: []Tool{
+			Tool{
+				BaseMetadata: BaseMetadata{Name: "advanced_tool"},
+				Description:  "A tool with advanced schema parameters",
+				ToolInputSchema: InputSchema{
+					Schema: "https://json-schema.org/draft/2020-12/schema",
+					Type:   "object",
+					Properties: map[string]parameters.ParameterMcpManifest{
+						"advanced_param": {
+							AnyOf: []*parameters.ParameterMcpManifest{
+								{Type: "string"},
+								{Type: "integer"},
+							},
+						},
+					},
+					Required: []string{"advanced_param"},
+				},
+			},
+		},
+	}
+
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Fatalf("unexpected list tools result (-want +got):\n%s", diff)
 	}
