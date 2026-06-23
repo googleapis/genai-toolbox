@@ -59,7 +59,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Gets a Dataproc job"

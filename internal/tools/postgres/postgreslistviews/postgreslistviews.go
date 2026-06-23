@@ -81,7 +81,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("view_name", "", "Optional: A specific view name to search for."),
 		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name to search for."),

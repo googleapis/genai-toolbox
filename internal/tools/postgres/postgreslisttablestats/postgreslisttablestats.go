@@ -107,7 +107,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional: A specific schema name to filter by"),
 		parameters.NewStringParameterWithRequired("table_name", "Optional: A specific table name to filter by", false),

@@ -357,6 +357,18 @@ and data.
   [internal/prebuiltconfigs/prebuiltconfigs_test.go](internal/prebuiltconfigs/prebuiltconfigs_test.go)
   and [cmd/root_test.go](cmd/root_test.go).
 
+### Deprecating an Existing Primitive
+
+A primitive (e.g., sources, tools, auth services) will only be removed after it
+has been marked as deprecated for at least one major version, or four minor
+versions (approximately two months, given our biweekly release cadence).
+
+To mark a primitive as deprecated, you must add our deprecation helper function
+to the initialization of the primitive.
+
+During the next major version release, any primitive that meets these
+deprecation timeframe requirements will be permanently removed.
+
 ## Testing
 
 ### Infrastructure
@@ -948,8 +960,8 @@ _Repeat the following steps for each of the 5 combinations listed above._
    cd npm/server-<os>-<arch>
    ```
 2. **Verify versioning:**
-   - Verify that the `version.txt` file reflects the version of the toolbox binary to be released.
-   - Open `package.json` and verify that the `"version"` field reflects the target version.
+   - The toolbox binary version is sourced from `cmd/version.txt` at the repo root (the release-please `versionFile`); `downloadBinary.js` reads it from there during `prepack`. Verify it reflects the version to be released.
+   - Open `package.json` and verify that the `"version"` field matches `cmd/version.txt`.
 3. **Sync Lockfile:**
    ```bash
    npm install --force

@@ -15,6 +15,7 @@
 package cloudmonitoring_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -78,7 +79,7 @@ func TestInitialize(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			tool, err := tc.cfg.Initialize()
+			tool, err := tc.cfg.Initialize(context.Background())
 
 			if tc.wantErr != "" {
 				if err == nil {

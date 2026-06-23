@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudhealthcare_test
+package cloudhealthcare
 
 import (
 	"context"
@@ -21,7 +21,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
@@ -42,9 +41,9 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 			dataset: my-dataset
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-instance": cloudhealthcare.Config{
+				"my-instance": Config{
 					Name:           "my-instance",
-					Type:           cloudhealthcare.SourceType,
+					Type:           SourceType,
 					Project:        "my-project",
 					Region:         "us-central1",
 					Dataset:        "my-dataset",
@@ -64,9 +63,9 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 			useClientOAuth: true
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-instance": cloudhealthcare.Config{
+				"my-instance": Config{
 					Name:           "my-instance",
-					Type:           cloudhealthcare.SourceType,
+					Type:           SourceType,
 					Project:        "my-project",
 					Region:         "us",
 					Dataset:        "my-dataset",
@@ -90,9 +89,9 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 				- my-dicom-store2
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-instance": cloudhealthcare.Config{
+				"my-instance": Config{
 					Name:               "my-instance",
-					Type:               cloudhealthcare.SourceType,
+					Type:               SourceType,
 					Project:            "my-project",
 					Region:             "us",
 					Dataset:            "my-dataset",
@@ -155,6 +154,201 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestValidateFHIRPageURL(t *testing.T) {
+	src := &Source{
+		Config: Config{
+			Project:           "my-project",
+			Region:            "us-central1",
+			Dataset:           "my-dataset",
+			AllowedFHIRStores: []string{"store1", "store2"},
+		},
+		allowedFHIRStores: map[string]struct{}{
+			"store1": {},
+			"store2": {},
+		},
+	}
+
+	tests := []struct {
+		desc    string
+		pageURL string
+		wantErr bool
+		wantURL string
+	}{
+		{
+			desc:    "Valid URL v1",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Valid URL mTLS",
+			pageURL: "https://healthcare.mtls.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.mtls.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Valid URL v1beta1",
+			pageURL: "https://healthcare.googleapis.com/v1beta1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store2/fhir/Patient?_count=10",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1beta1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store2/fhir/Patient?_count=10",
+		},
+		{
+			desc:    "Valid URL with port",
+			pageURL: "https://healthcare.googleapis.com:443/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com:443/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Valid URL with trailing slash",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient/",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Invalid scheme",
+			pageURL: "http://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Invalid version v0",
+			pageURL: "https://healthcare.googleapis.com/v0/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Invalid version v1.0",
+			pageURL: "https://healthcare.googleapis.com/v1.0/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Missing version prefix (projects as part 0)",
+			pageURL: "https://healthcare.googleapis.com/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Valid version v2",
+			pageURL: "https://healthcare.googleapis.com/v2/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v2/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Invalid host",
+			pageURL: "https://evil.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Host suffix spoofing attempt",
+			pageURL: "https://healthcare.googleapis.com.evil.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Authority userinfo spoofing attempt",
+			pageURL: "https://healthcare.googleapis.com@evil.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Invalid project",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/other-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Invalid location",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-east1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Invalid dataset",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/other-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Disallowed FHIR store",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store3/fhir/Patient",
+			wantErr: true,
+		},
+		{
+			desc:    "Directory traversal attack path bypass attempt 1",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/../../../../something",
+			wantErr: true,
+		},
+		{
+			desc:    "Directory traversal attack path bypass attempt 2",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient/../../../../something",
+			wantErr: true,
+		},
+		{
+			desc:    "Too short path",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project",
+			wantErr: true,
+		},
+		{
+			desc:    "Non-FHIR endpoint on same host",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/dicomStores/store1",
+			wantErr: true,
+		},
+		{
+			desc:    "Valid URL with uppercase host and scheme",
+			pageURL: "HTTPS://HEALTHCARE.GOOGLEAPIS.COM/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+		},
+		{
+			desc:    "Invalid URL without version prefix",
+			pageURL: "https://healthcare.googleapis.com/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/store1/fhir/Patient",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			gotURL, err := src.validateFHIRPageURL(tc.pageURL)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("validateFHIRPageURL(%q) err = %v, wantErr = %v", tc.pageURL, err, tc.wantErr)
+			}
+			if err == nil && gotURL != tc.wantURL {
+				t.Errorf("validateFHIRPageURL(%q) gotURL = %q, wantURL = %q", tc.pageURL, gotURL, tc.wantURL)
+			}
+		})
+	}
+}
+
+func TestValidateFHIRPageURLNoAllowedStores(t *testing.T) {
+	// If s.Config.AllowedFHIRStores is empty (meaning all FHIR stores are allowed),
+	// validateFHIRPageURL should allow any fhir store ID.
+	src := &Source{
+		Config: Config{
+			Project: "my-project",
+			Region:  "us-central1",
+			Dataset: "my-dataset",
+		},
+	}
+
+	tests := []struct {
+		desc    string
+		pageURL string
+		wantErr bool
+		wantURL string
+	}{
+		{
+			desc:    "Valid URL with storeX",
+			pageURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/storeX/fhir/Patient",
+			wantErr: false,
+			wantURL: "https://healthcare.googleapis.com/v1/projects/my-project/locations/us-central1/datasets/my-dataset/fhirStores/storeX/fhir/Patient",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.desc, func(t *testing.T) {
+			gotURL, err := src.validateFHIRPageURL(tc.pageURL)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("validateFHIRPageURL(%q) err = %v, wantErr = %v", tc.pageURL, err, tc.wantErr)
+			}
+			if err == nil && gotURL != tc.wantURL {
+				t.Errorf("validateFHIRPageURL(%q) gotURL = %q, wantURL = %q", tc.pageURL, gotURL, tc.wantURL)
 			}
 		})
 	}

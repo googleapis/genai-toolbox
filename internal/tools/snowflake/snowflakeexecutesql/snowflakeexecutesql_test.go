@@ -15,6 +15,7 @@
 package snowflakeexecutesql_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -76,7 +77,7 @@ func TestFailInitializeMissingDescription(t *testing.T) {
 		Type:       "snowflake-execute-sql",
 		Source:     "my-snowflake-source",
 	}
-	_, err := cfg.Initialize()
+	_, err := cfg.Initialize(context.Background())
 	if err == nil {
 		t.Fatalf("expect initialize to fail")
 	}

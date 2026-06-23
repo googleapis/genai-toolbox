@@ -108,7 +108,7 @@ func TestGenerateToolManifest(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations)
+			got := generateToolManifest(tc.name, tc.description, tc.authInvoke, tc.params, tc.annotations, nil)
 			gotM := got.Metadata
 			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
@@ -140,6 +140,7 @@ func TestParamManifest(t *testing.T) {
 	tcs := []struct {
 		name          string
 		in            parameters.Parameters
+		urlParams     map[string]string
 		wantSchema    InputSchema
 		wantAuthParam map[string][]string
 	}{
@@ -185,10 +186,28 @@ func TestParamManifest(t *testing.T) {
 				"foo-string3-auth": []string{"my-google-auth-service", "other-auth-service"},
 			},
 		},
+		{
+			name: "urlParams is not nil, skips matched params",
+			in: parameters.Parameters{
+				parameters.NewStringParameter("foo-string", "bar"),
+				parameters.NewIntParameter("foo-int", "bar"),
+			},
+			urlParams: map[string]string{
+				"foo-string": "url-val",
+			},
+			wantSchema: InputSchema{
+				Type: "object",
+				Properties: map[string]parameters.ParameterMcpManifest{
+					"foo-int": {Type: "integer", Description: "bar"},
+				},
+				Required: []string{"foo-int"},
+			},
+			wantAuthParam: map[string][]string{},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			gotSchema, gotAuthParam := generateParamManifest(tc.in)
+			gotSchema, gotAuthParam := generateParamManifest(tc.in, tc.urlParams)
 			if diff := cmp.Diff(tc.wantSchema, gotSchema); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
 			}
@@ -230,7 +249,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
 	}
 
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap)
+	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
