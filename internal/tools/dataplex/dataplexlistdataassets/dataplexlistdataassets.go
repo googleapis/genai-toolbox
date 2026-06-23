@@ -63,7 +63,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize() (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
 	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
-	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching accross all fields at once is not yet supported.")
+	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported.")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Optional. Number of returned data assets in the page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Optional. Specifies the ordering of results.")
 	params := parameters.Parameters{locationId, dataProductId, filter, pageSize, orderBy}
