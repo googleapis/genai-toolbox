@@ -227,7 +227,7 @@ func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClie
 }
 
 func initDataplexDataProductConnection(ctx context.Context) (*dataplex.DataProductClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -407,7 +407,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
 	ownerEmail := tests.ServiceAccountEmail
 	if ownerEmail == "" {
-		t.Errorf("Service account email is required, but tests.ServiceAccountEmail was empty")
+		t.Fatalf("Service account email is required, but tests.ServiceAccountEmail was empty")
 	}
 	createReq := &dataplexpb.CreateDataProductRequest{
 		Parent:        parent,

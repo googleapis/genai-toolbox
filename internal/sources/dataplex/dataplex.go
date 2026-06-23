@@ -401,14 +401,14 @@ func (s *Source) ListDataProducts(
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
 		parts := strings.Split(dp.GetName(), "/")
-		var locId, prodId string
+		var locID, prodID string
 		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
-			locId = parts[3]
-			prodId = parts[5]
+			locID = parts[3]
+			prodID = parts[5]
 		}
 		results = append(results, &DataProductSummary{
-			LocationID:    locId,
-			DataProductID: prodId,
+			LocationID:    locID,
+			DataProductID: prodID,
 			DisplayName:   dp.GetDisplayName(),
 			OwnerEmails:   dp.GetOwnerEmails(),
 			AssetCount:    dp.GetAssetCount(),
@@ -436,11 +436,11 @@ type DataProduct struct {
 	AccessGroups  []AccessGroup     `json:"accessGroups"`
 }
 
-func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProductId string) (*DataProduct, error) {
+func (s *Source) GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*DataProduct, error) {
 	if s.GetDataProductClient() == nil {
 		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
-	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
 	req := &dataplexpb.GetDataProductRequest{
 		Name: name,
 	}
@@ -461,15 +461,15 @@ func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProd
 	}
 
 	parts := strings.Split(resp.GetName(), "/")
-	var locId, prodId string
+	var locID, prodID string
 	if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
-		locId = parts[3]
-		prodId = parts[5]
+		locID = parts[3]
+		prodID = parts[5]
 	}
 
 	return &DataProduct{
-		LocationID:    locId,
-		DataProductID: prodId,
+		LocationID:    locID,
+		DataProductID: prodID,
 		DisplayName:   resp.GetDisplayName(),
 		Description:   resp.GetDescription(),
 		OwnerEmails:   resp.GetOwnerEmails(),

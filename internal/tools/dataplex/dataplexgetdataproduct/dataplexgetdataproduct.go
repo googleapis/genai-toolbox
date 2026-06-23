@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetDataProduct(ctx context.Context, locationId string, dataProductId string) (*dataplex.DataProduct, error)
+	GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*dataplex.DataProduct, error)
 }
 
 type Config struct {
@@ -97,16 +97,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	locationId, ok := paramsMap["locationId"].(string)
+	locationID, ok := paramsMap["locationId"].(string)
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
 	}
-	dataProductId, ok := paramsMap["dataProductId"].(string)
+	dataProductID, ok := paramsMap["dataProductId"].(string)
 	if !ok {
 		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
 	}
 
-	resp, err := source.GetDataProduct(ctx, locationId, dataProductId)
+	resp, err := source.GetDataProduct(ctx, locationID, dataProductID)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
