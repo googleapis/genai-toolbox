@@ -888,7 +888,7 @@ names, or other parts of the query.&lt;/p&gt;</description></item><item><title>C
  &lt;tr&gt;
  &lt;td&gt;&lt;/td&gt;
  &lt;td&gt;&lt;code&gt;--sql-commenter&lt;/code&gt;&lt;/td&gt;
- &lt;td&gt;Append SQLCommenter-format comments (traceparent, server, tool.name, db.system.name, client metadata from &lt;code&gt;_meta[&amp;quot;dev.mcp-toolbox/telemetry&amp;quot;]&lt;/code&gt;) to executed SQL.&lt;/td&gt;
+ &lt;td&gt;Prepend SQLCommenter-format comments (traceparent, server, tool.name, db.system.name, client metadata from &lt;code&gt;_meta[&amp;quot;dev.mcp-toolbox/telemetry&amp;quot;]&lt;/code&gt;) to executed SQL.&lt;/td&gt;
  &lt;td&gt;&lt;/td&gt;
  &lt;/tr&gt;
  &lt;tr&gt;
@@ -8695,7 +8695,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode351s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode467s0hbhb"&gt;
 
 
 
