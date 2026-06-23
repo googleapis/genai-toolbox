@@ -15,6 +15,7 @@ package lookercommon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -141,6 +142,12 @@ func GetQueryParameters() parameters.Parameters {
 	limitParameter := parameters.NewIntParameter("limit", "The row limit.", parameters.WithIntDefault(500))
 	tzParameter := parameters.NewStringParameter("tz", "The query timezone.", parameters.WithStringRequired(false))
 	filterExpressionParameter := parameters.NewStringParameter("filter_expression", "An optional filter expression string.", parameters.WithStringRequired(false))
+	dynamicFieldsParameter := parameters.NewArrayParameter(
+		"dynamic_fields",
+		"An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+		parameters.NewMapParameter("dynamic_field", "A dynamic field definition", ""),
+		parameters.WithArrayDefault([]any{}),
+	)
 
 	return parameters.Parameters{
 		modelParameter,
@@ -152,6 +159,7 @@ func GetQueryParameters() parameters.Parameters {
 		limitParameter,
 		tzParameter,
 		filterExpressionParameter,
+		dynamicFieldsParameter,
 	}
 }
 
@@ -343,6 +351,18 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		}
 	}
 
+	var dynamicFieldsPtr *string
+	if val, ok := paramsMap["dynamic_fields"]; ok && val != nil {
+		if sliceVal, ok := val.([]any); ok && len(sliceVal) > 0 {
+			jsonBytes, err := json.Marshal(sliceVal)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling dynamic_fields: %w", err)
+			}
+			jsonStr := string(jsonBytes)
+			dynamicFieldsPtr = &jsonStr
+		}
+	}
+
 	wq := v4.WriteQuery{
 		Model:            paramsMap["model"].(string),
 		View:             paramsMap["explore"].(string),
@@ -353,6 +373,7 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		QueryTimezone:    &tz,
 		Limit:            &limit,
 		FilterExpression: filterExpressionPtr,
+		DynamicFields:    dynamicFieldsPtr,
 	}
 	return &wq, nil
 }

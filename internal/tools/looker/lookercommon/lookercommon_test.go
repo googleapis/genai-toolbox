@@ -463,3 +463,87 @@ func TestProcessQueryArgsWithFilterExpression(t *testing.T) {
 		})
 	}
 }
+
+func TestProcessQueryArgsWithDynamicFields(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	tcs := []struct {
+		desc          string
+		dynamicFields any
+		wantVal       *string
+		wantErr       bool
+	}{
+		{
+			desc:          "dynamic fields is nil",
+			dynamicFields: nil,
+			wantVal:       nil,
+			wantErr:       false,
+		},
+		{
+			desc: "dynamic fields is valid array of maps",
+			dynamicFields: []any{
+				map[string]any{
+					"category":          "table_calculation",
+					"expression":        "${order_items.total_sale_price} * 0.8",
+					"label":             "test",
+					"table_calculation": "test",
+					"_type_hint":        "number",
+				},
+			},
+			wantVal: func() *string {
+				s := `[{"_type_hint":"number","category":"table_calculation","expression":"${order_items.total_sale_price} * 0.8","label":"test","table_calculation":"test"}]`
+				return &s
+			}(),
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			params := parameters.ParamValues{
+				{Name: "model", Value: "marketing"},
+				{Name: "explore", Value: "cohort_marketing_performance"},
+				{Name: "fields", Value: []any{"view.channel"}},
+				{Name: "filters", Value: map[string]any{}},
+				{Name: "pivots", Value: []any{}},
+				{Name: "sorts", Value: []any{}},
+				{Name: "limit", Value: 10},
+				{Name: "tz", Value: "Etc/UTC"},
+			}
+			if tc.dynamicFields != nil {
+				params = append(params, parameters.ParamValue{Name: "dynamic_fields", Value: tc.dynamicFields})
+			}
+			wq, err := lookercommon.ProcessQueryArgs(ctx, params)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if wq.DynamicFields == nil && tc.wantVal != nil {
+				t.Fatalf("expected DynamicFields %v, got nil", *tc.wantVal)
+			}
+			if wq.DynamicFields != nil && tc.wantVal == nil {
+				t.Fatalf("expected DynamicFields nil, got %v", *wq.DynamicFields)
+			}
+			if wq.DynamicFields != nil && tc.wantVal != nil {
+				var gotObj, wantObj any
+				if err := json.Unmarshal([]byte(*wq.DynamicFields), &gotObj); err != nil {
+					t.Fatalf("failed to unmarshal got dynamic fields: %v", err)
+				}
+				if err := json.Unmarshal([]byte(*tc.wantVal), &wantObj); err != nil {
+					t.Fatalf("failed to unmarshal want dynamic fields: %v", err)
+				}
+				if diff := cmp.Diff(wantObj, gotObj); diff != "" {
+					t.Fatalf("incorrect DynamicFields: diff %v", diff)
+				}
+			}
+		})
+	}
+}
