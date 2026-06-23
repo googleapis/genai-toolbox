@@ -176,6 +176,23 @@ func LoggerFromContext(ctx context.Context) (log.Logger, error) {
 	return nil, fmt.Errorf("unable to retrieve logger")
 }
 
+// LogPrimitiveDeprecation is a helper function to mark a primitive as
+// deprecated.
+//
+// kind: kind of primitive. E.g. source / tool / authService / etc.
+// primitiveType: the type of primitive being deprecated. E.g. postgres-sql
+// migrationStep: the migration step for this deprecation. E.g. "Please use
+// [Alternative] instead." / "Please remove this from your configuration file."
+func LogPrimitiveDeprecation(ctx context.Context, kind string, primitiveType string, migrationStep string) error {
+	l, err := LoggerFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	msg := fmt.Sprintf("%s '%s' is deprecated and will be removed in the next major release. %s", kind, primitiveType, migrationStep)
+	l.WarnContext(ctx, msg)
+	return nil
+}
+
 const instrumentationKey contextKey = "instrumentation"
 
 // WithInstrumentation adds an instrumentation into the context as a value

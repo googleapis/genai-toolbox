@@ -126,7 +126,7 @@ func TestInvokeValidation(t *testing.T) {
 		Type:   "cloud-storage-get-object-metadata",
 		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

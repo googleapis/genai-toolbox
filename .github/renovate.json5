@@ -75,7 +75,6 @@
       ],
       ignorePaths: [
         'docs/**',
-        '.hugo/**',
       ],
     },
     {
@@ -86,7 +85,6 @@
       // Explicitly match the sample directories
       matchFileNames: [
         'docs/**',
-        '.hugo/**',
       ],
     },
     {
@@ -96,7 +94,6 @@
       ],
       ignorePaths: [
         'docs/**',
-        '.hugo/**',
       ],
     },
     {
@@ -107,7 +104,6 @@
       // Explicitly match the sample directories
       matchFileNames: [
         'docs/**',
-        '.hugo/**',
       ],
     },
   ],
