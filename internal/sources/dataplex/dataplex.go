@@ -638,6 +638,9 @@ func (s *Source) GetOperation(ctx context.Context, opName string) (map[string]an
 		Name: opName,
 	}
 	op, err := s.DataScanClient.LROClient.GetOperation(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 
 	bytes, err := protojson.Marshal(op)
 	if err != nil {
