@@ -73,11 +73,41 @@
         'minor',
         'patch',
       ],
+      ignorePaths: [
+        'docs/**',
+        '.hugo/**',
+      ],
+    },
+    {
+      groupName: 'Node Samples',
+      matchManagers: [
+        'npm',
+      ],
+      // Explicitly match the sample directories
+      matchFileNames: [
+        'docs/**',
+        '.hugo/**',
+      ],
     },
     {
       groupName: 'Pip',
       matchManagers: [
         'pip_requirements',
+      ],
+      ignorePaths: [
+        'docs/**',
+        '.hugo/**',
+      ],
+    },
+    {
+      groupName: 'Python Samples',
+      matchManagers: [
+        'pip_requirements',
+      ],
+      // Explicitly match the sample directories
+      matchFileNames: [
+        'docs/**',
+        '.hugo/**',
       ],
     },
   ],
