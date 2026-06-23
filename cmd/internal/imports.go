@@ -182,6 +182,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexupdatedataasset"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexupdatedataproduct"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexupdatedataproductaspects"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataprocgetcluster"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataprocgetjob"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataproc/dataproclistclusters"

@@ -96,6 +96,12 @@ source: dataplex-source
 description: Updates an existing Data Asset under a Data Product.
 ---
 kind: tool
+name: update_data_product_aspects
+type: dataplex-update-data-product-aspects
+source: dataplex-source
+description: Updates aspects (e.g. overview, business description) for an existing Data Product Entry.
+---
+kind: tool
 name: generate_data_insights
 type: dataplex-generate-data-insights
 source: dataplex-source
@@ -290,6 +296,7 @@ tools:
 - update_data_product
 - create_data_asset
 - update_data_asset
+- update_data_product_aspects
 - get_operation
 ---
 kind: toolset

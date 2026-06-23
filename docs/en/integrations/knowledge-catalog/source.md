@@ -444,6 +444,20 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
 3. Once completed successfully, the updated Data Asset resource details can be found inside the `response` block of the final `get_operation` result.
 
+## Tool: update_data_product_aspects
+### Request
+1. Use this tool to update metadata aspects (like `overview` or `contacts`) on an existing Data Product Entry.
+2. You must provide `locationId`, `dataProductId`, and `aspects`.
+3. The `aspects` parameter is an array of aspects. Each aspect contains:
+   - `projectId` (string, required): The project ID of the aspect type (use `"dataplex-types"` for system aspects).
+   - `locationId` (string, required): The location ID of the aspect type (use `"global"` for system aspects).
+   - `aspectTypeId` (string, required): The name of the aspect type (e.g. `"overview"` or `"refresh-cadence"`).
+   - `data` (object, optional): The aspect payload details.
+     - For `"overview"` (documentation), the `data` object accepts: `content` (string, required, markdown or text), `contentType` (string, optional, `MARKDOWN` or `HTML`), and `links` (array of objects with `url` and `title`).
+     - For `"refresh-cadence"` (contract), the `data` object accepts: `frequency` (string, required: `Daily`, `Weekly`, `Monthly`, etc.), `refreshTime` (string, optional, e.g. `"09:00 PST"`), `thresholdInMinutes` (int, optional), and `cronSchedule` (string, optional).
+### Response
+1. Present the updated entry details including `name`, `entrySource`, `entryType`, and the list of updated `aspects` (each containing `projectId`, `locationId`, `aspectTypeId`, and `data`).
+
 ## Tool: get_operation
 ### Request
 1. Use this tool to retrieve the status of an asynchronous long-running operation (LRO) like scan creation or data product/asset creation/updation.

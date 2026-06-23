@@ -1,0 +1,246 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package dataplexupdatedataproductaspects
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"strings"
+
+	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"google.golang.org/protobuf/types/known/structpb"
+)
+
+const resourceType string = "dataplex-update-data-product-aspects"
+
+func init() {
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
+
+type compatibleSource interface {
+	ProjectID() string
+	ProjectNumber() int64
+	UpdateEntry(ctx context.Context, entry *dataplexpb.Entry, updateMask *fieldmaskpb.FieldMask) (*dataplexpb.Entry, error)
+}
+
+type Config struct {
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Parameters       parameters.Parameters  `yaml:"parameters"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+}
+
+// validate interface
+var _ tools.ToolConfig = Config{}
+
+func (cfg Config) ToolConfigType() string {
+	return resourceType
+}
+
+type Aspect struct {
+	ProjectId    string         `json:"projectId" validate:"required"`
+	LocationId   string         `json:"locationId" validate:"required"`
+	AspectTypeId string         `json:"aspectTypeId" validate:"required"`
+	Data         map[string]any `json:"data,omitempty"`
+}
+
+type EntrySource struct {
+	Resource    string `json:"resource,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type UpdateDataProductAspectsResponse struct {
+	Name        string       `json:"name"`
+	EntrySource *EntrySource `json:"entrySource,omitempty"`
+	EntryType   string       `json:"entryType,omitempty"`
+	Aspects     []Aspect     `json:"aspects"`
+}
+
+func (cfg Config) Initialize() (tools.Tool, error) {
+	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') of the Data Product.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the Data Product.")
+
+	aspectSchema := parameters.NewMapParameter("aspect", "Aspect details containing: projectId (string, required, 'dataplex-types' for system aspects), locationId (string, required, 'global' for system aspects), aspectTypeId (string, required, e.g. 'overview'), and data (object, optional, the aspect details schema mapping).", "")
+	aspects := parameters.NewArrayParameter("aspects", "Required. The list of aspects to update on the Data Product Entry.", aspectSchema)
+
+	allParameters := parameters.Parameters{locationId, dataProductId, aspects}
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
+}
+
+// validate interface
+var _ tools.Tool = Tool{}
+
+type Tool struct {
+	tools.BaseTool[Config]
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	paramsMap := params.AsMap()
+	locationId, _ := paramsMap["locationId"].(string)
+	dataProductId, _ := paramsMap["dataProductId"].(string)
+
+	if locationId == "" {
+		return nil, util.NewAgentError("locationId parameter is required", nil)
+	}
+	if dataProductId == "" {
+		return nil, util.NewAgentError("dataProductId parameter is required", nil)
+	}
+
+	rawAspects, ok := paramsMap["aspects"].([]any)
+	if !ok {
+		return nil, util.NewAgentError("aspects parameter is required and must be an array", nil)
+	}
+
+	projectId := source.ProjectID()
+
+	// Convert input array of maps to aspects map
+	aspectsMap := make(map[string]*dataplexpb.Aspect)
+
+	for i, rawAspect := range rawAspects {
+		aspectMap, ok := rawAspect.(map[string]any)
+		if !ok {
+			return nil, util.NewAgentError(fmt.Sprintf("aspect at index %d is not a map", i), nil)
+		}
+
+		aspectTypeId, _ := aspectMap["aspectTypeId"].(string)
+		if aspectTypeId == "" {
+			return nil, util.NewAgentError(fmt.Sprintf("aspectTypeId is required for aspect at index %d", i), nil)
+		}
+
+		data, _ := aspectMap["data"].(map[string]any)
+		if data == nil {
+			return nil, util.NewAgentError(fmt.Sprintf("data is required for aspect at index %d", i), nil)
+		}
+
+		aspectProjId, _ := aspectMap["projectId"].(string)
+		aspectLocId, _ := aspectMap["locationId"].(string)
+
+		if aspectProjId == "" {
+			if aspectTypeId == "overview" || aspectTypeId == "refresh-cadence" {
+				aspectProjId = "dataplex-types"
+			} else {
+				aspectProjId = projectId
+			}
+		}
+
+		if aspectLocId == "" {
+			if aspectTypeId == "overview" || aspectTypeId == "refresh-cadence" {
+				aspectLocId = "global"
+			} else {
+				aspectLocId = locationId
+			}
+		}
+
+		aspectType := fmt.Sprintf("projects/%s/locations/%s/aspectTypes/%s", aspectProjId, aspectLocId, aspectTypeId)
+		aspectKey := fmt.Sprintf("%s.%s.%s", aspectProjId, aspectLocId, aspectTypeId)
+
+		structData, err := structpb.NewStruct(data)
+		if err != nil {
+			return nil, util.NewAgentError(fmt.Sprintf("failed to serialize data for aspect %q: %s", aspectTypeId, err), err)
+		}
+
+		aspectsMap[aspectKey] = &dataplexpb.Aspect{
+			AspectType: aspectType,
+			Data:       structData,
+		}
+	}
+
+	entryName := fmt.Sprintf(
+		"projects/%s/locations/%s/entryGroups/@dataplex/entries/projects/%d/locations/%s/dataProducts/%s",
+		projectId, locationId, source.ProjectNumber(), locationId, dataProductId,
+	)
+
+	entry := &dataplexpb.Entry{
+		Name:    entryName,
+		Aspects: aspectsMap,
+	}
+
+	updateMask, _ := fieldmaskpb.New(entry, "aspects")
+
+	returnedEntry, err := source.UpdateEntry(ctx, entry, updateMask)
+	if err != nil {
+		return nil, util.ProcessGcpError(err)
+	}
+
+	// Format returned entry aspects back to the expected output Aspects format
+	var returnedAspects []Aspect
+	for _, aspectProto := range returnedEntry.Aspects {
+		parts := strings.Split(aspectProto.AspectType, "/")
+		if len(parts) < 6 {
+			continue
+		}
+		aspectProjId := parts[1]
+		aspectLocId := parts[3]
+		aspectTypeName := parts[5]
+		data := aspectProto.Data.AsMap()
+		returnedAspects = append(returnedAspects, Aspect{
+			AspectTypeId: aspectTypeName,
+			Data:         data,
+			ProjectId:    aspectProjId,
+			LocationId:   aspectLocId,
+		})
+	}
+
+	var entrySource *EntrySource
+	if returnedEntry.GetEntrySource() != nil {
+		entrySource = &EntrySource{
+			Resource:    returnedEntry.GetEntrySource().GetResource(),
+			DisplayName: returnedEntry.GetEntrySource().GetDisplayName(),
+			Description: returnedEntry.GetEntrySource().GetDescription(),
+		}
+	}
+
+	return UpdateDataProductAspectsResponse{
+		Name:        returnedEntry.GetName(),
+		EntrySource: entrySource,
+		EntryType:   returnedEntry.GetEntryType(),
+		Aspects:     returnedAspects,
+	}, nil
+}
