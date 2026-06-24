@@ -169,6 +169,10 @@ type Tool struct {
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	ToolInputSchema InputSchema `json:"inputSchema,omitempty"`
+	// Extension of the schema: This was not in the original schema for this version.
+	Annotations *ToolAnnotations `json:"annotations,omitempty"`
+	// Extension of the schema: This was not in the original schema for this version.
+	Metadata map[string]any `json:"_meta,omitempty"`
 }
 
 type InputSchema struct {
@@ -241,6 +245,38 @@ type CallToolResult struct {
 	// Whether the tool call ended in an error.
 	// If not set, this is assumed to be false (the call was successful).
 	IsError bool `json:"isError,omitempty"`
+}
+
+// Additional properties describing a Tool to clients.
+//
+// NOTE: all properties in ToolAnnotations are **hints**.
+// They are not guaranteed to provide a faithful description of
+// tool behavior (including descriptive properties like `title`).
+//
+// Clients should never make tool use decisions based on ToolAnnotations
+// received from untrusted servers.
+type ToolAnnotations struct {
+	// A human-readable title for the tool.
+	Title string `json:"title,omitempty"`
+	// If true, the tool does not modify its environment.
+	// Default: false
+	ReadOnlyHint *bool `json:"readOnlyHint,omitempty"`
+	// If true, the tool may perform destructive updates to its environment.
+	// If false, the tool performs only additive updates.
+	// (This property is meaningful only when `readOnlyHint == false`)
+	// Default: true
+	DestructiveHint *bool `json:"destructiveHint,omitempty"`
+	// If true, calling the tool repeatedly with the same arguments
+	// will have no additional effect on the its environment.
+	// (This property is meaningful only when `readOnlyHint == false`)
+	// Default: false
+	IdempotentHint *bool `json:"idempotentHint,omitempty"`
+	// If true, this tool may interact with an "open world" of external
+	// entities. If false, the tool's domain of interaction is closed.
+	// For example, the world of a web search tool is open, whereas that
+	// of a memory tool is not.
+	// Default: true
+	OpenWorldHint *bool `json:"openWorldHint,omitempty"`
 }
 
 /* Prompts */

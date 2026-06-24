@@ -73,6 +73,33 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
+var urlBindingToolInputSchema = map[string]any{
+	"type": "object",
+	"properties": map[string]any{
+		"param1": map[string]any{"type": "string", "description": "A bound string param"},
+		"param2": map[string]any{"type": "integer", "description": "A bound int param"},
+		"param3": map[string]any{"type": "boolean", "description": "A bound bool param"},
+		"param4": map[string]any{"type": "number", "description": "A bound float param"},
+		"param5": map[string]any{"type": "string", "description": "An unbound string param"},
+		"param6": map[string]any{
+			"type":        "array",
+			"description": "A bound array param",
+			"items": map[string]any{
+				"type":        "string",
+				"description": "item",
+			},
+		},
+		"param7": map[string]any{
+			"type":        "object",
+			"description": "A bound map param",
+			"additionalProperties": map[string]any{
+				"type": "string",
+			},
+		},
+	},
+	"required": []any{"param1", "param2", "param3", "param4", "param5", "param6", "param7"},
+}
+
 var prompt2Args = []any{
 	map[string]any{
 		"name":        "arg1",
@@ -82,9 +109,9 @@ var prompt2Args = []any{
 }
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -427,9 +454,9 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 }
 
 func TestMcpEndpoint(t *testing.T) {
-	mockTools := []testutils.MockTool{tool1, tool2, tool3, tool4, tool5}
-	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -454,7 +481,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -471,7 +498,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -488,7 +515,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -505,7 +532,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"tools":   map[string]any{"listChanged": false},
 						"prompts": map[string]any{"listChanged": false},
 					},
-					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
 		},
@@ -594,6 +621,11 @@ func TestMcpEndpoint(t *testing.T) {
 								map[string]any{
 									"name":        "require_client_auth_tool",
 									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "url_binding_tool",
+									"description": "A tool for testing URL param binding",
+									"inputSchema": urlBindingToolInputSchema,
 								},
 							},
 						},
@@ -788,6 +820,7 @@ func TestMcpEndpoint(t *testing.T) {
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
+						"id":      nil,
 						"error": map[string]any{
 							"code":    -32600.0,
 							"message": "not supporting batch requests",
@@ -867,6 +900,116 @@ func TestMcpEndpoint(t *testing.T) {
 						},
 					},
 				},
+				{
+					name: "tools/list with URL param binding",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-list-url-binding",
+						Request: jsonrpc.Request{
+							Method: "tools/list",
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-list-url-binding",
+						"result": map[string]any{
+							"tools": []any{
+								map[string]any{
+									"name":        "no_params",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "some_params",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "array_param",
+									"description": "some description",
+									"inputSchema": tool3InputSchema,
+								},
+								map[string]any{
+									"name":        "unauthorized_tool",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "require_client_auth_tool",
+									"inputSchema": basicInputSchema,
+								},
+								map[string]any{
+									"name":        "url_binding_tool",
+									"description": "A tool for testing URL param binding",
+									"inputSchema": map[string]any{
+										"type": "object",
+										"properties": map[string]any{
+											"param5": map[string]any{"type": "string", "description": "An unbound string param"},
+										},
+										"required": []any{"param5"},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					name: "tools/call with URL param binding",
+					url:  "/?param1=bound-string&param2=42&param3=true&param4=3.14&param6=%5B%22a%22%2C%22b%22%5D&param7=%7B%22k%22%3A%22v%22%7D",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "tools-call-url-binding",
+						Request: jsonrpc.Request{
+							Method: "tools/call",
+						},
+						Params: map[string]any{
+							"name": "url_binding_tool",
+							"arguments": map[string]any{
+								"param5": "unbound-value",
+							},
+						},
+					},
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "tools-call-url-binding",
+						"result": map[string]any{
+							"content": []any{
+								map[string]any{
+									"type": "text",
+									"text": `"url_binding_tool"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `"bound-string"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `42`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `true`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `3.14`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `"unbound-value"`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `["a","b"]`,
+								},
+								map[string]any{
+									"type": "text",
+									"text": `{"k":"v"}`,
+								},
+							},
+						},
+					},
+				},
 			}
 			for _, tc := range testCases {
 				t.Run(tc.name, func(t *testing.T) {
@@ -898,10 +1041,6 @@ func TestMcpEndpoint(t *testing.T) {
 						var got map[string]any
 						if err := json.Unmarshal(body, &got); err != nil {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
-						}
-						// for decode failure, a random uuid is generated in server
-						if tc.want["id"] == nil {
-							tc.want["id"] = got["id"]
 						}
 						if !reflect.DeepEqual(got, tc.want) {
 							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
@@ -974,6 +1113,68 @@ func TestGetEndpoint(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected error during request: %s", err)
+	}
+}
+
+func TestMcpRequestBodyLimit(t *testing.T) {
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	limit := int(DefaultHTTPMaxRequestBytes)
+	tooLarge := bytes.Repeat([]byte("x"), limit+1)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	errBody, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing error payload: %v", got)
+	}
+	wantMessage := fmt.Sprintf("request body exceeds %d bytes", DefaultHTTPMaxRequestBytes)
+	if errBody["message"] != wantMessage {
+		t.Fatalf("unexpected error message: got %v, want %s", errBody["message"], wantMessage)
+	}
+}
+
+func TestMcpRequestBodyLimitOverride(t *testing.T) {
+	customLimit := int64(1 << 20)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil, withHTTPMaxRequestBytes(customLimit))
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	tooLarge := bytes.Repeat([]byte("x"), int(customLimit)+1)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewReader(tooLarge), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	errBody, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("response missing error payload: %v", got)
+	}
+	wantMessage := fmt.Sprintf("request body exceeds %d bytes", customLimit)
+	if errBody["message"] != wantMessage {
+		t.Fatalf("unexpected error message: got %v, want %s", errBody["message"], wantMessage)
 	}
 }
 
@@ -1094,9 +1295,9 @@ func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mockTools := []testutils.MockTool{tool1, tool2, tool3}
-	mockPrompts := []testutils.MockPrompt{prompt1, prompt2}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
@@ -1108,7 +1309,7 @@ func TestStdioSession(t *testing.T) {
 		t.Fatalf("unable to initialize logger: %s", err)
 	}
 
-	otelShutdown, err := telemetry.SetupOTel(ctx, fakeVersionString, "", false, "toolbox")
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
 	if err != nil {
 		t.Fatalf("unable to setup otel: %s", err)
 	}
@@ -1119,7 +1320,7 @@ func TestStdioSession(t *testing.T) {
 		}
 	}()
 
-	instrumentation, err := telemetry.CreateTelemetryInstrumentation(fakeVersionString)
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
 	if err != nil {
 		t.Fatalf("unable to create custom metrics: %s", err)
 	}
@@ -1129,7 +1330,7 @@ func TestStdioSession(t *testing.T) {
 	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	server := &Server{
-		version:         fakeVersionString,
+		version:         testutils.MockVersionString,
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,

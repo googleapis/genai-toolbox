@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageMoveObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"move_tool": cloudstoragemoveobject.Config{
-					Name:         "move_tool",
-					Type:         "cloud-storage-move-object",
-					Source:       "my-gcs",
-					Description:  "Move a Cloud Storage object",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "move_tool",
+						Description:  "Move a Cloud Storage object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-move-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageMoveObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_move": cloudstoragemoveobject.Config{
-					Name:         "secure_move",
-					Type:         "cloud-storage-move-object",
-					Source:       "prod-gcs",
-					Description:  "Move with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_move",
+						Description:  "Move with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-move-object",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -120,12 +124,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragemoveobject.Config{
-		Name:        "move_tool",
-		Type:        "cloud-storage-move-object",
-		Source:      "my-gcs",
-		Description: "Move",
+		ConfigBase: tools.ConfigBase{
+			Name:        "move_tool",
+			Description: "Move",
+		},
+		Type:   "cloud-storage-move-object",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

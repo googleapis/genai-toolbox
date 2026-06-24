@@ -176,6 +176,23 @@ func LoggerFromContext(ctx context.Context) (log.Logger, error) {
 	return nil, fmt.Errorf("unable to retrieve logger")
 }
 
+// LogPrimitiveDeprecation is a helper function to mark a primitive as
+// deprecated.
+//
+// kind: kind of primitive. E.g. source / tool / authService / etc.
+// primitiveType: the type of primitive being deprecated. E.g. postgres-sql
+// migrationStep: the migration step for this deprecation. E.g. "Please use
+// [Alternative] instead." / "Please remove this from your configuration file."
+func LogPrimitiveDeprecation(ctx context.Context, kind string, primitiveType string, migrationStep string) error {
+	l, err := LoggerFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	msg := fmt.Sprintf("%s '%s' is deprecated and will be removed in the next major release. %s", kind, primitiveType, migrationStep)
+	l.WarnContext(ctx, msg)
+	return nil
+}
+
 const instrumentationKey contextKey = "instrumentation"
 
 // WithInstrumentation adds an instrumentation into the context as a value
@@ -228,6 +245,36 @@ func AuthTokenClaimsFromContext(ctx context.Context) map[string]any {
 		return claims
 	}
 	return nil
+}
+
+const clientIPKey contextKey = "clientIP"
+
+// WithClientIP adds a client IP address into the context as a value
+func WithClientIP(ctx context.Context, clientIP string) context.Context {
+	return context.WithValue(ctx, clientIPKey, clientIP)
+}
+
+// ClientIPFromContext retrieves the client IP address or returns false if not present
+func ClientIPFromContext(ctx context.Context) (string, bool) {
+	if ip, ok := ctx.Value(clientIPKey).(string); ok {
+		return ip, true
+	}
+	return "", false
+}
+
+// ExtractClientIP retrieves the leftmost client IP from X-Forwarded-For or X-Real-IP header
+func ExtractClientIP(header http.Header) string {
+	if xff := header.Get("X-Forwarded-For"); xff != "" {
+		for _, ip := range strings.Split(xff, ",") {
+			if trimmed := strings.TrimSpace(ip); trimmed != "" {
+				return trimmed
+			}
+		}
+	}
+	if xri := header.Get("X-Real-IP"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+	return ""
 }
 
 // TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
@@ -284,4 +331,35 @@ func ToolboxVersionFromContext(ctx context.Context) (string, error) {
 	} else {
 		return "", fmt.Errorf("unable to retrieve toolbox version")
 	}
+}
+
+const ignoreUnknownToolsKey contextKey = "ignoreUnknownTools"
+
+// WithIgnoreUnknownTools adds the ignore-unknown-tools flag to the context
+func WithIgnoreUnknownTools(ctx context.Context, ignore bool) context.Context {
+	return context.WithValue(ctx, ignoreUnknownToolsKey, ignore)
+}
+
+// IgnoreUnknownToolsFromContext retrieves the ignore-unknown-tools flag from context
+func IgnoreUnknownToolsFromContext(ctx context.Context) bool {
+	if ignore, ok := ctx.Value(ignoreUnknownToolsKey).(bool); ok {
+		return ignore
+	}
+	return false
+}
+
+// urlParamsKey is the key used to store URL parameters within context
+const urlParamsKey contextKey = "urlParams"
+
+// WithUrlParams adds URL parameters into the context as a value
+func WithUrlParams(ctx context.Context, params map[string]string) context.Context {
+	return context.WithValue(ctx, urlParamsKey, params)
+}
+
+// UrlParamsFromContext retrieves URL parameters from context
+func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
+	if params, ok := ctx.Value(urlParamsKey).(map[string]string); ok {
+		return params, true
+	}
+	return nil, false
 }

@@ -12,16 +12,17 @@ description: >
 The `looker-query` tool runs a query using the Looker
 semantic model.
 
-`looker-query` takes eight parameters:
+`looker-query` takes nine parameters:
 
 1. the `model`
 2. the `explore`
 3. the `fields` list
 4. an optional set of `filters`
-5. an optional set of `pivots`
-6. an optional set of `sorts`
-7. an optional `limit`
-8. an optional `tz`
+5. an optional `filter_expression`
+6. an optional set of `pivots`
+7. an optional set of `sorts`
+8. an optional `limit`
+9. an optional `tz`
 
 Starting in Looker v25.18, these queries can be identified in Looker's
 System Activity. In the History explore, use the field API Client Name
@@ -52,6 +53,14 @@ description: |
     - Do not quote field names.
     - Use `not null` instead of `-NULL`.
     - If a value contains a comma, enclose it in single quotes (e.g., "'New York, NY'").
+  - filter_expression: A Looker expression filter string (custom filter). This allows complex logic and comparing fields.
+    - Reference fields using `${view.field_name}` syntax.
+    - Supports logical operators (`AND`, `OR`, `NOT`) and comparison operators.
+    - Supports Looker functions (e.g., `matches_filter`, `now`, `add_days`, `diff_days`).
+    - Examples:
+      - `${orders.order_date} < add_years(-1, now())`
+      - `${activity.email} != ${activity_drive_facts.current_owner_email}`
+      - `matches_filter(${order.order_month}, '24 months') AND matches_filter(${order.order_month}, 'before 2024/07/01')`
   - sorts: A list of fields to sort by, optionally including direction (e.g., `["view.field desc"]`).
   - limit: Row limit (default 500). Use "-1" for unlimited.
   - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).

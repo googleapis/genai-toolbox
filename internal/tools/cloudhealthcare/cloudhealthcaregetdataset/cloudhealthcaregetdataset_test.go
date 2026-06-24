@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	getdataset "github.com/googleapis/mcp-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdataset"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlGetHealthcareDataset(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": getdataset.Config{
-					Name:         "example_tool",
-					Type:         "cloud-healthcare-get-dataset",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-healthcare-get-dataset",
+					Source: "my-instance",
 				},
 			},
 		},

@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/oracle/oracleexecutesql"
 )
 
@@ -37,11 +38,13 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"run_adhoc_query": oracleexecutesql.Config{
-					Name:         "run_adhoc_query",
-					Type:         "oracle-execute-sql",
-					Source:       "my-oracle-instance",
-					Description:  "Executes arbitrary SQL statements like INSERT or UPDATE.",
-					AuthRequired: []string{"my-google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "run_adhoc_query",
+						Description:  "Executes arbitrary SQL statements like INSERT or UPDATE.",
+						AuthRequired: []string{"my-google-auth-service"},
+					},
+					Type:   "oracle-execute-sql",
+					Source: "my-oracle-instance",
 				},
 			},
 		},
@@ -56,11 +59,13 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"run_simple_update": oracleexecutesql.Config{
-					Name:         "run_simple_update",
-					Type:         "oracle-execute-sql",
-					Source:       "db-dev",
-					Description:  "Runs a simple update operation.",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "run_simple_update",
+						Description:  "Runs a simple update operation.",
+						AuthRequired: []string{},
+					},
+					Type:   "oracle-execute-sql",
+					Source: "db-dev",
 				},
 			},
 		},
@@ -76,12 +81,14 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"safe_query": oracleexecutesql.Config{
-					Name:         "safe_query",
-					Type:         "oracle-execute-sql",
-					Source:       "db-prod",
-					Description:  "Safe read operation.",
-					ReadOnly:     &valTrue,
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "safe_query",
+						Description:  "Safe read operation.",
+						AuthRequired: []string{},
+					},
+					Type:     "oracle-execute-sql",
+					Source:   "db-prod",
+					ReadOnly: &valTrue,
 				},
 			},
 		},
@@ -97,12 +104,14 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"update_user": oracleexecutesql.Config{
-					Name:         "update_user",
-					Type:         "oracle-execute-sql",
-					Source:       "db-prod",
-					Description:  "Updates user table.",
-					ReadOnly:     &valFalse,
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "update_user",
+						Description:  "Updates user table.",
+						AuthRequired: []string{},
+					},
+					Type:     "oracle-execute-sql",
+					Source:   "db-prod",
+					ReadOnly: &valFalse,
 				},
 			},
 		},

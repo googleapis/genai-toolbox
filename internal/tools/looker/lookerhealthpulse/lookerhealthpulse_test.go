@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	lhp "github.com/googleapis/mcp-toolbox/internal/tools/looker/lookerhealthpulse"
 )
 
@@ -45,11 +46,13 @@ func TestParseFromYamlLookerHealthPulse(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": lhp.Config{
-					Name:         "example_tool",
-					Type:         "looker-health-pulse",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-health-pulse",
+					Source: "my-instance",
 				},
 			},
 		},

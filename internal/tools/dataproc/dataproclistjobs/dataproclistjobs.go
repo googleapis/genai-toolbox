@@ -20,9 +20,7 @@ import (
 	"net/http"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/sources/dataproc"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -37,7 +35,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -45,14 +43,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -64,47 +58,58 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-
-	ds, ok := rawS.(*dataproc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be `%s`", kind, dataproc.SourceType)
-	}
-
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Lists and filters Dataproc jobs"
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("filter", `A filter constraining the jobs to list. Filters are case-sensitive and have the following syntax: field = value [AND [field = value]] ... where field is clusterName, status.state, or labels.[KEY], and [KEY] is a label key. value can be * to match all values. status.state can be one of the following: PENDING, RUNNING, CANCEL_PENDING, JOB_STATE_CANCELLED, DONE, ERROR, or ATTEMPT_FAILURE. Only the logical AND operator is supported; space-separated items are treated as having an implicit AND operator. Filtering by clusterName is recommended to improve query performance.`, false),
-		parameters.NewStringParameterWithRequired("jobStateMatcher", "Specifies if the job state matcher should match ALL jobs, only ACTIVE jobs, or only NON_ACTIVE jobs. Defaults to ALL. Supported values: ALL, ACTIVE, NON_ACTIVE.", false),
-		parameters.NewIntParameterWithDefault("pageSize", 20, "The maximum number of jobs to return in a single page (default 20)"),
-		parameters.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListJobs` call", false),
+		parameters.NewStringParameter("filter", `A filter constraining the jobs to list. Filters are case-sensitive and have the following syntax: field = value [AND [field = value]] ... where field is clusterName, status.state, or labels.[KEY], and [KEY] is a label key. value can be * to match all values. status.state can be one of the following: PENDING, RUNNING, CANCEL_PENDING, JOB_STATE_CANCELLED, DONE, ERROR, or ATTEMPT_FAILURE. Only the logical AND operator is supported; space-separated items are treated as having an implicit AND operator. Filtering by clusterName is recommended to improve query performance.`, parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("jobStateMatcher", "Specifies if the job state matcher should match ALL jobs, only ACTIVE jobs, or only NON_ACTIVE jobs. Defaults to ALL. Supported values: ALL, ACTIVE, NON_ACTIVE.", parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("pageSize", "The maximum number of jobs to return in a single page (default 20)", parameters.WithIntDefault(20)),
+		parameters.NewStringParameter("pageToken", "A page token, received from a previous `ListJobs` call", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{
-		Config:   cfg,
-		Source:   ds,
-		manifest: tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
-
-		Parameters: allParameters,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations),
+			tools.Manifest{Description: desc, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
+// validate interface
+var _ tools.Tool = Tool{}
+
 // Tool is the implementation of the tool.
 type Tool struct {
-	Config
+	tools.BaseTool[Config]
+}
 
-	Source *dataproc.Source
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
 
-	manifest tools.Manifest
+func (t Tool) validate(srcs map[string]sources.Source) error {
+	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	return err
+}
 
-	Parameters parameters.Parameters
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	if err := t.validate(srcs); err != nil {
+		return nil, err
+	}
+	return t.BaseTool.GetParameters(srcs)
+}
+
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	if err := t.validate(srcs); err != nil {
+		return tools.Manifest{}, err
+	}
+	return t.BaseTool.Manifest(srcs)
 }
 
 type compatibleSource interface {
@@ -113,7 +118,7 @@ type compatibleSource interface {
 
 // Invoke executes the tool's operation.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Config.Source, t.Name, kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, kind)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -136,53 +141,4 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.ProcessGcpError(err)
 	}
 	return res, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(services []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, services)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	// Client OAuth not supported, rely on ADCs.
-	return false, nil
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return tools.GetAnnotationsOrDefault(t.Annotations, tools.NewReadOnlyAnnotations)
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }
