@@ -34,6 +34,8 @@ const (
 	TOOLS_CALL   = "tools/call"
 	PROMPTS_LIST = "prompts/list"
 	PROMPTS_GET  = "prompts/get"
+	RESOURCES_LIST = "resources/list"
+	RESOURCES_READ = "resources/read"
 )
 
 /* Initialization */
@@ -332,4 +334,84 @@ type PromptArgument struct {
 type PromptMessage struct {
 	Role    string      `json:"role"`
 	Content TextContent `json:"content"`
+}
+
+
+/* Resources & Templates */
+
+// ResourcesListParams is the parameters for resources/list request.
+type ResourcesListParams struct {
+	Cursor string `json:"cursor,omitempty"`
+}
+
+// ResourcesListRequest is the resources/list request.
+type ResourcesListRequest struct {
+	jsonrpc.JSONRPCRequest
+	Params ResourcesListParams `json:"params"`
+}
+
+// ResourcesListResult is the result for resources/list response.
+type ResourcesListResult struct {
+	Resources         []Resource         `json:"resources"`
+	ResourceTemplates []ResourceTemplate `json:"resourceTemplates"`
+	NextCursor        string             `json:"nextCursor,omitempty"`
+}
+
+// ResourcesListResponse is the resources/list response.
+type ResourcesListResponse struct {
+	jsonrpc.JSONRPCResponse
+	Result ResourcesListResult `json:"result"`
+}
+
+// Resource is the representation of a static resource.
+type Resource struct {
+	URI         string               `json:"uri"`
+	Name        string               `json:"name"`
+	Description string               `json:"description,omitempty"`
+	MimeType    string               `json:"mimeType,omitempty"`
+	Annotations *ResourceAnnotations `json:"annotations,omitempty"`
+}
+
+// ResourceTemplate is the representation of a resource template.
+type ResourceTemplate struct {
+	URITemplate string               `json:"uriTemplate"`
+	Name        string               `json:"name"`
+	Description string               `json:"description,omitempty"`
+	MimeType    string               `json:"mimeType,omitempty"`
+	Annotations *ResourceAnnotations `json:"annotations,omitempty"`
+}
+
+// ResourceAnnotations represent the annotations for a resource.
+type ResourceAnnotations struct {
+	Audience []string `json:"audience,omitempty"`
+	Priority float64  `json:"priority,omitempty"`
+}
+
+// ResourcesReadParams is the parameters for resources/read request.
+type ResourcesReadParams struct {
+	URI string `json:"uri"`
+}
+
+// ResourcesReadRequest is the resources/read request.
+type ResourcesReadRequest struct {
+	jsonrpc.JSONRPCRequest
+	Params ResourcesReadParams `json:"params"`
+}
+
+// ResourcesReadResult is the result for resources/read response.
+type ResourcesReadResult struct {
+	Contents []ResourceContent `json:"contents"`
+}
+
+// ResourcesReadResponse is the resources/read response.
+type ResourcesReadResponse struct {
+	jsonrpc.JSONRPCResponse
+	Result ResourcesReadResult `json:"result"`
+}
+
+// ResourceContent is the representation of a resource's content.
+type ResourceContent struct {
+	URI      string `json:"uri"`
+	MimeType string `json:"mimeType,omitempty"`
+	Text     string `json:"text,omitempty"`
 }

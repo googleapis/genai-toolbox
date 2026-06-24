@@ -71,7 +71,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil, nil)
 
 	// Execute Tool
 	toolName := args[0]

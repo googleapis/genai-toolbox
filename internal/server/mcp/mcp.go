@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
@@ -44,16 +45,16 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
-func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceset resources.ResourceSet, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	switch mcpVersion {
 	case v20251125.PROTOCOL_VERSION:
-		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
+		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceset, primitiveMgr, body, header)
 	case v20250618.PROTOCOL_VERSION:
-		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
+		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, resourceset, primitiveMgr, body, header)
 	case v20250326.PROTOCOL_VERSION:
-		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
+		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, resourceset, primitiveMgr, body, header)
 	default:
-		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
+		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, resourceset, primitiveMgr, body, header)
 	}
 }
 

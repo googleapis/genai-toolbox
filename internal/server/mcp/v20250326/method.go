@@ -15,6 +15,8 @@
 package v20250326
 
 import (
+	"strings"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -38,7 +40,7 @@ import (
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceset resources.ResourceSet, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	switch method {
 	case INITIALIZE:
 		return initializeHandler(ctx, id, body)
@@ -52,6 +54,10 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 		return promptsListHandler(ctx, id, primitiveMgr, promptset, body)
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, promptset, primitiveMgr, body)
+	case RESOURCES_LIST:
+		return resourcesListHandler(ctx, id, primitiveMgr, resourceset, body)
+	case RESOURCES_READ:
+		return resourcesReadHandler(ctx, id, resourceset, primitiveMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -505,4 +511,126 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prom
 		Id:      id,
 		Result:  result,
 	}, nil
+}
+
+
+/* Resources Handlers */
+
+func resourcesListHandler(ctx context.Context, id jsonrpc.RequestId, primitiveMgr *primitives.PrimitiveManager, resourceset resources.ResourceSet, body []byte) (any, error) {
+	allRes := primitiveMgr.ListResources()
+	allTemps := primitiveMgr.ListResourceTemplates()
+
+	var resList []Resource
+	for _, r := range allRes {
+		if resourceset.ContainsResource(r.ResourceURI()) {
+			resList = append(resList, Resource{
+				URI:         r.ResourceURI(),
+				Name:        r.ResourceName(),
+				Description: r.ResourceDescription(),
+				MimeType:    r.ResourceMimeType(),
+				Annotations: translateAnnotations(r.ResourceAnnotations()),
+			})
+		}
+	}
+
+	var tempList []ResourceTemplate
+	for _, r := range allTemps {
+		if resourceset.ContainsResource(r.ResourceURI()) {
+			tempList = append(tempList, ResourceTemplate{
+				URITemplate: r.ResourceURI(),
+				Name:        r.ResourceName(),
+				Description: r.ResourceDescription(),
+				MimeType:    r.ResourceMimeType(),
+				Annotations: translateAnnotations(r.ResourceAnnotations()),
+			})
+		}
+	}
+
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result: ResourcesListResult{
+			Resources:         resList,
+			ResourceTemplates: tempList,
+		},
+	}, nil
+}
+
+func resourcesReadHandler(ctx context.Context, id jsonrpc.RequestId, resourceset resources.ResourceSet, primitiveMgr *primitives.PrimitiveManager, body []byte) (any, error) {
+	var req ResourcesReadRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid resources/read request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	uri := req.Params.URI
+	if uri == "" {
+		err := fmt.Errorf("missing 'uri' parameter")
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Resolve resource
+	res, found := primitiveMgr.ResolveResource(uri)
+	if !found {
+		err := fmt.Errorf("resource not found: %q", uri)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	// Verify resourceset membership
+	if !resourceset.ContainsResource(res.ResourceURI()) {
+		err := fmt.Errorf("permission denied: resource %q is not in the active resourceset", uri)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	// Extract template parameters
+	params := extractTemplateParams(res.ResourceURI(), uri)
+
+	// Read resource content
+	contents, err := res.Read(ctx, params)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	var rpcContents []ResourceContent
+	for _, c := range contents {
+		rpcContents = append(rpcContents, ResourceContent{
+			URI:      c.URI,
+			MimeType: c.MimeType,
+			Text:     c.Text,
+		})
+	}
+
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result: ResourcesReadResult{
+			Contents: rpcContents,
+		},
+	}, nil
+}
+
+func translateAnnotations(ann *resources.Annotations) *ResourceAnnotations {
+	if ann == nil {
+		return nil
+	}
+	prio := 1.0
+	if ann.Priority != nil {
+		prio = *ann.Priority
+	}
+	return &ResourceAnnotations{
+		Audience: ann.Audience,
+		Priority: prio,
+	}
+}
+
+func extractTemplateParams(templateURI, requestedURI string) map[string]any {
+	params := make(map[string]any)
+	if strings.Contains(templateURI, "{path}") {
+		prefix := strings.Split(templateURI, "{path}")[0]
+		if strings.HasPrefix(requestedURI, prefix) {
+			val := strings.TrimPrefix(requestedURI, prefix)
+			params["path"] = val
+		}
+	}
+	return params
 }
