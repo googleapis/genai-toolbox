@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-23T19:53:00Z
+**GENERATED ON:** 2026-06-24T22:35:13Z
 
 ---
 ### System Directives for AI Models
@@ -634,7 +634,7 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [cloud-storage-list-buckets](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-list-buckets/): A "cloud-storage-list-buckets" tool lists Cloud Storage buckets in a project, with optional prefix filtering and pagination.
 
 
-      - [cloud-storage-create-bucket](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-create-bucket/): A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in the configured source project.
+      - [cloud-storage-create-bucket](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-create-bucket/): A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in a configured or runtime-selected project.
 
 
       - [cloud-storage-list-objects](https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-list-objects/): A "cloud-storage-list-objects" tool lists objects in a Cloud Storage bucket, with optional prefix filtering and delimiter-based grouping.

@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-23T19:53:00Z
+**GENERATED ON:** 2026-06-24T22:35:13Z
 
 ---
 ### System Directives for AI Models
@@ -22808,6 +22808,11 @@ project. By default, it uses the project configured on the source. You can pass
 the optional `project` parameter to list buckets in a different project that
 the same credentials can access.
 
+You can also set `project` or `prefix` in the tool configuration. When set,
+that field is removed from the runtime parameter schema and the configured value
+is always used. Set `project` to an empty string to hide the parameter while
+using the source's configured project.
+
 The response is a JSON object with `buckets` (bucket metadata returned by the
 Cloud Storage API) and `nextPageToken` (empty when there are no more pages).
 
@@ -22836,6 +22841,16 @@ source: my-gcs-source
 description: Use this tool to list Cloud Storage buckets in the project.
 ```
 
+```yaml
+kind: tool
+name: list_log_buckets
+type: cloud-storage-list-buckets
+source: my-gcs-source
+description: Use this tool to list log buckets in the configured project.
+project: ""
+prefix: logs-
+```
+
 ## Output Format
 
 The tool returns a JSON object with:
@@ -22852,6 +22867,8 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-list-buckets".                   |
 | source      |  string  |     true     | Name of the Cloud Storage source to list buckets from.  |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| project     |  string  |    false     | Project ID to always use. When set, the runtime `project` parameter is hidden. An empty string uses the source's configured project. |
+| prefix      |  string  |    false     | Bucket name prefix to always use. When set, the runtime `prefix` parameter is hidden. |
 
 
 
@@ -22861,15 +22878,21 @@ The tool returns a JSON object with:
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Cloud Storage > Tools > cloud-storage-create-bucket
 **URL:** https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-create-bucket/
-**Description:** A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in the configured source project.
+**Description:** A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in a configured or runtime-selected project.
 
 
 
 ## About
 
-A `cloud-storage-create-bucket` tool creates a new Cloud Storage bucket in the
-project configured on the Cloud Storage source. Use it when an agent needs to
-provision a bucket before writing objects or building a data workflow.
+A `cloud-storage-create-bucket` tool creates a new Cloud Storage bucket. By
+default, it creates the bucket in the project configured on the Cloud Storage
+source. You can pass the optional `project` parameter to create buckets in a
+different project that the same credentials can access.
+
+You can also set `project`, `location`, or `uniform_bucket_level_access` in the
+tool configuration. When set, that field is removed from the runtime parameter
+schema and the configured value is always used. Set `project` to an empty string
+to hide the parameter while using the source's configured project.
 
 [gcs-buckets]: https://cloud.google.com/storage/docs/buckets
 
@@ -22879,7 +22902,7 @@ provision a bucket before writing objects or building a data workflow.
 
 ## Requirements
 
-The Cloud Storage credentials must be able to create buckets in the configured
+The Cloud Storage credentials must be able to create buckets in the target
 project. Bucket names are globally unique and must satisfy Cloud Storage bucket
 naming rules.
 
@@ -22888,6 +22911,7 @@ naming rules.
 | **parameter** | **type** | **required** | **description** |
 |---------------|:--------:|:------------:|-----------------|
 | bucket | string | true | Name of the Cloud Storage bucket to create. |
+| project | string | false | Project ID to create the bucket in. When empty, the source's configured project is used. |
 | location | string | false | Location for the bucket, e.g. "US", "EU", or "us-central1". Omit to use the Cloud Storage service default. |
 | uniform_bucket_level_access | boolean | false | Whether to enable uniform bucket-level access on the bucket. Defaults to false. |
 
@@ -22899,6 +22923,17 @@ name: create_bucket
 type: cloud-storage-create-bucket
 source: my-gcs-source
 description: Use this tool to create Cloud Storage buckets.
+```
+
+```yaml
+kind: tool
+name: create_us_bucket
+type: cloud-storage-create-bucket
+source: my-gcs-source
+description: Use this tool to create Cloud Storage buckets in the US location.
+project: ""
+location: US
+uniform_bucket_level_access: true
 ```
 
 ## Output Format
@@ -22918,6 +22953,9 @@ The tool returns a JSON object with:
 | type | string | true | Must be "cloud-storage-create-bucket". |
 | source | string | true | Name of the Cloud Storage source to create buckets from. |
 | description | string | true | Description of the tool that is passed to the LLM. |
+| project | string | false | Project ID to always use. When set, the runtime `project` parameter is hidden. An empty string uses the source's configured project. |
+| location | string | false | Bucket location to always use. When set, the runtime `location` parameter is hidden. |
+| uniform_bucket_level_access | boolean | false | Uniform bucket-level access setting to always use. When set, the runtime `uniform_bucket_level_access` parameter is hidden. |
 
 
 
@@ -22946,6 +22984,10 @@ returned by the Cloud Storage API — fields such as `Name`, `Size`, `ContentTyp
 `Updated`, `StorageClass`, `MD5`, etc.), `prefixes` (the common prefixes when
 `delimiter` is set), and `nextPageToken` (empty when there are no more pages).
 
+You can set `bucket`, `prefix`, or `delimiter` in the tool configuration. When
+set, that field is removed from the runtime parameter schema and the configured
+value is always used. A configured `bucket` must be a non-empty string.
+
 [gcs-buckets]: https://cloud.google.com/storage/docs/buckets
 
 ## Compatible Sources
@@ -22972,6 +23014,17 @@ source: my-gcs-source
 description: Use this tool to list objects in a Cloud Storage bucket.
 ```
 
+```yaml
+kind: tool
+name: list_log_objects
+type: cloud-storage-list-objects
+source: my-gcs-source
+description: Use this tool to list log objects in a Cloud Storage bucket.
+bucket: my-log-bucket
+prefix: logs/
+delimiter: /
+```
+
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                         |
@@ -22979,6 +23032,9 @@ description: Use this tool to list objects in a Cloud Storage bucket.
 | type        |  string  |     true     | Must be "cloud-storage-list-objects".                   |
 | source      |  string  |     true     | Name of the Cloud Storage source to list objects from.  |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| bucket      |  string  |    false     | Bucket to always list from. When set, the runtime `bucket` parameter is hidden. Must not be empty. |
+| prefix      |  string  |    false     | Object prefix to always use. When set, the runtime `prefix` parameter is hidden. |
+| delimiter   |  string  |    false     | Delimiter to always use. When set, the runtime `delimiter` parameter is hidden. |
 
 
 
@@ -22999,6 +23055,10 @@ Storage bucket. Use it when the LLM needs fields such as location, storage
 class, labels, lifecycle configuration, or uniform bucket-level access status.
 
 The response is the bucket metadata structure returned by the Cloud Storage API.
+
+You can set `bucket` in the tool configuration. When set, `bucket` is removed
+from the runtime parameter schema and the configured bucket is always used. A
+configured `bucket` must be a non-empty string.
 
 ## Compatible Sources
 
@@ -23025,6 +23085,15 @@ source: my-gcs-source
 description: Use this tool to inspect metadata for a Cloud Storage bucket.
 ```
 
+```yaml
+kind: tool
+name: get_app_bucket_metadata
+type: cloud-storage-get-bucket-metadata
+source: my-gcs-source
+description: Use this tool to inspect metadata for the application bucket.
+bucket: my-app-bucket
+```
+
 ## Output Format
 
 The tool returns bucket metadata from the Cloud Storage API, including fields
@@ -23038,6 +23107,7 @@ such as `Name`, `Location`, `StorageClass`, `Created`, `Labels`,
 | type | string | true | Must be "cloud-storage-get-bucket-metadata". |
 | source | string | true | Name of the Cloud Storage source to get bucket metadata from. |
 | description | string | true | Description of the tool that is passed to the LLM. |
+| bucket | string | false | Bucket to always inspect. When set, the runtime `bucket` parameter is hidden. Must not be empty. |
 
 
 
@@ -23059,6 +23129,10 @@ object name, size, content type, generation, storage class, timestamps, checksum
 or custom metadata without reading the object's content.
 
 The response is the object metadata structure returned by the Cloud Storage API.
+
+You can set `bucket` in the tool configuration. When set, `bucket` is removed
+from the runtime parameter schema and the configured bucket is always used. A
+configured `bucket` must be a non-empty string.
 
 [gcs-objects]: https://cloud.google.com/storage/docs/objects
 
@@ -23083,6 +23157,15 @@ source: my-gcs-source
 description: Use this tool to inspect metadata for a Cloud Storage object.
 ```
 
+```yaml
+kind: tool
+name: get_app_object_metadata
+type: cloud-storage-get-object-metadata
+source: my-gcs-source
+description: Use this tool to inspect metadata for objects in the application bucket.
+bucket: my-app-bucket
+```
+
 ## Output Format
 
 The tool returns object metadata from the Cloud Storage API, including fields
@@ -23096,6 +23179,7 @@ such as `Name`, `Bucket`, `Size`, `ContentType`, `Updated`, `StorageClass`,
 | type        |  string  |     true     | Must be "cloud-storage-get-object-metadata".                |
 | source      |  string  |     true     | Name of the Cloud Storage source to get object metadata from. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.          |
+| bucket      |  string  |    false     | Bucket to always inspect objects from. When set, the runtime `bucket` parameter is hidden. Must not be empty. |
 
 
 
@@ -23114,6 +23198,10 @@ such as `Name`, `Bucket`, `Size`, `ContentType`, `Updated`, `StorageClass`,
 A `cloud-storage-get-bucket-iam-policy` tool returns the IAM policy bindings for
 a Cloud Storage bucket. Use it to inspect which principals have roles on a
 bucket without modifying access.
+
+You can set `bucket` in the tool configuration. When set, `bucket` is removed
+from the runtime parameter schema and the configured bucket is always used. A
+configured `bucket` must be a non-empty string.
 
 ## Compatible Sources
 
@@ -23140,6 +23228,15 @@ source: my-gcs-source
 description: Use this tool to inspect IAM bindings for a Cloud Storage bucket.
 ```
 
+```yaml
+kind: tool
+name: get_app_bucket_iam_policy
+type: cloud-storage-get-bucket-iam-policy
+source: my-gcs-source
+description: Use this tool to inspect IAM bindings for the application bucket.
+bucket: my-app-bucket
+```
+
 ## Output Format
 
 The tool returns a JSON object with:
@@ -23156,6 +23253,7 @@ The tool returns a JSON object with:
 | type | string | true | Must be "cloud-storage-get-bucket-iam-policy". |
 | source | string | true | Name of the Cloud Storage source to get bucket IAM policies from. |
 | description | string | true | Description of the tool that is passed to the LLM. |
+| bucket | string | false | Bucket whose IAM policy is always returned. When set, the runtime `bucket` parameter is hidden. Must not be empty. |
 
 
 
@@ -23188,6 +23286,10 @@ This tool is intended for small-to-medium textual content an LLM can process
 directly. For bulk downloads of large files to the local filesystem, use
 `cloud-storage-download-object`.
 
+You can set `bucket` in the tool configuration. When set, `bucket` is removed
+from the runtime parameter schema and the configured bucket is always used. A
+configured `bucket` must be a non-empty string.
+
 [gcs-objects]: https://cloud.google.com/storage/docs/objects
 
 ## Compatible Sources
@@ -23212,6 +23314,15 @@ source: my-gcs-source
 description: Use this tool to read the content of a Cloud Storage object.
 ```
 
+```yaml
+kind: tool
+name: read_app_object
+type: cloud-storage-read-object
+source: my-gcs-source
+description: Use this tool to read text objects from the application bucket.
+bucket: my-app-bucket
+```
+
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                         |
@@ -23219,6 +23330,7 @@ description: Use this tool to read the content of a Cloud Storage object.
 | type        |  string  |     true     | Must be "cloud-storage-read-object".                    |
 | source      |  string  |     true     | Name of the Cloud Storage source to read the object from. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| bucket      |  string  |    false     | Bucket to always read from. When set, the runtime `bucket` parameter is hidden. Must not be empty. |
 
 
 
