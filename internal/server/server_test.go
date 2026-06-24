@@ -268,37 +268,37 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	s.PrimitiveMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
 
-	gotSource, _ := s.ResourceMgr.GetSource("example-source")
+	gotSource, _ := s.PrimitiveMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
 	}
 
-	gotAuthService, _ := s.ResourceMgr.GetAuthService("example-auth")
+	gotAuthService, _ := s.PrimitiveMgr.GetAuthService("example-auth")
 	if diff := cmp.Diff(gotAuthService, newAuth["example-auth"]); diff != "" {
 		t.Errorf("error updating server, authServices (-want +got):\n%s", diff)
 	}
 
-	gotTool, _ := s.ResourceMgr.GetTool("example-tool")
+	gotTool, _ := s.PrimitiveMgr.GetTool("example-tool")
 	if diff := cmp.Diff(gotTool, newTools["example-tool"]); diff != "" {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
+	gotToolset, _ := s.PrimitiveMgr.GetToolset("example-toolset")
 	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
+	gotPrompt, _ := s.PrimitiveMgr.GetPrompt("example-prompt")
 	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
-	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
+	gotPromptset, _ := s.PrimitiveMgr.GetPromptset("example-promptset")
 	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}

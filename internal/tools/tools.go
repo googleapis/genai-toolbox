@@ -139,7 +139,7 @@ type Tool interface {
 	GetScopesRequired() []string
 }
 
-// SourceProvider defines the minimal view of the server.ResourceManager
+// SourceProvider defines the minimal view of the server.PrimitiveManager
 // that the Tool package needs.
 // This is implemented to prevent import cycles.
 type SourceProvider interface {

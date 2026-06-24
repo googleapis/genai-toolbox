@@ -28,7 +28,7 @@ import (
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
 	v20250618 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250618"
 	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
@@ -44,16 +44,16 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
-func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, primitiveMgr *primitives.PrimitiveManager, body []byte, header http.Header) (any, error) {
 	switch mcpVersion {
 	case v20251125.PROTOCOL_VERSION:
-		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
 	case v20250618.PROTOCOL_VERSION:
-		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
 	case v20250326.PROTOCOL_VERSION:
-		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
 	default:
-		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, primitiveMgr, body, header)
 	}
 }
 

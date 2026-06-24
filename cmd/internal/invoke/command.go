@@ -22,7 +22,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/server"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
@@ -71,11 +71,11 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	resourceMgr := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	primitiveMgr := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	// Execute Tool
 	toolName := args[0]
-	tool, ok := resourceMgr.GetTool(toolName)
+	tool, ok := primitiveMgr.GetTool(toolName)
 	if !ok {
 		errMsg := fmt.Errorf("tool %q not found", toolName)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -110,7 +110,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	parsedParams, err = tool.EmbedParams(ctx, parsedParams, resourceMgr.GetEmbeddingModelMap())
+	parsedParams, err = tool.EmbedParams(ctx, parsedParams, primitiveMgr.GetEmbeddingModelMap())
 	if err != nil {
 		errMsg := fmt.Errorf("error embedding parameters: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -118,7 +118,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 	}
 
 	// Client Auth not supported for ephemeral CLI call
-	requiresAuth, err := tool.RequiresClientAuthorization(resourceMgr)
+	requiresAuth, err := tool.RequiresClientAuthorization(primitiveMgr)
 	if err != nil {
 		errMsg := fmt.Errorf("failed to check auth requirements: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
@@ -130,7 +130,7 @@ func runInvoke(cmd *cobra.Command, args []string, opts *internal.ToolboxOptions)
 		return errMsg
 	}
 
-	result, err := tool.Invoke(ctx, resourceMgr, parsedParams, "")
+	result, err := tool.Invoke(ctx, primitiveMgr, parsedParams, "")
 	if err != nil {
 		errMsg := fmt.Errorf("tool execution failed: %w", err)
 		opts.Logger.ErrorContext(ctx, errMsg.Error())
