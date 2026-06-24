@@ -65,14 +65,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to create.")
-	locationParam := parameters.NewStringParameterWithRequired(locationKey, "Location for the bucket, e.g. 'US', 'EU', or 'us-central1'. Omit to use the Cloud Storage service default.", false)
-	uniformAccessParam := parameters.NewBooleanParameterWithDefault(uniformBucketLevelAccessKey, false, "Whether to enable uniform bucket-level access on the bucket.")
+	locationParam := parameters.NewStringParameter(locationKey, "Location for the bucket, e.g. 'US', 'EU', or 'us-central1'. Omit to use the Cloud Storage service default.", parameters.WithStringRequired(false))
+	uniformAccessParam := parameters.NewBooleanParameter(uniformBucketLevelAccessKey, "Whether to enable uniform bucket-level access on the bucket.", parameters.WithBooleanDefault(false))
 	allParameters := parameters.Parameters{bucketParam, locationParam, uniformAccessParam}
 
 	return Tool{

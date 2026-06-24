@@ -12,8 +12,8 @@ Whether you are writing a simple script to execute a single query or building a 
 
 By using our SDKs, your application can dynamically request tools, bind parameters, add authentication, and execute commands at runtime. We offer official support and deep framework integrations across three primary languages:
 
-*   **[Python](./python-sdk/_index.md)**: Includes the Core SDK, along with native integrations for popular orchestrators like LangChain, LlamaIndex, and the ADK.
-*   **[JavaScript / TypeScript](./javascript-sdk/_index.md)**: Includes the Node.js Core SDK and integrations for the Agent Development Kit (ADK).
-*   **[Go](./go-sdk/_index.md/)**: Includes the Core SDK, plus dedicated packages for building agents with Genkit (`tbgenkit`) and the ADK.
+*   **[Python](./python-sdk/)**: Includes the Core SDK, along with native integrations for popular orchestrators like LangChain, LlamaIndex, and the ADK.
+*   **[JavaScript / TypeScript](./javascript-sdk/)**: Includes the Node.js Core SDK and integrations for the Agent Development Kit (ADK).
+*   **[Go](./go-sdk/)**: Includes the Core SDK, plus dedicated packages for building agents with Genkit (`tbgenkit`) and the ADK.
 
 Select your preferred language to explore installation instructions, quickstart guides, and framework-specific implementations.

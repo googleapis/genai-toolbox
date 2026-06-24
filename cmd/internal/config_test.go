@@ -955,8 +955,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1063,8 +1063,8 @@ func TestParseConfigWithAuth(t *testing.T) {
 						Statement: "SELECT * FROM SQL_STATEMENT;\n",
 						Parameters: []parameters.Parameter{
 							parameters.NewStringParameter("country", "some description"),
-							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+							parameters.NewIntParameter("id", "user id", parameters.WithIntAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}})),
+							parameters.NewStringParameter("email", "user email", parameters.WithStringAuth([]parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}})),
 						},
 					},
 				},
@@ -1234,9 +1234,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Method: "GET",
 						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},
@@ -1382,9 +1382,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Method: "GET",
 						Path:   "search?name=alice&pet=cat",
 						QueryParams: []parameters.Parameter{
-							parameters.NewStringParameterWithAuth("country", "some description",
+							parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-									{Name: "other-auth-service", Field: "user_id"}}),
+									{Name: "other-auth-service", Field: "user_id"}})),
 						},
 						RequestBody: `{
   "age": {{.age}},

@@ -65,9 +65,9 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("spec_id", "Unique ID for the vector spec to delete.", true),
+		parameters.NewStringParameter("spec_id", "Unique ID for the vector spec to delete.", parameters.WithStringRequired(true)),
 	}
 	paramManifest := allParameters.Manifest()
 

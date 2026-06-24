@@ -88,11 +88,11 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("role_name", "Optional: The owner name to filter the stored procedures by. Defaults to NULL.", false),
-		parameters.NewStringParameterWithRequired("schema_name", "Optional: The schema name to filter the stored procedures by. Defaults to NULL.", false),
-		parameters.NewIntParameterWithDefault("limit", 20, "Optional: The maximum number of stored procedures to return. Defaults to 20."),
+		parameters.NewStringParameter("role_name", "Optional: The owner name to filter the stored procedures by. Defaults to NULL.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("schema_name", "Optional: The schema name to filter the stored procedures by. Defaults to NULL.", parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of stored procedures to return. Defaults to 20.", parameters.WithIntDefault(20)),
 	}
 
 	if cfg.Description == "" {

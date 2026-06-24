@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "Creates a new user in a Cloud SQL instance. Both built-in and IAM users are supported. IAM users require an email account as the user name. IAM is the more secure and recommended way to manage users. The agent should always ask the user what type of user they want to create. For more information, see https://cloud.google.com/sql/docs/postgres/add-manage-iam-users"
@@ -143,13 +143,13 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("instance", "The ID of the instance where the user will be created."),
 		parameters.NewStringParameter("name", "The name for the new user. Must be unique within the instance."),
-		parameters.NewStringParameterWithRequired("password", "A secure password for the new user. Not required for IAM users.", false),
+		parameters.NewStringParameter("password", "A secure password for the new user. Not required for IAM users.", parameters.WithStringRequired(false)),
 		parameters.NewBooleanParameter("iamUser", "Set to true to create a Cloud IAM user."),
 	}
 }
