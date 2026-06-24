@@ -44,11 +44,11 @@ applying IAM permissions and roles to an identity.
 
 The `dataplex-list-data-products` tool has the following optional parameters:
 
-| **field** | **type** | **required** | **description**                                                                                                                                                                         |
-| --------- | :------: | :----------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| filter    |  string  |    false     | Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`. |
-| pageSize  | integer  |    false     | Number of returned data products in the page. Defaults to `10`.                                                                                                                         |
-| orderBy   |  string  |    false     | Specifies the ordering of results.                                                                                                                                                      |
+| **field** | **type** | **required** | **description**                                                                                                                                                                                                                                                |
+| --------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filter    | string   | false        | Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within "". Matching accross all fields at once is not yet supported. E.g. "display_name:\"my-product\"" |
+| pageSize  | integer  | false        | Number of returned data products in the page. Defaults to `10`.                                                                                                                                                                                                |
+| orderBy   | string   | false        | Specifies the ordering of results.                                                                                                                                                                                                                             |
 
 ## Example
 
@@ -63,7 +63,7 @@ description: Use this tool to list Data Products.
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
-|-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "dataplex-list-data-products".             |
-| source      |  string  |     true     | Name of the source the tool should execute on.     |
-| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-list-data-products".             |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
