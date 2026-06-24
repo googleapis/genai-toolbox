@@ -1901,6 +1901,17 @@ func TestFailParametersUnmarshal(t *testing.T) {
 			err: "parameter is missing 'type' field",
 		},
 		{
+			name: "common parameter with non-string type",
+			in: []map[string]any{
+				{
+					"name":        "my_string",
+					"type":        123,
+					"description": "this is a param with a numeric type",
+				},
+			},
+			err: "parameter 'type' field must be a string",
+		},
+		{
 			name: "common parameter missing description",
 			in: []map[string]any{
 				{
