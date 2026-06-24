@@ -1423,6 +1423,41 @@ func TestParametersParse(t *testing.T) {
 	})
 }
 
+func TestParseTypeErrorReportsValue(t *testing.T) {
+	// When a value fails the type assertion, the error must report the actual
+	// offending value, not the zero value of the target type. The primitive
+	// parameters already do this; array and map parameters used to pass their
+	// (nil) asserted variable instead of the input, producing useless errors
+	// like `%!q(<nil>) not type "array"` that hid the bad value from the user.
+	tcs := []struct {
+		name  string
+		param parameters.Parameter
+		in    string
+	}{
+		{
+			name:  "array given a non-array",
+			param: parameters.NewArrayParameter("my_array", "an array", parameters.NewStringParameter("my_string", "string item")),
+			in:    "not-an-array",
+		},
+		{
+			name:  "map given a non-map",
+			param: parameters.NewMapParameter("my_map", "a map", "string"),
+			in:    "not-a-map",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.param.Parse(tc.in)
+			if err == nil {
+				t.Fatalf("Parse(%q) expected a type error, got nil", tc.in)
+			}
+			if got := err.Error(); !strings.Contains(got, tc.in) {
+				t.Errorf("error %q does not mention the offending value %q", got, tc.in)
+			}
+		})
+	}
+}
+
 func TestAuthParametersParse(t *testing.T) {
 	authServices := []parameters.ParamAuthService{
 		{

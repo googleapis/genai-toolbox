@@ -1102,7 +1102,7 @@ func (p *ArrayParameter) IsExcludedValues(v []any) bool {
 func (p *ArrayParameter) Parse(v any) (any, error) {
 	arrVal, ok := v.([]any)
 	if !ok {
-		return nil, &ParseTypeError{p.Name, p.Type, arrVal}
+		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
 	if !p.IsAllowedValues(arrVal) {
 		return nil, fmt.Errorf("%s is not an allowed value", arrVal)
@@ -1282,7 +1282,7 @@ func (p *MapParameter) IsExcludedValues(v map[string]any) bool {
 func (p *MapParameter) Parse(v any) (any, error) {
 	m, ok := v.(map[string]any)
 	if !ok {
-		return nil, &ParseTypeError{p.Name, p.Type, m}
+		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
 	if !p.IsAllowedValues(m) {
 		return nil, fmt.Errorf("%s is not an allowed value", m)
