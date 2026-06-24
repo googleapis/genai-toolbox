@@ -67,7 +67,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -76,9 +76,9 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 
 	titleParameter := parameters.NewStringParameter("title", "The title of the Dashboard")
 	allParameters = append(allParameters, titleParameter)
-	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Dashboard")
+	descParameter := parameters.NewStringParameter("description", "The description of the Dashboard", parameters.WithStringDefault(""))
 	allParameters = append(allParameters, descParameter)
-	folderParameter := parameters.NewStringParameterWithDefault("folder", "", "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder")
+	folderParameter := parameters.NewStringParameter("folder", "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder", parameters.WithStringDefault(""))
 	allParameters = append(allParameters, folderParameter)
 
 	// finish tool setup

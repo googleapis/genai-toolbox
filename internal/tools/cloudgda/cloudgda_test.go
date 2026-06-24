@@ -187,7 +187,7 @@ func TestInitialize(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			tool, err := tc.cfg.Initialize()
+			tool, err := tc.cfg.Initialize(context.Background())
 			if err != nil {
 				t.Fatalf("did not expect an error but got: %v", err)
 			}
@@ -258,7 +258,7 @@ func TestInvoke(t *testing.T) {
 		},
 	}
 
-	tool, err := toolCfg.Initialize()
+	tool, err := toolCfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
