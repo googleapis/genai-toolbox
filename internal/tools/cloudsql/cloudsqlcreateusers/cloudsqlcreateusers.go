@@ -143,13 +143,13 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("instance", "The ID of the instance where the user will be created."),
 		parameters.NewStringParameter("name", "The name for the new user. Must be unique within the instance."),
-		parameters.NewStringParameterWithRequired("password", "A secure password for the new user. Not required for IAM users.", false),
+		parameters.NewStringParameter("password", "A secure password for the new user. Not required for IAM users.", parameters.WithStringRequired(false)),
 		parameters.NewBooleanParameter("iamUser", "Set to true to create a Cloud IAM user."),
 	}
 }

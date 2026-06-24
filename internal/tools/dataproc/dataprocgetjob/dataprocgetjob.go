@@ -66,7 +66,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("jobId", "The job ID, e.g. for \"projects/my-project/regions/us-central1/jobs/my-job\", pass \"my-job\" (the project and region are inherited from the source)", false),
+		parameters.NewStringParameter("jobId", "The job ID, e.g. for \"projects/my-project/regions/us-central1/jobs/my-job\", pass \"my-job\" (the project and region are inherited from the source)", parameters.WithStringRequired(false)),
 	}
 	return Tool{
 		BaseTool: tools.NewBaseTool(

@@ -83,7 +83,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		- base_view (boolean, optional)
 		- columns (array of objects, optional): Each object must have 'column_name' (string).`, tableDef)
 
-	folderNameParameter := parameters.NewStringParameterWithDefault("folder_name", "views", "The folder to place the view files in (e.g., 'views').")
+	folderNameParameter := parameters.NewStringParameter("folder_name", "The folder to place the view files in (e.g., 'views').", parameters.WithStringDefault("views"))
 
 	params := parameters.Parameters{projectIdParameter, connectionParameter, tablesParameter, folderNameParameter}
 

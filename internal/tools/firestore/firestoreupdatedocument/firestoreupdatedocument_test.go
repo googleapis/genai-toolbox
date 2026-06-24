@@ -200,8 +200,8 @@ func TestTool_ParseParams(t *testing.T) {
 			StaticParameters: parameters.Parameters{
 				parameters.NewStringParameter("documentPath", "Document path"),
 				parameters.NewMapParameter("documentData", "Document data", ""),
-				parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
-				parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+				parameters.NewArrayParameter("updateMask", "Update mask", parameters.NewStringParameter("field", "Field"), parameters.WithArrayRequired(false)),
+				parameters.NewBooleanParameter("returnData", "Return data", parameters.WithBooleanDefault(false)),
 			},
 		},
 	}

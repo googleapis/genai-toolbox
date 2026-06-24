@@ -31,8 +31,8 @@ func TestInitialize(t *testing.T) {
 	t.Parallel()
 
 	wantParams := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+		parameters.NewStringParameter("projectId", "The Id of the Google Cloud project.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("query", "The promql query to execute.", parameters.WithStringRequired(true)),
 	}
 
 	testCases := []struct {

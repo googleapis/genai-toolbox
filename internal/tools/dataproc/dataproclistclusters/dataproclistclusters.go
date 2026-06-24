@@ -65,9 +65,9 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("filter", `A filter constraining the clusters to list. Filters are case-sensitive and have the following syntax: field = value [AND [field = value]] ...  where field is one of status.state, clusterName, or labels.[KEY], and [KEY] is a label key. value can be * to match all values. status.state can be one of the following: ACTIVE, INACTIVE, CREATING, RUNNING, ERROR, DELETING, UPDATING, STOPPING, or STOPPED. ACTIVE contains the CREATING, UPDATING, and RUNNING states. INACTIVE contains the DELETING, ERROR, STOPPING, and STOPPED states. clusterName is the name of the cluster provided at creation time. Only the logical AND operator is supported; space-separated items are treated as having an implicit AND operator.`, false),
-		parameters.NewIntParameterWithDefault("pageSize", 20, "The maximum number of clusters to return in a single page (default 20)"),
-		parameters.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListClusters` call", false),
+		parameters.NewStringParameter("filter", `A filter constraining the clusters to list. Filters are case-sensitive and have the following syntax: field = value [AND [field = value]] ...  where field is one of status.state, clusterName, or labels.[KEY], and [KEY] is a label key. value can be * to match all values. status.state can be one of the following: ACTIVE, INACTIVE, CREATING, RUNNING, ERROR, DELETING, UPDATING, STOPPING, or STOPPED. ACTIVE contains the CREATING, UPDATING, and RUNNING states. INACTIVE contains the DELETING, ERROR, STOPPING, and STOPPED states. clusterName is the name of the cluster provided at creation time. Only the logical AND operator is supported; space-separated items are treated as having an implicit AND operator.`, parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("pageSize", "The maximum number of clusters to return in a single page (default 20)", parameters.WithIntDefault(20)),
+		parameters.NewStringParameter("pageToken", "A page token, received from a previous `ListClusters` call", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{

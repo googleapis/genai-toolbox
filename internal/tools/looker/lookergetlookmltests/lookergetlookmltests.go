@@ -72,7 +72,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	projectIdParameter := parameters.NewStringParameter("project_id", "The unique ID of the LookML project.")
-	fileIdParameter := parameters.NewStringParameterWithRequired("file_id", "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').", false)
+	fileIdParameter := parameters.NewStringParameter("file_id", "Optional ID of the file to filter tests by. This must be the complete file path from the project root (e.g., 'models/my_model.model.lkml').", parameters.WithStringRequired(false))
 	allParameters := parameters.Parameters{projectIdParameter, fileIdParameter}
 
 	// finish tool setup

@@ -67,12 +67,11 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	cypherParameter := parameters.NewStringParameter("cypher", "The cypher to execute.")
-	dryRunParameter := parameters.NewBooleanParameterWithDefault(
+	dryRunParameter := parameters.NewBooleanParameter(
 		"dry_run",
-		false,
 		"If set to true, the query will be validated and information about the execution "+
-			"will be returned without running the query. Defaults to false.",
-	)
+			"will be returned without running the query. Defaults to false.", parameters.WithBooleanDefault(
+			false))
 	params := parameters.Parameters{cypherParameter, dryRunParameter}
 
 	return Tool{

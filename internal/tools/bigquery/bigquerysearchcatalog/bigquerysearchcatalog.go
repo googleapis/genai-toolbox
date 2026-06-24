@@ -68,10 +68,10 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	prompt := parameters.NewStringParameter("prompt", "Prompt representing search intention. Do not rewrite the prompt.")
-	datasetIds := parameters.NewArrayParameterWithDefault("datasetIds", []any{}, "Array of dataset IDs.", parameters.NewStringParameter("datasetId", "The IDs of the bigquery dataset."))
-	projectIds := parameters.NewArrayParameterWithDefault("projectIds", []any{}, "Array of project IDs.", parameters.NewStringParameter("projectId", "The IDs of the bigquery project."))
-	types := parameters.NewArrayParameterWithDefault("types", []any{}, "Array of data types to filter by.", parameters.NewStringParameter("type", "The type of the data. Accepted values are: CONNECTION, POLICY, DATASET, MODEL, ROUTINE, TABLE, VIEW."))
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
+	datasetIds := parameters.NewArrayParameter("datasetIds", "Array of dataset IDs.", parameters.NewStringParameter("datasetId", "The IDs of the bigquery dataset."), parameters.WithArrayDefault([]any{}))
+	projectIds := parameters.NewArrayParameter("projectIds", "Array of project IDs.", parameters.NewStringParameter("projectId", "The IDs of the bigquery project."), parameters.WithArrayDefault([]any{}))
+	types := parameters.NewArrayParameter("types", "Array of data types to filter by.", parameters.NewStringParameter("type", "The type of the data. Accepted values are: CONNECTION, POLICY, DATASET, MODEL, ROUTINE, TABLE, VIEW."), parameters.WithArrayDefault([]any{}))
+	pageSize := parameters.NewIntParameter("pageSize", "Number of results in the search page.", parameters.WithIntDefault(5))
 	params := parameters.Parameters{prompt, datasetIds, projectIds, types, pageSize}
 
 	if cfg.Description == "" {

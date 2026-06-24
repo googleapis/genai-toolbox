@@ -82,8 +82,8 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("database_name", "", "Optional: The database name to list query stats for."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of results to return. Defaults to 50."),
+		parameters.NewStringParameter("database_name", "Optional: The database name to list query stats for.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of results to return. Defaults to 50.", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {

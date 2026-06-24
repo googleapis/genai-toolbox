@@ -69,7 +69,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameter("project", "The project ID"),
 		parameters.NewStringParameter("instance", "The name of the instance to check"),
-		parameters.NewStringParameterWithDefault("targetDatabaseVersion", "POSTGRES_18", "The target PostgreSQL version for the upgrade (e.g., POSTGRES_18). If not specified, defaults to the PostgreSQL 18."),
+		parameters.NewStringParameter("targetDatabaseVersion", "The target PostgreSQL version for the upgrade (e.g., POSTGRES_18). If not specified, defaults to the PostgreSQL 18.", parameters.WithStringDefault("POSTGRES_18")),
 	}
 
 	if cfg.Description == "" {

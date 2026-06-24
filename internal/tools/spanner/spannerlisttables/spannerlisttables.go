@@ -66,16 +66,12 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault(
+		parameters.NewStringParameter(
 			"table_names",
-			"",
-			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.",
-		),
-		parameters.NewStringParameterWithDefault(
+			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter(
 			"output_format",
-			"detailed",
-			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.",
-		),
+			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.", parameters.WithStringDefault("detailed")),
 	}
 
 	if cfg.Description == "" {

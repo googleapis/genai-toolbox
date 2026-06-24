@@ -106,11 +106,11 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where statistics  is to be executed. Check all tables visible to the current user if not specified"),
-		parameters.NewStringParameterWithDefault("table_name", "", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified."),
-		parameters.NewStringParameterWithDefault("sort_by", "", "(Optional) The column to sort by"),
-		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
-		parameters.NewStringParameterWithRequired("connected_schema", "(Optional) The connected db", false),
+		parameters.NewStringParameter("table_schema", "(Optional) The database where statistics  is to be executed. Check all tables visible to the current user if not specified", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("sort_by", "(Optional) The column to sort by", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "(Optional) Max rows to return, default is 10", parameters.WithIntDefault(10)),
+		parameters.NewStringParameter("connected_schema", "(Optional) The connected db", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{

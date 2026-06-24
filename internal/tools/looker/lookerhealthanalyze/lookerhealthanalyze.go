@@ -75,12 +75,12 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	actionParameter := parameters.NewStringParameterWithRequired("action", "The analysis to run. Can be 'projects', 'models', or 'explores'.", true)
-	projectParameter := parameters.NewStringParameterWithRequired("project", "The Looker project to analyze (optional).", false)
-	modelParameter := parameters.NewStringParameterWithRequired("model", "The Looker model to analyze (optional).", false)
-	exploreParameter := parameters.NewStringParameterWithRequired("explore", "The Looker explore to analyze (optional).", false)
-	timeframeParameter := parameters.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
-	minQueriesParameter := parameters.NewIntParameterWithDefault("min_queries", 0, "The minimum number of queries for a model or explore to be considered used.")
+	actionParameter := parameters.NewStringParameter("action", "The analysis to run. Can be 'projects', 'models', or 'explores'.", parameters.WithStringRequired(true))
+	projectParameter := parameters.NewStringParameter("project", "The Looker project to analyze (optional).", parameters.WithStringRequired(false))
+	modelParameter := parameters.NewStringParameter("model", "The Looker model to analyze (optional).", parameters.WithStringRequired(false))
+	exploreParameter := parameters.NewStringParameter("explore", "The Looker explore to analyze (optional).", parameters.WithStringRequired(false))
+	timeframeParameter := parameters.NewIntParameter("timeframe", "The timeframe in days to analyze.", parameters.WithIntDefault(90))
+	minQueriesParameter := parameters.NewIntParameter("min_queries", "The minimum number of queries for a model or explore to be considered used.", parameters.WithIntDefault(0))
 
 	allParameters := parameters.Parameters{
 		actionParameter,

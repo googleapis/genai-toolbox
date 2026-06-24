@@ -69,7 +69,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	devModeParameter := parameters.NewBooleanParameterWithDefault("devMode", true, "Whether to set Dev Mode.")
+	devModeParameter := parameters.NewBooleanParameter("devMode", "Whether to set Dev Mode.", parameters.WithBooleanDefault(true))
 	params := parameters.Parameters{devModeParameter}
 
 	return Tool{

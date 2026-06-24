@@ -23,7 +23,7 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v6"
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"

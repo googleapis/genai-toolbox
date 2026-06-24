@@ -82,9 +82,9 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name pattern to search for."),
-		parameters.NewStringParameterWithDefault("sequence_name", "", "Optional: A specific sequence name pattern to search for."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
+		parameters.NewStringParameter("schema_name", "Optional: A specific schema name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("sequence_name", "Optional: A specific sequence name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return. Default is 50", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {

@@ -133,8 +133,8 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewIntParameterWithDefault("min_duration_secs", 0, "Optional: Only show queries running for at least this long in seconds"),
-		parameters.NewIntParameterWithDefault("limit", 100, "Optional: The maximum number of rows to return."),
+		parameters.NewIntParameter("min_duration_secs", "Optional: Only show queries running for at least this long in seconds", parameters.WithIntDefault(0)),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(100)),
 	}
 
 	return Tool{

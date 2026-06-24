@@ -128,12 +128,12 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("database_name", "", "Optional: A specific database name pattern to search for."),
-		parameters.NewBooleanParameterWithDefault("include_templates", false, "Optional: Whether to include template databases in the results."),
-		parameters.NewStringParameterWithDefault("database_owner", "", "Optional: A specific database owner name pattern to search for."),
-		parameters.NewStringParameterWithDefault("default_tablespace", "", "Optional: A specific default tablespace name pattern to search for."),
-		parameters.NewStringParameterWithDefault("order_by", "", "Optional: The field to order the results by. Valid values are 'size' and 'commit'."),
-		parameters.NewIntParameterWithDefault("limit", 10, "Optional: The maximum number of rows to return."),
+		parameters.NewStringParameter("database_name", "Optional: A specific database name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewBooleanParameter("include_templates", "Optional: Whether to include template databases in the results.", parameters.WithBooleanDefault(false)),
+		parameters.NewStringParameter("database_owner", "Optional: A specific database owner name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("default_tablespace", "Optional: A specific default tablespace name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("order_by", "Optional: The field to order the results by. Valid values are 'size' and 'commit'.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(10)),
 	}
 	if cfg.Description == "" {
 		cfg.Description =

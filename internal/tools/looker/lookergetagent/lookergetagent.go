@@ -70,7 +70,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
+	agentIdParameter := parameters.NewStringParameter("agent_id", "The ID of the agent.", parameters.WithStringDefault(""))
 	params := parameters.Parameters{agentIdParameter}
 
 	annotations := &tools.ToolAnnotations{}

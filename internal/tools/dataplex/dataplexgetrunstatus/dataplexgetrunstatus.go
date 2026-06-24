@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	scanID := parameters.NewStringParameter("scanId", "The unique ID of the Dataplex DataScan (e.g. 'nq-doc-12345...').")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan was created (e.g. 'us-central1').")
-	jobID := parameters.NewStringParameterWithRequired("jobId", "Optional. The specific unique ID of the background job run (DataScanJob) to track. If not provided, tracks the latest execution run.", false)
+	jobID := parameters.NewStringParameter("jobId", "Optional. The specific unique ID of the background job run (DataScanJob) to track. If not provided, tracks the latest execution run.", parameters.WithStringRequired(false))
 
 	allParameters := parameters.Parameters{scanID, location, jobID}
 

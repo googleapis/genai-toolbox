@@ -108,11 +108,11 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: a text to filter results by schema name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("table_name", "", "Optional: a text to filter results by table name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("index_name", "", "Optional: a text to filter results by index name. The input is used within a LIKE clause."),
-		parameters.NewBooleanParameterWithDefault("only_unused", false, "Optional: If true, only returns indexes that have never been used."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
+		parameters.NewStringParameter("schema_name", "Optional: a text to filter results by schema name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "Optional: a text to filter results by table name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("index_name", "Optional: a text to filter results by index name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewBooleanParameter("only_unused", "Optional: If true, only returns indexes that have never been used.", parameters.WithBooleanDefault(false)),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return. Default is 50", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {

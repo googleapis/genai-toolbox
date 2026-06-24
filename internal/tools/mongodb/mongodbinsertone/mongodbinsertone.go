@@ -70,7 +70,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	payloadParams := parameters.NewStringParameterWithRequired(dataParamsKey, "the JSON payload to insert, should be a JSON object", true)
+	payloadParams := parameters.NewStringParameter(dataParamsKey, "the JSON payload to insert, should be a JSON object", parameters.WithStringRequired(true))
 
 	allParameters := parameters.Parameters{payloadParams}
 

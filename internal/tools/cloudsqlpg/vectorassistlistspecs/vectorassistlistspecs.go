@@ -68,8 +68,8 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("table_name", "Table name to list vector specifications for.", true),
-		parameters.NewStringParameterWithRequired("column_name", "Column name to list vector specifications for.", false),
+		parameters.NewStringParameter("table_name", "Table name to list vector specifications for.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("column_name", "Column name to list vector specifications for.", parameters.WithStringRequired(false)),
 	}
 	paramManifest := allParameters.Manifest()
 

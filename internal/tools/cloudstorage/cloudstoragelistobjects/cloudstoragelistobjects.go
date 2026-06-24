@@ -78,10 +78,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to list objects from.")
-	prefixParam := parameters.NewStringParameterWithDefault(prefixKey, "", "Filter results to objects whose names begin with this prefix.")
-	delimiterParam := parameters.NewStringParameterWithDefault(delimiterKey, "", "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.")
-	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.")
-	pageTokenParam := parameters.NewStringParameterWithDefault(pageTokenKey, "", "A previously-returned page token for retrieving the next page of results.")
+	prefixParam := parameters.NewStringParameter(prefixKey, "Filter results to objects whose names begin with this prefix.", parameters.WithStringDefault(""))
+	delimiterParam := parameters.NewStringParameter(delimiterKey, "Delimiter used to group object names (typically '/'). When set, common prefixes are returned as 'prefixes'.", parameters.WithStringDefault(""))
+	maxResultsParam := parameters.NewIntParameter(maxResultsKey, "Maximum number of objects to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.", parameters.WithIntDefault(0))
+	pageTokenParam := parameters.NewStringParameter(pageTokenKey, "A previously-returned page token for retrieving the next page of results.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{bucketParam, prefixParam, delimiterParam, maxResultsParam, pageTokenParam}
 
 	return Tool{
