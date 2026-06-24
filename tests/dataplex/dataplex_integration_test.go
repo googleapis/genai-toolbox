@@ -648,6 +648,11 @@ func runDataplexToolGetTest(t *testing.T) {
 			expectedParams: []string{"filter", "dataScanId", "resourcePath", "pageSize", "orderBy"},
 		},
 		{
+			name:           "get my-dataplex-list-data-products-tool",
+			toolName:       "my-dataplex-list-data-products-tool",
+			expectedParams: []string{"filter", "pageSize", "orderBy"},
+		},
+		{
 			name:           "get my-dataplex-generate-data-profile-tool",
 			toolName:       "my-dataplex-generate-data-profile-tool",
 			expectedParams: []string{"resourcePath", "location", "publish"},
@@ -696,11 +701,6 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-get-data-quality-results-tool",
 			toolName:       "my-dataplex-get-data-quality-results-tool",
 			expectedParams: []string{"scanId", "location"},
-		},
-		{
-			name:           "get my-dataplex-list-data-products-tool",
-			toolName:       "my-dataplex-list-data-products-tool",
-			expectedParams: []string{"filter", "pageSize", "orderBy"},
 		},
 	}
 

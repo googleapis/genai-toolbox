@@ -4,8 +4,6 @@ type: docs
 weight: 1
 description: >
   A "dataplex-list-data-products" tool allows to list data products.
-aliases:
-  - /integrations/dataplex/tools/dataplex-list-data-products/
 ---
 
 ## About
