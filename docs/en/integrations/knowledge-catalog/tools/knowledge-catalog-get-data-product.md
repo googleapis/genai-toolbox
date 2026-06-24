@@ -4,8 +4,6 @@ type: docs
 weight: 1
 description: >
   A "dataplex-get-data-product" tool allows to retrieve a specific Data Product.
-aliases:
-  - /integrations/dataplex/tools/dataplex-get-data-product/
 ---
 
 ## About
