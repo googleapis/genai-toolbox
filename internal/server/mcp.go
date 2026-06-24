@@ -429,6 +429,7 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		err = fmt.Errorf("unable to retrieve flusher for sse")
 		s.logger.DebugContext(ctx, err.Error())
 		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+		return
 	}
 	session := &sseSession{
 		writer:     w,

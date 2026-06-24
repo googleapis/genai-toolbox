@@ -1291,6 +1291,70 @@ func runSseRequest(ts *httptest.Server, path string, proto string) (*http.Respon
 	return resp, nil
 }
 
+// nonFlusherResponseWriter is an http.ResponseWriter that deliberately does not
+// implement http.Flusher, used to exercise sseHandler's missing-flusher path.
+type nonFlusherResponseWriter struct {
+	header http.Header
+	status int
+	body   bytes.Buffer
+}
+
+func (w *nonFlusherResponseWriter) Header() http.Header {
+	if w.header == nil {
+		w.header = make(http.Header)
+	}
+	return w.header
+}
+
+func (w *nonFlusherResponseWriter) Write(b []byte) (int, error) { return w.body.Write(b) }
+
+func (w *nonFlusherResponseWriter) WriteHeader(status int) { w.status = status }
+
+// TestSseHandlerWriterWithoutFlusher checks that when the ResponseWriter does
+// not implement http.Flusher, sseHandler reports a clean 500 instead of falling
+// through and dereferencing a nil flusher.
+func TestSseHandlerWriterWithoutFlusher(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	testLogger, err := log.NewStdLogger(os.Stderr, os.Stderr, "warn")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+
+	otelShutdown, err := telemetry.SetupOTel(ctx, testutils.MockVersionString, "", false, "", "toolbox")
+	if err != nil {
+		t.Fatalf("unable to setup otel: %s", err)
+	}
+	defer func() {
+		if err := otelShutdown(ctx); err != nil {
+			t.Fatalf("error shutting down OpenTelemetry: %s", err)
+		}
+	}()
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(testutils.MockVersionString)
+	if err != nil {
+		t.Fatalf("unable to create custom metrics: %s", err)
+	}
+
+	server := &Server{
+		version:         testutils.MockVersionString,
+		logger:          testLogger,
+		instrumentation: instrumentation,
+		sseManager:      newSseManager(ctx),
+		ResourceMgr:     resources.NewResourceManager(nil, nil, nil, nil, nil, nil, nil),
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/sse", nil).WithContext(ctx)
+	w := &nonFlusherResponseWriter{}
+
+	sseHandler(server, w, req)
+
+	if w.status != http.StatusInternalServerError {
+		t.Fatalf("expected status %d for a writer without a flusher, got %d", http.StatusInternalServerError, w.status)
+	}
+}
+
 func TestStdioSession(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
