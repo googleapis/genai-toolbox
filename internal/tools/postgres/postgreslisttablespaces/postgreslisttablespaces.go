@@ -88,8 +88,8 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("tablespace_name", "", "Optional: a text to filter results by tablespace name. The input is used within a LIKE clause."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+		parameters.NewStringParameter("tablespace_name", "Optional: a text to filter results by tablespace name. The input is used within a LIKE clause.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(50)),
 	}
 	if cfg.Description == "" {
 		cfg.Description = "Lists all tablespaces in the database. Returns the tablespace name, owner name, size in bytes(if the current user has CREATE privileges on the tablespace, otherwise NULL), internal object ID, the access control list regarding permissions, and any specific tablespace options."

@@ -70,20 +70,21 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	nameParameter := parameters.NewStringParameterWithDefault("name", "", "The name of the agent.")
-	descriptionParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the agent.")
-	instructionsParameter := parameters.NewStringParameterWithDefault("instructions", "", "The instructions (system prompt) for the agent.")
-	sourcesParameter := parameters.NewArrayParameterWithRequired(
+	nameParameter := parameters.NewStringParameter("name", "The name of the agent.", parameters.WithStringDefault(""))
+	descriptionParameter := parameters.NewStringParameter("description", "The description of the agent.", parameters.WithStringDefault(""))
+	instructionsParameter := parameters.NewStringParameter("instructions", "The instructions (system prompt) for the agent.", parameters.WithStringDefault(""))
+	sourcesParameter := parameters.NewArrayParameter(
 		"sources",
 		"Optional. A list of JSON-encoded data sources for the agent (e.g., [{\"model\": \"my_model\", \"explore\": \"my_explore\"}]).",
-		false,
 		parameters.NewMapParameter(
 			"source",
 			"A JSON-encoded source object with 'model' and 'explore' keys.",
 			"string",
 		),
+		parameters.WithArrayRequired(false),
 	)
-	codeInterpreterParameter := parameters.NewBooleanParameterWithDefault("code_interpreter", false, "Optional. Enables Code Interpreter for this Agent.")
+
+	codeInterpreterParameter := parameters.NewBooleanParameter("code_interpreter", "Optional. Enables Code Interpreter for this Agent.", parameters.WithBooleanDefault(false))
 	params := parameters.Parameters{nameParameter, descriptionParameter, instructionsParameter, sourcesParameter, codeInterpreterParameter}
 
 	annotations := &tools.ToolAnnotations{}

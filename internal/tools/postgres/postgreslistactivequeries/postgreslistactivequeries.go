@@ -88,9 +88,9 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("min_duration", "1 minute", "Optional: Only show queries running at least this long (e.g., '1 minute', '1 second', '2 seconds')."),
-		parameters.NewStringParameterWithDefault("exclude_application_names", "", "Optional: A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., 'psql', 'pgAdmin', 'DBeaver'). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+		parameters.NewStringParameter("min_duration", "Optional: Only show queries running at least this long (e.g., '1 minute', '1 second', '2 seconds').", parameters.WithStringDefault("1 minute")),
+		parameters.NewStringParameter("exclude_application_names", "Optional: A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., 'psql', 'pgAdmin', 'DBeaver'). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(50)),
 	}
 	paramManifest := allParameters.Manifest()
 

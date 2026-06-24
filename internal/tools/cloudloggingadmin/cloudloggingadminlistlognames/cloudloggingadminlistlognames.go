@@ -69,7 +69,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	limitDescription := fmt.Sprintf("Maximum number of log entries to return. Default: %d.", defaultLimit)
 	params := parameters.Parameters{
-		parameters.NewIntParameterWithRequired("limit", limitDescription, false),
+		parameters.NewIntParameter("limit", limitDescription, parameters.WithIntRequired(false)),
 	}
 
 	return Tool{

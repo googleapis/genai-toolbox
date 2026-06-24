@@ -132,7 +132,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// Define the parameters for the Gemini Data Analytics Query API
 	// The query is the only input parameter.
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("query", "A natural language formulation of a database query.", true),
+		parameters.NewStringParameter("query", "A natural language formulation of a database query.", parameters.WithStringRequired(true)),
 	}
 	// The input and outputs are for tool guidance, usage guidance is for multi-turn interaction.
 	guidance := Guidance

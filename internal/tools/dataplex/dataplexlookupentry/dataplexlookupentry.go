@@ -78,8 +78,8 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 				*   4 (ALL): Return the entry and both required and optional aspects (at most 100 aspects)
 				`
 
-	view := parameters.NewIntParameterWithDefault("view", 2, viewDesc)
-	aspectTypes := parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "Optional. Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", parameters.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."))
+	view := parameters.NewIntParameter("view", viewDesc, parameters.WithIntDefault(2))
+	aspectTypes := parameters.NewArrayParameter("aspectTypes", "Optional. Limits the aspects returned to the provided aspect types. It only works when used together with CUSTOM view.", parameters.NewStringParameter("aspectType", "The types of aspects to be included in the response in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`."), parameters.WithArrayDefault([]any{}))
 	entry := parameters.NewStringParameter("entry", "Required. The resource name of the Entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.")
 	allParameters := parameters.Parameters{entry, view, aspectTypes}
 

@@ -116,9 +116,9 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name pattern to search for."),
-		parameters.NewStringParameterWithDefault("owner", "", "Optional: A specific schema owner name pattern to search for."),
-		parameters.NewIntParameterWithDefault("limit", 10, "Optional: The maximum number of schemas to return."),
+		parameters.NewStringParameter("schema_name", "Optional: A specific schema name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("owner", "Optional: A specific schema owner name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of schemas to return.", parameters.WithIntDefault(10)),
 	}
 
 	if cfg.Description == "" {

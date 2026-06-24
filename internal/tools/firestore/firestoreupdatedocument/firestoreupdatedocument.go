@@ -95,18 +95,16 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		"", // Empty string for generic map that accepts any value type
 	)
 
-	updateMaskParameter := parameters.NewArrayParameterWithRequired(
+	updateMaskParameter := parameters.NewArrayParameter(
 		updateMaskKey,
 		"The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document",
-		false, // not required
-		parameters.NewStringParameter("field", "Field path to update or delete. Use dot notation to access nested fields within maps (e.g., 'address.city' to update the city field within an address map, or 'user.profile.name' for deeply nested fields). To delete a field, include it in the mask but omit it from documentData. Note: You cannot update individual array elements; you must update the entire array field"),
-	)
+		parameters.NewStringParameter("field", "Field path to update or delete. Use dot notation to access nested fields within maps (e.g., 'address.city' to update the city field within an address map, or 'user.profile.name' for deeply nested fields). To delete a field, include it in the mask but omit it from documentData. Note: You cannot update individual array elements; you must update the entire array field"), parameters.WithArrayRequired(
+			false))
 
-	returnDataParameter := parameters.NewBooleanParameterWithDefault(
+	returnDataParameter := parameters.NewBooleanParameter(
 		returnDocumentDataKey,
-		false,
-		"If set to true the output will have the data of the updated document. This flag if set to false will help avoid overloading the context of the agent.",
-	)
+		"If set to true the output will have the data of the updated document. This flag if set to false will help avoid overloading the context of the agent.", parameters.WithBooleanDefault(
+			false))
 
 	params := parameters.Parameters{
 		documentPathParameter,

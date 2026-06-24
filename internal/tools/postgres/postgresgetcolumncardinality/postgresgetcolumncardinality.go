@@ -81,9 +81,9 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional: The schema name in which the table is present."),
-		parameters.NewStringParameterWithRequired("table_name", "Required: The table name in which the column is present.", true),
-		parameters.NewStringParameterWithRequired("column_name", "Optional: The column name for which the cardinality is to be found. If not provided, cardinality for all columns will be returned.", false),
+		parameters.NewStringParameter("schema_name", "Optional: The schema name in which the table is present.", parameters.WithStringDefault("public")),
+		parameters.NewStringParameter("table_name", "Required: The table name in which the column is present.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("column_name", "Optional: The column name for which the cardinality is to be found. If not provided, cardinality for all columns will be returned.", parameters.WithStringRequired(false)),
 	}
 	paramManifest := allParameters.Manifest()
 

@@ -72,7 +72,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	projectIdParameter := parameters.NewStringParameter("project_id", "The project_id")
 	branchParameter := parameters.NewStringParameter("branch", "The git branch to switch to")
-	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to switch the branch to using `reset --hard`.")
+	refParameter := parameters.NewStringParameter("ref", "The ref to switch the branch to using `reset --hard`.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
 	annotations := &tools.ToolAnnotations{}

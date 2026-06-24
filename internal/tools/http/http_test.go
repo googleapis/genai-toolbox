@@ -120,9 +120,9 @@ func TestParseFromYamlHTTP(t *testing.T) {
 					Method: "GET",
 					Path:   "{{.pathParam}}?name=alice&pet=cat",
 					QueryParams: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					PathParams: parameters.Parameters{
 						&parameters.StringParameter{

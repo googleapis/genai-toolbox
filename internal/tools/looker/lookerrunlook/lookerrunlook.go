@@ -73,7 +73,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	lookidParameter := parameters.NewStringParameter("look_id", "The id of the look to run.")
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 500, "The row limit. Default 500")
+	limitParameter := parameters.NewIntParameter("limit", "The row limit. Default 500", parameters.WithIntDefault(500))
 
 	allParameters := parameters.Parameters{
 		lookidParameter,

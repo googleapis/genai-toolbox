@@ -68,10 +68,10 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	// parameters are marked required/ optional based on the vector assist function defintions
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("spec_id", "The unique ID of the vector specification to apply.", false),
-		parameters.NewStringParameterWithRequired("table_name", "The name of the table to apply the vector specification to (in case of a single spec defined on the table).", false),
-		parameters.NewStringParameterWithRequired("column_name", "The text_column_name or vector_column_name of the spec to identify the exact spec in case there are multiple specs defined on a table.", false),
-		parameters.NewStringParameterWithRequired("schema_name", "The schema name for the table.", false),
+		parameters.NewStringParameter("spec_id", "The unique ID of the vector specification to apply.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("table_name", "The name of the table to apply the vector specification to (in case of a single spec defined on the table).", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("column_name", "The text_column_name or vector_column_name of the spec to identify the exact spec in case there are multiple specs defined on a table.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("schema_name", "The schema name for the table.", parameters.WithStringRequired(false)),
 	}
 
 	if cfg.Description == "" {

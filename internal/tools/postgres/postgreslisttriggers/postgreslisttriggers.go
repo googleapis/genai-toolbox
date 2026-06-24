@@ -108,10 +108,10 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("trigger_name", "", "Optional: A specific trigger name pattern to search for."),
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name pattern to search for."),
-		parameters.NewStringParameterWithDefault("table_name", "", "Optional: A specific table name pattern to search for."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+		parameters.NewStringParameter("trigger_name", "Optional: A specific trigger name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("schema_name", "Optional: A specific schema name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "Optional: A specific table name pattern to search for.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {

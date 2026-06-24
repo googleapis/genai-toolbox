@@ -75,16 +75,14 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	startTimeDescription := fmt.Sprintf("Start time in RFC3339 format (e.g., 2025-12-09T00:00:00Z). Defaults to %d days ago.", defaultStartTimeOffsetDays)
 	limitDescription := fmt.Sprintf("Maximum number of log entries to return. Default: %d.", defaultLimit)
 	params := parameters.Parameters{
-		parameters.NewStringParameterWithRequired(
+		parameters.NewStringParameter(
 			"filter",
-			"Cloud Logging filter query. Common fields: resource.type, resource.labels.*, logName, severity, textPayload, jsonPayload.*, protoPayload.*, labels.*, httpRequest.*. Operators: =, !=, <, <=, >, >=, :, =~, AND, OR, NOT.",
-			false,
-		),
-		parameters.NewBooleanParameterWithRequired("newestFirst", "Set to true for newest logs first. Defaults to oldest first.", false),
-		parameters.NewStringParameterWithRequired("startTime", startTimeDescription, false),
-		parameters.NewStringParameterWithRequired("endTime", "End time in RFC3339 format (e.g., 2025-12-09T23:59:59Z). Defaults to now.", false),
-		parameters.NewBooleanParameterWithRequired("verbose", "Include additional fields (insertId, trace, spanId, httpRequest, labels, operation, sourceLocation). Defaults to false.", false),
-		parameters.NewIntParameterWithRequired("limit", limitDescription, false),
+			"Cloud Logging filter query. Common fields: resource.type, resource.labels.*, logName, severity, textPayload, jsonPayload.*, protoPayload.*, labels.*, httpRequest.*. Operators: =, !=, <, <=, >, >=, :, =~, AND, OR, NOT.", parameters.WithStringRequired(false)),
+		parameters.NewBooleanParameter("newestFirst", "Set to true for newest logs first. Defaults to oldest first.", parameters.WithBooleanRequired(false)),
+		parameters.NewStringParameter("startTime", startTimeDescription, parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("endTime", "End time in RFC3339 format (e.g., 2025-12-09T23:59:59Z). Defaults to now.", parameters.WithStringRequired(false)),
+		parameters.NewBooleanParameter("verbose", "Include additional fields (insertId, trace, spanId, httpRequest, labels, operation, sourceLocation). Defaults to false.", parameters.WithBooleanRequired(false)),
+		parameters.NewIntParameter("limit", limitDescription, parameters.WithIntRequired(false)),
 	}
 
 	return Tool{

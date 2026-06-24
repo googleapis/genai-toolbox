@@ -75,7 +75,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object.")
 	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
 	destinationParam := parameters.NewStringParameter(destinationKey, "Absolute local filesystem path where the object will be written. Relative paths and paths containing '..' are rejected.")
-	overwriteParam := parameters.NewBooleanParameterWithDefault(overwriteKey, false, "If true, overwrite the destination when it already exists. If false (default), the tool returns an error when the destination exists.")
+	overwriteParam := parameters.NewBooleanParameter(overwriteKey, "If true, overwrite the destination when it already exists. If false (default), the tool returns an error when the destination exists.", parameters.WithBooleanDefault(false))
 	allParameters := parameters.Parameters{bucketParam, objectParam, destinationParam, overwriteParam}
 
 	return Tool{

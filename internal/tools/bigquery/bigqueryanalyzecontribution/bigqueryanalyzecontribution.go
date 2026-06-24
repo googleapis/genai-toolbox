@@ -310,27 +310,23 @@ func buildParams(allowedDatasets []string) parameters.Parameters {
 	}
 
 	inputDataParameter := parameters.NewStringParameter("input_data", inputDataDescription)
-	contributionMetricParameter := parameters.NewStringParameterWithEscape("contribution_metric",
-		`The name of the column that contains the metric to analyze.
+	contributionMetricParameter := parameters.NewStringParameter("contribution_metric", `The name of the column that contains the metric to analyze.
 		Provides the expression to use to calculate the metric you are analyzing.
 		To calculate a summable metric, the expression must be in the form SUM(metric_column_name),
 		where metric_column_name is a numeric data type.
-
 		To calculate a summable ratio metric, the expression must be in the form
 		SUM(numerator_metric_column_name)/SUM(denominator_metric_column_name),
 		where numerator_metric_column_name and denominator_metric_column_name are numeric data types.
-
 		To calculate a summable by category metric, the expression must be in the form
 		SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name). The summed column must be a numeric data type.
-		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`, "single-quotes")
-	isTestColParameter := parameters.NewStringParameterWithEscape("is_test_col",
-		"The name of the column that identifies whether a row is in the test or control group.", "single-quotes")
-	dimensionIDColsParameter := parameters.NewArrayParameterWithRequired("dimension_id_cols",
-		"An array of column names that uniquely identify each dimension.", false, parameters.NewStringParameterWithEscape("dimension_id_col", "A dimension column name.", "single-quotes"))
-	topKInsightsParameter := parameters.NewIntParameterWithDefault("top_k_insights_by_apriori_support", 30,
-		"The number of top insights to return, ranked by apriori support.")
-	pruningMethodParameter := parameters.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
-		"The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.")
+		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`, parameters.WithStringEscape(
+		"single-quotes"))
+	isTestColParameter := parameters.NewStringParameter("is_test_col", "The name of the column that identifies whether a row is in the test or control group.", parameters.WithStringEscape(
+		"single-quotes"))
+	dimensionIDColsParameter := parameters.NewArrayParameter("dimension_id_cols", "An array of column names that uniquely identify each dimension.", parameters.NewStringParameter("dimension_id_col", "A dimension column name.", parameters.WithStringEscape("single-quotes")), parameters.WithArrayRequired(
+		false))
+	topKInsightsParameter := parameters.NewIntParameter("top_k_insights_by_apriori_support", "The number of top insights to return, ranked by apriori support.", parameters.WithIntDefault(30))
+	pruningMethodParameter := parameters.NewStringParameter("pruning_method", "The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.", parameters.WithStringDefault("PRUNE_REDUNDANT_INSIGHTS"))
 
 	return parameters.Parameters{
 		inputDataParameter,

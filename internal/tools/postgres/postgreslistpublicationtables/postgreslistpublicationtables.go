@@ -92,10 +92,10 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("table_names", "", "Optional: Filters by a comma-separated list of table names."),
-		parameters.NewStringParameterWithDefault("publication_names", "", "Optional: Filters by a comma-separated list of publication names."),
-		parameters.NewStringParameterWithDefault("schema_names", "", "Optional: Filters by a comma-separated list of schema names."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+		parameters.NewStringParameter("table_names", "Optional: Filters by a comma-separated list of table names.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("publication_names", "Optional: Filters by a comma-separated list of publication names.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("schema_names", "Optional: Filters by a comma-separated list of schema names.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of rows to return.", parameters.WithIntDefault(50)),
 	}
 	if cfg.Description == "" {
 		cfg.Description = "Lists all publication tables in the database. Returns the publication name, schema name, and table name, along with definition details indicating if it publishes all tables, whether it replicates inserts, updates, deletes, or truncates, and the publication owner."

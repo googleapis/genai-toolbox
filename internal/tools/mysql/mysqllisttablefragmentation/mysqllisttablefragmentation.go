@@ -89,10 +89,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where fragmentation check is to be executed. Check all tables visible to the current user if not specified"),
-		parameters.NewStringParameterWithDefault("table_name", "", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified."),
-		parameters.NewIntParameterWithDefault("data_free_threshold_bytes", 1, "(Optional) Only show tables with at least this much free space in bytes. Default is 1"),
-		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
+		parameters.NewStringParameter("table_schema", "(Optional) The database where fragmentation check is to be executed. Check all tables visible to the current user if not specified", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("data_free_threshold_bytes", "(Optional) Only show tables with at least this much free space in bytes. Default is 1", parameters.WithIntDefault(1)),
+		parameters.NewIntParameter("limit", "(Optional) Max rows to return, default is 10", parameters.WithIntDefault(10)),
 	}
 
 	return Tool{

@@ -71,7 +71,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	connParameter := parameters.NewStringParameter("conn", "The connection containing the tables.")
-	dbParameter := parameters.NewStringParameterWithRequired("db", "The optional database to search", false)
+	dbParameter := parameters.NewStringParameter("db", "The optional database to search", parameters.WithStringRequired(false))
 	schemaParameter := parameters.NewStringParameter("schema", "The schema containing the tables.")
 	tablesParameter := parameters.NewStringParameter("tables", "A comma separated list of tables containing the columns.")
 	params := parameters.Parameters{connParameter, dbParameter, schemaParameter, tablesParameter}

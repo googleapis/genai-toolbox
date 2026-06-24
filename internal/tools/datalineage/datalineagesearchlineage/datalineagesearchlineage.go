@@ -92,35 +92,31 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		entityRef,
 	)
 
-	direction := parameters.NewStringParameterWithAllowedValues(
+	direction := parameters.NewStringParameter(
 		"direction",
 		"Required. Direction of the search.",
-		[]any{"UPSTREAM", "DOWNSTREAM"},
+		parameters.WithStringAllowedValues([]any{"UPSTREAM", "DOWNSTREAM"}),
 	)
 
-	maxDepth := parameters.NewIntParameterWithRequired(
+	maxDepth := parameters.NewIntParameter(
 		"max_depth",
-		"Optional. The maximum depth of the search. Default is 5, max is 100.",
-		false,
-	)
+		"Optional. The maximum depth of the search. Default is 5, max is 100.", parameters.WithIntRequired(
+			false))
 
-	maxResults := parameters.NewIntParameterWithRequired(
+	maxResults := parameters.NewIntParameter(
 		"max_results",
-		"Optional. The maximum number of links to return in the response. Default is 1000, max is 10000.",
-		false,
-	)
+		"Optional. The maximum number of links to return in the response. Default is 1000, max is 10000.", parameters.WithIntRequired(
+			false))
 
-	maxProcessPerLink := parameters.NewIntParameterWithRequired(
+	maxProcessPerLink := parameters.NewIntParameter(
 		"max_process_per_link",
-		"Optional. The maximum number of processes to return per link. Default is 0, max is 100. Must be greater than 0 if request_process_details is true.",
-		false,
-	)
+		"Optional. The maximum number of processes to return per link. Default is 0, max is 100. Must be greater than 0 if request_process_details is true.", parameters.WithIntRequired(
+			false))
 
-	requestProcessDetails := parameters.NewBooleanParameterWithRequired(
+	requestProcessDetails := parameters.NewBooleanParameter(
 		"request_process_details",
-		"Optional. If true, retrieves full process details (displayName, attributes, origin) for the links. Requires max_process_per_link to be greater than 0.",
-		false,
-	)
+		"Optional. If true, retrieves full process details (displayName, attributes, origin) for the links. Requires max_process_per_link to be greater than 0.", parameters.WithBooleanRequired(
+			false))
 
 	params := parameters.Parameters{locations, rootEntities, direction, maxDepth, maxResults, maxProcessPerLink, requestProcessDetails}
 

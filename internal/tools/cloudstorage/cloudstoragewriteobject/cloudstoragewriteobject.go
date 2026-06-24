@@ -74,7 +74,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to write into.")
 	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
 	contentParam := parameters.NewStringParameter(contentKey, "Text content to write to the Cloud Storage object.")
-	contentTypeParam := parameters.NewStringParameterWithDefault(contentTypeKey, "", "MIME type to record on the written object. When empty, Cloud Storage auto-detects from the first 512 bytes of content.")
+	contentTypeParam := parameters.NewStringParameter(contentTypeKey, "MIME type to record on the written object. When empty, Cloud Storage auto-detects from the first 512 bytes of content.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{bucketParam, objectParam, contentParam, contentTypeParam}
 
 	return Tool{

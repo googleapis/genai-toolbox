@@ -70,9 +70,9 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("filter", `A filter for the sessions to return in the response. A filter is a logical expression constraining the values of various fields in each session resource. Filters are case sensitive, and may contain multiple clauses combined with logical operators (AND, OR). Supported fields are session_id, session_uuid, state, create_time, and labels. Example: state = ACTIVE and create_time < "2023-01-01T00:00:00Z" is a filter for sessions in an ACTIVE state that were created before 2023-01-01. state = ACTIVE and labels.environment=production is a filter for sessions in an ACTIVE state that have a production environment label.`, false),
-		parameters.NewIntParameterWithDefault("pageSize", 20, "The maximum number of sessions to return in a single page (default 20)"),
-		parameters.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListSessions` call", false),
+		parameters.NewStringParameter("filter", `A filter for the sessions to return in the response. A filter is a logical expression constraining the values of various fields in each session resource. Filters are case sensitive, and may contain multiple clauses combined with logical operators (AND, OR). Supported fields are session_id, session_uuid, state, create_time, and labels. Example: state = ACTIVE and create_time < "2023-01-01T00:00:00Z" is a filter for sessions in an ACTIVE state that were created before 2023-01-01. state = ACTIVE and labels.environment=production is a filter for sessions in an ACTIVE state that have a production environment label.`, parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("pageSize", "The maximum number of sessions to return in a single page (default 20)", parameters.WithIntDefault(20)),
+		parameters.NewStringParameter("pageToken", "A page token, received from a previous `ListSessions` call", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{

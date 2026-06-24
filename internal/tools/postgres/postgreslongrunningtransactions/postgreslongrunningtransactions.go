@@ -90,8 +90,8 @@ func (cfg Config) ToolConfigType() string {
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("min_duration", "5 minutes", "Optional: Only show transactions running at least this long (e.g., '1 minute', '15 minutes', '30 seconds')."),
-		parameters.NewIntParameterWithDefault("limit", 20, "Optional: The maximum number of long-running transactions to return. Defaults to 20."),
+		parameters.NewStringParameter("min_duration", "Optional: Only show transactions running at least this long (e.g., '1 minute', '15 minutes', '30 seconds').", parameters.WithStringDefault("5 minutes")),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of long-running transactions to return. Defaults to 20.", parameters.WithIntDefault(20)),
 	}
 
 	if cfg.Description == "" {

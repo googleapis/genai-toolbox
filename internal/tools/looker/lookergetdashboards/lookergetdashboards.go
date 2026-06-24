@@ -70,10 +70,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	titleParameter := parameters.NewStringParameterWithDefault("title", "", "The title of the dashboard.")
-	descParameter := parameters.NewStringParameterWithDefault("desc", "", "The description of the dashboard.")
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 100, "The number of dashboards to fetch. Default 100")
-	offsetParameter := parameters.NewIntParameterWithDefault("offset", 0, "The number of dashboards to skip before fetching. Default 0")
+	titleParameter := parameters.NewStringParameter("title", "The title of the dashboard.", parameters.WithStringDefault(""))
+	descParameter := parameters.NewStringParameter("desc", "The description of the dashboard.", parameters.WithStringDefault(""))
+	limitParameter := parameters.NewIntParameter("limit", "The number of dashboards to fetch. Default 100", parameters.WithIntDefault(100))
+	offsetParameter := parameters.NewIntParameter("offset", "The number of dashboards to skip before fetching. Default 0", parameters.WithIntDefault(0))
 	params := parameters.Parameters{
 		titleParameter,
 		descParameter,

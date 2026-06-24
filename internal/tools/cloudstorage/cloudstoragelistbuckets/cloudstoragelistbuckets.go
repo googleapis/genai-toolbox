@@ -76,10 +76,10 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	projectParam := parameters.NewStringParameterWithDefault(projectKey, "", "Project ID to list buckets in. When empty, the source's configured project is used.")
-	prefixParam := parameters.NewStringParameterWithDefault(prefixKey, "", "Filter results to buckets whose names begin with this prefix.")
-	maxResultsParam := parameters.NewIntParameterWithDefault(maxResultsKey, 0, "Maximum number of buckets to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.")
-	pageTokenParam := parameters.NewStringParameterWithDefault(pageTokenKey, "", "A previously-returned page token for retrieving the next page of results.")
+	projectParam := parameters.NewStringParameter(projectKey, "Project ID to list buckets in. When empty, the source's configured project is used.", parameters.WithStringDefault(""))
+	prefixParam := parameters.NewStringParameter(prefixKey, "Filter results to buckets whose names begin with this prefix.", parameters.WithStringDefault(""))
+	maxResultsParam := parameters.NewIntParameter(maxResultsKey, "Maximum number of buckets to return per page. A value of 0 uses the API default (1000); negative values and values above 1000 are rejected.", parameters.WithIntDefault(0))
+	pageTokenParam := parameters.NewStringParameter(pageTokenKey, "A previously-returned page token for retrieving the next page of results.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{projectParam, prefixParam, maxResultsParam, pageTokenParam}
 
 	return Tool{

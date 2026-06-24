@@ -77,15 +77,12 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	titleParameter := parameters.NewStringParameter("title", "The title of the Look")
 	allParameters = append(allParameters, titleParameter)
-	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Look")
+	descParameter := parameters.NewStringParameter("description", "The description of the Look", parameters.WithStringDefault(""))
 	allParameters = append(allParameters, descParameter)
-	folderParameter := parameters.NewStringParameterWithDefault("folder", "", "The folder id where the Look will be created. Leave blank to use the user's personal folder")
+	folderParameter := parameters.NewStringParameter("folder", "The folder id where the Look will be created. Leave blank to use the user's personal folder", parameters.WithStringDefault(""))
 	allParameters = append(allParameters, folderParameter)
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
-		"The visualization config for the query",
-		"",
-	)
+	vizParameter := parameters.NewMapParameter("vis_config", "The visualization config for the query", "", parameters.WithMapDefault(
+		map[string]any{}))
 	allParameters = append(allParameters, vizParameter)
 
 	// finish tool setup

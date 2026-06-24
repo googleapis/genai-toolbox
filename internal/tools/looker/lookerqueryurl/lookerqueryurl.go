@@ -73,11 +73,8 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	allParameters := lookercommon.GetQueryParameters()
 
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
-		"The visualization config for the query",
-		"",
-	)
+	vizParameter := parameters.NewMapParameter("vis_config", "The visualization config for the query", "", parameters.WithMapDefault(
+		map[string]any{}))
 	allParameters = append(allParameters, vizParameter)
 
 	// finish tool setup
