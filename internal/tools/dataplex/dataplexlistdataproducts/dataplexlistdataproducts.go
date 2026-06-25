@@ -60,10 +60,22 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
-	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching accross all fields at once is not yet supported. E.g. \"display_name:\\\"my-product\\\"\"")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Number of returned data products in the page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Specifies the ordering of results.")
+func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
+	filter := parameters.NewStringParameter(
+		"filter",
+		"Optional. Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching accross all fields at once is not yet supported. E.g. \"display_name:\\\"my-product\\\"\"",
+		parameters.WithStringDefault(""),
+	)
+	pageSize := parameters.NewIntParameter(
+		"pageSize",
+		"Optional. Number of returned data products in the page.",
+		parameters.WithIntDefault(10),
+	)
+	orderBy := parameters.NewStringParameter(
+		"orderBy",
+		"Optional. Specifies the ordering of results.",
+		parameters.WithStringDefault(""),
+	)
 	params := parameters.Parameters{filter, pageSize, orderBy}
 
 	return Tool{
