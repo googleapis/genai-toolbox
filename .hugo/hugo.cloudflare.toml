@@ -55,7 +55,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   github_subdir = "docs"
   offlineSearch = false
   version_menu = "Releases"
-  disableMigrationBanner = true
   releases_url = "/releases.releases"
   global_logo_url = "/"
   pagefind = true
@@ -107,11 +106,6 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 [[params.versions]]
   version = "v0.32.0"
   url = "https://mcp-toolbox.dev/v0.32.0/"
-
-[[params.versions]]
-  version = "v0.31.0"
-  url = "https://mcp-toolbox.dev/v0.31.0/"
-
 
 [[menu.main]]
   name = "GitHub"

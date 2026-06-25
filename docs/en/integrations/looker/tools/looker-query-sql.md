@@ -12,16 +12,17 @@ description: >
 The `looker-query-sql` generates a sql query using the Looker
 semantic model.
 
-`looker-query-sql` takes eight parameters:
+`looker-query-sql` takes nine parameters:
 
 1. the `model`
 2. the `explore`
 3. the `fields` list
 4. an optional set of `filters`
-5. an optional set of `pivots`
-6. an optional set of `sorts`
-7. an optional `limit`
-8. an optional `tz`
+5. an optional `filter_expression`
+6. an optional set of `pivots`
+7. an optional set of `sorts`
+8. an optional `limit`
+9. an optional `tz`
 
 Starting in Looker v25.18, these queries can be identified in Looker's
 System Activity. In the History explore, use the field API Client Name
@@ -46,7 +47,7 @@ description: |
   Parameters:
   All parameters for this tool are identical to those of the `query` tool.
   This includes `model_name`, `explore_name`, `fields` (required),
-  and optional parameters like `pivots`, `filters`, `sorts`, `limit`, and `query_timezone`.
+  and optional parameters like `pivots`, `filters`, `filter_expression`, `sorts`, `limit`, and `query_timezone`.
 
   Output:
   The result of this tool is the raw SQL text.

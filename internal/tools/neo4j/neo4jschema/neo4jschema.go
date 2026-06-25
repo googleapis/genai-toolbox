@@ -77,7 +77,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}

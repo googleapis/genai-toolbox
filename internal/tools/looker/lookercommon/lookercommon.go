@@ -116,27 +116,31 @@ func GetQueryParameters() parameters.Parameters {
 		"The fields to be retrieved.",
 		parameters.NewStringParameter("field", "A field to be returned in the query"),
 	)
-	filtersParameter := parameters.NewMapParameterWithDefault("filters",
-		map[string]any{},
+	filtersParameter := parameters.NewMapParameter(
+		"filters",
 		"The filters for the query. Keys are fully-qualified field names "+
 			"(e.g. \"view.field\") and values are filter expressions or "+
 			"parameter values. Pass values bare — do not wrap them in extra "+
 			"quote characters. For LookML `parameter` fields, use the raw "+
 			"allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 		"",
+		parameters.WithMapDefault(map[string]any{}),
 	)
-	pivotsParameter := parameters.NewArrayParameterWithDefault("pivots",
-		[]any{},
+	pivotsParameter := parameters.NewArrayParameter(
+		"pivots",
 		"The query pivots (must be included in fields as well).",
 		parameters.NewStringParameter("pivot_field", "A field to be used as a pivot in the query"),
+		parameters.WithArrayDefault([]any{}),
 	)
-	sortsParameter := parameters.NewArrayParameterWithDefault("sorts",
-		[]any{},
+	sortsParameter := parameters.NewArrayParameter(
+		"sorts",
 		"The sorts like \"field.id desc 0\".",
 		parameters.NewStringParameter("sort_field", "A field to be used as a sort in the query"),
+		parameters.WithArrayDefault([]any{}),
 	)
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 500, "The row limit.")
-	tzParameter := parameters.NewStringParameterWithRequired("tz", "The query timezone.", false)
+	limitParameter := parameters.NewIntParameter("limit", "The row limit.", parameters.WithIntDefault(500))
+	tzParameter := parameters.NewStringParameter("tz", "The query timezone.", parameters.WithStringRequired(false))
+	filterExpressionParameter := parameters.NewStringParameter("filter_expression", "An optional filter expression string.", parameters.WithStringRequired(false))
 
 	return parameters.Parameters{
 		modelParameter,
@@ -147,6 +151,7 @@ func GetQueryParameters() parameters.Parameters {
 		sortsParameter,
 		limitParameter,
 		tzParameter,
+		filterExpressionParameter,
 	}
 }
 
@@ -329,15 +334,25 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		tz = tzname
 	}
 
+	var filterExpressionPtr *string
+	if val, ok := paramsMap["filter_expression"]; ok && val != nil {
+		if strVal, ok := val.(string); ok {
+			filterExpressionPtr = &strVal
+		} else {
+			return nil, fmt.Errorf("'filter_expression' must be a string, got %T", val)
+		}
+	}
+
 	wq := v4.WriteQuery{
-		Model:         paramsMap["model"].(string),
-		View:          paramsMap["explore"].(string),
-		Fields:        &fields,
-		Pivots:        &pivots,
-		Filters:       &filters,
-		Sorts:         &sorts,
-		QueryTimezone: &tz,
-		Limit:         &limit,
+		Model:            paramsMap["model"].(string),
+		View:             paramsMap["explore"].(string),
+		Fields:           &fields,
+		Pivots:           &pivots,
+		Filters:          &filters,
+		Sorts:            &sorts,
+		QueryTimezone:    &tz,
+		Limit:            &limit,
+		FilterExpression: filterExpressionPtr,
 	}
 	return &wq, nil
 }

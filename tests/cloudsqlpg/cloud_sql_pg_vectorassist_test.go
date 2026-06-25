@@ -99,6 +99,11 @@ func setupVectorAssistTable(t *testing.T, ctx context.Context, pool *pgxpool.Poo
 // TODO: Remove the test from this file and follow the existing test pattern
 // by calling the tests from cloudsqlpg_integration_test.go
 func TestVectorAssistIntegration(t *testing.T) {
+	// temporarily skip vector assist test since "Vector assist is temporarily
+	// disabled for all Cloud SQL for PostgreSQL instances"
+	// ref: https://docs.cloud.google.com/sql/docs/postgres/vector-assist-overview
+	t.Skip("Temporarily skipping vector assist test. Google had temporarily disabled vector assist for all CloudSQL for PostgreSQL instances.")
+
 	sourceConfig := getCloudSQLPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
