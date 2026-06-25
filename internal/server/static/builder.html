@@ -1,0 +1,238 @@
+<!--
+Copyright 2025 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Config Builder</title>
+  <!-- Tailwind CSS v4 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Geist Fonts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/core.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.0/dist/mono.css" />
+  <!-- JS-YAML for safe, compile-free parsing and dumping -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+  <style>
+    body {
+      font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #F7F6F3;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .font-mono {
+      font-family: 'Geist Mono', SFMono-Regular, Consolas, monospace;
+    }
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.16);
+    }
+  </style>
+</head>
+<body class="h-full overflow-hidden text-zinc-800 flex flex-col">
+
+  <!-- Header -->
+  <header class="h-14 border-b border-zinc-200/80 bg-white flex items-center justify-between px-6 shrink-0 z-10">
+    <div class="flex items-center gap-3">
+      <div class="w-2.5 h-2.5 rounded-sm bg-zinc-800"></div>
+      <span class="font-mono text-xs uppercase tracking-widest font-semibold text-zinc-900">MCP Toolbox</span>
+      <span class="text-zinc-300">/</span>
+      <span class="text-xs font-medium text-zinc-500">Config Builder</span>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button id="btn-import-modal" class="px-3 py-1.5 text-xs font-mono font-medium border border-zinc-200 rounded-md bg-white hover:bg-zinc-50 hover:border-zinc-300 active:scale-[0.98] focus:ring-1 focus:ring-zinc-400 focus:outline-none transition-all cursor-pointer">
+        Import Config
+      </button>
+      <button id="btn-clear-all" class="px-3 py-1.5 text-xs font-mono font-medium border border-red-200/50 rounded-md bg-red-50/50 text-red-700 hover:bg-red-50 hover:border-red-300 active:scale-[0.98] focus:ring-1 focus:ring-red-400 focus:outline-none transition-all cursor-pointer">
+        Reset
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="flex-1 flex overflow-hidden min-h-0">
+    
+    <!-- Left Column: Tabs & Navigation -->
+    <aside class="w-80 border-r border-zinc-200/80 bg-white flex flex-col shrink-0">
+      <!-- Section Tabs -->
+      <div class="p-4 border-b border-zinc-200/50">
+        <label class="text-[10px] tracking-widest font-mono font-semibold uppercase text-zinc-400 block mb-3">Resource Types</label>
+        <nav class="grid grid-cols-2 gap-1.5 text-xs" aria-label="Resource tabs">
+          <button data-tab="sources" class="tab-btn px-3 py-2 text-left font-mono font-medium rounded-md border border-transparent bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all cursor-pointer">
+            Sources
+          </button>
+          <button data-tab="authServices" class="tab-btn px-3 py-2 text-left font-mono font-medium rounded-md border border-transparent bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all cursor-pointer">
+            Auth Services
+          </button>
+          <button data-tab="tools" class="tab-btn px-3 py-2 text-left font-mono font-medium rounded-md border border-transparent bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all cursor-pointer">
+            Tools
+          </button>
+          <button data-tab="toolsets" class="tab-btn px-3 py-2 text-left font-mono font-medium rounded-md border border-transparent bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all cursor-pointer">
+            Toolsets
+          </button>
+          <button data-tab="embeddingModels" class="tab-btn px-3 py-2 text-left font-mono font-medium rounded-md border border-transparent bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all cursor-pointer">
+            Embeddings
+          </button>
+          <button data-tab="prompts" class="tab-btn px-3 py-2 text-left font-mono font-medium rounded-md border border-transparent bg-zinc-50 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 active:scale-[0.98] transition-all cursor-pointer">
+            Prompts
+          </button>
+        </nav>
+      </div>
+
+      <!-- Resource List Title / Action -->
+      <div class="px-4 py-3 bg-zinc-50/50 border-b border-zinc-200/50 flex items-center justify-between">
+        <span id="list-title" class="text-xs font-mono font-semibold uppercase text-zinc-500 tracking-wider">Sources</span>
+        <button id="btn-add-resource" class="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-zinc-700 bg-white border border-zinc-200 rounded hover:bg-zinc-50 hover:border-zinc-300 active:scale-[0.96] transition-all cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          Add New
+        </button>
+      </div>
+
+      <!-- Resource List Content -->
+      <div id="resource-list" class="flex-1 overflow-y-auto divide-y divide-zinc-100 p-2 space-y-1">
+        <!-- Dyn list of elements -->
+      </div>
+    </aside>
+
+    <!-- Middle Column: Form Editor -->
+    <main class="flex-1 border-r border-zinc-200/80 flex flex-col bg-white overflow-y-auto">
+      
+      <!-- Editor Form Wrapper -->
+      <div id="editor-container" class="p-8 max-w-2xl mx-auto w-full flex-1 flex flex-col justify-between">
+        <!-- Form elements injected here dynamically -->
+        <div id="welcome-view" class="text-center py-20 flex-1 flex flex-col justify-center items-center">
+          <div class="w-10 h-10 border border-dashed border-zinc-300 rounded-md flex items-center justify-center mb-4">
+            <svg class="w-5 h-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.68-.69-1.8-2.01-1.8-3.08 0-1.07 1.12-2.39 1.8-3.08m3.32 6.16c.68-.69 1.8-2.01 1.8-3.08 0-1.07-1.12-2.39-1.8-3.08M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <h2 class="text-sm font-mono font-medium text-zinc-800">MCP Configuration Editor</h2>
+          <p class="text-xs text-zinc-400 mt-2 max-w-xs">Select an existing resource from the left pane or click "Add New" to get started configuring your tools.yaml.</p>
+        </div>
+
+        <form id="editor-form" class="hidden space-y-6 flex-1 flex flex-col justify-between">
+          <!-- Form Header -->
+          <div class="border-b border-zinc-100 pb-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span id="form-badge-kind" class="px-2 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wider rounded">SOURCE</span>
+              <span class="text-zinc-300 font-mono text-xs">/</span>
+              <span id="form-title-context" class="text-xs text-zinc-400 font-mono font-medium">new_resource</span>
+            </div>
+            <h3 id="form-header-title" class="text-base font-mono font-medium text-zinc-800">Configure Resource</h3>
+          </div>
+
+          <!-- Dynamic Form Fields Container -->
+          <div id="form-fields" class="space-y-4 flex-1">
+            <!-- Injected form fields based on resource type -->
+          </div>
+
+          <!-- Form Action buttons -->
+          <div class="pt-6 border-t border-zinc-100 flex items-center justify-between shrink-0">
+            <button type="button" id="btn-delete-active" class="px-3 py-2 text-xs font-mono font-medium border border-red-200/60 rounded-md bg-[#FDEBEC] text-[#9F2F2D] hover:bg-red-50 hover:border-red-300 active:scale-[0.98] focus:ring-1 focus:ring-red-400 focus:outline-none transition-all cursor-pointer">
+              Delete Resource
+            </button>
+            <div class="flex items-center gap-3">
+              <button type="button" id="btn-cancel-edit" class="px-3 py-2 text-xs font-mono font-medium border border-zinc-200 rounded-md bg-white hover:bg-zinc-50 active:scale-[0.98] transition-all cursor-pointer">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 text-xs font-mono font-medium border border-transparent rounded-md bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] focus:ring-2 focus:ring-zinc-400 focus:outline-none transition-all cursor-pointer">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <!-- Right Column: Live YAML Output -->
+    <aside class="w-96 bg-zinc-50 border-l border-zinc-200/80 flex flex-col shrink-0">
+      <div class="px-4 py-3 border-b border-zinc-200/80 bg-white flex items-center justify-between shrink-0">
+        <span class="text-xs font-mono font-semibold uppercase text-zinc-500 tracking-wider">Live Preview</span>
+        <div class="flex items-center gap-2">
+          <button id="btn-copy-yaml" class="px-2.5 py-1 text-[11px] font-mono font-medium border border-zinc-200 bg-white hover:bg-zinc-50 rounded hover:border-zinc-300 active:scale-[0.97] transition-all cursor-pointer">
+            Copy
+          </button>
+          <button id="btn-download-yaml" class="px-2.5 py-1 text-[11px] font-mono font-medium border border-transparent bg-zinc-900 text-white hover:bg-zinc-800 rounded active:scale-[0.97] transition-all cursor-pointer">
+            Download
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-hidden p-4 flex flex-col">
+        <div class="flex-1 relative overflow-auto border border-zinc-200/60 rounded-lg bg-white">
+          <pre><code id="yaml-code" class="block font-mono text-[11px] text-zinc-700 p-4 select-all leading-relaxed whitespace-pre"></code></pre>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+          <span>Multi-document format (---)</span>
+          <span id="yaml-char-count">0 bytes</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Import Modal (Hidden by default) -->
+  <div id="import-modal" class="fixed inset-0 bg-zinc-900/40 backdrop-blur-[1px] flex items-center justify-center z-50 hidden">
+    <div class="w-full max-w-xl bg-white border border-zinc-200 rounded-lg shadow-xl overflow-hidden flex flex-col">
+      <div class="px-5 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+        <h4 class="text-sm font-mono font-semibold text-zinc-700">Import tools.yaml</h4>
+        <button id="btn-close-import" class="text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="text-[10px] tracking-widest font-mono font-semibold uppercase text-zinc-400 block mb-2">Upload File</label>
+          <div class="flex items-center gap-3">
+            <input type="file" id="file-import" accept=".yaml,.yml" class="hidden" />
+            <button id="btn-file-select" class="px-3 py-2 text-xs font-mono font-medium border border-zinc-200 rounded-md bg-white hover:bg-zinc-50 hover:border-zinc-300 active:scale-[0.98] transition-all cursor-pointer">
+              Choose YAML File...
+            </button>
+            <span id="selected-filename" class="text-xs text-zinc-500 font-mono italic">No file chosen</span>
+          </div>
+        </div>
+
+        <div class="relative">
+          <div class="flex justify-between items-center mb-2">
+            <label class="text-[10px] tracking-widest font-mono font-semibold uppercase text-zinc-400 block">Or Paste YAML Content</label>
+            <span id="import-error" class="text-[10px] font-mono text-red-600 hidden">Invalid YAML structure</span>
+          </div>
+          <textarea id="text-import" placeholder="Paste your multi-document tools.yaml here..." class="w-full h-64 font-mono text-xs p-3 border border-zinc-200 rounded-md focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 placeholder-zinc-300"></textarea>
+        </div>
+      </div>
+      <div class="px-5 py-4 border-t border-zinc-100 bg-zinc-50/50 flex items-center justify-end gap-3">
+        <button id="btn-cancel-import" class="px-3 py-2 text-xs font-mono font-medium border border-zinc-200 rounded-md bg-white hover:bg-zinc-50 active:scale-[0.98] transition-all cursor-pointer">
+          Cancel
+        </button>
+        <button id="btn-confirm-import" class="px-4 py-2 text-xs font-mono font-medium border border-transparent rounded-md bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] focus:ring-2 focus:ring-zinc-400 focus:outline-none transition-all cursor-pointer">
+          Import and Load
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/ui/js/builder.js" type="module"></script>
+</body>
+</html>

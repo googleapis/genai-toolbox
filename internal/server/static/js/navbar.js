@@ -34,6 +34,7 @@ function renderNavbar(containerId, activePath) {
                 <!--<li><a href="/ui/authservices">Auth Services</a></li>-->
                 <li><a href="/ui/tools">Tools</a></li>
                 <li><a href="/ui/toolsets">Toolsets</a></li>
+                <li><a href="/ui/builder">Config Builder</a></li>
             </ul>
         </nav>
     `;
