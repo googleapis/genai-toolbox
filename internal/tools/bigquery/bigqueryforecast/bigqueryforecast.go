@@ -174,9 +174,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				}
 			}
 
-			var dryRunJob *bigqueryrestapi.Job
-			var validationErr util.ToolboxError
-			dryRunJob, validationErr = bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps, source, source.GetMaximumBytesBilled(), false)
+			dryRunJob, validationErr := bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps, source, source.GetMaximumBytesBilled(), false)
 			if validationErr != nil {
 				return nil, validationErr
 			}
@@ -237,8 +235,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if len(source.BigQueryAllowedDatasets()) > 0 {
-		var validationErr util.ToolboxError
-		_, validationErr = bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, sql, nil, connProps, source, source.GetMaximumBytesBilled(), false)
+		_, validationErr := bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, sql, nil, connProps, source, source.GetMaximumBytesBilled(), false)
 		if validationErr != nil {
 			return nil, validationErr
 		}
