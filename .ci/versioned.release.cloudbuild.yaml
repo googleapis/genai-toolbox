@@ -107,7 +107,7 @@ steps:
     script: |
       #!/usr/bin/env bash
       export VERSION=v$(cat ./cmd/version.txt)
-      gcloud storage cp toolbox.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+      gcloud storage cp toolbox.linux.amd64 gs://$_UNSIGNED_BUCKET_NAME/$VERSION/linux/amd64/toolbox
 
   - id: "build-linux-amd64-geminicli"
     name: golang:1
@@ -174,7 +174,7 @@ steps:
     script: |
       #!/usr/bin/env bash
       export VERSION=v$(cat ./cmd/version.txt)
-      gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+      gcloud storage cp toolbox.darwin.arm64 gs://$_UNSIGNED_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
 
   - id: "build-darwin-arm64-geminicli"
     name: golang:1
@@ -248,7 +248,7 @@ steps:
     script: |
       #!/usr/bin/env bash
       export VERSION=v$(cat ./cmd/version.txt)
-      gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
+      gcloud storage cp toolbox.darwin.amd64 gs://$_UNSIGNED_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
 
   - id: "build-darwin-amd64-geminicli"
     name: golang:1
@@ -315,7 +315,7 @@ steps:
     script: |
       #!/usr/bin/env bash
       export VERSION=v$(cat ./cmd/version.txt)
-      gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
+      gcloud storage cp toolbox.windows.amd64 gs://$_UNSIGNED_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
 
   - id: "build-windows-amd64-geminicli"
     name: golang:1
@@ -375,7 +375,7 @@ steps:
     script: |
       #!/usr/bin/env bash
       export VERSION=v$(cat ./cmd/version.txt)
-      gcloud storage cp toolbox.windows.arm64 gs://$_BUCKET_NAME/$VERSION/windows/arm64/toolbox.exe
+      gcloud storage cp toolbox.windows.arm64 gs://$_UNSIGNED_BUCKET_NAME/$VERSION/windows/arm64/toolbox.exe
 
   - id: "build-windows-arm64-geminicli"
     name: golang:1
@@ -407,14 +407,88 @@ steps:
       export VERSION=v$(cat ./cmd/version.txt)
       gcloud storage cp toolbox.geminicli.windows.arm64 gs://$_BUCKET_NAME/geminicli/$VERSION/windows/arm64/toolbox.exe
 
+  - id: "trigger-linux-signing"
+    name: "gcr.io/$PROJECT_ID/stubby-caller"
+    waitFor:
+      - "store-linux-amd64"
+    script: |
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      stubby call blade:kokoro-api KokoroApi.Build <<EOF
+      full_job_name: "toolbox/linux/release_sign"
+      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/linux/amd64/toolbox"
+      EOF
+
+  - id: "trigger-macos-signing"
+    name: "gcr.io/$PROJECT_ID/stubby-caller"
+    waitFor:
+      - "store-darwin-arm64"
+      - "store-darwin-amd64"
+    script: |
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      stubby call blade:kokoro-api KokoroApi.Build <<EOF
+      full_job_name: "toolbox/macos/release_sign"
+      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/darwin/arm64/toolbox"
+      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/darwin/amd64/toolbox"
+      EOF
+
+  - id: "trigger-windows-signing"
+    name: "gcr.io/$PROJECT_ID/stubby-caller"
+    waitFor:
+      - "store-windows-amd64"
+      - "store-windows-arm64"
+    script: |
+      #!/usr/bin/env bash
+      export VERSION=v$(cat ./cmd/version.txt)
+      stubby call blade:kokoro-api KokoroApi.Build <<EOF
+      full_job_name: "toolbox/windows/release_sign"
+      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe"
+      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/windows/arm64/toolbox.exe"
+      EOF
+
+  - id: "download-signed-binaries"
+    name: "gcr.io/cloud-builders/gcloud:latest"
+    waitFor:
+      - "trigger-linux-signing"
+      - "trigger-windows-signing"
+      - "trigger-macos-signing"
+    script: |
+      #!/usr/bin/env bash
+      set -eo pipefail
+      export VERSION=v$(cat ./cmd/version.txt)
+
+      EXPECTED_FILES=(
+        "$VERSION/linux/amd64/toolbox"
+        "$VERSION/linux/amd64/toolbox.sig"
+        "$VERSION/darwin/arm64/toolbox"
+        "$VERSION/darwin/amd64/toolbox"
+        "$VERSION/windows/amd64/toolbox.exe"
+        "$VERSION/windows/arm64/toolbox.exe"
+      )
+
+      echo "Waiting for Kokoro to sign and upload all binaries to gs://$_BUCKET_NAME..."
+      for f in "${EXPECTED_FILES[@]}"; do
+        until gcloud storage stat "gs://$_BUCKET_NAME/$f" >/dev/null 2>&1; do
+          echo "Waiting for gs://$_BUCKET_NAME/$f..."
+          sleep 30
+        done
+        echo "Found signed file gs://$_BUCKET_NAME/$f!"
+      done
+
+      echo "Downloading signed binaries to local workspace..."
+      gcloud storage cp "gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox" toolbox.linux.amd64
+      gcloud storage cp "gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox" toolbox.darwin.arm64
+      gcloud storage cp "gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox" toolbox.darwin.amd64
+      gcloud storage cp "gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe" toolbox.windows.amd64
+      gcloud storage cp "gs://$_BUCKET_NAME/$VERSION/windows/arm64/toolbox.exe" toolbox.windows.arm64
+
+      echo "All signed binaries have been successfully downloaded."
+
   - id: "publish-npm-to-ar"
     name: node:20
     waitFor:
-      - "build-linux-amd64"
-      - "build-darwin-arm64"
-      - "build-darwin-amd64"
-      - "build-windows-amd64"
-      - "build-windows-arm64"
+      - "download-signed-binaries"
     script: |
       #!/usr/bin/env bash
       bash .ci/publish_npm_to_ar.sh
@@ -432,11 +506,7 @@ steps:
   - id: "publish-pypi-to-ar"
     name: python:3.12
     waitFor:
-      - "build-linux-amd64"
-      - "build-darwin-arm64"
-      - "build-darwin-amd64"
-      - "build-windows-amd64"
-      - "build-windows-arm64"
+      - "download-signed-binaries"
     script: |
       #!/usr/bin/env bash
       bash .ci/publish_pypi_to_ar.sh
@@ -467,6 +537,7 @@ substitutions:
   _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
   _AR_REPO_NAME: toolbox
   _BUCKET_NAME: mcp-toolbox-for-databases
+  _UNSIGNED_BUCKET_NAME: mcp-toolbox-for-databases-unsigned
   _ASSETS_BUCKET: toolbox-build-assets
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
   _PUSH_LATEST: "false" # Substituted in trigger
