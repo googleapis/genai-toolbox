@@ -33,12 +33,14 @@ import (
 )
 
 type Config struct {
-	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
-	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-	Tools           server.ToolConfigs           `yaml:"tools"`
-	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
-	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Sources           server.SourceConfigs         `yaml:"sources"`
+	AuthServices      server.AuthServiceConfigs    `yaml:"authServices"`
+	EmbeddingModels   server.EmbeddingModelConfigs `yaml:"embeddingModels"`
+	Tools             server.ToolConfigs           `yaml:"tools"`
+	Toolsets          server.ToolsetConfigs        `yaml:"toolsets"`
+	Prompts           server.PromptConfigs         `yaml:"prompts"`
+	Resources         server.ResourceConfigs       `yaml:"resources"`
+	ResourceTemplates server.ResourceConfigs       `yaml:"resourceTemplates"`
 }
 
 type ConfigParser struct {
@@ -150,10 +152,18 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
+	unmarshaled, err := server.UnmarshalConfigs(ctx, raw)
 	if err != nil {
 		return config, err
 	}
+	config.Sources = unmarshaled.Sources
+	config.AuthServices = unmarshaled.AuthServices
+	config.EmbeddingModels = unmarshaled.EmbeddingModels
+	config.Tools = unmarshaled.Tools
+	config.Toolsets = unmarshaled.Toolsets
+	config.Prompts = unmarshaled.Prompts
+	config.Resources = unmarshaled.Resources
+	config.ResourceTemplates = unmarshaled.ResourceTemplates
 	return config, nil
 }
 
@@ -180,7 +190,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "resources", "resourceTemplates"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -217,6 +227,10 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "resources":
+					key = "resource"
+				case "resourceTemplates":
+					key = "resourceTemplate"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {

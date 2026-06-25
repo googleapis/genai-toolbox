@@ -38,6 +38,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -46,6 +47,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"net/url"
 )
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
@@ -72,12 +74,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]tools.Toolset,
 	map[string]prompts.Prompt,
 	map[string]prompts.Promptset,
+	map[string]resources.Resource,
+	map[string]resources.Resource,
 	error,
 ) {
 	if cfg.EnableAPI {
 		for _, sc := range cfg.AuthServiceConfigs {
 			if sc.IsMCPEnabled() {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
+				return nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
 			}
 		}
 	}
@@ -89,12 +93,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	// initialize and validate the sources from configs
@@ -115,7 +119,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return s, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
 		sourcesMap[name] = s
 	}
@@ -143,7 +147,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return a, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
 		authServicesMap[name] = a
 	}
@@ -172,7 +176,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return em, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
 		embeddingModelsMap[name] = em
 	}
@@ -184,12 +188,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
 	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
 	// initialize and validate the prompts from configs
@@ -210,7 +214,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsMap[name] = p
 	}
@@ -247,7 +251,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, err
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsetsMap[name] = p
 	}
@@ -261,7 +265,120 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets: %s", len(promptsetsMap), strings.Join(promptsetNames, ", ")))
 
-	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+	// initialize and validate resources from configs
+	resourcesMap := make(map[string]resources.Resource)
+	for name, rc := range cfg.ResourceConfigs {
+		r, err := func() (resources.Resource, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/resource/init",
+				trace.WithAttributes(attribute.String("resource_type", rc.ResourceConfigType())),
+				trace.WithAttributes(attribute.String("resource_name", name)),
+			)
+			defer span.End()
+			r, err := rc.Initialize(ctx, cfg.ConfigDir, cfg.UsingConfigFolder)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize resource %q: %w", name, err)
+			}
+			return r, nil
+		}()
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		}
+		resourcesMap[name] = r
+	}
+
+	// initialize and validate resource templates from configs
+	resourceTemplatesMap := make(map[string]resources.Resource)
+	for name, rc := range cfg.ResourceTemplateConfigs {
+		r, err := func() (resources.Resource, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/resource_template/init",
+				trace.WithAttributes(attribute.String("resource_template_type", rc.ResourceConfigType())),
+				trace.WithAttributes(attribute.String("resource_template_name", name)),
+			)
+			defer span.End()
+			r, err := rc.Initialize(ctx, cfg.ConfigDir, cfg.UsingConfigFolder)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize resource template %q: %w", name, err)
+			}
+			return r, nil
+		}()
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		}
+		resourceTemplatesMap[name] = r
+	}
+
+	// Boot-Phase Security Validation
+	urisSeen := make(map[string]string) // URI -> Name
+	namesSeen := make(map[string]bool)
+
+	validate := func(r resources.Resource, isTemplate bool) error {
+		name := r.ResourceName()
+		uri := r.ResourceURI()
+		resType := r.ResourceType()
+
+		// 1. Name collision check
+		if namesSeen[name] {
+			return fmt.Errorf("boot validation error: resource name collision: %q is defined multiple times", name)
+		}
+		namesSeen[name] = true
+
+		// 2. RFC 3986 Syntax Compliance & Scheme Checks
+		parsedURI, err := url.ParseRequestURI(uri)
+		if err != nil {
+			return fmt.Errorf("boot validation error: resource %q has invalid RFC 3986 URI %q: %w", name, uri, err)
+		}
+
+		if resType == resources.FileResourceType {
+			if parsedURI.Scheme != "file" {
+				return fmt.Errorf("boot validation error: file resource %q URI must use the 'file://' scheme, got %q", name, uri)
+			}
+		} else if resType == resources.TextResourceType {
+			if parsedURI.Scheme != "info" && parsedURI.Scheme != "" {
+				return fmt.Errorf("boot validation error: text resource %q URI must use the 'info://' scheme, got %q", name, uri)
+			}
+		}
+
+		// 3. Global URI Collision Prevention
+		uriKey := uri
+		if isTemplate {
+			uriKey = strings.ReplaceAll(uri, "{path}", "")
+		}
+		if existingName, exists := urisSeen[uriKey]; exists {
+			return fmt.Errorf("boot validation error: resource URI collision: resources %q and %q share the same target URI %q", name, existingName, uri)
+		}
+		urisSeen[uriKey] = name
+
+		// 4. Local-only Template Scoping
+		if isTemplate {
+			if resType != resources.FileResourceType {
+				return fmt.Errorf("boot validation error: resource template %q must be of type 'file', got %q", name, resType)
+			}
+			openCount := strings.Count(uri, "{")
+			closeCount := strings.Count(uri, "}")
+			if openCount != 1 || closeCount != 1 || !strings.Contains(uri, "{path}") {
+				return fmt.Errorf("boot validation error: resource template %q URI %q has invalid template variables: only '{path}' is permitted", name, uri)
+			}
+		}
+
+		return nil
+	}
+
+	for _, r := range resourcesMap {
+		if err := validate(r, false); err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		}
+	}
+	for _, r := range resourceTemplatesMap {
+		if err := validate(r, true); err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		}
+	}
+
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, resourcesMap, resourceTemplatesMap, nil
 }
 
 // InitializeOfflineConfigs initializes only tools and toolsets from the config,
@@ -439,7 +556,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	logger := l.SlogLogger()
 	r.Use(httplog.RequestLogger(logger, httpOpts))
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, _, _, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
 	}

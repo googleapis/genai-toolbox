@@ -181,7 +181,7 @@ func validateReloadEdits(
 		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
-	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, _, _, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())

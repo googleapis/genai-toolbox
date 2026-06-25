@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -304,6 +305,39 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	opts.Cfg.ToolConfigs = finalConfig.Tools
 	opts.Cfg.ToolsetConfigs = finalConfig.Toolsets
 	opts.Cfg.PromptConfigs = finalConfig.Prompts
+	opts.Cfg.ResourceConfigs = finalConfig.Resources
+	opts.Cfg.ResourceTemplateConfigs = finalConfig.ResourceTemplates
+
+	// Set configuration directory tracking
+	if opts.ConfigFolder != "" {
+		absDir, err := filepath.Abs(opts.ConfigFolder)
+		if err != nil {
+			return isCustomConfigured, fmt.Errorf("invalid config folder: %w", err)
+		}
+		opts.Cfg.ConfigDir = absDir
+		opts.Cfg.UsingConfigFolder = true
+	} else if opts.Config != "" {
+		absDir, err := filepath.Abs(filepath.Dir(opts.Config))
+		if err != nil {
+			return isCustomConfigured, fmt.Errorf("invalid config file path: %w", err)
+		}
+		opts.Cfg.ConfigDir = absDir
+		opts.Cfg.UsingConfigFolder = false
+	} else if len(opts.Configs) > 0 {
+		absDir, err := filepath.Abs(filepath.Dir(opts.Configs[0]))
+		if err != nil {
+			return isCustomConfigured, fmt.Errorf("invalid config path: %w", err)
+		}
+		opts.Cfg.ConfigDir = absDir
+		opts.Cfg.UsingConfigFolder = false
+	} else {
+		absDir, err := filepath.Abs(".")
+		if err != nil {
+			return isCustomConfigured, fmt.Errorf("failed to resolve current directory: %w", err)
+		}
+		opts.Cfg.ConfigDir = absDir
+		opts.Cfg.UsingConfigFolder = false
+	}
 
 	return isCustomConfigured, nil
 }
