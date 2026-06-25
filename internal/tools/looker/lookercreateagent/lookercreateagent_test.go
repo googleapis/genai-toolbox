@@ -161,7 +161,7 @@ func TestInvokeValidation(t *testing.T) {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	resourceMgr := MockSourceProvider{source: MockSource{}}
+	primitiveMgr := MockSourceProvider{source: MockSource{}}
 
 	tcs := []struct {
 		desc    string
@@ -193,7 +193,7 @@ func TestInvokeValidation(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, err := tool.Invoke(ctx, resourceMgr, tc.params, "")
+			_, err := tool.Invoke(ctx, primitiveMgr, tc.params, "")
 			if err == nil {
 				t.Fatalf("expect error, got nil")
 			}

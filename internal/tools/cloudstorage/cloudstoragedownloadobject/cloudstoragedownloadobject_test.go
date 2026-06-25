@@ -156,7 +156,7 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			ov := false
 			if b, ok := tc.overwrite.(bool); ok {
 				ov = b
@@ -167,7 +167,7 @@ func TestInvokeValidation(t *testing.T) {
 				{Name: "destination", Value: tc.dest},
 				{Name: "overwrite", Value: ov},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")

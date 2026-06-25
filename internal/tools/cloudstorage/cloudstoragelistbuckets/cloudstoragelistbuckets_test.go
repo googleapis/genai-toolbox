@@ -148,7 +148,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			tool := initTool(t)
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
 				{Name: "project", Value: ""},
@@ -157,7 +157,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 				{Name: "page_token", Value: ""},
 			}
 
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if toolErr == nil {
 				t.Fatalf("expected error for max_results=%d, got nil", tc.maxResults)
 			}
@@ -190,14 +190,14 @@ func TestInvokeProjectPassthrough(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{
 				{Name: "project", Value: tc.project},
 				{Name: "prefix", Value: ""},
 				{Name: "max_results", Value: 0},
 				{Name: "page_token", Value: ""},
 			}
-			if _, err := tool.Invoke(context.Background(), resourceMgr, params, ""); err != nil {
+			if _, err := tool.Invoke(context.Background(), primitiveMgr, params, ""); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			if !src.listCalled {

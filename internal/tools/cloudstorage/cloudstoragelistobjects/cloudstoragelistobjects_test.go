@@ -142,7 +142,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 			}
 
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
 				{Name: "bucket", Value: "my-bucket"},
@@ -152,7 +152,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 				{Name: "page_token", Value: ""},
 			}
 
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if toolErr == nil {
 				t.Fatalf("expected error for max_results=%d, got nil", tc.maxResults)
 			}

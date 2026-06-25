@@ -158,7 +158,7 @@ func TestInvokeValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			ct := ""
 			if s, ok := tc.contentType.(string); ok {
 				ct = s
@@ -169,7 +169,7 @@ func TestInvokeValidation(t *testing.T) {
 				{Name: "source", Value: tc.src},
 				{Name: "content_type", Value: ct},
 			}
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if tc.wantErr {
 				if toolErr == nil {
 					t.Fatalf("expected error, got nil")

@@ -141,10 +141,10 @@ func (m MockSourceProvider) GetSource(name string) (sources.Source, bool) {
 }
 
 func TestInvokeValidation(t *testing.T) {
-	resourceMgr := MockSourceProvider{source: MockSource{}}
+	primitiveMgr := MockSourceProvider{source: MockSource{}}
 
 	// No validation errors to mock for this simple tool that throws errors from Invoke directly
-	_ = resourceMgr
+	_ = primitiveMgr
 
 }
 
