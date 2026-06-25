@@ -596,8 +596,29 @@ type ParamAuthService struct {
 }
 
 // NewStringParameter is a convenience function for initializing a StringParameter.
-func NewStringParameter(name string, desc string) *StringParameter {
-	return &StringParameter{
+type StringParameterOption func(*StringParameter)
+
+func WithStringRequired(v bool) StringParameterOption {
+	return func(p *StringParameter) { p.Required = &v }
+}
+func WithStringAuth(v []ParamAuthService) StringParameterOption {
+	return func(p *StringParameter) { p.AuthServices = v }
+}
+func WithStringAllowedValues(v []any) StringParameterOption {
+	return func(p *StringParameter) { p.AllowedValues = v }
+}
+func WithStringExcludedValues(v []any) StringParameterOption {
+	return func(p *StringParameter) { p.ExcludedValues = v }
+}
+func WithStringDefault(v string) StringParameterOption {
+	return func(p *StringParameter) { p.Default = &v }
+}
+func WithStringEscape(v string) StringParameterOption {
+	return func(p *StringParameter) { p.Escape = &v }
+}
+
+func NewStringParameter(name string, desc string, opts ...StringParameterOption) *StringParameter {
+	p := &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
 			Type:         TypeString,
@@ -605,83 +626,10 @@ func NewStringParameter(name string, desc string) *StringParameter {
 			AuthServices: nil,
 		},
 	}
-}
-
-// NewStringParameterWithDefault is a convenience function for initializing a StringParameter with default value.
-func NewStringParameterWithDefault(name string, defaultV, desc string) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Default: &defaultV,
+	for _, opt := range opts {
+		opt(p)
 	}
-}
-
-// NewStringParameterWithEscape is a convenience function for initializing a StringParameter.
-func NewStringParameterWithEscape(name, desc, escape string) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Escape: &escape,
-	}
-}
-
-// NewStringParameterWithRequired is a convenience function for initializing a StringParameter.
-func NewStringParameterWithRequired(name string, desc string, required bool) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			Required:     &required,
-			AuthServices: nil,
-		},
-	}
-}
-
-// NewStringParameterWithAuth is a convenience function for initializing a StringParameter with a list of ParamAuthService.
-func NewStringParameterWithAuth(name string, desc string, authServices []ParamAuthService) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeString,
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-	}
-}
-
-// NewStringParameterWithAllowedValues is a convenience function for initializing a StringParameter with a list of allowedValues
-func NewStringParameterWithAllowedValues(name string, desc string, allowedValues []any) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          TypeString,
-			Desc:          desc,
-			AllowedValues: allowedValues,
-			AuthServices:  nil,
-		},
-	}
-}
-
-// NewStringParameterWithExcludedValues is a convenience function for initializing a StringParameter with a list of excludedValues
-func NewStringParameterWithExcludedValues(name string, desc string, excludedValues []any) *StringParameter {
-	return &StringParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           TypeString,
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-			AuthServices:   nil,
-		},
-	}
+	return p
 }
 
 var _ Parameter = &StringParameter{}
@@ -757,8 +705,22 @@ func (p *StringParameter) Manifest() ParameterManifest {
 }
 
 // NewIntParameter is a convenience function for initializing a IntParameter.
-func NewIntParameter(name string, desc string) *IntParameter {
-	return &IntParameter{
+type IntParameterOption func(*IntParameter)
+
+func WithIntRequired(v bool) IntParameterOption { return func(p *IntParameter) { p.Required = &v } }
+func WithIntAuth(v []ParamAuthService) IntParameterOption {
+	return func(p *IntParameter) { p.AuthServices = v }
+}
+func WithIntAllowedValues(v []any) IntParameterOption {
+	return func(p *IntParameter) { p.AllowedValues = v }
+}
+func WithIntExcludedValues(v []any) IntParameterOption {
+	return func(p *IntParameter) { p.ExcludedValues = v }
+}
+func WithIntDefault(v int) IntParameterOption { return func(p *IntParameter) { p.Default = &v } }
+
+func NewIntParameter(name string, desc string, opts ...IntParameterOption) *IntParameter {
+	p := &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
 			Type:         TypeInt,
@@ -766,87 +728,16 @@ func NewIntParameter(name string, desc string) *IntParameter {
 			AuthServices: nil,
 		},
 	}
-}
-
-// NewIntParameterWithRange is a convenience function for initializing a IntParameter.
-func NewIntParameterWithRange(name string, desc string, minValue *int, maxValue *int) *IntParameter {
-	return &IntParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeInt,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		MinValue: minValue,
-		MaxValue: maxValue,
+	for _, opt := range opts {
+		opt(p)
 	}
-}
-
-// NewIntParameterWithDefault is a convenience function for initializing a IntParameter with default value.
-func NewIntParameterWithDefault(name string, defaultV int, desc string) *IntParameter {
-	return &IntParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeInt,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Default: &defaultV,
-	}
-}
-
-// NewIntParameterWithRequired is a convenience function for initializing a IntParameter.
-func NewIntParameterWithRequired(name string, desc string, required bool) *IntParameter {
-	return &IntParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeInt,
-			Desc:         desc,
-			Required:     &required,
-			AuthServices: nil,
-		},
-	}
-}
-
-// NewIntParameterWithAuth is a convenience function for initializing a IntParameter with a list of ParamAuthService.
-func NewIntParameterWithAuth(name string, desc string, authServices []ParamAuthService) *IntParameter {
-	return &IntParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeInt,
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-	}
-}
-
-// NewIntParameterWithAllowedValues is a convenience function for initializing a IntParameter with a list of allowedValues
-func NewIntParameterWithAllowedValues(name string, desc string, allowedValues []any) *IntParameter {
-	return &IntParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          TypeString,
-			Desc:          desc,
-			AllowedValues: allowedValues,
-			AuthServices:  nil,
-		},
-	}
-}
-
-// NewIntParameterWithExcludedValues is a convenience function for initializing a IntParameter with a list of excludedValues
-func NewIntParameterWithExcludedValues(name string, desc string, excludedValues []any) *IntParameter {
-	return &IntParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           TypeString,
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-			AuthServices:   nil,
-		},
-	}
+	return p
 }
 
 var _ Parameter = &IntParameter{}
+
+func WithIntMinValue(v *int) IntParameterOption { return func(p *IntParameter) { p.MinValue = v } }
+func WithIntMaxValue(v *int) IntParameterOption { return func(p *IntParameter) { p.MaxValue = v } }
 
 // IntParameter is a parameter representing the "int" type.
 type IntParameter struct {
@@ -916,8 +807,26 @@ func (p *IntParameter) Manifest() ParameterManifest {
 }
 
 // NewFloatParameter is a convenience function for initializing a FloatParameter.
-func NewFloatParameter(name string, desc string) *FloatParameter {
-	return &FloatParameter{
+type FloatParameterOption func(*FloatParameter)
+
+func WithFloatRequired(v bool) FloatParameterOption {
+	return func(p *FloatParameter) { p.Required = &v }
+}
+func WithFloatAuth(v []ParamAuthService) FloatParameterOption {
+	return func(p *FloatParameter) { p.AuthServices = v }
+}
+func WithFloatAllowedValues(v []any) FloatParameterOption {
+	return func(p *FloatParameter) { p.AllowedValues = v }
+}
+func WithFloatExcludedValues(v []any) FloatParameterOption {
+	return func(p *FloatParameter) { p.ExcludedValues = v }
+}
+func WithFloatDefault(v float64) FloatParameterOption {
+	return func(p *FloatParameter) { p.Default = &v }
+}
+
+func NewFloatParameter(name string, desc string, opts ...FloatParameterOption) *FloatParameter {
+	p := &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
 			Type:         TypeFloat,
@@ -925,87 +834,20 @@ func NewFloatParameter(name string, desc string) *FloatParameter {
 			AuthServices: nil,
 		},
 	}
-}
-
-// NewFloatParameterWithRange is a convenience function for initializing a FloatParameter.
-func NewFloatParameterWithRange(name string, desc string, minValue *float64, maxValue *float64) *FloatParameter {
-	return &FloatParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeFloat,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		MinValue: minValue,
-		MaxValue: maxValue,
+	for _, opt := range opts {
+		opt(p)
 	}
-}
-
-// NewFloatParameterWithDefault is a convenience function for initializing a FloatParameter with default value.
-func NewFloatParameterWithDefault(name string, defaultV float64, desc string) *FloatParameter {
-	return &FloatParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeFloat,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Default: &defaultV,
-	}
-}
-
-// NewFloatParameterWithRequired is a convenience function for initializing a FloatParameter.
-func NewFloatParameterWithRequired(name string, desc string, required bool) *FloatParameter {
-	return &FloatParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeFloat,
-			Desc:         desc,
-			Required:     &required,
-			AuthServices: nil,
-		},
-	}
-}
-
-// NewFloatParameterWithAuth is a convenience function for initializing a FloatParameter with a list of ParamAuthService.
-func NewFloatParameterWithAuth(name string, desc string, authServices []ParamAuthService) *FloatParameter {
-	return &FloatParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeFloat,
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-	}
-}
-
-// NewFloatParameterWithAllowedValues is a convenience function for initializing a FloatParameter with a list of allowed values.
-func NewFloatParameterWithAllowedValues(name string, desc string, allowedValues []any) *FloatParameter {
-	return &FloatParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          TypeFloat,
-			Desc:          desc,
-			AllowedValues: allowedValues,
-			AuthServices:  nil,
-		},
-	}
-}
-
-// NewFloatParameterWithExcludedValues is a convenience function for initializing a FloatParameter with a list of excluded values.
-func NewFloatParameterWithExcludedValues(name string, desc string, excludedValues []any) *FloatParameter {
-	return &FloatParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           TypeFloat,
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-			AuthServices:   nil,
-		},
-	}
+	return p
 }
 
 var _ Parameter = &FloatParameter{}
+
+func WithFloatMinValue(v *float64) FloatParameterOption {
+	return func(p *FloatParameter) { p.MinValue = v }
+}
+func WithFloatMaxValue(v *float64) FloatParameterOption {
+	return func(p *FloatParameter) { p.MaxValue = v }
+}
 
 // FloatParameter is a parameter representing the "float" type.
 type FloatParameter struct {
@@ -1083,8 +925,26 @@ func (p *FloatParameter) McpManifest() (ParameterMcpManifest, []string) {
 }
 
 // NewBooleanParameter is a convenience function for initializing a BooleanParameter.
-func NewBooleanParameter(name string, desc string) *BooleanParameter {
-	return &BooleanParameter{
+type BooleanParameterOption func(*BooleanParameter)
+
+func WithBooleanRequired(v bool) BooleanParameterOption {
+	return func(p *BooleanParameter) { p.Required = &v }
+}
+func WithBooleanAuth(v []ParamAuthService) BooleanParameterOption {
+	return func(p *BooleanParameter) { p.AuthServices = v }
+}
+func WithBooleanAllowedValues(v []any) BooleanParameterOption {
+	return func(p *BooleanParameter) { p.AllowedValues = v }
+}
+func WithBooleanExcludedValues(v []any) BooleanParameterOption {
+	return func(p *BooleanParameter) { p.ExcludedValues = v }
+}
+func WithBooleanDefault(v bool) BooleanParameterOption {
+	return func(p *BooleanParameter) { p.Default = &v }
+}
+
+func NewBooleanParameter(name string, desc string, opts ...BooleanParameterOption) *BooleanParameter {
+	p := &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
 			Type:         TypeBool,
@@ -1092,70 +952,10 @@ func NewBooleanParameter(name string, desc string) *BooleanParameter {
 			AuthServices: nil,
 		},
 	}
-}
-
-// NewBooleanParameterWithDefault is a convenience function for initializing a BooleanParameter with default value.
-func NewBooleanParameterWithDefault(name string, defaultV bool, desc string) *BooleanParameter {
-	return &BooleanParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeBool,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Default: &defaultV,
+	for _, opt := range opts {
+		opt(p)
 	}
-}
-
-// NewBooleanParameterWithRequired is a convenience function for initializing a BooleanParameter.
-func NewBooleanParameterWithRequired(name string, desc string, required bool) *BooleanParameter {
-	return &BooleanParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeBool,
-			Desc:         desc,
-			Required:     &required,
-			AuthServices: nil,
-		},
-	}
-}
-
-// NewBooleanParameterWithAuth is a convenience function for initializing a BooleanParameter with a list of ParamAuthService.
-func NewBooleanParameterWithAuth(name string, desc string, authServices []ParamAuthService) *BooleanParameter {
-	return &BooleanParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeBool,
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-	}
-}
-
-// NewBooleanParameterWithAllowedValues is a convenience function for initializing a BooleanParameter with a list of allowed values.
-func NewBooleanParameterWithAllowedValues(name string, desc string, allowedValues []any) *BooleanParameter {
-	return &BooleanParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          TypeBool,
-			Desc:          desc,
-			AllowedValues: allowedValues,
-			AuthServices:  nil,
-		},
-	}
-}
-
-// NewBooleanParameterWithExcludedValues is a convenience function for initializing a BooleanParameter with a list of excluded values.
-func NewBooleanParameterWithExcludedValues(name string, desc string, excludedValues []any) *BooleanParameter {
-	return &BooleanParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           TypeBool,
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-			AuthServices:   nil,
-		},
-	}
+	return p
 }
 
 var _ Parameter = &BooleanParameter{}
@@ -1207,8 +1007,26 @@ func (p *BooleanParameter) Manifest() ParameterManifest {
 }
 
 // NewArrayParameter is a convenience function for initializing a ArrayParameter.
-func NewArrayParameter(name string, desc string, items Parameter) *ArrayParameter {
-	return &ArrayParameter{
+type ArrayParameterOption func(*ArrayParameter)
+
+func WithArrayRequired(v bool) ArrayParameterOption {
+	return func(p *ArrayParameter) { p.Required = &v }
+}
+func WithArrayAuth(v []ParamAuthService) ArrayParameterOption {
+	return func(p *ArrayParameter) { p.AuthServices = v }
+}
+func WithArrayAllowedValues(v []any) ArrayParameterOption {
+	return func(p *ArrayParameter) { p.AllowedValues = v }
+}
+func WithArrayExcludedValues(v []any) ArrayParameterOption {
+	return func(p *ArrayParameter) { p.ExcludedValues = v }
+}
+func WithArrayDefault(v []any) ArrayParameterOption {
+	return func(p *ArrayParameter) { p.Default = &v }
+}
+
+func NewArrayParameter(name string, desc string, items Parameter, opts ...ArrayParameterOption) *ArrayParameter {
+	p := &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
 			Type:         TypeArray,
@@ -1217,75 +1035,10 @@ func NewArrayParameter(name string, desc string, items Parameter) *ArrayParamete
 		},
 		Items: items,
 	}
-}
-
-// NewArrayParameterWithDefault is a convenience function for initializing a ArrayParameter with default value.
-func NewArrayParameterWithDefault(name string, defaultV []any, desc string, items Parameter) *ArrayParameter {
-	return &ArrayParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeArray,
-			Desc:         desc,
-			AuthServices: nil,
-		},
-		Items:   items,
-		Default: &defaultV,
+	for _, opt := range opts {
+		opt(p)
 	}
-}
-
-// NewArrayParameterWithRequired is a convenience function for initializing a ArrayParameter with default value.
-func NewArrayParameterWithRequired(name string, desc string, required bool, items Parameter) *ArrayParameter {
-	return &ArrayParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeArray,
-			Desc:         desc,
-			Required:     &required,
-			AuthServices: nil,
-		},
-		Items: items,
-	}
-}
-
-// NewArrayParameterWithAuth is a convenience function for initializing a ArrayParameter with a list of ParamAuthService.
-func NewArrayParameterWithAuth(name string, desc string, items Parameter, authServices []ParamAuthService) *ArrayParameter {
-	return &ArrayParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         TypeArray,
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-		Items: items,
-	}
-}
-
-// NewArrayParameterWithAllowedValues is a convenience function for initializing a ArrayParameter with a list of allowed values.
-func NewArrayParameterWithAllowedValues(name string, desc string, allowedValues []any, items Parameter) *ArrayParameter {
-	return &ArrayParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          TypeArray,
-			Desc:          desc,
-			AllowedValues: allowedValues,
-			AuthServices:  nil,
-		},
-		Items: items,
-	}
-}
-
-// NewArrayParameterWithExcludedValues is a convenience function for initializing a ArrayParameter with a list of excluded values.
-func NewArrayParameterWithExcludedValues(name string, desc string, excludedValues []any, items Parameter) *ArrayParameter {
-	return &ArrayParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           TypeArray,
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-			AuthServices:   nil,
-		},
-		Items: items,
-	}
+	return p
 }
 
 var _ Parameter = &ArrayParameter{}
@@ -1427,8 +1180,24 @@ type MapParameter struct {
 var _ Parameter = &MapParameter{}
 
 // NewMapParameter is a convenience function for initializing a MapParameter.
-func NewMapParameter(name string, desc string, valueType string) *MapParameter {
-	return &MapParameter{
+type MapParameterOption func(*MapParameter)
+
+func WithMapRequired(v bool) MapParameterOption { return func(p *MapParameter) { p.Required = &v } }
+func WithMapAuth(v []ParamAuthService) MapParameterOption {
+	return func(p *MapParameter) { p.AuthServices = v }
+}
+func WithMapAllowedValues(v []any) MapParameterOption {
+	return func(p *MapParameter) { p.AllowedValues = v }
+}
+func WithMapExcludedValues(v []any) MapParameterOption {
+	return func(p *MapParameter) { p.ExcludedValues = v }
+}
+func WithMapDefault(v map[string]any) MapParameterOption {
+	return func(p *MapParameter) { p.Default = &v }
+}
+
+func NewMapParameter(name string, desc string, valueType string, opts ...MapParameterOption) *MapParameter {
+	p := &MapParameter{
 		CommonParameter: CommonParameter{
 			Name: name,
 			Type: "map",
@@ -1436,71 +1205,10 @@ func NewMapParameter(name string, desc string, valueType string) *MapParameter {
 		},
 		ValueType: valueType,
 	}
-}
-
-// NewMapParameterWithDefault is a convenience function for initializing a MapParameter with a default value.
-func NewMapParameterWithDefault(name string, defaultV map[string]any, desc string, valueType string) *MapParameter {
-	return &MapParameter{
-		CommonParameter: CommonParameter{
-			Name: name,
-			Type: "map",
-			Desc: desc,
-		},
-		ValueType: valueType,
-		Default:   &defaultV,
+	for _, opt := range opts {
+		opt(p)
 	}
-}
-
-// NewMapParameterWithRequired is a convenience function for initializing a MapParameter as required.
-func NewMapParameterWithRequired(name string, desc string, required bool, valueType string) *MapParameter {
-	return &MapParameter{
-		CommonParameter: CommonParameter{
-			Name:     name,
-			Type:     "map",
-			Desc:     desc,
-			Required: &required,
-		},
-		ValueType: valueType,
-	}
-}
-
-// NewMapParameterWithAuth is a convenience function for initializing a MapParameter with auth services.
-func NewMapParameterWithAuth(name string, desc string, valueType string, authServices []ParamAuthService) *MapParameter {
-	return &MapParameter{
-		CommonParameter: CommonParameter{
-			Name:         name,
-			Type:         "map",
-			Desc:         desc,
-			AuthServices: authServices,
-		},
-		ValueType: valueType,
-	}
-}
-
-// NewMapParameterWithAllowedValues is a convenience function for initializing a MapParameter with a list of allowed values.
-func NewMapParameterWithAllowedValues(name string, desc string, allowedValues []any, valueType string) *MapParameter {
-	return &MapParameter{
-		CommonParameter: CommonParameter{
-			Name:          name,
-			Type:          "map",
-			Desc:          desc,
-			AllowedValues: allowedValues,
-		},
-		ValueType: valueType,
-	}
-}
-
-// NewMapParameterWithExcludedValues is a convenience function for initializing a MapParameter with a list of excluded values.
-func NewMapParameterWithExcludedValues(name string, desc string, excludedValues []any, valueType string) *MapParameter {
-	return &MapParameter{
-		CommonParameter: CommonParameter{
-			Name:           name,
-			Type:           "map",
-			Desc:           desc,
-			ExcludedValues: excludedValues,
-		},
-		ValueType: valueType,
-	}
+	return p
 }
 
 // UnmarshalYAML handles parsing the MapParameter from YAML input.
