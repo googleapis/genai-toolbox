@@ -25,8 +25,8 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"google.golang.org/api/googleapi"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
+	"google.golang.org/api/googleapi"
 )
 
 // validBQTableID matches BigQuery table identifiers in 'dataset.table' or
@@ -178,7 +178,6 @@ func ValidateQueryAgainstAllowedDatasets(
 		}
 	}
 
-
 	// If violations were found, check if they are explicitly in the SQL to support authorized views.
 	if len(violatingTables) > 0 {
 		explicitlyReferenced, err := IsAnyTableExplicitlyReferenced(sql, projectID, violatingTables)
@@ -321,4 +320,3 @@ func InitializeDatasetParameters(
 
 	return projectParam, datasetParam
 }
-

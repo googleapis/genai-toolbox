@@ -1088,7 +1088,6 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 
 }
 
-
 // finds and deletes all tables in a Bigtable instance that match the uniqueID.
 func CleanupBigtableTables(t *testing.T, ctx context.Context, adminClient *bigtable.AdminClient, uniqueID string) {
 	tables, err := adminClient.Tables(ctx)

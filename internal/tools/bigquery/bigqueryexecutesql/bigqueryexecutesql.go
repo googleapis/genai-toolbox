@@ -171,7 +171,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-
 	if dryRun {
 		if dryRunJob != nil {
 			jobJSON, err := json.MarshalIndent(dryRunJob, "", "  ")

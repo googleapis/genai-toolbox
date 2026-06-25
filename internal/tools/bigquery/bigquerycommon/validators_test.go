@@ -235,4 +235,3 @@ func TestBQTypeStringFromToolType(t *testing.T) {
 		}
 	}
 }
-
