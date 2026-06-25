@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
-	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
@@ -316,17 +315,3 @@ func InitializeDatasetParameters(
 	return projectParam, datasetParam
 }
 
-// ProcessGcpError converts a Google API error into a user-friendly error.
-func ProcessGcpError(err error) util.ToolboxError {
-	return util.ProcessGcpError(err)
-}
-
-// NewAgentError returns a new AgentError.
-func NewAgentError(message string, err error) util.ToolboxError {
-	return util.NewAgentError(message, err)
-}
-
-// NewClientServerError returns a new ClientServerError.
-func NewClientServerError(message string, statusCode int, err error) util.ToolboxError {
-	return util.NewClientServerError(message, statusCode, err)
-}
