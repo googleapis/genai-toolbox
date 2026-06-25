@@ -49,7 +49,7 @@ func (m *mockSAPSource) RunSAPRequest(req *http.Request, accessToken tools.Acces
 	return map[string]interface{}{"d": map[string]interface{}{"results": []interface{}{}}}, nil
 }
 
-func (m *mockSAPSource) IsClientOauthEnabled() bool {
+func (m *mockSAPSource) UseClientAuthorization() bool {
 	return false
 }
 
@@ -176,7 +176,7 @@ func (m *mockSAPSourceWithResponse) HttpBaseURL() string { return m.baseURL }
 func (m *mockSAPSourceWithResponse) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	return m.response, nil
 }
-func (m *mockSAPSourceWithResponse) IsClientOauthEnabled() bool { return false }
+func (m *mockSAPSourceWithResponse) UseClientAuthorization() bool { return false }
 func (m *mockSAPSourceWithResponse) Metadata() *odata.ODataMetadata { return m.metadata }
 func (m *mockSAPSourceWithResponse) Compatibility() odata.CompatibilityConfig { return odata.CompatibilityConfig{} }
 

@@ -44,12 +44,44 @@ func TestMockSAPOData(t *testing.T) {
 		// Mock response for metadata
 		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV/$metadata" {
 			w.Header().Set("Content-Type", "application/xml")
-			w.Write([]byte(`<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"><edmx:DataServices m:DataServiceVersion="2.0" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"><Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm"><EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true"><EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType"/></EntityContainer><EntityType Name="A_SalesOrderType"><Key><PropertyRef Name="SalesOrder"/></Key><Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10"/></EntityType></Schema></edmx:DataServices></edmx:Edmx>`))
+			w.Write([]byte(`<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"><edmx:DataServices m:DataServiceVersion="2.0" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"><Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm"><EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true"><EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType"/></EntityContainer><EntityType Name="A_SalesOrderType"><Key><PropertyRef Name="SalesOrder"/></Key><Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10"/><Property Name="SalesOrderType" Type="Edm.String" Nullable="false" MaxLength="4"/><Property Name="SoldToParty" Type="Edm.String" Nullable="false" MaxLength="10"/></EntityType></Schema></edmx:DataServices></edmx:Edmx>`))
 			return
 		}
-		// Mock response for entity set read
+		// Mock response for CSRF pre-flight HEAD requests on the BaseURL
+		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV" {
+			// Ensure bearer token was passed
+			if r.Header.Get("X-SAP-Auth") == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error":"unauthorized: missing X-SAP-Auth"}`))
+				return
+			}
+			if r.Method == http.MethodHead && r.Header.Get("X-CSRF-Token") == "Fetch" {
+				w.Header().Set("X-CSRF-Token", "mock-csrf-token-12345")
+				w.Header().Set("Set-Cookie", "sap-session-cookie=mock-cookie-value")
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+		}
+		// Mock response for entity set read or create
 		if r.URL.Path == "/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder" {
+			// Ensure bearer token was passed
+			if r.Header.Get("X-SAP-Auth") == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte(`{"error":"unauthorized: missing X-SAP-Auth"}`))
+				return
+			}
 			w.Header().Set("Content-Type", "application/json")
+			if r.Method == http.MethodPost {
+				// Ensure mock verified the CSRF token
+				if r.Header.Get("X-CSRF-Token") != "mock-csrf-token-12345" {
+					w.WriteHeader(http.StatusForbidden)
+					w.Write([]byte(`{"error":"invalid csrf token"}`))
+					return
+				}
+				w.WriteHeader(http.StatusCreated)
+				w.Write([]byte(`{"d":{"SalesOrder":"24","SalesOrderType":"OR1","SoldToParty":"1"}}`))
+				return
+			}
 			w.Write([]byte(`{"d":{"results":[{"SalesOrder":"1"}]}}`))
 			return
 		}
@@ -64,9 +96,10 @@ func TestMockSAPOData(t *testing.T) {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"mock-sap-source": map[string]any{
-				"type":         "odata",
-				"baseUrl":      ts.URL + "/sap/opu/odata/sap/API_SALES_ORDER_SRV",
-				"authStrategy": "sap-gateway",
+				"type":           "odata",
+				"baseUrl":        ts.URL + "/sap/opu/odata/sap/API_SALES_ORDER_SRV",
+				"authStrategy":   "sap-gateway",
+				"useClientOauth": "X-SAP-Auth",
 			},
 		},
 		"tools": map[string]any{
@@ -76,6 +109,17 @@ func TestMockSAPOData(t *testing.T) {
 				"entitySet":   "A_SalesOrder",
 				"operation":   "READ",
 				"description": "Read Sales Orders",
+			},
+			"create-sales-order": map[string]any{
+				"type":        "odata",
+				"source":      "mock-sap-source",
+				"entitySet":   "A_SalesOrder",
+				"operation":   "CREATE",
+				"description": "Create Sales Order",
+				"bodyParams": []map[string]any{
+					{"name": "SalesOrderType", "type": "string", "description": "Sales Order Type"},
+					{"name": "SoldToParty", "type": "string", "description": "Sold To Party"},
+				},
 			},
 		},
 	}
@@ -95,37 +139,90 @@ func TestMockSAPOData(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %v", err)
 	}
 
-	// Invoke the tool via HTTP API
-	api := "http://127.0.0.1:5000/api/tool/read-sales-order/invoke"
-	req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString("{}"))
+	// 1. Invoke without authorization header -> Expect 401
+	apiRead := "http://127.0.0.1:5000/api/tool/read-sales-order/invoke"
+	reqNoAuth, err := http.NewRequest(http.MethodPost, apiRead, bytes.NewBufferString("{}"))
 	if err != nil {
 		t.Fatalf("unable to create request: %s", err)
 	}
-	req.Header.Add("Content-type", "application/json")
+	reqNoAuth.Header.Add("Content-type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	respNoAuth, err := http.DefaultClient.Do(reqNoAuth)
 	if err != nil {
 		t.Fatalf("unable to send request: %s", err)
 	}
-	defer resp.Body.Close()
+	defer respNoAuth.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	if respNoAuth.StatusCode != http.StatusUnauthorized {
+		t.Errorf("expected status 401, got %d", respNoAuth.StatusCode)
 	}
 
-	var body map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+	// 2. Invoke with authorization header -> Expect 200
+	reqRead, err := http.NewRequest(http.MethodPost, apiRead, bytes.NewBufferString("{}"))
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+	reqRead.Header.Add("Content-type", "application/json")
+	reqRead.Header.Add("Authorization", "Bearer mock-oauth-token")
+
+	respRead, err := http.DefaultClient.Do(reqRead)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer respRead.Body.Close()
+
+	if respRead.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(respRead.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", respRead.StatusCode, string(bodyBytes))
+	}
+
+	var bodyRead map[string]any
+	if err := json.NewDecoder(respRead.Body).Decode(&bodyRead); err != nil {
 		t.Fatalf("error parsing response body: %v", err)
 	}
 
-	result, ok := body["result"].(string)
+	resultRead, ok := bodyRead["result"].(string)
 	if !ok {
 		t.Fatalf("unable to find 'result' string in response body")
 	}
 
-	if !regexp.MustCompile(`"SalesOrder":"1"`).MatchString(result) {
-		t.Errorf("unexpected result: %s", result)
+	if !regexp.MustCompile(`"SalesOrder":"1"`).MatchString(resultRead) {
+		t.Errorf("unexpected read result: %s", resultRead)
+	}
+
+	// 3. Invoke the create tool via HTTP API (F002)
+	apiCreate := "http://127.0.0.1:5000/api/tool/create-sales-order/invoke"
+	payloadCreate := `{"SalesOrderType": "OR1", "SoldToParty": "1"}`
+	reqCreate, err := http.NewRequest(http.MethodPost, apiCreate, bytes.NewBufferString(payloadCreate))
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+	reqCreate.Header.Add("Content-type", "application/json")
+	reqCreate.Header.Add("Authorization", "Bearer mock-oauth-token")
+
+	respCreate, err := http.DefaultClient.Do(reqCreate)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer respCreate.Body.Close()
+
+	if respCreate.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(respCreate.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", respCreate.StatusCode, string(bodyBytes))
+	}
+
+	var bodyCreate map[string]any
+	if err := json.NewDecoder(respCreate.Body).Decode(&bodyCreate); err != nil {
+		t.Fatalf("error parsing response body: %v", err)
+	}
+
+	resultCreate, ok := bodyCreate["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find 'result' string in response body")
+	}
+
+	if !regexp.MustCompile(`"SalesOrder":"24"`).MatchString(resultCreate) {
+		t.Errorf("unexpected create result: %s", resultCreate)
 	}
 }
 

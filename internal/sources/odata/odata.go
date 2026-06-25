@@ -177,7 +177,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Config:              c,
 		client:              &client,
 		authStrategy:        authStrategy,
-		authTokenHeaderName: headerName,
+		AuthTokenHeaderName: headerName,
 	}
 
 	// Fetch metadata (schema) at initialization.
@@ -196,7 +196,7 @@ type Source struct {
 	client              *http.Client
 	metadata            *ODataMetadata
 	authStrategy        AuthStrategy
-	authTokenHeaderName string
+	AuthTokenHeaderName string
 }
 
 var _ sources.Source = &Source{}
@@ -213,15 +213,15 @@ func (s *Source) HttpBaseURL() string {
 	return s.BaseURL
 }
 
-func (s *Source) IsClientOauthEnabled() bool {
+func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOauth != "" && s.UseClientOauth != "false"
 }
 
 func (s *Source) GetAuthTokenHeaderName() string {
-	if s.authTokenHeaderName == "" {
+	if s.AuthTokenHeaderName == "" {
 		return "Authorization"
 	}
-	return s.authTokenHeaderName
+	return s.AuthTokenHeaderName
 }
 
 func (s *Source) Metadata() *ODataMetadata {

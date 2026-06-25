@@ -57,7 +57,7 @@ type odataSource interface {
 
 type odataSourceOauth interface {
 	odataSource
-	IsClientOauthEnabled() bool
+	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 }
 
@@ -379,7 +379,7 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	}
 
 	if oauthSource, ok := s.(odataSourceOauth); ok {
-		return oauthSource.IsClientOauthEnabled(), nil
+		return oauthSource.UseClientAuthorization(), nil
 	}
 	return false, nil
 }
@@ -391,7 +391,7 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	}
 
 	if oauthSource, ok := s.(odataSourceOauth); ok {
-		if oauthSource.IsClientOauthEnabled() {
+		if oauthSource.UseClientAuthorization() {
 			return oauthSource.GetAuthTokenHeaderName(), nil
 		}
 	}
