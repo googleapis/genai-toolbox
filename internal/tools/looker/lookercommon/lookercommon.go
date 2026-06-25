@@ -502,10 +502,8 @@ func CreateViewsFromTables(ctx context.Context, l *v4.LookerSDK, projectId strin
 		"folder_name":            queryParams.FolderName,
 	}
 
-	// Pass the Tables slice directly as the body, not the wrapped struct.
-	// The API spec defines `tables` as `body_param ... array: true`,
-	// which means the body itself should be the array.
-	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody.Tables, options)
+	// The API expects a JSON object with a `tables` property containing the array.
+	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody, options)
 
 	logger, _ := util.LoggerFromContext(ctx)
 	logger.DebugContext(ctx, fmt.Sprintf("generating views with request: query=%v body=%v error=%v", query, reqBody.Tables, err))
