@@ -36,6 +36,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/tests"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -128,7 +129,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// global cleanup for this test run
 	t.Cleanup(func() {
-		tests.CleanupBigQueryDatasets(t, context.Background(), client, []string{datasetName})
+		CleanupBigQueryDatasets(t, context.Background(), client, []string{datasetName})
 	})
 
 	// set up data for param tool
@@ -260,7 +261,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// global cleanup for this test run
 	t.Cleanup(func() {
-		tests.CleanupBigQueryDatasets(t, context.Background(), client, []string{allowedDatasetName1, allowedDatasetName2, disallowedDatasetName})
+		CleanupBigQueryDatasets(t, context.Background(), client, []string{allowedDatasetName1, allowedDatasetName2, disallowedDatasetName})
 	})
 
 	// Setup allowed table
@@ -3308,3 +3309,44 @@ func getBigQueryVectorSearchStmts(vectorTableName string) (string, string) {
 	searchStmt := fmt.Sprintf("SELECT id, content, ML.DISTANCE(embedding, @query, 'COSINE') AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
 	return insertStmt, searchStmt
 }
+
+func CleanupBigQueryDatasets(t *testing.T, ctx context.Context, client *bigqueryapi.Client, datasetIDs []string) {
+	for _, id := range datasetIDs {
+		t.Logf("INTEGRATION CLEANUP: Purging dataset %s", id)
+		ds := client.Dataset(id)
+
+		// Delete tables first since Dataset.Delete fails if not empty
+		tableIt := ds.Tables(ctx)
+		for {
+			table, err := tableIt.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				if apiErr, ok := err.(*googleapi.Error); ok && apiErr.Code == 404 {
+					t.Logf("INTEGRATION CLEANUP: Dataset %s already deleted (during table iteration)", id)
+					break
+				}
+				t.Errorf("INTEGRATION CLEANUP: Failed to iterate tables in %s: %v", id, err)
+				break
+			}
+			if err := table.Delete(ctx); err != nil {
+				if apiErr, ok := err.(*googleapi.Error); ok && apiErr.Code == 404 {
+					continue
+				}
+				t.Errorf("INTEGRATION CLEANUP: Failed to delete table %s: %v", table.TableID, err)
+			}
+		}
+		// delete empty dataset
+		if err := ds.Delete(ctx); err != nil {
+			if apiErr, ok := err.(*googleapi.Error); ok && apiErr.Code == 404 {
+				t.Logf("INTEGRATION CLEANUP: Dataset %s already deleted", id)
+			} else {
+				t.Errorf("INTEGRATION CLEANUP: Failed to delete dataset %s: %v", id, err)
+			}
+		} else {
+			t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped dataset %s", id)
+		}
+	}
+}
+
