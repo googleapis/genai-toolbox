@@ -60,7 +60,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Cloud SQL Admin ExecuteSqlMany tool.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	params := parameters.Parameters{
 		parameters.NewStringParameter("project", "The GCP project ID."),
 		parameters.NewStringParameter("instanceId", "The Cloud SQL instance ID."),

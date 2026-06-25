@@ -131,7 +131,7 @@ func TestInvoke(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": src,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -328,7 +328,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	// 3. Define mock source that returns this client and allowed datasets configuration
 	testSrc := &bigquerycommon.MockSource{
 		Client:          bqClient,
-		RestService:     restService,
+		Service:         restService,
 		AllowedDatasets: []string{"allowed_dataset"},
 	}
 
@@ -343,7 +343,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

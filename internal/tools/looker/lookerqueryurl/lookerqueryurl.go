@@ -66,18 +66,15 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	allParameters := lookercommon.GetQueryParameters()
 
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
-		"The visualization config for the query",
-		"",
-	)
+	vizParameter := parameters.NewMapParameter("vis_config", "The visualization config for the query", "", parameters.WithMapDefault(
+		map[string]any{}))
 	allParameters = append(allParameters, vizParameter)
 
 	// finish tool setup

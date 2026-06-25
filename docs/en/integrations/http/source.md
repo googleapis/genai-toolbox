@@ -54,5 +54,26 @@ instead of hardcoding your secrets into the configuration file.
 | queryParams            | map[string]string |    false     | Default query parameters to include in the HTTP requests.                                                                          |
 | returnFullError        |       bool        |    false     | Include raw upstream response bodies in error messages for non-2xx responses. Defaults to `false`.                                 |
 | disableSslVerification |       bool        |    false     | Disable SSL certificate verification. This should only be used for local development. Defaults to `false`.                         |
+| allowPrivateNetworks   |       bool        |    false     | Allow requests and redirects to loopback and private networks (RFC 1918 / link-local). Defaults to `false`.                         |
+| allowedIpRanges        |     []string      |    false     | List of IP addresses or CIDR blocks to explicitly allow (whitelisted overrides).                                                   |
+| customBlockedIpRanges  |     []string      |    false     | List of IP addresses or CIDR blocks to explicitly block.                                                                           |
+
+## Advanced Usage
+
+### SSRF Protection (SSRF Guard)
+By default, the HTTP source implements strict protection against Server-Side Request Forgery (SSRF) and DNS Rebinding (TOCTOU) attacks. It automatically intercepts, resolves, and blocks connection requests to private IP ranges, loopback ranges (such as `127.0.0.1`), and link-local ranges (e.g. AWS/GCP metadata service at `169.254.169.254`).
+
+To override the default protection or block custom ranges, configure `allowPrivateNetworks`, `allowedIpRanges`, and `customBlockedIpRanges`:
+
+```yaml
+kind: source
+name: my-http-source
+type: http
+baseUrl: https://internal.corp/api
+allowedIpRanges:
+  - 10.0.0.0/24         # Explicitly trust internal subnet
+customBlockedIpRanges:
+  - 10.0.0.99           # Block a specific sensitive host inside the subnet
+```
 
 [parse-duration-doc]: https://pkg.go.dev/time#ParseDuration

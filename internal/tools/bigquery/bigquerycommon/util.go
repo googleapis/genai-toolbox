@@ -172,9 +172,6 @@ func ValidateQueryAgainstAllowedDatasets(
 		}
 	}
 
-	if len(tableIDSet) > 0 && len(violatingTables) == 0 {
-		return dryRunJob, nil
-	}
 
 	// If violations were found, check if they are explicitly in the SQL to support authorized views.
 	if len(violatingTables) > 0 {
@@ -287,7 +284,7 @@ func InitializeDatasetParameters(
 			datasetID := parts[1]
 			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
 			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
-			datasetParam = parameters.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
+			datasetParam = parameters.NewStringParameter(datasetKey, datasetDescription, parameters.WithStringDefault(datasetID))
 		} else {
 			datasetIDsByProject := make(map[string][]string)
 			for _, ds := range allowedDatasets {
@@ -314,7 +311,7 @@ func InitializeDatasetParameters(
 		datasetParam = parameters.NewStringParameter(datasetKey, datasetDescription)
 	}
 
-	projectParam = parameters.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
+	projectParam = parameters.NewStringParameter(projectKey, projectDescription, parameters.WithStringDefault(defaultProjectID))
 
 	return projectParam, datasetParam
 }

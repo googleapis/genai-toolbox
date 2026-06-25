@@ -36,13 +36,13 @@ func PersistentFlags(parentCmd *cobra.Command, opts *ToolboxOptions) {
 	persistentFlags.StringVar(&opts.Cfg.TelemetryGCPProject, "telemetry-gcp-project", "", "Google Cloud project ID to use for telemetry-gcp. Defaults to `GOOGLE_CLOUD_PROJECT` if not set.")
 	persistentFlags.StringVar(&opts.Cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	persistentFlags.StringVar(&opts.Cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	persistentFlags.BoolVar(&opts.Cfg.SQLCommenter, "sql-commenter", false, "Enable appending SQLCommenter-format comments to SQL statements.")
+	persistentFlags.BoolVar(&opts.Cfg.SQLCommenter, "sql-commenter", false, "Enable prepending SQLCommenter-format comments to SQL statements.")
 	persistentFlags.StringSliceVar(&opts.Cfg.UserAgentMetadata, "user-agent-metadata", []string{}, "Appends additional metadata to the User-Agent.")
 }
 
 // ConfigFileFlags defines flags related to the configuration file.
 // It should be applied to any command that requires configuration loading.
-func ConfigFileFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
+func ConfigFileFlags(parentCmd *cobra.Command, flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVar(&opts.Config, "config", "", "File path specifying the tool configuration. Cannot be used with --configs, or --config-folder.")
 	flags.StringVar(&opts.Config, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
 	_ = flags.MarkDeprecated("tools-file", "please use --config instead") // DEPRECATED
@@ -52,6 +52,7 @@ func ConfigFileFlags(flags *pflag.FlagSet, opts *ToolboxOptions) {
 	flags.StringVar(&opts.ConfigFolder, "config-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config, or --configs.")
 	flags.StringVar(&opts.ConfigFolder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
 	_ = flags.MarkDeprecated("tools-folder", "please use --config-folder instead") // DEPRECATED
+	parentCmd.MarkFlagsMutuallyExclusive("config", "configs", "config-folder", "tools-file", "tools-files", "tools-folder")
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
 		"Use a prebuilt tool configuration by source type. Allowed: '%s'. Can be specified multiple times.",

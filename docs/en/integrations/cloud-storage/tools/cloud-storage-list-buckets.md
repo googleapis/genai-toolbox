@@ -13,6 +13,11 @@ project. By default, it uses the project configured on the source. You can pass
 the optional `project` parameter to list buckets in a different project that
 the same credentials can access.
 
+You can also set `project` or `prefix` in the tool configuration. When set,
+that field is removed from the runtime parameter schema and the configured value
+is always used. Set `project` to an empty string to hide the parameter while
+using the source's configured project.
+
 The response is a JSON object with `buckets` (bucket metadata returned by the
 Cloud Storage API) and `nextPageToken` (empty when there are no more pages).
 
@@ -41,6 +46,16 @@ source: my-gcs-source
 description: Use this tool to list Cloud Storage buckets in the project.
 ```
 
+```yaml
+kind: tool
+name: list_log_buckets
+type: cloud-storage-list-buckets
+source: my-gcs-source
+description: Use this tool to list log buckets in the configured project.
+project: ""
+prefix: logs-
+```
+
 ## Output Format
 
 The tool returns a JSON object with:
@@ -57,3 +72,5 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-list-buckets".                   |
 | source      |  string  |     true     | Name of the Cloud Storage source to list buckets from.  |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| project     |  string  |    false     | Project ID to always use. When set, the runtime `project` parameter is hidden. An empty string uses the source's configured project. |
+| prefix      |  string  |    false     | Bucket name prefix to always use. When set, the runtime `prefix` parameter is hidden. |

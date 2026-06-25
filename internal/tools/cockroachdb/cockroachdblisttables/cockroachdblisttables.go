@@ -135,14 +135,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("table_names", "", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
-		parameters.NewStringParameterWithDefault("output_format", "detailed", "Optional: Use 'simple' for names only or 'detailed' for full info."),
+		parameters.NewStringParameter("table_names", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("output_format", "Optional: Use 'simple' for names only or 'detailed' for full info.", parameters.WithStringDefault("detailed")),
 	}
 	paramManifest := allParameters.Manifest()
 

@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "Creates a new AlloyDB instance (PRIMARY or READ_POOL) within a cluster. This is a long-running operation. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
@@ -160,16 +160,16 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The GCP project ID.")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
 		parameters.NewStringParameter("cluster", "The ID of the cluster to create the instance in."),
 		parameters.NewStringParameter("instance", "A unique ID for the new AlloyDB instance."),
-		parameters.NewStringParameterWithDefault("instanceType", "PRIMARY", "The type of instance to create. Valid values are: PRIMARY and READ_POOL. Default is PRIMARY"),
-		parameters.NewStringParameterWithRequired("displayName", "An optional, user-friendly name for the instance.", false),
-		parameters.NewIntParameterWithDefault("nodeCount", 1, "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1."),
+		parameters.NewStringParameter("instanceType", "The type of instance to create. Valid values are: PRIMARY and READ_POOL. Default is PRIMARY", parameters.WithStringDefault("PRIMARY")),
+		parameters.NewStringParameter("displayName", "An optional, user-friendly name for the instance.", parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("nodeCount", "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1.", parameters.WithIntDefault(1)),
 	}
 }
 

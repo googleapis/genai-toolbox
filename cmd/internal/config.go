@@ -65,50 +65,76 @@ func (p *ConfigParser) parseEnv(input string) (string, error) {
 	}
 
 	var err error
-	output := re.ReplaceAllStringFunc(input, func(match string) string {
-		parts := re.FindStringSubmatch(match)
+	matches := re.FindAllStringSubmatchIndex(input, -1)
+	var output strings.Builder
+	lastIndex := 0
+	for _, match := range matches {
+		start, end := match[0], match[1]
+		output.WriteString(input[lastIndex:start])
 
-		// extract the variable name
-		variableName := parts[1]
+		variableName := input[match[2]:match[3]]
+		defaultValue := ""
+		defaultProvided := match[4] != -1 && match[5] != -1
+		if defaultProvided {
+			defaultValue = input[match[6]:match[7]]
+		}
 
-		isOptional := len(parts) >= 4 && parts[2] != ""
-		if isOptional {
-			// Add to optional list only if it hasn't been explicitly required
-			if !slices.Contains(p.requiredEnvVars, variableName) && !slices.Contains(p.OptionalEnvVars, variableName) {
-				p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
-			}
+		if defaultProvided {
+			p.OptionalEnvVars = append(p.OptionalEnvVars, variableName)
 		} else {
-			// Mark as required
-			if !slices.Contains(p.requiredEnvVars, variableName) {
-				p.requiredEnvVars = append(p.requiredEnvVars, variableName)
-			}
-
-			// Remove from optional list if it's there
-			if i := slices.Index(p.OptionalEnvVars, variableName); i != -1 {
-				p.OptionalEnvVars = slices.Delete(p.OptionalEnvVars, i, i+1)
-			}
+			p.requiredEnvVars = append(p.requiredEnvVars, variableName)
 		}
 
 		if value, found := os.LookupEnv(variableName); found {
 			p.EnvVars[variableName] = value
-			return value
+			output.WriteString(value)
+		} else if defaultProvided {
+			p.EnvVars[variableName] = defaultValue
+			output.WriteString(defaultValue)
+		} else {
+			if p.AllowMissingEnvVars {
+				p.EnvVars[variableName] = variableName
+				output.WriteString(variableName)
+			} else if err == nil {
+				line, column := lineColumnAt(input, start)
+				err = fmt.Errorf("environment variable not found: %q (line %d, column %d)", variableName, line, column)
+			}
 		}
-		if len(parts) >= 4 && parts[2] != "" {
-			value := parts[3]
-			p.EnvVars[variableName] = value
-			return value
+
+		lastIndex = end
+	}
+	output.WriteString(input[lastIndex:])
+
+	// Filter out OptionalEnvVars that were also found as required
+	var finalOptional []string
+	for _, v := range p.OptionalEnvVars {
+		if !slices.Contains(p.requiredEnvVars, v) && !slices.Contains(finalOptional, v) {
+			finalOptional = append(finalOptional, v)
 		}
-		if p.AllowMissingEnvVars {
-			p.EnvVars[variableName] = variableName
-			return variableName
-		}
-		err = fmt.Errorf("environment variable not found: %q", variableName)
-		return ""
-	})
-	return output, err
+	}
+	p.OptionalEnvVars = finalOptional
+
+	return output.String(), err
 }
 
 // ParseConfig parses the provided yaml into appropriate configs.
+func lineColumnAt(input string, index int) (int, int) {
+	line := 1
+	column := 1
+	for i, r := range input {
+		if i >= index {
+			break
+		}
+		if r == '\n' {
+			line++
+			column = 1
+		} else {
+			column++
+		}
+	}
+	return line, column
+}
+
 func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, error) {
 	var config Config
 	// Replace environment variables if found
