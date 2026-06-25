@@ -2,17 +2,6 @@
  * Custom Layout Interactivity
  * Handles dynamic offsets, DOM repositioning, and UI enhancements.
  */
-
-// ==========================================================================
-// BANNER CONFIGURATION
-// ==========================================================================
-const BANNER_CONFIG = {
-  title: "Announcement:",
-  message: "Put your general announcement message here!",
-  linkText: "Learn more",
-  linkUrl: "https://google.com"
-};
-
 document.addEventListener('DOMContentLoaded', function() {
 
   // ==========================================================================
@@ -25,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     .theme-banner-wrapper {
+      position: sticky;
       z-index: 20;
       padding-top: 15px;
       padding-bottom: 5px;
@@ -32,46 +22,21 @@ document.addEventListener('DOMContentLoaded', function() {
       background-color: var(--bs-body-bg, #ffffff);
     }
 
-    .theme-banner {
+    .theme-migration-banner {
       background-color: #ebf3fc;
       border: 1px solid #80a7e9;
       color: #1c3a6b;
       border-radius: 4px;
-      padding: 12px 15px;
+      padding: 15px;
+      text-align: center;
       width: 100%;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
     }
 
-    .theme-banner-content {
-      flex-grow: 1;
-      text-align: center;
-    }
-
-    .theme-banner a {
+    .theme-migration-banner a {
       color: #4484f4;
       text-decoration: underline;
       font-weight: bold;
-    }
-
-    /* Cancel Button Styling */
-    .theme-banner button.close-btn {
-      background: none;
-      border: none;
-      color: inherit;
-      font-size: 22px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 0 5px;
-      opacity: 0.6;
-      transition: opacity 0.2s;
-    }
-
-    .theme-banner button.close-btn:hover {
-      opacity: 1;
     }
 
     /* DARK MODE STYLING */
@@ -81,17 +46,17 @@ document.addEventListener('DOMContentLoaded', function() {
       background-color: var(--bs-body-bg, #20252b);
     }
 
-    html[data-bs-theme="dark"] .theme-banner,
-    body.dark .theme-banner,
-    html.dark-mode .theme-banner {
+    html[data-bs-theme="dark"] .theme-migration-banner,
+    body.dark .theme-migration-banner,
+    html.dark-mode .theme-migration-banner {
       background-color: #1a273b;
       color: #e6efff;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
 
-    html[data-bs-theme="dark"] .theme-banner a,
-    body.dark .theme-banner a,
-    html.dark-mode .theme-banner a {
+    html[data-bs-theme="dark"] .theme-migration-banner a,
+    body.dark .theme-migration-banner a,
+    html.dark-mode .theme-migration-banner a {
       color: #80a7e9;
     }
 
@@ -99,12 +64,12 @@ document.addEventListener('DOMContentLoaded', function() {
       html:not([data-bs-theme="light"]):not(.light) .theme-banner-wrapper {
         background-color: var(--bs-body-bg, #20252b);
       }
-      html:not([data-bs-theme="light"]):not(.light) .theme-banner {
+      html:not([data-bs-theme="light"]):not(.light) .theme-migration-banner {
         background-color: #1a273b;
         color: #e6efff;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       }
-      html:not([data-bs-theme="light"]):not(.light) .theme-banner a {
+      html:not([data-bs-theme="light"]):not(.light) .theme-migration-banner a {
         color: #80a7e9;
       }
     }
@@ -113,75 +78,59 @@ document.addEventListener('DOMContentLoaded', function() {
     @media (max-width: 991.98px) {
       .theme-banner-wrapper {
         position: relative !important;
-        top: auto !important;
-        z-index: 1;
+        top: auto !important; 
+        z-index: 1; 
       }
     }
   `;
   document.head.appendChild(styleTag);
 
   // ==========================================================================
-  // HEADER OFFSET CALCULATOR
+  // MIGRATION BANNER & HEADER OFFSET CALCULATOR
   // ==========================================================================
 
   function updateHeaderOffset() {
     var mainNav = document.querySelector('.td-navbar');
     var secondaryNav = document.getElementById('secondary-nav');
+    var migrationWrapper = document.getElementById('migration-banner-wrapper');
 
     var h1 = mainNav ? mainNav.offsetHeight : 0;
     var h2 = secondaryNav ? secondaryNav.offsetHeight : 0;
     var totalHeight = h1 + h2;
 
     document.documentElement.style.setProperty('--header-offset', totalHeight + 'px');
+
+    if (migrationWrapper) {
+      migrationWrapper.style.top = totalHeight + 'px';
+    }
   }
 
-  // ==========================================================================
-  // INJECT BANNER
-  // ==========================================================================
+  // Create the Wrapper
+  var wrapper = document.createElement('div');
+  wrapper.id = 'migration-banner-wrapper';
+  wrapper.className = 'theme-banner-wrapper';
 
-  var storageKey = "hideGeneralBanner";
+  // Create the Banner
+  var banner = document.createElement('div');
+  banner.className = 'theme-migration-banner';
+  banner.innerHTML = '⚠️ <strong>Archived Docs:</strong> Visit <a href="https://mcp-toolbox.dev/">mcp-toolbox.dev</a> for the latest version.';
+  wrapper.appendChild(banner);
 
-  if (sessionStorage.getItem(storageKey) !== "true") {
-
-    var wrapper = document.createElement('div');
-    wrapper.id = 'banner-wrapper';
-    wrapper.className = 'theme-banner-wrapper';
-
-    var banner = document.createElement('div');
-    banner.className = 'theme-banner';
-
-    // If the URL starts with http/https, add target="_blank" and security attributes
-    var isExternal = BANNER_CONFIG.linkUrl.startsWith('http');
-    var linkAttributes = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-
-    banner.innerHTML = `
-      <div class="theme-banner-content">
-        <strong>${BANNER_CONFIG.title}</strong> ${BANNER_CONFIG.message}
-        <a href="${BANNER_CONFIG.linkUrl}"${linkAttributes}>${BANNER_CONFIG.linkText}</a>.
-      </div>
-      <button id="close-general-banner" class="close-btn" aria-label="Close">&times;</button>
-    `;
-    wrapper.appendChild(banner);
-
-    var contentArea = document.querySelector('.td-content') || document.querySelector('main');
-    if (contentArea) {
-      contentArea.prepend(wrapper);
-    }
-
-    var closeBtn = document.getElementById('close-general-banner');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function() {
-        wrapper.style.display = 'none';
-        sessionStorage.setItem(storageKey, "true");
-      });
-    }
+  // Inject the wrapper into the center information column
+  var contentArea = document.querySelector('.td-content') || document.querySelector('main');
+  if (contentArea) {
+    contentArea.prepend(wrapper);
+  } else {
+    console.warn("Could not find the main content column to inject the banner.");
   }
 
   // Initialize the dynamic offset
   updateHeaderOffset();
 
+  // Re-calculate on window resize
   window.addEventListener('resize', updateHeaderOffset);
 
+  // Use ResizeObserver to detect header height changes
   if (window.ResizeObserver) {
     const ro = new ResizeObserver(updateHeaderOffset);
     const navToWatch = document.querySelector('.td-navbar');
