@@ -140,9 +140,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	var dryRunJob *bigqueryrestapi.Job
 	if len(source.BigQueryAllowedDatasets()) > 0 {
-		dryRunJob, err = bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps, source, source.GetMaximumBytesBilled(), false)
-		if err != nil {
-			return nil, util.ProcessGcpError(err)
+		var validationErr util.ToolboxError
+		dryRunJob, validationErr = bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps, source, source.GetMaximumBytesBilled(), false)
+		if validationErr != nil {
+			return nil, validationErr
 		}
 	} else {
 		dryRunJob, err = bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps, source.GetMaximumBytesBilled(), false)

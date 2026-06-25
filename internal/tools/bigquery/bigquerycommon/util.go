@@ -16,13 +16,16 @@ package bigquerycommon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+	"google.golang.org/api/googleapi"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
@@ -130,14 +133,18 @@ func ValidateQueryAgainstAllowedDatasets(
 	validator DatasetValidator,
 	maximumBytesBilled int64,
 	createSession bool,
-) (*bigqueryrestapi.Job, error) {
+) (*bigqueryrestapi.Job, util.ToolboxError) {
 	dryRunJob, err := DryRunQuery(ctx, restService, projectID, location, sql, params, connProps, maximumBytesBilled, createSession)
 	if err != nil {
-		return nil, fmt.Errorf("query validation failed: %w", err)
+		var gErr *googleapi.Error
+		if errors.As(err, &gErr) {
+			return nil, util.ProcessGcpError(err)
+		}
+		return nil, util.NewAgentError("query validation failed", err)
 	}
 
 	if dryRunJob.Statistics == nil || dryRunJob.Statistics.Query == nil {
-		return nil, fmt.Errorf("dry run failed to return query statistics")
+		return nil, util.NewAgentError("dry run failed to return query statistics", nil)
 	}
 
 	// Use a map to avoid duplicate table names from the dry run result.
@@ -176,7 +183,7 @@ func ValidateQueryAgainstAllowedDatasets(
 	if len(violatingTables) > 0 {
 		explicitlyReferenced, err := IsAnyTableExplicitlyReferenced(sql, projectID, violatingTables)
 		if err != nil {
-			return nil, fmt.Errorf("failed to analyze query for explicit table references: %w", err)
+			return nil, util.NewAgentError("failed to analyze query for explicit table references", err)
 		}
 		if explicitlyReferenced {
 			violatingDatasets := []string{}
@@ -192,14 +199,14 @@ func ValidateQueryAgainstAllowedDatasets(
 			if len(violatingDatasets) > 1 {
 				plural = "s"
 			}
-			return nil, fmt.Errorf("access to dataset%s %s is not allowed", plural, strings.Join(violatingDatasets, ", "))
+			return nil, util.NewAgentError(fmt.Sprintf("access to dataset%s %s is not allowed", plural, strings.Join(violatingDatasets, ", ")), nil)
 		}
 	}
 
 	// Fall back to TableParser for final intent verification or if dry run was inconclusive.
 	parsedTables, parseErr := TableParser(sql, projectID)
 	if parseErr != nil {
-		return nil, fmt.Errorf("could not safely analyze query with dataset restrictions: %w", parseErr)
+		return nil, util.NewAgentError("could not safely analyze query with dataset restrictions", parseErr)
 	}
 
 	var parsedViolatingDatasets []string
@@ -224,7 +231,7 @@ func ValidateQueryAgainstAllowedDatasets(
 		if len(parsedViolatingDatasets) > 1 {
 			plural = "s"
 		}
-		return nil, fmt.Errorf("access to dataset%s %s is not allowed", plural, strings.Join(parsedViolatingDatasets, ", "))
+		return nil, util.NewAgentError(fmt.Sprintf("access to dataset%s %s is not allowed", plural, strings.Join(parsedViolatingDatasets, ", ")), nil)
 	}
 
 	return dryRunJob, nil

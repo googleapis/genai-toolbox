@@ -174,9 +174,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				}
 			}
 
-			dryRunJob, err := bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps, source, source.GetMaximumBytesBilled(), false)
-			if err != nil {
-				return nil, util.ProcessGcpError(err)
+			var dryRunJob *bigqueryrestapi.Job
+			var validationErr util.ToolboxError
+			dryRunJob, validationErr = bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps, source, source.GetMaximumBytesBilled(), false)
+			if validationErr != nil {
+				return nil, validationErr
 			}
 			if dryRunJob.Statistics.Query.StatementType != "SELECT" {
 				return nil, util.NewAgentError(fmt.Sprintf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", dryRunJob.Statistics.Query.StatementType), nil)
@@ -235,9 +237,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if len(source.BigQueryAllowedDatasets()) > 0 {
-		_, err := bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, sql, nil, connProps, source, source.GetMaximumBytesBilled(), false)
-		if err != nil {
-			return nil, util.ProcessGcpError(err)
+		var validationErr util.ToolboxError
+		_, validationErr = bqutil.ValidateQueryAgainstAllowedDatasets(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, sql, nil, connProps, source, source.GetMaximumBytesBilled(), false)
+		if validationErr != nil {
+			return nil, validationErr
 		}
 	}
 
