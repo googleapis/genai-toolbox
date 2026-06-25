@@ -179,6 +179,35 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
 }
 
+// parseExploreReferences converts the raw explore_references parameter into typed
+// references. The parameter is declared as an array of free-form maps, so the values
+// the model supplies are not schema-validated; guard every field access instead of
+// letting an unexpected shape (a missing key, a non-string value, or a non-object
+// element) panic the tool. Mirrors the validation in datalineagesearchlineage.
+func parseExploreReferences(raw []any, lookerInstanceURI string) ([]LookerExploreReference, util.ToolboxError) {
+	refs := make([]LookerExploreReference, 0, len(raw))
+	for i, er := range raw {
+		m, ok := er.(map[string]any)
+		if !ok {
+			return nil, util.NewAgentError(fmt.Sprintf("invalid explore reference at index %d in 'explore_references': expected object, got %T", i, er), nil)
+		}
+		model, ok := m["model"].(string)
+		if !ok {
+			return nil, util.NewAgentError(fmt.Sprintf("missing or invalid 'model' (expected string) in 'explore_references' at index %d", i), nil)
+		}
+		explore, ok := m["explore"].(string)
+		if !ok {
+			return nil, util.NewAgentError(fmt.Sprintf("missing or invalid 'explore' (expected string) in 'explore_references' at index %d", i), nil)
+		}
+		refs = append(refs, LookerExploreReference{
+			LookerInstanceUri: lookerInstanceURI,
+			LookmlModel:       model,
+			Explore:           explore,
+		})
+	}
+	return refs, nil
+}
+
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
@@ -206,13 +235,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	userQuery, _ := mapParams["user_query_with_context"].(string)
 	exploreReferences, _ := mapParams["explore_references"].([]any)
 
-	ler := make([]LookerExploreReference, 0)
-	for _, er := range exploreReferences {
-		ler = append(ler, LookerExploreReference{
-			LookerInstanceUri: source.LookerApiSettings().BaseUrl,
-			LookmlModel:       er.(map[string]any)["model"].(string),
-			Explore:           er.(map[string]any)["explore"].(string),
-		})
+	ler, lerErr := parseExploreReferences(exploreReferences, source.LookerApiSettings().BaseUrl)
+	if lerErr != nil {
+		return nil, lerErr
 	}
 	oauth_creds := OAuthCredentials{}
 	if source.UseClientAuthorization() {
