@@ -15,6 +15,7 @@ package lookercommon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -141,6 +142,12 @@ func GetQueryParameters() parameters.Parameters {
 	limitParameter := parameters.NewIntParameter("limit", "The row limit.", parameters.WithIntDefault(500))
 	tzParameter := parameters.NewStringParameter("tz", "The query timezone.", parameters.WithStringRequired(false))
 	filterExpressionParameter := parameters.NewStringParameter("filter_expression", "An optional filter expression string.", parameters.WithStringRequired(false))
+	dynamicFieldsParameter := parameters.NewArrayParameter(
+		"dynamic_fields",
+		"An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+		parameters.NewMapParameter("dynamic_field", "A dynamic field definition", ""),
+		parameters.WithArrayDefault([]any{}),
+	)
 
 	return parameters.Parameters{
 		modelParameter,
@@ -152,6 +159,7 @@ func GetQueryParameters() parameters.Parameters {
 		limitParameter,
 		tzParameter,
 		filterExpressionParameter,
+		dynamicFieldsParameter,
 	}
 }
 
@@ -343,6 +351,18 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		}
 	}
 
+	var dynamicFieldsPtr *string
+	if val, ok := paramsMap["dynamic_fields"]; ok && val != nil {
+		if sliceVal, ok := val.([]any); ok && len(sliceVal) > 0 {
+			jsonBytes, err := json.Marshal(sliceVal)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling dynamic_fields: %w", err)
+			}
+			jsonStr := string(jsonBytes)
+			dynamicFieldsPtr = &jsonStr
+		}
+	}
+
 	wq := v4.WriteQuery{
 		Model:            paramsMap["model"].(string),
 		View:             paramsMap["explore"].(string),
@@ -353,6 +373,7 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		QueryTimezone:    &tz,
 		Limit:            &limit,
 		FilterExpression: filterExpressionPtr,
+		DynamicFields:    dynamicFieldsPtr,
 	}
 	return &wq, nil
 }
@@ -502,10 +523,8 @@ func CreateViewsFromTables(ctx context.Context, l *v4.LookerSDK, projectId strin
 		"folder_name":            queryParams.FolderName,
 	}
 
-	// Pass the Tables slice directly as the body, not the wrapped struct.
-	// The API spec defines `tables` as `body_param ... array: true`,
-	// which means the body itself should be the array.
-	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody.Tables, options)
+	// The API expects a JSON object with a `tables` property containing the array.
+	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody, options)
 
 	logger, _ := util.LoggerFromContext(ctx)
 	logger.DebugContext(ctx, fmt.Sprintf("generating views with request: query=%v body=%v error=%v", query, reqBody.Tables, err))
