@@ -95,6 +95,8 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
+	// EnableDraftSpecs allow users to opt-in and test upcoming draft MCP specs.
+	EnableDraftSpecs bool
 }
 
 type logFormat string

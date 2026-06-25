@@ -61,6 +61,7 @@ type Server struct {
 	sseManager          *sseManager
 	ResourceMgr         *resources.ResourceManager
 	mcpPrmFile          string
+	enableDraftSpecs    bool
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -403,6 +404,11 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		ResourceMgr:         resourceManager,
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
+		enableDraftSpecs:    cfg.EnableDraftSpecs,
+	}
+
+	if s.enableDraftSpecs {
+		s.logger.WarnContext(ctx, "Flag --enable-draft-specs is active. Please note that draft specs are subject to breaking changes and will be completely removed (not redirected) once stable MCP specifications are released. Do not use this configuration in production.")
 	}
 
 	// cors

@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -47,10 +46,13 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
-func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, enableDraftSpecs bool, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch mcpVersion {
 	case mcputil.VERSION_DRAFT:
-		return vdraft.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		if enableDraftSpecs {
+			return vdraft.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		}
+		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion)
 	case mcputil.VERSION_20251125:
 		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	case mcputil.VERSION_20250618:
@@ -62,9 +64,4 @@ func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId,
 	default:
 		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion)
 	}
-}
-
-// VerifyProtocolVersion verifies if the version string is valid.
-func VerifyProtocolVersion(version string) bool {
-	return slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, version)
 }
