@@ -59,6 +59,7 @@ type Config struct {
 	Type             string                 `yaml:"type" validate:"required"`
 	Source           string                 `yaml:"source" validate:"required"`
 	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Bucket           *string                `yaml:"bucket,omitempty"`
 }
 
 // validate interface
@@ -72,11 +73,17 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
+	if cfg.Bucket != nil && *cfg.Bucket == "" {
+		return nil, fmt.Errorf("bucket cannot be empty for tool %q", cfg.Name)
+	}
 
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object.")
 	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
 	rangeParam := parameters.NewStringParameter(rangeKey, "Optional HTTP byte range, e.g. 'bytes=0-999' (first 1000 bytes), 'bytes=-500' (last 500 bytes), or 'bytes=500-' (from byte 500 to end). Empty reads the full object.", parameters.WithStringDefault(""))
-	allParameters := parameters.Parameters{bucketParam, objectParam, rangeParam}
+	allParameters := parameters.Parameters{}
+	if cfg.Bucket == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object."))
+	}
+	allParameters = append(allParameters, objectParam, rangeParam)
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -106,8 +113,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	mapParams := params.AsMap()
-	bucket, ok := mapParams[bucketKey].(string)
-	if !ok || bucket == "" {
+	bucket := cloudstoragecommon.ResolveString(t.Cfg.Bucket, mapParams, bucketKey)
+	if bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
 	object, ok := mapParams[objectKey].(string)
