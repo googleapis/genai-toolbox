@@ -1,12 +1,6 @@
-/**
- * Custom Layout Interactivity
- * Handles dynamic offsets, DOM repositioning, and UI enhancements.
- */
 document.addEventListener('DOMContentLoaded', function() {
 
-  // ==========================================================================
-  // DYNAMIC STYLES INJECTION
-  // ==========================================================================
+  // Setup CSS for the wrapper and the banner
   var styleTag = document.createElement('style');
   styleTag.innerHTML = `
     .td-navbar .dropdown-menu {
@@ -16,9 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     .theme-banner-wrapper {
       position: sticky;
       z-index: 20;
-      padding-top: 15px;
-      padding-bottom: 5px;
-      margin-bottom: 2rem;
+      padding-top: 15px;    /* This is your gap! */
+      padding-bottom: 5px;  /* Breathing room below the banner */
+      /* Uses Bootstrap's native body background variable, with white as fallback */
       background-color: var(--bs-body-bg, #ffffff);
     }
 
@@ -43,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     html[data-bs-theme="dark"] .theme-banner-wrapper,
     body.dark .theme-banner-wrapper,
     html.dark-mode .theme-banner-wrapper {
+      /* Uses Docsy's dark mode background fallback if var fails */
       background-color: var(--bs-body-bg, #20252b);
     }
 
@@ -60,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
       color: #80a7e9;
     }
 
+    /* Fallback for OS-level dark mode */
     @media (prefers-color-scheme: dark) {
       html:not([data-bs-theme="light"]):not(.light) .theme-banner-wrapper {
         background-color: var(--bs-body-bg, #20252b);
@@ -73,37 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
         color: #80a7e9;
       }
     }
-
-    /* Disable Sticky Banner on Mobile */
-    @media (max-width: 991.98px) {
-      .theme-banner-wrapper {
-        position: relative !important;
-        top: auto !important; 
-        z-index: 1; 
-      }
-    }
   `;
   document.head.appendChild(styleTag);
-
-  // ==========================================================================
-  // MIGRATION BANNER & HEADER OFFSET CALCULATOR
-  // ==========================================================================
-
-  function updateHeaderOffset() {
-    var mainNav = document.querySelector('.td-navbar');
-    var secondaryNav = document.getElementById('secondary-nav');
-    var migrationWrapper = document.getElementById('migration-banner-wrapper');
-
-    var h1 = mainNav ? mainNav.offsetHeight : 0;
-    var h2 = secondaryNav ? secondaryNav.offsetHeight : 0;
-    var totalHeight = h1 + h2;
-
-    document.documentElement.style.setProperty('--header-offset', totalHeight + 'px');
-
-    if (migrationWrapper) {
-      migrationWrapper.style.top = totalHeight + 'px';
-    }
-  }
 
   // Create the Wrapper
   var wrapper = document.createElement('div');
@@ -124,32 +91,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.warn("Could not find the main content column to inject the banner.");
   }
 
-  // Initialize the dynamic offset
-  updateHeaderOffset();
-
-  // Re-calculate on window resize
-  window.addEventListener('resize', updateHeaderOffset);
-
-  // Use ResizeObserver to detect header height changes
-  if (window.ResizeObserver) {
-    const ro = new ResizeObserver(updateHeaderOffset);
-    const navToWatch = document.querySelector('.td-navbar');
-    const secNavToWatch = document.getElementById('secondary-nav');
-
-    if (navToWatch) ro.observe(navToWatch);
-    if (secNavToWatch) ro.observe(secNavToWatch);
-  }
-
-  // ==========================================================================
-  // BREADCRUMBS REPOSITIONING
-  // ==========================================================================
-  var breadcrumbs = document.querySelector('.td-breadcrumbs') || document.querySelector('nav[aria-label="breadcrumb"]');
-  var pageTitle = document.querySelector('.td-content h1');
-
-  if (breadcrumbs && pageTitle) {
-    pageTitle.parentNode.insertBefore(breadcrumbs, pageTitle);
-    breadcrumbs.style.marginTop = "1rem";
-    breadcrumbs.style.marginBottom = "2rem";
-  }
-
+  // Calculate navbar height synchronously to correctly offset the sticky wrapper
+  var navbar = document.querySelector('.td-navbar');
+  var navbarHeight = navbar ? navbar.offsetHeight : 64;
+  wrapper.style.top = navbarHeight + 'px';
 });
