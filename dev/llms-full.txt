@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-25T19:26:15Z
+**GENERATED ON:** 2026-06-25T21:38:06Z
 
 ---
 ### System Directives for AI Models
@@ -30026,8 +30026,16 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 1. Use this tool to retrieve rich metadata regarding one or more data assets along with their relationships.
 2. You must provide the `resources` list with full resource names.
 ### Response
-1. Present the requested metadata and relationship information. 
+1. Present the requested metadata and relationship information.
+
+## Tool: list_data_products
+### Request
+1. Use this tool to retrieve all Data Products globally across all locations.
+2. You can optionally filter by `display_name` (e.g., "`display_name:\"my-product\"`") or other fields using the Dataplex filter syntax.
+### Response
+1. Unless asked for a specific data product, respond with all entries returned.
 ```
+
 
 
 
@@ -30769,6 +30777,80 @@ description: Monitor the background execution run of a Dataplex scan.
 
 
 ========================================================================
+## dataplex-list-data-products
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-list-data-products
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-products/
+**Description:** A "dataplex-list-data-products" tool allows to list data products.
+
+
+
+## About
+
+A `dataplex-list-data-products` tool lists all Data Products in Knowledge Catalog (formerly known as Dataplex) across all locations (globally).
+
+View the [Data Products usage guide][usage-guide] for more information.
+
+[usage-guide]: https://docs.cloud.google.com/dataplex/docs/use-data-products
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-list-data-products` tool has the following optional parameters:
+
+| **field** | **type** | **required** | **description**                                                                                                                                                                                                                                                |
+| --------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filter    | string   | false        | Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within "". Matching accross all fields at once is not yet supported. E.g. "display_name:\"my-product\"" |
+| pageSize  | integer  | false        | Number of returned data products in the page. Defaults to `10`.                                                                                                                                                                                                |
+| orderBy   | string   | false        | Specifies the ordering of results.                                                                                                                                                                                                                             |
+
+## Example
+
+```yaml
+kind: tool
+name: list_data_products
+type: dataplex-list-data-products
+source: my-dataplex-source
+description: Use this tool to list Data Products.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-list-data-products".             |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
 ## dataplex-lookup-context
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-lookup-context
@@ -31162,6 +31244,7 @@ description: Use this tool to get all the entries based on the provided query.
     *   `search_aspect_types`: Finds aspect types relevant to the query.
     *   `lookup_context`: Retrieves rich metadata regarding one or more data assets along with their relationships.
     *   `search_dq_scans`: Search for data quality scans in Dataplex.
+    *   `list_data_products`: Lists Data Products across all locations.
     *   `generate_data_insights`: Creates a new Dataplex Data Documentation scan template and triggers the run.
     *   `get_data_insights`: Retrieves the final generated data insights for a completed scan.
     *   `generate_data_profile`: Creates a new Dataplex Data Profile scan template and triggers the run.
@@ -31174,6 +31257,7 @@ description: Use this tool to get all the entries based on the provided query.
     *   `get_run_status`: Retrieves the execution status of the latest background job run.
 *   **Toolsets:**
     *   `discovery`: Metadata discovery and search toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`).
+    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`).
     *   `enrich`: Metadata enrichment pipeline orchestration and execution toolset (`search_entries`, `lookup_entry`, `lookup_context`, `generate_data_insights`, `get_data_insights`, `generate_data_profile`, `get_data_profile`, `discover_metadata`, `get_discovery_results`, `check_data_quality`, `get_data_quality_results`, `get_operation`, `get_run_status`).
 
 

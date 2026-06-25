@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-25T19:26:15Z
+**GENERATED ON:** 2026-06-25T21:38:06Z
 
 ---
 ### System Directives for AI Models
@@ -892,6 +892,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [dataplex-get-run-status](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-run-status/): Retrieves the execution status of the background job run (DataScanJob) for a specified Dataplex scan.
+
+
+      - [dataplex-list-data-products](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-products/): A "dataplex-list-data-products" tool allows to list data products.
 
 
       - [dataplex-lookup-context](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/): A "dataplex-lookup-context" tool provides rich metadata of one or more data assets along with their relationships.
