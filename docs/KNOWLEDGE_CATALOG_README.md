@@ -48,10 +48,12 @@ The Knowledge Catalog MCP server provides the following tools:
 
 | Tool Name             | Description                                                                                                                  |
 |:----------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| `search_entries`      | Search for entries in Knowledge Catalog.                                                                                      |
+| `search_entries`      | Search for entries in Knowledge Catalog.                                                                                     |
 | `lookup_entry`        | Retrieve specific subset of metadata (for example, schema, usage, business overview, and contacts) of a specific data asset. |
 | `search_aspect_types` | Find aspect types relevant to the query.                                                                                     |
 | `lookup_context`      | Retrieve rich metadata regarding one or more data assets along with their relationships.                                     |
+| `search_dq_scans`     | Search for Data Quality scans.                                                                                               |
+| `list_data_products`  | List Data Products for the current project.                                                                                  |
 
 ## Custom MCP Server Configuration
 
