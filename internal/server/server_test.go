@@ -1481,14 +1481,8 @@ func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
 	}
 
 	expectedOrder := []string{"apple", "banana", "zoo"}
-	if len(defaultToolset.ToolNames) != len(expectedOrder) {
-		t.Fatalf("expected %d tools, got %d", len(expectedOrder), len(defaultToolset.ToolNames))
-	}
-
-	for i, name := range expectedOrder {
-		if defaultToolset.ToolNames[i] != name {
-			t.Errorf("at index %d: expected tool name %q, got %q", i, name, defaultToolset.ToolNames[i])
-		}
+	if diff := cmp.Diff(expectedOrder, defaultToolset.ToolNames); diff != "" {
+		t.Errorf("default toolset ToolNames mismatch (-want +got):\n%s", diff)
 	}
 }
 
