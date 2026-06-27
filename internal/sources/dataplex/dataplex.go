@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
@@ -77,14 +78,15 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, dataScanClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project, r.ImpersonateServiceAccount, r.Scopes)
+	client, dataScanClient, dataProductClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project, r.ImpersonateServiceAccount, r.Scopes)
 	if err != nil {
 		return nil, err
 	}
 	s := &Source{
-		Config:         r,
-		Client:         client,
-		DataScanClient: dataScanClient,
+		Config:            r,
+		Client:            client,
+		DataScanClient:    dataScanClient,
+		dataProductClient: dataProductClient,
 	}
 
 	return s, nil
@@ -94,8 +96,9 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client         *dataplexapi.CatalogClient
-	DataScanClient *dataplexapi.DataScanClient
+	Client            *dataplexapi.CatalogClient
+	DataScanClient    *dataplexapi.DataScanClient
+	dataProductClient *dataplexapi.DataProductClient
 }
 
 func (s *Source) SourceType() string {
@@ -119,6 +122,10 @@ func (s *Source) GetDataScanClient() *dataplexapi.DataScanClient {
 	return s.DataScanClient
 }
 
+func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
+	return s.dataProductClient
+}
+
 func initDataplexConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -126,13 +133,13 @@ func initDataplexConnection(
 	project string,
 	impersonateServiceAccount string,
 	scopes []string,
-) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, error) {
+) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, *dataplexapi.DataProductClient, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	var opts []option.ClientOption
@@ -149,7 +156,7 @@ func initDataplexConnection(
 			Scopes:          credScopes,
 		})
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q for project %q: %w", impersonateServiceAccount, project, err)
+			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q for project %q: %w", impersonateServiceAccount, project, err)
 		}
 		opts = []option.ClientOption{
 			option.WithUserAgent(userAgent),
@@ -159,7 +166,7 @@ func initDataplexConnection(
 		// Use default credentials
 		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 		if err != nil {
-			return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials for project %q: %w", project, err)
 		}
 		opts = []option.ClientOption{
 			option.WithUserAgent(userAgent),
@@ -169,14 +176,19 @@ func initDataplexConnection(
 
 	client, err := dataplexapi.NewCatalogClient(ctx, opts...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 
 	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, opts...)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
 	}
-	return client, dataScanClient, nil
+
+	dataProductClient, err := dataplexapi.NewDataProductClient(ctx, opts...)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to create Dataplex DataProduct client for project %q: %w", project, err)
+	}
+	return client, dataScanClient, dataProductClient, nil
 }
 
 func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectTypes []string, entry string) (*dataplexpb.Entry, error) {
@@ -342,6 +354,65 @@ func (s *Source) SearchDataQualityScans(ctx context.Context, filter string, page
 			return nil, fmt.Errorf("failed to list data scans: %w", err)
 		}
 		results = append(results, scan)
+	}
+	return results, nil
+}
+
+type DataProductSummary struct {
+	LocationID    string   `json:"locationId"`
+	DataProductID string   `json:"dataProductId"`
+	DisplayName   string   `json:"displayName"`
+	OwnerEmails   []string `json:"ownerEmails"`
+	AssetCount    int32    `json:"assetCount"`
+}
+
+func (s *Source) ListDataProducts(
+	ctx context.Context,
+	filter string,
+	pageSize int,
+	orderBy string,
+) ([]*DataProductSummary, error) {
+	if s.dataProductClient == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
+	parent := fmt.Sprintf("projects/%s/locations/-", s.ProjectID())
+	req := &dataplexpb.ListDataProductsRequest{
+		Parent:   parent,
+		Filter:   filter,
+		PageSize: int32(pageSize),
+		OrderBy:  orderBy,
+	}
+
+	it := s.dataProductClient.ListDataProducts(ctx, req)
+	var results []*DataProductSummary
+
+	for len(results) < pageSize {
+		dp, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				return nil, fmt.Errorf("failed to list data products: code=%s message=%s", st.Code(), st.Message())
+			}
+			return nil, fmt.Errorf("failed to list data products: %w", err)
+		}
+		parts := strings.Split(dp.GetName(), "/")
+		var locationId, dataProductId string
+		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+			locationId = parts[3]
+			dataProductId = parts[5]
+		}
+		results = append(results, &DataProductSummary{
+			LocationID:    locationId,
+			DataProductID: dataProductId,
+			DisplayName:   dp.GetDisplayName(),
+			OwnerEmails:   dp.GetOwnerEmails(),
+			AssetCount:    dp.GetAssetCount(),
+		})
 	}
 	return results, nil
 }
