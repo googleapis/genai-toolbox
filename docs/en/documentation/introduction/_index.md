@@ -796,8 +796,12 @@ become stable.
 
 {{< notice note >}}
 Once the draft specification is finalized and released as a stable version, the
-draft implementation will be permanently removed. There will be no automatic
-redirects or backwards compatibility from the draft spec to the stable release.
-Developers must manually migrate their clients to the stable version once it is
-available. Do not use this flag in production environments.
+draft implementation will be permanently removed. The flag itself will not be
+removed, but its functionality will remain dormant (having no effect on the
+server) until a new draft specification becomes available.
+
+There will be no automatic redirects or backwards compatibility from the draft
+spec to the stable release. Developers must manually migrate their clients to
+the stable version once it is available. Do not use this flag in production
+environments.
 {{< /notice >}}
