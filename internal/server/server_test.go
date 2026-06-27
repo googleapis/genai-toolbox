@@ -1449,3 +1449,46 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 		t.Errorf("unexpected error message: %v", err)
 	}
 }
+
+func TestDefaultToolsetIsAlphabeticallySorted(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("error setting up logger: %s", err)
+	}
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation("0.0.0")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	cfg := server.ServerConfig{
+		Version: "0.0.0",
+		ToolConfigs: server.ToolConfigs{
+			"zoo":    offlineToolConfig{name: "zoo"},
+			"apple":  offlineToolConfig{name: "apple"},
+			"banana": offlineToolConfig{name: "banana"},
+		},
+	}
+
+	_, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	if err != nil {
+		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
+	}
+
+	defaultToolset, ok := toolsetsMap[""]
+	if !ok {
+		t.Fatal("expected default toolset to be present")
+	}
+
+	expectedOrder := []string{"apple", "banana", "zoo"}
+	if len(defaultToolset.ToolNames) != len(expectedOrder) {
+		t.Fatalf("expected %d tools, got %d", len(expectedOrder), len(defaultToolset.ToolNames))
+	}
+
+	for i, name := range expectedOrder {
+		if defaultToolset.ToolNames[i] != name {
+			t.Errorf("at index %d: expected tool name %q, got %q", i, name, defaultToolset.ToolNames[i])
+		}
+	}
+}
+

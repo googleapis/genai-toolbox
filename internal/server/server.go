@@ -334,6 +334,7 @@ func initializeToolsets(ctx context.Context, cfg ServerConfig, toolsMap map[stri
 	for name := range toolsMap {
 		allToolNames = append(allToolNames, name)
 	}
+	slices.Sort(allToolNames)
 	if cfg.ToolsetConfigs == nil {
 		cfg.ToolsetConfigs = make(ToolsetConfigs)
 	}
