@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize implements tools.ToolConfig.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, fmt.Errorf("unable to process parameters: %w", err)

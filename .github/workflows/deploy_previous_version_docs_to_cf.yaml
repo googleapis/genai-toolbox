@@ -30,14 +30,14 @@ jobs:
 
     steps:
       - name: Checkout main branch (for latest templates and theme)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           ref: 'main'
           submodules: 'recursive'
           fetch-depth: 0
 
       - name: Checkout old content from tag into a temporary directory
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           ref: ${{ github.event.inputs.version_tag }}
           path: 'old_version_source'
@@ -54,7 +54,7 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
         with:
-          hugo-version: "0.161.1"
+          hugo-version: "0.163.3"
           extended: true
 
       - name: Setup Node
@@ -81,7 +81,7 @@ jobs:
         working-directory: .hugo
 
       - name: Deploy to cloudflare-pages
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .hugo/public
@@ -107,7 +107,7 @@ jobs:
         working-directory: .hugo
 
       - name: Deploy to root
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .hugo/public

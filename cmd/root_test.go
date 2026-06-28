@@ -666,12 +666,12 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		{
 			desc:      "--config and --configs",
 			args:      []string{"--config", "my.yaml", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config configs] were all set",
 		},
 		{
 			desc:      "--config-folder and --configs",
 			args:      []string{"--config-folder", "./", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config-folder configs] were all set",
 		},
 	}
 

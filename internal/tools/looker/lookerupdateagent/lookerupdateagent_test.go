@@ -156,7 +156,7 @@ func TestInvokeValidation(t *testing.T) {
 		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestManifest(t *testing.T) {
 		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -251,7 +251,7 @@ func TestAnnotations(t *testing.T) {
 		},
 	}
 
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

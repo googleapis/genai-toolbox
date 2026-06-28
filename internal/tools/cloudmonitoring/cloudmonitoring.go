@@ -60,15 +60,15 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	// Define the parameters internally instead of from the config file.
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+		parameters.NewStringParameter("projectId", "The Id of the Google Cloud project.", parameters.WithStringRequired(true)),
+		parameters.NewStringParameter("query", "The promql query to execute.", parameters.WithStringRequired(true)),
 	}
 
 	return Tool{
