@@ -65,14 +65,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	projectIdParameter := parameters.NewStringParameter("project_id", "The project_id")
 	branchParameter := parameters.NewStringParameter("branch", "The git branch to switch to")
-	refParameter := parameters.NewStringParameterWithDefault("ref", "", "The ref to switch the branch to using `reset --hard`.")
+	refParameter := parameters.NewStringParameter("ref", "The ref to switch the branch to using `reset --hard`.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{projectIdParameter, branchParameter, refParameter}
 
 	annotations := &tools.ToolAnnotations{}
