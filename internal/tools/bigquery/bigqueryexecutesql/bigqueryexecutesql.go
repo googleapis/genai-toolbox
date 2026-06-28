@@ -75,7 +75,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -281,12 +281,11 @@ func buildParams(writeMode string, allowedDatasets []string) (parameters.Paramet
 	}
 
 	sqlParameter := parameters.NewStringParameter("sql", sqlDescriptionBuilder.String())
-	dryRunParameter := parameters.NewBooleanParameterWithDefault(
+	dryRunParameter := parameters.NewBooleanParameter(
 		"dry_run",
-		false,
 		"If set to true, the query will be validated and information about the execution will be returned "+
-			"without running the query. Defaults to false.",
-	)
+			"without running the query. Defaults to false.", parameters.WithBooleanDefault(
+			false))
 	return parameters.Parameters{sqlParameter, dryRunParameter}, nil
 }
 

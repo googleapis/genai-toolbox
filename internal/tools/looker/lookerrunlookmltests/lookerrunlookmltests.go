@@ -65,15 +65,15 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	projectIdParameter := parameters.NewStringParameter("project_id", "The id of the project to run LookML tests for.")
-	fileIdParameter := parameters.NewStringParameterWithRequired("file_id", "Optional id of the file to run tests for.", false)
-	testParameter := parameters.NewStringParameterWithRequired("test", "Optional name of the test to run.", false)
-	modelParameter := parameters.NewStringParameterWithRequired("model", "Optional name of the model to run tests for.", false)
+	fileIdParameter := parameters.NewStringParameter("file_id", "Optional id of the file to run tests for.", parameters.WithStringRequired(false))
+	testParameter := parameters.NewStringParameter("test", "Optional name of the test to run.", parameters.WithStringRequired(false))
+	modelParameter := parameters.NewStringParameter("model", "Optional name of the model to run tests for.", parameters.WithStringRequired(false))
 	allParameters := parameters.Parameters{projectIdParameter, fileIdParameter, testParameter, modelParameter}
 
 	// finish tool setup

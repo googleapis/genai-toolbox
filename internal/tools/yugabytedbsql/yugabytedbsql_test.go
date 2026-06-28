@@ -69,12 +69,11 @@ func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
 					Source:    "yb-source",
 					Statement: "SELECT * FROM hotels WHERE city = $1;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("city", "city name",
+						parameters.NewStringParameter("city", "city name", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{
 								{Name: "auth-service-a", Field: "user_id"},
 								{Name: "auth-service-b", Field: "user_id"},
-							},
-						),
+							})),
 					},
 				},
 			},
