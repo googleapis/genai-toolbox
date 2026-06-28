@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -93,11 +93,10 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 		"", // Empty string for generic map that accepts any value type
 	)
 
-	returnDataParameter := parameters.NewBooleanParameterWithDefault(
+	returnDataParameter := parameters.NewBooleanParameter(
 		returnDocumentDataKey,
-		false,
-		"If set to true the output will have the data of the created document. This flag if set to false will help avoid overloading the context of the agent.",
-	)
+		"If set to true the output will have the data of the created document. This flag if set to false will help avoid overloading the context of the agent.", parameters.WithBooleanDefault(
+			false))
 
 	params := parameters.Parameters{
 		collectionPathParameter,

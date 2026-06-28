@@ -409,7 +409,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
 	ownerEmail := tests.ServiceAccountEmail
 	if ownerEmail == "" {
-		t.Fatalf("Service account email is required, but tests.ServiceAccountEmail was empty")
+		t.Fatalf("Service account email is required, but tests.ServiceAccountEmail is empty")
 	}
 	createReq := &dataplexpb.CreateDataProductRequest{
 		Parent:        parent,
