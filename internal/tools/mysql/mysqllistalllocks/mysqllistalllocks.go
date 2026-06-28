@@ -115,16 +115,16 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where locked object is detected. Check all databases if not specified."),
-		parameters.NewStringParameterWithDefault("table_name", "", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified."),
-		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
-		parameters.NewStringParameterWithRequired("connected_schema", "(Optional) The database user is connected to, the value is set from env variable CLOUD_SQL_MYSQL_DATABASE or MYSQL_DATABASE", false),
+		parameters.NewStringParameter("table_schema", "(Optional) The database where locked object is detected. Check all databases if not specified.", parameters.WithStringDefault("")),
+		parameters.NewStringParameter("table_name", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", parameters.WithStringDefault("")),
+		parameters.NewIntParameter("limit", "(Optional) Max rows to return, default is 10", parameters.WithIntDefault(10)),
+		parameters.NewStringParameter("connected_schema", "(Optional) The database user is connected to, the value is set from env variable CLOUD_SQL_MYSQL_DATABASE or MYSQL_DATABASE", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{

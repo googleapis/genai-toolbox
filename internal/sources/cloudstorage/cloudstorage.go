@@ -273,12 +273,15 @@ func (s *Source) ListBuckets(ctx context.Context, project, prefix string, maxRes
 	}, nil
 }
 
-// CreateBucket creates a Cloud Storage bucket in the source project and returns
-// its freshly-read metadata. When location is empty, Cloud Storage applies its
-// service default.
-func (s *Source) CreateBucket(ctx context.Context, bucket, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
+// CreateBucket creates a Cloud Storage bucket and returns its freshly-read
+// metadata. When project is empty, the source's configured project is used.
+// When location is empty, Cloud Storage applies its service default.
+func (s *Source) CreateBucket(ctx context.Context, bucket, project, location string, uniformBucketLevelAccess bool) (map[string]any, error) {
 	if err := s.validateBucket(bucket); err != nil {
 		return nil, err
+	}
+	if project == "" {
+		project = s.Project
 	}
 	attrs := &storage.BucketAttrs{Location: location}
 	if uniformBucketLevelAccess {
@@ -286,8 +289,8 @@ func (s *Source) CreateBucket(ctx context.Context, bucket, location string, unif
 	}
 
 	bkt := s.client.Bucket(bucket)
-	if err := bkt.Create(ctx, s.Project, attrs); err != nil {
-		return nil, fmt.Errorf("failed to create bucket %q in project %q: %w", bucket, s.Project, err)
+	if err := bkt.Create(ctx, project, attrs); err != nil {
+		return nil, fmt.Errorf("failed to create bucket %q in project %q: %w", bucket, project, err)
 	}
 
 	createdAttrs, err := bkt.Attrs(ctx)

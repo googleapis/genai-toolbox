@@ -67,7 +67,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -75,7 +75,7 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket to upload into.")
 	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
 	sourceParam := parameters.NewStringParameter(sourceKey, "Absolute local filesystem path of the file to upload. Relative paths and paths containing '..' are rejected.")
-	contentTypeParam := parameters.NewStringParameterWithDefault(contentTypeKey, "", "MIME type to record on the uploaded object. When empty, it is inferred from the source file's extension; if that fails, Cloud Storage auto-detects from the first 512 bytes of content.")
+	contentTypeParam := parameters.NewStringParameter(contentTypeKey, "MIME type to record on the uploaded object. When empty, it is inferred from the source file's extension; if that fails, Cloud Storage auto-detects from the first 512 bytes of content.", parameters.WithStringDefault(""))
 	allParameters := parameters.Parameters{bucketParam, objectParam, sourceParam, contentTypeParam}
 
 	return Tool{
