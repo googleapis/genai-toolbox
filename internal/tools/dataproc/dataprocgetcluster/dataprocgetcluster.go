@@ -59,14 +59,14 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Gets a Dataproc cluster"
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("clusterName", "The short name of the cluster, e.g. for \"projects/my-project/regions/us-central1/clusters/my-cluster\", pass \"my-cluster\" (the project and region are inherited from the source)", false),
+		parameters.NewStringParameter("clusterName", "The short name of the cluster, e.g. for \"projects/my-project/regions/us-central1/clusters/my-cluster\", pass \"my-cluster\" (the project and region are inherited from the source)", parameters.WithStringRequired(false)),
 	}
 
 	return Tool{

@@ -60,12 +60,24 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
 	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
-	filter := parameters.NewStringParameterWithDefault("filter", "", "Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported.")
-	pageSize := parameters.NewIntParameterWithDefault("pageSize", 10, "Optional. Number of returned data assets in the page.")
-	orderBy := parameters.NewStringParameterWithDefault("orderBy", "", "Optional. Specifies the ordering of results.")
+	filter := parameters.NewStringParameter(
+		"filter",
+		"Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported.",
+		parameters.WithStringDefault(""),
+	)
+	pageSize := parameters.NewIntParameter(
+		"pageSize",
+		"Optional. Number of returned data assets in the page.",
+		parameters.WithIntDefault(10),
+	)
+	orderBy := parameters.NewStringParameter(
+		"orderBy",
+		"Optional. Specifies the ordering of results.",
+		parameters.WithStringDefault(""),
+	)
 	params := parameters.Parameters{locationId, dataProductId, filter, pageSize, orderBy}
 
 	t := Tool{

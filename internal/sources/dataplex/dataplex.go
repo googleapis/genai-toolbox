@@ -24,7 +24,7 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v6"
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -372,9 +372,6 @@ func (s *Source) ListDataProducts(
 	pageSize int,
 	orderBy string,
 ) ([]*DataProductSummary, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
 	if pageSize <= 0 {
 		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
 	}
@@ -437,9 +434,6 @@ type DataProduct struct {
 }
 
 func (s *Source) GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*DataProduct, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
 	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
 	req := &dataplexpb.GetDataProductRequest{
 		Name: name,
@@ -495,9 +489,6 @@ func (s *Source) ListDataAssets(
 	pageSize int,
 	orderBy string,
 ) ([]*DataAssetSummary, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
 	if pageSize <= 0 {
 		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
 	}
@@ -551,9 +542,6 @@ type DataAsset struct {
 }
 
 func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProductId string, dataAssetId string) (*DataAsset, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
 	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationId, dataProductId, dataAssetId)
 	req := &dataplexpb.GetDataAssetRequest{
 		Name: name,
@@ -592,10 +580,6 @@ func (s *Source) CreateDataProduct(
 	ownerEmails []string,
 	accessGroups []AccessGroup,
 ) (string, string, error) {
-	if s.GetDataProductClient() == nil {
-		return "", "", fmt.Errorf("dataplex data product client is not initialized")
-	}
-
 	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationId)
 
 	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)

@@ -60,7 +60,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	resourcePath := parameters.NewStringParameter("resourcePath", "The BigQuery table to analyze. Accepts raw table name (e.g. 'my_table'), dataset.table (e.g. 'my_dataset.my_table'), or fully-qualified resource path (e.g. '//bigquery.googleapis.com/projects/{project}/datasets/{dataset}/tables/{table}').")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the BigQuery resource.")
 	publish := parameters.NewBooleanParameter("publish", "Whether to publish the generated profile results to the Dataplex Universal Catalog.")
