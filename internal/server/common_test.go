@@ -39,7 +39,7 @@ var (
 )
 
 // setUpServer create a new server with tools, toolsets, prompts, and promptsets.
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset, enableDraft bool) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -62,11 +62,12 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
-		version:         testutils.MockVersionString,
-		logger:          testLogger,
-		instrumentation: instrumentation,
-		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
+		version:          testutils.MockVersionString,
+		logger:           testLogger,
+		instrumentation:  instrumentation,
+		sseManager:       sseManager,
+		ResourceMgr:      resourceManager,
+		enableDraftSpecs: enableDraft,
 	}
 
 	var r chi.Router
