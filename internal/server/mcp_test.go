@@ -110,6 +110,9 @@ var prompt2Args = []any{
 	},
 }
 
+// TestMcpEndpointWithoutInitialized is expecting Toolbox to response with the
+// v2024-11-05 version. This was a customs transport that we implemented during
+// the initial integration of MCP within Toolbox.
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
@@ -459,7 +462,7 @@ func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -1147,6 +1150,93 @@ func TestMcpEndpoint(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+// TestMcpEndpointWithoutEnablingDraftSpecs checks a method on draft specs
+// without enabling draft specs in server. The server should response with
+// unsupported protocol version errror.
+func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	protocol := protocolVersionDraft
+	meta := map[string]any{
+		"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+		"io.modelcontextprotocol/clientInfo": map[string]any{
+			"version": "client-temp-version",
+			"name":    "client-name",
+		},
+		"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+	}
+
+	url := "/"
+	body := jsonrpc.JSONRPCRequest{
+		Jsonrpc: jsonrpcVersion,
+		Id:      "server-discover",
+		Request: jsonrpc.Request{
+			Method: "server/discover",
+		},
+	}
+	methodName := "server/discover"
+	wantStatusCode := http.StatusBadRequest
+	want := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "server-discover",
+		"error": map[string]interface{}{
+			"code": float64(-32004),
+			"data": map[string]interface{}{
+				"requested": "DRAFT-2026-v1",
+				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+			},
+			"message": "unsupported protocol version",
+		},
+	}
+	// add required header
+	header := map[string]string{}
+	header["Mcp-Protocol-Version"] = protocol
+	header["Mcp-Method"] = methodName
+	if body.Params != nil {
+		body.Params.(map[string]any)["_meta"] = meta
+	} else {
+		body.Params = map[string]any{
+			"_meta": meta,
+		}
+	}
+	reqMarshal, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of body")
+	}
+
+	if protocol != protocolVersion20241105 && len(header) == 0 {
+		t.Fatalf("header is missing")
+	}
+
+	resp, resBody, err := runRequest(ts, http.MethodPost, url, bytes.NewBuffer(reqMarshal), header)
+
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != wantStatusCode {
+		t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, wantStatusCode)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(resBody, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected response: got %#v, want %#v", got, want)
 	}
 }
 
