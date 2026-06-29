@@ -110,7 +110,7 @@ runnables and middleware that screen prompts and responses with Model Armor.
 1. Install the dependencies:
 
     ```bash
-    pip install "langchain-google-community>=3.0.4" langchain-google-genai toolbox-langchain
+    pip install "langchain>=1.0" "langchain-google-community>=3.0.4" langchain-google-genai toolbox-langchain
     ```
 
 2. Create an **ingress** sanitizer for user prompts and an **egress** sanitizer
@@ -164,6 +164,14 @@ runnables and middleware that screen prompts and responses with Model Armor.
    `ModelArmorMiddleware` and pass it to `create_agent`. This screens the
    intermediate tool calls and responses (agent-to-tool egress) in addition to
    the user-facing prompt and answer:
+
+    {{< notice note >}}
+  `create_agent` and the `middleware` parameter are part of
+  [LangChain v1.0](https://docs.langchain.com/oss/python/releases/langchain-v1)
+  (`langchain>=1.0`). On older releases, agents were built with
+  `create_react_agent` / `create_tool_calling_agent`, which do not support
+  middleware — upgrade to v1.0 to use this pattern.
+    {{< /notice >}}
 
     ```python
     import asyncio
