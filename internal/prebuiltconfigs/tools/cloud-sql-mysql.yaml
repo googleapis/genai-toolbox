@@ -75,6 +75,18 @@ source: cloud-sql-mysql-source
 description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 ---
 kind: tool
+name: list_all_locks
+type: mysql-list-all-locks
+source: cloud-sql-mysql-source
+description: Lists top N (default 10) locks on the specified database ordered by query execution time in descending order.
+---
+kind: tool
+name: show_query_stats
+type: mysql-show-query-stats
+source: cloud-sql-mysql-source
+description: Displays query execution statistics including execution count, total and average latency, max latency, total rows examined, full table scans, and inefficient index usage.
+---
+kind: tool
 name: create_backup
 type: cloud-sql-create-backup
 source: cloud-sql-admin-source
@@ -241,11 +253,13 @@ name: monitor
 tools:
 - get_query_plan
 - list_active_queries
+- list_all_locks
 - get_query_metrics
 - get_system_metrics
 - list_table_fragmentation
 - list_table_stats
 - list_tables_missing_unique_indexes
+- show_query_stats
 ---
 kind: toolset
 name: lifecycle

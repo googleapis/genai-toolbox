@@ -65,7 +65,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "Creates a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
@@ -156,15 +156,15 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The GCP project ID.")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
-		parameters.NewStringParameterWithDefault("location", "us-central1", "The location to create the cluster in. The default value is us-central1. If quota is exhausted then use other regions."),
+		parameters.NewStringParameter("location", "The location to create the cluster in. The default value is us-central1. If quota is exhausted then use other regions.", parameters.WithStringDefault("us-central1")),
 		parameters.NewStringParameter("cluster", "A unique ID for the AlloyDB cluster."),
 		parameters.NewStringParameter("password", "A secure password for the initial user."),
-		parameters.NewStringParameterWithDefault("network", "default", "The name of the VPC network to connect the cluster to (e.g., 'default')."),
-		parameters.NewStringParameterWithDefault("user", "postgres", "The name for the initial superuser. Defaults to 'postgres' if not provided."),
+		parameters.NewStringParameter("network", "The name of the VPC network to connect the cluster to (e.g., 'default').", parameters.WithStringDefault("default")),
+		parameters.NewStringParameter("user", "The name for the initial superuser. Defaults to 'postgres' if not provided.", parameters.WithStringDefault("postgres")),
 	}
 }
 

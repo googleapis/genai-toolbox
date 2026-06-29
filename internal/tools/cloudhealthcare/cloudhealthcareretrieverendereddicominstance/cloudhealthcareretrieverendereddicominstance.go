@@ -69,7 +69,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -151,7 +151,7 @@ func buildParams(singleStore bool) parameters.Parameters {
 		parameters.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study"),
 		parameters.NewStringParameter(seriesInstanceUIDKey, "The UID of the DICOM series"),
 		parameters.NewStringParameter(sopInstanceUIDKey, "The UID of the SOP instance."),
-		parameters.NewIntParameterWithDefault(frameNumberKey, 1, "The frame number to retrieve (1-based). Only applicable to multi-frame instances."),
+		parameters.NewIntParameter(frameNumberKey, "The frame number to retrieve (1-based). Only applicable to multi-frame instances.", parameters.WithIntDefault(1)),
 	}
 	if !singleStore {
 		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))

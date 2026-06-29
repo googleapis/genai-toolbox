@@ -666,12 +666,12 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		{
 			desc:      "--config and --configs",
 			args:      []string{"--config", "my.yaml", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config configs] were all set",
 		},
 		{
 			desc:      "--config-folder and --configs",
 			args:      []string{"--config-folder", "./", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config-folder configs] were all set",
 		},
 	}
 
@@ -1050,4 +1050,33 @@ baseUrl: http://example.com
 			t.Errorf("expected 'invalid_tool' to be skipped and filtered out, but it was found in ToolConfigs")
 		}
 	})
+}
+
+func TestMCPAuthEnableAPIClashCLI(t *testing.T) {
+	tempDir := t.TempDir()
+	configFile := filepath.Join(tempDir, "config.yaml")
+	configContent := `
+authServices:
+  generic1:
+    type: generic
+    audience: aud
+    mcpEnabled: true
+    authorizationServer: https://example.com/oauth
+`
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write temp config file: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	cmd := NewCommand(opts)
+	cmd.SetArgs([]string{"--config", configFile, "--enable-api"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when running with MCP Auth and --enable-api, got nil")
+	}
+	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
+		t.Errorf("unexpected error: %v", err)
+	}
 }

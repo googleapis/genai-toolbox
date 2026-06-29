@@ -373,5 +373,12 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 1. Use this tool to retrieve rich metadata regarding one or more data assets along with their relationships.
 2. You must provide the `resources` list with full resource names.
 ### Response
-1. Present the requested metadata and relationship information. 
+1. Present the requested metadata and relationship information.
+
+## Tool: list_data_products
+### Request
+1. Use this tool to retrieve all Data Products globally across all locations.
+2. You can optionally filter by `display_name` (e.g., "`display_name:\"my-product\"`") or other fields using the Dataplex filter syntax.
+### Response
+1. Unless asked for a specific data product, respond with all entries returned.
 ```

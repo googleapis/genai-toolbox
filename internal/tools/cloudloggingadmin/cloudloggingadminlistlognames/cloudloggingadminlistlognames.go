@@ -62,14 +62,14 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	limitDescription := fmt.Sprintf("Maximum number of log entries to return. Default: %d.", defaultLimit)
 	params := parameters.Parameters{
-		parameters.NewIntParameterWithRequired("limit", limitDescription, false),
+		parameters.NewIntParameter("limit", limitDescription, parameters.WithIntRequired(false)),
 	}
 
 	return Tool{

@@ -133,7 +133,7 @@ func TestGetManifest(t *testing.T) {
 			description: "Prompt with arguments.",
 			args: prompts.Arguments{
 				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewBooleanParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewBooleanParameter("param2", "Second param", parameters.WithBooleanRequired(false))},
 			},
 			want: prompts.Manifest{
 				Description: "Prompt with arguments.",

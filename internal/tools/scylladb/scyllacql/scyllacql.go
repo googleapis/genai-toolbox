@@ -1,0 +1,116 @@
+// Copyright 2026 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package scyllacql
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+
+	yaml "github.com/goccy/go-yaml"
+	gocql "github.com/gocql/gocql"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
+)
+
+const resourceType string = "scylladb-cql"
+
+func init() {
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
+	}
+}
+
+type compatibleSource interface {
+	ScyllaDBSession() *gocql.Session
+	RunSQL(context.Context, string, parameters.ParamValues) (any, error)
+}
+
+type Config struct {
+	tools.ConfigBase   `yaml:",inline"`
+	Type               string                 `yaml:"type" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Statement          string                 `yaml:"statement" validate:"required"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+}
+
+var _ tools.ToolConfig = Config{}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+	return actual, nil
+}
+
+// ToolConfigType implements tools.ToolConfig.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
+}
+
+// Initialize implements tools.ToolConfig.
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	if err != nil {
+		return nil, fmt.Errorf("unable to process parameters: %w", err)
+	}
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
+}
+
+var _ tools.Tool = Tool{}
+
+type Tool struct {
+	tools.BaseTool[Config]
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
+}
+
+// Invoke implements tools.Tool.
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
+	}
+
+	paramsMap := params.AsMap()
+	newStatement, err := parameters.ResolveTemplateParams(t.Cfg.TemplateParameters, t.Cfg.Statement, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("unable to extract template params", err)
+	}
+
+	newParams, err := parameters.GetParams(t.Cfg.Parameters, paramsMap)
+	if err != nil {
+		return nil, util.NewAgentError("unable to extract standard params", err)
+	}
+	resp, err := source.RunSQL(ctx, newStatement, newParams)
+	if err != nil {
+		return nil, util.ProcessGeneralError(err)
+	}
+	return resp, nil
+}

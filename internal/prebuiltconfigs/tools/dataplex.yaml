@@ -48,6 +48,12 @@ source: dataplex-source
 description: Use this tool to search for data quality scans in Dataplex.
 ---
 kind: tool
+name: list_data_products
+type: dataplex-list-data-products
+source: dataplex-source
+description: Lists Data Products across all locations.
+---
+kind: tool
 name: generate_data_insights
 type: dataplex-generate-data-insights
 source: dataplex-source
@@ -230,6 +236,15 @@ tools:
 - search_aspect_types
 - lookup_context
 - search_dq_scans
+---
+kind: toolset
+name: data-products
+tools:
+- search_entries
+- lookup_entry
+- search_aspect_types
+- lookup_context
+- list_data_products
 ---
 kind: toolset
 name: enrich
