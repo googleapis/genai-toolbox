@@ -21,11 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"slices"
-	"strings"
 	"time"
 
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
@@ -44,7 +42,7 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case SERVER_DISCOVER:
 		return serverDiscoverHandler(ctx, id, body, header)
 	case TOOLS_LIST:
-		return toolsListHandler(id, resourceMgr, toolset, body, header)
+		return toolsListHandler(ctx, id, resourceMgr, toolset, body, header)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
@@ -124,6 +122,11 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
+	enableDraft, ok := util.EnableDraftSpecsFromContext(ctx)
+	if !ok {
+		err = fmt.Errorf("unable to retrieve enableDraftSpecs from context")
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
 
 	var req DiscoverRequest
 	if err := json.Unmarshal(body, &req); err != nil {
@@ -142,7 +145,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 	toolsListChanged := false
 	promptsListChanged := false
 	result := DiscoverResult{
-		SupportedVersions: mcputil.SUPPORTED_PROTOCOL_VERSIONS,
+		SupportedVersions: mcputil.GetSupportedVersions(enableDraft),
 		Capabilities: ServerCapabilities{
 			Tools: &ListChanged{
 				ListChanged: &toolsListChanged,
@@ -166,7 +169,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 	return res, nil
 }
 
-func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte, header http.Header) (any, error) {
+func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte, header http.Header) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
@@ -181,8 +184,9 @@ func toolsListHandler(id jsonrpc.RequestId, resourceMgr *resources.ResourceManag
 		return validateErr, err
 	}
 
+	urlParams, _ := util.UrlParamsFromContext(ctx)
 	toolsMap := resourceMgr.GetToolsMap()
-	listToolsResult, err := GenerateListToolsResult(toolset, toolsMap)
+	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), toolset, toolsMap, urlParams)
 	if err != nil {
 		err = fmt.Errorf("error generating manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -293,11 +297,19 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	// if using stdio, header will be nil and auth will not be supported
 	if header != nil {
 		for _, aS := range authServices {
-			claims, err := aS.GetClaimsFromHeader(ctx, header)
-			if err != nil {
-				logger.DebugContext(ctx, err.Error())
-				continue
+			var claims map[string]any
+			var err error
+
+			if mSvc, ok := aS.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+				claims = util.AuthTokenClaimsFromContext(ctx)
+			} else {
+				claims, err = aS.GetClaimsFromHeader(ctx, header)
+				if err != nil {
+					logger.DebugContext(ctx, err.Error())
+					continue
+				}
 			}
+
 			if claims == nil {
 				// authService not present in header
 				continue
@@ -326,51 +338,20 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
-	// Find MCP enabled auth service
-	var mcpSvcName string
-	for _, aS := range authServices {
-		cfg := aS.ToConfig()
-		if genCfg, ok := cfg.(generic.Config); ok && genCfg.McpEnabled {
-			mcpSvcName = aS.GetName()
-			break
-		}
+	if err := mcputil.ValidateScopes(ctx, tool.GetScopesRequired(), authServices); err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	toolScopes := tool.GetScopesRequired()
-	if mcpSvcName != "" && len(toolScopes) > 0 {
-		claims := util.AuthTokenClaimsFromContext(ctx)
-		if claims == nil {
-			err = &generic.MCPAuthError{
-				Code:           http.StatusForbidden,
-				Message:        "missing claims for MCP authorization",
-				ScopesRequired: toolScopes,
-			}
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-		}
-
-		scopeClaim, _ := claims["scope"].(string)
-		tokenScopes := strings.Split(scopeClaim, " ")
-
-		// Check if all required scopes are present in the token
-		missing := false
-		for _, ts := range toolScopes {
-			if !slices.Contains(tokenScopes, ts) {
-				missing = true
-				break
-			}
-		}
-
-		if missing {
-			err = &generic.MCPAuthError{
-				Code:           http.StatusForbidden,
-				Message:        "insufficient scopes for this tool",
-				ScopesRequired: toolScopes,
-			}
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
-		}
+	toolParams, err := tool.GetParameters(resourceMgr.GetSourcesMap())
+	if err != nil {
+		err = fmt.Errorf("error getting parameters for tool: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
+	// Auto-populate arguments from URL parameters
+	data = mcputil.PopulateUrlParams(ctx, data, toolParams)
+
+	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err

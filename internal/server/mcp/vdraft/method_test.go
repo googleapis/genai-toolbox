@@ -509,7 +509,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(dummyID, resourceMgr, tt.toolset, body, tt.header)
+			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.toolset, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {

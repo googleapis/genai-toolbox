@@ -270,7 +270,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			// if protocol version was found in meta, it takes precedence
 			// the metaProtocolVersion does not replace existing protocol
 			// version if initialize method took place
-			if metaProtocolVersion != "" {
+			if protocol == "" && metaProtocolVersion != "" {
 				protocol = metaProtocolVersion
 			}
 
@@ -815,6 +815,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	// Add instrumentation and toolbox version to context for use in method handlers
 	ctx = util.WithInstrumentation(ctx, s.instrumentation)
 	ctx = util.WithToolboxVersionKey(ctx, s.version)
+	ctx = util.WithEnableDraftSpecs(ctx, s.enableDraftSpecs)
 	// Process the method
 	switch baseMessage.Method {
 	// This is only used for <v2026
@@ -831,13 +832,13 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 		var version string
 		v := initReq.Params.ProtocolVersion
-		if slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, v) {
+		if slices.Contains(mcputil.GetSupportedVersions(s.enableDraftSpecs), v) {
 			version = v
 		} else {
-			version = mcputil.LATEST_PROTOCOL_VERSION
+			version = mcputil.GetLatestSupportedVersion(s.enableDraftSpecs)
 		}
 
-		result, err := mcp.ProcessMethod(ctx, s.enableDraftSpecs, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
+		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
@@ -867,7 +868,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		result, err := mcp.ProcessMethod(ctx, s.enableDraftSpecs, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code

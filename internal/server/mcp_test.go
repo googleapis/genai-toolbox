@@ -1192,7 +1192,7 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 			"code": float64(-32004),
 			"data": map[string]interface{}{
 				"requested": "DRAFT-2026-v1",
-				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
 			},
 			"message": "unsupported protocol version",
 		},

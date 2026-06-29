@@ -30,6 +30,7 @@ import (
 	vdraft "github.com/googleapis/mcp-toolbox/internal/server/mcp/vdraft"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 // NotificationHandler process notifications request. It MUST NOT send a response.
@@ -46,13 +47,18 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
-func ProcessMethod(ctx context.Context, enableDraftSpecs bool, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	enableDraft, ok := util.EnableDraftSpecsFromContext(ctx)
+	if !ok {
+		err := fmt.Errorf("unable to retrieve enableDraftSpecs from context")
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
 	switch mcpVersion {
 	case mcputil.VERSION_DRAFT:
-		if enableDraftSpecs {
+		if enableDraft {
 			return vdraft.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 		}
-		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion)
+		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion, enableDraft)
 	case mcputil.VERSION_20251125:
 		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	case mcputil.VERSION_20250618:
@@ -62,6 +68,6 @@ func ProcessMethod(ctx context.Context, enableDraftSpecs bool, mcpVersion string
 	case "", mcputil.VERSION_20241105:
 		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	default:
-		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion)
+		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion, enableDraft)
 	}
 }

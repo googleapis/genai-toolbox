@@ -159,7 +159,7 @@ func NewError(id RequestId, code int, message string, data any) JSONRPCError {
 	}
 }
 
-func NewUnsupportedProtocolVersionError(id RequestId, v string) (JSONRPCError, error) {
+func NewUnsupportedProtocolVersionError(id RequestId, v string, enableDraft bool) (JSONRPCError, error) {
 	err := fmt.Errorf("unsupported protocol version")
 	return JSONRPCError{
 		Jsonrpc: JSONRPC_VERSION,
@@ -171,7 +171,7 @@ func NewUnsupportedProtocolVersionError(id RequestId, v string) (JSONRPCError, e
 				Supported []string `json:"supported"`
 				Requested string   `json:"requested"`
 			}{
-				Supported: mcputil.SUPPORTED_PROTOCOL_VERSIONS,
+				Supported: mcputil.GetSupportedVersions(enableDraft),
 				Requested: v,
 			},
 		},
