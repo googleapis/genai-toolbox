@@ -51,20 +51,26 @@ cleanly with this kind of interception.
 
 ## Requirements
 
-1. **Enable the API.** Enable `modelarmor.googleapis.com` in your Google Cloud
+1. **Install the gcloud CLI.** Install and initialize the
+   [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) so you can
+   create and manage Model Armor templates.
+2. **Enable the API.** Enable `modelarmor.googleapis.com` in your Google Cloud
    project.
    ```bash
    gcloud config set project YOUR_PROJECT_ID
    gcloud services enable modelarmor.googleapis.com
    ```
-2. **Grant IAM roles.** 
+3. **Grant IAM roles.** 
     - The identity that runs your agent needs `roles/modelarmor.user` to invoke sanitization. 
     - To create and manage templates, you need `roles/modelarmor.admin`.
 
 ## Step 1: Configure a Model Armor template
 
-Model Armor applies its filters through a **template**. Create one that enforces
-both Sensitive Data Protection (SDP) and prompt injection / jailbreak detection:
+Model Armor applies its filters through a **template** that bundles your
+detection settings into a reusable policy. You create a template once, then
+reference its ID on every sanitize call, so you can change the policy in one
+place without touching your agent code. Create a template that enforces both
+Sensitive Data Protection (SDP) and prompt injection / jailbreak detection:
 
 ```bash
 gcloud model-armor templates create my-mcp-template \
@@ -81,6 +87,8 @@ numbers, API keys, and passwords. For granular PII detection and masking, use an
 advanced SDP configuration with `--advanced-config-inspect-template`. See
 [Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses#advanced_sdp_configuration)
 for details.
+
+For more information on how to create templates for Model Armor, refer to the [official docs](https://docs.cloud.google.com/model-armor/manage-templates#create-ma-template).
 {{< /notice >}}
 
 ## Step 2: Secure ingress and egress
