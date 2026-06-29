@@ -53,6 +53,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
     no = 'Sorry to hear that. Please <a href="https://github.com/googleapis/mcp-toolbox/issues/new">tell us how we can improve</a>.'
   [params.ui.readingtime]
       enable = true
+  [params.mermaid]
+    version = "11.16.0"
 
 [[params.versions]]
   version = "dev"
