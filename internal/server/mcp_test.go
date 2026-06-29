@@ -974,6 +974,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "tools/list",
 						},
 					},
+					methodName:     "tools/list",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -1032,6 +1033,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					methodName:     "tools/call",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",

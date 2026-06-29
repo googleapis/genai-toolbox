@@ -281,6 +281,7 @@ func TestValidateHeader(t *testing.T) {
 
 func TestServerDiscoverHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+	ctx = util.WithEnableDraftSpecs(ctx, true)
 	defer cancel()
 	ctxVersion := util.WithToolboxVersionKey(ctx, fakeVersionString)
 	tests := []struct {
