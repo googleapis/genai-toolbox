@@ -72,15 +72,14 @@ gcloud model-armor templates create my-mcp-template \
     --project=YOUR_PROJECT_ID \
     --basic-config-filter-enforcement=enabled \
     --pi-and-jailbreak-filter-settings-enforcement=enabled \
-    --pi-and-jailbreak-filter-settings-confidence-level=MEDIUM_AND_ABOVE
+    --pi-and-jailbreak-filter-settings-confidence-level=medium-and-above
 ```
 
 {{< notice note >}}
 Basic SDP automatically scans for high-confidence secrets such as credit card
 numbers, API keys, and passwords. For granular PII detection and masking, use an
-advanced SDP configuration with `--advanced-config-inspect-template` and
-`--advanced-config-deidentify-template`. See
-[Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses)
+advanced SDP configuration with `--advanced-config-inspect-template`. See
+[Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses#advanced_sdp_configuration)
 for details.
 {{< /notice >}}
 
