@@ -69,8 +69,18 @@ cleanly with this kind of interception.
 Model Armor applies its filters through a **template** that bundles your
 detection settings into a reusable policy. You create a template once, then
 reference its ID on every sanitize call, so you can change the policy in one
-place without touching your agent code. Create a template that enforces both
-Sensitive Data Protection (SDP) and prompt injection / jailbreak detection:
+place without touching your agent code.
+
+Template and sanitization operations are **regional**, but the gcloud CLI
+defaults to the global endpoint. Point gcloud at your region first, otherwise
+template commands fail with `PERMISSION_DENIED: Write access ... was denied`:
+
+```bash
+gcloud config set api_endpoint_overrides/modelarmor https://modelarmor.us-central1.rep.googleapis.com/
+```
+
+Then create a template that enforces both Sensitive Data Protection (SDP) and
+prompt injection / jailbreak detection:
 
 ```bash
 gcloud model-armor templates create my-mcp-template \
