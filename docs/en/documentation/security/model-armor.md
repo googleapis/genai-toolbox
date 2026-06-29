@@ -13,7 +13,7 @@ description: >
 an LLM-agnostic service that screens prompts and responses to defend AI
 applications against prompt injection, jailbreaks, and sensitive data leakage.
 Pairing it with MCP Toolbox lets you enforce these protections on both the
-prompts your users send and the requests your agent makes to tools — without
+prompts your users send and the requests your agent makes to tools, without
 trusting the model to police itself.
 
 Model Armor inspects traffic at two points:
@@ -170,7 +170,7 @@ runnables and middleware that screen prompts and responses with Model Armor.
   [LangChain v1.0](https://docs.langchain.com/oss/python/releases/langchain-v1)
   (`langchain>=1.0`). On older releases, agents were built with
   `create_react_agent` / `create_tool_calling_agent`, which do not support
-  middleware — upgrade to v1.0 to use this pattern.
+  middleware. Upgrade to v1.0 to use this pattern.
     {{< /notice >}}
 
     ```python
