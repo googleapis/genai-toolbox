@@ -9,49 +9,38 @@ description: >
 
 ## About
 
-[Google Cloud Model Armor](https://docs.cloud.google.com/model-armor/overview) is
+[Google Cloud Model Armor](https://cloud.google.com/security/products/model-armor) is
 an LLM-agnostic service that screens prompts and responses to defend AI
 applications against prompt injection, jailbreaks, and sensitive data leakage.
-Pairing it with MCP Toolbox lets you enforce these protections on both the
-prompts your users send and the requests your agent makes to tools, without
-trusting the model to police itself.
+Pairing it with MCP Toolbox lets you screen both the prompts your users send and
+the responses your agent returns, including any sensitive data pulled from your
+tools, without trusting the model to police itself.
 
 Model Armor inspects traffic at two points:
 
-- **Ingress (client → agent):** the user prompt is screened *before* it reaches
+- **Ingress (incoming prompt):** The user prompt is screened *before* it reaches
   the agent, blocking prompt injection and jailbreak attempts.
-- **Egress (agent → tool / anywhere):** the agent's tool requests and the
-  responses returned by those tools are screened to mask or block sensitive data
-  (PII, secrets) before it is processed or surfaced.
+- **Egress (outgoing response):** The agent's response, including any sensitive
+  data pulled in from tools, is screened *before* it returns to the user, masking
+  or blocking PII and secrets.
 
 ```mermaid
-flowchart LR
-    User([User])
-    Agent[Agent / LLM]
-    Tool[(MCP Toolbox<br/>tool + data source)]
+sequenceDiagram
+    autonumber
+    actor User
+    participant MA as Google Cloud Model Armor
+    participant Agent as Agent / LLM
+    participant Tool as MCP Toolbox tool
 
-    subgraph MA["Google Cloud Model Armor"]
-        In{{Ingress filter}}
-        Out{{Egress filter}}
-    end
-
-    User -->|prompt| In
-    In -->|sanitized prompt| Agent
-    Agent -->|tool call + args| Out
-    Out -->|sanitized request| Tool
-    Tool -->|raw response| Out
-    Out -->|sanitized response| Agent
-    Agent -->|answer| User
-
-    In -.->|block: prompt injection / jailbreak| User
-    Out -.->|mask / block: PII, secrets| Agent
-
-    classDef armor fill:#e8f0fe,stroke:#1a73e8,color:#174ea6;
-    class In,Out armor;
+    User->>MA: prompt
+    Note over MA: Inspect prompt<br/>(prompt injection, jailbreaks)
+    MA->>Agent: sanitized prompt
+    Agent->>Tool: tool call
+    Tool-->>Agent: tool data
+    Agent->>MA: response
+    Note over MA: Inspect response<br/>(PII, secrets)
+    MA-->>User: sanitized response
 ```
-
-In short, Model Armor inspects the user prompt before it reaches the agent, and
-inspects every tool request and response before and after the tool runs.
 
 {{< notice note >}}
 Like other [pre- and post-processing](../configuration/pre-post-processing/)
@@ -60,21 +49,17 @@ Gateway), not in the Toolbox SDK itself. Toolbox tools are designed to work
 cleanly with this kind of interception.
 {{< /notice >}}
 
-{{< notice tip >}}
-This guide covers the Python + LangChain integration. Examples for ADK, Agent
-Gateway, Google Cloud MCP servers, and other languages (Go, Node.js, Java) are
-being added in follow-up guides.
-{{< /notice >}}
-
 ## Requirements
 
 1. **Enable the API.** Enable `modelarmor.googleapis.com` in your Google Cloud
    project.
-2. **Grant IAM roles.** The identity that runs your agent needs
-   `roles/modelarmor.user` to invoke sanitization. To create and manage
-   templates, you also need `roles/modelarmor.admin`. See the
-   [access control reference](https://docs.cloud.google.com/model-armor/overview)
-   for the full list of roles.
+   ```bash
+   gcloud config set project YOUR_PROJECT_ID
+   gcloud services enable modelarmor.googleapis.com
+   ```
+2. **Grant IAM roles.** 
+    - The identity that runs your agent needs `roles/modelarmor.user` to invoke sanitization. 
+    - To create and manage templates, you need `roles/modelarmor.admin`.
 
 ## Step 1: Configure a Model Armor template
 
