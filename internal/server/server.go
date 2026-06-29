@@ -307,7 +307,7 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize()
+			t, err := tc.Initialize(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 			}

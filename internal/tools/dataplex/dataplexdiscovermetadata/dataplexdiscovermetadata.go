@@ -60,7 +60,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	resourcePath := parameters.NewStringParameter("resourcePath", "The Cloud Storage bucket to discover. Accepts raw bucket name (e.g. 'my-bucket'), standard gs:// URI (e.g. 'gs://my-bucket'), or fully-qualified resource path (e.g. '//storage.googleapis.com/projects/{project}/buckets/{bucket}').")
 	location := parameters.NewStringParameter("location", "The Google Cloud region where the Dataplex scan should be created and executed (e.g., 'us-central1'). This should match the location of the GCS bucket.")
 

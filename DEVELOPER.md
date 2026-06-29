@@ -357,6 +357,18 @@ and data.
   [internal/prebuiltconfigs/prebuiltconfigs_test.go](internal/prebuiltconfigs/prebuiltconfigs_test.go)
   and [cmd/root_test.go](cmd/root_test.go).
 
+### Deprecating an Existing Primitive
+
+A primitive (e.g., sources, tools, auth services) will only be removed after it
+has been marked as deprecated for at least one major version, or four minor
+versions (approximately two months, given our biweekly release cadence).
+
+To mark a primitive as deprecated, you must add our deprecation helper function
+to the initialization of the primitive.
+
+During the next major version release, any primitive that meets these
+deprecation timeframe requirements will be permanently removed.
+
 ## Testing
 
 ### Infrastructure

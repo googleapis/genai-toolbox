@@ -63,13 +63,13 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	emptyString := ""
-	parentPathParameter := parameters.NewStringParameterWithDefault(parentPathKey, emptyString, "Relative parent document path to list subcollections from (e.g., 'users/userId'). If not provided, lists root collections. Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'")
+	parentPathParameter := parameters.NewStringParameter(parentPathKey, "Relative parent document path to list subcollections from (e.g., 'users/userId'). If not provided, lists root collections. Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'", parameters.WithStringDefault(emptyString))
 	params := parameters.Parameters{parentPathParameter}
 
 	return Tool{

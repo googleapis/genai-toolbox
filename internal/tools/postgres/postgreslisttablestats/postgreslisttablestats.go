@@ -107,13 +107,13 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional: A specific schema name to filter by"),
-		parameters.NewStringParameterWithRequired("table_name", "Optional: A specific table name to filter by", false),
-		parameters.NewStringParameterWithRequired("owner", "Optional: A specific owner to filter by", false),
-		parameters.NewStringParameterWithRequired("sort_by", "Optional: The column to sort by", false),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of results to return"),
+		parameters.NewStringParameter("schema_name", "Optional: A specific schema name to filter by", parameters.WithStringDefault("public")),
+		parameters.NewStringParameter("table_name", "Optional: A specific table name to filter by", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("owner", "Optional: A specific owner to filter by", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("sort_by", "Optional: The column to sort by", parameters.WithStringRequired(false)),
+		parameters.NewIntParameter("limit", "Optional: The maximum number of results to return", parameters.WithIntDefault(50)),
 	}
 
 	if cfg.Description == "" {
