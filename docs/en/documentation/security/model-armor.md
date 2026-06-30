@@ -501,7 +501,7 @@ the next hop.
    call the model:
 
     ```bash
-    export GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"
+    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
     ```
 
 3. Create a Model Armor client pointed at the regional endpoint:
