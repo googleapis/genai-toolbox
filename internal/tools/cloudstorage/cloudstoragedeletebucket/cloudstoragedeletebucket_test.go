@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageDeleteBucket(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"delete_bucket_tool": cloudstoragedeletebucket.Config{
-					Name:         "delete_bucket_tool",
-					Type:         "cloud-storage-delete-bucket",
-					Source:       "my-gcs",
-					Description:  "Delete a Cloud Storage bucket",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "delete_bucket_tool",
+						Description:  "Delete a Cloud Storage bucket",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-delete-bucket",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,13 @@ func TestParseFromYamlCloudStorageDeleteBucket(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_delete_bucket": cloudstoragedeletebucket.Config{
-					Name:         "secure_delete_bucket",
-					Type:         "cloud-storage-delete-bucket",
-					Source:       "prod-gcs",
-					Description:  "Delete bucket with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_delete_bucket",
+						Description:  "Delete bucket with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-delete-bucket",
+					Source: "prod-gcs",
 				},
 			},
 		},
@@ -116,12 +120,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragedeletebucket.Config{
-		Name:        "delete_bucket_tool",
-		Type:        "cloud-storage-delete-bucket",
-		Source:      "my-gcs",
-		Description: "Delete bucket",
+		ConfigBase: tools.ConfigBase{
+			Name:        "delete_bucket_tool",
+			Description: "Delete bucket",
+		},
+		Type:   "cloud-storage-delete-bucket",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

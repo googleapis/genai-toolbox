@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=70.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "toolbox-server"
+dynamic = ["version"] # Version is set in src/toolbox_server/__init__.py
+requires-python = ">=3.9"
+description = "MCP Toolbox Server for Database Operations"
+readme = "README.md"
+license = "Apache-2.0"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+# This package wraps a Go binary, so it has no direct Python dependencies.
+dependencies = []
+
+[project.scripts]
+toolbox-server = "toolbox_server.main:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["toolbox_server*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "toolbox_server.__version__"}

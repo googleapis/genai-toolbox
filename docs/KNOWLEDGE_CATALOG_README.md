@@ -7,7 +7,8 @@ The Knowledge Catalog (formerly known as Dataplex) Model Context Protocol (MCP) 
 An editor configured to use the Knowledge Catalog MCP server can use its AI capabilities to help you:
 
 - **Search Catalog** - Search for entries in Knowledge Catalog
-- **Explore Metadata** - Lookup specific entries and search aspect types
+- **Explore Metadata** - Lookup specific entries, search aspect types, and list/retrieve Data Products and Data Assets
+- **Data Quality** - Search for data quality scans
 
 ## Prerequisites
 
@@ -41,6 +42,9 @@ Once configured, the MCP server will automatically provide Knowledge Catalog cap
 
 *   "Search for entries related to 'sales' in Knowledge Catalog."
 *   "Look up details for the entry 'projects/my-project/locations/us-central1/entryGroups/my-group/entries/my-entry'."
+*   "List all Data Products."
+*   "Get details of the Data Product 'projects/my-project/locations/us-central1/dataProducts/my-product'."
+*   "List Data Assets for the Data Product 'projects/my-project/locations/us-central1/dataProducts/my-product'."
 
 ## Server Capabilities
 
@@ -48,10 +52,14 @@ The Knowledge Catalog MCP server provides the following tools:
 
 | Tool Name             | Description                                                                                                                  |
 |:----------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| `search_entries`      | Search for entries in Knowledge Catalog.                                                                                      |
+| `search_entries`      | Search for entries in Knowledge Catalog.                                                                                     |
 | `lookup_entry`        | Retrieve specific subset of metadata (for example, schema, usage, business overview, and contacts) of a specific data asset. |
 | `search_aspect_types` | Find aspect types relevant to the query.                                                                                     |
 | `lookup_context`      | Retrieve rich metadata regarding one or more data assets along with their relationships.                                     |
+| `search_dq_scans`     | Search for Data Quality scans.                                                                                               |
+| `list_data_products`  | List Data Products for the current project.                                                                                  |
+| `get_data_product`    | Retrieve a specific Data Product.                                                                                            |
+| `list_data_assets`    | List Data Assets under a Data Product.                                                                                       |
 
 ## Custom MCP Server Configuration
 

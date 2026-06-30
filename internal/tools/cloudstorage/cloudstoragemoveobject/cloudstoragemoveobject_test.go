@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageMoveObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"move_tool": cloudstoragemoveobject.Config{
-					Name:         "move_tool",
-					Type:         "cloud-storage-move-object",
-					Source:       "my-gcs",
-					Description:  "Move a Cloud Storage object",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "move_tool",
+						Description:  "Move a Cloud Storage object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-move-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,11 +73,36 @@ func TestParseFromYamlCloudStorageMoveObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_move": cloudstoragemoveobject.Config{
-					Name:         "secure_move",
-					Type:         "cloud-storage-move-object",
-					Source:       "prod-gcs",
-					Description:  "Move with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_move",
+						Description:  "Move with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-move-object",
+					Source: "prod-gcs",
+				},
+			},
+		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_move
+			type: cloud-storage-move-object
+			source: prod-gcs
+			description: Move configured object
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_move": cloudstoragemoveobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_move",
+						Description:  "Move configured object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-move-object",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
 				},
 			},
 		},
@@ -93,12 +120,92 @@ func TestParseFromYamlCloudStorageMoveObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	called               bool
 	gotBucket            string
 	gotSourceObject      string
 	gotDestinationObject string
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragemoveobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "move_tool",
+			Description: "Move",
+		},
+		Type:   "cloud-storage-move-object",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"source_object", "destination_object"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "source_object", Value: "src"},
+		{Name: "destination_object", Value: "dst"},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotSourceObject != "src" || src.gotDestinationObject != "dst" {
+		t.Fatalf("forwarded params = %q/%q/%q, want baked-bucket/src/dst", src.gotBucket, src.gotSourceObject, src.gotDestinationObject)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstoragemoveobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "move_tool",
+			Description: "Move",
+		},
+		Type:   "cloud-storage-move-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "source_object", "destination_object"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragemoveobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "move_tool",
+			Description: "Move",
+		},
+		Type:   "cloud-storage-move-object",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }
 
 func (m *mockSource) MoveObject(ctx context.Context, bucket, sourceObject, destinationObject string) (map[string]any, error) {
@@ -120,12 +227,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstoragemoveobject.Config{
-		Name:        "move_tool",
-		Type:        "cloud-storage-move-object",
-		Source:      "my-gcs",
-		Description: "Move",
+		ConfigBase: tools.ConfigBase{
+			Name:        "move_tool",
+			Description: "Move",
+		},
+		Type:   "cloud-storage-move-object",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

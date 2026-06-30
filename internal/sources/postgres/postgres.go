@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5"
@@ -58,6 +59,7 @@ type Config struct {
 	Database      string            `yaml:"database" validate:"required"`
 	QueryParams   map[string]string `yaml:"queryParams"`
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
+	SQLCommenter  *bool             `yaml:"sqlCommenter"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -102,6 +104,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.PostgresPool().Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -109,7 +112,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	defer results.Close()
 
 	fields := results.FieldDescriptions()
-	var out []any
+	out := []any{}
 	for results.Next() {
 		values, err := results.Values()
 		if err != nil {

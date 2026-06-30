@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/oracle/oraclesql"
 )
 
@@ -38,13 +39,15 @@ func TestParseFromYamlOracleSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"get_user_by_id": oraclesql.Config{
-					Name:         "get_user_by_id",
-					Type:         "oracle-sql",
-					Source:       "my-oracle-instance",
-					Description:  "Retrieves user details by ID.",
-					Statement:    "SELECT id, name, email FROM users WHERE id = :1",
-					ReadOnly:     nil,
-					AuthRequired: []string{"my-google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get_user_by_id",
+						Description:  "Retrieves user details by ID.",
+						AuthRequired: []string{"my-google-auth-service"},
+					},
+					Type:      "oracle-sql",
+					Source:    "my-oracle-instance",
+					Statement: "SELECT id, name, email FROM users WHERE id = :1",
+					ReadOnly:  nil,
 				},
 			},
 		},
@@ -60,13 +63,15 @@ func TestParseFromYamlOracleSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"get_orders": oraclesql.Config{
-					Name:         "get_orders",
-					Type:         "oracle-sql",
-					Source:       "db-prod",
-					Description:  "Gets orders for a customer with optional filtering.",
-					Statement:    "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
-					ReadOnly:     nil,
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get_orders",
+						Description:  "Gets orders for a customer with optional filtering.",
+						AuthRequired: []string{},
+					},
+					Type:      "oracle-sql",
+					Source:    "db-prod",
+					Statement: "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
+					ReadOnly:  nil,
 				},
 			},
 		},
@@ -83,13 +88,15 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"safe_query": oraclesql.Config{
-					Name:         "safe_query",
-					Type:         "oracle-sql",
-					Source:       "db-prod",
-					Description:  "Safe read operation.",
-					Statement:    "SELECT * FROM orders",
-					ReadOnly:     &valTrue,
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "safe_query",
+						Description:  "Safe read operation.",
+						AuthRequired: []string{},
+					},
+					Type:      "oracle-sql",
+					Source:    "db-prod",
+					Statement: "SELECT * FROM orders",
+					ReadOnly:  &valTrue,
 				},
 			},
 		},
@@ -106,13 +113,15 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"update_user": oraclesql.Config{
-					Name:         "update_user",
-					Type:         "oracle-sql",
-					Source:       "db-prod",
-					Description:  "Updates user email.",
-					Statement:    "UPDATE users SET email = :1 WHERE id = :2",
-					ReadOnly:     &valFalse,
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "update_user",
+						Description:  "Updates user email.",
+						AuthRequired: []string{},
+					},
+					Type:      "oracle-sql",
+					Source:    "db-prod",
+					Statement: "UPDATE users SET email = :1 WHERE id = :2",
+					ReadOnly:  &valFalse,
 				},
 			},
 		},

@@ -21,10 +21,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
 	"time"
 
+	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
+	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -37,20 +40,65 @@ import (
 // ProcessMethod returns a response for the request.
 func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch method {
+	case INITIALIZE:
+		return initializeHandler(ctx, id, body)
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
-		return toolsListHandler(id, toolset, body)
+		return toolsListHandler(ctx, id, resourceMgr, toolset, body)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, toolset, resourceMgr, body, header)
 	case PROMPTS_LIST:
-		return promptsListHandler(ctx, id, promptset, body)
+		return promptsListHandler(ctx, id, resourceMgr, promptset, body)
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, promptset, resourceMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
+}
+
+// InitializeResponse runs capability negotiation and protocol version agreement.
+// This is the Initialization phase of the lifecycle for MCP client-server connections.
+// Always start with the latest protocol version supported.
+func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (any, error) {
+	v, err := util.ToolboxVersionFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	var req InitializeRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid mcp initialize request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	toolsListChanged := false
+	promptsListChanged := false
+	result := InitializeResult{
+		ProtocolVersion: PROTOCOL_VERSION,
+		Capabilities: ServerCapabilities{
+			Tools: &ListChanged{
+				ListChanged: &toolsListChanged,
+			},
+			Prompts: &ListChanged{
+				ListChanged: &promptsListChanged,
+			},
+		},
+		ServerInfo: Implementation{
+			BaseMetadata: BaseMetadata{
+				Name: SERVER_NAME,
+			},
+			Version: v,
+		},
+	}
+	res := jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  result,
+	}
+
+	return res, nil
 }
 
 // pingHandler handles the "ping" method by returning an empty response.
@@ -62,25 +110,35 @@ func pingHandler(id jsonrpc.RequestId) (any, error) {
 	}, nil
 }
 
-func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) (any, error) {
+func toolsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, toolset tools.Toolset, body []byte) (any, error) {
 	var req ListToolsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	result := ListToolsResult{
-		Tools: toolset.McpManifest,
+	urlParams, _ := util.UrlParamsFromContext(ctx)
+	toolsMap := resourceMgr.GetToolsMap()
+	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), toolset, toolsMap, urlParams)
+	if err != nil {
+		err = fmt.Errorf("error generating manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  listToolsResult,
 	}, nil
 }
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.Toolset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	if header != nil {
+		if clientIP := util.ExtractClientIP(header); clientIP != "" {
+			ctx = util.WithClientIP(ctx, clientIP)
+		}
+	}
+
 	authServices := resourceMgr.GetAuthServiceMap()
 
 	// retrieve logger from context
@@ -131,7 +189,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 		errMsg := fmt.Errorf("error during invocation: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
 	}
-	accessToken := tools.AccessToken(header.Get(authTokenHeadername))
+	var accessToken tools.AccessToken
+	if header != nil {
+		accessToken = tools.AccessToken(header.Get(authTokenHeadername))
+	}
 
 	// Check if this specific tool requires the standard authorization header
 	clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
@@ -151,16 +212,21 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	}
 
 	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
-	aMarshal, err := json.Marshal(toolArgument)
-	if err != nil {
-		err = fmt.Errorf("unable to marshal tools argument: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-
 	var data map[string]any
-	if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
-		err = fmt.Errorf("unable to decode tools argument: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	if toolArgument != nil {
+		aMarshal, err := json.Marshal(toolArgument)
+		if err != nil {
+			err = fmt.Errorf("unable to marshal tools argument: %w", err)
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		}
+
+		if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
+			err = fmt.Errorf("unable to decode tools argument: %w", err)
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		}
+	}
+	if data == nil {
+		data = make(map[string]any)
 	}
 
 	// Tool authentication
@@ -170,11 +236,19 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	// if using stdio, header will be nil and auth will not be supported
 	if header != nil {
 		for _, aS := range authServices {
-			claims, err := aS.GetClaimsFromHeader(ctx, header)
-			if err != nil {
-				logger.DebugContext(ctx, err.Error())
-				continue
+			var claims map[string]any
+			var err error
+
+			if mSvc, ok := aS.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+				claims = util.AuthTokenClaimsFromContext(ctx)
+			} else {
+				claims, err = aS.GetClaimsFromHeader(ctx, header)
+				if err != nil {
+					logger.DebugContext(ctx, err.Error())
+					continue
+				}
 			}
+
 			if claims == nil {
 				// authService not present in header
 				continue
@@ -203,7 +277,20 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
-	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
+	if err := mcputil.ValidateScopes(ctx, tool.GetScopesRequired(), authServices); err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	toolParams, err := tool.GetParameters(resourceMgr.GetSourcesMap())
+	if err != nil {
+		err = fmt.Errorf("error getting parameters for tool: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	// Auto-populate arguments from URL parameters
+	data = mcputil.PopulateUrlParams(ctx, data, toolParams)
+
+	params, err := parameters.ParseParams(toolParams, data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -312,7 +399,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 }
 
 // promptsListHandler handles the "prompts/list" method.
-func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset prompts.Promptset, body []byte) (any, error) {
+func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, promptset prompts.Promptset, body []byte) (any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -326,14 +413,17 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset pro
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	result := ListPromptsResult{
-		Prompts: promptset.McpManifest,
+	promptsMap := resourceMgr.GetPromptsMap()
+	listPromptsResult, err := GenerateListPromptsResult(promptset, promptsMap)
+	if err != nil {
+		err = fmt.Errorf("error generating manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("returning %d prompts", len(promptset.McpManifest)))
+	logger.DebugContext(ctx, fmt.Sprintf("returning %d prompts", len(listPromptsResult.Prompts)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  result,
+		Result:  listPromptsResult,
 	}, nil
 }
 

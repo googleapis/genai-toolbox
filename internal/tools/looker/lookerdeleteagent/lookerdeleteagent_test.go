@@ -15,6 +15,7 @@
 package lookerdeleteagent_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -50,11 +51,13 @@ func TestParseFromYaml(t *testing.T) {
                                 `,
 			want: server.ToolConfigs{
 				"test_tool": lkr.Config{
-					Name:         "test_tool",
-					Type:         "looker-delete-agent",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "test_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "looker-delete-agent",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -125,7 +128,7 @@ func (m MockSource) LookerApiSettings() *rtl.ApiSettings {
 	return &rtl.ApiSettings{}
 }
 
-func (m MockSource) GetLookerSDK(string) (*v4.LookerSDK, error) {
+func (m MockSource) GetLookerSDK(ctx context.Context, s string) (*v4.LookerSDK, error) {
 	return &v4.LookerSDK{}, nil
 }
 
@@ -145,13 +148,15 @@ func TestInvokeValidation(t *testing.T) {
 	}
 
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-delete-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-delete-agent",
+		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -186,18 +191,23 @@ func TestInvokeValidation(t *testing.T) {
 
 func TestManifest(t *testing.T) {
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-delete-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-delete-agent",
+		Source: "my-instance",
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	manifest := tool.Manifest()
+	manifest, err := tool.Manifest(nil)
+	if err != nil {
+		t.Fatalf("Manifest() returned unexpected error: %v", err)
+	}
 	if manifest.Description != cfg.Description {
 		t.Errorf("manifest description mismatch: got %q, want %q", manifest.Description, cfg.Description)
 	}
@@ -217,66 +227,41 @@ func TestManifest(t *testing.T) {
 	}
 }
 
-func TestMcpManifest(t *testing.T) {
-	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-delete-agent",
-		Source:      "my-instance",
-		Description: "test description",
-	}
-
-	tool, err := cfg.Initialize(nil)
-	if err != nil {
-		t.Fatalf("failed to initialize tool: %v", err)
-	}
-
-	mcp := tool.McpManifest()
-	if mcp.Name != cfg.Name {
-		t.Errorf("mcp manifest name mismatch: got %q, want %q", mcp.Name, cfg.Name)
-	}
-
-	properties := mcp.InputSchema.Properties
-	expectedParams := []string{"agent_id"}
-	for _, p := range expectedParams {
-		if _, ok := properties[p]; !ok {
-			t.Errorf("parameter %q not found in MCP properties", p)
-		}
-	}
-}
-
 func TestAnnotations(t *testing.T) {
 	readOnlyTrue := true
 	destructiveFalse := false
 	cfg := lkr.Config{
-		Name:        "test_tool",
-		Type:        "looker-delete-agent",
-		Source:      "my-instance",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test_tool",
+			Description: "test description",
+		},
+		Type:   "looker-delete-agent",
+		Source: "my-instance",
 		Annotations: &tools.ToolAnnotations{
 			ReadOnlyHint:    &readOnlyTrue,
 			DestructiveHint: &destructiveFalse,
 		},
 	}
 
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	mcp := tool.McpManifest()
-	if mcp.Annotations == nil {
+	annotations := tool.GetAnnotations()
+	if annotations == nil {
 		t.Fatal("mcp manifest annotations is nil")
 	}
-	if mcp.Annotations.ReadOnlyHint == nil {
+	if annotations.ReadOnlyHint == nil {
 		t.Fatal("mcp manifest ReadOnlyHint is nil")
 	}
-	if *mcp.Annotations.ReadOnlyHint != false {
-		t.Errorf("ReadOnlyHint should be false, got %v", *mcp.Annotations.ReadOnlyHint)
+	if *annotations.ReadOnlyHint != false {
+		t.Errorf("ReadOnlyHint should be false, got %v", *annotations.ReadOnlyHint)
 	}
-	if mcp.Annotations.DestructiveHint == nil {
+	if annotations.DestructiveHint == nil {
 		t.Fatal("mcp manifest DestructiveHint is nil")
 	}
-	if *mcp.Annotations.DestructiveHint != true {
-		t.Errorf("DestructiveHint should be true, got %v", *mcp.Annotations.DestructiveHint)
+	if *annotations.DestructiveHint != true {
+		t.Errorf("DestructiveHint should be true, got %v", *annotations.DestructiveHint)
 	}
 }

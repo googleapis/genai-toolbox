@@ -30,7 +30,7 @@ func TestConfig(t *testing.T) {
 	// Setup a shared config for testing its methods
 	testArgs := prompts.Arguments{
 		{Parameter: parameters.NewStringParameter("name", "The name to use.")},
-		{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
+		{Parameter: parameters.NewStringParameter("location", "The location.", parameters.WithStringRequired(false))},
 	}
 
 	cfg := custom.Config{
@@ -65,21 +65,6 @@ func TestConfig(t *testing.T) {
 		got := p.Manifest()
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
-		}
-	})
-
-	t.Run("McpManifest", func(t *testing.T) {
-		want := prompts.McpManifest{
-			Name:        "TestConfig",
-			Description: "A test config.",
-			Arguments: []prompts.ArgMcpManifest{
-				{Name: "name", Description: "The name to use.", Required: true},
-				{Name: "location", Description: "The location.", Required: false},
-			},
-		}
-		got := p.McpManifest()
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
 		}
 	})
 

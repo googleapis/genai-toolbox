@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/dataform/dataformcompilelocal"
 )
 
@@ -43,10 +44,12 @@ func TestParseFromYamlDataformCompile(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": dataformcompilelocal.Config{
-					Name:         "example_tool",
-					Type:         "dataform-compile-local",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type: "dataform-compile-local",
 				},
 			},
 		},

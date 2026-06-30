@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/valkey"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -52,12 +53,14 @@ func TestParseFromYamlvalkey(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"valkey_tool": valkey.Config{
-					Name:         "valkey_tool",
-					Type:         "valkey",
-					Source:       "my-valkey-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Commands:     [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
+					ConfigBase: tools.ConfigBase{
+						Name:         "valkey_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:     "valkey",
+					Source:   "my-valkey-instance",
+					Commands: [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "user name"),
 					},

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorequery"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -51,14 +52,16 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"query_users_tool": firestorequery.Config{
-					Name:           "query_users_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_users_tool",
+						Description:  "Query users collection with parameterized path",
+						AuthRequired: []string{},
+					},
 					Type:           "firestore-query",
 					Source:         "my-firestore-instance",
-					Description:    "Query users collection with parameterized path",
 					CollectionPath: "users/{{.userId}}/documents",
-					AuthRequired:   []string{},
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("userId", "The user ID to query documents for", true),
+						parameters.NewStringParameter("userId", "The user ID to query documents for", parameters.WithStringRequired(true)),
 					},
 				},
 			},
@@ -91,10 +94,13 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"query_products_tool": firestorequery.Config{
-					Name:           "query_products_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_products_tool",
+						Description:  "Query products with dynamic filters",
+						AuthRequired: []string{},
+					},
 					Type:           "firestore-query",
 					Source:         "prod-firestore",
-					Description:    "Query products with dynamic filters",
 					CollectionPath: "products",
 					Filters: `{
     "and": [
@@ -103,10 +109,9 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
     ]
 }
 `,
-					AuthRequired: []string{},
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("category", "Product category to filter by", true),
-						parameters.NewFloatParameterWithRequired("maxPrice", "Maximum price for products", true),
+						parameters.NewStringParameter("category", "Product category to filter by", parameters.WithStringRequired(true)),
+						parameters.NewFloatParameter("maxPrice", "Maximum price for products", parameters.WithFloatRequired(true)),
 					},
 				},
 			},
@@ -136,20 +141,22 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"query_orders_tool": firestorequery.Config{
-					Name:           "query_orders_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_orders_tool",
+						Description:  "Query orders with field selection",
+						AuthRequired: []string{},
+					},
 					Type:           "firestore-query",
 					Source:         "orders-firestore",
-					Description:    "Query orders with field selection",
 					CollectionPath: "orders",
 					Select:         []string{"orderId", "customerName", "totalAmount"},
 					OrderBy: map[string]any{
 						"field":     "{{.sortField}}",
 						"direction": "DESCENDING",
 					},
-					Limit:        "50",
-					AuthRequired: []string{},
+					Limit: "50",
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("sortField", "Field to sort by", true),
+						parameters.NewStringParameter("sortField", "Field to sort by", parameters.WithStringRequired(true)),
 					},
 				},
 			},
@@ -195,10 +202,13 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_query_tool": firestorequery.Config{
-					Name:           "secure_query_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_query_tool",
+						Description:  "Query with authentication and complex filters",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
 					Type:           "firestore-query",
 					Source:         "secure-firestore",
-					Description:    "Query with authentication and complex filters",
 					CollectionPath: "{{.collection}}",
 					Filters: `{
     "or": [
@@ -213,11 +223,10 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 }
 `,
 					AnalyzeQuery: true,
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("collection", "Collection name to query", true),
-						parameters.NewStringParameterWithRequired("status", "Status to filter by", true),
-						parameters.NewIntParameterWithDefault("minPriority", 1, "Minimum priority level"),
+						parameters.NewStringParameter("collection", "Collection name to query", parameters.WithStringRequired(true)),
+						parameters.NewStringParameter("status", "Status to filter by", parameters.WithStringRequired(true)),
+						parameters.NewIntParameter("minPriority", "Minimum priority level", parameters.WithIntDefault(1)),
 					},
 				},
 			},
@@ -271,10 +280,13 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"query_with_typed_values": firestorequery.Config{
-					Name:           "query_with_typed_values",
+					ConfigBase: tools.ConfigBase{
+						Name:         "query_with_typed_values",
+						Description:  "Query with Firestore native JSON value types",
+						AuthRequired: []string{},
+					},
 					Type:           "firestore-query",
 					Source:         "typed-firestore",
-					Description:    "Query with Firestore native JSON value types",
 					CollectionPath: "countries",
 					Filters: `{
     "or": [
@@ -292,13 +304,12 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
     ]
 }
 `,
-					AuthRequired: []string{},
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("continent", "Continent to filter by", true),
-						parameters.NewStringParameterWithRequired("minPopulation", "Minimum population as string", true),
-						parameters.NewFloatParameterWithRequired("minGdp", "Minimum GDP value", true),
-						parameters.NewBooleanParameterWithRequired("isActive", "Filter by active status", true),
-						parameters.NewStringParameterWithRequired("startDate", "Start date in RFC3339 format", true),
+						parameters.NewStringParameter("continent", "Continent to filter by", parameters.WithStringRequired(true)),
+						parameters.NewStringParameter("minPopulation", "Minimum population as string", parameters.WithStringRequired(true)),
+						parameters.NewFloatParameter("minGdp", "Minimum GDP value", parameters.WithFloatRequired(true)),
+						parameters.NewBooleanParameter("isActive", "Filter by active status", parameters.WithBooleanRequired(true)),
+						parameters.NewStringParameter("startDate", "Start date in RFC3339 format", parameters.WithStringRequired(true)),
 					},
 				},
 			},
@@ -414,10 +425,13 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"query_user_posts": firestorequery.Config{
-			Name:           "query_user_posts",
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_user_posts",
+				Description:  "Query user posts with filtering",
+				AuthRequired: []string{},
+			},
 			Type:           "firestore-query",
 			Source:         "social-firestore",
-			Description:    "Query user posts with filtering",
 			CollectionPath: "users/{{.userId}}/posts",
 			Filters: `{
   "and": [
@@ -431,35 +445,39 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 				"field":     "createdAt",
 				"direction": "{{.sortOrder}}",
 			},
-			Limit:        "20",
-			AuthRequired: []string{},
+			Limit: "20",
 			Parameters: parameters.Parameters{
-				parameters.NewStringParameterWithRequired("userId", "User ID whose posts to query", true),
-				parameters.NewStringParameterWithRequired("visibility", "Post visibility (public, private, friends)", true),
-				parameters.NewStringParameterWithRequired("startDate", "Start date for posts", true),
-				parameters.NewStringParameterWithDefault("sortOrder", "DESCENDING", "Sort order (ASCENDING or DESCENDING)"),
+				parameters.NewStringParameter("userId", "User ID whose posts to query", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("visibility", "Post visibility (public, private, friends)", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("startDate", "Start date for posts", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("sortOrder", "Sort order (ASCENDING or DESCENDING)", parameters.WithStringDefault("DESCENDING")),
 			},
 		},
 		"query_inventory": firestorequery.Config{
-			Name:           "query_inventory",
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_inventory",
+				Description:  "Query inventory items",
+				AuthRequired: []string{},
+			},
 			Type:           "firestore-query",
 			Source:         "inventory-firestore",
-			Description:    "Query inventory items",
 			CollectionPath: "warehouses/{{.warehouseId}}/inventory",
 			Filters: `{
   "field": "quantity", "op": "<", "value": {"integerValue": "{{.threshold}}"}}
 `,
-			AuthRequired: []string{},
 			Parameters: parameters.Parameters{
-				parameters.NewStringParameterWithRequired("warehouseId", "Warehouse ID to check inventory", true),
-				parameters.NewIntParameterWithRequired("threshold", "Quantity threshold for low stock", true),
+				parameters.NewStringParameter("warehouseId", "Warehouse ID to check inventory", parameters.WithStringRequired(true)),
+				parameters.NewIntParameter("threshold", "Quantity threshold for low stock", parameters.WithIntRequired(true)),
 			},
 		},
 		"query_transactions": firestorequery.Config{
-			Name:           "query_transactions",
+			ConfigBase: tools.ConfigBase{
+				Name:         "query_transactions",
+				Description:  "Query financial transactions",
+				AuthRequired: []string{"finance-auth"},
+			},
 			Type:           "firestore-query",
 			Source:         "finance-firestore",
-			Description:    "Query financial transactions",
 			CollectionPath: "accounts/{{.accountId}}/transactions",
 			Filters: `{
   "or": [
@@ -469,11 +487,10 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 }
 `,
 			AnalyzeQuery: true,
-			AuthRequired: []string{"finance-auth"},
 			Parameters: parameters.Parameters{
-				parameters.NewStringParameterWithRequired("accountId", "Account ID for transactions", true),
-				parameters.NewStringParameterWithDefault("transactionType", "all", "Type of transaction"),
-				parameters.NewFloatParameterWithDefault("minAmount", 0, "Minimum transaction amount"),
+				parameters.NewStringParameter("accountId", "Account ID for transactions", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("transactionType", "Type of transaction", parameters.WithStringDefault("all")),
+				parameters.NewFloatParameter("minAmount", "Minimum transaction amount", parameters.WithFloatDefault(0)),
 			},
 		},
 	}

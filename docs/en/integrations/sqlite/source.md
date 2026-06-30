@@ -70,6 +70,7 @@ database: ":memory:"
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
 | type      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
+| sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
 
 ### Connection Properties
 

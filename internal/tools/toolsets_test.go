@@ -71,14 +71,6 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 				},
 				Manifest: tools.ToolsetManifest{
 					ServerVersion: serverVersion,
-					ToolsManifest: map[string]tools.Manifest{
-						"tool1": toolsMap["tool1"].Manifest(),
-						"tool2": toolsMap["tool2"].Manifest(),
-					},
-				},
-				McpManifest: []tools.McpManifest{
-					toolsMap["tool1"].McpManifest(),
-					toolsMap["tool2"].McpManifest(),
 				},
 			},
 			wantErr: "",
@@ -99,12 +91,6 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 				},
 				Manifest: tools.ToolsetManifest{
 					ServerVersion: serverVersion,
-					ToolsManifest: map[string]tools.Manifest{
-						"tool1": toolsMap["tool1"].Manifest(),
-					},
-				},
-				McpManifest: []tools.McpManifest{
-					toolsMap["tool1"].McpManifest(),
 				},
 			},
 			wantErr: "",
@@ -123,9 +109,7 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 				Tools: []*tools.Tool{},
 				Manifest: tools.ToolsetManifest{
 					ServerVersion: serverVersion,
-					ToolsManifest: map[string]tools.Manifest{},
 				},
-				McpManifest: []tools.McpManifest{},
 			},
 			wantErr: "invalid toolset name",
 		},
@@ -146,12 +130,6 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 				},
 				Manifest: tools.ToolsetManifest{
 					ServerVersion: serverVersion,
-					ToolsManifest: map[string]tools.Manifest{
-						"tool1": toolsMap["tool1"].Manifest(),
-					},
-				},
-				McpManifest: []tools.McpManifest{
-					toolsMap["tool1"].McpManifest(),
 				},
 			},
 			wantErr: "tool does not exist",
@@ -170,9 +148,7 @@ func TestToolsetConfig_Initialize(t *testing.T) {
 				Tools: []*tools.Tool{},
 				Manifest: tools.ToolsetManifest{
 					ServerVersion: serverVersion,
-					ToolsManifest: map[string]tools.Manifest{},
 				},
-				McpManifest: []tools.McpManifest{},
 			},
 			wantErr: "",
 		},

@@ -53,11 +53,13 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 			`, resourceType),
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
-					Name:         "example_tool",
-					Type:         resourceType,
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   resourceType,
+					Source: "my-instance",
 				}),
 			},
 		},
@@ -78,10 +80,13 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 			`, resourceType),
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
-					Name:        "example_tool",
-					Type:        resourceType,
-					Source:      "my-instance",
-					Description: "some description",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   resourceType,
+					Source: "my-instance",
 					RuntimeConfig: &dataproc.RuntimeConfig{
 						Properties: map[string]string{"spark.driver.memory": "1g"},
 					},
@@ -90,7 +95,6 @@ func RunParseFromYAMLTests(t *testing.T, resourceType string, newConfig func(c c
 							Network: &dataproc.ExecutionConfig_NetworkUri{NetworkUri: "my-network"},
 						},
 					},
-					AuthRequired: []string{},
 				}),
 			},
 		},

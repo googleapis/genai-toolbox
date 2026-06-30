@@ -1,0 +1,13 @@
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# Local dependencies
+.venv/
+.pytest_cache/
+
+# Dynamically copied LICENSE
+LICENSE

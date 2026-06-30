@@ -51,11 +51,13 @@ func TestParseFromYamlCloudStorageUploadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"upload_tool": cloudstorageuploadobject.Config{
-					Name:         "upload_tool",
-					Type:         "cloud-storage-upload-object",
-					Source:       "my-gcs",
-					Description:  "Upload a local file to Cloud Storage",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "upload_tool",
+						Description:  "Upload a local file to Cloud Storage",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-upload-object",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -72,11 +74,36 @@ func TestParseFromYamlCloudStorageUploadObject(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_upload": cloudstorageuploadobject.Config{
-					Name:         "secure_upload",
-					Type:         "cloud-storage-upload-object",
-					Source:       "prod-gcs",
-					Description:  "Upload with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_upload",
+						Description:  "Upload with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-upload-object",
+					Source: "prod-gcs",
+				},
+			},
+		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_upload
+			type: cloud-storage-upload-object
+			source: prod-gcs
+			description: Upload configured object
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_upload": cloudstorageuploadobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_upload",
+						Description:  "Upload configured object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-upload-object",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
 				},
 			},
 		},
@@ -94,15 +121,23 @@ func TestParseFromYamlCloudStorageUploadObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	called         bool
+	gotBucket      string
+	gotObject      string
 	gotSource      string
 	gotContentType string
 }
 
 func (m *mockSource) UploadObject(ctx context.Context, bucket, object, source, contentType string) (map[string]any, error) {
 	m.called = true
+	m.gotBucket = bucket
+	m.gotObject = object
 	m.gotSource = source
 	m.gotContentType = contentType
 	return map[string]any{"bucket": bucket, "object": object, "bytes": int64(0), "contentType": contentType}, nil
@@ -119,12 +154,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 
 func TestInvokeValidation(t *testing.T) {
 	cfg := cloudstorageuploadobject.Config{
-		Name:        "upload_tool",
-		Type:        "cloud-storage-upload-object",
-		Source:      "my-gcs",
-		Description: "Upload",
+		ConfigBase: tools.ConfigBase{
+			Name:        "upload_tool",
+			Description: "Upload",
+		},
+		Type:   "cloud-storage-upload-object",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -190,4 +227,82 @@ func TestInvokeValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstorageuploadobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "upload_tool",
+			Description: "Upload",
+		},
+		Type:   "cloud-storage-upload-object",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"object", "source", "content_type"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	localSource := filepath.Join(t.TempDir(), "in.csv")
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "object", Value: "o"},
+		{Name: "source", Value: localSource},
+		{Name: "content_type", Value: "text/csv"},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotObject != "o" || src.gotSource != localSource || src.gotContentType != "text/csv" {
+		t.Fatalf("forwarded params = %q/%q/%q/%q, want baked-bucket/o/%s/text/csv", src.gotBucket, src.gotObject, src.gotSource, src.gotContentType, localSource)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstorageuploadobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "upload_tool",
+			Description: "Upload",
+		},
+		Type:   "cloud-storage-upload-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "object", "source", "content_type"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstorageuploadobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "upload_tool",
+			Description: "Upload",
+		},
+		Type:   "cloud-storage-upload-object",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

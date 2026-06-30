@@ -101,8 +101,12 @@ func (opts *ToolboxOptions) Setup(ctx context.Context) (context.Context, func(co
 	ctx = util.WithLogger(ctx, logger)
 	opts.Logger = logger
 
+	ctx = util.WithIgnoreUnknownTools(ctx, opts.Cfg.IgnoreUnknownTools)
+
+	logger.InfoContext(ctx, fmt.Sprintf("Starting MCP Toolbox for Databases version %s", opts.Cfg.Version))
+
 	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, opts.Cfg.Version, opts.Cfg.TelemetryOTLP, opts.Cfg.TelemetryGCP, opts.Cfg.TelemetryServiceName)
+	otelShutdown, err := telemetry.SetupOTel(ctx, opts.Cfg.Version, opts.Cfg.TelemetryOTLP, opts.Cfg.TelemetryGCP, opts.Cfg.TelemetryGCPProject, opts.Cfg.TelemetryServiceName)
 	if err != nil {
 		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
 		logger.ErrorContext(ctx, errMsg.Error())
@@ -144,15 +148,6 @@ func (opts *ToolboxOptions) GetCustomConfigFiles(ctx context.Context) ([]string,
 
 	// Load Custom Configurations
 	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (opts.Config != "" && len(opts.Configs) > 0) ||
-			(opts.Config != "" && opts.ConfigFolder != "") ||
-			(len(opts.Configs) > 0 && opts.ConfigFolder != "") {
-			errMsg := fmt.Errorf("--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously")
-			logger.ErrorContext(ctx, errMsg.Error())
-			return nil, isCustomConfigured, errMsg
-		}
-
 		if len(opts.Configs) > 0 {
 			// Use tools-files
 			logger.InfoContext(ctx, fmt.Sprintf("retrieving %d tool configuration files", len(opts.Configs)))
@@ -202,7 +197,22 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		logger.InfoContext(ctx, logMsg)
 
 		for _, configName := range opts.PrebuiltConfigs {
-			buf, err := prebuiltconfigs.Get(configName)
+			if !strings.Contains(configName, "/") {
+				for _, sep := range []string{".", ":", "@"} {
+					if strings.Contains(configName, sep) {
+						parts := strings.SplitN(configName, sep, 2)
+						if slices.Contains(prebuiltconfigs.GetPrebuiltSources(), parts[0]) {
+							errMsg := fmt.Errorf("invalid prebuilt config format '%s'. Did you mean '%s/%s'? Use '/' to specify a toolset", configName, parts[0], parts[1])
+							logger.ErrorContext(ctx, errMsg.Error())
+							return isCustomConfigured, errMsg
+						}
+					}
+				}
+			}
+
+			sourceName, toolsetName, _ := strings.Cut(configName, "/")
+
+			buf, err := prebuiltconfigs.Get(sourceName)
 			if err != nil {
 				logger.ErrorContext(ctx, err.Error())
 				return isCustomConfigured, err
@@ -215,6 +225,35 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 				logger.ErrorContext(ctx, errMsg.Error())
 				return isCustomConfigured, errMsg
 			}
+
+			if toolsetName != "" {
+				targetToolset, exists := parsed.Toolsets[toolsetName]
+				if !exists {
+					var available []string
+					for k := range parsed.Toolsets {
+						available = append(available, k)
+					}
+					slices.Sort(available)
+					errMsg := fmt.Errorf("toolset '%s' not found in prebuilt configuration '%s'. Available toolsets: %s", toolsetName, sourceName, strings.Join(available, ", "))
+					logger.ErrorContext(ctx, errMsg.Error())
+					return isCustomConfigured, errMsg
+				}
+
+				// Filter tools to only include those in the target toolset
+				filteredTools := make(server.ToolConfigs)
+				for _, tName := range targetToolset.ToolNames {
+					if tCfg, tExists := parsed.Tools[tName]; tExists {
+						filteredTools[tName] = tCfg
+					}
+				}
+				parsed.Tools = filteredTools
+
+				// Filter toolsets to only include the target toolset
+				filteredToolsets := make(server.ToolsetConfigs)
+				filteredToolsets[toolsetName] = targetToolset
+				parsed.Toolsets = filteredToolsets
+			}
+
 			allConfigs = append(allConfigs, parsed)
 		}
 	}
@@ -237,7 +276,8 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		}
 		// prebuiltConfigs is already sorted above
 		for _, configName := range opts.PrebuiltConfigs {
-			opts.Cfg.Version += fmt.Sprintf("+%s.%s", tag, configName)
+			sanitizedConfigName := strings.ReplaceAll(configName, "/", ".")
+			opts.Cfg.Version += fmt.Sprintf("+%s.%s", tag, sanitizedConfigName)
 		}
 	}
 

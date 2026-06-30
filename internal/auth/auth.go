@@ -23,6 +23,7 @@ import (
 type AuthServiceConfig interface {
 	AuthServiceConfigType() string
 	Initialize() (AuthService, error)
+	IsMCPEnabled() bool
 }
 
 // AuthService is the interface for authentication services.
@@ -31,4 +32,22 @@ type AuthService interface {
 	GetName() string
 	GetClaimsFromHeader(context.Context, http.Header) (map[string]any, error)
 	ToConfig() AuthServiceConfig
+}
+
+// MCPAuthError represents an error during MCP authentication validation.
+type MCPAuthError struct {
+	Code           int
+	Message        string
+	ScopesRequired []string
+}
+
+func (e *MCPAuthError) Error() string { return e.Message }
+
+// MCPAuthService is the interface for authentication services that support MCP auth.
+type MCPAuthService interface {
+	AuthService
+	IsMCPEnabled() bool
+	GetScopesRequired() []string
+	GetAuthorizationServer() string
+	ValidateMCPAuth(context.Context, http.Header) (map[string]any, error)
 }

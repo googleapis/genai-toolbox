@@ -25,8 +25,6 @@ import (
 	"text/template"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -41,7 +39,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -56,22 +54,18 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Path         string                 `yaml:"path" validate:"required"`
-	Method       tools.HTTPMethod       `yaml:"method" validate:"required"`
-	Headers      map[string]string      `yaml:"headers"`
-	RequestBody  string                 `yaml:"requestBody"`
-	PathParams   parameters.Parameters  `yaml:"pathParams"`
-	QueryParams  parameters.Parameters  `yaml:"queryParams"`
-	BodyParams   parameters.Parameters  `yaml:"bodyParams"`
-	HeaderParams parameters.Parameters  `yaml:"headerParams"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Path             string                 `yaml:"path" validate:"required"`
+	Method           tools.HTTPMethod       `yaml:"method" validate:"required"`
+	Headers          map[string]string      `yaml:"headers"`
+	RequestBody      string                 `yaml:"requestBody"`
+	PathParams       parameters.Parameters  `yaml:"pathParams"`
+	QueryParams      parameters.Parameters  `yaml:"queryParams"`
+	BodyParams       parameters.Parameters  `yaml:"bodyParams"`
+	HeaderParams     parameters.Parameters  `yaml:"headerParams"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -81,24 +75,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be `http`", resourceType)
-	}
-
-	// Combine Source and Tool headers.
-	// In case of conflict, Tool header overrides Source header
-	combinedHeaders := make(map[string]string)
-	maps.Copy(combinedHeaders, s.HttpDefaultHeaders())
-	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create a slice for all parameters
 	allParameters := slices.Concat(cfg.PathParams, cfg.QueryParams, cfg.BodyParams, cfg.HeaderParams)
@@ -116,17 +96,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	// Create MCP manifest
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
-
 	// finish tool setup
 	return Tool{
-		Config:      cfg,
-		Headers:     combinedHeaders,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
 	}, nil
 }
 
@@ -134,15 +111,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Headers     map[string]string     `yaml:"headers"`
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 // Helper function to generate the HTTP request body upon Tool invocation.
@@ -283,32 +256,38 @@ func getHeaders(headerParams parameters.Parameters, defaultHeaders map[string]st
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
+	// Combine Source and Tool headers.
+	// In case of conflict, Tool header overrides Source header
+	combinedHeaders := make(map[string]string)
+	maps.Copy(combinedHeaders, source.HttpDefaultHeaders())
+	maps.Copy(combinedHeaders, t.Cfg.Headers)
+
 	paramsMap := params.AsMap()
 
 	// Calculate request body
-	requestBody, err := getRequestBody(t.BodyParams, t.RequestBody, paramsMap)
+	requestBody, err := getRequestBody(t.Cfg.BodyParams, t.Cfg.RequestBody, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating request body", err)
 	}
 
 	// Calculate URL
-	urlString, err := getURL(source.HttpBaseURL(), t.Path, t.PathParams, t.QueryParams, source.HttpQueryParams(), paramsMap)
+	urlString, err := getURL(source.HttpBaseURL(), t.Cfg.Path, t.Cfg.PathParams, t.Cfg.QueryParams, source.HttpQueryParams(), paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating path parameters", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, string(t.Method), urlString, strings.NewReader(requestBody))
+	req, err := http.NewRequestWithContext(ctx, string(t.Cfg.Method), urlString, strings.NewReader(requestBody))
 	if err != nil {
 		return nil, util.NewClientServerError("error creating http request", http.StatusInternalServerError, err)
 	}
 
 	// Calculate request headers
-	allHeaders, err := getHeaders(t.HeaderParams, t.Headers, paramsMap)
+	allHeaders, err := getHeaders(t.Cfg.HeaderParams, combinedHeaders, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("error populating request headers", err)
 	}
@@ -322,36 +301,4 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.ProcessGeneralError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

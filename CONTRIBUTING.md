@@ -83,7 +83,7 @@ Submit a pull request to the repository with your changes. Be sure to include a
 detailed description of your changes and any requests for long term testing
 resources.
 
-* **Title:** All pull request title should follow the formatting of
+* **Title:** All pull request titles should follow the formatting of
   [Conventional
   Commit](https://www.conventionalcommits.org/) guidelines: `<type>[optional
   scope]: description`. For example, if you are adding a new field in postgres
@@ -110,12 +110,12 @@ resources.
   `tools/mssql-sql`).
   
   Ideally, **each PR covers only one scope**, if this is
-  inevitable, multiple scopes can be seaparated with a comma (e.g.
+  inevitable, multiple scopes can be separated with a comma (e.g.
   `sources/postgres,sources/alloydbpg`). If the PR covers multiple `scope-type`
   (such as adding a new database), you can disregard the `scope-type`, e.g.
   `feat(new-db): adding support for new-db source and tool`.
 
 * **PR Description:** PR description should **always** be included. It should
-  include a concise description of the changes, it's impact, along with a
+  include a concise description of the changes, its impact, along with a
   summary of the solution. If the PR is related to a specific issue, the issue
   number should be mentioned in the PR description (e.g. `Fixes #1`).

@@ -20,8 +20,6 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudstorage/cloudstoragecommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -44,7 +42,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -56,14 +54,13 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string                 `yaml:"name" validate:"required"`
-	Type         string                 `yaml:"type" validate:"required"`
-	Source       string                 `yaml:"source" validate:"required"`
-	Description  string                 `yaml:"description" validate:"required"`
-	AuthRequired []string               `yaml:"authRequired"`
-	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Bucket           *string                `yaml:"bucket,omitempty"`
+	DestinationDir   *string                `yaml:"destination_dir,omitempty"`
+	Overwrite        *bool                  `yaml:"overwrite,omitempty"`
 }
 
 // validate interface
@@ -73,48 +70,67 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	bucketParam := parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object.")
-	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
-	destinationParam := parameters.NewStringParameter(destinationKey, "Absolute local filesystem path where the object will be written. Relative paths and paths containing '..' are rejected.")
-	overwriteParam := parameters.NewBooleanParameterWithDefault(overwriteKey, false, "If true, overwrite the destination when it already exists. If false (default), the tool returns an error when the destination exists.")
-	params := parameters.Parameters{bucketParam, objectParam, destinationParam, overwriteParam}
-
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
-
-	t := Tool{
-		Config:      cfg,
-		Parameters:  params,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
-	return t, nil
+	if cfg.Bucket != nil && *cfg.Bucket == "" {
+		return nil, fmt.Errorf("bucket cannot be empty for tool %q", cfg.Name)
+	}
+	if cfg.DestinationDir != nil {
+		if *cfg.DestinationDir == "" {
+			return nil, fmt.Errorf("destination_dir cannot be empty for tool %q", cfg.Name)
+		}
+		if _, err := cloudstoragecommon.ValidateLocalPath(*cfg.DestinationDir); err != nil {
+			return nil, fmt.Errorf("destination_dir is invalid for tool %q: %w", cfg.Name, err)
+		}
+	}
+
+	objectParam := parameters.NewStringParameter(objectKey, "Full object name (path) within the bucket, e.g. 'path/to/file.txt'.")
+	destinationDesc := "Absolute local filesystem path where the object will be written. Relative paths and paths containing '..' are rejected."
+	if cfg.DestinationDir != nil {
+		destinationDesc = "Relative path under the configured destination_dir where the object will be written. Absolute paths and paths that escape destination_dir are rejected."
+	}
+	allParameters := parameters.Parameters{}
+	if cfg.Bucket == nil {
+		allParameters = append(allParameters, parameters.NewStringParameter(bucketKey, "Name of the Cloud Storage bucket containing the object."))
+	}
+	allParameters = append(allParameters, objectParam)
+	allParameters = append(allParameters, parameters.NewStringParameter(destinationKey, destinationDesc))
+	if cfg.Overwrite == nil {
+		allParameters = append(allParameters, parameters.NewBooleanParameter(overwriteKey, "If true, overwrite the destination when it already exists. If false (default), the tool returns an error when the destination exists.", parameters.WithBooleanDefault(false)))
+	}
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	mapParams := params.AsMap()
-	bucket, ok := mapParams[bucketKey].(string)
-	if !ok || bucket == "" {
+	bucket := cloudstoragecommon.ResolveString(t.Cfg.Bucket, mapParams, bucketKey)
+	if bucket == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", bucketKey), nil)
 	}
 	object, ok := mapParams[objectKey].(string)
@@ -125,47 +141,21 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok || destination == "" {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid or missing '%s' parameter; expected a non-empty string", destinationKey), nil)
 	}
-	cleanDest, pathErr := cloudstoragecommon.ValidateLocalPath(destination)
+	var cleanDest string
+	var pathErr error
+	if t.Cfg.DestinationDir != nil {
+		cleanDest, pathErr = cloudstoragecommon.ResolveWithinDir(*t.Cfg.DestinationDir, destination)
+	} else {
+		cleanDest, pathErr = cloudstoragecommon.ValidateLocalPath(destination)
+	}
 	if pathErr != nil {
 		return nil, util.NewAgentError(fmt.Sprintf("invalid '%s' parameter: %v", destinationKey, pathErr), pathErr)
 	}
-	overwrite, _ := mapParams[overwriteKey].(bool)
+	overwrite := cloudstoragecommon.ResolveBool(t.Cfg.Overwrite, mapParams, overwriteKey)
 
 	resp, err := source.DownloadObject(ctx, bucket, object, cleanDest, overwrite)
 	if err != nil {
 		return nil, cloudstoragecommon.ProcessGCSError(err)
 	}
 	return resp, nil
-}
-
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

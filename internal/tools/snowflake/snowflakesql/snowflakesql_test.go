@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/snowflake/snowflakesql"
 )
 
@@ -45,12 +46,14 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"my-snowflake-tool": snowflakesql.Config{
-					Name:               "my-snowflake-tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "my-snowflake-tool",
+						Description:  "Execute parameterized SQL on Snowflake",
+						AuthRequired: []string{},
+					},
 					Type:               "snowflake-sql",
 					Source:             "my-snowflake-source",
-					Description:        "Execute parameterized SQL on Snowflake",
 					Statement:          "SELECT * FROM my_table WHERE id = $1",
-					AuthRequired:       []string{},
 					Parameters:         nil,
 					TemplateParameters: nil,
 				},
