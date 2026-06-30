@@ -162,12 +162,11 @@ In this section, we will download Toolbox, configure our tools in a
 
 1.  Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
-        ```bash
-        ./toolbox --config "tools.yaml"
-        ```
+    ```bash
+    ./toolbox --config "tools.yaml"
+    ```
 
-        {{< notice note >}}
-
+    {{< notice note >}}
     Toolbox enables dynamic reloading by default. To disable, use the
     `--disable-reload` flag.
     {{< /notice >}}
