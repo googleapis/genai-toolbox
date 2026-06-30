@@ -358,12 +358,9 @@ For more on callbacks, see the
 {{< tabpane persist=header >}}
 {{% tab header="LangChain" text=true %}}
 
-LangChain.js has no dedicated Model Armor package, so you call the
-`@google-cloud/modelarmor` client directly from custom middleware. Two node-style
-hooks cover both directions: `beforeModel` screens the prompt (ingress) and
-`afterModel` screens the response (egress). Returning a message with
-`jumpTo: "end"` short-circuits the agent, so flagged content never reaches the
-next hop.
+Screen traffic by calling the `@google-cloud/modelarmor` client from custom
+middleware. Two node-style hooks cover both directions: `beforeModel` screens the
+prompt (ingress) and `afterModel` screens the response (egress).
 
 1. Install the dependencies:
 
@@ -490,7 +487,7 @@ next hop.
 For more on middleware hooks, see the
 [LangChain middleware docs](https://docs.langchain.com/oss/javascript/langchain/middleware/custom)
 and the
-[Model Armor Node.js reference](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses).
+[Model Armor Node.js reference](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses#node.js).
 
 {{% /tab %}}
 {{< /tabpane >}}
