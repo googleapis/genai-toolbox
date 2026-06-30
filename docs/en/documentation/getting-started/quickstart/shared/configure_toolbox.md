@@ -25,12 +25,13 @@ In this section, we will download Toolbox, configure our tools in a
     We recommend verifying the digital signature of the downloaded binary before running it.
 
     {{< tabpane persist=header >}}
-      <!-- {x-release-please-start-version} -->
     {{< tab header="Linux" lang="bash" >}}
 
     # 1. Download the detached GPG signature file (.sig)
 
+    <!-- {x-release-please-start-version} -->
     curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.5.0/$OS/toolbox.sig
+    <!-- {x-release-please-end} -->
 
     # 2. Import Google's public GPG signing key
 
@@ -40,7 +41,6 @@ In this section, we will download Toolbox, configure our tools in a
 
     gpg --verify toolbox.sig toolbox
     {{< /tab >}}
-      <!-- {x-release-please-end} -->
     {{< tab header="macOS" lang="bash" >}}
 
     # Verify the code signature
