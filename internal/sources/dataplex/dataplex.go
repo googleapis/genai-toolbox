@@ -86,7 +86,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Config:            r,
 		Client:            client,
 		DataScanClient:    dataScanClient,
-		DataProductClient: dataProductClient,
+		dataProductClient: dataProductClient,
 	}
 
 	return s, nil
@@ -98,7 +98,7 @@ type Source struct {
 	Config
 	Client            *dataplexapi.CatalogClient
 	DataScanClient    *dataplexapi.DataScanClient
-	DataProductClient *dataplexapi.DataProductClient
+	dataProductClient *dataplexapi.DataProductClient
 }
 
 func (s *Source) SourceType() string {
@@ -123,7 +123,7 @@ func (s *Source) GetDataScanClient() *dataplexapi.DataScanClient {
 }
 
 func (s *Source) GetDataProductClient() *dataplexapi.DataProductClient {
-	return s.DataProductClient
+	return s.dataProductClient
 }
 
 func initDataplexConnection(
