@@ -18,21 +18,21 @@ for file_key in "${FILES[@]}"; do
     ARCH=$(echo "$file_key" | cut -d '.' -f 2)
 
     if [ "$OS" = 'windows' ]; then
-        SIGNED_URL="gs://mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox.exe"
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox.exe"
     else
-        SIGNED_URL="gs://mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox"
+        URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/$OS/$ARCH/toolbox"
     fi
 
-    until gsutil stat "${SIGNED_URL}" > /dev/null 2>&1; do
-        echo "Waiting for signed binary: ${SIGNED_URL}..."
+    until curl --fail --silent --head "${URL}" > /dev/null 2>&1; do
+        echo "Waiting for signed binary: ${URL}..."
         sleep 30
     done
-    echo "Found signed binary: ${SIGNED_URL}!"
+    echo "Found signed binary: ${URL}!"
 done
 
 # Wait for the Linux GPG signature
-LINUX_SIG_URL="gs://mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.sig"
-until gsutil stat "${LINUX_SIG_URL}" > /dev/null 2>&1; do
+LINUX_SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.sig"
+until curl --fail --silent --head "${LINUX_SIG_URL}" > /dev/null 2>&1; do
     echo "Waiting for Linux GPG signature: ${LINUX_SIG_URL}..."
     sleep 30
 done
