@@ -102,6 +102,8 @@ only in *where* the check runs. Pick the one that matches your stack:
   framework integration (LangChain or ADK).
 - **[Agent Gateway](#agent-gateway)**: screen it at a managed control plane, with
   no changes to your agent code.
+- **[Google Cloud MCP servers](#google-cloud-mcp-servers)**: enforce screening
+  project-wide on Google Cloud MCP server traffic with floor settings.
 
 ### Python
 
@@ -371,8 +373,43 @@ before you rely on it.
 For the full gateway setup and template-binding steps, see
 [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration).
 
+### Google Cloud MCP servers
+
+If your agents reach Google Cloud services through
+[Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration),
+you can enforce Model Armor on that traffic project-wide with **floor settings**,
+with no per-agent code. A floor setting is the minimum policy applied across the
+project, so it screens the `tools/call` and `prompts/get` requests and responses
+(and tool execution errors) passing through those MCP servers.
+
+Unlike the paths above, a floor setting defines its detection filters directly at
+the project level; it does not reference the template from Step 1.
+
+Enable enforcement for MCP server traffic:
+
+```bash
+gcloud model-armor floorsettings update \
+  --full-uri='projects/PROJECT_ID/locations/global/floorSetting' \
+  --enable-floor-setting-enforcement=true \
+  --add-integrated-services=GOOGLE_MCP_SERVER \
+  --google-mcp-server-enforcement-type=INSPECT_AND_BLOCK \
+  --enable-google-mcp-server-cloud-logging
+```
+
+{{< notice warning >}}
+A floor setting applies to the **entire project**, so it affects the traffic of
+every integrated service, not only MCP servers. The MCP integration also supports
+**basic SDP only**; for granular PII detection, use a per-agent path above with an
+advanced SDP template.
+{{< /notice >}}
+
+For the detection-filter configuration and the full list of sanitized payloads,
+see
+[Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
+
 ## Additional Resources
 
 - [Model Armor overview](https://docs.cloud.google.com/model-armor/overview)
 - [Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses)
 - [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
+- [Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration)
