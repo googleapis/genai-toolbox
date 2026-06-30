@@ -400,43 +400,36 @@ prompt (ingress) and `afterModel` screens the response (egress).
 
     const BLOCKED = "MATCH_FOUND";
 
+    // Build a hook that screens the latest message and blocks on a match.
+    const screen = (sanitize, label) => async (state) => {
+      const text = state.messages.at(-1)?.content;
+      if (!text) return;
+      const [res] = await sanitize(text);
+      if (res.sanitizationResult.filterMatchState === BLOCKED) {
+        return {
+          messages: [new AIMessage(`Blocked by Model Armor: unsafe ${label}.`)],
+          jumpTo: "end",
+        };
+      }
+    };
+
     const modelArmor = createMiddleware({
       name: "ModelArmor",
       // Ingress: screen the prompt before it reaches the model.
       beforeModel: {
         canJumpTo: ["end"],
-        hook: async (state) => {
-          const text = state.messages.at(-1)?.content;
-          if (!text) return;
-          const [res] = await maClient.sanitizeUserPrompt({
-            name: TEMPLATE,
-            userPromptData: { text },
-          });
-          if (res.sanitizationResult.filterMatchState === BLOCKED) {
-            return {
-              messages: [new AIMessage("Blocked by Model Armor: unsafe prompt.")],
-              jumpTo: "end",
-            };
-          }
-        },
+        hook: screen(
+          (text) => maClient.sanitizeUserPrompt({ name: TEMPLATE, userPromptData: { text } }),
+          "prompt"
+        ),
       },
       // Egress: screen the model response before it returns.
       afterModel: {
         canJumpTo: ["end"],
-        hook: async (state) => {
-          const text = state.messages.at(-1)?.content;
-          if (!text) return;
-          const [res] = await maClient.sanitizeModelResponse({
-            name: TEMPLATE,
-            modelResponseData: { text },
-          });
-          if (res.sanitizationResult.filterMatchState === BLOCKED) {
-            return {
-              messages: [new AIMessage("Blocked by Model Armor: unsafe response.")],
-              jumpTo: "end",
-            };
-          }
-        },
+        hook: screen(
+          (text) => maClient.sanitizeModelResponse({ name: TEMPLATE, modelResponseData: { text } }),
+          "response"
+        ),
       },
     });
     ```
