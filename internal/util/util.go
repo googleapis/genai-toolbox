@@ -277,6 +277,14 @@ func ExtractClientIP(header http.Header) string {
 	return ""
 }
 
+// ExtractTargetResourceName retrieves the target resource name from the Tool-Target-Source header
+func ExtractTargetResourceName(header http.Header) string {
+	if xri := header.Get("Tool-Target-Source"); xri != "" {
+		return strings.TrimSpace(xri)
+	}
+	return ""
+}
+
 // TelemetryAttributes holds client-provided telemetry metadata from _meta["dev.mcp-toolbox/telemetry"].
 type TelemetryAttributes struct {
 	ClientName    string

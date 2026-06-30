@@ -1471,6 +1471,62 @@ func TestExtractMeta_TelemetryAttrsOnly(t *testing.T) {
 	}
 }
 
+func TestToolsCallWithTargetSourceHeader(t *testing.T) {
+	mockTools := []testutils.MockTool{tool1, tool2}
+	mockPrompts := []testutils.MockPrompt{prompt1}
+	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	callBody := func() []byte {
+		b, _ := json.Marshal(map[string]any{
+			"jsonrpc": jsonrpcVersion,
+			"id":      "test-target-source",
+			"method":  "tools/call",
+			"params": map[string]any{
+				"name":      tool1.Name,
+				"arguments": map[string]any{},
+			},
+		})
+		return b
+	}
+
+	tcs := []struct {
+		desc   string
+		header map[string]string
+	}{
+		{
+			desc:   "no Tool-Target-Source header — normal invocation",
+			header: map[string]string{},
+		},
+		{
+			desc:   "Tool-Target-Source header set — header accepted without error",
+			header: map[string]string{"Tool-Target-Source": "some_source"},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(callBody()), tc.header)
+			if err != nil {
+				t.Fatalf("unexpected request error: %s", err)
+			}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
+			if _, hasResult := got["result"]; !hasResult {
+				t.Errorf("expected result field in response, got: %v", got)
+			}
+			if _, hasError := got["error"]; hasError {
+				t.Errorf("unexpected error field in response: %v", got)
+			}
+		})
+	}
+}
+
 func TestExtractMeta_TraceparentAndTelemetryBoth(t *testing.T) {
 	withTraceContextPropagator(t)
 	body := []byte(`{"params":{"_meta":{` +

@@ -180,6 +180,27 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 	return source, nil
 }
 
+// overridingSourceProvider wraps a SourceProvider and redirects all GetSource
+// calls to a fixed override name, implementing dynamic source selection via the
+// Tool-Target-Source request header.
+type overridingSourceProvider struct {
+	SourceProvider
+	override string
+}
+
+func (o overridingSourceProvider) GetSource(_ string) (sources.Source, bool) {
+	return o.SourceProvider.GetSource(o.override)
+}
+
+// NewOverridingSourceProvider returns a SourceProvider that redirects all
+// GetSource calls to override. Returns base unchanged when override is empty.
+func NewOverridingSourceProvider(base SourceProvider, override string) SourceProvider {
+	if override == "" {
+		return base
+	}
+	return overridingSourceProvider{SourceProvider: base, override: override}
+}
+
 // GetCompatibleSourceFromMap looks up a source by name from a sources map and
 // asserts it to the requested type. It mirrors GetCompatibleSource for callers
 // that hold the sources map directly (Manifest/GetParameters) rather than a

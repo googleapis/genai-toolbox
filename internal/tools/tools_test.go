@@ -20,10 +20,19 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
+
+// mockSourceProvider is a simple SourceProvider backed by a name→Source map.
+type mockSourceProvider map[string]sources.Source
+
+func (m mockSourceProvider) GetSource(name string) (sources.Source, bool) {
+	s, ok := m[name]
+	return s, ok
+}
 
 // stubConfig and stubTool exercise the path of embedding BaseTool with only
 // the extra methods (Invoke, ToConfig) needed to satisfy the Tool interface.
@@ -151,6 +160,65 @@ func TestBaseToolGetAuthTokenHeaderName(t *testing.T) {
 	}
 	if got != "Authorization" {
 		t.Errorf("GetAuthTokenHeaderName() = %q, want %q", got, "Authorization")
+	}
+}
+
+func TestOverridingSourceProvider(t *testing.T) {
+	srcA := &struct{ sources.Source }{}
+	srcB := &struct{ sources.Source }{}
+
+	base := mockSourceProvider{
+		"source_a": srcA,
+		"source_b": srcB,
+	}
+
+	tcs := []struct {
+		desc     string
+		override string
+		lookup   string
+		wantSrc  sources.Source
+		wantOk   bool
+	}{
+		{
+			desc:     "empty override returns base unchanged",
+			override: "",
+			lookup:   "source_a",
+			wantSrc:  srcA,
+			wantOk:   true,
+		},
+		{
+			desc:     "override redirects all lookups to override name",
+			override: "source_b",
+			lookup:   "source_a",
+			wantSrc:  srcB,
+			wantOk:   true,
+		},
+		{
+			desc:     "override to unknown name returns not-found",
+			override: "nonexistent",
+			lookup:   "source_a",
+			wantSrc:  nil,
+			wantOk:   false,
+		},
+		{
+			desc:     "no override, unknown lookup returns not-found",
+			override: "",
+			lookup:   "nonexistent",
+			wantSrc:  nil,
+			wantOk:   false,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			provider := tools.NewOverridingSourceProvider(base, tc.override)
+			got, ok := provider.GetSource(tc.lookup)
+			if ok != tc.wantOk {
+				t.Errorf("GetSource(%q) ok = %v, want %v", tc.lookup, ok, tc.wantOk)
+			}
+			if got != tc.wantSrc {
+				t.Errorf("GetSource(%q) source = %v, want %v", tc.lookup, got, tc.wantSrc)
+			}
+		})
 	}
 }
 
