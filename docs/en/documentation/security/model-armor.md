@@ -383,18 +383,9 @@ project, so it screens the `tools/call` and `prompts/get` requests and responses
 (and tool execution errors) passing through those MCP servers.
 
 Unlike the paths above, a floor setting defines its detection filters directly at
-the project level; it does not reference the template from Step 1.
-
-Enable enforcement for MCP server traffic:
-
-```bash
-gcloud model-armor floorsettings update \
-  --full-uri='projects/PROJECT_ID/locations/global/floorSetting' \
-  --enable-floor-setting-enforcement=true \
-  --add-integrated-services=GOOGLE_MCP_SERVER \
-  --google-mcp-server-enforcement-type=INSPECT_AND_BLOCK \
-  --enable-google-mcp-server-cloud-logging
-```
+the project level; it does not reference the template from Step 1. For the setup
+steps and the full list of sanitized payloads, see
+[Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 
 {{< notice warning >}}
 A floor setting applies to the **entire project**, so it affects the traffic of
@@ -402,10 +393,6 @@ every integrated service, not only MCP servers. The MCP integration also support
 **basic SDP only**; for granular PII detection, use a per-agent path above with an
 advanced SDP template.
 {{< /notice >}}
-
-For the detection-filter configuration and the full list of sanitized payloads,
-see
-[Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 
 ## Additional Resources
 
