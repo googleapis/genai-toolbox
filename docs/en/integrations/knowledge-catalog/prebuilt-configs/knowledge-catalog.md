@@ -20,8 +20,9 @@ aliases:
     *   `lookup_entry`: Retrieves a specific entry from Knowledge Catalog.
     *   `search_aspect_types`: Finds aspect types relevant to the query.
     *   `lookup_context`: Retrieves rich metadata regarding one or more data assets along with their relationships.
-    *   `search_dq_scans`: Search for data quality scans in Dataplex.
+    *   `search_dq_scans`: Searches for data quality scans in Dataplex.
     *   `list_data_products`: Lists Data Products across all locations.
+    *   `get_data_product`: Retrieves a specific Data Product.
     *   `generate_data_insights`: Creates a new Dataplex Data Documentation scan template and triggers the run.
     *   `get_data_insights`: Retrieves the final generated data insights for a completed scan.
     *   `generate_data_profile`: Creates a new Dataplex Data Profile scan template and triggers the run.
@@ -34,6 +35,5 @@ aliases:
     *   `get_run_status`: Retrieves the execution status of the latest background job run.
 *   **Toolsets:**
     *   `discovery`: Metadata discovery and search toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`).
-    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`).
+    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`).
     *   `enrich`: Metadata enrichment pipeline orchestration and execution toolset (`search_entries`, `lookup_entry`, `lookup_context`, `generate_data_insights`, `get_data_insights`, `generate_data_profile`, `get_data_profile`, `discover_metadata`, `get_discovery_results`, `check_data_quality`, `get_data_quality_results`, `get_operation`, `get_run_status`).
-

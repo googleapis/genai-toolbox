@@ -372,7 +372,7 @@ func (s *Source) ListDataProducts(
 	pageSize int,
 	orderBy string,
 ) ([]*DataProductSummary, error) {
-	if s.dataProductClient == nil {
+	if s.GetDataProductClient() == nil {
 		return nil, fmt.Errorf("dataplex data product client is not initialized")
 	}
 	if pageSize <= 0 {
@@ -386,7 +386,7 @@ func (s *Source) ListDataProducts(
 		OrderBy:  orderBy,
 	}
 
-	it := s.dataProductClient.ListDataProducts(ctx, req)
+	it := s.GetDataProductClient().ListDataProducts(ctx, req)
 	var results []*DataProductSummary
 
 	for len(results) < pageSize {
@@ -401,20 +401,82 @@ func (s *Source) ListDataProducts(
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
 		parts := strings.Split(dp.GetName(), "/")
-		var locationId, dataProductId string
+		var locID, prodID string
 		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
-			locationId = parts[3]
-			dataProductId = parts[5]
+			locID = parts[3]
+			prodID = parts[5]
 		}
 		results = append(results, &DataProductSummary{
-			LocationID:    locationId,
-			DataProductID: dataProductId,
+			LocationID:    locID,
+			DataProductID: prodID,
 			DisplayName:   dp.GetDisplayName(),
 			OwnerEmails:   dp.GetOwnerEmails(),
 			AssetCount:    dp.GetAssetCount(),
 		})
 	}
 	return results, nil
+}
+
+type AccessGroup struct {
+	ID             string `json:"id"`
+	DisplayName    string `json:"displayName"`
+	Description    string `json:"description"`
+	GoogleGroup    string `json:"googleGroup,omitempty"`
+	ServiceAccount string `json:"serviceAccount,omitempty"`
+}
+
+type DataProduct struct {
+	LocationID    string            `json:"locationId"`
+	DataProductID string            `json:"dataProductId"`
+	DisplayName   string            `json:"displayName"`
+	Description   string            `json:"description"`
+	OwnerEmails   []string          `json:"ownerEmails"`
+	AssetCount    int32             `json:"assetCount"`
+	Labels        map[string]string `json:"labels"`
+	AccessGroups  []AccessGroup     `json:"accessGroups"`
+}
+
+func (s *Source) GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*DataProduct, error) {
+	if s.GetDataProductClient() == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
+	req := &dataplexpb.GetDataProductRequest{
+		Name: name,
+	}
+	resp, err := s.GetDataProductClient().GetDataProduct(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	accessGroups := []AccessGroup{}
+	for _, ag := range resp.GetAccessGroups() {
+		accessGroups = append(accessGroups, AccessGroup{
+			ID:             ag.GetId(),
+			DisplayName:    ag.GetDisplayName(),
+			Description:    ag.GetDescription(),
+			GoogleGroup:    ag.GetPrincipal().GetGoogleGroup(),
+			ServiceAccount: ag.GetPrincipal().GetServiceAccount(),
+		})
+	}
+
+	parts := strings.Split(resp.GetName(), "/")
+	var locID, prodID string
+	if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+		locID = parts[3]
+		prodID = parts[5]
+	}
+
+	return &DataProduct{
+		LocationID:    locID,
+		DataProductID: prodID,
+		DisplayName:   resp.GetDisplayName(),
+		Description:   resp.GetDescription(),
+		OwnerEmails:   resp.GetOwnerEmails(),
+		AssetCount:    resp.GetAssetCount(),
+		Labels:        resp.GetLabels(),
+		AccessGroups:  accessGroups,
+	}, nil
 }
 
 func (s *Source) GenerateDataInsights(ctx context.Context, location, resourcePath string, publish bool) (string, error) {

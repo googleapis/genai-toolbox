@@ -54,6 +54,12 @@ source: dataplex-source
 description: Lists Data Products across all locations.
 ---
 kind: tool
+name: get_data_product
+type: dataplex-get-data-product
+source: dataplex-source
+description: Retrieves specific metadata regarding a Data Product.
+---
+kind: tool
 name: generate_data_insights
 type: dataplex-generate-data-insights
 source: dataplex-source
@@ -245,6 +251,7 @@ tools:
 - search_aspect_types
 - lookup_context
 - list_data_products
+- get_data_product
 ---
 kind: toolset
 name: enrich
