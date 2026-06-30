@@ -103,7 +103,7 @@ only in *where* the check runs. Pick the one that matches your stack:
 - **[Agent Gateway](#agent-gateway)**: screen it at a managed control plane, with
   no changes to your agent code.
 - **[Google Cloud MCP servers](#google-cloud-mcp-servers)**: enforce screening
-  project-wide on Google Cloud MCP server traffic with floor settings.
+  project-wide on Google Cloud MCP server traffic.
 
 ### Python
 
@@ -386,17 +386,23 @@ project, so you don't change any agent code.
 The screening covers the `tools/call` and `prompts/get` messages (both the request
 and the response), along with any errors a tool returns while it runs.
 
-A floor setting carries its own filters, so it does **not** use the template you
-created in Step 1; you configure detection as part of the floor setting itself. For
-the setup steps and the complete list of screened messages, see
-[Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 
 {{< notice warning >}}
-Because a floor setting is project-wide, it affects every service Model Armor is
-integrated with, not just your MCP servers. It also supports **basic SDP only**, so
-if you need to detect or mask specific kinds of PII, use one of the per-agent paths
-above with an advanced SDP template instead.
+Floor settings come with some limits worth knowing before you rely on them:
+
+- **Supported products only.** Screening applies only to
+  [Google Cloud MCP servers that support Model Armor](https://docs.cloud.google.com/mcp/model-armor-supported-products);
+  calls to any other MCP server pass through unscreened.
+- **Project-wide impact.** A floor setting affects every service Model Armor is
+  integrated with, not just your MCP servers.
+
+For other limits, such as unscreened streaming transports and basic-SDP-only
+support, see the
+[Model Armor MCP integration docs](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 {{< /notice >}}
+
+For the setup steps and the complete list of screened messages, see
+[Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 
 ## Additional Resources
 
