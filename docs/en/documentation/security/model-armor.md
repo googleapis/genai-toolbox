@@ -341,7 +341,61 @@ For more on callbacks, see the
 {{% /tab %}}
 {{< /tabpane >}}
 
+### Agent Gateway
+
+[Agent Gateway](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
+is a managed control plane in the Gemini Enterprise Agent Platform that routes
+agent traffic and invokes Model Armor on the content passing through it — with no
+changes to your agent code. You assign a Model Armor template to each direction
+when you configure the gateway: one for **ingress** (client to agent) and one for
+**egress** (agent to tools and other services). A single template can serve both.
+
+The gateway's own service identities call Model Armor, so grant them access. For
+**ingress**, the AI Platform Reasoning Engine service agent needs
+`roles/modelarmor.calloutUser` in the agent's project and `roles/modelarmor.user`
+in the template's project:
+
+```bash
+gcloud projects add-iam-policy-binding AGENT_RUNTIME_PROJECT_ID \
+    --member="serviceAccount:service-AGENT_RUNTIME_PROJECT_NUMBER@gcp-sa-aiplatform-re.iam.gserviceaccount.com" \
+    --role="roles/modelarmor.calloutUser"
+
+gcloud projects add-iam-policy-binding MODEL_ARMOR_PROJECT_ID \
+    --member="serviceAccount:service-AGENT_RUNTIME_PROJECT_NUMBER@gcp-sa-aiplatform-re.iam.gserviceaccount.com" \
+    --role="roles/modelarmor.user"
+```
+
+For **egress**, the Agent Gateway service account needs
+`roles/modelarmor.calloutUser` and `roles/serviceusage.serviceUsageConsumer` in
+the gateway's project, plus `roles/modelarmor.user` in the template's project:
+
+```bash
+gcloud projects add-iam-policy-binding GATEWAY_PROJECT_ID \
+    --member="serviceAccount:service-GATEWAY_PROJECT_NUMBER@gcp-sa-dep.iam.gserviceaccount.com" \
+    --role="roles/modelarmor.calloutUser"
+
+gcloud projects add-iam-policy-binding GATEWAY_PROJECT_ID \
+    --member="serviceAccount:service-GATEWAY_PROJECT_NUMBER@gcp-sa-dep.iam.gserviceaccount.com" \
+    --role="roles/serviceusage.serviceUsageConsumer"
+
+gcloud projects add-iam-policy-binding MODEL_ARMOR_PROJECT_ID \
+    --member="serviceAccount:service-GATEWAY_PROJECT_NUMBER@gcp-sa-dep.iam.gserviceaccount.com" \
+    --role="roles/modelarmor.user"
+```
+
+{{< notice note >}}
+Model Armor and the gateway must be in the **same region** — cross-region calls
+are not supported. Inline **ingress** protection currently covers only agents
+built with ADK (via `reasoningEngines.streamQuery`); inline **egress** protection
+covers MCP servers, OpenAI-format services, and A2A. Check the integration guide
+for the current support matrix.
+{{< /notice >}}
+
+For the full gateway setup and template-binding steps, see
+[Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration).
+
 ## Additional Resources
 
 - [Model Armor overview](https://docs.cloud.google.com/model-armor/overview)
 - [Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses)
+- [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
