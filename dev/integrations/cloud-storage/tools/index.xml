@@ -135,15 +135,10 @@ file on the Toolbox server. Unlike &lt;code&gt;cloud-storage-read-object&lt;/cod
 return the object bytes to the LLM and does not require UTF-8 text content, so it
 can be used for binary objects or large files.&lt;/p&gt;
 &lt;p&gt;The &lt;code&gt;destination&lt;/code&gt; path is interpreted on the server where Toolbox is running.
-Relative paths and paths containing &lt;code&gt;..&lt;/code&gt; are rejected.&lt;/p&gt;
-&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-
-
-
-
-
-&lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>cloud-storage-upload-object</title><link>https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-upload-object/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-upload-object/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+By default, &lt;code&gt;destination&lt;/code&gt; must be an absolute path and paths containing &lt;code&gt;..&lt;/code&gt; are
+rejected. When &lt;code&gt;destination_dir&lt;/code&gt; is configured on the tool, &lt;code&gt;destination&lt;/code&gt; remains
+visible to the LLM but must be a relative path under that configured directory.
+Absolute paths and paths that escape &lt;code&gt;destination_dir&lt;/code&gt; are rejected.&lt;/p&gt;</description></item><item><title>cloud-storage-upload-object</title><link>https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-upload-object/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/cloud-storage/tools/cloud-storage-upload-object/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;cloud-storage-upload-object&lt;/code&gt; tool streams a local file from the Toolbox
 server filesystem into a Cloud Storage object. The &lt;code&gt;source&lt;/code&gt; path is interpreted
 on the server where Toolbox is running. Relative paths and paths containing &lt;code&gt;..&lt;/code&gt;
@@ -336,11 +331,5 @@ Storage bucket.&lt;/p&gt;
 			&lt;/tr&gt;
 	&lt;/tbody&gt;
 &lt;/table&gt;
-&lt;h2 id="example"&gt;Example&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;kind&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;tool&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;delete_object&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;cloud-storage-delete-object&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;source&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;my-gcs-source&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nt"&gt;description&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;Use this tool to delete Cloud Storage objects.&lt;/span&gt;&lt;span class="w"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id="output-format"&gt;Output Format&lt;/h2&gt;
-&lt;p&gt;The tool returns a JSON object with:&lt;/p&gt;</description></item></channel></rss>
+&lt;p&gt;If &lt;code&gt;bucket&lt;/code&gt; is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.&lt;/p&gt;</description></item></channel></rss>

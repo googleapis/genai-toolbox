@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-30T06:08:20Z
+**GENERATED ON:** 2026-06-30T16:12:27Z
 
 ---
 ### System Directives for AI Models
@@ -23412,7 +23412,10 @@ return the object bytes to the LLM and does not require UTF-8 text content, so i
 can be used for binary objects or large files.
 
 The `destination` path is interpreted on the server where Toolbox is running.
-Relative paths and paths containing `..` are rejected.
+By default, `destination` must be an absolute path and paths containing `..` are
+rejected. When `destination_dir` is configured on the tool, `destination` remains
+visible to the LLM but must be a relative path under that configured directory.
+Absolute paths and paths that escape `destination_dir` are rejected.
 
 [gcs-objects]: https://cloud.google.com/storage/docs/objects
 
@@ -23436,6 +23439,11 @@ destination already exists.
 | destination   |  string  |     true     | Absolute local filesystem path where the object will be written. Relative paths and paths containing `..` are rejected. |
 | overwrite     | boolean  |    false     | If true, overwrite the destination when it already exists. If false (default), return an error when it exists.     |
 
+If `bucket` is configured on the tool, it is removed from the parameter list. If
+`destination_dir` is configured on the tool, `destination` stays in the parameter
+list but changes to a relative path under `destination_dir`. If `overwrite` is
+configured on the tool, it is removed from the parameter list.
+
 ## Example
 
 ```yaml
@@ -23444,6 +23452,17 @@ name: download_object
 type: cloud-storage-download-object
 source: my-gcs-source
 description: Use this tool to download a Cloud Storage object to the server filesystem.
+```
+
+```yaml
+kind: tool
+name: download_reports
+type: cloud-storage-download-object
+source: my-gcs-source
+description: Use this tool to download report objects into the reports directory.
+bucket: analytics-exports
+destination_dir: /var/toolbox/downloads/reports
+overwrite: false
 ```
 
 ## Output Format
@@ -23463,6 +23482,9 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-download-object".                  |
 | source      |  string  |     true     | Name of the Cloud Storage source to download objects from. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.        |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |
+| destination_dir | string | false | Absolute local directory to contain downloaded files. When set, `destination` is a relative path under this directory. |
+| overwrite   | boolean  |    false     | Whether to overwrite existing destination files for every invocation. When set, `overwrite` is hidden from the tool parameters. |
 
 
 
@@ -23508,6 +23530,9 @@ file.
 | source        |  string  |     true     | Absolute local filesystem path of the file to upload. Relative paths and paths containing `..` are rejected.       |
 | content_type  |  string  |    false     | MIME type to record on the uploaded object. When empty, it is inferred from the source file extension when possible. |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -23516,6 +23541,15 @@ name: upload_object
 type: cloud-storage-upload-object
 source: my-gcs-source
 description: Use this tool to upload a local file to Cloud Storage.
+```
+
+```yaml
+kind: tool
+name: upload_reports
+type: cloud-storage-upload-object
+source: my-gcs-source
+description: Use this tool to upload local report files to Cloud Storage.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -23536,6 +23570,7 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-upload-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to upload objects to. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.     |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |
 
 
 
@@ -23576,6 +23611,9 @@ object.
 | content       |  string  |     true     | Text content to write to the Cloud Storage object.                                                    |
 | content_type  |  string  |    false     | MIME type to record on the written object. When empty, Cloud Storage auto-detects from the content.   |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -23584,6 +23622,15 @@ name: write_object
 type: cloud-storage-write-object
 source: my-gcs-source
 description: Use this tool to write text content to Cloud Storage.
+```
+
+```yaml
+kind: tool
+name: write_reports
+type: cloud-storage-write-object
+source: my-gcs-source
+description: Use this tool to write generated reports to Cloud Storage.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -23604,6 +23651,7 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-write-object".                |
 | source      |  string  |     true     | Name of the Cloud Storage source to write objects to. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |
 
 
 
@@ -23643,6 +23691,10 @@ or update the destination object.
 | destination_bucket |  string  |     true     | Name of the Cloud Storage bucket to copy into.                                      |
 | destination_object |  string  |     true     | Full destination object name (path) within the destination bucket.                  |
 
+If `source_bucket` or `destination_bucket` is configured on the tool, that field
+is removed from the parameter list and the configured value is used for every
+invocation.
+
 ## Example
 
 ```yaml
@@ -23651,6 +23703,16 @@ name: copy_object
 type: cloud-storage-copy-object
 source: my-gcs-source
 description: Use this tool to copy Cloud Storage objects.
+```
+
+```yaml
+kind: tool
+name: copy_reports
+type: cloud-storage-copy-object
+source: my-gcs-source
+description: Use this tool to copy reports into the archive bucket.
+source_bucket: analytics-exports
+destination_bucket: analytics-archive
 ```
 
 ## Output Format
@@ -23673,6 +23735,8 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-copy-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to copy objects in. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+| source_bucket | string | false | Source Cloud Storage bucket to use for every invocation. When set, `source_bucket` is hidden from the tool parameters. |
+| destination_bucket | string | false | Destination Cloud Storage bucket to use for every invocation. When set, `destination_bucket` is hidden from the tool parameters. |
 
 
 
@@ -23713,6 +23777,9 @@ already exists, `storage.objects.delete` is also required.
 | source_object      |  string  |     true     | Full source object name (path) within the bucket, e.g. `path/to/file.txt`.       |
 | destination_object |  string  |     true     | Full destination object name (path) within the same bucket.                      |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -23721,6 +23788,15 @@ name: move_object
 type: cloud-storage-move-object
 source: my-gcs-source
 description: Use this tool to move or rename an object within a Cloud Storage bucket.
+```
+
+```yaml
+kind: tool
+name: move_reports
+type: cloud-storage-move-object
+source: my-gcs-source
+description: Use this tool to move report objects within the reports bucket.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -23742,6 +23818,7 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-move-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to move objects in. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |
 
 
 
@@ -23775,6 +23852,9 @@ The Cloud Storage credentials must be able to delete the target object.
 | bucket        |  string  |     true     | Name of the Cloud Storage bucket containing the object to delete.    |
 | object        |  string  |     true     | Full object name (path) within the bucket, e.g. `path/to/file.txt`.  |
 
+If `bucket` is configured on the tool, it is removed from the parameter list and
+the configured bucket is used for every invocation.
+
 ## Example
 
 ```yaml
@@ -23783,6 +23863,15 @@ name: delete_object
 type: cloud-storage-delete-object
 source: my-gcs-source
 description: Use this tool to delete Cloud Storage objects.
+```
+
+```yaml
+kind: tool
+name: delete_reports
+type: cloud-storage-delete-object
+source: my-gcs-source
+description: Use this tool to delete report objects from Cloud Storage.
+bucket: analytics-exports
 ```
 
 ## Output Format
@@ -23802,6 +23891,7 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-delete-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to delete objects in. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.     |
+| bucket      |  string  |    false     | Cloud Storage bucket to use for every invocation. When set, `bucket` is hidden from the tool parameters. |
 
 
 
