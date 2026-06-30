@@ -31,7 +31,7 @@ for file_key in "${FILES[@]}"; do
 done
 
 # Wait for the Linux GPG signature
-LINUX_SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.sig"
+LINUX_SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.asc"
 until curl --fail --silent --head "${LINUX_SIG_URL}" > /dev/null 2>&1; do
     echo "Waiting for Linux GPG signature: ${LINUX_SIG_URL}..."
     sleep 30
@@ -81,7 +81,7 @@ do
 
     # Write the table row
     if [ "$OS" = 'linux' ]; then
-        SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.sig"
+        SIG_URL="https://storage.googleapis.com/mcp-toolbox-for-databases/$VERSION/linux/amd64/toolbox.asc"
         output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL) ([Signature]($SIG_URL))" "$description_text" "$SHA256")$'\n'
     else
         output_string+=$(printf "$ROW_FMT" "[$OS/$ARCH]($URL)" "$description_text" "$SHA256")$'\n'

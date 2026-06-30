@@ -27,10 +27,10 @@ In this section, we will download Toolbox, configure our tools in a
     {{< tabpane persist=header >}}
     {{< tab header="Linux" lang="bash" >}}
 
-    # 1. Download the detached GPG signature file (.sig)
+    # 1. Download the detached GPG signature file (.asc)
 
     <!-- {x-release-please-start-version} -->
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.5.0/$OS/toolbox.sig
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.5.0/$OS/toolbox.asc
     <!-- {x-release-please-end} -->
 
     # 2. Import Google's public GPG signing key
@@ -39,7 +39,7 @@ In this section, we will download Toolbox, configure our tools in a
 
     # 3. Verify the signature against the downloaded binary
 
-    gpg --verify toolbox.sig toolbox
+    gpg --verify toolbox.asc toolbox
     {{< /tab >}}
     {{< tab header="macOS" lang="bash" >}}
 
