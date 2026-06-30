@@ -408,5 +408,3 @@ For the setup steps and the complete list of screened messages, see
 
 - [Model Armor overview](https://docs.cloud.google.com/model-armor/overview)
 - [Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses)
-- [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
-- [Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration)
