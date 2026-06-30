@@ -49,18 +49,10 @@ Gateway), not in the Toolbox SDK itself. Toolbox tools are designed to work
 cleanly with this kind of interception.
 {{< /notice >}}
 
-## Requirements
+## Pre-requisites
 
-1. **Install the gcloud CLI.** Install and initialize the
-   [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) so you can
-   create and manage Model Armor templates.
-2. **Enable the API.** Enable `modelarmor.googleapis.com` in your Google Cloud
-   project.
-   ```bash
-   gcloud config set project YOUR_PROJECT_ID
-   gcloud services enable modelarmor.googleapis.com
-   ```
-3. **Grant IAM roles.** 
+1. **Enable the API.** Enable [Model Armor API](https://console.cloud.google.com/apis/library/modelarmor.googleapis.com) in your Google Cloud project.
+2. **Grant IAM roles.** 
     - The identity that runs your agent needs `roles/modelarmor.user` to invoke sanitization. 
     - To create and manage templates, you need `roles/modelarmor.admin`.
 
@@ -71,25 +63,22 @@ detection settings into a reusable policy. You create a template once, then
 reference its ID on every sanitize call, so you can change the policy in one
 place without touching your agent code.
 
-Template and sanitization operations are **regional**, but the gcloud CLI
-defaults to the global endpoint. Point gcloud at your region first, otherwise
-template commands fail with `PERMISSION_DENIED: Write access ... was denied`:
+Create a template that enforces both Sensitive Data Protection (SDP) and prompt
+injection / jailbreak detection:
 
-```bash
-gcloud config set api_endpoint_overrides/modelarmor https://modelarmor.us-central1.rep.googleapis.com/
-```
+Create the template:
 
-Then create a template that enforces both Sensitive Data Protection (SDP) and
-prompt injection / jailbreak detection:
+1. In the Google Cloud console, go to the **Model Armor** page and click
+   **Create template**.
+2. Set the **Template ID** to `test-template` and the **Region** to
+   `us-central1`.
+3. Under **Prompt injection and jailbreak detection**, enable the filter and set
+   the confidence level to **Medium and above**.
+4. Under **Sensitive Data Protection**, enable **Basic** scanning.
+5. Click **Create**.
 
-```bash
-gcloud model-armor templates create my-mcp-template \
-    --location=us-central1 \
-    --project=YOUR_PROJECT_ID \
-    --basic-config-filter-enforcement=enabled \
-    --pi-and-jailbreak-filter-settings-enforcement=enabled \
-    --pi-and-jailbreak-filter-settings-confidence-level=medium-and-above
-```
+For the full list of detection settings and options, see
+[Create a Model Armor template](https://docs.cloud.google.com/model-armor/manage-templates#create-ma-template).
 
 {{< notice note >}}
 Basic SDP automatically scans for high-confidence secrets such as credit card
@@ -97,8 +86,6 @@ numbers, API keys, and passwords. For granular PII detection and masking, use an
 advanced SDP configuration with `--advanced-config-inspect-template`. See
 [Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses#advanced_sdp_configuration)
 for details.
-
-For more information on how to create templates for Model Armor, refer to the [official docs](https://docs.cloud.google.com/model-armor/manage-templates#create-ma-template).
 {{< /notice >}}
 
 ## Step 2: Secure ingress and egress
@@ -146,34 +133,10 @@ runnables and middleware that screen prompts and responses with Model Armor.
     )
     ```
 
-3. For a simple chain, place the sanitizers around the model. A blocked prompt or
-   response raises `ValueError`:
-
-    ```python
-    from langchain_google_genai import ChatGoogleGenerativeAI
-
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-    chain = sanitize_prompt | llm | sanitize_response
-
-    try:
-        result = chain.invoke("Summarize today's bookings.")
-        print(result.content)
-    except ValueError as e:
-        print(f"Model Armor blocked the content: {e}")
-    ```
-
-4. For an agent that calls Toolbox tools, wrap the sanitizers in
+3. For an agent that calls Toolbox tools, wrap the sanitizers in
    `ModelArmorMiddleware` and pass it to `create_agent`. This screens the
    intermediate tool calls and responses (agent-to-tool egress) in addition to
    the user-facing prompt and answer:
-
-    {{< notice note >}}
-  `create_agent` and the `middleware` parameter are part of
-  [LangChain v1.0](https://docs.langchain.com/oss/python/releases/langchain-v1)
-  (`langchain>=1.0`). On older releases, agents were built with
-  `create_react_agent` / `create_tool_calling_agent`, which do not support
-  middleware. Upgrade to v1.0 to use this pattern.
-    {{< /notice >}}
 
     ```python
     import asyncio
