@@ -375,4 +375,3 @@ For the full gateway setup and template-binding steps, see
 
 - [Model Armor overview](https://docs.cloud.google.com/model-armor/overview)
 - [Sanitize prompts and responses](https://docs.cloud.google.com/model-armor/sanitize-prompts-responses)
-- [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
