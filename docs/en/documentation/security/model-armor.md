@@ -258,7 +258,8 @@ Using [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), you cal
         callback_context: CallbackContext, llm_request: LlmRequest
     ) -> Optional[LlmResponse]:
         contents = llm_request.contents
-        text = contents[-1].parts[0].text if contents and contents[-1].parts else None
+        parts = contents[-1].parts if contents else None
+        text = " ".join(p.text for p in parts if p.text) if parts else None
         if not text:  # skip tool-result turns, which carry no text to screen
             return None
         result = ma_client.sanitize_user_prompt(
@@ -276,8 +277,8 @@ Using [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), you cal
     def sanitize_response(
         callback_context: CallbackContext, llm_response: LlmResponse
     ) -> Optional[LlmResponse]:
-        content = llm_response.content
-        text = content.parts[0].text if content and content.parts else None
+        parts = llm_response.content.parts if llm_response.content else None
+        text = " ".join(p.text for p in parts if p.text) if parts else None
         if not text:  # skip tool-call turns, which have no text to screen
             return None
         result = ma_client.sanitize_model_response(
