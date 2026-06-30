@@ -375,23 +375,27 @@ For the full gateway setup and template-binding steps, see
 
 ### Google Cloud MCP servers
 
-If your agents reach Google Cloud services through
+The paths above protect one agent at a time. If your agents reach Google Cloud
+services through
 [Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration),
-you can enforce Model Armor on that traffic project-wide with **floor settings**,
-with no per-agent code. A floor setting is the minimum policy applied across the
-project, so it screens the `tools/call` and `prompts/get` requests and responses
-(and tool execution errors) passing through those MCP servers.
+you can instead apply a single rule that covers the whole project, using **floor
+settings**. A floor setting is a project-wide baseline: once it's on, Model Armor
+automatically screens traffic to and from every Google Cloud MCP server in the
+project, so you don't change any agent code.
 
-Unlike the paths above, a floor setting defines its detection filters directly at
-the project level; it does not reference the template from Step 1. For the setup
-steps and the full list of sanitized payloads, see
+The screening covers the `tools/call` and `prompts/get` messages (both the request
+and the response), along with any errors a tool returns while it runs.
+
+A floor setting carries its own filters, so it does **not** use the template you
+created in Step 1; you configure detection as part of the floor setting itself. For
+the setup steps and the complete list of screened messages, see
 [Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 
 {{< notice warning >}}
-A floor setting applies to the **entire project**, so it affects the traffic of
-every integrated service, not only MCP servers. The MCP integration also supports
-**basic SDP only**; for granular PII detection, use a per-agent path above with an
-advanced SDP template.
+Because a floor setting is project-wide, it affects every service Model Armor is
+integrated with, not just your MCP servers. It also supports **basic SDP only**, so
+if you need to detect or mask specific kinds of PII, use one of the per-agent paths
+above with an advanced SDP template instead.
 {{< /notice >}}
 
 ## Additional Resources
