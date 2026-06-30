@@ -166,6 +166,12 @@
 					&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
 			&lt;/tr&gt;
 			&lt;tr&gt;
+					&lt;td&gt;&lt;/td&gt;
+					&lt;td&gt;&lt;code&gt;--enable-draft-specs&lt;/code&gt;&lt;/td&gt;
+					&lt;td&gt;Opt-in and test upcoming draft MCP specifications.&lt;/td&gt;
+					&lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
+			&lt;/tr&gt;
+			&lt;tr&gt;
 					&lt;td&gt;&lt;code&gt;-v&lt;/code&gt;&lt;/td&gt;
 					&lt;td&gt;&lt;code&gt;--version&lt;/code&gt;&lt;/td&gt;
 					&lt;td&gt;version for toolbox&lt;/td&gt;
