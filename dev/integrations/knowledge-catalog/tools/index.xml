@@ -57,7 +57,46 @@ CRITICAL: Access the results only via the nested public GA fields &lt;code&gt;da
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-data-profile</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-data-product</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-product/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-product/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-data-product&lt;/code&gt; tool retrieves detailed metadata for a specific Data Product in Knowledge Catalog (formerly known as Dataplex).&lt;/p&gt;
+&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-get-data-profile</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-get-data-profile&lt;/code&gt; tool retrieves the results of a completed Data Profile scan.&lt;/p&gt;
 &lt;p&gt;WARNING: You must verify the execution run has succeeded (via &lt;code&gt;dataplex-get-run-status&lt;/code&gt;) before calling this tool, otherwise the results will be empty.
 CRITICAL: Access the results via the nested public fields &lt;code&gt;dataProfileResult.profile.fields&lt;/code&gt; inside the returned DataScan.&lt;/p&gt;
@@ -164,7 +203,7 @@ WARNING: This only tracks the creation of the scan template, NOT the actual back
 &lt;div class="compatibility-section"&gt;
  &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-list-data-products</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-products/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-products/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-list-data-products&lt;/code&gt; tool lists all Data Products in Knowledge Catalog (formerly known as Dataplex) across all locations (globally).&lt;/p&gt;
-&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/use-data-products"&gt;Data Products usage guide&lt;/a&gt; for more information.&lt;/p&gt;
+&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
 

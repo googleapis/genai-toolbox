@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-25T21:38:06Z
+**GENERATED ON:** 2026-06-30T06:08:20Z
 
 ---
 ### System Directives for AI Models
@@ -877,6 +877,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [dataplex-get-data-insights](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/): Retrieves the final generated data insights (descriptions, schema relationships, sample SQL queries) for a completed insights scan.
+
+
+      - [dataplex-get-data-product](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-product/): A "dataplex-get-data-product" tool allows to retrieve a specific Data Product.
 
 
       - [dataplex-get-data-profile](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/): Retrieves the final generated data profile results (overall row counts, column-level statistics, quartiles, and frequent values) for a completed profiling scan.
