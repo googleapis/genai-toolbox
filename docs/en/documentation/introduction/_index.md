@@ -762,3 +762,46 @@ For more detailed instructions on using the Toolbox Go SDK, see the
 [README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
 For more details, see the [Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
+
+## Supported MCP Version
+
+Toolbox is fully compatible with the Model Context Protocol (MCP) and maintains support for multiple protocol revisions to ensure seamless integration with most MCP clients.
+
+### Stable Releases
+The following official MCP specification versions are currently supported for production use:
+
+* `2025-11-25`
+* `2025-06-18`
+* `2025-03-26`
+* `2024-11-05`
+
+{{< notice note >}}
+If no protocol version is negotiated or provided, the Toolbox server defaults to
+the legacy custom transport protocol established on `2024-11-05`, which does not
+require initialization.
+{{< /notice >}}
+
+### Draft Specifications
+We actively develop against upcoming protocol specifications. You can opt-in to
+test these forthcoming revisions before their official release using the
+`--enable-draft-specs` flag during server startup.
+
+To test these draft specifications, enable the startup flag and use this version
+string during negotiation:
+* `DRAFT-2026-v1`
+
+Description: Enables experimental support for upcoming draft MCP specifications,
+allowing you to test new schema standards and transport adjustments before they
+become stable.
+
+{{< notice note >}}
+Once the draft specification is finalized and released as a stable version, the
+draft implementation will be permanently removed. The flag itself will not be
+removed, but its functionality will remain dormant (having no effect on the
+server) until a new draft specification becomes available.
+
+There will be no automatic redirects or backwards compatibility from the draft
+spec to the stable release. Developers must manually migrate their clients to
+the stable version once it is available. Do not use this flag in production
+environments.
+{{< /notice >}}
