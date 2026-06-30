@@ -96,16 +96,14 @@ for details.
 ## Step 2: Secure ingress and egress
 
 Every option below applies the same ingress and egress screening — they differ
-only in *where* the check runs. Pick the one that matches your stack and expand it
-for setup steps (the Python path is expanded by default):
+only in *where* the check runs. Pick the one that matches your stack:
 
-- **Python** — screen traffic from inside your agent code with a framework
-  integration (LangChain or ADK).
-- **Agent Gateway** — screen it at a managed control plane, with no changes to
-  your agent code.
+- **[Python](#python)** — screen traffic from inside your agent code with a
+  framework integration (LangChain or ADK).
+- **[Agent Gateway](#agent-gateway)** — screen it at a managed control plane, with
+  no changes to your agent code.
 
-<details open>
-<summary><b>Python</b></summary>
+### Python
 
 {{< tabpane persist=header >}}
 {{% tab header="LangChain" text=true %}}
@@ -351,10 +349,7 @@ For more on callbacks, see the
 {{% /tab %}}
 {{< /tabpane >}}
 
-</details>
-
-<details>
-<summary><b>Agent Gateway</b></summary>
+### Agent Gateway
 
 [Agent Gateway](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
 is a managed control plane in the Gemini Enterprise Agent Platform that routes
@@ -406,8 +401,6 @@ for the current support matrix.
 
 For the full gateway setup and template-binding steps, see
 [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration).
-
-</details>
 
 ## Additional Resources
 
