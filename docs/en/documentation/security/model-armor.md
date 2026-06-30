@@ -398,7 +398,7 @@ Floor settings come with some limits worth knowing before you rely on them:
 
 For other limits, such as unscreened streaming transports and basic-SDP-only
 support, see the
-[Model Armor MCP integration docs](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
+[Model Armor MCP integration limitations](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration#limitations).
 {{< /notice >}}
 
 For the setup steps and the complete list of screened messages, see
