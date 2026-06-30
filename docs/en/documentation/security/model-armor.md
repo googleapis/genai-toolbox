@@ -95,12 +95,12 @@ for details.
 
 ## Step 2: Secure ingress and egress
 
-Every option below applies the same ingress and egress screening — they differ
+Every option below applies the same ingress and egress screening; they differ
 only in *where* the check runs. Pick the one that matches your stack:
 
-- **[Python](#python)** — screen traffic from inside your agent code with a
+- **[Python](#python)**: screen traffic from inside your agent code with a
   framework integration (LangChain or ADK).
-- **[Agent Gateway](#agent-gateway)** — screen it at a managed control plane, with
+- **[Agent Gateway](#agent-gateway)**: screen it at a managed control plane, with
   no changes to your agent code.
 
 ### Python
@@ -353,7 +353,7 @@ For more on callbacks, see the
 
 [Agent Gateway](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
 is a managed control plane in the Gemini Enterprise Agent Platform that routes
-agent traffic and invokes Model Armor on the content passing through it — with no
+agent traffic and invokes Model Armor on the content passing through it, with no
 changes to your agent code. You assign a Model Armor template to each direction
 when you configure the gateway: one for **ingress** (client to agent) and one for
 **egress** (agent to tools and other services). A single template can serve both.
@@ -392,7 +392,7 @@ gcloud projects add-iam-policy-binding MODEL_ARMOR_PROJECT_ID \
 ```
 
 {{< notice note >}}
-Model Armor and the gateway must be in the **same region** — cross-region calls
+Model Armor and the gateway must be in the **same region**. Cross-region calls
 are not supported. Inline **ingress** protection currently covers only agents
 built with ADK (via `reasoningEngines.streamQuery`); inline **egress** protection
 covers MCP servers, OpenAI-format services, and A2A. Check the integration guide
