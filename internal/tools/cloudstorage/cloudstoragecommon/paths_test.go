@@ -59,3 +59,42 @@ func TestValidateLocalPath(t *testing.T) {
 		})
 	}
 }
+
+func TestResolveWithinDir(t *testing.T) {
+	base := t.TempDir()
+
+	tcs := []struct {
+		desc    string
+		dir     string
+		rel     string
+		want    string
+		wantErr bool
+	}{
+		{desc: "valid relative path", dir: base, rel: filepath.Join("nested", "out.bin"), want: filepath.Join(base, "nested", "out.bin")},
+		{desc: "cleans in-dir path", dir: base, rel: filepath.Join("nested", ".", "out.bin"), want: filepath.Join(base, "nested", "out.bin")},
+		{desc: "cleans parent segment that stays in dir", dir: base, rel: filepath.Join("nested", "..", "out.bin"), want: filepath.Join(base, "out.bin")},
+		{desc: "empty dir", dir: "", rel: "out.bin", wantErr: true},
+		{desc: "relative dir", dir: "relative/base", rel: "out.bin", wantErr: true},
+		{desc: "empty relative path", dir: base, rel: "", wantErr: true},
+		{desc: "absolute relative path rejected", dir: base, rel: filepath.Join(base, "out.bin"), wantErr: true},
+		{desc: "parent escape rejected", dir: base, rel: filepath.Join("..", "escape.bin"), wantErr: true},
+		{desc: "nested parent escape rejected", dir: base, rel: filepath.Join("nested", "..", "..", "escape.bin"), wantErr: true},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := ResolveWithinDir(tc.dir, tc.rel)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got %q", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tc.want {
+				t.Fatalf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}

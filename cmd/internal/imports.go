@@ -164,6 +164,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgeneratedatainsights"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgeneratedataprofile"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdatainsights"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdataproduct"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdataprofile"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdataqualityresults"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdiscoveryresults"
