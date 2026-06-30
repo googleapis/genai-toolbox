@@ -407,52 +407,14 @@ steps:
       export VERSION=v$(cat ./cmd/version.txt)
       gcloud storage cp toolbox.geminicli.windows.arm64 gs://$_BUCKET_NAME/geminicli/$VERSION/windows/arm64/toolbox.exe
 
-  - id: "trigger-linux-signing"
-    name: "gcr.io/$PROJECT_ID/stubby-caller"
-    waitFor:
-      - "store-linux-amd64"
-    script: |
-      #!/usr/bin/env bash
-      export VERSION=v$(cat ./cmd/version.txt)
-      stubby call blade:kokoro-api KokoroApi.Build <<EOF
-      full_job_name: "toolbox/linux/release_sign"
-      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/linux/amd64/toolbox"
-      EOF
-
-  - id: "trigger-macos-signing"
-    name: "gcr.io/$PROJECT_ID/stubby-caller"
-    waitFor:
-      - "store-darwin-arm64"
-      - "store-darwin-amd64"
-    script: |
-      #!/usr/bin/env bash
-      export VERSION=v$(cat ./cmd/version.txt)
-      stubby call blade:kokoro-api KokoroApi.Build <<EOF
-      full_job_name: "toolbox/macos/release_sign"
-      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/darwin/arm64/toolbox"
-      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/darwin/amd64/toolbox"
-      EOF
-
-  - id: "trigger-windows-signing"
-    name: "gcr.io/$PROJECT_ID/stubby-caller"
-    waitFor:
-      - "store-windows-amd64"
-      - "store-windows-arm64"
-    script: |
-      #!/usr/bin/env bash
-      export VERSION=v$(cat ./cmd/version.txt)
-      stubby call blade:kokoro-api KokoroApi.Build <<EOF
-      full_job_name: "toolbox/windows/release_sign"
-      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe"
-      input_file_paths: "/bigstore/$_UNSIGNED_BUCKET_NAME/$VERSION/windows/arm64/toolbox.exe"
-      EOF
-
   - id: "download-signed-binaries"
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
-      - "trigger-linux-signing"
-      - "trigger-windows-signing"
-      - "trigger-macos-signing"
+      - "store-linux-amd64"
+      - "store-darwin-arm64"
+      - "store-darwin-amd64"
+      - "store-windows-amd64"
+      - "store-windows-arm64"
     script: |
       #!/usr/bin/env bash
       set -eo pipefail
