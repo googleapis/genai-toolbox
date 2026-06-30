@@ -365,7 +365,7 @@ prompt (ingress) and `afterModel` screens the response (egress).
 1. Install the dependencies:
 
     ```bash
-    npm install @toolbox-sdk/core langchain @langchain/core @langchain/google-genai @google-cloud/modelarmor
+    npm install @toolbox-sdk/core langchain@^1 @langchain/core@^1 @langchain/google-genai @google-cloud/modelarmor
     ```
 
 2. Set your [Gemini API key](https://aistudio.google.com/apikey) so the agent can
