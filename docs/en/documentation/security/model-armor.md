@@ -487,9 +487,7 @@ and the
 
 Screen traffic by calling the `@google-cloud/modelarmor` client from ADK model
 callbacks. `beforeModelCallback` screens the prompt (ingress) and
-`afterModelCallback` screens the response (egress). Returning an `LlmResponse`
-from either callback short-circuits the turn, so flagged content never reaches
-the next hop.
+`afterModelCallback` screens the response (egress).
 
 1. Install the dependencies:
 
@@ -520,9 +518,7 @@ the next hop.
     ```
 
 4. Build two callbacks that screen each direction. `beforeModelCallback` reads
-   the latest prompt; `afterModelCallback` reads the model's answer. When Model
-   Armor reports `MATCH_FOUND`, the callback returns an `LlmResponse` that
-   replaces the content and ends the turn:
+   the latest prompt; `afterModelCallback` reads the model's answer.
 
     ```javascript
     const BLOCKED = "MATCH_FOUND";
@@ -531,33 +527,31 @@ the next hop.
     const textOf = (content) => content?.parts?.map((p) => p.text ?? "").join("") ?? "";
 
     // Build an LlmResponse that short-circuits the turn with a block message.
-    const block = (message) => ({ content: { role: "model", parts: [{ text: message }] } });
+    const block = (label) => ({
+      content: { role: "model", parts: [{ text: `Blocked by Model Armor: unsafe ${label}.` }] },
+    });
+
+    // Build a callback that screens one direction and blocks on a match.
+    const screen = (pick, sanitize, label) => async (params) => {
+      const text = textOf(pick(params));
+      if (!text) return;
+      const [res] = await sanitize(text);
+      if (res.sanitizationResult.filterMatchState === BLOCKED) return block(label);
+    };
 
     // Ingress: screen the user prompt before it reaches the model.
-    const screenPrompt = async ({ request }) => {
-      const text = textOf(request.contents.at(-1));
-      if (!text) return;
-      const [res] = await maClient.sanitizeUserPrompt({
-        name: TEMPLATE,
-        userPromptData: { text },
-      });
-      if (res.sanitizationResult.filterMatchState === BLOCKED) {
-        return block("Blocked by Model Armor: unsafe prompt.");
-      }
-    };
+    const screenPrompt = screen(
+      ({ request }) => request.contents.at(-1),
+      (text) => maClient.sanitizeUserPrompt({ name: TEMPLATE, userPromptData: { text } }),
+      "prompt"
+    );
 
     // Egress: screen the model response before it returns.
-    const screenResponse = async ({ response }) => {
-      const text = textOf(response.content);
-      if (!text) return;
-      const [res] = await maClient.sanitizeModelResponse({
-        name: TEMPLATE,
-        modelResponseData: { text },
-      });
-      if (res.sanitizationResult.filterMatchState === BLOCKED) {
-        return block("Blocked by Model Armor: unsafe response.");
-      }
-    };
+    const screenResponse = screen(
+      ({ response }) => response.content,
+      (text) => maClient.sanitizeModelResponse({ name: TEMPLATE, modelResponseData: { text } }),
+      "response"
+    );
     ```
 
 5. Load your Toolbox tools, attach the callbacks to the agent, and run it:
@@ -565,7 +559,6 @@ the next hop.
     ```javascript
     import { InMemoryRunner, LlmAgent, LogLevel } from "@google/adk";
     import { ToolboxClient } from "@toolbox-sdk/adk";
-
 
     const client = new ToolboxClient("http://127.0.0.1:5000");
     const tools = await client.loadToolset("my-toolset");
