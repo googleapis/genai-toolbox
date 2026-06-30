@@ -363,13 +363,10 @@ specific IAM roles granted to the right service account. For the exact roles and
 `gcloud` commands, follow
 [Configure Model Armor on the gateway](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration#configure-model-armor-gateway).
 
-{{< notice note >}}
-Model Armor and the gateway must be in the **same region**. Cross-region calls
-are not supported. Inline **ingress** protection currently covers only agents
-built with ADK (via `reasoningEngines.streamQuery`); inline **egress** protection
-covers MCP servers, OpenAI-format services, and A2A. Check the integration guide
-for the current support matrix.
-{{< /notice >}}
+Inline protection has some limitations (for example, same-region requirements and
+restrictions on which agent types and traffic are covered). Review the
+[Agent Gateway limitations](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration#limitations)
+before you rely on it.
 
 For the full gateway setup and template-binding steps, see
 [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration).
