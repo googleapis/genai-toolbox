@@ -170,6 +170,7 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetdiscoveryresults"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetoperation"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexgetrunstatus"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlistdataassets"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlistdataproducts"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlookupcontext"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexlookupentry"
