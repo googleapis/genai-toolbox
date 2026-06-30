@@ -1862,7 +1862,7 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 				"data-products": tools.ToolsetConfig{
 					Name:      "data-products",
-					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products"},
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "list_data_products", "get_data_product"},
 				},
 				"enrich": tools.ToolsetConfig{
 					Name:      "enrich",
