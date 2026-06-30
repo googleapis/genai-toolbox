@@ -375,17 +375,17 @@ For the full gateway setup and template-binding steps, see
 
 ### Google Cloud MCP servers
 
-The paths above protect one agent at a time. If your agents reach Google Cloud
-services through
-[Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration),
-you can instead apply a single rule that covers the whole project, using **floor
-settings**. A floor setting is a project-wide baseline: once it's on, Model Armor
-automatically screens traffic to and from every Google Cloud MCP server in the
-project, so you don't change any agent code.
+The paths above secure each agent or gateway you configure. If your agents reach
+Google Cloud services through **Google Cloud MCP servers**, you can instead apply
+one rule across the whole project, using **floor settings**. A floor setting is a
+project-wide baseline: once it's on, Model Armor automatically screens traffic to
+and from every Google Cloud MCP server in the project, so you don't change any
+agent code.
 
 The screening covers the `tools/call` and `prompts/get` messages (both the request
-and the response), along with any errors a tool returns while it runs.
-
+and the response), along with any errors a tool returns while it runs. A floor
+setting defines its own detection filters, so it doesn't use the `test-template`
+you created in Step 1.
 
 {{< notice warning >}}
 Floor settings come with some limits worth knowing before you rely on them:
