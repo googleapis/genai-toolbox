@@ -25,6 +25,7 @@ In this section, we will download Toolbox, configure our tools in a
     We recommend verifying the digital signature of the downloaded binary before running it.
 
     {{< tabpane persist=header >}}
+      <!-- {x-release-please-start-version} -->
     {{< tab header="Linux" lang="bash" >}}
 
     # 1. Download the detached GPG signature file (.sig)
@@ -39,6 +40,7 @@ In this section, we will download Toolbox, configure our tools in a
 
     gpg --verify toolbox.sig toolbox
     {{< /tab >}}
+      <!-- {x-release-please-end} -->
     {{< tab header="macOS" lang="bash" >}}
 
     # Verify the code signature
