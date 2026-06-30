@@ -202,6 +202,119 @@ For more on the middleware, see the
 [Model Armor LangChain integration](https://docs.cloud.google.com/model-armor/model-armor-langchain-integration).
 
 {{% /tab %}}
+{{% tab header="Python (ADK)" text=true %}}
+
+Using [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), you call the Model Armor client from a `before_model_callback` (ingress) and an `after_model_callback` (egress), returning an `LlmResponse` to short-circuit the model when a threat is found.
+
+1. Install the dependencies:
+
+    ```bash
+    pip install google-adk google-cloud-modelarmor toolbox-core
+    ```
+
+2. Set your [Gemini API key](https://aistudio.google.com/apikey) so the agent can call the model:
+
+    ```bash
+    export GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+    ```
+
+3. Create a Model Armor client:
+
+    ```python
+    from google.api_core.client_options import ClientOptions
+    from google.cloud import modelarmor_v1
+
+    PROJECT_ID = "YOUR_PROJECT_ID"
+    LOCATION = "us-central1"
+    TEMPLATE_ID = "test-template"
+
+    ma_client = modelarmor_v1.ModelArmorClient(
+        client_options=ClientOptions(
+            api_endpoint=f"modelarmor.{LOCATION}.rep.googleapis.com"
+        )
+    )
+    TEMPLATE = f"projects/{PROJECT_ID}/locations/{LOCATION}/templates/{TEMPLATE_ID}"
+    ```
+
+4. Wire sanitization into ADK's model callbacks. `before_model_callback` screens the user prompt (ingress); `after_model_callback` screens the model's answer (egress). Returning an `LlmResponse` skips/replaces the model call:
+
+    ```python
+    from typing import Optional
+
+    from google.adk.agents.callback_context import CallbackContext
+    from google.adk.models import LlmRequest, LlmResponse
+    from google.genai import types
+
+    BLOCKED = modelarmor_v1.FilterMatchState.MATCH_FOUND
+
+    def _block(message: str) -> LlmResponse:
+        return LlmResponse(
+            content=types.Content(role="model", parts=[types.Part(text=message)])
+        )
+
+
+    # Ingress: screen the user prompt before it reaches the model.
+    def sanitize_prompt(
+        callback_context: CallbackContext, llm_request: LlmRequest
+    ) -> Optional[LlmResponse]:
+        contents = llm_request.contents
+        text = contents[-1].parts[0].text if contents and contents[-1].parts else None
+        if not text:  # skip tool-result turns, which carry no text to screen
+            return None
+        result = ma_client.sanitize_user_prompt(
+            request=modelarmor_v1.SanitizeUserPromptRequest(
+                name=TEMPLATE,
+                user_prompt_data=modelarmor_v1.DataItem(text=text),
+            )
+        )
+        if result.sanitization_result.filter_match_state == BLOCKED:
+            return _block("Blocked by Model Armor: unsafe prompt.")
+        return None
+
+
+    # Egress: screen the model response before it returns to the user.
+    def sanitize_response(
+        callback_context: CallbackContext, llm_response: LlmResponse
+    ) -> Optional[LlmResponse]:
+        content = llm_response.content
+        text = content.parts[0].text if content and content.parts else None
+        if not text:  # skip tool-call turns, which have no text to screen
+            return None
+        result = ma_client.sanitize_model_response(
+            request=modelarmor_v1.SanitizeModelResponseRequest(
+                name=TEMPLATE,
+                model_response_data=modelarmor_v1.DataItem(text=text),
+            )
+        )
+        if result.sanitization_result.filter_match_state == BLOCKED:
+            return _block("Blocked by Model Armor: unsafe response.")
+        return None
+    ```
+
+5. Attach the callbacks to an agent that loads your Toolbox tools, then run it
+   with `adk run` or `adk web`:
+
+    ```python
+    from google.adk.agents import Agent
+    from toolbox_core import ToolboxSyncClient
+
+    toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
+
+    root_agent = Agent(
+        model="gemini-3.1-pro-preview",
+        name="hotel_agent",
+        instruction="You help users find hotels.",
+        tools=toolbox.load_toolset("my-toolset"),
+        before_model_callback=sanitize_prompt,
+        after_model_callback=sanitize_response,
+    )
+    ```
+
+For more on callbacks, see the
+[ADK safety guide](https://google.github.io/adk-docs/safety/) and the
+[Secure your agent with Model Armor codelab](https://codelabs.developers.google.com/secure-agent-modelarmor).
+
+{{% /tab %}}
 {{< /tabpane >}}
 
 ## Additional Resources
