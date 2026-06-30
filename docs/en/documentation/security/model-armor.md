@@ -566,8 +566,6 @@ the next hop.
     import { InMemoryRunner, LlmAgent, LogLevel } from "@google/adk";
     import { ToolboxClient } from "@toolbox-sdk/adk";
 
-    // ADK reads the Gemini key from GOOGLE_GENAI_API_KEY.
-    process.env.GOOGLE_GENAI_API_KEY ||= process.env.GOOGLE_API_KEY;
 
     const client = new ToolboxClient("http://127.0.0.1:5000");
     const tools = await client.loadToolset("my-toolset");
