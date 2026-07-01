@@ -15,7 +15,10 @@
 package internal
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -2415,5 +2418,70 @@ tools:
 				}
 			}
 		})
+	}
+}
+
+func TestGetPathsFromConfigFolder(t *testing.T) {
+	ctx := context.Background()
+	root := t.TempDir()
+
+	if err := os.WriteFile(filepath.Join(root, "sources.yaml"), []byte("kind: source\nname: root\n"), 0o644); err != nil {
+		t.Fatalf("write root yaml: %v", err)
+	}
+
+	nestedDir := filepath.Join(root, "tools-a")
+	if err := os.MkdirAll(nestedDir, 0o755); err != nil {
+		t.Fatalf("mkdir nested: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(nestedDir, "tool-a.yaml"), []byte("kind: tool\nname: tool-a\n"), 0o644); err != nil {
+		t.Fatalf("write nested yaml: %v", err)
+	}
+
+	deepDir := filepath.Join(root, "tools-b", "nested")
+	if err := os.MkdirAll(deepDir, 0o755); err != nil {
+		t.Fatalf("mkdir deep nested: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(deepDir, "tool-c.yml"), []byte("kind: tool\nname: tool-c\n"), 0o644); err != nil {
+		t.Fatalf("write deep nested yaml: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "README.txt"), []byte("ignore me"), 0o644); err != nil {
+		t.Fatalf("write non-yaml file: %v", err)
+	}
+
+	got, err := GetPathsFromConfigFolder(ctx, root)
+	if err != nil {
+		t.Fatalf("GetPathsFromConfigFolder() error = %v", err)
+	}
+
+	want := []string{
+		filepath.Join(root, "sources.yaml"),
+		filepath.Join(nestedDir, "tool-a.yaml"),
+		filepath.Join(deepDir, "tool-c.yml"),
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("GetPathsFromConfigFolder() mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestGetConfigFolderWatchDirs(t *testing.T) {
+	root := t.TempDir()
+
+	nestedDir := filepath.Join(root, "tools-a", "nested")
+	if err := os.MkdirAll(nestedDir, 0o755); err != nil {
+		t.Fatalf("mkdir nested: %v", err)
+	}
+
+	got, err := GetConfigFolderWatchDirs(root)
+	if err != nil {
+		t.Fatalf("GetConfigFolderWatchDirs() error = %v", err)
+	}
+
+	want := []string{
+		root,
+		filepath.Join(root, "tools-a"),
+		nestedDir,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("GetConfigFolderWatchDirs() mismatch (-want +got):\n%s", diff)
 	}
 }

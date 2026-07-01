@@ -428,32 +428,67 @@ func (p *ConfigParser) LoadAndMergeConfigs(ctx context.Context, filePaths []stri
 	return configs[0], nil
 }
 
-// GetPathsFromConfigFolder loads all YAML files from a directory and merges them
+// GetPathsFromConfigFolder returns all YAML config files under folderPath,
+// including nested subdirectories, in deterministic sorted order.
 func GetPathsFromConfigFolder(ctx context.Context, folderPath string) ([]string, error) {
-	// Check if directory exists
-	info, err := os.Stat(folderPath)
-	if err != nil {
-		return nil, fmt.Errorf("unable to access config folder at %q: %w", folderPath, err)
-	}
-	if !info.IsDir() {
-		return nil, fmt.Errorf("path %q is not a directory", folderPath)
+	if err := validateConfigFolder(folderPath); err != nil {
+		return nil, err
 	}
 
-	// Find all YAML files in the directory
-	pattern := filepath.Join(folderPath, "*.yaml")
-	yamlFiles, err := filepath.Glob(pattern)
+	var allFiles []string
+	err := filepath.WalkDir(folderPath, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			return nil
+		}
+		name := d.Name()
+		if strings.HasSuffix(name, ".yaml") || strings.HasSuffix(name, ".yml") {
+			allFiles = append(allFiles, path)
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("error finding YAML files in %q: %w", folderPath, err)
 	}
 
-	// Also find .yml files
-	ymlPattern := filepath.Join(folderPath, "*.yml")
-	ymlFiles, err := filepath.Glob(ymlPattern)
-	if err != nil {
-		return nil, fmt.Errorf("error finding YML files in %q: %w", folderPath, err)
+	slices.Sort(allFiles)
+	return allFiles, nil
+}
+
+// GetConfigFolderWatchDirs returns folderPath and every subdirectory under it so
+// config hot-reload can observe nested YAML files.
+func GetConfigFolderWatchDirs(folderPath string) ([]string, error) {
+	if err := validateConfigFolder(folderPath); err != nil {
+		return nil, err
 	}
 
-	// Combine both file lists
-	allFiles := append(yamlFiles, ymlFiles...)
-	return allFiles, nil
+	var dirs []string
+	err := filepath.WalkDir(folderPath, func(path string, d os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if d.IsDir() {
+			dirs = append(dirs, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error walking config folder %q: %w", folderPath, err)
+	}
+
+	slices.Sort(dirs)
+	return dirs, nil
+}
+
+func validateConfigFolder(folderPath string) error {
+	info, err := os.Stat(folderPath)
+	if err != nil {
+		return fmt.Errorf("unable to access config folder at %q: %w", folderPath, err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("path %q is not a directory", folderPath)
+	}
+	return nil
 }

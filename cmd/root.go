@@ -205,18 +205,15 @@ func scanWatchedFiles(watchingFolder bool, folderToWatch string, watchedFiles ma
 	changed := false
 	currentDiskFiles := make(map[string]bool)
 	if watchingFolder {
-		files, err := os.ReadDir(folderToWatch)
+		files, err := internal.GetPathsFromConfigFolder(context.Background(), folderToWatch)
 		if err != nil {
 			return nil, changed, fmt.Errorf("error reading config folder %w", err)
 		}
-		for _, f := range files {
-			if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
-				fullPath := filepath.Join(folderToWatch, f.Name())
-				currentDiskFiles[fullPath] = true
-				if info, err := f.Info(); err == nil {
-					if checkModTime(fullPath, info.ModTime(), lastSeen) {
-						changed = true
-					}
+		for _, fullPath := range files {
+			currentDiskFiles[fullPath] = true
+			if info, err := os.Stat(fullPath); err == nil {
+				if checkModTime(fullPath, info.ModTime(), lastSeen) {
+					changed = true
 				}
 			}
 		}
@@ -234,7 +231,7 @@ func scanWatchedFiles(watchingFolder bool, folderToWatch string, watchedFiles ma
 }
 
 // watchChanges checks for changes in the provided yaml config(s) or folder.
-func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int) {
+func watchChanges(ctx context.Context, configFolderRoot string, watchDirs map[string]bool, watchedFiles map[string]bool, s *server.Server, pollTickerSecond int) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
@@ -254,16 +251,13 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 	// if watchedFiles is empty, indicates that user passed entire folder instead
 	if len(watchedFiles) == 0 {
 		watchingFolder = true
-
-		// validate that watchDirs only has single element
-		if len(watchDirs) > 1 {
-			logger.WarnContext(ctx, "error setting watcher, expected single config folder if no file(s) are defined.")
-			return
-		}
-
-		for onlyKey := range watchDirs {
-			folderToWatch = onlyKey
-			break
+		if configFolderRoot != "" {
+			folderToWatch = filepath.Clean(configFolderRoot)
+		} else if len(watchDirs) == 1 {
+			for onlyKey := range watchDirs {
+				folderToWatch = onlyKey
+				break
+			}
 		}
 	}
 
@@ -402,7 +396,14 @@ func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder str
 	if len(toolsFiles) > 0 {
 		relevantFiles = toolsFiles
 	} else if toolsFolder != "" {
-		watchDirs[filepath.Clean(toolsFolder)] = true
+		cleanFolder := filepath.Clean(toolsFolder)
+		if dirs, err := internal.GetConfigFolderWatchDirs(cleanFolder); err == nil {
+			for _, dir := range dirs {
+				watchDirs[dir] = true
+			}
+		} else {
+			watchDirs[cleanFolder] = true
+		}
 	} else {
 		relevantFiles = []string{toolsFile}
 	}
@@ -527,7 +528,7 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	if isCustomConfigured && !opts.Cfg.DisableReload {
 		watchDirs, watchedFiles := resolveWatcherInputs(opts.Config, opts.Configs, opts.ConfigFolder)
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
-		go watchChanges(ctx, watchDirs, watchedFiles, s, opts.Cfg.PollInterval)
+		go watchChanges(ctx, opts.ConfigFolder, watchDirs, watchedFiles, s, opts.Cfg.PollInterval)
 	}
 
 	// wait for either the server to error out or the command's context to be canceled

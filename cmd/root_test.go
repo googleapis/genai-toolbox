@@ -576,6 +576,28 @@ func TestResolveWatcherInputs(t *testing.T) {
 	}
 }
 
+func TestResolveWatcherInputsNestedConfigFolder(t *testing.T) {
+	root := t.TempDir()
+	nestedDir := filepath.Join(root, "tools-a")
+	if err := os.MkdirAll(nestedDir, 0o755); err != nil {
+		t.Fatalf("mkdir nested: %v", err)
+	}
+
+	gotWatchDirs, gotWatchedFiles := resolveWatcherInputs("", nil, root)
+
+	if len(gotWatchedFiles) != 0 {
+		t.Fatalf("expected empty watchedFiles for folder mode, got %v", gotWatchedFiles)
+	}
+
+	wantWatchDirs := map[string]bool{
+		root:      true,
+		nestedDir: true,
+	}
+	if diff := cmp.Diff(wantWatchDirs, gotWatchDirs); diff != "" {
+		t.Fatalf("incorrect watchDirs: diff %v", diff)
+	}
+}
+
 // helper function for testing file detection in dynamic reloading
 func tmpFileWithCleanup(content []byte) (string, func(), error) {
 	f, err := os.CreateTemp("", "*")
@@ -629,7 +651,7 @@ func TestSingleEdit(t *testing.T) {
 	watchedFiles := map[string]bool{cleanFileToWatch: true}
 	watchDirs := map[string]bool{watchDir: true}
 
-	go watchChanges(ctx, watchDirs, watchedFiles, mockServer, 0)
+	go watchChanges(ctx, "", watchDirs, watchedFiles, mockServer, 0)
 
 	// escape backslash so regex doesn't fail on windows filepaths
 	regexEscapedPathFile := strings.ReplaceAll(cleanFileToWatch, `\`, `\\\\*\\`)
