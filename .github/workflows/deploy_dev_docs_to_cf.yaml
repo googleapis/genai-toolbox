@@ -80,20 +80,24 @@ jobs:
           mv public staging/dev
           mv staging/dev/releases.releases staging/releases.releases
 
+      - name: Checkout Cloudflare Branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: cloudflare-pages
+          path: cf-pages-temp
+
       - name: Push to Cloudflare Branch
         run: |
-          cd $GITHUB_WORKSPACE
-          git clone --branch cloudflare-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git cf-pages-temp
-          cd cf-pages-temp
+          cd $GITHUB_WORKSPACE/cf-pages-temp
           rm -rf dev
           
-          # opy over the fresh dev build and releases file from staging
+          # copy over the dev build and releases file from staging
           cp -r ../.hugo/staging/dev ./dev
           cp ../.hugo/staging/releases.releases ./releases.releases || true
           
           # Commit and push the clean build
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "release-please[bot]"
+          git config user.email "55107282+release-please[bot]@users.noreply.github.com"
           git add .
           
           git diff-index --quiet HEAD || git commit -m "deploy dev docs: ${{ github.event.head_commit.message }}" && git push origin cloudflare-pages
