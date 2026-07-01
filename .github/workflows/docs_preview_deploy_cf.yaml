@@ -46,6 +46,8 @@ jobs:
     steps:
       - name: Checkout base repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
 
       - name: Download Artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -58,8 +60,8 @@ jobs:
       - name: Read PR Number
         id: get_pr
         run: |
-          if [ -n "${{ github.event.inputs.pr_number }}" ]; then
-            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          if [ -n "${GITHUB_EVENT_INPUTS_PR_NUMBER}" ]; then
+            PR_NUMBER="${GITHUB_EVENT_INPUTS_PR_NUMBER}"
           else
             PR_NUMBER=$(cat downloaded-artifact/pr_number.txt)
           fi
@@ -68,6 +70,8 @@ jobs:
             exit 1
           fi
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_EVENT_INPUTS_PR_NUMBER: ${{ github.event.inputs.pr_number }}
 
       - name: Deploy to Cloudflare Pages
         id: cf_deploy
