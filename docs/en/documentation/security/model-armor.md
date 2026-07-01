@@ -492,7 +492,7 @@ callbacks. `beforeModelCallback` screens the prompt (ingress) and
 1. Install the dependencies:
 
     ```bash
-    npm install @toolbox-sdk/adk @google/adk @google-cloud/modelarmor
+    npm install @toolbox-sdk/adk^1 @google-cloud/modelarmor
     ```
 
 2. Set your [Gemini API key](https://aistudio.google.com/apikey) so the agent can
