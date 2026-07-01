@@ -94,11 +94,15 @@ jobs:
         run: npx pagefind --site public
         working-directory: .hugo
 
+      - name: Checkout Cloudflare Branch for Root
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          ref: cloudflare-pages
+          path: cf-pages-root-temp
+
       - name: Deploy to root
         run: |
-          cd $GITHUB_WORKSPACE
-          git clone --branch cloudflare-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git cf-pages-root-temp
-          cd cf-pages-root-temp
+          cd $GITHUB_WORKSPACE/cf-pages-root-temp
           # Delete older pagefind search indexes
           rm -rf pagefind
           
@@ -106,8 +110,8 @@ jobs:
           cp -r ../.hugo/public/* .
           
           # Commit and push the clean build
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "release-please[bot]"
+          git config user.email "55107282+release-please[bot]@users.noreply.github.com"
           git add .
           
           git diff-index --quiet HEAD || git commit -m "deploy: docs to root for ${{ steps.get_version.outputs.VERSION }}" && git push origin cloudflare-pages
