@@ -51,8 +51,8 @@ jobs:
 
       - name: Commit and Push Changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "release-please[bot]"
+          git config user.email "55107282+release-please[bot]@users.noreply.github.com"
           git add .hugo/hugo.cloudflare.toml
           if git diff --quiet && git diff --staged --quiet; then
             echo "No changes to commit"
