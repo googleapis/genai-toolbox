@@ -65,12 +65,12 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	dataParam := parameters.NewStringParameterWithRequired(paramDataKey, "the JSON payload to insert, should be a JSON array of documents", true)
+	dataParam := parameters.NewStringParameter(paramDataKey, "the JSON payload to insert, should be a JSON array of documents", parameters.WithStringRequired(true))
 
 	allParameters := parameters.Parameters{dataParam}
 

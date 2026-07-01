@@ -4,8 +4,6 @@ type: docs
 weight: 1
 description: >
   A "dataplex-get-data-asset" tool retrieve specific metadata regarding a Data Asset.
-aliases:
-  - /integrations/dataplex/tools/dataplex-get-data-asset/
 ---
 
 ## About

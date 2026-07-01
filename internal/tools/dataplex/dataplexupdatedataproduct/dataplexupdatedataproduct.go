@@ -68,28 +68,36 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "The location to update the data product in.")
 	dataProductId := parameters.NewStringParameter("dataProductId", "The data product ID.")
-	description := parameters.NewStringParameterWithRequired("description", "Optional. Description of the data product.", false)
-	displayName := parameters.NewStringParameterWithRequired("displayName", "Optional. Display name of the data product.", false)
-	ownerEmails := parameters.NewArrayParameterWithRequired(
+	description := parameters.NewStringParameter(
+		"description",
+		"Optional. Description of the data product.",
+		parameters.WithStringRequired(false),
+	)
+	displayName := parameters.NewStringParameter(
+		"displayName",
+		"Optional. Display name of the data product.",
+		parameters.WithStringRequired(false),
+	)
+	ownerEmails := parameters.NewArrayParameter(
 		"ownerEmails",
 		"Optional. The email addresses of the owners of the data product.",
-		false,
 		parameters.NewStringParameter("email", "Owner email address"),
+		parameters.WithArrayRequired(false),
 	)
-	accessGroups := parameters.NewArrayParameterWithRequired(
+	accessGroups := parameters.NewArrayParameter(
 		"accessGroups",
 		"Optional. List of access groups to associate with the Data Product.",
-		false,
 		parameters.NewMapParameter("accessGroup", "Access Group details (id, displayName, description, googleGroup, serviceAccount)", ""),
+		parameters.WithArrayRequired(false),
 	)
-	updateMask := parameters.NewArrayParameterWithRequired(
+	updateMask := parameters.NewArrayParameter(
 		"updateMask",
 		"Optional. The fields to update. If not specified, all fields provided will be updated.",
-		false,
 		parameters.NewStringParameter("field", "Field path to update"),
+		parameters.WithArrayRequired(false),
 	)
 
 	params := parameters.Parameters{locationId, dataProductId, description, displayName, ownerEmails, accessGroups, updateMask}
@@ -128,51 +136,96 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	paramsMap := params.AsMap()
 	locationId, ok := paramsMap["locationId"].(string)
 	if !ok || locationId == "" {
-		return nil, util.NewAgentError("locationId is required and must be a string", nil)
+		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 
 	dataProductId, ok := paramsMap["dataProductId"].(string)
 	if !ok || dataProductId == "" {
-		return nil, util.NewAgentError("dataProductId is required and must be a string", nil)
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
-	description, _ := paramsMap["description"].(string)
-	displayName, _ := paramsMap["displayName"].(string)
+	var description string
+	if val, exists := paramsMap["description"]; exists && val != nil {
+		var ok bool
+		description, ok = val.(string)
+		if !ok {
+			return nil, util.NewAgentError("description must be a string", nil)
+		}
+	}
+
+	var displayName string
+	if val, exists := paramsMap["displayName"]; exists && val != nil {
+		var ok bool
+		displayName, ok = val.(string)
+		if !ok {
+			return nil, util.NewAgentError("displayName must be a string", nil)
+		}
+	}
 
 	var ownerEmails []string
-	if rawOwners, ok := paramsMap["ownerEmails"].([]any); ok {
+	if val, exists := paramsMap["ownerEmails"]; exists && val != nil {
+		rawOwners, ok := val.([]any)
+		if !ok {
+			return nil, util.NewAgentError("ownerEmails must be an array", nil)
+		}
 		for _, o := range rawOwners {
 			email, ok := o.(string)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid owner email type: expected string, got %T", o), nil)
+			if !ok || email == "" {
+				return nil, util.NewAgentError("each item in ownerEmails must be a non-empty string", nil)
 			}
 			ownerEmails = append(ownerEmails, email)
 		}
 	}
 
 	var accessGroups []dataplex.AccessGroup
-	if rawGroups, ok := paramsMap["accessGroups"].([]any); ok {
+	if val, exists := paramsMap["accessGroups"]; exists && val != nil {
+		rawGroups, ok := val.([]any)
+		if !ok {
+			return nil, util.NewAgentError("accessGroups must be an array", nil)
+		}
 		for _, rawG := range rawGroups {
 			gMap, ok := rawG.(map[string]any)
 			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid accessGroup item: expected map, got %T", rawG), nil)
+				return nil, util.NewAgentError("each access group in accessGroups must be an object", nil)
 			}
-			id, _ := gMap["id"].(string)
-			dispName, _ := gMap["displayName"].(string)
-			desc, _ := gMap["description"].(string)
-			googleGroup, _ := gMap["googleGroup"].(string)
-			serviceAccount, _ := gMap["serviceAccount"].(string)
-
-			if id == "" {
-				return nil, util.NewAgentError("access group 'id' is required", nil)
+			id, ok := gMap["id"].(string)
+			if !ok || id == "" {
+				return nil, util.NewAgentError("access group 'id' is required and must be a non-empty string", nil)
+			}
+			dispName, ok := gMap["displayName"].(string)
+			if !ok || dispName == "" {
+				return nil, util.NewAgentError("access group 'displayName' is required and must be a non-empty string", nil)
 			}
 
-			if dispName == "" {
-				return nil, util.NewAgentError("access group 'displayName' is required", nil)
+			var desc string
+			if dVal, dExists := gMap["description"]; dExists && dVal != nil {
+				var dOk bool
+				desc, dOk = dVal.(string)
+				if !dOk {
+					return nil, util.NewAgentError("access group 'description' must be a string", nil)
+				}
+			}
+
+			var googleGroup string
+			if gVal, gExists := gMap["googleGroup"]; gExists && gVal != nil {
+				var gOk bool
+				googleGroup, gOk = gVal.(string)
+				if !gOk {
+					return nil, util.NewAgentError("access group 'googleGroup' must be a string", nil)
+				}
+			}
+
+			var serviceAccount string
+			if sVal, sExists := gMap["serviceAccount"]; sExists && sVal != nil {
+				var sOk bool
+				serviceAccount, sOk = sVal.(string)
+				if !sOk {
+					return nil, util.NewAgentError("access group 'serviceAccount' must be a string", nil)
+				}
 			}
 
 			if googleGroup == "" && serviceAccount == "" {
-				return nil, util.NewAgentError("at least one of access group 'googleGroup' or 'serviceAccount' is required", nil)
+				return nil, util.NewAgentError("at least one of access group 'googleGroup' or 'serviceAccount' must be a non-empty string", nil)
 			}
 
 			accessGroups = append(accessGroups, dataplex.AccessGroup{
@@ -186,11 +239,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	var updateMask []string
-	if rawMask, ok := paramsMap["updateMask"].([]any); ok {
+	if val, exists := paramsMap["updateMask"]; exists && val != nil {
+		rawMask, ok := val.([]any)
+		if !ok {
+			return nil, util.NewAgentError("updateMask must be an array", nil)
+		}
 		for _, v := range rawMask {
-			if s, ok := v.(string); ok {
-				updateMask = append(updateMask, s)
+			s, ok := v.(string)
+			if !ok || s == "" {
+				return nil, util.NewAgentError("each item in updateMask must be a non-empty string", nil)
 			}
+			updateMask = append(updateMask, s)
 		}
 	}
 

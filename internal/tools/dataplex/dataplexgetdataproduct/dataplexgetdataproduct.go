@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetDataProduct(ctx context.Context, locationId string, dataProductId string) (*dataplex.DataProduct, error)
+	GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*dataplex.DataProduct, error)
 }
 
 type Config struct {
@@ -60,7 +60,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
 	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the Data Product.")
 	params := parameters.Parameters{locationId, dataProductId}
@@ -97,16 +97,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	locationId, ok := paramsMap["locationId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	locationID, ok := paramsMap["locationId"].(string)
+	if !ok || locationID == "" {
+		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
-	dataProductId, ok := paramsMap["dataProductId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
+	dataProductID, ok := paramsMap["dataProductId"].(string)
+	if !ok || dataProductID == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
-	resp, err := source.GetDataProduct(ctx, locationId, dataProductId)
+	resp, err := source.GetDataProduct(ctx, locationID, dataProductID)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

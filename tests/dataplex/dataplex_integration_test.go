@@ -233,7 +233,7 @@ func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClie
 }
 
 func initDataplexDataProductConnection(ctx context.Context) (*dataplex.DataProductClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -427,7 +427,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
 	ownerEmail := tests.ServiceAccountEmail
 	if ownerEmail == "" {
-		t.Errorf("Service account email is required, but tests.ServiceAccountEmail was empty")
+		t.Fatalf("Service account email is required, but tests.ServiceAccountEmail is empty")
 	}
 	createReq := &dataplexpb.CreateDataProductRequest{
 		Parent:        parent,
@@ -770,6 +770,36 @@ func runDataplexToolGetTest(t *testing.T) {
 			expectedParams: []string{"filter", "dataScanId", "resourcePath", "pageSize", "orderBy"},
 		},
 		{
+			name:           "get my-dataplex-list-data-products-tool",
+			toolName:       "my-dataplex-list-data-products-tool",
+			expectedParams: []string{"filter", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-get-data-product-tool",
+			toolName:       "my-dataplex-get-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId"},
+		},
+		{
+			name:           "get my-dataplex-list-data-assets-tool",
+			toolName:       "my-dataplex-list-data-assets-tool",
+			expectedParams: []string{"locationId", "dataProductId", "filter", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-get-data-asset-tool",
+			toolName:       "my-dataplex-get-data-asset-tool",
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId"},
+		},
+		{
+			name:           "get my-dataplex-create-data-product-tool",
+			toolName:       "my-dataplex-create-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId", "displayName", "description", "ownerEmails", "accessGroups"},
+		},
+		{
+			name:           "get my-dataplex-update-data-product-tool",
+			toolName:       "my-dataplex-update-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId", "description", "displayName", "ownerEmails", "accessGroups", "updateMask"},
+		},
+		{
 			name:           "get my-dataplex-generate-data-profile-tool",
 			toolName:       "my-dataplex-generate-data-profile-tool",
 			expectedParams: []string{"resourcePath", "location", "publish"},
@@ -818,36 +848,6 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-get-data-quality-results-tool",
 			toolName:       "my-dataplex-get-data-quality-results-tool",
 			expectedParams: []string{"scanId", "location"},
-		},
-		{
-			name:           "get my-dataplex-list-data-products-tool",
-			toolName:       "my-dataplex-list-data-products-tool",
-			expectedParams: []string{"filter", "pageSize", "orderBy"},
-		},
-		{
-			name:           "get my-dataplex-get-data-product-tool",
-			toolName:       "my-dataplex-get-data-product-tool",
-			expectedParams: []string{"locationId", "dataProductId"},
-		},
-		{
-			name:           "get my-dataplex-list-data-assets-tool",
-			toolName:       "my-dataplex-list-data-assets-tool",
-			expectedParams: []string{"locationId", "dataProductId", "filter", "pageSize", "orderBy"},
-		},
-		{
-			name:           "get my-dataplex-get-data-asset-tool",
-			toolName:       "my-dataplex-get-data-asset-tool",
-			expectedParams: []string{"locationId", "dataProductId", "dataAssetId"},
-		},
-		{
-			name:           "get my-dataplex-create-data-product-tool",
-			toolName:       "my-dataplex-create-data-product-tool",
-			expectedParams: []string{"locationId", "dataProductId", "displayName", "description", "ownerEmails", "accessGroups"},
-		},
-		{
-			name:           "get my-dataplex-update-data-product-tool",
-			toolName:       "my-dataplex-update-data-product-tool",
-			expectedParams: []string{"locationId", "dataProductId", "description", "displayName", "ownerEmails", "accessGroups", "updateMask"},
 		},
 	}
 

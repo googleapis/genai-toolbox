@@ -69,9 +69,9 @@ func TestParseFromYamlPostgres(t *testing.T) {
 					Source:    "my-pg-instance",
 					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},

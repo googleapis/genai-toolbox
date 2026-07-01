@@ -4,8 +4,6 @@ type: docs
 weight: 1
 description: >
   A "dataplex-list-data-products" tool allows to list data products.
-aliases:
-  - /integrations/dataplex/tools/dataplex-list-data-products/
 ---
 
 ## About
@@ -46,11 +44,11 @@ applying IAM permissions and roles to an identity.
 
 The `dataplex-list-data-products` tool has the following optional parameters:
 
-| **field** | **type** | **required** | **description**                                                                                                                                                                         |
-| --------- | -------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| filter    | string   | false        | Filter string to list data products. Use `=` for exact matching and `:` for contains matching. String literals must be enclosed within double quotes. E.g. `display_name:"my-product"`. |
-| pageSize  | integer  | false        | Number of returned data products in the page. Defaults to `10`.                                                                                                                         |
-| orderBy   | string   | false        | Specifies the ordering of results.                                                                                                                                                      |
+| **field** | **type** | **required** | **description**                                                                                                                                                                                                                                                |
+| --------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filter    | string   | false        | Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within "". Matching across all fields at once is not yet supported. E.g. "display_name:\"my-product\"" |
+| pageSize  | integer  | false        | Number of returned data products in the page. Defaults to `10`.                                                                                                                                                                                                |
+| orderBy   | string   | false        | Specifies the ordering of results.                                                                                                                                                                                                                             |
 
 ## Example
 

@@ -148,15 +148,6 @@ func (opts *ToolboxOptions) GetCustomConfigFiles(ctx context.Context) ([]string,
 
 	// Load Custom Configurations
 	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (opts.Config != "" && len(opts.Configs) > 0) ||
-			(opts.Config != "" && opts.ConfigFolder != "") ||
-			(len(opts.Configs) > 0 && opts.ConfigFolder != "") {
-			errMsg := fmt.Errorf("--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously")
-			logger.ErrorContext(ctx, errMsg.Error())
-			return nil, isCustomConfigured, errMsg
-		}
-
 		if len(opts.Configs) > 0 {
 			// Use tools-files
 			logger.InfoContext(ctx, fmt.Sprintf("retrieving %d tool configuration files", len(opts.Configs)))

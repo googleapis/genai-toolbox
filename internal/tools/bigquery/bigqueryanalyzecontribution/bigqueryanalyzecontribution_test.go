@@ -130,7 +130,7 @@ func TestInvoke(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": src,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -336,7 +336,7 @@ func TestInvokeAllowedDatasetsValidation(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
