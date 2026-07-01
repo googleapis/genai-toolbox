@@ -66,7 +66,7 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	filter := parameters.NewStringParameter(
 		"filter",
 		"Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported.",
-		parameters.WithStringDefault(""),
+		parameters.WithStringRequired(false),
 	)
 	pageSize := parameters.NewIntParameter(
 		"pageSize",
@@ -76,7 +76,7 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	orderBy := parameters.NewStringParameter(
 		"orderBy",
 		"Optional. Specifies the ordering of results.",
-		parameters.WithStringDefault(""),
+		parameters.WithStringRequired(false),
 	)
 	params := parameters.Parameters{locationId, dataProductId, filter, pageSize, orderBy}
 
@@ -114,24 +114,35 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	paramsMap := params.AsMap()
 	locationId, ok := paramsMap["locationId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	if !ok || locationId == "" {
+		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 	dataProductId, ok := paramsMap["dataProductId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
+	if !ok || dataProductId == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
-	filter, ok := paramsMap["filter"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'filter' parameter: %v", paramsMap["filter"]), nil)
+
+	var filter string
+	if val, exists := paramsMap["filter"]; exists && val != nil {
+		var ok bool
+		filter, ok = val.(string)
+		if !ok {
+			return nil, util.NewAgentError("filter must be a string", nil)
+		}
 	}
+
 	pageSize, ok := paramsMap["pageSize"].(int)
 	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'pageSize' parameter: %v", paramsMap["pageSize"]), nil)
+		return nil, util.NewAgentError("pageSize must be an integer", nil)
 	}
-	orderBy, ok := paramsMap["orderBy"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'orderBy' parameter: %v", paramsMap["orderBy"]), nil)
+
+	var orderBy string
+	if val, exists := paramsMap["orderBy"]; exists && val != nil {
+		var ok bool
+		orderBy, ok = val.(string)
+		if !ok {
+			return nil, util.NewAgentError("orderBy must be a string", nil)
+		}
 	}
 
 	resp, err := source.ListDataAssets(ctx, locationId, dataProductId, filter, pageSize, orderBy)

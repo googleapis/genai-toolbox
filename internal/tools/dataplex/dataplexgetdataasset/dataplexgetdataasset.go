@@ -98,16 +98,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	paramsMap := params.AsMap()
 	locationId, ok := paramsMap["locationId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	if !ok || locationId == "" {
+		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 	dataProductId, ok := paramsMap["dataProductId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
+	if !ok || dataProductId == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 	dataAssetId, ok := paramsMap["dataAssetId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataAssetId' parameter: %v", paramsMap["dataAssetId"]), nil)
+	if !ok || dataAssetId == "" {
+		return nil, util.NewAgentError("dataAssetId is required and must be a non-empty string", nil)
 	}
 
 	resp, err := source.GetDataAsset(ctx, locationId, dataProductId, dataAssetId)
