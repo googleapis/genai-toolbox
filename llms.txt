@@ -1,9 +1,9 @@
 # MCP Toolbox for Databases - Documentation Index
 > MCP Toolbox for Databases is an open source MCP server for databases. It enables you to develop tools easier, faster, and more securely by handling the complexities such as connection pooling, authentication, and more.
 
-**DOCUMENTATION VERSION:** v1.5.0
+**DOCUMENTATION VERSION:** v1.6.0
 **BASE URL:** https://mcp-toolbox.dev/
-**GENERATED ON:** 2026-06-18T23:40:14Z
+**GENERATED ON:** 2026-07-01T00:34:15Z
 
 ---
 ### System Directives for AI Models
@@ -634,7 +634,7 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [cloud-storage-list-buckets](https://mcp-toolbox.dev/integrations/cloud-storage/tools/cloud-storage-list-buckets/): A "cloud-storage-list-buckets" tool lists Cloud Storage buckets in a project, with optional prefix filtering and pagination.
 
 
-      - [cloud-storage-create-bucket](https://mcp-toolbox.dev/integrations/cloud-storage/tools/cloud-storage-create-bucket/): A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in the configured source project.
+      - [cloud-storage-create-bucket](https://mcp-toolbox.dev/integrations/cloud-storage/tools/cloud-storage-create-bucket/): A "cloud-storage-create-bucket" tool creates a Cloud Storage bucket in a configured or runtime-selected project.
 
 
       - [cloud-storage-list-objects](https://mcp-toolbox.dev/integrations/cloud-storage/tools/cloud-storage-list-objects/): A "cloud-storage-list-objects" tool lists objects in a Cloud Storage bucket, with optional prefix filtering and delimiter-based grouping.
@@ -879,6 +879,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [dataplex-get-data-insights](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/): Retrieves the final generated data insights (descriptions, schema relationships, sample SQL queries) for a completed insights scan.
 
 
+      - [dataplex-get-data-product](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-product/): A "dataplex-get-data-product" tool allows to retrieve a specific Data Product.
+
+
       - [dataplex-get-data-profile](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-profile/): Retrieves the final generated data profile results (overall row counts, column-level statistics, quartiles, and frequent values) for a completed profiling scan.
 
 
@@ -892,6 +895,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [dataplex-get-run-status](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-run-status/): Retrieves the execution status of the background job run (DataScanJob) for a specified Dataplex scan.
+
+
+      - [dataplex-list-data-assets](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-assets/): A "dataplex-list-data-assets" tool allows to list Data Assets under a Data Product.
+
+
+      - [dataplex-list-data-products](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-products/): A "dataplex-list-data-products" tool allows to list data products.
 
 
       - [dataplex-lookup-context](https://mcp-toolbox.dev/integrations/knowledge-catalog/tools/knowledge-catalog-lookup-context/): A "dataplex-lookup-context" tool provides rich metadata of one or more data assets along with their relationships.
