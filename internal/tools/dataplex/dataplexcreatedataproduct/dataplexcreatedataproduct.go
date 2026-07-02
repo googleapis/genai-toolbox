@@ -68,13 +68,13 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
+	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
 	dataProductId := parameters.NewStringParameter(
 		"dataProductId",
 		"Optional. The unique ID of the Data Product to create. If not specified, the backend will auto-generate an ID.",
 		parameters.WithStringRequired(false),
 	)
-	displayName := parameters.NewStringParameter("displayName", "Required. The display name of the Data Product.")
+	displayName := parameters.NewStringParameter("displayName", "The display name of the Data Product.")
 	description := parameters.NewStringParameter(
 		"description",
 		"Optional. The description of the Data Product.",
@@ -82,7 +82,7 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	)
 	ownerEmails := parameters.NewArrayParameter(
 		"ownerEmails",
-		"Required. The list of owner emails for the Data Product.",
+		"The list of owner emails for the Data Product.",
 		parameters.NewStringParameter("email", "Owner email address"),
 	)
 	accessGroups := parameters.NewArrayParameter(

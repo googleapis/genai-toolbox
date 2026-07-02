@@ -49,3 +49,26 @@ func ValidateLocalPath(p string) (string, error) {
 	}
 	return clean, nil
 }
+
+func ResolveWithinDir(dir, rel string) (string, error) {
+	cleanDir, err := ValidateLocalPath(dir)
+	if err != nil {
+		return "", fmt.Errorf("directory %q is invalid: %w", dir, err)
+	}
+	if rel == "" {
+		return "", fmt.Errorf("relative path is empty")
+	}
+	if filepath.IsAbs(rel) {
+		return "", fmt.Errorf("path %q must be relative", rel)
+	}
+
+	cleanDest := filepath.Clean(filepath.Join(cleanDir, rel))
+	within, err := filepath.Rel(cleanDir, cleanDest)
+	if err != nil {
+		return "", fmt.Errorf("path %q cannot be resolved within %q: %w", rel, cleanDir, err)
+	}
+	if within == ".." || strings.HasPrefix(within, ".."+string(filepath.Separator)) || filepath.IsAbs(within) {
+		return "", fmt.Errorf("path %q escapes configured directory %q", rel, cleanDir)
+	}
+	return cleanDest, nil
+}
