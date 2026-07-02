@@ -99,7 +99,7 @@ You can explicitly select a protocol using the `protocol` option during client i
 
 ### Supported Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` enum definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/src/toolbox_core/protocol.py).
 
 | Constant | Description |
 | :--- | :--- |
@@ -130,6 +130,17 @@ from toolbox_core import ToolboxClient
 from toolbox_core.protocol import Protocol
 
 async with ToolboxClient("http://127.0.0.1:5000", protocol=Protocol.MCP_v20250326) as toolbox:
+    # Use client
+    pass
+```
+
+You can also provide a custom list of supported protocols to restrict negotiation to specific versions. The client will attempt to negotiate the first protocol in the list that the server supports:
+
+```py
+from toolbox_core import ToolboxClient
+from toolbox_core.protocol import Protocol
+
+async with ToolboxClient("http://127.0.0.1:5000", protocol=[Protocol.MCP_LATEST, Protocol.MCP_DRAFT]) as toolbox:
     # Use client
     pass
 ```

@@ -87,7 +87,8 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 
 ### Available Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` enum definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/src/toolbox_core/protocol.ts).
+
 
 - `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20251125`).
 - `Protocol.MCP_LATEST`: Alias for the latest stable MCP version (currently aliases to `MCP_v20251125`).
@@ -109,6 +110,19 @@ const URL = 'http://127.0.0.1:5000';
 
 // Initialize with a specific protocol version
 const client = new ToolboxClient(URL, null, null, Protocol.MCP_v20241105);
+
+const tools = await client.loadToolset();
+```
+
+You can also provide a custom array of supported protocols to restrict negotiation to specific versions. The client will attempt to negotiate the first protocol in the list that the server supports:
+
+```javascript
+import { ToolboxClient, Protocol } from '@toolbox-sdk/core';
+
+const URL = 'http://127.0.0.1:5000';
+
+// Initialize with a custom array of protocols
+const client = new ToolboxClient(URL, null, null, [Protocol.MCP_LATEST, Protocol.MCP_DRAFT]);
 
 const tools = await client.loadToolset();
 ```
