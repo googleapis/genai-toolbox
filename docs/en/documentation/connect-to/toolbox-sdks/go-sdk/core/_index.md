@@ -100,7 +100,7 @@ You can explicitly select a protocol using the `core.WithProtocol` option during
 
 ### Supported Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` type definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/protocol.go).
 
 | Constant | Description |
 | :--- | :--- |
@@ -133,6 +133,17 @@ import "github.com/googleapis/mcp-toolbox-sdk-go/core"
 client, err := core.NewToolboxClient(
     "http://localhost:5000",
     core.WithProtocol(core.MCPv20250326),
+)
+```
+
+You can also provide a custom array of supported protocols to restrict negotiation to specific versions. The client will attempt to negotiate the first protocol in the list that the server supports:
+
+```go
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+client, err := core.NewToolboxClient(
+    "http://localhost:5000",
+    core.WithSupportedProtocols([]core.Protocol{core.MCPLatest, core.MCPDraft}),
 )
 ```
 
