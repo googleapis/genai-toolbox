@@ -60,9 +60,9 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
-	dataAssetId := parameters.NewStringParameter("dataAssetId", "Required. The unique ID of the Data Asset.")
+	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "The unique ID of the parent Data Product.")
+	dataAssetId := parameters.NewStringParameter("dataAssetId", "The unique ID of the Data Asset.")
 	params := parameters.Parameters{locationId, dataProductId, dataAssetId}
 
 	t := Tool{
