@@ -62,6 +62,13 @@ func (gc GroupConfig) Initialize(serverVersion string, toolsMap map[string]tools
 	return Group{GroupConfig: gc, toolset: toolset, promptset: promptset}, nil
 }
 
+// NewGroup builds a Group from already-initialized toolset and promptset views.
+// It is used when the derived views are constructed directly (e.g. in tests)
+// rather than through GroupConfig.Initialize.
+func NewGroup(config GroupConfig, toolset tools.Toolset, promptset prompts.Promptset) Group {
+	return Group{GroupConfig: config, toolset: toolset, promptset: promptset}
+}
+
 // ToToolset returns the derived toolset view, keyed by the group's name, so that
 // existing toolset call sites keep working unchanged.
 func (g Group) ToToolset() tools.Toolset {

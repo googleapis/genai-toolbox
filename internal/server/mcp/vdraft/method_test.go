@@ -402,8 +402,8 @@ func TestServerDiscoverHandler(t *testing.T) {
 func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, toolsets, promptsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
 		name        string
@@ -545,8 +545,8 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, toolsets, promptsMap, _, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
 		name        string
@@ -707,8 +707,8 @@ func TestPromptsListHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, _, promptsMap, promptsets, groups := testutils.SetUpResources(t, nil, mockPrompts)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -791,8 +791,8 @@ func TestPromptsGetHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, _, promptsMap, promptsets, groups := testutils.SetUpResources(t, nil, mockPrompts)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest

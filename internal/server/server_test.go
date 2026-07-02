@@ -41,6 +41,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -268,7 +269,11 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	newGroups := map[string]group.Group{
+		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset"}, newToolsets["example-toolset"], prompts.Promptset{}),
+		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset"}, tools.Toolset{}, newPromptsets["example-promptset"]),
+	}
+	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -1380,7 +1385,7 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 		},
 	}
 
-	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
 	if err != nil {
 		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
 	}
@@ -1390,9 +1395,9 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 	if _, ok := toolsMap["my-tool"]; !ok {
 		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
 	}
-	// The implicit default ("") toolset should always be present.
-	if _, ok := toolsetsMap[""]; !ok {
-		t.Error("expected default toolset to be present")
+	// The implicit default ("") group should always be present.
+	if _, ok := groupsMap[""]; !ok {
+		t.Error("expected default group to be present")
 	}
 }
 

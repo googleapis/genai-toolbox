@@ -59,8 +59,6 @@ type ServerConfig struct {
 	ToolsetConfigs ToolsetConfigs
 	// PromptConfigs defines what prompts are available
 	PromptConfigs PromptConfigs
-	// PromptsetConfigs defines what prompts are available
-	PromptsetConfigs PromptsetConfigs
 	// IgnoreUnknownTools logs warnings and skips unknown/unsupported tool types instead of failing to start.
 	IgnoreUnknownTools bool
 	// LoggingFormat defines whether structured loggings are used.
@@ -161,7 +159,6 @@ type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
 type ToolConfigs map[string]tools.ToolConfig
 type ToolsetConfigs map[string]tools.ToolsetConfig
 type PromptConfigs map[string]prompts.PromptConfig
-type PromptsetConfigs map[string]prompts.PromptsetConfig
 
 func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
 	// prepare configs map

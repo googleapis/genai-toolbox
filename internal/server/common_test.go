@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
@@ -37,6 +38,26 @@ var (
 	_ tools.Tool     = testutils.MockTool{}
 	_ prompts.Prompt = testutils.MockPrompt{}
 )
+
+// groupsFromViews builds the authoritative groups map from legacy toolset and
+// promptset views, keyed by the union of their names, so the derived views match.
+func groupsFromViews(toolsets map[string]tools.Toolset, promptsets map[string]prompts.Promptset) map[string]group.Group {
+	names := make(map[string]struct{})
+	for name := range toolsets {
+		names[name] = struct{}{}
+	}
+	for name := range promptsets {
+		names[name] = struct{}{}
+	}
+	groups := make(map[string]group.Group)
+	for name := range names {
+		ts := toolsets[name]
+		ps := promptsets[name]
+		gc := group.GroupConfig{Name: name, ToolNames: ts.ToolNames, PromptNames: ps.PromptNames}
+		groups[name] = group.NewGroup(gc, ts, ps)
+	}
+	return groups
+}
 
 // setUpServer create a new server with tools, toolsets, prompts, and promptsets.
 func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset, opts ...func(*Server)) (chi.Router, func()) {
@@ -59,7 +80,8 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
+	groups := groupsFromViews(toolsets, promptsets)
+	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, prompts, groups)
 
 	server := Server{
 		version:         testutils.MockVersionString,

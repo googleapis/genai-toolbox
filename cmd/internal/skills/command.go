@@ -229,14 +229,14 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 }
 
 func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]map[string]tools.Tool, error) {
-	// Initialize tools and toolsets only; skills generation does not need live
+	// Initialize tools and groups only; skills generation does not need live
 	// sources, auth services, or embedding models.
-	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
+	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, opts.Cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize resources: %w", err)
 	}
 
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsetsMap, nil, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, nil, groupsMap)
 
 	skillsToTools := make(map[string]map[string]tools.Tool)
 
@@ -261,19 +261,19 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		return skillsToTools, nil
 	}
 
-	if len(toolsetsMap) <= 1 {
-		// Default to all tools if no toolset found
+	if len(groupsMap) <= 1 {
+		// Default to all tools if no named group found
 		skillsToTools[c.name] = toolsMap
 		return skillsToTools, nil
 	}
 
-	// One skill per toolset
-	for tsName, ts := range toolsetsMap {
-		if tsName == "" {
+	// One skill per group
+	for gName, g := range groupsMap {
+		if gName == "" {
 			continue
 		}
-		skillName := fmt.Sprintf("%s-%s", c.name, tsName)
-		skillsToTools[skillName] = getToolsFromToolset(ts)
+		skillName := fmt.Sprintf("%s-%s", c.name, gName)
+		skillsToTools[skillName] = getToolsFromToolset(g.ToToolset())
 	}
 
 	return skillsToTools, nil

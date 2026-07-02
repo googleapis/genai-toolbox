@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -56,7 +57,11 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	newGroups := map[string]group.Group{
+		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset"}, newToolsets["example-toolset"], prompts.Promptset{}),
+		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset"}, tools.Toolset{}, newPromptsets["example-promptset"]),
+	}
+	resMgr := resources.NewResourceManager(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 
 	gotSource, _ := resMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {
@@ -97,7 +102,7 @@ func TestUpdateServer(t *testing.T) {
 		},
 	}
 
-	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	resMgr.SetResources(updateSource, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	gotSource, _ = resMgr.GetSource("example-source2")
 	if diff := cmp.Diff(gotSource, updateSource["example-source2"]); diff != "" {
 		t.Errorf("error updating server, sources (-want +got):\n%s", diff)
