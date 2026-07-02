@@ -14,7 +14,8 @@
 
 name: "CF: Deploy Docs Preview"
 
-on:
+# zizmor flags workflow_run input, but this workflow safely sanitizes the untrusted PR number artifact before use.
+on: # zizmor: ignore[dangerous-triggers]
   workflow_run:
     workflows: ["CF: Build Docs Preview"]
     types:
@@ -83,10 +84,13 @@ jobs:
 
       - name: Post Preview URL Comment
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          PR_NUMBER: ${{ steps.get_pr.outputs.pr_number }}
+          DEPLOY_URL: ${{ steps.cf_deploy.outputs.pages-deployment-alias-url }}
         with:
           script: |
-            const prNumber = parseInt('${{ steps.get_pr.outputs.pr_number }}', 10);
-            const deployUrl = '${{ steps.cf_deploy.outputs.pages-deployment-alias-url }}';
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
+            const deployUrl = process.env.DEPLOY_URL;
             const marker = '<!-- cf-preview-comment-marker -->';
 
             // Fetch all comments on the PR

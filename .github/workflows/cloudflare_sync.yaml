@@ -21,7 +21,7 @@ concurrency:
   group: cloudflare-sync
   cancel-in-progress: true
 
-on:
+on: # zizmor: ignore[dangerous-triggers]
   workflow_dispatch:
   workflow_run:
     workflows: ["CF: Deploy Dev Docs", "CF: Deploy Versioned Docs", "CF: Deploy Previous Version Docs"]
@@ -30,7 +30,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:

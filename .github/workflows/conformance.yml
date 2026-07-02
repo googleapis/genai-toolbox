@@ -13,7 +13,8 @@
 # limitations under the License.
 
 name: conformance
-on:
+# zizmor flags pull_request_target, but it is safely gated by the 'tests: run' label manually applied by maintainers.
+on: # zizmor: ignore[dangerous-triggers]
   pull_request:
   pull_request_target:
     types: [labeled]
