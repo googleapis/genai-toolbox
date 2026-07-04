@@ -125,7 +125,7 @@ client, err := core.NewToolboxClient(
 )
 ```
 
-If you want to pin the MCP Version 2025-03-26:
+If you want to set the preferred starting protocol to 2025-03-26 (allowing fallback negotiation if the server doesn't support it):
 
 ```go
 import "github.com/googleapis/mcp-toolbox-sdk-go/core"
@@ -136,16 +136,23 @@ client, err := core.NewToolboxClient(
 )
 ```
 
-You can also provide a custom array of supported protocols to restrict negotiation to specific versions. The client will attempt to negotiate the first protocol in the list that the server supports:
+To restrict negotiation to a specific subset of versions, you can pass an array of supported protocols using `WithSupportedProtocols`:
 
 ```go
 import "github.com/googleapis/mcp-toolbox-sdk-go/core"
 
 client, err := core.NewToolboxClient(
     "http://localhost:5000",
-    core.WithSupportedProtocols([]core.Protocol{core.MCPLatest, core.MCPDraft}),
+    core.WithSupportedProtocols([]core.Protocol{
+        core.MCPLatest,
+        core.MCPv20250618,
+    }),
 )
 ```
+
+{{< notice tip >}}
+If you want to strictly pin the version and disable protocol fallback, you must pass an array containing just one value using `WithSupportedProtocols`: `core.WithSupportedProtocols([]core.Protocol{core.MCPDraft})`
+{{< /notice >}}
 
 ## Loading Tools
 
