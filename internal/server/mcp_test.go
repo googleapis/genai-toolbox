@@ -45,7 +45,7 @@ const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
 const protocolVersion20251125 = "2025-11-25"
-const protocolVersionDraft = "DRAFT-2026-v1"
+const protocolVersionDraft = "2026-07-28"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -629,7 +629,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"jsonrpc": "2.0",
 						"id":      "server-discover",
 						"result": map[string]any{
-							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "2026-07-28"},
 							"capabilities": map[string]any{
 								"tools":   map[string]any{"listChanged": false},
 								"prompts": map[string]any{"listChanged": false},
@@ -1193,7 +1193,7 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 		"error": map[string]interface{}{
 			"code": float64(-32004),
 			"data": map[string]interface{}{
-				"requested": "DRAFT-2026-v1",
+				"requested": "2026-07-28",
 				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
 			},
 			"message": "unsupported protocol version",

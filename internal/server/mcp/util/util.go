@@ -19,7 +19,7 @@ const (
 	VERSION_20250326 = "2025-03-26"
 	VERSION_20250618 = "2025-06-18"
 	VERSION_20251125 = "2025-11-25"
-	VERSION_DRAFT    = "DRAFT-2026-v1"
+	VERSION_DRAFT    = "2026-07-28"
 )
 
 // LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.
