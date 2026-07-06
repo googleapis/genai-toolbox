@@ -106,6 +106,21 @@ func TestFailParseFromYaml(t *testing.T) {
 			`,
 			err: "error unmarshaling source: unable to parse source \"my-snowflake-instance\" as \"snowflake\": Key: 'Config.Schema' Error:Field validation for 'Schema' failed on the 'required' tag",
 		},
+		{
+			desc: "unsupported timeout field",
+			in: `
+				kind: source
+				name: my-snowflake-instance
+				type: snowflake
+				account: my-account
+				user: my_user
+				password: my_pass
+				database: my_db
+				schema: my_schema
+				timeout: 60
+			`,
+			err: "error unmarshaling source: unable to parse source \"my-snowflake-instance\" as \"snowflake\": [6:1] unknown field \"timeout\"\n   3 | name: my-snowflake-instance\n   4 | password: my_pass\n   5 | schema: my_schema\n>  6 | timeout: 60\n       ^\n   7 | type: snowflake\n   8 | user: my_user",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
