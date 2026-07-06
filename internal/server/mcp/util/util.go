@@ -19,11 +19,16 @@ const (
 	VERSION_20250326 = "2025-03-26"
 	VERSION_20250618 = "2025-06-18"
 	VERSION_20251125 = "2025-11-25"
+	VERSION_DRAFT    = "DRAFT-2026-v1"
 )
 
 // LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.
 // Update the version used in InitializeResponse when this value is updated.
 const LATEST_PROTOCOL_VERSION = VERSION_20251125
+
+// LATEST_PROTOCOL_VERSION_NONSTABLE is the latest version of the MCP protocol
+// supported that includes non-stable version
+const LATEST_PROTOCOL_VERSION_NONSTABLE = VERSION_DRAFT
 
 // SUPPORTED_PROTOCOL_VERSIONS is the MCP protocol versions that are supported.
 var SUPPORTED_PROTOCOL_VERSIONS = []string{
@@ -31,4 +36,22 @@ var SUPPORTED_PROTOCOL_VERSIONS = []string{
 	VERSION_20250326,
 	VERSION_20250618,
 	VERSION_20251125,
+}
+
+var SUPPORTED_PROTOCOL_VERSIONS_NONSTABLE = []string{
+	VERSION_DRAFT,
+}
+
+func GetSupportedVersions(enableDraft bool) []string {
+	if enableDraft {
+		return append(SUPPORTED_PROTOCOL_VERSIONS, SUPPORTED_PROTOCOL_VERSIONS_NONSTABLE...)
+	}
+	return SUPPORTED_PROTOCOL_VERSIONS
+}
+
+func GetLatestSupportedVersion(enableDraft bool) string {
+	if enableDraft {
+		return LATEST_PROTOCOL_VERSION_NONSTABLE
+	}
+	return LATEST_PROTOCOL_VERSION
 }

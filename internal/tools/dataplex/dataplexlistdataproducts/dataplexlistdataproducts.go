@@ -63,7 +63,7 @@ func (cfg Config) ToolConfigType() string {
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	filter := parameters.NewStringParameter(
 		"filter",
-		"Optional. Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching accross all fields at once is not yet supported. E.g. \"display_name:\\\"my-product\\\"\"",
+		"Optional. Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported. E.g. \"display_name:\\\"my-product\\\"\"",
 		parameters.WithStringDefault(""),
 	)
 	pageSize := parameters.NewIntParameter(
@@ -108,6 +108,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
+
 	paramsMap := params.AsMap()
 	filter, ok := paramsMap["filter"].(string)
 	if !ok {
