@@ -7,10 +7,10 @@
 // BANNER CONFIGURATION
 // ==========================================================================
 const BANNER_CONFIG = {
-  title: "Announcement:",
-  message: "Put your general announcement message here!",
-  linkText: "Learn more",
-  linkUrl: "https://google.com"
+  title: "Google Cloud Storage (GCS) is Now Available in MCP Toolbox!",
+  message: "GCS is now natively supported in MCP Toolbox, providing prebuilt toolsets to manage storage infrastructure and unstructured data. The integration also enables custom secure tooling, allowing developers to enforce hardcoded allow-lists and eliminate data leak risks.",
+  linkText: "Read the launch blog!",
+  linkUrl: "https://medium.com/@mcp_toolbox/turning-data-into-context-google-cloud-storage-gcs-is-now-available-in-mcp-toolbox-5880f368846a"
 };
 
 document.addEventListener('DOMContentLoaded', function() {
