@@ -8,7 +8,7 @@
 // ==========================================================================
 const BANNER_CONFIG = {
   title: "Google Cloud Storage (GCS) is Now Available in MCP Toolbox!",
-  message: "GCS is now natively supported in MCP Toolbox, providing prebuilt toolsets to manage storage infrastructure and unstructured data. The integration also enables custom secure tooling, allowing developers to enforce hardcoded allow-lists and eliminate data leak risks.",
+  message: "GCS is now natively supported in MCP Toolbox, providing prebuilt toolsets and custom secure tooling.",
   linkText: "Read the launch blog!",
   linkUrl: "https://medium.com/@mcp_toolbox/turning-data-into-context-google-cloud-storage-gcs-is-now-available-in-mcp-toolbox-5880f368846a"
 };
