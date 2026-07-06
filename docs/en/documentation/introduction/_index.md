@@ -84,7 +84,7 @@ For a full list of available tools and their capabilities across all supported d
 
 #### Custom Tools
 
-You can run Toolbox directly with a [configuration file](../configure.md):
+You can run Toolbox directly with a [configuration file](../configuration/_index.md):
 
 ```sh
 npx @toolbox-sdk/server --config tools.yaml
