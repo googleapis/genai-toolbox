@@ -104,7 +104,6 @@ We currently support different versions of the MCP protocol.
 | `core.MCP` | **(Default)** Alias for the default MCP version (currently `v2025-11-25`). |
 | `core.MCPLatest` | Alias for the latest stable MCP version (currently `v2025-11-25`). |
 | `core.MCPDraft` | Alias for the upcoming draft MCP version (currently `v2026-draft`). |
-| `core.MCPv2026Draft` | MCP Protocol draft version v2026-draft. |
 | `core.MCPv20251125` | MCP Protocol version 2025-11-25. |
 | `core.MCPv20250618` | MCP Protocol version 2025-06-18. |
 | `core.MCPv20250326` | MCP Protocol version 2025-03-26. |
