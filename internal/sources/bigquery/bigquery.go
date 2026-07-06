@@ -689,6 +689,75 @@ func NormalizeValue(v any) any {
 	return v
 }
 
+// reloadingTokenSource wraps the Application Default Credentials token source so
+// that, when the cached source can no longer mint a token -- for example after
+// a user re-runs `gcloud auth application-default login`, which writes a new
+// refresh token and revokes the old one -- it reloads ADC from disk and
+// recovers, instead of failing until the process is restarted. It is safe for
+// concurrent use.
+type reloadingTokenSource struct {
+	mu     sync.Mutex
+	cur    oauth2.TokenSource
+	reload func() (oauth2.TokenSource, error)
+}
+
+// Token returns a token from the current source. If that source can no longer
+// mint one, it reloads ADC from disk once and retries. Ordinary access-token
+// expiry is handled transparently by the underlying source's own refresh, so
+// reaching the reload path typically means the on-disk credentials were rotated
+// (e.g. by `gcloud auth application-default login`); a transient mint error also
+// lands here and simply resolves on the retry.
+func (r *reloadingTokenSource) Token() (*oauth2.Token, error) {
+	r.mu.Lock()
+	cur := r.cur
+	r.mu.Unlock()
+	if cur != nil {
+		if tok, err := cur.Token(); err == nil {
+			return tok, nil
+		}
+	}
+
+	// Serialize the reload under the lock so concurrent callers that all saw the
+	// same failing source don't each hit disk (a thundering herd). A caller that
+	// finds the source already reloaded -- r.cur changed while it waited for the
+	// lock -- reuses it instead of reloading again.
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.cur != cur {
+		if tok, err := r.cur.Token(); err == nil {
+			return tok, nil
+		}
+	}
+	next, err := r.reload()
+	if err != nil {
+		return nil, fmt.Errorf("failed to reload default credentials: %w", err)
+	}
+	r.cur = next
+	return next.Token()
+}
+
+// newReloadingDefaultTokenSource returns a token source that serves tokens from
+// `initial` and, on a mint failure, reloads Application Default Credentials from
+// disk. It is wrapped in oauth2.ReuseTokenSource so a valid access token is
+// cached and the reload path runs only on an actual failure, not on every
+// request.
+func newReloadingDefaultTokenSource(scopes []string, initial oauth2.TokenSource) oauth2.TokenSource {
+	r := &reloadingTokenSource{
+		cur: initial,
+		reload: func() (oauth2.TokenSource, error) {
+			// A token source outlives any single request, so reload with a
+			// background context rather than capturing a request/initialization
+			// context that may later be cancelled.
+			cred, err := google.FindDefaultCredentials(context.Background(), scopes...)
+			if err != nil {
+				return nil, err
+			}
+			return cred.TokenSource, nil
+		},
+	}
+	return oauth2.ReuseTokenSource(nil, r)
+}
+
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -735,11 +804,21 @@ func initBigQueryConnection(
 			option.WithTokenSource(cloudPlatformTokenSource),
 		}
 	} else {
-		// Use default credentials
+		// Use default credentials (Application Default Credentials). Wrap the
+		// credential's token source so that if it can no longer mint a token --
+		// for example after a user re-runs `gcloud auth application-default
+		// login`, which writes a new refresh token and revokes the old one --
+		// it reloads ADC from disk and recovers, instead of failing on every
+		// call until the process is restarted.
 		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
 		}
+		// Replace only the token source with a self-refreshing one and keep the
+		// rest of the credential via WithCredentials, so ADC metadata such as
+		// the quota project (X-Goog-User-Project, read from cred.JSON) is still
+		// applied to requests.
+		cred.TokenSource = newReloadingDefaultTokenSource(credScopes, cred.TokenSource)
 		tokenSource = cred.TokenSource
 		opts = []option.ClientOption{
 			option.WithUserAgent(userAgent),
@@ -881,11 +960,15 @@ func initDataplexConnection(
 				option.WithTokenSource(ts),
 			}
 		} else {
-			// Use default credentials
+			// Use default credentials. Wrap the token source so a mid-session
+			// `gcloud auth application-default login` is recovered by reloading
+			// ADC from disk (see reloadingTokenSource), and keep WithCredentials
+			// so ADC metadata such as the quota project is preserved.
 			cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 			}
+			cred.TokenSource = newReloadingDefaultTokenSource(credScopes, cred.TokenSource)
 			opts = []option.ClientOption{
 				option.WithUserAgent(userAgent),
 				option.WithCredentials(cred),
