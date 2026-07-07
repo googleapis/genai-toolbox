@@ -117,6 +117,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 var _ sources.Source = &Source{}
 
+// limitClausePattern detects an existing LIMIT clause regardless of surrounding whitespace.
+var limitClausePattern = regexp.MustCompile(`(?i)\bLIMIT\b`)
+
 type Source struct {
 	Config
 	Pool *pgxpool.Pool
@@ -307,9 +310,8 @@ func (s *Source) ApplyQueryLimits(sql string) (string, error) {
 
 	// Apply row limit only to SELECT queries
 	if sqlType == SQLTypeSelect && s.MaxRowLimit > 0 {
-		// Check if query already has LIMIT clause
-		normalized := strings.ToUpper(sql)
-		if !strings.Contains(normalized, " LIMIT ") {
+		// Check if query already has LIMIT clause (any whitespace boundary)
+		if !limitClausePattern.MatchString(sql) {
 			// Add LIMIT clause - trim trailing whitespace and semicolon
 			sql = strings.TrimSpace(sql)
 			sql = strings.TrimSuffix(sql, ";")

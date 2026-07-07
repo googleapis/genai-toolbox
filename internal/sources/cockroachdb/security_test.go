@@ -240,6 +240,27 @@ func TestApplyQueryLimits(t *testing.T) {
 			shouldAddLimit: true,
 		},
 		{
+			name:           "SELECT with multiline existing LIMIT",
+			sql:            "SELECT *\nFROM users\nLIMIT 50",
+			maxRowLimit:    100,
+			expectedSQL:    "SELECT *\nFROM users\nLIMIT 50",
+			shouldAddLimit: false,
+		},
+		{
+			name:           "SELECT with tab-separated LIMIT",
+			sql:            "SELECT * FROM users\tLIMIT 25",
+			maxRowLimit:    100,
+			expectedSQL:    "SELECT * FROM users\tLIMIT 25",
+			shouldAddLimit: false,
+		},
+		{
+			name:           "SELECT with lowercase multiline limit",
+			sql:            "select *\nfrom users\nlimit 10",
+			maxRowLimit:    100,
+			expectedSQL:    "select *\nfrom users\nlimit 10",
+			shouldAddLimit: false,
+		},
+		{
 			name:           "INSERT should not have LIMIT added",
 			sql:            "INSERT INTO users (name) VALUES ('alice')",
 			maxRowLimit:    100,
