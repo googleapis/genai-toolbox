@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	redissrc "github.com/googleapis/mcp-toolbox/internal/sources/redis"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
@@ -86,6 +87,10 @@ type Tool struct {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Cfg
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Cfg.Parameters, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForRedis)
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {

@@ -16,6 +16,8 @@ package embeddingmodels
 
 import (
 	"context"
+	"encoding/binary"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -56,4 +58,14 @@ func FormatVectorForPgvector(vectorFloats []float32) any {
 	return b.String()
 }
 
+// FormatVectorForRedis converts a slice of float32s into a little-endian binary string representation.
+func FormatVectorForRedis(vectorFloats []float32) any {
+	buf := make([]byte, len(vectorFloats)*4)
+	for i, f := range vectorFloats {
+		binary.LittleEndian.PutUint32(buf[i*4:], math.Float32bits(f))
+	}
+	return string(buf)
+}
+
 var _ VectorFormatter = FormatVectorForPgvector
+var _ VectorFormatter = FormatVectorForRedis

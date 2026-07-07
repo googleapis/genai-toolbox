@@ -63,3 +63,53 @@ parameters:
     type: array
     description: The user names to be set.  
 ```
+
+### Vector Search
+
+Redis supports vector similarity search (using RediSearch). When using an `embeddingModel` with a `redis` tool, the tool automatically converts text parameters into the little-endian binary vector format required by Redis.
+
+#### Vector Ingestion Example
+
+This tool stores a text content and its vector representation as a binary string in a Redis hash.
+
+```yaml
+kind: tool
+name: insert_doc_redis
+type: redis
+source: my-redis-source
+commands:
+  - ["HSET", "doc:$id", "content", "$content", "embedding", "$text_to_embed"]
+description: |
+  Index new documents for semantic search in Redis.
+parameters:
+  - name: id
+    type: string
+    description: The unique ID of the document.
+  - name: content
+    type: string
+    description: The text content to store.
+  - name: text_to_embed
+    type: string
+    valueFromParam: content
+    embeddedBy: gemini-model
+```
+
+#### Vector Search Example
+
+This tool performs a semantic search using `FT.SEARCH` with KNN vector similarity. The search query string provided by the Agent is converted into a binary vector before the search command is executed.
+
+```yaml
+kind: tool
+name: search_docs_redis
+type: redis
+source: my-redis-source
+commands:
+  - ["FT.SEARCH", "idx:docs", "(*)=>[KNN 5 @embedding $query]", "PARAMS", "2", "query", "$query", "DIALECT", "2"]
+description: |
+  Search for documents in Redis using natural language.
+parameters:
+  - name: query
+    type: string
+    description: The search query.
+    embeddedBy: gemini-model
+```
