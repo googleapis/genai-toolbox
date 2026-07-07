@@ -116,11 +116,14 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"vector_insert": Config{
-					Name:        "vector_insert",
-					Type:        "clickhouse-sql",
-					Source:      "my-instance",
-					Description: "Stores content and its vector embedding.",
-					Statement:   "INSERT INTO docs (content, embedding) VALUES (?, ?)",
+					ConfigBase: tools.ConfigBase{
+						Name:         "vector_insert",
+						Description:  "Stores content and its vector embedding.",
+						AuthRequired: []string{},
+					},
+					Type:      "clickhouse-sql",
+					Source:    "my-instance",
+					Statement: "INSERT INTO docs (content, embedding) VALUES (?, ?)",
 					Parameters: parameters.Parameters{
 						parameters.NewStringParameter("content", "The text content to store."),
 						&parameters.StringParameter{
@@ -133,7 +136,6 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 							},
 						},
 					},
-					AuthRequired: []string{},
 				},
 			},
 		},
