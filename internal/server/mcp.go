@@ -652,9 +652,12 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			}
 		case jsonrpc.METHOD_NOT_FOUND:
 			render.Status(r, http.StatusNotFound)
-		case jsonrpc.HEADER_MISMATCH, jsonrpc.UNSUPPORTED_PROTOCOL_VERSION, jsonrpc.INVALID_PARAMS:
+		case jsonrpc.HEADER_MISMATCH, jsonrpc.UNSUPPORTED_PROTOCOL_VERSION:
 			render.Status(r, http.StatusBadRequest)
-
+		case jsonrpc.INVALID_PARAMS:
+			if strings.Contains(rpcResponse.Error.Message, "_meta error") {
+				render.Status(r, http.StatusBadRequest)
+			}
 		}
 	}
 
