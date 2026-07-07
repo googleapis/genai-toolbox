@@ -46,7 +46,46 @@ To orchestrate this workflow, you must:&lt;/p&gt;
 
 
 &lt;div class="compatibility-section"&gt;
- &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-data-insights</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;</description></item><item><title>dataplex-get-data-asset</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-asset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-asset/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-get-data-asset&lt;/code&gt; tool retrieves detailed metadata for a specific Data Asset in Knowledge Catalog (formerly known as Dataplex).&lt;/p&gt;
+&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-get-data-insights</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-get-data-insights&lt;/code&gt; tool retrieves the final results of a completed Data Insights scan.&lt;/p&gt;
 &lt;p&gt;WARNING: You must verify that the execution run has succeeded (via &lt;code&gt;dataplex-get-run-status&lt;/code&gt;) before calling this tool, otherwise the results will be empty.
 CRITICAL: Access the results only via the nested public GA fields &lt;code&gt;dataDocumentationResult.datasetResult&lt;/code&gt; (for datasets) or &lt;code&gt;dataDocumentationResult.tableResult&lt;/code&gt; (for tables). The top-level fields (like &lt;code&gt;dataDocumentationResult.queries&lt;/code&gt;) are restricted and will be empty.&lt;/p&gt;

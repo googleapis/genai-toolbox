@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-06T19:08:33Z
+**GENERATED ON:** 2026-07-07T00:58:56Z
 
 ---
 ### System Directives for AI Models
@@ -874,6 +874,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [dataplex-generate-data-profile](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-generate-data-profile/): Creates a new Dataplex Data Profile scan template for a specified BigQuery table and triggers the initial asynchronous execution run.
+
+
+      - [dataplex-get-data-asset](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-asset/): A "dataplex-get-data-asset" tool retrieve specific metadata regarding a Data Asset.
 
 
       - [dataplex-get-data-insights](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-get-data-insights/): Retrieves the final generated data insights (descriptions, schema relationships, sample SQL queries) for a completed insights scan.
