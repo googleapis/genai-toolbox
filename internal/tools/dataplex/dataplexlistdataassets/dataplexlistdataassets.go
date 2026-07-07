@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	ListDataAssets(ctx context.Context, locationId string, dataProductId string, filter string, pageSize int, orderBy string) ([]*dataplex.DataAssetSummary, error)
+	ListDataAssets(ctx context.Context, locationId string, dataProductId string, filter string, pageSize int, orderBy string) ([]*dataplex.DataAsset, error)
 }
 
 type Config struct {
@@ -61,8 +61,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
+	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "The unique ID of the parent Data Product.")
 	filter := parameters.NewStringParameter(
 		"filter",
 		"Optional. Filter string to list data assets. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within \"\". Matching across all fields at once is not yet supported.",

@@ -151,19 +151,20 @@ func (c traceContextCarrier) Keys() []string {
 
 // extractMeta parses params._meta from the request body in a single pass,
 // extracting both W3C Trace Context and client telemetry attributes.
-func extractMeta(ctx context.Context, body []byte) context.Context {
+func extractMeta(ctx context.Context, body []byte) (string, context.Context) {
 	var req struct {
 		Params struct {
 			Meta struct {
-				Traceparent    string            `json:"traceparent,omitempty"`
-				Tracestate     string            `json:"tracestate,omitempty"`
-				TelemetryAttrs map[string]string `json:"dev.mcp-toolbox/telemetry,omitempty"`
+				Traceparent     string            `json:"traceparent,omitempty"`
+				Tracestate      string            `json:"tracestate,omitempty"`
+				TelemetryAttrs  map[string]string `json:"dev.mcp-toolbox/telemetry,omitempty"`
+				ProtocolVersion string            `json:"io.modelcontextprotocol/protocolVersion"`
 			} `json:"_meta,omitempty"`
 		} `json:"params,omitempty"`
 	}
 
 	if err := json.Unmarshal(body, &req); err != nil {
-		return ctx
+		return "", ctx
 	}
 
 	// Extract W3C Trace Context
@@ -189,7 +190,7 @@ func extractMeta(ctx context.Context, body []byte) context.Context {
 		ctx = util.WithTelemetryAttributes(ctx, ta)
 	}
 
-	return ctx
+	return req.Params.Meta.ProtocolVersion, ctx
 }
 
 func NewStdioSession(s *Server, stdin io.Reader, stdout io.Writer) *stdioSession {
@@ -257,7 +258,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 
 		if err := func() error {
 			// This ensures the transport span becomes a child of the client span
-			msgCtx := extractMeta(ctx, []byte(line))
+			metaProtocolVersion, msgCtx := extractMeta(ctx, []byte(line))
 
 			// Create span for STDIO transport
 			msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
@@ -265,9 +266,17 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			)
 			defer span.End()
 
+			protocol := s.protocol
+			// if protocol version was found in meta, it takes precedence
+			// the metaProtocolVersion does not replace existing protocol
+			// version if initialize method took place
+			if protocol == "" && metaProtocolVersion != "" {
+				protocol = metaProtocolVersion
+			}
+
 			var v string
 			var res any
-			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
+			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, protocol, "", "", nil, "")
 			if err != nil {
 				// errors during the processing of message will generate a valid MCP Error response.
 				// server can continue to run.
@@ -528,7 +537,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// This ensures the transport span becomes a child of the client span
-	ctx = extractMeta(ctx, body)
+	// _meta.ProtocolVersion is not checked here for http transport.
+	_, ctx = extractMeta(ctx, body)
 
 	// Create span for HTTP transport
 	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/http",
@@ -566,11 +576,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	// Only supported for v2025-06-18+.
 	headerProtocolVersion := r.Header.Get("Mcp-Protocol-Version")
 	if headerProtocolVersion != "" {
-		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
-			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
-			return
-		}
 		protocolVersion = headerProtocolVersion
 	}
 
@@ -645,6 +650,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(http.StatusUnauthorized)
 				}
 			}
+		case jsonrpc.METHOD_NOT_FOUND:
+			w.WriteHeader(http.StatusNotFound)
+		case jsonrpc.HEADER_MISMATCH, jsonrpc.UNSUPPORTED_PROTOCOL_VERSION:
+			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 
@@ -803,11 +812,13 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		return "", nil, err
 	}
 
-	// Add instrumentation to context for use in method handlers
+	// Add instrumentation and toolbox version to context for use in method handlers
 	ctx = util.WithInstrumentation(ctx, s.instrumentation)
-
+	ctx = util.WithToolboxVersionKey(ctx, s.version)
+	ctx = util.WithEnableDraftSpecs(ctx, s.enableDraftSpecs)
 	// Process the method
 	switch baseMessage.Method {
+	// This is only used for <v2026
 	case "initialize":
 		var initReq struct {
 			Params struct {
@@ -821,13 +832,12 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 		var version string
 		v := initReq.Params.ProtocolVersion
-		if slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, v) {
+		if slices.Contains(mcputil.GetSupportedVersions(s.enableDraftSpecs), v) {
 			version = v
 		} else {
-			version = mcputil.LATEST_PROTOCOL_VERSION
+			version = mcputil.GetLatestSupportedVersion(s.enableDraftSpecs)
 		}
 
-		ctx = util.WithToolboxVersionKey(ctx, s.version)
 		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
