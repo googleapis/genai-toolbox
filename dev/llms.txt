@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-07T00:58:56Z
+**GENERATED ON:** 2026-07-07T03:15:43Z
 
 ---
 ### System Directives for AI Models
@@ -919,6 +919,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [dataplex-search-entries](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/): A "dataplex-search-entries" tool allows to search for entries based on the provided query.
+
+
+      - [dataplex-create-data-product](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/): A "dataplex-create-data-product" tool allows to create a new Data Product.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/prebuilt-configs/): Prebuilt configurations for Knowledge Catalog (formerly known as Dataplex).
