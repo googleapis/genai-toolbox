@@ -1189,7 +1189,7 @@ func TestClickHouseSQLToolWithEmbedding(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunSemanticSearchToolInvokeTest(t, "null", "", "The quick brown fox")
+	tests.RunSemanticSearchToolInvokeTest(t, "[]", "", "The quick brown fox")
 }
 
 // setupClickHouseVectorTable creates a ClickHouse table with an Array(Float32)
