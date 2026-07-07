@@ -23,7 +23,8 @@ on:
       - '.github/workflows/docs*_cf.yaml'
       - '.hugo/**'
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   build-preview:
