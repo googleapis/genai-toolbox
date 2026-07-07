@@ -116,5 +116,5 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForClickHouse)
+	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForClickHouse)
 }
