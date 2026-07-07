@@ -32,6 +32,10 @@ or update the destination object.
 | destination_bucket |  string  |     true     | Name of the Cloud Storage bucket to copy into.                                      |
 | destination_object |  string  |     true     | Full destination object name (path) within the destination bucket.                  |
 
+If `source_bucket` or `destination_bucket` is configured on the tool, that field
+is removed from the parameter list and the configured value is used for every
+invocation.
+
 ## Example
 
 ```yaml
@@ -40,6 +44,16 @@ name: copy_object
 type: cloud-storage-copy-object
 source: my-gcs-source
 description: Use this tool to copy Cloud Storage objects.
+```
+
+```yaml
+kind: tool
+name: copy_reports
+type: cloud-storage-copy-object
+source: my-gcs-source
+description: Use this tool to copy reports into the archive bucket.
+source_bucket: analytics-exports
+destination_bucket: analytics-archive
 ```
 
 ## Output Format
@@ -62,3 +76,5 @@ The tool returns a JSON object with:
 | type        |  string  |     true     | Must be "cloud-storage-copy-object".                 |
 | source      |  string  |     true     | Name of the Cloud Storage source to copy objects in. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |
+| source_bucket | string | false | Source Cloud Storage bucket to use for every invocation. When set, `source_bucket` is hidden from the tool parameters. |
+| destination_bucket | string | false | Destination Cloud Storage bucket to use for every invocation. When set, `destination_bucket` is hidden from the tool parameters. |

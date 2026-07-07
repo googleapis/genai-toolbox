@@ -364,7 +364,12 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		return nil, fmt.Errorf("parameter is missing 'type' field")
 	}
 
-	return ParseParameter(ctx, p, t.(string))
+	typeStr, ok := t.(string)
+	if !ok {
+		return nil, fmt.Errorf("parameter 'type' field must be a string, got %T", t)
+	}
+
+	return ParseParameter(ctx, p, typeStr)
 }
 
 // ParseParameter parses a raw map into a Parameter object based on its "type" field.
