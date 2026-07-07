@@ -52,6 +52,26 @@ const (
 	verbMerge  = "merge"
 )
 
+var datasetLevelInformationSchemaViews = map[string]bool{
+	"tables":                  true,
+	"table_options":           true,
+	"columns":                 true,
+	"column_field_paths":      true,
+	"views":                   true,
+	"routines":                true,
+	"routine_options":         true,
+	"parameters":              true,
+	"partitions":              true,
+	"key_column_usage":        true,
+	"table_constraints":       true,
+	"check_constraints":       true,
+	"referential_constraints": true,
+	"search_indexes":          true,
+	"vector_indexes":          true,
+	"materialized_views":      true,
+	"table_snapshots":         true,
+}
+
 var tableFollowsKeywords = map[string]bool{
 	"from":   true,
 	"join":   true,
@@ -207,6 +227,34 @@ func parseSQL(sql, defaultProjectID string, tableIDSet map[string]struct{}, visi
 				if consumed == 0 {
 					i++
 					continue
+				}
+
+				for _, part := range parts {
+					if strings.EqualFold(part, "EXTERNAL_QUERY") {
+						return 0, fmt.Errorf("EXTERNAL_QUERY is not allowed when dataset restrictions are in place")
+					}
+				}
+
+				// Check for INFORMATION_SCHEMA
+				infoSchemaIdx := -1
+				for idx, part := range parts {
+					if strings.EqualFold(part, "INFORMATION_SCHEMA") {
+						infoSchemaIdx = idx
+						break
+					}
+				}
+				if infoSchemaIdx != -1 {
+					viewName := parts[len(parts)-1]
+					if !datasetLevelInformationSchemaViews[strings.ToLower(viewName)] {
+						return 0, fmt.Errorf("querying non-dataset-level INFORMATION_SCHEMA view %q is not allowed when dataset restrictions are in place", viewName)
+					}
+					if infoSchemaIdx == 0 {
+						return 0, fmt.Errorf("querying INFORMATION_SCHEMA views without a dataset prefix is not allowed when dataset restrictions are in place")
+					}
+					if infoSchemaIdx > 2 {
+						return 0, fmt.Errorf("invalid INFORMATION_SCHEMA query path %q", strings.Join(parts, "."))
+					}
+					parts = parts[:infoSchemaIdx+1]
 				}
 
 				if len(parts) == 1 {

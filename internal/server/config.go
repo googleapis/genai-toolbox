@@ -16,12 +16,15 @@ package server
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"io"
 	"regexp"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/parser"
+	"github.com/goccy/go-yaml/token"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/auth/google"
@@ -40,6 +43,10 @@ type ServerConfig struct {
 	Address string
 	// Port is the port the server will listen on.
 	Port int
+	// CertFile is the path to tls certificate file
+	CertFile string
+	// KeyFile is the path to TLS key file
+	KeyFile string
 	// SourceConfigs defines what sources of data are available for tools.
 	SourceConfigs SourceConfigs
 	// AuthServiceConfigs defines what sources of authentication are available for tools.
@@ -54,6 +61,8 @@ type ServerConfig struct {
 	PromptConfigs PromptConfigs
 	// PromptsetConfigs defines what prompts are available
 	PromptsetConfigs PromptsetConfigs
+	// IgnoreUnknownTools logs warnings and skips unknown/unsupported tool types instead of failing to start.
+	IgnoreUnknownTools bool
 	// LoggingFormat defines whether structured loggings are used.
 	LoggingFormat logFormat
 	// LogLevel defines the levels to log.
@@ -62,8 +71,12 @@ type ServerConfig struct {
 	TelemetryGCP bool
 	// TelemetryOTLP defines OTLP collector url for telemetry exports.
 	TelemetryOTLP string
+	// TelemetryGCPProject defines the Google Cloud project ID to use for telemetry exports.
+	TelemetryGCPProject string
 	// TelemetryServiceName defines the value of service.name resource attribute.
 	TelemetryServiceName string
+	// SQLCommenter enables prepending SQLCommenter-format comments to SQL statements.
+	SQLCommenter bool
 	// Stdio indicates if Toolbox is listening via MCP stdio.
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
@@ -84,6 +97,10 @@ type ServerConfig struct {
 	UserAgentMetadata []string
 	// PollInterval sets the polling frequency for configuration file updates.
 	PollInterval int
+	// HttpMaxRequestBytes caps MCP HTTP request bodies. Zero uses the default.
+	HttpMaxRequestBytes int64
+	// EnableDraftSpecs allow users to opt-in and test upcoming draft MCP specs.
+	EnableDraftSpecs bool
 }
 
 type logFormat string
@@ -156,22 +173,40 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 	var promptConfigs PromptConfigs
 	// promptset configs is not yet supported
 
+	file, err := parser.ParseBytes(raw, 0)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
+	}
+
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
-	// for loop to unmarshal documents with the `---` separator
-	for {
+	for index, doc := range file.Docs {
+		if doc == nil || doc.Body == nil {
+			continue
+		}
+		docIndex := index + 1
 		var resource map[string]any
-		if err := decoder.DecodeContext(ctx, &resource); err != nil {
-			if err == io.EOF {
-				break
+		if err := decoder.DecodeFromNodeContext(ctx, doc.Body, &resource); err != nil {
+			if len(file.Docs) > 1 {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
 			}
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %w", err)
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
 		}
 		var kind, name string
 		var ok bool
 		if kind, ok = resource["kind"].(string); !ok {
+			if len(file.Docs) > 1 {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
+			}
 			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
 		}
 		if name, ok = resource["name"].(string); !ok {
+			if len(file.Docs) > 1 {
+				fallbackToken := keyToken(doc.Body, "name")
+				if fallbackToken == nil {
+					fallbackToken = keyToken(doc.Body, "kind")
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
+			}
 			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
 		}
 		// remove 'kind' from map for strict unmarshaling
@@ -181,7 +216,10 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		case "source":
 			c, err := UnmarshalYAMLSourceConfig(ctx, name, resource)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if sourceConfigs == nil {
 				sourceConfigs = make(SourceConfigs)
@@ -190,7 +228,10 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		case "authService":
 			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if authServiceConfigs == nil {
 				authServiceConfigs = make(AuthServiceConfigs)
@@ -199,7 +240,13 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		case "tool":
 			c, err := UnmarshalYAMLToolConfig(ctx, name, resource)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+			}
+			if c == nil {
+				continue
 			}
 			if toolConfigs == nil {
 				toolConfigs = make(ToolConfigs)
@@ -208,7 +255,10 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		case "toolset":
 			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if toolsetConfigs == nil {
 				toolsetConfigs = make(ToolsetConfigs)
@@ -217,7 +267,10 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		case "embeddingModel":
 			c, err := UnmarshalYAMLEmbeddingModelConfig(ctx, name, resource)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if embeddingModelConfigs == nil {
 				embeddingModelConfigs = make(EmbeddingModelConfigs)
@@ -226,13 +279,19 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		case "prompt":
 			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+				if len(file.Docs) > 1 {
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+				}
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if promptConfigs == nil {
 				promptConfigs = make(PromptConfigs)
 			}
 			promptConfigs[name] = c
 		default:
+			if len(file.Docs) > 1 {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
+			}
 			return nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
 		}
 	}
@@ -271,11 +330,33 @@ func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[stri
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
 		}
+		if !actual.McpEnabled {
+			if actual.Audience != "" {
+				return nil, fmt.Errorf("`audience` is not allowed when `mcpEnabled` is false")
+			}
+			if len(actual.ScopesRequired) > 0 {
+				return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+			}
+		}
 		return actual, nil
 	case generic.AuthServiceType:
 		actual := generic.Config{Name: name}
 		if err := dec.DecodeContext(ctx, &actual); err != nil {
 			return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+		}
+		if !actual.McpEnabled {
+			if actual.IntrospectionEndpoint != "" {
+				return nil, fmt.Errorf("`introspectionEndpoint` is not allowed when `mcpEnabled` is false")
+			}
+			if actual.IntrospectionMethod != "" {
+				return nil, fmt.Errorf("`introspectionMethod` is not allowed when `mcpEnabled` is false")
+			}
+			if actual.IntrospectionParamName != "" {
+				return nil, fmt.Errorf("`introspectionParamName` is not allowed when `mcpEnabled` is false")
+			}
+			if len(actual.ScopesRequired) > 0 {
+				return nil, fmt.Errorf("`scopesRequired` is not allowed when `mcpEnabled` is false")
+			}
 		}
 		return actual, nil
 	default:
@@ -314,6 +395,21 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 	// Make `authRequired` an empty list instead of nil for Tool manifest
 	if r["authRequired"] == nil {
 		r["authRequired"] = []string{}
+	}
+
+	// Parse scopesRequired if present
+	if rawScopes, ok := r["scopesRequired"]; ok {
+		if scopesList, ok := rawScopes.([]any); ok {
+			var scopes []string
+			for _, s := range scopesList {
+				if str, ok := s.(string); ok {
+					scopes = append(scopes, str)
+				}
+			}
+			r["scopesRequired"] = scopes
+		} else {
+			return nil, fmt.Errorf("scopesRequired must be a list of strings")
+		}
 	}
 
 	// validify parameter references
@@ -360,6 +456,13 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 	}
 	toolCfg, err := tools.DecodeConfig(ctx, resourceType, name, dec)
 	if err != nil {
+		if errors.Is(err, tools.ErrUnknownToolType) && util.IgnoreUnknownToolsFromContext(ctx) {
+			l, logErr := util.LoggerFromContext(ctx)
+			if logErr == nil {
+				l.WarnContext(ctx, fmt.Sprintf("Skipping unknown tool type %q for tool %q", resourceType, name))
+			}
+			return nil, nil
+		}
 		return nil, err
 	}
 	return toolCfg, nil
@@ -423,6 +526,43 @@ func NameValidation(name string) error {
 	isValid := validChars.MatchString(name)
 	if !isValid {
 		return fmt.Errorf("invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed")
+	}
+	return nil
+}
+
+func formatDocLocation(docIndex int, keyToken *token.Token, body ast.Node) string {
+	line, column := 0, 0
+	if keyToken != nil {
+		line = keyToken.Position.Line
+		column = keyToken.Position.Column
+	} else if body != nil && body.GetToken() != nil {
+		line = body.GetToken().Position.Line
+		column = body.GetToken().Position.Column
+	}
+	if line > 0 && column > 0 {
+		return fmt.Sprintf("document %d (line %d, column %d):", docIndex, line, column)
+	}
+	return fmt.Sprintf("document %d:", docIndex)
+}
+
+func keyToken(body ast.Node, key string) *token.Token {
+	if body == nil {
+		return nil
+	}
+	mapping, ok := body.(*ast.MappingNode)
+	if !ok {
+		return nil
+	}
+	iter := mapping.MapRange()
+	for iter.Next() {
+		mapKey := iter.Key()
+		if mapKey == nil {
+			continue
+		}
+		token := mapKey.GetToken()
+		if token != nil && token.Value == key {
+			return token
+		}
 	}
 	return nil
 }

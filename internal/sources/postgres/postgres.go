@@ -17,10 +17,12 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/sqlcommenter"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5"
@@ -57,6 +59,7 @@ type Config struct {
 	Database      string            `yaml:"database" validate:"required"`
 	QueryParams   map[string]string `yaml:"queryParams"`
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
+	SQLCommenter  *bool             `yaml:"sqlCommenter"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -101,6 +104,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 }
 
 func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	statement = sqlcommenter.PrependComment(ctx, statement, SourceType, s.SQLCommenter)
 	results, err := s.PostgresPool().Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -108,7 +112,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	defer results.Close()
 
 	fields := results.FieldDescriptions()
-	var out []any
+	out := []any{}
 	for results.Next() {
 		values, err := results.Values()
 		if err != nil {
@@ -143,15 +147,7 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		queryParams["application_name"] = userAgent
 	}
 
-	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
-	url := &url.URL{
-		Scheme:   "postgres",
-		User:     url.UserPassword(user, pass),
-		Host:     fmt.Sprintf("%s:%s", host, port),
-		Path:     dbname,
-		RawQuery: ConvertParamMapToRawQuery(queryParams),
-	}
-	config, err := pgxpool.ParseConfig(url.String())
+	config, err := pgxpool.ParseConfig(BuildPostgresURL(host, port, user, pass, dbname, queryParams))
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse connection uri: %w", err)
 	}
@@ -170,12 +166,26 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	return pool, nil
 }
 
-func ConvertParamMapToRawQuery(queryParams map[string]string) string {
-	values := make(url.Values, len(queryParams))
-	for k, v := range queryParams {
-		values.Set(k, v)
+// BuildPostgresURL assembles a postgres connection URL from its components.
+// It uses net.JoinHostPort so IPv6 host literals are wrapped in brackets as
+// required by RFC 3986 (e.g. "[::1]:5432"); IPv4 addresses and hostnames are
+// left unchanged. Query parameters are encoded with url.Values so special
+// characters are escaped correctly and the output is deterministic.
+func BuildPostgresURL(host, port, user, pass, dbname string, queryParams map[string]string) string {
+	u := &url.URL{
+		Scheme: "postgres",
+		User:   url.UserPassword(user, pass),
+		Host:   net.JoinHostPort(host, port),
+		Path:   dbname,
 	}
-	return values.Encode()
+	if len(queryParams) > 0 {
+		q := url.Values{}
+		for k, v := range queryParams {
+			q.Set(k, v)
+		}
+		u.RawQuery = q.Encode()
+	}
+	return u.String()
 }
 
 func ParseQueryExecMode(queryExecMode string) (pgx.QueryExecMode, error) {

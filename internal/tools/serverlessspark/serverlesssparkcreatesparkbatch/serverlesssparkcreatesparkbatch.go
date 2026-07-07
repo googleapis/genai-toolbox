@@ -20,7 +20,6 @@ import (
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/createbatch"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -39,11 +38,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	if err != nil {
 		return nil, err
 	}
-	return Config{baseCfg}, nil
+	return Config{Config: baseCfg}, nil
 }
 
 type Config struct {
 	createbatch.Config
+
+	ScopesRequired []string `yaml:"scopesRequired"`
 }
 
 // validate interface
@@ -55,19 +56,19 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	return createbatch.NewTool(cfg.Config, cfg, srcs, &SparkBatchBuilder{})
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	return createbatch.NewTool(cfg.Config, cfg, &SparkBatchBuilder{})
 }
 
 type SparkBatchBuilder struct{}
 
 func (b *SparkBatchBuilder) Parameters() parameters.Parameters {
 	return parameters.Parameters{
-		parameters.NewStringParameterWithRequired("mainJarFile", "Optional. The gs:// URI of the jar file that contains the main class. Exactly one of mainJarFile or mainClass must be specified.", false),
-		parameters.NewStringParameterWithRequired("mainClass", "Optional. The name of the driver's main class. Exactly one of mainJarFile or mainClass must be specified.", false),
-		parameters.NewArrayParameterWithRequired("jarFiles", "Optional. A list of gs:// URIs of jar files to add to the CLASSPATHs of the Spark driver and tasks.", false, parameters.NewStringParameter("jarFile", "A jar file URI.")),
-		parameters.NewArrayParameterWithRequired("args", "Optional. A list of arguments passed to the driver.", false, parameters.NewStringParameter("arg", "An argument.")),
-		parameters.NewStringParameterWithRequired("version", "Optional. The Serverless runtime version to execute with.", false),
+		parameters.NewStringParameter("mainJarFile", "Optional. The gs:// URI of the jar file that contains the main class. Exactly one of mainJarFile or mainClass must be specified.", parameters.WithStringRequired(false)),
+		parameters.NewStringParameter("mainClass", "Optional. The name of the driver's main class. Exactly one of mainJarFile or mainClass must be specified.", parameters.WithStringRequired(false)),
+		parameters.NewArrayParameter("jarFiles", "Optional. A list of gs:// URIs of jar files to add to the CLASSPATHs of the Spark driver and tasks.", parameters.NewStringParameter("jarFile", "A jar file URI."), parameters.WithArrayRequired(false)),
+		parameters.NewArrayParameter("args", "Optional. A list of arguments passed to the driver.", parameters.NewStringParameter("arg", "An argument."), parameters.WithArrayRequired(false)),
+		parameters.NewStringParameter("version", "Optional. The Serverless runtime version to execute with.", parameters.WithStringRequired(false)),
 	}
 }
 

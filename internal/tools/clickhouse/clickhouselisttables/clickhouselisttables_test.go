@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -51,11 +52,13 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "clickhouse-list-tables",
-					Source:       "my-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "clickhouse-list-tables",
+					Source: "my-instance",
 				},
 			},
 		},
@@ -77,13 +80,13 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 func TestListTablesToolParseParams(t *testing.T) {
 	databaseParam := parameters.NewStringParameter("database", "The database to list tables from.")
 	tool := Tool{
-		Config: Config{
-			Parameters: parameters.Parameters{databaseParam},
+		BaseTool: tools.BaseTool[Config]{
+			StaticParameters: parameters.Parameters{databaseParam},
 		},
-		AllParams: parameters.Parameters{databaseParam},
 	}
 
-	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{"database": "test_db"}, map[string]map[string]any{})
+	toolParams, _ := tool.GetParameters(nil)
+	params, err := parameters.ParseParams(toolParams, map[string]any{"database": "test_db"}, map[string]map[string]any{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
@@ -95,5 +98,53 @@ func TestListTablesToolParseParams(t *testing.T) {
 	mapParams := params.AsMap()
 	if mapParams["database"] != "test_db" {
 		t.Errorf("expected database parameter to be 'test_db', got %v", mapParams["database"])
+	}
+}
+
+func TestValidIdentifierRegexp(t *testing.T) {
+	tcs := []struct {
+		in    string
+		valid bool
+	}{
+		// Allowed: plain identifiers.
+		{"default", true},
+		{"my_db", true},
+		{"DB1", true},
+		{"_internal", true},
+		{"a", true},
+
+		// Rejected: empty, whitespace, control characters.
+		{"", false},
+		{" ", false},
+		{"\t", false},
+		{"\n", false},
+
+		// Rejected: leading digit (ClickHouse identifier rule).
+		{"1db", false},
+
+		// Rejected: identifier-quoting characters that would let the value
+		// re-open the identifier and append clauses after it.
+		{"`default`", false},
+		{`"default"`, false},
+
+		// Rejected: separators / statement terminators / metacharacters.
+		{"default;DROP TABLE x", false},
+		{"default LIKE '%'", false},
+		{"default LIMIT 0 FORMAT JSON", false},
+		{"default INTO OUTFILE '/tmp/x'", false},
+		{"system.tables", false},
+		{"default--", false},
+		{"default/*", false},
+
+		// Rejected: unicode and surrounding spaces.
+		{"𝐝𝐞𝐟𝐚𝐮𝐥𝐭", false},
+		{"  default  ", false},
+		{"default ", false},
+		{" default", false},
+	}
+	for _, tc := range tcs {
+		if got := validIdentifier.MatchString(tc.in); got != tc.valid {
+			t.Errorf("validIdentifier.MatchString(%q) = %v, want %v", tc.in, got, tc.valid)
+		}
 	}
 }

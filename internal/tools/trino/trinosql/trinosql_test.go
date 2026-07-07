@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/trino/trinosql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -59,16 +60,18 @@ func TestParseFromYamlTrino(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": trinosql.Config{
-					Name:         "example_tool",
-					Type:         "trino-sql",
-					Source:       "my-trino-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "trino-sql",
+					Source:    "my-trino-instance",
+					Statement: "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("id", "ID to filter by",
+						parameters.NewStringParameter("id", "ID to filter by", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -139,16 +142,18 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": trinosql.Config{
-					Name:         "example_tool",
-					Type:         "trino-sql",
-					Source:       "my-trino-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "trino-sql",
+					Source:    "my-trino-instance",
+					Statement: "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("catalog", "The catalog to query from."),

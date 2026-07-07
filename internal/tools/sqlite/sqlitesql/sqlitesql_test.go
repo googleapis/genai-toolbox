@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	_ "modernc.org/sqlite"
@@ -60,16 +61,18 @@ func TestParseFromYamlSQLite(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": sqlitesql.Config{
-					Name:         "example_tool",
-					Type:         "sqlite-sql",
-					Source:       "my-sqlite-instance",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "sqlite-sql",
+					Source:    "my-sqlite-instance",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -136,16 +139,18 @@ func TestParseFromYamlWithTemplateSqlite(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": sqlitesql.Config{
-					Name:         "example_tool",
-					Type:         "sqlite-sql",
-					Source:       "my-sqlite-db",
-					Description:  "some description",
-					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:      "sqlite-sql",
+					Source:    "my-sqlite-db",
+					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("tableName", "The table to select hotels from."),

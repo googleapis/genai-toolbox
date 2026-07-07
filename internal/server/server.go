@@ -16,6 +16,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,10 +35,10 @@ import (
 	"github.com/go-chi/httplog/v3"
 	"github.com/go-chi/render"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
@@ -49,16 +50,19 @@ import (
 
 // Server contains info for running an instance of Toolbox. Should be instantiated with NewServer().
 type Server struct {
-	version         string
-	toolboxUrl      string
-	srv             *http.Server
-	listener        net.Listener
-	root            chi.Router
-	logger          log.Logger
-	instrumentation *telemetry.Instrumentation
-	sseManager      *sseManager
-	ResourceMgr     *resources.ResourceManager
-	mcpPrmFile      string
+	version             string
+	sqlCommenterEnabled bool
+	toolboxUrl          string
+	srv                 *http.Server
+	listener            net.Listener
+	root                chi.Router
+	logger              log.Logger
+	instrumentation     *telemetry.Instrumentation
+	sseManager          *sseManager
+	ResourceMgr         *resources.ResourceManager
+	mcpPrmFile          string
+	httpMaxRequestBytes int64
+	enableDraftSpecs    bool
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -71,6 +75,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]prompts.Promptset,
 	error,
 ) {
+	if cfg.EnableAPI {
+		for _, sc := range cfg.AuthServiceConfigs {
+			if sc.IsMCPEnabled() {
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
+			}
+		}
+	}
+
 	metadataStr := cfg.Version
 	if len(cfg.UserAgentMetadata) > 0 {
 		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
@@ -78,12 +90,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	// initialize and validate the sources from configs
@@ -136,6 +148,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		authServicesMap[name] = a
 	}
+
 	authServiceNames := make([]string, 0, len(authServicesMap))
 	for name := range authServicesMap {
 		authServiceNames = append(authServiceNames, name)
@@ -170,74 +183,15 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
-	// initialize and validate the tools from configs
-	toolsMap := make(map[string]tools.Tool)
-	for name, tc := range cfg.ToolConfigs {
-		t, err := func() (tools.Tool, error) {
-			_, span := instrumentation.Tracer.Start(
-				ctx,
-				"toolbox/server/tool/init",
-				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
-				trace.WithAttributes(attribute.String("tool_name", name)),
-			)
-			defer span.End()
-			t, err := tc.Initialize(sourcesMap)
-			if err != nil {
-				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
-			}
-			return t, nil
-		}()
-		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
-		}
-		toolsMap[name] = t
+	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
-	toolNames := make([]string, 0, len(toolsMap))
-	for name := range toolsMap {
-		toolNames = append(toolNames, name)
-	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 
-	// create a default toolset that contains all tools
-	allToolNames := make([]string, 0, len(toolsMap))
-	for name := range toolsMap {
-		allToolNames = append(allToolNames, name)
+	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
-	if cfg.ToolsetConfigs == nil {
-		cfg.ToolsetConfigs = make(ToolsetConfigs)
-	}
-	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
-
-	// initialize and validate the toolsets from configs
-	toolsetsMap := make(map[string]tools.Toolset)
-	for name, tc := range cfg.ToolsetConfigs {
-		t, err := func() (tools.Toolset, error) {
-			_, span := instrumentation.Tracer.Start(
-				ctx,
-				"toolbox/server/toolset/init",
-				trace.WithAttributes(attribute.String("toolset.name", name)),
-			)
-			defer span.End()
-			t, err := tc.Initialize(cfg.Version, toolsMap)
-			if err != nil {
-				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
-			}
-			return t, err
-		}()
-		if err != nil {
-			return nil, nil, nil, nil, nil, nil, nil, err
-		}
-		toolsetsMap[name] = t
-	}
-	toolsetNames := make([]string, 0, len(toolsetsMap))
-	for name := range toolsetsMap {
-		if name == "" {
-			toolsetNames = append(toolsetNames, "default")
-		} else {
-			toolsetNames = append(toolsetNames, name)
-		}
-	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
 
 	// initialize and validate the prompts from configs
 	promptsMap := make(map[string]prompts.Prompt)
@@ -311,6 +265,127 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
+// InitializeOfflineConfigs initializes only tools and toolsets from the config,
+// skipping sources, auth services, and embedding models. It backs flows like
+// skills-generate that need tool metadata without live source connections.
+func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
+	map[string]tools.Tool,
+	map[string]tools.Toolset,
+	error,
+) {
+	instrumentation, err := util.InstrumentationFromContext(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
+	}
+
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
+	}
+
+	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	toolsetsMap, err := initializeToolsets(ctx, cfg, toolsMap, instrumentation, l)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return toolsMap, toolsetsMap, nil
+}
+
+// initializeTools initializes and validates the tools from the config.
+func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
+	toolsMap := make(map[string]tools.Tool)
+	for name, tc := range cfg.ToolConfigs {
+		t, err := func() (tools.Tool, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/tool/init",
+				trace.WithAttributes(attribute.String("tool_type", tc.ToolConfigType())),
+				trace.WithAttributes(attribute.String("tool_name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
+			}
+			return t, nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+		toolsMap[name] = t
+	}
+	toolNames := make([]string, 0, len(toolsMap))
+	for name := range toolsMap {
+		toolNames = append(toolNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
+	return toolsMap, nil
+}
+
+// initializeToolsets seeds a default toolset containing all tools, then
+// initializes and validates the toolsets from the config.
+func initializeToolsets(ctx context.Context, cfg ServerConfig, toolsMap map[string]tools.Tool, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Toolset, error) {
+	// create a default toolset that contains all tools
+	allToolNames := make([]string, 0, len(toolsMap))
+	for name := range toolsMap {
+		allToolNames = append(allToolNames, name)
+	}
+	if cfg.ToolsetConfigs == nil {
+		cfg.ToolsetConfigs = make(ToolsetConfigs)
+	}
+	cfg.ToolsetConfigs[""] = tools.ToolsetConfig{Name: "", ToolNames: allToolNames}
+
+	toolsetsMap := make(map[string]tools.Toolset)
+	for name, tc := range cfg.ToolsetConfigs {
+		if cfg.IgnoreUnknownTools {
+			filteredToolNames := make([]string, 0, len(tc.ToolNames))
+			for _, tn := range tc.ToolNames {
+				if _, ok := toolsMap[tn]; ok {
+					filteredToolNames = append(filteredToolNames, tn)
+				} else {
+					l.WarnContext(ctx, fmt.Sprintf("Skipping missing tool %q in toolset %q", tn, name))
+				}
+			}
+			tc.ToolNames = filteredToolNames
+			cfg.ToolsetConfigs[name] = tc
+		}
+
+		t, err := func() (tools.Toolset, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/toolset/init",
+				trace.WithAttributes(attribute.String("toolset.name", name)),
+			)
+			defer span.End()
+			t, err := tc.Initialize(cfg.Version, toolsMap)
+			if err != nil {
+				return tools.Toolset{}, fmt.Errorf("unable to initialize toolset %q: %w", name, err)
+			}
+			return t, err
+		}()
+		if err != nil {
+			return nil, err
+		}
+		toolsetsMap[name] = t
+	}
+	toolsetNames := make([]string, 0, len(toolsetsMap))
+	for name := range toolsetsMap {
+		if name == "" {
+			toolsetNames = append(toolsetNames, "default")
+		} else {
+			toolsetNames = append(toolsetNames, name)
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
+
+	return toolsetsMap, nil
+}
+
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -377,21 +452,33 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
+	limit := cfg.HttpMaxRequestBytes
+	if limit <= 0 {
+		limit = DefaultHTTPMaxRequestBytes
+	}
+
 	s := &Server{
-		version:         cfg.Version,
-		srv:             srv,
-		root:            r,
-		logger:          l,
-		instrumentation: instrumentation,
-		sseManager:      sseManager,
-		ResourceMgr:     resourceManager,
-		toolboxUrl:      cfg.ToolboxUrl,
-		mcpPrmFile:      cfg.McpPrmFile,
+		version:             cfg.Version,
+		sqlCommenterEnabled: cfg.SQLCommenter,
+		srv:                 srv,
+		root:                r,
+		logger:              l,
+		instrumentation:     instrumentation,
+		sseManager:          sseManager,
+		ResourceMgr:         resourceManager,
+		toolboxUrl:          cfg.ToolboxUrl,
+		mcpPrmFile:          cfg.McpPrmFile,
+		httpMaxRequestBytes: limit,
+		enableDraftSpecs:    cfg.EnableDraftSpecs,
+	}
+
+	if s.enableDraftSpecs {
+		s.logger.WarnContext(ctx, "Flag --enable-draft-specs is active. Please note that draft specs are subject to breaking changes and will be completely removed (not redirected) once stable MCP specifications are released. Do not use this configuration in production.")
 	}
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
+		s.logger.WarnContext(ctx, "wildcard (*) allows any website to access the resources. This creates a security risk regardless of whether you are in a production or local development environment. Recommended to use --allowed-origins with specific local addresses.")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -404,7 +491,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Use(cors.Handler(corsOpts))
 	// validate hosts for DNS rebinding attacks
 	if slices.Contains(cfg.AllowedHosts, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
+		s.logger.WarnContext(ctx, "wildcard (*) hosts allow any domain to access this resource, making it vulnerable to DNS rebinding attacks regardless of whether you are in a production or local development environment. For improved security, use the --allowed-hosts flag to specify trusted domains.")
 	}
 	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
 	for _, h := range cfg.AllowedHosts {
@@ -419,7 +506,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	// Host OAuth Protected Resource Metadata endpoint
 	mcpAuthEnabled := false
 	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-		if genCfg, ok := authSvc.ToConfig().(generic.Config); ok && genCfg.McpEnabled {
+		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpAuthEnabled = true
 			break
 		}
@@ -495,10 +582,10 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Find McpEnabled auth service
-			var mcpSvc *generic.AuthService
+			var mcpSvc auth.MCPAuthService
 			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-				if genSvc, ok := authSvc.(*generic.AuthService); ok && genSvc.McpEnabled {
-					mcpSvc = genSvc
+				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+					mcpSvc = mSvc
 					break
 				}
 			}
@@ -509,8 +596,9 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 				return
 			}
 
-			if err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header); err != nil {
-				var mcpErr *generic.MCPAuthError
+			claims, err := mcpSvc.ValidateMCPAuth(r.Context(), r.Header)
+			if err != nil {
+				var mcpErr *auth.MCPAuthError
 				if errors.As(err, &mcpErr) {
 					switch mcpErr.Code {
 					case http.StatusUnauthorized:
@@ -519,15 +607,25 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 							scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 						}
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
-						http.Error(w, mcpErr.Message, http.StatusUnauthorized)
+						render.Status(r, http.StatusUnauthorized)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.UNAUTHORIZED, mcpErr.Message, nil))
 						return
 					case http.StatusForbidden:
 						w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
-						http.Error(w, mcpErr.Message, http.StatusForbidden)
+						render.Status(r, http.StatusForbidden)
+						render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.FORBIDDEN, mcpErr.Message, nil))
 						return
 					}
 				}
+				// Fail closed on unexpected errors
+				s.logger.ErrorContext(r.Context(), "unexpected error during MCP auth validation", "error", err)
+				render.Status(r, http.StatusInternalServerError)
+				render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.INTERNAL_ERROR, "Internal Server Error", nil))
+				return
 			}
+
+			ctx := util.WithAuthTokenClaims(r.Context(), claims)
+			r = r.WithContext(ctx)
 
 			next.ServeHTTP(w, r)
 		})
@@ -535,7 +633,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 }
 
 // Listen starts a listener for the given Server instance.
-func (s *Server) Listen(ctx context.Context) error {
+func (s *Server) Listen(ctx context.Context, certFile, keyFile string) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -543,11 +641,26 @@ func (s *Server) Listen(ctx context.Context) error {
 		return fmt.Errorf("server is already listening: %s", s.listener.Addr().String())
 	}
 	lc := net.ListenConfig{KeepAlive: 30 * time.Second}
-	var err error
-	if s.listener, err = lc.Listen(ctx, "tcp", s.srv.Addr); err != nil {
+	ln, err := lc.Listen(ctx, "tcp", s.srv.Addr)
+	if err != nil {
 		return fmt.Errorf("failed to open listener for %q: %w", s.srv.Addr, err)
 	}
-	s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+
+	if certFile != "" || keyFile != "" {
+		// Load the certificates
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			ln.Close()
+			return fmt.Errorf("failed to load TLS key pair (cert: %q, key: %q): %w", certFile, keyFile, err)
+		}
+		// Wrap the listener with TLS
+		config := &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}
+		s.listener = tls.NewListener(ln, config)
+		s.logger.DebugContext(ctx, fmt.Sprintf("secure server listening on %s", s.srv.Addr))
+	} else {
+		s.listener = ln
+		s.logger.DebugContext(ctx, fmt.Sprintf("server listening on %s", s.srv.Addr))
+	}
 	return nil
 }
 

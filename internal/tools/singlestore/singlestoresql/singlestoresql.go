@@ -22,7 +22,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -37,7 +36,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -51,12 +50,10 @@ type compatibleSource interface {
 
 // Config defines the configuration for a SingleStore SQL tool.
 type Config struct {
-	Name               string                 `yaml:"name" validate:"required"`
+	tools.ConfigBase   `yaml:",inline"`
 	Type               string                 `yaml:"type" validate:"required"`
 	Source             string                 `yaml:"source" validate:"required"`
-	Description        string                 `yaml:"description" validate:"required"`
 	Statement          string                 `yaml:"statement" validate:"required"`
-	AuthRequired       []string               `yaml:"authRequired"`
 	Parameters         parameters.Parameters  `yaml:"parameters"`
 	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
 	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
@@ -70,50 +67,35 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-// Initialize sets up and returns a new Tool instance based on the provided configuration and available sources.
-// It verifies that the specified source exists and is compatible, processes tool parameters, and constructs
-// the necessary manifests for tool operation. Returns an initialized Tool or an error if setup fails.
-//
-// Parameters:
-//
-//	srcs - a map of available sources, keyed by source name.
-//
-// Returns:
-//
-//	tools.Tool - the initialized tool instance.
-//	error      - an error if the source is missing, incompatible, or setup fails.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+// Initialize sets up and returns a new Tool instance based on the provided configuration.
+// It processes tool parameters and constructs the necessary manifests for tool operation.
+// Returns an initialized Tool or an error if setup fails.
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, err
 	}
 
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
-
-	// finish tool setup
-	t := Tool{
-		Config:      cfg,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
-// Tool represents a SingleStore SQL tool instance with its configuration, parameters, and database connection.
+// Tool represents a SingleStore SQL tool instance.
 type Tool struct {
-	Config
-	AllParams   parameters.Parameters `yaml:"allParams"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	tools.BaseTool[Config]
 }
 
 // Invoke executes the SQL statement defined in the Tool using the provided context and parameter values.
@@ -131,18 +113,18 @@ func (t Tool) ToConfig() tools.ToolConfig {
 //   - A slice of maps, where each map represents a row with column names as keys.
 //   - An error if template resolution, parameter extraction, query execution, or result processing fails.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
-	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	newStatement, err := parameters.ResolveTemplateParams(t.Cfg.TemplateParameters, t.Cfg.Statement, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract template params", err)
 	}
 
-	newParams, err := parameters.GetParams(t.Parameters, paramsMap)
+	newParams, err := parameters.GetParams(t.Cfg.Parameters, paramsMap)
 	if err != nil {
 		return nil, util.NewAgentError("unable to extract standard params", err)
 	}
@@ -155,30 +137,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
+// EmbedParams overrides BaseTool to apply the pgvector formatter.
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForPgvector)
+	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, embeddingmodels.FormatVectorForPgvector)
 }
 
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Cfg
 }

@@ -19,58 +19,87 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-// mockPrompt is a simple mock implementation of prompts.Prompt for testing.
-type mockPrompt struct {
-	name        string
-	desc        string
-	args        prompts.Arguments
-	manifest    prompts.Manifest
-	mcpManifest prompts.McpManifest
-}
+func TestPromptset_ContainsPrompt(t *testing.T) {
+	t.Parallel()
 
-func (m mockPrompt) SubstituteParams(parameters.ParamValues) (any, error) { return nil, nil }
-func (m mockPrompt) ParseArgs(map[string]any, map[string]map[string]any) (parameters.ParamValues, error) {
-	return nil, nil
-}
-func (m mockPrompt) Manifest() prompts.Manifest       { return m.manifest }
-func (m mockPrompt) McpManifest() prompts.McpManifest { return m.mcpManifest }
-func (m mockPrompt) ToConfig() prompts.PromptConfig   { return nil }
-
-// newMockPrompt creates a new mock prompt for testing.
-func newMockPrompt(name, desc string) prompts.Prompt {
-	args := prompts.Arguments{
-		{Parameter: parameters.NewStringParameter("arg1", "Test argument")},
+	promptset := prompts.Promptset{
+		PromptsetConfig: prompts.PromptsetConfig{
+			Name:        "test-promptset",
+			PromptNames: []string{"greet", "summarize"},
+		},
+		PromptNameSet: map[string]struct{}{"greet": struct{}{}, "summarize": struct{}{}},
 	}
-	return mockPrompt{
-		name: name,
-		desc: desc,
-		args: args,
-		manifest: prompts.Manifest{
-			Description: desc,
-			Arguments: []parameters.ParameterManifest{
-				{Name: "arg1", Type: "string", Required: true, Description: "Test argument", AuthServices: []string{}},
-			},
+
+	tests := []struct {
+		name       string
+		promptName string
+		want       bool
+	}{
+		{
+			name:       "prompt exists in promptset",
+			promptName: "greet",
+			want:       true,
 		},
-		mcpManifest: prompts.McpManifest{
-			Name:        name,
-			Description: desc,
-			Arguments: []prompts.ArgMcpManifest{
-				{Name: "arg1", Description: "Test argument", Required: true},
-			},
+		{
+			name:       "another prompt exists in promptset",
+			promptName: "summarize",
+			want:       true,
 		},
+		{
+			name:       "prompt not in promptset",
+			promptName: "admin_prompt",
+			want:       false,
+		},
+		{
+			name:       "empty prompt name",
+			promptName: "",
+			want:       false,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := promptset.ContainsPrompt(tc.promptName)
+			if got != tc.want {
+				t.Errorf("ContainsPrompt(%q) = %v, want %v", tc.promptName, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPromptset_ContainsPrompt_EmptyPromptset(t *testing.T) {
+	t.Parallel()
+
+	promptset := prompts.Promptset{
+		PromptsetConfig: prompts.PromptsetConfig{
+			Name:        "empty-promptset",
+			PromptNames: []string{},
+		},
+	}
+
+	if promptset.ContainsPrompt("anything") {
+		t.Error("ContainsPrompt should return false for empty promptset")
 	}
 }
 
 func TestPromptsetConfig_Initialize(t *testing.T) {
 	t.Parallel()
 
+	args := prompts.Arguments{
+		{Parameter: parameters.NewStringParameter("arg1", "Test argument")},
+	}
+
 	promptsMap := map[string]prompts.Prompt{
-		"prompt1": newMockPrompt("prompt1", "First test prompt"),
-		"prompt2": newMockPrompt("prompt2", "Second test prompt"),
+		"prompt1": testutils.NewMockPrompt("prompt1", "First test prompt", args),
+		"prompt2": testutils.NewMockPrompt("prompt2", "Second test prompt", args),
 	}
 	serverVersion := "v1.0.0"
 
@@ -93,7 +122,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "default",
+					Name:        "default",
+					PromptNames: []string{"prompt1", "prompt2"},
 				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
@@ -106,10 +136,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 						"prompt2": promptsMap["prompt2"].Manifest(),
 					},
 				},
-				McpManifest: []prompts.McpManifest{
-					promptsMap["prompt1"].McpManifest(),
-					promptsMap["prompt2"].McpManifest(),
-				},
+				PromptNameSet: map[string]struct{}{"prompt1": struct{}{}, "prompt2": struct{}{}},
 			},
 			wantErr: "",
 		},
@@ -121,7 +148,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "single",
+					Name:        "single",
+					PromptNames: []string{"prompt1"},
 				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
@@ -132,9 +160,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 						"prompt1": promptsMap["prompt1"].Manifest(),
 					},
 				},
-				McpManifest: []prompts.McpManifest{
-					promptsMap["prompt1"].McpManifest(),
-				},
+				PromptNameSet: map[string]struct{}{"prompt1": struct{}{}},
 			},
 			wantErr: "",
 		},
@@ -144,7 +170,18 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				Name:        "invalid name", // Contains a space
 				PromptNames: []string{"prompt1"},
 			},
-			want:    prompts.Promptset{PromptsetConfig: prompts.PromptsetConfig{Name: "invalid name"}}, // Expect partial struct
+			want: prompts.Promptset{
+				PromptsetConfig: prompts.PromptsetConfig{
+					Name:        "invalid name",
+					PromptNames: []string{"prompt1"},
+				},
+				Prompts: []*prompts.Prompt{},
+				Manifest: prompts.PromptsetManifest{
+					ServerVersion:   serverVersion,
+					PromptsManifest: map[string]prompts.Manifest{},
+				},
+				PromptNameSet: map[string]struct{}{},
+			},
 			wantErr: "invalid promptset name",
 		},
 		{
@@ -156,7 +193,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			// Expect partial struct with fields populated up to the error
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "missing_prompt",
+					Name:        "missing_prompt",
+					PromptNames: []string{"prompt1", "prompt_does_not_exist"},
 				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
@@ -167,9 +205,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 						"prompt1": promptsMap["prompt1"].Manifest(),
 					},
 				},
-				McpManifest: []prompts.McpManifest{
-					promptsMap["prompt1"].McpManifest(),
-				},
+				PromptNameSet: map[string]struct{}{"prompt1": struct{}{}},
 			},
 			wantErr: "prompt does not exist",
 		},
@@ -181,14 +217,15 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			want: prompts.Promptset{
 				PromptsetConfig: prompts.PromptsetConfig{
-					Name: "empty",
+					Name:        "empty",
+					PromptNames: []string{},
 				},
 				Prompts: []*prompts.Prompt{},
 				Manifest: prompts.PromptsetManifest{
 					ServerVersion:   serverVersion,
 					PromptsManifest: map[string]prompts.Manifest{},
 				},
-				McpManifest: []prompts.McpManifest{},
+				PromptNameSet: map[string]struct{}{},
 			},
 			wantErr: "",
 		},
@@ -206,17 +243,21 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				if !strings.Contains(err.Error(), tc.wantErr) {
 					t.Errorf("Initialize() error mismatch:\n  want to contain: %q\n  got: %q", tc.wantErr, err.Error())
 				}
-				// Also check that the partially populated struct matches
-				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(mockPrompt{})); diff != "" {
+				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockPrompt{}), cmpopts.IgnoreUnexported(prompts.Promptset{})); diff != "" {
 					t.Errorf("Initialize() partial result on error mismatch (-want +got):\n%s", diff)
 				}
 			} else {
 				if err != nil {
 					t.Fatalf("Initialize() returned unexpected error: %v", err)
 				}
-				// Using cmp.AllowUnexported because mockPrompt is unexported
-				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(mockPrompt{})); diff != "" {
+				// Using cmp.AllowUnexported because MockPrompt is unexported
+				if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(testutils.MockPrompt{}), cmpopts.IgnoreUnexported(prompts.Promptset{})); diff != "" {
 					t.Errorf("Initialize() result mismatch (-want +got):\n%s", diff)
+				}
+
+				gotConfig := got.ToConfig()
+				if diff := cmp.Diff(tc.config, gotConfig); diff != "" {
+					t.Errorf("ToConfig() result mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})

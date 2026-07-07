@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
@@ -47,12 +48,14 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 		`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "elasticsearch-esql",
-					Source:       "my-elasticsearch-instance",
-					Description:  "Elasticsearch ES|QL tool",
-					AuthRequired: []string{},
-					Query:        "FROM my-index\n| KEEP first_name, last_name\n",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "Elasticsearch ES|QL tool",
+						AuthRequired: []string{},
+					},
+					Type:   "elasticsearch-esql",
+					Source: "my-elasticsearch-instance",
+					Query:  "FROM my-index\n| KEEP first_name, last_name\n",
 				},
 			},
 		},
@@ -74,11 +77,13 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "elasticsearch-esql",
-					Source:       "my-elasticsearch-instance",
-					Description:  "Elasticsearch ES|QL tool with customizable limit",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "Elasticsearch ES|QL tool with customizable limit",
+						AuthRequired: []string{},
+					},
+					Type:   "elasticsearch-esql",
+					Source: "my-elasticsearch-instance",
 					Parameters: parameters.Parameters{
 						parameters.NewIntParameter("limit", "Limit the number of results"),
 					},

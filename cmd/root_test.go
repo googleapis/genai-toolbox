@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.UserAgentMetadata == nil {
 		c.UserAgentMetadata = []string{}
 	}
+	if c.HttpMaxRequestBytes == 0 {
+		c.HttpMaxRequestBytes = server.DefaultHTTPMaxRequestBytes
+	}
 	return c
 }
 
@@ -226,10 +229,31 @@ func TestServerConfigFlags(t *testing.T) {
 			}),
 		},
 		{
+			desc: "http max request bytes",
+			args: []string{"--http-max-request-bytes", "2097152"},
+			want: withDefaults(server.ServerConfig{
+				HttpMaxRequestBytes: 2097152,
+			}),
+		},
+		{
 			desc: "user agent metadata",
 			args: []string{"--user-agent-metadata", "foo,bar"},
 			want: withDefaults(server.ServerConfig{
 				UserAgentMetadata: []string{"foo", "bar"},
+			}),
+		},
+		{
+			desc: "cert file",
+			args: []string{"--tls-cert", "cert.pem"},
+			want: withDefaults(server.ServerConfig{
+				CertFile: "cert.pem",
+			}),
+		},
+		{
+			desc: "key file",
+			args: []string{"--tls-key", "key.pem"},
+			want: withDefaults(server.ServerConfig{
+				KeyFile: "key.pem",
 			}),
 		},
 	}
@@ -387,6 +411,11 @@ func TestPrebuiltFlag(t *testing.T) {
 			desc: "comma separated prebuilt flags",
 			args: []string{"--prebuilt", "alloydb,bigquery"},
 			want: []string{"alloydb", "bigquery"},
+		},
+		{
+			desc: "prebuilt toolset flag",
+			args: []string{"--prebuilt", "alloydb-postgres/monitor"},
+			want: []string{"alloydb-postgres/monitor"},
 		},
 	}
 	for _, tc := range tcs {
@@ -637,12 +666,12 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		{
 			desc:      "--config and --configs",
 			args:      []string{"--config", "my.yaml", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config configs] were all set",
 		},
 		{
 			desc:      "--config-folder and --configs",
 			args:      []string{"--config-folder", "./", "--configs", "a.yaml,b.yaml"},
-			errString: "--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously",
+			errString: "if any flags in the group [config configs config-folder tools-file tools-files tools-folder] are set none of the others can be; [config-folder configs] were all set",
 		},
 	}
 
@@ -833,6 +862,42 @@ tools:
 			wantErr:   true,
 			errString: "resource conflicts detected",
 		},
+		{
+			desc:    "success toolset filtering",
+			args:    []string{"--prebuilt", "sqlite/sqlite_database_tools"},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.ToolConfigs["execute_sql"]; !ok {
+					return fmt.Errorf("expected tool 'execute_sql' not found")
+				}
+				if _, ok := cfg.ToolConfigs["list_tables"]; !ok {
+					return fmt.Errorf("expected tool 'list_tables' not found")
+				}
+				if len(cfg.ToolConfigs) != 2 {
+					return fmt.Errorf("expected exactly 2 tools, got %d", len(cfg.ToolConfigs))
+				}
+				if _, ok := cfg.ToolsetConfigs["sqlite_database_tools"]; !ok {
+					return fmt.Errorf("expected toolset 'sqlite_database_tools' not found")
+				}
+				if len(cfg.ToolsetConfigs) != 2 {
+					var names []string
+					for k := range cfg.ToolsetConfigs {
+						names = append(names, k)
+					}
+					return fmt.Errorf("expected exactly 2 toolsets (including default), got %d: %v", len(cfg.ToolsetConfigs), names)
+				}
+				if _, ok := cfg.ToolsetConfigs[""]; !ok {
+					return fmt.Errorf("expected default toolset '' not found")
+				}
+				return nil
+			},
+		},
+		{
+			desc:      "toolset not found error",
+			args:      []string{"--prebuilt", "sqlite/nonexistent"},
+			wantErr:   true,
+			errString: "toolset 'nonexistent' not found in prebuilt configuration 'sqlite'",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -858,7 +923,7 @@ tools:
 				}
 				if tc.cfgCheck != nil {
 					if err := tc.cfgCheck(opts.Cfg); err != nil {
-						t.Errorf("config check failed: %v", err)
+						t.Errorf("config check failed: %v. Output:\n%s", err, output)
 					}
 				}
 			}
@@ -938,5 +1003,80 @@ func TestSubcommandWiring(t *testing.T) {
 		if cmd.Name() != tc.expectedName {
 			t.Errorf("Expected command name %q, got %q", tc.expectedName, cmd.Name())
 		}
+	}
+}
+
+func TestIgnoreUnknownToolsFlag(t *testing.T) {
+	invalidContent := `
+kind: tool
+name: invalid_tool
+type: unregistered-tool-type
+source: my-http
+description: "A tool with unregistered type"
+---
+kind: source
+name: my-http
+type: http
+baseUrl: http://example.com
+`
+	invalidFile := filepath.Join(t.TempDir(), "invalid.yaml")
+	if err := os.WriteFile(invalidFile, []byte(invalidContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("without ignore flag fails", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		defer cancel()
+		_, _, _, err := invokeCommandWithContext(ctx, []string{"--config", invalidFile})
+		if err == nil {
+			t.Fatalf("expected error due to unregistered tool type, got nil")
+		}
+		if !strings.Contains(err.Error(), "unknown tool type") {
+			t.Errorf("expected error containing 'unknown tool type', got: %v", err)
+		}
+	})
+
+	t.Run("with ignore flag succeeds and skips tool", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+		defer cancel()
+		_, opts, output, err := invokeCommandWithContext(ctx, []string{"--config", invalidFile, "--ignore-unknown-tools"})
+		if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !strings.Contains(output, "Server ready to serve!") {
+			t.Errorf("server did not start successfully. Output:\n%s", output)
+		}
+		if _, ok := opts.Cfg.ToolConfigs["invalid_tool"]; ok {
+			t.Errorf("expected 'invalid_tool' to be skipped and filtered out, but it was found in ToolConfigs")
+		}
+	})
+}
+
+func TestMCPAuthEnableAPIClashCLI(t *testing.T) {
+	tempDir := t.TempDir()
+	configFile := filepath.Join(tempDir, "config.yaml")
+	configContent := `
+authServices:
+  generic1:
+    type: generic
+    audience: aud
+    mcpEnabled: true
+    authorizationServer: https://example.com/oauth
+`
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write temp config file: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	opts := internal.NewToolboxOptions(internal.WithIOStreams(buf, buf))
+	cmd := NewCommand(opts)
+	cmd.SetArgs([]string{"--config", configFile, "--enable-api"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error when running with MCP Auth and --enable-api, got nil")
+	}
+	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
+		t.Errorf("unexpected error: %v", err)
 	}
 }

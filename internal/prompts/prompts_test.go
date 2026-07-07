@@ -111,54 +111,6 @@ func TestRegistry(t *testing.T) {
 	})
 }
 
-func TestGetMcpManifest(t *testing.T) {
-	t.Parallel()
-	testCases := []struct {
-		name        string
-		promptName  string
-		description string
-		args        prompts.Arguments
-		want        prompts.McpManifest
-	}{
-		{
-			name:        "No arguments",
-			promptName:  "test-prompt",
-			description: "A test prompt.",
-			args:        prompts.Arguments{},
-			want: prompts.McpManifest{
-				Name:        "test-prompt",
-				Description: "A test prompt.",
-				Arguments:   []prompts.ArgMcpManifest{},
-			},
-		},
-		{
-			name:        "With arguments",
-			promptName:  "arg-prompt",
-			description: "Prompt with args.",
-			args: prompts.Arguments{
-				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
-			},
-			want: prompts.McpManifest{
-				Name:        "arg-prompt",
-				Description: "Prompt with args.",
-				Arguments: []prompts.ArgMcpManifest{
-					{Name: "param1", Description: "First param", Required: true},
-					{Name: "param2", Description: "Second param", Required: false},
-				},
-			},
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := prompts.GetMcpManifest(tc.promptName, tc.description, tc.args)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("GetMcpManifest() mismatch (-want +got):\n%s", diff)
-			}
-		})
-	}
-}
-
 func TestGetManifest(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
@@ -181,7 +133,7 @@ func TestGetManifest(t *testing.T) {
 			description: "Prompt with arguments.",
 			args: prompts.Arguments{
 				{Parameter: parameters.NewStringParameter("param1", "First param")},
-				{Parameter: parameters.NewBooleanParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewBooleanParameter("param2", "Second param", parameters.WithBooleanRequired(false))},
 			},
 			want: prompts.Manifest{
 				Description: "Prompt with arguments.",
