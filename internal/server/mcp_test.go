@@ -24,6 +24,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -44,6 +45,7 @@ const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
 const protocolVersion20251125 = "2025-11-25"
+const protocolVersionDraft = "DRAFT-2026-v1"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -108,6 +110,9 @@ var prompt2Args = []any{
 	},
 }
 
+// TestMcpEndpointWithoutInitialized is expecting Toolbox to response with the
+// v2024-11-05 version. This was a customs transport that we implemented during
+// the initial integration of MCP within Toolbox.
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
@@ -457,16 +462,19 @@ func TestMcpEndpoint(t *testing.T) {
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5, testutils.MockToolUrlBinding}
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
 	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets, withEnableDraftSpecs())
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
 	versTestCases := []struct {
-		name     string
-		protocol string
-		idHeader bool
-		initWant map[string]any
+		name           string
+		protocol       string
+		idHeader       bool
+		reqHeader      []string
+		initWant       map[string]any
+		invalidMethods []string
+		meta           map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -484,6 +492,8 @@ func TestMcpEndpoint(t *testing.T) {
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
+
+			invalidMethods: []string{"server/discover"},
 		},
 		{
 			name:     "version 2025-03-26",
@@ -501,11 +511,13 @@ func TestMcpEndpoint(t *testing.T) {
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
+			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:     "version 2025-06-18",
-			protocol: protocolVersion20250618,
-			idHeader: false,
+			name:      "version 2025-06-18",
+			protocol:  protocolVersion20250618,
+			idHeader:  false,
+			reqHeader: []string{"Mcp-Protocol-Version"},
 			initWant: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "mcp-initialize",
@@ -518,11 +530,13 @@ func TestMcpEndpoint(t *testing.T) {
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
+			invalidMethods: []string{"server/discover"},
 		},
 		{
-			name:     "version 2025-11-25",
-			protocol: protocolVersion20251125,
-			idHeader: false,
+			name:      "version 2025-11-25",
+			protocol:  protocolVersion20251125,
+			idHeader:  false,
+			reqHeader: []string{"Mcp-Protocol-Version"},
 			initWant: map[string]any{
 				"jsonrpc": "2.0",
 				"id":      "mcp-initialize",
@@ -535,25 +549,37 @@ func TestMcpEndpoint(t *testing.T) {
 					"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
 				},
 			},
+			invalidMethods: []string{"server/discover"},
+		},
+		{
+			name:           "version DRAFT",
+			protocol:       protocolVersionDraft,
+			idHeader:       false,
+			reqHeader:      []string{"Mcp-Protocol-Version", "Mcp-Method", "Mcp-Name"},
+			invalidMethods: []string{"ping"},
+			meta: map[string]any{
+				"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+				"io.modelcontextprotocol/clientInfo": map[string]any{
+					"version": "client-temp-version",
+					"name":    "client-name",
+				},
+				"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+			},
 		},
 	}
 	for _, vtc := range versTestCases {
 		t.Run(vtc.name, func(t *testing.T) {
-			sessionId := runInitializeLifecycle(t, ts, vtc.protocol, vtc.initWant, vtc.idHeader)
-
-			header := map[string]string{}
-			if sessionId != "" {
-				header["Mcp-Session-Id"] = sessionId
+			sessionId := ""
+			if len(vtc.initWant) != 0 {
+				sessionId = runInitializeLifecycle(t, ts, vtc.protocol, vtc.initWant, vtc.idHeader)
 			}
-			if vtc.protocol != protocolVersion20241105 && vtc.protocol != protocolVersion20250326 {
-				header["MCP-Protocol-Version"] = vtc.protocol
-			}
-
-			testCases := []struct {
+			testCases := []*struct {
 				name           string
 				url            string
 				isErr          bool
-				body           any
+				body           jsonrpc.JSONRPCRequest
+				batchBody      []jsonrpc.JSONRPCRequest
+				methodName     string
 				wantStatusCode int
 				want           map[string]any
 			}{
@@ -566,6 +592,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "notification",
 						},
 					},
+					methodName:     "notification",
 					wantStatusCode: http.StatusAccepted,
 				},
 				{
@@ -578,11 +605,37 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "ping",
 						},
 					},
+					methodName:     "ping",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"id":      "ping-test-123",
 						"result":  map[string]any{},
+					},
+				},
+				{
+					name: "server/discover",
+					url:  "/",
+					body: jsonrpc.JSONRPCRequest{
+						Jsonrpc: jsonrpcVersion,
+						Id:      "server-discover",
+						Request: jsonrpc.Request{
+							Method: "server/discover",
+						},
+					},
+					methodName:     "server/discover",
+					wantStatusCode: http.StatusOK,
+					want: map[string]any{
+						"jsonrpc": "2.0",
+						"id":      "server-discover",
+						"result": map[string]any{
+							"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+							"capabilities": map[string]any{
+								"tools":   map[string]any{"listChanged": false},
+								"prompts": map[string]any{"listChanged": false},
+							},
+							"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+						},
 					},
 				},
 				{
@@ -595,6 +648,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "tools/list",
 						},
 					},
+					methodName:     "tools/list",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -641,6 +695,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "prompts/list",
 						},
 					},
+					methodName:     "prompts/list",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -674,6 +729,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					methodName:     "prompts/get",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -701,6 +757,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "tools/list",
 						},
 					},
+					methodName:     "tools/list",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -726,6 +783,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "tools/list",
 						},
 					},
+					methodName:     "tools/list",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -745,7 +803,8 @@ func TestMcpEndpoint(t *testing.T) {
 						Id:      "missing-method",
 						Request: jsonrpc.Request{},
 					},
-					wantStatusCode: http.StatusOK,
+					methodName:     "",
+					wantStatusCode: http.StatusNotFound,
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"id":      "missing-method",
@@ -766,7 +825,8 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "foo",
 						},
 					},
-					wantStatusCode: http.StatusOK,
+					methodName:     "foo",
+					wantStatusCode: http.StatusNotFound,
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"id":      "invalid-method",
@@ -787,6 +847,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "foo",
 						},
 					},
+					methodName:     "foo",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -801,7 +862,7 @@ func TestMcpEndpoint(t *testing.T) {
 					name:  "batch requests",
 					url:   "/",
 					isErr: true,
-					body: []any{
+					batchBody: []jsonrpc.JSONRPCRequest{
 						jsonrpc.JSONRPCRequest{
 							Jsonrpc: "1.0",
 							Id:      "batch-requests1",
@@ -840,6 +901,7 @@ func TestMcpEndpoint(t *testing.T) {
 							"name": "no_params",
 						},
 					},
+					methodName:     "tools/call",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -867,6 +929,7 @@ func TestMcpEndpoint(t *testing.T) {
 							"name": "unauthorized_tool",
 						},
 					},
+					methodName:     "tools/call",
 					wantStatusCode: http.StatusUnauthorized,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -890,6 +953,7 @@ func TestMcpEndpoint(t *testing.T) {
 							"name": "require_client_auth_tool",
 						},
 					},
+					methodName:     "tools/call",
 					wantStatusCode: http.StatusUnauthorized,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -910,6 +974,7 @@ func TestMcpEndpoint(t *testing.T) {
 							Method: "tools/list",
 						},
 					},
+					methodName:     "tools/list",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -968,6 +1033,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					methodName:     "tools/call",
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
@@ -1011,11 +1077,44 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 				},
 			}
-			for _, tc := range testCases {
+			for i := range testCases {
+				tc := *testCases[i]
 				t.Run(tc.name, func(t *testing.T) {
+					// add required header
+					header := map[string]string{}
+					if sessionId != "" {
+						header["Mcp-Session-Id"] = sessionId
+					}
+					if slices.Contains(vtc.reqHeader, "Mcp-Protocol-Version") {
+						header["Mcp-Protocol-Version"] = vtc.protocol
+					}
+					if slices.Contains(vtc.reqHeader, "Mcp-Method") {
+						header["Mcp-Method"] = tc.methodName
+					}
+					if slices.Contains(vtc.reqHeader, "Mcp-Name") && (tc.methodName == "tools/call" || tc.methodName == "prompts/get") {
+						params := tc.body.Params.(map[string]any)
+						header["Mcp-Name"] = params["name"].(string)
+					}
+					if vtc.meta != nil {
+						body := tc.body
+						if body.Params != nil {
+							body.Params.(map[string]any)["_meta"] = vtc.meta
+						} else {
+							body.Params = map[string]any{
+								"_meta": vtc.meta,
+							}
+						}
+						tc.body = body
+					}
 					reqMarshal, err := json.Marshal(tc.body)
 					if err != nil {
 						t.Fatalf("unexpected error during marshaling of body")
+					}
+					if tc.batchBody != nil {
+						reqMarshal, err = json.Marshal(tc.batchBody)
+						if err != nil {
+							t.Fatalf("unexpected error during marshaling of body")
+						}
 					}
 
 					if vtc.protocol != protocolVersion20241105 && len(header) == 0 {
@@ -1023,6 +1122,10 @@ func TestMcpEndpoint(t *testing.T) {
 					}
 
 					resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), header)
+
+					if slices.Contains(vtc.invalidMethods, tc.methodName) {
+						return
+					}
 
 					if err != nil {
 						t.Fatalf("unexpected error during request: %s", err)
@@ -1043,7 +1146,7 @@ func TestMcpEndpoint(t *testing.T) {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
 						}
 						if !reflect.DeepEqual(got, tc.want) {
-							t.Fatalf("unexpected response: got %+v, want %+v", got, tc.want)
+							t.Fatalf("unexpected response: got %#v, want %#v", got, tc.want)
 						}
 					}
 				})
@@ -1052,25 +1155,134 @@ func TestMcpEndpoint(t *testing.T) {
 	}
 }
 
-func TestInvalidProtocolVersionHeader(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
+// TestMcpEndpointWithoutEnablingDraftSpecs checks a method on draft specs
+// without enabling draft specs in server. The server should response with
+// unsupported protocol version errror.
+func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
 
+	protocol := protocolVersionDraft
+	meta := map[string]any{
+		"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+		"io.modelcontextprotocol/clientInfo": map[string]any{
+			"version": "client-temp-version",
+			"name":    "client-name",
+		},
+		"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+	}
+
+	url := "/"
+	body := jsonrpc.JSONRPCRequest{
+		Jsonrpc: jsonrpcVersion,
+		Id:      "server-discover",
+		Request: jsonrpc.Request{
+			Method: "server/discover",
+		},
+	}
+	methodName := "server/discover"
+	wantStatusCode := http.StatusBadRequest
+	want := map[string]interface{}{
+		"jsonrpc": "2.0",
+		"id":      "server-discover",
+		"error": map[string]interface{}{
+			"code": float64(-32004),
+			"data": map[string]interface{}{
+				"requested": "DRAFT-2026-v1",
+				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
+			},
+			"message": "unsupported protocol version",
+		},
+	}
+	// add required header
+	header := map[string]string{}
+	header["Mcp-Protocol-Version"] = protocol
+	header["Mcp-Method"] = methodName
+	if body.Params != nil {
+		body.Params.(map[string]any)["_meta"] = meta
+	} else {
+		body.Params = map[string]any{
+			"_meta": meta,
+		}
+	}
+	reqMarshal, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of body")
+	}
+
+	if protocol != protocolVersion20241105 && len(header) == 0 {
+		t.Fatalf("header is missing")
+	}
+
+	resp, resBody, err := runRequest(ts, http.MethodPost, url, bytes.NewBuffer(reqMarshal), header)
+
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if resp.StatusCode != wantStatusCode {
+		t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, wantStatusCode)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal(resBody, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected response: got %#v, want %#v", got, want)
+	}
+}
+
+func TestInvalidProtocolVersionHeader(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2, testutils.MockTool3, testutils.MockTool4, testutils.MockTool5}
+	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1}
+	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, mockPrompts)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	reqBody := jsonrpc.JSONRPCRequest{
+		Jsonrpc: jsonrpcVersion,
+		Id:      "tools-list",
+		Request: jsonrpc.Request{
+			Method: "tools/list",
+		},
+	}
+	reqMarshal, err := json.Marshal(reqBody)
+	if err != nil {
+		t.Fatalf("unexpected error during marshaling of body")
+	}
 	header := map[string]string{}
 	header["MCP-Protocol-Version"] = "foo"
 
-	resp, body, err := runRequest(ts, http.MethodPost, "/", nil, header)
+	resp, body, err := runRequest(ts, http.MethodPost, "/", bytes.NewBuffer(reqMarshal), header)
 	if resp.Status != "400 Bad Request" {
-		t.Fatalf("unexpected status: %s", resp.Status)
+		t.Fatalf("unexpected status: %s; %s", resp.Status, body)
 	}
 	var got map[string]any
 	if err := json.Unmarshal(body, &got); err != nil {
 		t.Fatalf("unexpected error unmarshalling body: %s", err)
 	}
-	want := "invalid protocol version: foo"
-	if got["error"] != want {
+	errMap, ok := got["error"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected 'error' field to be a map, got %T", got["error"])
+	}
+	msg, ok := errMap["message"].(string)
+	if !ok {
+		t.Fatalf("expected 'message' field to be a string, got %T", errMap["message"])
+	}
+	want := "unsupported protocol version"
+	if msg != want {
 		t.Fatalf("unexpected error message: got %s, want %s", got["error"], want)
 	}
 	if err != nil {
@@ -1404,85 +1616,121 @@ func TestSseManagerGetNilSessionValue(t *testing.T) {
 	}
 }
 
-// withTraceContextPropagator registers the W3C trace-context propagator globally
-// for the duration of the test. extractMeta delegates to otel.GetTextMapPropagator,
-// and the default global propagator is a no-op — so without this helper the
-// "extracted" trace context would always be invalid.
-func withTraceContextPropagator(t *testing.T) {
+func TestExtractMeta(t *testing.T) {
+	// withTraceContextPropagator registers the W3C trace-context propagator globally
+	// for the duration of the test. extractMeta delegates to otel.GetTextMapPropagator,
+	// and the default global propagator is a no-op — so without this helper the
+	// "extracted" trace context would always be invalid.
 	t.Helper()
 	prev := otel.GetTextMapPropagator()
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	t.Cleanup(func() { otel.SetTextMapPropagator(prev) })
-}
 
-func TestExtractMeta_EmptyOrInvalidBody(t *testing.T) {
-	cases := map[string][]byte{
-		"empty":      []byte(""),
-		"not json":   []byte("not json"),
-		"no _meta":   []byte(`{"params":{}}`),
-		"no params":  []byte(`{"method":"tools/call"}`),
-		"empty meta": []byte(`{"params":{"_meta":{}}}`),
+	testCases := []struct {
+		name                 string
+		body                 []byte
+		wantEmptyCtx         bool
+		wantValidSpanContext bool
+		wantTraceId          string
+		wantProtocolVersion  string
+		wantTelemetryAttr    *util.TelemetryAttributes
+		wantClientName       string
+		wantClientVersion    string
+	}{
+		{
+			name:         "empty meta",
+			body:         []byte(""),
+			wantEmptyCtx: true,
+		},
+		{
+			name:         "not json meta",
+			body:         []byte("not json"),
+			wantEmptyCtx: true,
+		},
+		{
+			name:         "no _meta",
+			body:         []byte(`{"params":{}}`),
+			wantEmptyCtx: true,
+		},
+		{
+			name:         "no params",
+			body:         []byte(`{"method":"tools/call"}`),
+			wantEmptyCtx: true,
+		},
+		{
+			name:         "empty meta",
+			body:         []byte(`{"params":{"_meta":{}}}`),
+			wantEmptyCtx: true,
+		},
+		{
+			name:                 "traceparent only",
+			body:                 []byte(`{"params":{"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}`),
+			wantValidSpanContext: true,
+			wantEmptyCtx:         true,
+		},
+		{
+			name: "telemetry attributes only",
+			body: []byte(`{"params":{"_meta":{"dev.mcp-toolbox/telemetry":{` +
+				`"client.name":"toolbox-langchain-python",` +
+				`"client.version":"v0.1.0",` +
+				`"client.model":"gemini-2.5-flash",` +
+				`"client.user.id":"user-123",` +
+				`"client.agent.id":"agent-456"}}}}`),
+			wantTelemetryAttr: &util.TelemetryAttributes{
+				ClientName: "toolbox-langchain-python", ClientVersion: "v0.1.0",
+				ClientModel: "gemini-2.5-flash", ClientUserID: "user-123", ClientAgentID: "agent-456",
+			},
+		},
+		{
+			name: "traceparent, telemetry and protocol version",
+			body: []byte(`{"params":{"_meta":{` +
+				`"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",` +
+				`"dev.mcp-toolbox/telemetry":{"client.name":"foo","client.version":"v1"},` +
+				`"io.modelcontextprotocol/protocolVersion":"v999"}}}`),
+			wantTelemetryAttr: &util.TelemetryAttributes{
+				ClientName: "foo", ClientVersion: "v1",
+				ClientModel: "", ClientUserID: "", ClientAgentID: "",
+			},
+			wantValidSpanContext: true,
+			wantClientName:       "foo",
+			wantClientVersion:    "v1",
+			wantProtocolVersion:  "v999",
+		},
 	}
-	for name, body := range cases {
-		t.Run(name, func(t *testing.T) {
-			ctx := extractMeta(context.Background(), body)
-			if util.TelemetryAttributesFromContext(ctx) != nil {
-				t.Error("expected no telemetry attributes")
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			metaProtocolVersion, ctx := extractMeta(context.Background(), tc.body)
+			ta := util.TelemetryAttributesFromContext(ctx)
+			if tc.wantEmptyCtx {
+				if ta != nil {
+					t.Fatalf("expected no telemetry attributes")
+				}
+			}
+
+			if !reflect.DeepEqual(ta, tc.wantTelemetryAttr) {
+				t.Fatalf("got %#v, want %#v", ta, tc.wantTelemetryAttr)
+				if tc.wantClientName != "" && ta.ClientName != tc.wantClientName {
+					t.Fatalf("invalid telemetry attr client name: got %s, want %s", ta.ClientName, tc.wantClientName)
+				}
+				if tc.wantClientVersion != "" && ta.ClientVersion != tc.wantClientVersion {
+					t.Fatalf("invalid telemetry attr client version: got %s, want %s", ta.ClientVersion, tc.wantClientVersion)
+				}
+			}
+
+			if tc.wantValidSpanContext {
+				sc := trace.SpanContextFromContext(ctx)
+				if !sc.IsValid() {
+					t.Fatal("expected valid span context")
+				}
+				if got := sc.TraceID().String(); got != "0af7651916cd43dd8448eb211c80319c" {
+					t.Errorf("trace id mismatch: got %s", got)
+				}
+			}
+
+			if tc.wantProtocolVersion != metaProtocolVersion {
+				t.Fatalf("meta protocol version mismatch: got %s, want %s", metaProtocolVersion, tc.wantProtocolVersion)
 			}
 		})
-	}
-}
-
-func TestExtractMeta_TraceparentOnly(t *testing.T) {
-	withTraceContextPropagator(t)
-	body := []byte(`{"params":{"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}`)
-	ctx := extractMeta(context.Background(), body)
-
-	sc := trace.SpanContextFromContext(ctx)
-	if !sc.IsValid() {
-		t.Fatal("expected valid span context from extracted traceparent")
-	}
-	if got := sc.TraceID().String(); got != "0af7651916cd43dd8448eb211c80319c" {
-		t.Errorf("trace id mismatch: got %s", got)
-	}
-	if util.TelemetryAttributesFromContext(ctx) != nil {
-		t.Error("expected no telemetry attributes when only traceparent is sent")
-	}
-}
-
-func TestExtractMeta_TelemetryAttrsOnly(t *testing.T) {
-	body := []byte(`{"params":{"_meta":{"dev.mcp-toolbox/telemetry":{` +
-		`"client.name":"toolbox-langchain-python",` +
-		`"client.version":"v0.1.0",` +
-		`"client.model":"gemini-2.5-flash",` +
-		`"client.user.id":"user-123",` +
-		`"client.agent.id":"agent-456"}}}}`)
-
-	ta := util.TelemetryAttributesFromContext(extractMeta(context.Background(), body))
-	if ta == nil {
-		t.Fatal("expected TelemetryAttributes in context")
-	}
-	want := util.TelemetryAttributes{
-		ClientName: "toolbox-langchain-python", ClientVersion: "v0.1.0",
-		ClientModel: "gemini-2.5-flash", ClientUserID: "user-123", ClientAgentID: "agent-456",
-	}
-	if *ta != want {
-		t.Errorf("got %+v, want %+v", *ta, want)
-	}
-}
-
-func TestExtractMeta_TraceparentAndTelemetryBoth(t *testing.T) {
-	withTraceContextPropagator(t)
-	body := []byte(`{"params":{"_meta":{` +
-		`"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",` +
-		`"dev.mcp-toolbox/telemetry":{"client.name":"foo","client.version":"v1"}}}}`)
-	ctx := extractMeta(context.Background(), body)
-
-	if !trace.SpanContextFromContext(ctx).IsValid() {
-		t.Error("expected valid span context")
-	}
-	ta := util.TelemetryAttributesFromContext(ctx)
-	if ta == nil || ta.ClientName != "foo" || ta.ClientVersion != "v1" {
-		t.Errorf("expected telemetry attrs alongside traceparent, got %+v", ta)
 	}
 }
