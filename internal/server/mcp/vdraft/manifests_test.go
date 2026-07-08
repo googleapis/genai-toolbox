@@ -255,7 +255,7 @@ func TestGenerateListToolsResult(t *testing.T) {
 	}
 	want := ListToolsResult{
 		CacheableResult: CacheableResult{
-			TtlMs:      0,
+			TtlMs:      300000,
 			CacheScope: cacheScopePublic,
 		},
 		Tools: []Tool{
@@ -372,7 +372,7 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	}
 	want := ListPromptsResult{
 		CacheableResult: CacheableResult{
-			TtlMs:      0,
+			TtlMs:      300000,
 			CacheScope: cacheScopePublic,
 		},
 		Prompts: []Prompt{
