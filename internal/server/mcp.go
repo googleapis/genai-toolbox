@@ -276,7 +276,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 
 			var v string
 			var res any
-			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, protocol, "", "", nil, "")
+			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, protocol, "", nil, "")
 			if err != nil {
 				// errors during the processing of message will generate a valid MCP Error response.
 				// server can continue to run.
@@ -580,7 +580,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 
 	toolsetName := chi.URLParam(r, "toolsetName")
-	promptsetName := chi.URLParam(r, "promptsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
@@ -593,7 +592,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
 
-	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header, networkProtocolVersion)
+	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, r.Header, networkProtocolVersion)
 	if err != nil {
 		s.logger.DebugContext(ctx, fmt.Errorf("error processing message: %w", err).Error())
 	}
@@ -662,7 +661,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 // processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
 	operationStart := time.Now()
 
 	logger, err := util.LoggerFromContext(ctx)
@@ -850,7 +849,9 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		span.SetAttributes(attribute.String("mcp.protocol.version", version))
 		return version, result, err
 	default:
-		toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
+		// The URL segment names a group; its derived toolset and promptset views
+		// share that name, so prompts scope to the connected group.
+		g, ok := s.ResourceMgr.GetGroup(toolsetName)
 		if !ok {
 			err := fmt.Errorf("toolset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
@@ -859,16 +860,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		promptset, ok := s.ResourceMgr.GetPromptset(promptsetName)
-		if !ok {
-			err := fmt.Errorf("promptset does not exist")
-			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
-			metricErrorType = rpcErr.Error.String()
-			span.SetStatus(codes.Error, err.Error())
-			span.SetAttributes(attribute.String("error.type", metricErrorType))
-			return "", rpcErr, err
-		}
-		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g.ToToolset(), g.ToPromptset(), s.ResourceMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code

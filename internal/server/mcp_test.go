@@ -28,10 +28,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -1730,6 +1733,68 @@ func TestExtractMeta(t *testing.T) {
 
 			if tc.wantProtocolVersion != metaProtocolVersion {
 				t.Fatalf("meta protocol version mismatch: got %s, want %s", metaProtocolVersion, tc.wantProtocolVersion)
+			}
+		})
+	}
+}
+
+func TestMcpPromptScopingByGroup(t *testing.T) {
+	toolsMap := map[string]tools.Tool{}
+	promptsMap := map[string]prompts.Prompt{
+		testutils.MockPrompt1.Name: testutils.MockPrompt1,
+		testutils.MockPrompt2.Name: testutils.MockPrompt2,
+	}
+	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize group_a: %s", err)
+	}
+	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize group_b: %s", err)
+	}
+	groups := map[string]group.Group{"group_a": groupA, "group_b": groupB}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	testCases := []struct {
+		name        string
+		url         string
+		wantPrompts []any
+	}{
+		{
+			name:        "group_a scopes to its own prompt",
+			url:         "/group_a",
+			wantPrompts: []any{map[string]any{"name": "prompt1"}},
+		},
+		{
+			name:        "group_b scopes to its own prompt",
+			url:         "/group_b",
+			wantPrompts: []any{map[string]any{"name": "prompt2", "arguments": prompt2Args}},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			reqBody := jsonrpc.JSONRPCRequest{Jsonrpc: jsonrpcVersion, Id: "prompts-list", Request: jsonrpc.Request{Method: "prompts/list"}}
+			reqMarshal, err := json.Marshal(reqBody)
+			if err != nil {
+				t.Fatalf("unexpected error marshaling body: %s", err)
+			}
+			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
+			if err != nil {
+				t.Fatalf("unexpected error during request: %s", err)
+			}
+			if resp.StatusCode != http.StatusOK {
+				t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+			}
+			var got map[string]any
+			if err := json.Unmarshal(body, &got); err != nil {
+				t.Fatalf("unexpected error unmarshalling body: %s", err)
+			}
+			want := map[string]any{"jsonrpc": "2.0", "id": "prompts-list", "result": map[string]any{"prompts": tc.wantPrompts}}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected response: got %#v, want %#v", got, want)
 			}
 		})
 	}
