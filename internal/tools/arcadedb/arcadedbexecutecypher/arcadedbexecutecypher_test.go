@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 func TestParseFromYamlArcadeDBCypher(t *testing.T) {
@@ -46,11 +47,13 @@ func TestParseFromYamlArcadeDBCypher(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "arcadedb-execute-cypher",
-					Source:       "my-arcadedb-instance",
-					Description:  "some tool description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "arcadedb-execute-cypher",
+					Source: "my-arcadedb-instance",
 				},
 			},
 		},
@@ -69,12 +72,14 @@ func TestParseFromYamlArcadeDBCypher(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
-					Name:         "example_tool",
-					Type:         "arcadedb-execute-cypher",
-					Source:       "my-arcadedb-instance",
-					ReadOnly:     true,
-					Description:  "some tool description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "some tool description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:     "arcadedb-execute-cypher",
+					Source:   "my-arcadedb-instance",
+					ReadOnly: true,
 				},
 			},
 		},

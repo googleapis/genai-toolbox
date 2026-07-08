@@ -19,9 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -36,7 +35,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -49,12 +48,11 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	ReadOnly     bool     `yaml:"readOnly"`
-	AuthRequired []string `yaml:"authRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	ReadOnly         bool                   `yaml:"readOnly"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -63,44 +61,49 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
+	}
+
 	cypherParameter := parameters.NewStringParameter("cypher", "The cypher to execute.")
-	queryParamsParameter := parameters.NewMapParameterWithDefault(
+	queryParamsParameter := parameters.NewMapParameter(
 		"params",
-		map[string]any{},
 		"Optional query parameters to use with the cypher statement.",
 		"",
+		parameters.WithMapDefault(map[string]any{}),
 	)
-	dryRunParameter := parameters.NewBooleanParameterWithDefault(
+	dryRunParameter := parameters.NewBooleanParameter(
 		"dry_run",
-		false,
-		"If set to true, the query will be validated and information about the execution "+
+		"If set to true, the query will be validated and information about the execution " +
 			"will be returned without running the query. Defaults to false.",
+		parameters.WithBooleanDefault(false),
 	)
 	params := parameters.Parameters{cypherParameter, queryParamsParameter, dryRunParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
-
-	t := Tool{
-		Config:      cfg,
-		Parameters:  params,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+	allParameters, paramManifest, err := parameters.ProcessParameters(nil, params)
+	if err != nil {
+		return nil, err
 	}
-	return t, nil
+
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+	}, nil
 }
 
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters  parameters.Parameters `yaml:"parameters"`
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -108,7 +111,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	paramsMap := params.AsMap()
 	cypherStr, ok := paramsMap["cypher"].(string)
 	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("unable to cast cypher parameter %s", paramsMap["cypher"]), nil)
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast cypher parameter %v", paramsMap["cypher"]), nil)
 	}
 
 	if cypherStr == "" {
@@ -117,7 +120,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	dryRun, ok := paramsMap["dry_run"].(bool)
 	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("unable to cast dry_run parameter %s", paramsMap["dry_run"]), nil)
+		return nil, util.NewAgentError(fmt.Sprintf("unable to cast dry_run parameter %v", paramsMap["dry_run"]), nil)
 	}
 
 	queryParams, ok := paramsMap["params"].(map[string]any)
@@ -125,7 +128,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError(fmt.Sprintf("unable to cast params parameter %v", paramsMap["params"]), nil)
 	}
 
-	resp, err := source.RunCypher(ctx, cypherStr, queryParams, t.ReadOnly, dryRun)
+	resp, err := source.RunCypher(ctx, cypherStr, queryParams, t.Cfg.ReadOnly, dryRun)
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
@@ -133,33 +136,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	return false, nil
+	return parameters.EmbedParams(ctx, t.StaticParameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
+	return t.Cfg
 }
