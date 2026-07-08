@@ -14,7 +14,7 @@ description: >
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
 |              | `--http-max-request-bytes` | Maximum MCP HTTP request body size in bytes.                                                                                                                              | `10485760`  |
-|              | `--ignore-unknown-tools`   | Log warnings and skip unknown/unsupported tool types instead of failing to start.                                                                                          |             |
+|              | `--ignore-unknown-tools`   | Log warnings and skip unknown/unsupported tool types instead of failing to start.                                                                                         |             |
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                              | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                             | `standard`  |
 |              | `--mcp-prm-file`           | Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation for MCP Server-Wide Authentication.                                  |             |
@@ -27,7 +27,7 @@ description: >
 |              | `--telemetry-gcp-project`  | Google Cloud project ID used for `--telemetry-gcp`; defaults to `GOOGLE_CLOUD_PROJECT` if not set.                                                                        |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                             |             |
 |              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                 | `toolbox`   |
-|              | `--sql-commenter`          | Append SQLCommenter-format comments (traceparent, server, tool.name, db.system.name, client metadata from `_meta["dev.mcp-toolbox/telemetry"]`) to executed SQL.          |             |
+|              | `--sql-commenter`          | Prepend SQLCommenter-format comments (traceparent, server, tool.name, db.system.name, client metadata from `_meta["dev.mcp-toolbox/telemetry"]`) to executed SQL.         |             |
 |              | `--config`                 | File path specifying the tool configuration. Cannot be used with --configs or --config-folder.                                                                            |             |
 |              | `--configs`                | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --config or --config-folder.                                                |             |
 |              | `--config-folder`          | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --config or --configs.  |             |
@@ -36,6 +36,7 @@ description: >
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                               | `*`         |
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                            |             |
 |              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                 | `0`         |
+|              | `--enable-draft-specs`     | Opt-in and test upcoming draft MCP specifications.                                                                                                                        | `false`     |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                       |             |
 
 ## Sub Commands

@@ -30,7 +30,7 @@ func TestConfig(t *testing.T) {
 	// Setup a shared config for testing its methods
 	testArgs := prompts.Arguments{
 		{Parameter: parameters.NewStringParameter("name", "The name to use.")},
-		{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
+		{Parameter: parameters.NewStringParameter("location", "The location.", parameters.WithStringRequired(false))},
 	}
 
 	cfg := custom.Config{

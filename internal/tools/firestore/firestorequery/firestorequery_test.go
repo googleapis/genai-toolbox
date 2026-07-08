@@ -61,7 +61,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 					Source:         "my-firestore-instance",
 					CollectionPath: "users/{{.userId}}/documents",
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("userId", "The user ID to query documents for", true),
+						parameters.NewStringParameter("userId", "The user ID to query documents for", parameters.WithStringRequired(true)),
 					},
 				},
 			},
@@ -110,8 +110,8 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 }
 `,
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("category", "Product category to filter by", true),
-						parameters.NewFloatParameterWithRequired("maxPrice", "Maximum price for products", true),
+						parameters.NewStringParameter("category", "Product category to filter by", parameters.WithStringRequired(true)),
+						parameters.NewFloatParameter("maxPrice", "Maximum price for products", parameters.WithFloatRequired(true)),
 					},
 				},
 			},
@@ -156,7 +156,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 					},
 					Limit: "50",
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("sortField", "Field to sort by", true),
+						parameters.NewStringParameter("sortField", "Field to sort by", parameters.WithStringRequired(true)),
 					},
 				},
 			},
@@ -224,9 +224,9 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 `,
 					AnalyzeQuery: true,
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("collection", "Collection name to query", true),
-						parameters.NewStringParameterWithRequired("status", "Status to filter by", true),
-						parameters.NewIntParameterWithDefault("minPriority", 1, "Minimum priority level"),
+						parameters.NewStringParameter("collection", "Collection name to query", parameters.WithStringRequired(true)),
+						parameters.NewStringParameter("status", "Status to filter by", parameters.WithStringRequired(true)),
+						parameters.NewIntParameter("minPriority", "Minimum priority level", parameters.WithIntDefault(1)),
 					},
 				},
 			},
@@ -305,11 +305,11 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 }
 `,
 					Parameters: parameters.Parameters{
-						parameters.NewStringParameterWithRequired("continent", "Continent to filter by", true),
-						parameters.NewStringParameterWithRequired("minPopulation", "Minimum population as string", true),
-						parameters.NewFloatParameterWithRequired("minGdp", "Minimum GDP value", true),
-						parameters.NewBooleanParameterWithRequired("isActive", "Filter by active status", true),
-						parameters.NewStringParameterWithRequired("startDate", "Start date in RFC3339 format", true),
+						parameters.NewStringParameter("continent", "Continent to filter by", parameters.WithStringRequired(true)),
+						parameters.NewStringParameter("minPopulation", "Minimum population as string", parameters.WithStringRequired(true)),
+						parameters.NewFloatParameter("minGdp", "Minimum GDP value", parameters.WithFloatRequired(true)),
+						parameters.NewBooleanParameter("isActive", "Filter by active status", parameters.WithBooleanRequired(true)),
+						parameters.NewStringParameter("startDate", "Start date in RFC3339 format", parameters.WithStringRequired(true)),
 					},
 				},
 			},
@@ -447,10 +447,10 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 			},
 			Limit: "20",
 			Parameters: parameters.Parameters{
-				parameters.NewStringParameterWithRequired("userId", "User ID whose posts to query", true),
-				parameters.NewStringParameterWithRequired("visibility", "Post visibility (public, private, friends)", true),
-				parameters.NewStringParameterWithRequired("startDate", "Start date for posts", true),
-				parameters.NewStringParameterWithDefault("sortOrder", "DESCENDING", "Sort order (ASCENDING or DESCENDING)"),
+				parameters.NewStringParameter("userId", "User ID whose posts to query", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("visibility", "Post visibility (public, private, friends)", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("startDate", "Start date for posts", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("sortOrder", "Sort order (ASCENDING or DESCENDING)", parameters.WithStringDefault("DESCENDING")),
 			},
 		},
 		"query_inventory": firestorequery.Config{
@@ -466,8 +466,8 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
   "field": "quantity", "op": "<", "value": {"integerValue": "{{.threshold}}"}}
 `,
 			Parameters: parameters.Parameters{
-				parameters.NewStringParameterWithRequired("warehouseId", "Warehouse ID to check inventory", true),
-				parameters.NewIntParameterWithRequired("threshold", "Quantity threshold for low stock", true),
+				parameters.NewStringParameter("warehouseId", "Warehouse ID to check inventory", parameters.WithStringRequired(true)),
+				parameters.NewIntParameter("threshold", "Quantity threshold for low stock", parameters.WithIntRequired(true)),
 			},
 		},
 		"query_transactions": firestorequery.Config{
@@ -488,9 +488,9 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 `,
 			AnalyzeQuery: true,
 			Parameters: parameters.Parameters{
-				parameters.NewStringParameterWithRequired("accountId", "Account ID for transactions", true),
-				parameters.NewStringParameterWithDefault("transactionType", "all", "Type of transaction"),
-				parameters.NewFloatParameterWithDefault("minAmount", 0, "Minimum transaction amount"),
+				parameters.NewStringParameter("accountId", "Account ID for transactions", parameters.WithStringRequired(true)),
+				parameters.NewStringParameter("transactionType", "Type of transaction", parameters.WithStringDefault("all")),
+				parameters.NewFloatParameter("minAmount", "Minimum transaction amount", parameters.WithFloatDefault(0)),
 			},
 		},
 	}

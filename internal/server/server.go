@@ -62,6 +62,7 @@ type Server struct {
 	ResourceMgr         *resources.ResourceManager
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
+	enableDraftSpecs    bool
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -74,6 +75,14 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]prompts.Promptset,
 	error,
 ) {
+	if cfg.EnableAPI {
+		for _, sc := range cfg.AuthServiceConfigs {
+			if sc.IsMCPEnabled() {
+				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (EnableAPI)")
+			}
+		}
+	}
+
 	metadataStr := cfg.Version
 	if len(cfg.UserAgentMetadata) > 0 {
 		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
@@ -81,12 +90,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	// initialize and validate the sources from configs
@@ -139,6 +148,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		authServicesMap[name] = a
 	}
+
 	authServiceNames := make([]string, 0, len(authServicesMap))
 	for name := range authServicesMap {
 		authServiceNames = append(authServiceNames, name)
@@ -265,12 +275,12 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 ) {
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to get instrumentation from context: %w", err)
 	}
 
 	l, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
 	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
@@ -298,7 +308,7 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 				trace.WithAttributes(attribute.String("tool_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize()
+			t, err := tc.Initialize(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize tool %q: %w", name, err)
 			}
@@ -459,6 +469,11 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
+		enableDraftSpecs:    cfg.EnableDraftSpecs,
+	}
+
+	if s.enableDraftSpecs {
+		s.logger.WarnContext(ctx, "Flag --enable-draft-specs is active. Please note that draft specs are subject to breaking changes and will be completely removed (not redirected) once stable MCP specifications are released. Do not use this configuration in production.")
 	}
 
 	// cors

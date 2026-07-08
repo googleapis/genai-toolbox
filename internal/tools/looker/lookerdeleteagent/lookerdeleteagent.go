@@ -65,12 +65,12 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
-	agentIdParameter := parameters.NewStringParameterWithDefault("agent_id", "", "The ID of the agent.")
+	agentIdParameter := parameters.NewStringParameter("agent_id", "The ID of the agent.", parameters.WithStringDefault(""))
 	params := parameters.Parameters{agentIdParameter}
 
 	annotations := &tools.ToolAnnotations{}

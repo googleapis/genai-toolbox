@@ -16,6 +16,7 @@ package cloudstorage
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -46,6 +47,30 @@ func TestParseFromYamlCloudStorage(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with allowed buckets and local roots",
+			in: `
+			kind: source
+			name: my-gcs
+			type: cloud-storage
+			project: my-project
+			allowedBuckets:
+				- bucket1
+				- bucket2
+			allowedLocalRoots:
+				- /var/tmp
+				- /workspace
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-gcs": Config{
+					Name:              "my-gcs",
+					Type:              SourceType,
+					Project:           "my-project",
+					AllowedBuckets:    []string{"bucket1", "bucket2"},
+					AllowedLocalRoots: []string{"/var/tmp", "/workspace"},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -54,7 +79,7 @@ func TestParseFromYamlCloudStorage(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 			if !cmp.Equal(tc.want, got) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+				t.Fatalf("incorrect parse: %v", cmp.Diff(tc.want, got))
 			}
 		})
 	}
@@ -96,6 +121,110 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestValidateBucket(t *testing.T) {
+	tcs := []struct {
+		desc           string
+		allowedBuckets []string
+		bucket         string
+		wantErr        bool
+	}{
+		{
+			desc:           "empty allowedBuckets succeeds",
+			allowedBuckets: nil,
+			bucket:         "my-bucket",
+			wantErr:        false,
+		},
+		{
+			desc:           "allowed bucket succeeds",
+			allowedBuckets: []string{"my-bucket", "other-bucket"},
+			bucket:         "my-bucket",
+			wantErr:        false,
+		},
+		{
+			desc:           "disallowed bucket fails",
+			allowedBuckets: []string{"my-bucket", "other-bucket"},
+			bucket:         "attacker-bucket",
+			wantErr:        true,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := &Source{
+				Config: Config{
+					Name:           "my-gcs",
+					AllowedBuckets: tc.allowedBuckets,
+				},
+			}
+			err := s.validateBucket(tc.bucket)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("validateBucket(%q) got error: %v, wantErr: %v", tc.bucket, err, tc.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateLocalPath(t *testing.T) {
+	base := t.TempDir()
+
+	tcs := []struct {
+		desc         string
+		allowedRoots []string
+		path         string
+		wantErr      bool
+	}{
+		{
+			desc:         "empty allowedLocalRoots succeeds",
+			allowedRoots: nil,
+			path:         filepath.Join(base, "var", "tmp", "file.txt"),
+			wantErr:      false,
+		},
+		{
+			desc:         "under allowed root succeeds",
+			allowedRoots: []string{filepath.Join(base, "var", "tmp"), filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace", "file.txt"),
+			wantErr:      false,
+		},
+		{
+			desc:         "exact match allowed root succeeds",
+			allowedRoots: []string{filepath.Join(base, "var", "tmp"), filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace"),
+			wantErr:      false,
+		},
+		{
+			desc:         "outside allowed root fails",
+			allowedRoots: []string{filepath.Join(base, "var", "tmp"), filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "etc", "passwd"),
+			wantErr:      true,
+		},
+		{
+			desc:         "prefix check bypass fails (partial matching directory)",
+			allowedRoots: []string{filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace-malicious", "file.txt"),
+			wantErr:      true,
+		},
+		{
+			desc:         "relative path is cleaned and validated",
+			allowedRoots: []string{filepath.Join(base, "workspace")},
+			path:         filepath.Join(base, "workspace", "..", "etc", "passwd"),
+			wantErr:      true,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			s := &Source{
+				Config: Config{
+					Name:              "my-gcs",
+					AllowedLocalRoots: tc.allowedRoots,
+				},
+			}
+			err := s.validateLocalPath(tc.path)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("validateLocalPath(%q) got error: %v, wantErr: %v", tc.path, err, tc.wantErr)
 			}
 		})
 	}

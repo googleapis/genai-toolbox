@@ -63,7 +63,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -71,10 +71,15 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
 	params := parameters.Parameters{sqlParameter}
 
+	defaultAnnotations := tools.NewDestructiveAnnotations
+	if cfg.ReadOnly {
+		defaultAnnotations = tools.NewReadOnlyAnnotations
+	}
+
 	return Tool{
 		BaseTool: tools.NewBaseTool(
 			cfg,
-			tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewDestructiveAnnotations),
+			tools.GetAnnotationsOrDefault(cfg.Annotations, defaultAnnotations),
 			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 			params,
 		),
