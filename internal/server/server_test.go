@@ -1242,7 +1242,7 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1334,11 +1334,163 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
 		})
+	}
+}
+
+func TestGroupConfigParsing(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "valid named group",
+			yaml: `
+kind: group
+name: my_group
+description: a group of tools and prompts
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`,
+			wantError: false,
+		},
+		{
+			name: "named group with only description",
+			yaml: `
+kind: group
+name: my_group
+description: just a description
+`,
+			wantError: false,
+		},
+		{
+			name: "default group with only description",
+			yaml: `
+kind: group
+name:
+description: default server instruction
+`,
+			wantError: false,
+		},
+		{
+			name: "default group omitting name field",
+			yaml: `
+kind: group
+description: default server instruction
+`,
+			wantError: false,
+		},
+		{
+			name: "default group declaring tools is an error",
+			yaml: `
+kind: group
+name:
+tools:
+  - tool_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring prompts is an error",
+			yaml: `
+kind: group
+name:
+prompts:
+  - prompt_a
+`,
+			wantError: true,
+		},
+		{
+			name: "unknown field is an error",
+			yaml: `
+kind: group
+name: my_group
+resources:
+  - res_a
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate default group is an error",
+			yaml: `
+kind: group
+name:
+description: first
+---
+kind: group
+name:
+description: second
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate named group is an error",
+			yaml: `
+kind: group
+name: my_group
+tools:
+  - tool_a
+---
+kind: group
+name: my_group
+tools:
+  - tool_b
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestGroupConfigValues(t *testing.T) {
+	ctx := context.Background()
+	yaml := `
+kind: group
+name: my_group
+description: a group
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`
+	_, _, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(yaml))
+	if err != nil {
+		t.Fatalf("UnmarshalResourceConfig() returned unexpected error: %v", err)
+	}
+	gc, ok := groups["my_group"]
+	if !ok {
+		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
+	}
+	if gc.Name != "my_group" {
+		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
+	}
+	if gc.Description != "a group" {
+		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
+	}
+	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
+		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
+	}
+	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
+		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
 	}
 }
 

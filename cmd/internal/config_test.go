@@ -248,6 +248,26 @@ dimension: 768
 `,
 		},
 		{
+			desc: "convert nested groups",
+			in: `
+            groups:
+                my_group:
+                    description: my group description
+                    tools:
+                        - example_tool
+                    prompts:
+                        - code_review`,
+			want: `
+kind: group
+name: my_group
+description: my group description
+tools:
+- example_tool
+prompts:
+- code_review
+`,
+		},
+		{
 			desc: "preserve resource order",
 			in: `
             tools:
@@ -2241,6 +2261,7 @@ func TestMergeConfigs(t *testing.T) {
 				Tools:           server.ToolConfigs{"tool1": http.Config{ConfigBase: tools.ConfigBase{Name: "tool1"}}, "tool2": http.Config{ConfigBase: tools.ConfigBase{Name: "tool2"}}},
 				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
 				Prompts:         server.PromptConfigs{},
+				Groups:          server.GroupConfigs{},
 				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 			},
 			wantErr: false,
@@ -2266,6 +2287,7 @@ func TestMergeConfigs(t *testing.T) {
 				Tools:           file1.Tools,
 				Toolsets:        file1.Toolsets,
 				Prompts:         server.PromptConfigs{},
+				Groups:          server.GroupConfigs{},
 			},
 		},
 		{
@@ -2278,6 +2300,7 @@ func TestMergeConfigs(t *testing.T) {
 				Tools:           make(server.ToolConfigs),
 				Toolsets:        make(server.ToolsetConfigs),
 				Prompts:         server.PromptConfigs{},
+				Groups:          server.GroupConfigs{},
 			},
 		},
 	}

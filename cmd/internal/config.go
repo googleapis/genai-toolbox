@@ -39,6 +39,7 @@ type Config struct {
 	Tools           server.ToolConfigs           `yaml:"tools"`
 	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Groups          server.GroupConfigs          `yaml:"groups"`
 }
 
 type ConfigParser struct {
@@ -150,7 +151,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, config.Groups, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -180,7 +181,7 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	encoder := yaml.NewEncoder(&buf, yaml.UseLiteralStyleIfMultiline(true))
 
-	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	nestedFormatKey := []string{"sources", "authServices", "embeddingModels", "tools", "toolsets", "prompts", "groups"}
 	docIndex := 0
 	for {
 		if err := decoder.Decode(&input); err != nil {
@@ -217,6 +218,8 @@ func ConvertConfig(raw []byte) ([]byte, error) {
 					key = "toolset"
 				case "prompts":
 					key = "prompt"
+				case "groups":
+					key = "group"
 				}
 				transformed, err := transformDocs(key, slice)
 				if err != nil {
@@ -316,6 +319,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 		Tools:           make(server.ToolConfigs),
 		Toolsets:        make(server.ToolsetConfigs),
 		Prompts:         make(server.PromptConfigs),
+		Groups:          make(server.GroupConfigs),
 	}
 
 	var conflicts []string
@@ -376,11 +380,20 @@ func mergeConfigs(files ...Config) (Config, error) {
 				merged.Prompts[name] = prompt
 			}
 		}
+
+		// Check for conflicts and merge groups
+		for name, grp := range file.Groups {
+			if _, exists := merged.Groups[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("group '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Groups[name] = grp
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return Config{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset, prompt and group has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	// Ensure only one authService has mcpEnabled = true
