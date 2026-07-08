@@ -11,7 +11,7 @@ the capabilities of agents. These configs are built to be generic and adaptable,
 allowing developers to interact with and take action on databases.
 
 {{< notice warning >}}
-Prebuilt tool configurations are intended for developer use cases and not production environments.
+These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers.
 {{< /notice >}}
 
 See guides, [Connect from your IDE](../../connect-to/ides/_index.md), for
