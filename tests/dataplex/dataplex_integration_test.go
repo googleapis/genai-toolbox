@@ -235,7 +235,7 @@ func initDataplexDataScanConnection(ctx context.Context) (*dataplex.DataScanClie
 }
 
 func initDataplexDataProductConnection(ctx context.Context) (*dataplex.DataProductClient, error) {
-	cred, err := google.FindDefaultCredentials(ctx)
+	cred, err := google.FindDefaultCredentials(ctx, sources.CloudPlatformScope)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
@@ -854,6 +854,46 @@ func runDataplexToolGetTest(t *testing.T) {
 			expectedParams: []string{"filter", "dataScanId", "resourcePath", "pageSize", "orderBy"},
 		},
 		{
+			name:           "get my-dataplex-list-data-products-tool",
+			toolName:       "my-dataplex-list-data-products-tool",
+			expectedParams: []string{"filter", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-get-data-product-tool",
+			toolName:       "my-dataplex-get-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId"},
+		},
+		{
+			name:           "get my-dataplex-list-data-assets-tool",
+			toolName:       "my-dataplex-list-data-assets-tool",
+			expectedParams: []string{"locationId", "dataProductId", "filter", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-get-data-asset-tool",
+			toolName:       "my-dataplex-get-data-asset-tool",
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId"},
+		},
+		{
+			name:           "get my-dataplex-create-data-product-tool",
+			toolName:       "my-dataplex-create-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId", "displayName", "description", "ownerEmails", "accessGroups"},
+		},
+		{
+			name:           "get my-dataplex-update-data-product-tool",
+			toolName:       "my-dataplex-update-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId", "description", "displayName", "ownerEmails", "accessGroups", "updateMask"},
+		},
+		{
+			name:           "get my-dataplex-create-data-asset-tool",
+			toolName:       "my-dataplex-create-data-asset-tool",
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "resourceType", "resourceProjectId", "resourceLocationId", "resourceDatasetId", "resourceId", "labels", "accessGroupConfigs"},
+		},
+		{
+			name:           "get my-dataplex-update-data-asset-tool",
+			toolName:       "my-dataplex-update-data-asset-tool",
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "labels", "accessGroupConfigs", "updateMask"},
+		},
+		{
 			name:           "get my-dataplex-generate-data-profile-tool",
 			toolName:       "my-dataplex-generate-data-profile-tool",
 			expectedParams: []string{"resourcePath", "location", "publish"},
@@ -902,46 +942,6 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-get-data-quality-results-tool",
 			toolName:       "my-dataplex-get-data-quality-results-tool",
 			expectedParams: []string{"scanId", "location"},
-		},
-		{
-			name:           "get my-dataplex-list-data-products-tool",
-			toolName:       "my-dataplex-list-data-products-tool",
-			expectedParams: []string{"filter", "pageSize", "orderBy"},
-		},
-		{
-			name:           "get my-dataplex-get-data-product-tool",
-			toolName:       "my-dataplex-get-data-product-tool",
-			expectedParams: []string{"locationId", "dataProductId"},
-		},
-		{
-			name:           "get my-dataplex-list-data-assets-tool",
-			toolName:       "my-dataplex-list-data-assets-tool",
-			expectedParams: []string{"locationId", "dataProductId", "filter", "pageSize", "orderBy"},
-		},
-		{
-			name:           "get my-dataplex-get-data-asset-tool",
-			toolName:       "my-dataplex-get-data-asset-tool",
-			expectedParams: []string{"locationId", "dataProductId", "dataAssetId"},
-		},
-		{
-			name:           "get my-dataplex-create-data-product-tool",
-			toolName:       "my-dataplex-create-data-product-tool",
-			expectedParams: []string{"locationId", "dataProductId", "displayName", "description", "ownerEmails", "accessGroups"},
-		},
-		{
-			name:           "get my-dataplex-update-data-product-tool",
-			toolName:       "my-dataplex-update-data-product-tool",
-			expectedParams: []string{"locationId", "dataProductId", "description", "displayName", "ownerEmails", "accessGroups", "updateMask"},
-		},
-		{
-			name:           "get my-dataplex-create-data-asset-tool",
-			toolName:       "my-dataplex-create-data-asset-tool",
-			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "resourceUri", "labels", "accessGroupConfigs"},
-		},
-		{
-			name:           "get my-dataplex-update-data-asset-tool",
-			toolName:       "my-dataplex-update-data-asset-tool",
-			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "labels", "accessGroupConfigs", "updateMask"},
 		},
 	}
 
@@ -2481,9 +2481,6 @@ func runDataplexCreateDataAssetToolInvokeTest(
 		t.Fatalf("error getting Google ID token: %s", err)
 	}
 
-	resourceUriAuth := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetNameAuth, tableNameAuth)
-	resourceUriUnauth := fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", DataplexProject, datasetNameUnauth, tableNameUnauth)
-
 	testCases := []struct {
 		name           string
 		api            string
@@ -2497,8 +2494,8 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
-				dataProductId, dataAssetIdAuth, resourceUriAuth,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
+				dataProductId, dataAssetIdAuth, DataplexProject, datasetNameAuth, tableNameAuth,
 			))),
 			wantStatusCode: 200,
 			expectResult:   true,
@@ -2508,8 +2505,8 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
-				dataProductId, dataAssetIdUnauth, resourceUriUnauth,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
+				dataProductId, dataAssetIdUnauth, DataplexProject, datasetNameUnauth, tableNameUnauth,
 			))),
 			wantStatusCode: 200,
 			expectResult:   true,
@@ -2519,8 +2516,8 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"%s"}`,
-				dataProductId, dataAssetIdAuth, resourceUriAuth,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s"}`,
+				dataProductId, dataAssetIdAuth, DataplexProject, datasetNameAuth, tableNameAuth,
 			))),
 			wantStatusCode: 401,
 			expectResult:   false,
@@ -2530,8 +2527,8 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"%s"}`,
-				dataProductId, dataAssetIdAuth, resourceUriAuth,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s"}`,
+				dataProductId, dataAssetIdAuth, DataplexProject, datasetNameAuth, tableNameAuth,
 			))),
 			wantStatusCode: 401,
 			expectResult:   false,

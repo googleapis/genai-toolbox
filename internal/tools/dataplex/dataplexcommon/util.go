@@ -19,6 +19,19 @@ import (
 	"strings"
 )
 
+// SupportedResourceTypes is the ordered list of valid resource types for creating a Data Asset.
+// Make sure to also update documentation when changing this.
+var SupportedResourceTypes = []string{
+	"BIGQUERY_DATASET",
+	"BIGQUERY_TABLE",
+	"BIGQUERY_VIEW",
+	"BIGQUERY_ROUTINE",
+	"BIGQUERY_MODEL",
+	"GEMINI_ENTERPRISE_AGENT_PLATFORM_DATASET",
+	"GEMINI_ENTERPRISE_AGENT_PLATFORM_MODEL",
+	"CLOUD_STORAGE_BUCKET",
+}
+
 // NormalizeResourcePath normalizes shorthand BigQuery table/dataset names or Cloud Storage
 // bucket URIs into fully-qualified Dataplex resource URIs.
 func NormalizeResourcePath(resourcePath, projectID string) string {
@@ -63,4 +76,28 @@ func NormalizeResourcePath(resourcePath, projectID string) string {
 	}
 
 	return resourcePath
+}
+
+// BuildResourceURI computes the resource path from structured resource parameters.
+func BuildResourceURI(resourceType, resourceProjectID, resourceLocationID, resourceDatasetID, resourceID string) string {
+	switch resourceType {
+	case "BIGQUERY_DATASET":
+		return fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s", resourceProjectID, resourceDatasetID)
+	case "BIGQUERY_TABLE":
+		return fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", resourceProjectID, resourceDatasetID, resourceID)
+	case "BIGQUERY_VIEW":
+		return fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s", resourceProjectID, resourceDatasetID, resourceID)
+	case "BIGQUERY_ROUTINE":
+		return fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/routines/%s", resourceProjectID, resourceDatasetID, resourceID)
+	case "BIGQUERY_MODEL":
+		return fmt.Sprintf("//bigquery.googleapis.com/projects/%s/datasets/%s/models/%s", resourceProjectID, resourceDatasetID, resourceID)
+	case "GEMINI_ENTERPRISE_AGENT_PLATFORM_DATASET":
+		return fmt.Sprintf("//aiplatform.googleapis.com/projects/%s/locations/%s/datasets/%s", resourceProjectID, resourceLocationID, resourceID)
+	case "GEMINI_ENTERPRISE_AGENT_PLATFORM_MODEL":
+		return fmt.Sprintf("//aiplatform.googleapis.com/projects/%s/locations/%s/models/%s", resourceProjectID, resourceLocationID, resourceID)
+	case "CLOUD_STORAGE_BUCKET":
+		return fmt.Sprintf("//storage.googleapis.com/projects/_/buckets/%s", resourceID)
+	default:
+		return ""
+	}
 }

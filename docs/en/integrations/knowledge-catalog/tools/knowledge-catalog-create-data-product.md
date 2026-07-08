@@ -4,8 +4,6 @@ type: docs
 weight: 2
 description: >
   A "dataplex-create-data-product" tool allows to create a new Data Product.
-aliases:
-  - /integrations/dataplex/tools/dataplex-create-data-product/
 ---
 
 ## About

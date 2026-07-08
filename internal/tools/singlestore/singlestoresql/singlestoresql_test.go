@@ -69,9 +69,9 @@ func TestParseFromYaml(t *testing.T) {
 					Source:    "my-singlestore-instance",
 					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 				},
 			},
@@ -121,9 +121,9 @@ func TestParseFromYaml(t *testing.T) {
 					Source:    "my-singlestore-instance",
 					Statement: "SELECT * FROM SQL_STATEMENT;\n",
 					Parameters: []parameters.Parameter{
-						parameters.NewStringParameterWithAuth("country", "some description",
+						parameters.NewStringParameter("country", "some description", parameters.WithStringAuth(
 							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
-								{Name: "other-auth-service", Field: "user_id"}}),
+								{Name: "other-auth-service", Field: "user_id"}})),
 					},
 					TemplateParameters: []parameters.Parameter{
 						parameters.NewStringParameter("tableName", "The table to select hotels from."),

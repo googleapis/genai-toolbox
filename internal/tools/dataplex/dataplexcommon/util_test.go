@@ -92,3 +92,54 @@ func TestNormalizeResourcePath(t *testing.T) {
 		})
 	}
 }
+
+func TestBuildResourceURI(t *testing.T) {
+	tests := []struct {
+		name               string
+		resourceType       string
+		resourceProjectID  string
+		resourceLocationID string
+		resourceDatasetID  string
+		resourceID         string
+		want               string
+	}{
+		{
+			name:              "BIGQUERY_DATASET",
+			resourceType:      "BIGQUERY_DATASET",
+			resourceProjectID: "proj-1",
+			resourceDatasetID: "ds-1",
+			want:              "//bigquery.googleapis.com/projects/proj-1/datasets/ds-1",
+		},
+		{
+			name:              "BIGQUERY_TABLE",
+			resourceType:      "BIGQUERY_TABLE",
+			resourceProjectID: "proj-1",
+			resourceDatasetID: "ds-1",
+			resourceID:        "tbl-1",
+			want:              "//bigquery.googleapis.com/projects/proj-1/datasets/ds-1/tables/tbl-1",
+		},
+		{
+			name:               "GEMINI_ENTERPRISE_AGENT_PLATFORM_DATASET",
+			resourceType:       "GEMINI_ENTERPRISE_AGENT_PLATFORM_DATASET",
+			resourceProjectID:  "proj-1",
+			resourceLocationID: "us-central1",
+			resourceID:         "ds-id",
+			want:               "//aiplatform.googleapis.com/projects/proj-1/locations/us-central1/datasets/ds-id",
+		},
+		{
+			name:         "CLOUD_STORAGE_BUCKET",
+			resourceType: "CLOUD_STORAGE_BUCKET",
+			resourceID:   "my-bucket",
+			want:         "//storage.googleapis.com/projects/_/buckets/my-bucket",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := BuildResourceURI(tt.resourceType, tt.resourceProjectID, tt.resourceLocationID, tt.resourceDatasetID, tt.resourceID)
+			if got != tt.want {
+				t.Errorf("BuildResourceURI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

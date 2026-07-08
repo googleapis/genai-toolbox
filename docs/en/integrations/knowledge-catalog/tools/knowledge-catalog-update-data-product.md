@@ -4,8 +4,6 @@ type: docs
 weight: 2
 description: >
   A "dataplex-update-data-product" tool updates metadata for an existing Data Product in Knowledge Catalog.
-aliases:
-  - /integrations/dataplex/tools/dataplex-update-data-product/
 ---
 
 ## About

@@ -425,8 +425,8 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ## Tool: create_data_asset
 ### Request
 1. Use this tool to create a new Data Asset under a Data Product.
-2. You must provide `locationId`, `dataProductId`, `dataAssetId`, and `resourceUri`.
-3. You can optionally provide `labels` and `accessGroupConfigs`.
+2. You must provide `locationId`, `dataProductId`, `dataAssetId`, and `resourceType`.
+3. You can optionally provide `resourceProjectId`, `resourceLocationId`, `resourceDatasetId`, `resourceId`, `labels`, and `accessGroupConfigs` depending on the resource type requirements.
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.

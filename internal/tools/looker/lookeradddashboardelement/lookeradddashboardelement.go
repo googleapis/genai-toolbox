@@ -66,7 +66,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -75,23 +75,28 @@ func (cfg Config) Initialize() (tools.Tool, error) {
 
 	dashIdParameter := parameters.NewStringParameter("dashboard_id", "The id of the dashboard where this tile will exist")
 	params = append(params, dashIdParameter)
-	titleParameter := parameters.NewStringParameterWithDefault("title", "", "The title of the Dashboard Element")
+	titleParameter := parameters.NewStringParameter("title", "The title of the Dashboard Element", parameters.WithStringDefault(""))
 	params = append(params, titleParameter)
-	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
-		map[string]any{},
+	vizParameter := parameters.NewMapParameter(
+		"vis_config",
 		"The visualization config for the query",
 		"",
+		parameters.WithMapDefault(map[string]any{}),
 	)
+
 	params = append(params, vizParameter)
-	dashFilters := parameters.NewArrayParameterWithRequired("dashboard_filters",
+	dashFilters := parameters.NewArrayParameter(
+		"dashboard_filters",
 		`An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
-		false,
-		parameters.NewMapParameterWithDefault("dashboard_filter",
-			map[string]any{},
+		parameters.NewMapParameter(
+			"dashboard_filter",
 			`A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
 			"",
+			parameters.WithMapDefault(map[string]any{}),
 		),
+		parameters.WithArrayRequired(false),
 	)
+
 	params = append(params, dashFilters)
 
 	// finish tool setup

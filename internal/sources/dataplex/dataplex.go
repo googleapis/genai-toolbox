@@ -24,10 +24,11 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"cloud.google.com/go/longrunning/autogen/longrunningpb"
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v6"
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2/google"
@@ -373,9 +374,6 @@ func (s *Source) ListDataProducts(
 	pageSize int,
 	orderBy string,
 ) ([]*DataProductSummary, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
 	if pageSize <= 0 {
 		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
 	}
@@ -402,14 +400,14 @@ func (s *Source) ListDataProducts(
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
 		parts := strings.Split(dp.GetName(), "/")
-		var locId, prodId string
+		var locID, prodID string
 		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
-			locId = parts[3]
-			prodId = parts[5]
+			locID = parts[3]
+			prodID = parts[5]
 		}
 		results = append(results, &DataProductSummary{
-			LocationID:    locId,
-			DataProductID: prodId,
+			LocationID:    locID,
+			DataProductID: prodID,
 			DisplayName:   dp.GetDisplayName(),
 			OwnerEmails:   dp.GetOwnerEmails(),
 			AssetCount:    dp.GetAssetCount(),
@@ -437,11 +435,8 @@ type DataProduct struct {
 	AccessGroups  []AccessGroup     `json:"accessGroups"`
 }
 
-func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProductId string) (*DataProduct, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
-	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+func (s *Source) GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*DataProduct, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
 	req := &dataplexpb.GetDataProductRequest{
 		Name: name,
 	}
@@ -462,15 +457,15 @@ func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProd
 	}
 
 	parts := strings.Split(resp.GetName(), "/")
-	var locId, prodId string
+	var locID, prodID string
 	if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
-		locId = parts[3]
-		prodId = parts[5]
+		locID = parts[3]
+		prodID = parts[5]
 	}
 
 	return &DataProduct{
-		LocationID:    locId,
-		DataProductID: prodId,
+		LocationID:    locID,
+		DataProductID: prodID,
 		DisplayName:   resp.GetDisplayName(),
 		Description:   resp.GetDescription(),
 		OwnerEmails:   resp.GetOwnerEmails(),
@@ -480,29 +475,29 @@ func (s *Source) GetDataProduct(ctx context.Context, locationId string, dataProd
 	}, nil
 }
 
-type DataAssetSummary struct {
-	LocationID    string            `json:"locationId"`
-	DataProductID string            `json:"dataProductId"`
-	DataAssetID   string            `json:"dataAssetId"`
-	ResourceURI   string            `json:"resourceUri"`
-	Labels        map[string]string `json:"labels"`
+// Common between ListDataAssets and GetDataAsset.
+// The only difference between the objects returned by these two methods is whether the AccessGroupConfigs field (marked omitempty) is included.
+type DataAsset struct {
+	LocationID         string                                             `json:"locationId"`
+	DataProductID      string                                             `json:"dataProductId"`
+	DataAssetID        string                                             `json:"dataAssetId"`
+	ResourceURI        string                                             `json:"resourceUri"`
+	Labels             map[string]string                                  `json:"labels"`
+	AccessGroupConfigs map[string]*dataplexpb.DataAsset_AccessGroupConfig `json:"accessGroupConfigs,omitempty"`
 }
 
 func (s *Source) ListDataAssets(
 	ctx context.Context,
-	locationId string,
-	dataProductId string,
+	locationID string,
+	dataProductID string,
 	filter string,
 	pageSize int,
 	orderBy string,
-) ([]*DataAssetSummary, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
+) ([]*DataAsset, error) {
 	if pageSize <= 0 {
 		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
 	}
-	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
 	req := &dataplexpb.ListDataAssetsRequest{
 		Parent:   parent,
 		Filter:   filter,
@@ -511,7 +506,7 @@ func (s *Source) ListDataAssets(
 	}
 
 	it := s.GetDataProductClient().ListDataAssets(ctx, req)
-	var results []*DataAssetSummary
+	var results []*DataAsset
 
 	for len(results) < pageSize {
 		asset, err := it.Next()
@@ -525,16 +520,16 @@ func (s *Source) ListDataAssets(
 			return nil, fmt.Errorf("failed to list data assets: %w", err)
 		}
 		parts := strings.Split(asset.GetName(), "/")
-		var locId, prodId, assetId string
+		var locID, prodID, assetID string
 		if len(parts) >= 8 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" && parts[6] == "dataAssets" {
-			locId = parts[3]
-			prodId = parts[5]
-			assetId = parts[7]
+			locID = parts[3]
+			prodID = parts[5]
+			assetID = parts[7]
 		}
-		results = append(results, &DataAssetSummary{
-			LocationID:    locId,
-			DataProductID: prodId,
-			DataAssetID:   assetId,
+		results = append(results, &DataAsset{
+			LocationID:    locID,
+			DataProductID: prodID,
+			DataAssetID:   assetID,
 			ResourceURI:   asset.GetResource(),
 			Labels:        asset.GetLabels(),
 		})
@@ -542,20 +537,8 @@ func (s *Source) ListDataAssets(
 	return results, nil
 }
 
-type DataAsset struct {
-	LocationID         string              `json:"locationId"`
-	DataProductID      string              `json:"dataProductId"`
-	DataAssetID        string              `json:"dataAssetId"`
-	ResourceURI        string              `json:"resourceUri"`
-	Labels             map[string]string   `json:"labels"`
-	AccessGroupConfigs map[string][]string `json:"accessGroupConfigs"`
-}
-
-func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProductId string, dataAssetId string) (*DataAsset, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
-	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationId, dataProductId, dataAssetId)
+func (s *Source) GetDataAsset(ctx context.Context, locationID string, dataProductID string, dataAssetID string) (*DataAsset, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationID, dataProductID, dataAssetID)
 	req := &dataplexpb.GetDataAssetRequest{
 		Name: name,
 	}
@@ -565,43 +548,34 @@ func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProduc
 	}
 
 	parts := strings.Split(resp.GetName(), "/")
-	var locId, prodId, assetId string
+	var locID, prodID, assetID string
 	if len(parts) >= 8 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" && parts[6] == "dataAssets" {
-		locId = parts[3]
-		prodId = parts[5]
-		assetId = parts[7]
-	}
-
-	configs := make(map[string][]string)
-	for k, v := range resp.GetAccessGroupConfigs() {
-		configs[k] = v.GetIamRoles()
+		locID = parts[3]
+		prodID = parts[5]
+		assetID = parts[7]
 	}
 
 	return &DataAsset{
-		LocationID:         locId,
-		DataProductID:      prodId,
-		DataAssetID:        assetId,
+		LocationID:         locID,
+		DataProductID:      prodID,
+		DataAssetID:        assetID,
 		ResourceURI:        resp.GetResource(),
 		Labels:             resp.GetLabels(),
-		AccessGroupConfigs: configs,
+		AccessGroupConfigs: resp.GetAccessGroupConfigs(),
 	}, nil
 }
 
 // dataProductId is optional. If empty, the Dataplex backend will automatically generate a unique ID.
 func (s *Source) CreateDataProduct(
 	ctx context.Context,
-	locationId string,
-	dataProductId string,
+	locationID string,
+	dataProductID string,
 	displayName string,
 	description string,
 	ownerEmails []string,
 	accessGroups []AccessGroup,
 ) (map[string]string, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
-
-	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationId)
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationID)
 
 	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)
 	for _, ag := range accessGroups {
@@ -624,7 +598,7 @@ func (s *Source) CreateDataProduct(
 
 	req := &dataplexpb.CreateDataProductRequest{
 		Parent:        parent,
-		DataProductId: dataProductId,
+		DataProductId: dataProductID,
 		DataProduct: &dataplexpb.DataProduct{
 			DisplayName:  displayName,
 			Description:  description,
@@ -651,19 +625,15 @@ func (s *Source) CreateDataProduct(
 
 func (s *Source) UpdateDataProduct(
 	ctx context.Context,
-	locationId string,
-	dataProductId string,
+	locationID string,
+	dataProductID string,
 	description string,
 	displayName string,
 	ownerEmails []string,
 	accessGroups []AccessGroup,
 	updateMask []string,
 ) (map[string]string, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
-
-	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
 
 	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)
 	if len(accessGroups) > 0 {
@@ -724,18 +694,19 @@ func (s *Source) UpdateDataProduct(
 
 func (s *Source) CreateDataAsset(
 	ctx context.Context,
-	locationId string,
-	dataProductId string,
-	dataAssetId string,
-	resourceUri string,
+	locationID string,
+	dataProductID string,
+	dataAssetID string,
+	resourceType string,
+	resourceProjectID string,
+	resourceLocationID string,
+	resourceDatasetID string,
+	resourceID string,
 	labels map[string]string,
 	accessGroupConfigs map[string][]string,
 ) (map[string]string, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
-
-	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
+	resourceURI := dataplexcommon.BuildResourceURI(resourceType, resourceProjectID, resourceLocationID, resourceDatasetID, resourceID)
 
 	agcMap := make(map[string]*dataplexpb.DataAsset_AccessGroupConfig)
 	for k, v := range accessGroupConfigs {
@@ -746,9 +717,9 @@ func (s *Source) CreateDataAsset(
 
 	req := &dataplexpb.CreateDataAssetRequest{
 		Parent:      parent,
-		DataAssetId: dataAssetId,
+		DataAssetId: dataAssetID,
 		DataAsset: &dataplexpb.DataAsset{
-			Resource:           resourceUri,
+			Resource:           resourceURI,
 			Labels:             labels,
 			AccessGroupConfigs: agcMap,
 		},
@@ -772,18 +743,14 @@ func (s *Source) CreateDataAsset(
 
 func (s *Source) UpdateDataAsset(
 	ctx context.Context,
-	locationId string,
-	dataProductId string,
-	dataAssetId string,
+	locationID string,
+	dataProductID string,
+	dataAssetID string,
 	labels map[string]string,
 	accessGroupConfigs map[string][]string,
 	updateMask []string,
 ) (map[string]string, error) {
-	if s.GetDataProductClient() == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
-
-	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationId, dataProductId, dataAssetId)
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationID, dataProductID, dataAssetID)
 
 	agcMap := make(map[string]*dataplexpb.DataAsset_AccessGroupConfig)
 	for k, v := range accessGroupConfigs {
@@ -883,6 +850,9 @@ func (s *Source) GetOperation(ctx context.Context, opName string) (map[string]an
 		Name: opName,
 	}
 	op, err := s.DataScanClient.LROClient.GetOperation(ctx, req)
+	if err != nil {
+		return nil, err
+	}
 
 	bytes, err := protojson.Marshal(op)
 	if err != nil {

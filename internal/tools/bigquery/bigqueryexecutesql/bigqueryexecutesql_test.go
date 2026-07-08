@@ -180,7 +180,7 @@ func TestInvokeDatasetRestrictions(t *testing.T) {
 	sourcesMap := map[string]sources.Source{
 		"my-bq-source": testSrc,
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(ctx)
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

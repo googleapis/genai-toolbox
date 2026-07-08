@@ -4,8 +4,6 @@ type: docs
 weight: 2
 description: >
   A "dataplex-update-data-asset" tool updates an existing Data Asset under a Data Product in Knowledge Catalog.
-aliases:
-  - /integrations/dataplex/tools/dataplex-update-data-asset/
 ---
 
 ## About

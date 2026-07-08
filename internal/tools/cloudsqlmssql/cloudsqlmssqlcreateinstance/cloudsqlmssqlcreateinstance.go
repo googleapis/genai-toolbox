@@ -67,7 +67,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize initializes the tool from the configuration.
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 
 	if cfg.Description == "" {
 		cfg.Description = "Creates a SQL Server instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 8 GiB RAM (`db-custom-2-8192`) configuration with Non-HA/zonal availability. For the `Production` template, it chooses a 4 vCPU, 26 GiB RAM (`db-custom-4-26624`) configuration with HA/regional availability. The Enterprise edition is used in both cases. The default database version is `SQLSERVER_2022_STANDARD`. The agent should ask the user if they want to use a different version."
@@ -164,14 +164,14 @@ func (t Tool) ToConfig() tools.ToolConfig {
 func buildParams(project string) parameters.Parameters {
 	projectParam := parameters.NewStringParameter("project", "The project ID")
 	if project != "" {
-		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.", parameters.WithStringDefault(project))
 	}
 	return parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("name", "The name of the instance"),
-		parameters.NewStringParameterWithDefault("databaseVersion", "SQLSERVER_2022_STANDARD", "The database version for SQL Server. If not specified, defaults to SQLSERVER_2022_STANDARD."),
+		parameters.NewStringParameter("databaseVersion", "The database version for SQL Server. If not specified, defaults to SQLSERVER_2022_STANDARD.", parameters.WithStringDefault("SQLSERVER_2022_STANDARD")),
 		parameters.NewStringParameter("rootPassword", "The root password for the instance"),
-		parameters.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
+		parameters.NewStringParameter("editionPreset", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`.", parameters.WithStringDefault("Development")),
 	}
 }
 
