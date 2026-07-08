@@ -1152,7 +1152,7 @@ steps:
       - "CLICKHOUSE_PORT=$_CLICKHOUSE_PORT"
       - "CLICKHOUSE_PROTOCOL=$_CLICKHOUSE_PROTOCOL"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID"]
+    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
