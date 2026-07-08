@@ -163,9 +163,9 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 })
 
 // SetUpResources setups resources to test against. The returned groups map is the
-// source of truth used by ResourceManager; the toolsets and promptsets maps are
-// the legacy views callers may still assert against directly.
-func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, map[string]group.Group) {
+// source of truth used by ResourceManager; assert against the derived toolset and
+// promptset views via groups[name].ToToolset() / ToPromptset().
+func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -223,5 +223,5 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		groups[name] = group.NewGroup(gc, ts, ps)
 	}
 
-	return toolsMap, toolsets, promptsMap, promptsets, groups
+	return toolsMap, promptsMap, groups
 }
