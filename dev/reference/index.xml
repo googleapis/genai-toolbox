@@ -78,7 +78,7 @@
 			&lt;tr&gt;
 					&lt;td&gt;&lt;/td&gt;
 					&lt;td&gt;&lt;code&gt;--prebuilt&lt;/code&gt;&lt;/td&gt;
-					&lt;td&gt;Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., &lt;code&gt;&amp;lt;source&amp;gt;/&amp;lt;toolset&amp;gt;&lt;/code&gt;) to load only that toolset. See &lt;a href="https://mcp-toolbox.dev/dev/documentation/configuration/prebuilt-configs/"&gt;Prebuilt Tools Reference&lt;/a&gt; for allowed values.&lt;/td&gt;
+					&lt;td&gt;Use one or more prebuilt tool configuration by source type. Optionally specify a toolset suffix (e.g., &lt;code&gt;&amp;lt;source&amp;gt;/&amp;lt;toolset&amp;gt;&lt;/code&gt;) to load only that toolset. These prebuilt configs are intended for &amp;lsquo;build-time&amp;rsquo; use cases, where agents are helping trusted developers build things. They are not secure enough for &amp;lsquo;run time&amp;rsquo; use cases, where the agent will be talking to potentially untrusted developers. See &lt;a href="https://mcp-toolbox.dev/dev/documentation/configuration/prebuilt-configs/"&gt;Prebuilt Tools Reference&lt;/a&gt; for allowed values.&lt;/td&gt;
 					&lt;td&gt;&lt;/td&gt;
 			&lt;/tr&gt;
 			&lt;tr&gt;
