@@ -886,7 +886,7 @@ func runDataplexToolGetTest(t *testing.T) {
 		{
 			name:           "get my-dataplex-create-data-asset-tool",
 			toolName:       "my-dataplex-create-data-asset-tool",
-			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "resourceType", "resourceProjectId", "resourceLocationId", "resourceDatasetId", "resourceId", "labels", "accessGroupConfigs"},
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId", "resourceUri", "labels", "accessGroupConfigs"},
 		},
 		{
 			name:           "get my-dataplex-update-data-asset-tool",
@@ -2494,7 +2494,7 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
 				dataProductId, dataAssetIdAuth, DataplexProject, datasetNameAuth, tableNameAuth,
 			))),
 			wantStatusCode: 200,
@@ -2505,7 +2505,7 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s","labels":{"env":"test"},"accessGroupConfigs":{"test-group":["roles/bigquery.dataViewer"]}}`,
 				dataProductId, dataAssetIdUnauth, DataplexProject, datasetNameUnauth, tableNameUnauth,
 			))),
 			wantStatusCode: 200,
@@ -2516,7 +2516,7 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s"}`,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s"}`,
 				dataProductId, dataAssetIdAuth, DataplexProject, datasetNameAuth, tableNameAuth,
 			))),
 			wantStatusCode: 401,
@@ -2527,7 +2527,7 @@ func runDataplexCreateDataAssetToolInvokeTest(
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-asset-tool/invoke",
 			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
 			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
-				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceType":"BIGQUERY_TABLE","resourceProjectId":"%s","resourceDatasetId":"%s","resourceId":"%s"}`,
+				`{"locationId":"us","dataProductId":"%s","dataAssetId":"%s","resourceUri":"//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s"}`,
 				dataProductId, dataAssetIdAuth, DataplexProject, datasetNameAuth, tableNameAuth,
 			))),
 			wantStatusCode: 401,

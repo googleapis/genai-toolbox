@@ -28,7 +28,6 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/tools/dataplex/dataplexcommon"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2/google"
@@ -697,16 +696,11 @@ func (s *Source) CreateDataAsset(
 	locationID string,
 	dataProductID string,
 	dataAssetID string,
-	resourceType string,
-	resourceProjectID string,
-	resourceLocationID string,
-	resourceDatasetID string,
-	resourceID string,
+	resourceURI string,
 	labels map[string]string,
 	accessGroupConfigs map[string][]string,
 ) (map[string]string, error) {
 	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
-	resourceURI := dataplexcommon.BuildResourceURI(resourceType, resourceProjectID, resourceLocationID, resourceDatasetID, resourceID)
 
 	agcMap := make(map[string]*dataplexpb.DataAsset_AccessGroupConfig)
 	for k, v := range accessGroupConfigs {
