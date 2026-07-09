@@ -316,6 +316,96 @@ toolsets:
 	}
 }
 
+func TestGenerateSkill_SpecificGroup(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputDir := filepath.Join(tmpDir, "skills")
+
+	// On this lineage groups are seeded from toolsets, so --group targets a
+	// toolset-derived group by name.
+	toolsFileContent := `
+sources:
+  my-sqlite:
+    kind: sqlite
+    database: ":memory:"
+tools:
+  hello-sqlite:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "hello tool"
+    statement: "SELECT 'hello' as greeting"
+  bye-sqlite:
+    kind: sqlite-sql
+    source: my-sqlite
+    description: "bye tool"
+    statement: "SELECT 'bye' as greeting"
+toolsets:
+  greeting:
+    tools:
+      - hello-sqlite
+  farewell:
+    tools:
+      - bye-sqlite
+`
+
+	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
+	if err := os.WriteFile(toolsFilePath, []byte(toolsFileContent), 0644); err != nil {
+		t.Fatalf("failed to write tools file: %v", err)
+	}
+
+	args := []string{
+		"skills-generate",
+		"--config", toolsFilePath,
+		"--output-dir", outputDir,
+		"--name", "my-group-skill",
+		"--description", "fallback description",
+		"--group", "farewell",
+	}
+
+	got, err := invokeCommand(args)
+	if err != nil {
+		t.Fatalf("command failed: %v\nOutput: %s", err, got)
+	}
+
+	// --group produces a single skill named exactly --name.
+	skillPath := filepath.Join(outputDir, "my-group-skill")
+	if _, err := os.Stat(skillPath); os.IsNotExist(err) {
+		t.Fatalf("skill directory not created: %s", skillPath)
+	}
+	if _, err := os.Stat(filepath.Join(outputDir, "my-group-skill-farewell")); !os.IsNotExist(err) {
+		t.Fatalf("--group should not produce a per-group suffixed directory")
+	}
+
+	content, err := os.ReadFile(filepath.Join(skillPath, "SKILL.md"))
+	if err != nil {
+		t.Fatalf("failed to read SKILL.md: %v", err)
+	}
+	if !strings.Contains(string(content), "### bye-sqlite") {
+		t.Errorf("SKILL.md does not contain '### bye-sqlite' tool header")
+	}
+	if strings.Contains(string(content), "### hello-sqlite") {
+		t.Errorf("SKILL.md should not contain '### hello-sqlite' tool header")
+	}
+}
+
+func TestGenerateSkill_GroupAndToolsetMutuallyExclusive(t *testing.T) {
+	tmpDir := t.TempDir()
+	toolsFilePath := filepath.Join(tmpDir, "tools.yaml")
+	if err := os.WriteFile(toolsFilePath, []byte("tools: {}"), 0644); err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	args := []string{
+		"skills-generate",
+		"--config", toolsFilePath,
+		"--name", "test",
+		"--group", "a",
+		"--toolset", "b",
+	}
+	if _, err := invokeCommand(args); err == nil {
+		t.Fatal("expected error when --group and --toolset are both set, got nil")
+	}
+}
+
 func TestGenerateSkill_NoConfig(t *testing.T) {
 	tmpDir := t.TempDir()
 	outputDir := filepath.Join(tmpDir, "skills")
@@ -392,6 +482,50 @@ func TestBuildSkillContents_GroupDescriptionPrecedence(t *testing.T) {
 	if _, ok := contents["my-skill-"]; ok {
 		t.Errorf("default nameless group should not produce a skill")
 	}
+}
+
+func TestBuildSkillContents_GroupMode(t *testing.T) {
+	groupsMap := map[string]group.Group{
+		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+		"with-desc": group.NewGroup(
+			group.GroupConfig{Name: "with-desc", Description: "group's own description"},
+			tools.Toolset{}, prompts.Promptset{}),
+		"no-desc": group.NewGroup(
+			group.GroupConfig{Name: "no-desc"},
+			tools.Toolset{}, prompts.Promptset{}),
+	}
+
+	t.Run("uses group description", func(t *testing.T) {
+		c := &skillsCmd{name: "my-skill", description: "flag fallback", group: "with-desc"}
+		contents, err := c.buildSkillContents(nil, groupsMap)
+		if err != nil {
+			t.Fatalf("buildSkillContents failed: %v", err)
+		}
+		if len(contents) != 1 {
+			t.Fatalf("expected exactly 1 skill, got %d", len(contents))
+		}
+		if got := contents["my-skill"].description; got != "group's own description" {
+			t.Errorf("got %q, want %q", got, "group's own description")
+		}
+	})
+
+	t.Run("falls back to flag description", func(t *testing.T) {
+		c := &skillsCmd{name: "my-skill", description: "flag fallback", group: "no-desc"}
+		contents, err := c.buildSkillContents(nil, groupsMap)
+		if err != nil {
+			t.Fatalf("buildSkillContents failed: %v", err)
+		}
+		if got := contents["my-skill"].description; got != "flag fallback" {
+			t.Errorf("got %q, want %q", got, "flag fallback")
+		}
+	})
+
+	t.Run("unknown group errors", func(t *testing.T) {
+		c := &skillsCmd{name: "my-skill", group: "nope"}
+		if _, err := c.buildSkillContents(nil, groupsMap); err == nil {
+			t.Fatal("expected error for unknown group, got nil")
+		}
+	})
 }
 
 func TestBuildSkillContents_ToolsetModeUsesFlagDescription(t *testing.T) {

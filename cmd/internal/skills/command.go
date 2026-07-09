@@ -44,6 +44,7 @@ type skillsCmd struct {
 	name            string
 	description     string
 	toolset         string
+	group           string
 	outputDir       string
 	licenseHeader   string
 	additionalNotes string
@@ -68,12 +69,14 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	flags.StringVar(&cmd.name, "name", "", "Name of the generated skill.")
 	flags.StringVar(&cmd.description, "description", "", "Description of the generated skill. Used as a fallback when a group does not define its own description.")
 	flags.StringVar(&cmd.toolset, "toolset", "", "Name of the toolset to convert into a skill. If not provided, all tools will be included.")
+	flags.StringVar(&cmd.group, "group", "", "Name of the group to convert into a single skill. Uses the group's description, falling back to --description.")
 	flags.StringVar(&cmd.outputDir, "output-dir", "skills", "Directory to output generated skills")
 	flags.StringVar(&cmd.licenseHeader, "license-header", "", "Optional license header to prepend to generated node scripts.")
 	flags.StringVar(&cmd.additionalNotes, "additional-notes", "", "Additional notes to add under the Usage section of the generated SKILL.md")
 	flags.StringVar(&cmd.invocationMode, "invocation-mode", "npx", "Invocation mode for the generated scripts: 'binary' or 'npx'")
 	flags.StringVar(&cmd.toolboxVersion, "toolbox-version", opts.VersionNum, "Version of @toolbox-sdk/server to use for npx approach")
 	_ = cmd.MarkFlagRequired("name")
+	cmd.MarkFlagsMutuallyExclusive("group", "toolset")
 	return cmd.Command
 }
 
@@ -263,6 +266,20 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 			}
 		}
 		return toolsetTools
+	}
+
+	if c.group != "" {
+		g, ok := resourceMgr.GetGroup(c.group)
+		if !ok {
+			return nil, fmt.Errorf("group %q not found", c.group)
+		}
+
+		description := c.description
+		if g.Description != "" {
+			description = g.Description
+		}
+		skillsToContents[c.name] = skillContent{tools: getToolsFromToolset(g.ToToolset()), description: description}
+		return skillsToContents, nil
 	}
 
 	if c.toolset != "" {
