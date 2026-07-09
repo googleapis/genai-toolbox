@@ -921,7 +921,7 @@ func TestMcpEndpoint(t *testing.T) {
 						Request: jsonrpc.Request{},
 					},
 					methodName:     "",
-					wantStatusCode: http.StatusNotFound,
+					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"id":      "missing-method",
@@ -943,7 +943,7 @@ func TestMcpEndpoint(t *testing.T) {
 						},
 					},
 					methodName:     "foo",
-					wantStatusCode: http.StatusNotFound,
+					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
 						"id":      "invalid-method",

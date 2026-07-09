@@ -650,8 +650,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 					render.Status(r, http.StatusUnauthorized)
 				}
 			}
-		case jsonrpc.METHOD_NOT_FOUND:
-			render.Status(r, http.StatusNotFound)
+		// METHOD_NOT_FOUND (-32601) is intentionally not mapped to an HTTP
+		// error: under MCP streamable HTTP, 404 means the session expired and
+		// requires clients to discard it and re-initialize, so protocol-level
+		// errors must ride on HTTP 200.
 		case jsonrpc.HEADER_MISMATCH, jsonrpc.UNSUPPORTED_PROTOCOL_VERSION:
 			render.Status(r, http.StatusBadRequest)
 		case jsonrpc.INVALID_PARAMS:
