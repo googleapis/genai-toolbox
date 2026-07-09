@@ -38,10 +38,12 @@ jobs:
 
     steps:
       - uses: 'actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3' # v9
+        env:
+          TRIGGER_NAMES: ${{ inputs.trigger_names }}
         with:
           script: |-
                   // parse test names
-                  const testNameSubstring = '${{ inputs.trigger_names }}';
+                  const testNameSubstring = process.env.TRIGGER_NAMES;
                   const testNameFound = new Map(); //keeps track of whether each test is found
                   testNameSubstring.split(',').forEach(testName => {
                     testNameFound.set(testName, false); 
@@ -171,8 +173,8 @@ jobs:
                   const noTestFound = Array.from(testNameFound.values()).every(value => value === false);
                   if (noTestFound){
                     createOrCommentIssue(
-                      'Missing periodic tests: ${{ inputs.trigger_names }}',
-                      `No periodic test is found for triggers: ${{ inputs.trigger_names }}. Last checked from ${
+                      `Missing periodic tests: ${process.env.TRIGGER_NAMES}`,
+                      `No periodic test is found for triggers: ${process.env.TRIGGER_NAMES}. Last checked from ${
                         commits[0].html_url
                       } to ${commits[commits.length - 1].html_url}.`
                     );

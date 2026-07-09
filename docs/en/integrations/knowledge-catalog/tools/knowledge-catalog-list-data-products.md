@@ -10,9 +10,9 @@ description: >
 
 A `dataplex-list-data-products` tool lists all Data Products in Knowledge Catalog (formerly known as Dataplex) across all locations (globally).
 
-View the [Data Products usage guide][usage-guide] for more information.
+View the [Data Products guide][guide] for more information.
 
-[usage-guide]: https://docs.cloud.google.com/dataplex/docs/use-data-products
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
 
 ## Compatible Sources
 
@@ -46,7 +46,7 @@ The `dataplex-list-data-products` tool has the following optional parameters:
 
 | **field** | **type** | **required** | **description**                                                                                                                                                                                                                                                |
 | --------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| filter    | string   | false        | Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within "". Matching accross all fields at once is not yet supported. E.g. "display_name:\"my-product\"" |
+| filter    | string   | false        | Filter string to list data products. Based on the AIP-160 proposal. Use '=' for exact, and ':' for contains matching. String literals must be enclosed within "". Matching across all fields at once is not yet supported. E.g. "display_name:\"my-product\"" |
 | pageSize  | integer  | false        | Number of returned data products in the page. Defaults to `10`.                                                                                                                                                                                                |
 | orderBy   | string   | false        | Specifies the ordering of results.                                                                                                                                                                                                                             |
 
