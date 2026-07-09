@@ -102,6 +102,8 @@ only in *where* the check runs. Pick the one that matches your stack:
   framework integration (LangChain or ADK).
 - **[Agent Gateway](#agent-gateway)**: screen it at a managed control plane, with
   no changes to your agent code.
+- **[Google Cloud MCP servers](#google-cloud-mcp-servers)**: enforce screening
+  project-wide on Google Cloud MCP server traffic.
 
 ### Python
 
@@ -388,6 +390,37 @@ before you rely on it.
 
 For the full gateway setup and template-binding steps, see
 [Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration).
+
+### Google Cloud MCP servers
+
+The paths above secure each agent or gateway you configure. If your agents reach
+Google Cloud services through **Google Cloud MCP servers**, you can instead apply
+one rule across the whole project, using **floor settings**. A floor setting is a
+project-wide baseline: once it's on, Model Armor automatically screens traffic to
+and from every Google Cloud MCP server in the project, so you don't change any
+agent code.
+
+The screening covers the `tools/call` and `prompts/get` messages (both the request
+and the response), along with any errors a tool returns while it runs. A floor
+setting defines its own detection filters, so it doesn't use the `test-template`
+you created in Step 1.
+
+{{< notice warning >}}
+Floor settings come with some limits worth knowing before you rely on them:
+
+- **Supported products only.** Screening applies only to
+  [Google Cloud MCP servers that support Model Armor](https://docs.cloud.google.com/mcp/model-armor-supported-products);
+  calls to any other MCP server pass through unscreened.
+- **Project-wide impact.** A floor setting affects every service Model Armor is
+  integrated with, not just your MCP servers.
+
+For other limits, such as unscreened streaming transports and basic-SDP-only
+support, see the
+[Model Armor MCP integration limitations](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration#limitations).
+{{< /notice >}}
+
+For the setup steps and the complete list of screened messages, see
+[Integrate Model Armor with Google Cloud MCP servers](https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration).
 
 ## Additional Resources
 
