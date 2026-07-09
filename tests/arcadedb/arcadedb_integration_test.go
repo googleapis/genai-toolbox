@@ -31,6 +31,8 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var (
@@ -140,9 +142,29 @@ func teardownFixtures(t *testing.T) {
 // Cypher and SQL execution tools, including readOnly enforcement, dry_run
 // plan output, and parameter binding.
 func TestArcadeDBToolEndpoints(t *testing.T) {
-	sourceConfig := getArcadeDBVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
+
+	var boltURI, httpURL string
+	var containerCleanup func()
+
+	if ArcadeDBURI != "" {
+		boltURI = ArcadeDBURI
+		httpURL = arcadeHTTPBase(t)
+		containerCleanup = func() {}
+	} else {
+		boltURI, httpURL, containerCleanup = setupArcadeDBContainer(ctx, t)
+		ArcadeDBURI = boltURI
+		ArcadeDBHTTPURL = httpURL
+		ArcadeDBUser = "root"
+		ArcadeDBPass = "playwithdata"
+		ArcadeDBDatabase = "test_database"
+
+		createDatabase(t, httpURL, ArcadeDBDatabase)
+	}
+	defer containerCleanup()
+
+	sourceConfig := getArcadeDBVars(t)
 
 	args := []string{"--enable-api"}
 
@@ -546,4 +568,91 @@ func arcadeCountVertices(t *testing.T, vertexType string) int {
 		t.Fatalf("unexpected count type %T in response: %s", v, string(body))
 	}
 	return 0
+}
+
+func setupArcadeDBContainer(ctx context.Context, t *testing.T) (boltURI string, httpURL string, cleanup func()) {
+	t.Helper()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "arcadedata/arcadedb:26.3.2",
+		ExposedPorts: []string{"2480/tcp", "7687/tcp"},
+		Env: map[string]string{
+			"JAVA_OPTS":                        "-Darcadedb.server.rootPassword=playwithdata",
+			"arcadedb.server.defaultDatabases": "",
+		},
+		WaitingFor: wait.ForHTTP("/api/v1/ready").
+			WithPort("2480/tcp").
+			WithStatusCodeMatcher(func(status int) bool {
+				return status == http.StatusOK || status == http.StatusNoContent
+			}).
+			WithStartupTimeout(60 * time.Second),
+	}
+
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatalf("failed to start ArcadeDB container: %s", err)
+	}
+
+	cleanupFn := func() {
+		if err := container.Terminate(ctx); err != nil {
+			t.Fatalf("failed to terminate container: %s", err)
+		}
+	}
+
+	host, err := container.Host(ctx)
+	if err != nil {
+		cleanupFn()
+		t.Fatalf("failed to get container host: %s", err)
+	}
+
+	port2480, err := container.MappedPort(ctx, "2480")
+	if err != nil {
+		cleanupFn()
+		t.Fatalf("failed to get container mapped port 2480: %s", err)
+	}
+
+	port7687, err := container.MappedPort(ctx, "7687")
+	if err != nil {
+		cleanupFn()
+		t.Fatalf("failed to get container mapped port 7687: %s", err)
+	}
+
+	boltURI = fmt.Sprintf("bolt://%s:%s", host, port7687.Port())
+	httpURL = fmt.Sprintf("http://%s:%s", host, port2480.Port())
+
+	return boltURI, httpURL, cleanupFn
+}
+
+func createDatabase(t *testing.T, httpURL, dbName string) {
+	t.Helper()
+
+	payload, err := json.Marshal(map[string]any{
+		"command": fmt.Sprintf("create database %s", dbName),
+	})
+	if err != nil {
+		t.Fatalf("failed to marshal create database command: %v", err)
+	}
+
+	endpoint := fmt.Sprintf("%s/api/v1/server", httpURL)
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(payload))
+	if err != nil {
+		t.Fatalf("failed to build create database request: %v", err)
+	}
+	req.SetBasicAuth("root", "playwithdata")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("create database request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		t.Fatalf("create database request returned status %d: %s", resp.StatusCode, string(body))
+	}
 }
