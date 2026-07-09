@@ -588,6 +588,11 @@ func TestResolveSkillName(t *testing.T) {
 			want:            "alloydb-postgres",
 		},
 		{
+			name:            "sanitizes slashes in single prebuilt",
+			prebuiltConfigs: []string{"alloydb-postgres/some-toolset"},
+			want:            "alloydb-postgres-some-toolset",
+		},
+		{
 			name:    "no name and no prebuilt errors",
 			wantErr: true,
 		},
