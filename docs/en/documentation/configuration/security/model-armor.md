@@ -95,8 +95,10 @@ for details.
 
 ## Step 2: Secure ingress and egress
 
+### Python
+
 {{< tabpane persist=header >}}
-{{% tab header="Python (LangChain)" text=true %}}
+{{% tab header="LangChain" text=true %}}
 
 If your agent uses LangChain, the `langchain-google-community` package provides
 runnables and middleware that screen prompts and responses with Model Armor.
@@ -220,7 +222,7 @@ For more on the middleware, see the
 [Model Armor LangChain integration](https://docs.cloud.google.com/model-armor/model-armor-langchain-integration).
 
 {{% /tab %}}
-{{% tab header="Python (ADK)" text=true %}}
+{{% tab header="ADK" text=true %}}
 
 Using [Agent Development Kit (ADK)](https://google.github.io/adk-docs/), you
 screen traffic with two model callbacks: a `before_model_callback` (ingress) and
