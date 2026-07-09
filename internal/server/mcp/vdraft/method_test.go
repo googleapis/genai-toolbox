@@ -913,3 +913,162 @@ func TestPromptsGetHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestGroupsListHandler(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+
+	tests := []struct {
+		name        string
+		rawBody     []byte
+		body        ListGroupsRequest
+		wantErr     bool
+		errContains string
+		wantNames   []string
+	}{
+		{
+			name:        "invalid json body",
+			rawBody:     []byte(`{invalid json}`),
+			wantErr:     true,
+			errContains: "invalid mcp groups list request",
+		},
+		{
+			name: "success excludes default group and sorts",
+			body: ListGroupsRequest{
+				Request: jsonrpc.Request{Method: GROUPS_LIST},
+			},
+			wantErr:   false,
+			wantNames: []string{"tool1_only", "tool2_only"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := tt.rawBody
+			var err error
+			if body == nil {
+				body, err = json.Marshal(tt.body)
+				if err != nil {
+					t.Fatalf("unexpected error during marshaling: %v", err)
+				}
+			}
+			got, err := groupsListHandler(context.Background(), dummyID, resourceMgr, body)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("error = %v, want string containing %q", err, tt.errContains)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			res, ok := got.(jsonrpc.JSONRPCResponse)
+			if !ok {
+				t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+			}
+			result, ok := res.Result.(ListGroupsResult)
+			if !ok {
+				t.Fatalf("expected ListGroupsResult, got %T", res.Result)
+			}
+			gotNames := make([]string, 0, len(result.Groups))
+			for _, g := range result.Groups {
+				gotNames = append(gotNames, g.Name)
+			}
+			if len(gotNames) != len(tt.wantNames) {
+				t.Fatalf("got groups %v, want %v", gotNames, tt.wantNames)
+			}
+			for i, n := range tt.wantNames {
+				if gotNames[i] != n {
+					t.Errorf("group[%d] = %q, want %q", i, gotNames[i], n)
+				}
+			}
+		})
+	}
+}
+
+func TestGroupsGetHandler(t *testing.T) {
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+
+	tests := []struct {
+		name        string
+		rawBody     []byte
+		body        GetGroupRequest
+		wantErr     bool
+		errContains string
+		wantName    string
+	}{
+		{
+			name:        "invalid json body",
+			rawBody:     []byte(`{invalid json}`),
+			wantErr:     true,
+			errContains: "invalid mcp groups/get request",
+		},
+		{
+			name: "group does not exist",
+			body: GetGroupRequest{
+				Request: jsonrpc.Request{Method: GROUPS_GET},
+				Params: struct {
+					Name string `json:"name"`
+				}{Name: "missing_group"},
+			},
+			wantErr:     true,
+			errContains: `group with name "missing_group" does not exist`,
+		},
+		{
+			name: "success",
+			body: GetGroupRequest{
+				Request: jsonrpc.Request{Method: GROUPS_GET},
+				Params: struct {
+					Name string `json:"name"`
+				}{Name: "tool1_only"},
+			},
+			wantErr:  false,
+			wantName: "tool1_only",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := tt.rawBody
+			var err error
+			if body == nil {
+				body, err = json.Marshal(tt.body)
+				if err != nil {
+					t.Fatalf("unexpected error during marshaling: %v", err)
+				}
+			}
+			got, err := groupsGetHandler(context.Background(), dummyID, resourceMgr, body)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("error = %v, want string containing %q", err, tt.errContains)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			res, ok := got.(jsonrpc.JSONRPCResponse)
+			if !ok {
+				t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+			}
+			result, ok := res.Result.(GetGroupResult)
+			if !ok {
+				t.Fatalf("expected GetGroupResult, got %T", res.Result)
+			}
+			if result.Name != tt.wantName {
+				t.Errorf("result.Name = %q, want %q", result.Name, tt.wantName)
+			}
+		})
+	}
+}

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 
 	"time"
 
@@ -52,6 +53,10 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 		return promptsListHandler(ctx, id, resourceMgr, promptset, body)
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, promptset, resourceMgr, body)
+	case GROUPS_LIST:
+		return groupsListHandler(ctx, id, resourceMgr, body)
+	case GROUPS_GET:
+		return groupsGetHandler(ctx, id, resourceMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -513,5 +518,76 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prom
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
 		Result:  result,
+	}, nil
+}
+
+// groupsListHandler handles the "groups/list" method. It returns every named
+// group's name and description. The default nameless group is omitted.
+func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+	var req ListGroupsRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid mcp groups list request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	groupsMap := resourceMgr.GetGroupsMap()
+	names := make([]string, 0, len(groupsMap))
+	for name := range groupsMap {
+		if name == "" {
+			continue
+		}
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	groupsList := make([]GroupDescription, 0, len(names))
+	for _, name := range names {
+		g := groupsMap[name]
+		groupsList = append(groupsList, GroupDescription{Name: g.Name, Description: g.Description})
+	}
+
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  ListGroupsResult{Groups: groupsList},
+	}, nil
+}
+
+// groupsGetHandler handles the "groups/get" method. It returns the named group's
+// tools and prompts.
+func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+	var req GetGroupRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid mcp groups/get request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	groupName := req.Params.Name
+	g, ok := resourceMgr.GetGroup(groupName)
+	if !ok {
+		err := fmt.Errorf("invalid group name: group with name %q does not exist", groupName)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	urlParams, _ := util.UrlParamsFromContext(ctx)
+	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), g.ToToolset(), resourceMgr.GetToolsMap(), urlParams)
+	if err != nil {
+		err = fmt.Errorf("error generating tools manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	listPromptsResult, err := GenerateListPromptsResult(g.ToPromptset(), resourceMgr.GetPromptsMap())
+	if err != nil {
+		err = fmt.Errorf("error generating prompts manifest: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result: GetGroupResult{
+			Name:    g.Name,
+			Tools:   listToolsResult.Tools,
+			Prompts: listPromptsResult.Prompts,
+		},
 	}, nil
 }
