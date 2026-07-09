@@ -37,7 +37,9 @@ import (
 	source "github.com/googleapis/mcp-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudgda"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/tests"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
@@ -324,7 +326,7 @@ func setupDataAgent(t *testing.T, ctx context.Context, projectID, datasetID, tab
 
 	dataAgentId := "test" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	parent := fmt.Sprintf("projects/%s/locations/global", projectID)
-	url := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/%s/dataAgents?dataAgentId=%s", parent, dataAgentId)
+	url := fmt.Sprintf("%s/v1beta/%s/dataAgents?dataAgentId=%s", util.GetGDAEndpoint(), parent, dataAgentId)
 
 	requestBody := map[string]any{
 		"displayName": dataAgentDisplayName,
@@ -354,10 +356,14 @@ func setupDataAgent(t *testing.T, ctx context.Context, projectID, datasetID, tab
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
+	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken})
+	client, err := util.NewGDAClient(ctx, option.WithTokenSource(tokenSource))
+	if err != nil {
+		t.Fatalf("failed to create GDA client: %v", err)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("failed to create data agent: %v", err)
@@ -396,9 +402,8 @@ func setupDataAgent(t *testing.T, ctx context.Context, projectID, datasetID, tab
 		case <-timeout:
 			t.Fatalf("timed out waiting for data agent creation")
 		case <-ticker.C:
-			opUrl := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/%s", opName)
+			opUrl := fmt.Sprintf("%s/v1beta/%s", util.GetGDAEndpoint(), opName)
 			opReq, _ := http.NewRequestWithContext(ctx, http.MethodGet, opUrl, nil)
-			opReq.Header.Set("Authorization", "Bearer "+accessToken)
 			opResp, err := client.Do(opReq)
 			if err != nil {
 				t.Logf("failed to poll operation: %v", err)
@@ -424,9 +429,8 @@ func setupDataAgent(t *testing.T, ctx context.Context, projectID, datasetID, tab
 
 	teardown := func(t *testing.T) {
 		agentName := fmt.Sprintf("%s/dataAgents/%s", parent, dataAgentId)
-		deleteUrl := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/%s", agentName)
+		deleteUrl := fmt.Sprintf("%s/v1beta/%s", util.GetGDAEndpoint(), agentName)
 		delReq, _ := http.NewRequest(http.MethodDelete, deleteUrl, nil)
-		delReq.Header.Set("Authorization", "Bearer "+accessToken)
 		delResp, err := client.Do(delReq)
 		if err != nil {
 			t.Errorf("failed to delete data agent %s: %v", agentName, err)

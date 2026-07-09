@@ -190,7 +190,10 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 		errMsg := fmt.Errorf("error during invocation: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
 	}
-	accessToken := tools.AccessToken(header.Get(authTokenHeadername))
+	var accessToken tools.AccessToken
+	if header != nil {
+		accessToken = tools.AccessToken(header.Get(authTokenHeadername))
+	}
 
 	// Check if this specific tool requires the standard authorization header
 	clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
@@ -210,16 +213,21 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolset tools.T
 	}
 
 	// marshal arguments and decode it using decodeJSON instead to prevent loss between floats/int.
-	aMarshal, err := json.Marshal(toolArgument)
-	if err != nil {
-		err = fmt.Errorf("unable to marshal tools argument: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-
 	var data map[string]any
-	if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
-		err = fmt.Errorf("unable to decode tools argument: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	if toolArgument != nil {
+		aMarshal, err := json.Marshal(toolArgument)
+		if err != nil {
+			err = fmt.Errorf("unable to marshal tools argument: %w", err)
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		}
+
+		if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
+			err = fmt.Errorf("unable to decode tools argument: %w", err)
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		}
+	}
+	if data == nil {
+		data = make(map[string]any)
 	}
 
 	// Tool authentication
