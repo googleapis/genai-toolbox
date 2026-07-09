@@ -95,6 +95,14 @@ for details.
 
 ## Step 2: Secure ingress and egress
 
+Every option below applies the same ingress and egress screening; they differ
+only in *where* the check runs. Pick the one that matches your stack:
+
+- **[Python](#python)**: screen traffic from inside your agent code with a
+  framework integration (LangChain or ADK).
+- **[Agent Gateway](#agent-gateway)**: screen it at a managed control plane, with
+  no changes to your agent code.
+
 ### Python
 
 {{< tabpane persist=header >}}
@@ -358,6 +366,28 @@ For more on callbacks, see the
 
 {{% /tab %}}
 {{< /tabpane >}}
+
+### Agent Gateway
+
+[Agent Gateway](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration)
+is a managed control plane in the Gemini Enterprise Agent Platform that routes
+agent traffic and invokes Model Armor on the content passing through it, with no
+changes to your agent code. You assign a Model Armor template to each direction
+when you configure the gateway: one for **ingress** (client to agent) and one for
+**egress** (agent to tools and other services). A single template can serve both.
+
+The gateway's own service identities call Model Armor, so each direction needs
+specific IAM roles granted to the right service account. For the exact roles and
+`gcloud` commands, follow
+[Configure Model Armor on the gateway](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration#configure-model-armor-gateway).
+
+Inline protection has some limitations (for example, same-region requirements and
+restrictions on which agent types and traffic are covered). Review the
+[Agent Gateway limitations](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration#limitations)
+before you rely on it.
+
+For the full gateway setup and template-binding steps, see
+[Model Armor and Agent Gateway integration](https://docs.cloud.google.com/model-armor/model-armor-agent-gateway-integration).
 
 ## Additional Resources
 
