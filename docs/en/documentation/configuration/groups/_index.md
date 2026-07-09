@@ -89,7 +89,24 @@ Takes a group `name` and returns that group's tools and prompts together:
 ```json
 {
   "name": "data_analyst",
-  "tools": [ /* ... */ ],
-  "prompts": [ /* ... */ ]
+  "tools": [
+    {
+      "name": "list_tables",
+      "description": "List tables in the database.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "execute_sql",
+      "description": "Run a SQL query.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "sql": { "type": "string" } },
+        "required": ["sql"]
+      }
+    }
+  ],
+  "prompts": [
+    { "name": "summarize_results", "description": "Summarize query results." }
+  ]
 }
 ```
