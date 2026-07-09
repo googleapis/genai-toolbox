@@ -575,7 +575,7 @@ func setupArcadeDBContainer(ctx context.Context, t *testing.T) (boltURI string, 
 		Image:        "arcadedata/arcadedb:26.3.2",
 		ExposedPorts: []string{"2480/tcp", "7687/tcp"},
 		Env: map[string]string{
-			"JAVA_OPTS":                        "-Darcadedb.server.rootPassword=playwithdata -Darcadedb.server.plugins=Neo4j:com.arcadedb.server.neo4j.Neo4jServerPlugin",
+			"JAVA_OPTS":                        "-Darcadedb.server.rootPassword=playwithdata -Darcadedb.server.plugins=Bolt:com.arcadedb.bolt.BoltProtocolPlugin",
 			"arcadedb.server.defaultDatabases": "",
 		},
 		WaitingFor: wait.ForHTTP("/api/v1/ready").
