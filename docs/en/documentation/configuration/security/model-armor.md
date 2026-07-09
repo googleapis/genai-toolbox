@@ -59,7 +59,7 @@ cleanly with this kind of interception.
    - To create and manage templates, you need `roles/modelarmor.admin`.
 3. **Run a Toolbox server.** The example below connects to a Toolbox server at
    `http://127.0.0.1:5000` and loads a toolset named `my-toolset`. If you don't
-   already have one, follow the [Quickstart](../getting-started/local_quickstart/) to write a `tools.yaml`,
+   already have one, follow the [Quickstart](../../getting-started/local_quickstart/) to write a tools.yaml,
    start the server, and define a toolset. Match the URL and toolset name in your
    agent code to your configuration.
 
