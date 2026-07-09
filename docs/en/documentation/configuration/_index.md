@@ -90,10 +90,10 @@ tools:
 
 ### Groups
 
-The `group` kind scopes both **tools** and **prompts** together under one name,
-with a `description` used as group metadata. A toolset is a tools-only group, so
-existing `kind: toolset` configs keep working unchanged. See
-[Groups](./groups/_index.md) for details.
+The `group` kind scopes MCP primitives such as **tools** and **prompts**
+together under one name, with a `description` used as group metadata. A toolset
+is a tools-only group, so existing `kind: toolset` configs keep working
+unchanged. See [Groups](./groups/_index.md) for details.
 
 ```yaml
 kind: group

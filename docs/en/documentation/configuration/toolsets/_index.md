@@ -15,7 +15,7 @@ Try organizing your toolsets by the agent's persona or app feature (e.g., `data_
 {{< /notice >}}
 
 {{< notice note >}}
-A toolset is a tools-only [Group](../groups/). `kind: toolset` continues to work unchanged and needs no migration. If you also want to scope **prompts** alongside your tools, define a `kind: group` instead.
+A toolset is a tools-only [Group](../groups/). `kind: toolset` continues to work unchanged and needs no migration. If you also want to scope other MCP primitives such as **prompts** alongside your tools, define a `kind: group` instead.
 {{< /notice >}}
 
 ## Defining Toolsets
