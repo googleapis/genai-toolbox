@@ -372,9 +372,6 @@ func (s *Source) ListDataProducts(
 	pageSize int,
 	orderBy string,
 ) ([]*DataProductSummary, error) {
-	if s.dataProductClient == nil {
-		return nil, fmt.Errorf("dataplex data product client is not initialized")
-	}
 	if pageSize <= 0 {
 		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
 	}
@@ -386,7 +383,7 @@ func (s *Source) ListDataProducts(
 		OrderBy:  orderBy,
 	}
 
-	it := s.dataProductClient.ListDataProducts(ctx, req)
+	it := s.GetDataProductClient().ListDataProducts(ctx, req)
 	var results []*DataProductSummary
 
 	for len(results) < pageSize {
@@ -401,20 +398,228 @@ func (s *Source) ListDataProducts(
 			return nil, fmt.Errorf("failed to list data products: %w", err)
 		}
 		parts := strings.Split(dp.GetName(), "/")
-		var locationId, dataProductId string
+		var locID, prodID string
 		if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
-			locationId = parts[3]
-			dataProductId = parts[5]
+			locID = parts[3]
+			prodID = parts[5]
 		}
 		results = append(results, &DataProductSummary{
-			LocationID:    locationId,
-			DataProductID: dataProductId,
+			LocationID:    locID,
+			DataProductID: prodID,
 			DisplayName:   dp.GetDisplayName(),
 			OwnerEmails:   dp.GetOwnerEmails(),
 			AssetCount:    dp.GetAssetCount(),
 		})
 	}
 	return results, nil
+}
+
+type AccessGroup struct {
+	ID             string `json:"id"`
+	DisplayName    string `json:"displayName"`
+	Description    string `json:"description"`
+	GoogleGroup    string `json:"googleGroup"`
+	ServiceAccount string `json:"serviceAccount"`
+}
+
+type DataProduct struct {
+	LocationID    string            `json:"locationId"`
+	DataProductID string            `json:"dataProductId"`
+	DisplayName   string            `json:"displayName"`
+	Description   string            `json:"description"`
+	OwnerEmails   []string          `json:"ownerEmails"`
+	AssetCount    int32             `json:"assetCount"`
+	Labels        map[string]string `json:"labels"`
+	AccessGroups  []AccessGroup     `json:"accessGroups"`
+}
+
+func (s *Source) GetDataProduct(ctx context.Context, locationID string, dataProductID string) (*DataProduct, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationID, dataProductID)
+	req := &dataplexpb.GetDataProductRequest{
+		Name: name,
+	}
+	resp, err := s.GetDataProductClient().GetDataProduct(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	accessGroups := []AccessGroup{}
+	for _, ag := range resp.GetAccessGroups() {
+		accessGroups = append(accessGroups, AccessGroup{
+			ID:             ag.GetId(),
+			DisplayName:    ag.GetDisplayName(),
+			Description:    ag.GetDescription(),
+			GoogleGroup:    ag.GetPrincipal().GetGoogleGroup(),
+			ServiceAccount: ag.GetPrincipal().GetServiceAccount(),
+		})
+	}
+
+	parts := strings.Split(resp.GetName(), "/")
+	var locID, prodID string
+	if len(parts) >= 6 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" {
+		locID = parts[3]
+		prodID = parts[5]
+	}
+
+	return &DataProduct{
+		LocationID:    locID,
+		DataProductID: prodID,
+		DisplayName:   resp.GetDisplayName(),
+		Description:   resp.GetDescription(),
+		OwnerEmails:   resp.GetOwnerEmails(),
+		AssetCount:    resp.GetAssetCount(),
+		Labels:        resp.GetLabels(),
+		AccessGroups:  accessGroups,
+	}, nil
+}
+
+// Common between ListDataAssets and GetDataAsset.
+// The only difference between the objects returned by these two methods is whether the AccessGroupConfigs field (marked omitempty) is included.
+type DataAsset struct {
+	LocationID         string                                             `json:"locationId"`
+	DataProductID      string                                             `json:"dataProductId"`
+	DataAssetID        string                                             `json:"dataAssetId"`
+	ResourceURI        string                                             `json:"resourceUri"`
+	Labels             map[string]string                                  `json:"labels"`
+	AccessGroupConfigs map[string]*dataplexpb.DataAsset_AccessGroupConfig `json:"accessGroupConfigs,omitempty"`
+}
+
+func (s *Source) ListDataAssets(
+	ctx context.Context,
+	locationId string,
+	dataProductId string,
+	filter string,
+	pageSize int,
+	orderBy string,
+) ([]*DataAsset, error) {
+	if s.GetDataProductClient() == nil {
+		return nil, fmt.Errorf("dataplex data product client is not initialized")
+	}
+	if pageSize <= 0 {
+		return nil, fmt.Errorf("pageSize must be positive: %d", pageSize)
+	}
+	parent := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s", s.ProjectID(), locationId, dataProductId)
+	req := &dataplexpb.ListDataAssetsRequest{
+		Parent:   parent,
+		Filter:   filter,
+		PageSize: int32(pageSize),
+		OrderBy:  orderBy,
+	}
+
+	it := s.GetDataProductClient().ListDataAssets(ctx, req)
+	var results []*DataAsset
+
+	for len(results) < pageSize {
+		asset, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				return nil, fmt.Errorf("failed to list data assets: code=%s message=%s", st.Code(), st.Message())
+			}
+			return nil, fmt.Errorf("failed to list data assets: %w", err)
+		}
+		parts := strings.Split(asset.GetName(), "/")
+		var locId, prodId, assetId string
+		if len(parts) >= 8 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" && parts[6] == "dataAssets" {
+			locId = parts[3]
+			prodId = parts[5]
+			assetId = parts[7]
+		}
+		results = append(results, &DataAsset{
+			LocationID:    locId,
+			DataProductID: prodId,
+			DataAssetID:   assetId,
+			ResourceURI:   asset.GetResource(),
+			Labels:        asset.GetLabels(),
+		})
+	}
+	return results, nil
+}
+
+func (s *Source) GetDataAsset(ctx context.Context, locationId string, dataProductId string, dataAssetId string) (*DataAsset, error) {
+	name := fmt.Sprintf("projects/%s/locations/%s/dataProducts/%s/dataAssets/%s", s.ProjectID(), locationId, dataProductId, dataAssetId)
+	req := &dataplexpb.GetDataAssetRequest{
+		Name: name,
+	}
+	resp, err := s.GetDataProductClient().GetDataAsset(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.Split(resp.GetName(), "/")
+	var locId, prodId, assetId string
+	if len(parts) >= 8 && parts[0] == "projects" && parts[2] == "locations" && parts[4] == "dataProducts" && parts[6] == "dataAssets" {
+		locId = parts[3]
+		prodId = parts[5]
+		assetId = parts[7]
+	}
+
+	return &DataAsset{
+		LocationID:         locId,
+		DataProductID:      prodId,
+		DataAssetID:        assetId,
+		ResourceURI:        resp.GetResource(),
+		Labels:             resp.GetLabels(),
+		AccessGroupConfigs: resp.GetAccessGroupConfigs(),
+	}, nil
+}
+
+// CreateDataProduct creates a new Data Product.
+// dataProductId is optional. If empty, the Dataplex backend will automatically generate a unique ID.
+func (s *Source) CreateDataProduct(
+	ctx context.Context,
+	locationId string,
+	dataProductId string,
+	displayName string,
+	description string,
+	ownerEmails []string,
+	accessGroups []AccessGroup,
+) (string, string, error) {
+	parent := fmt.Sprintf("projects/%s/locations/%s", s.ProjectID(), locationId)
+
+	agMap := make(map[string]*dataplexpb.DataProduct_AccessGroup)
+	for _, ag := range accessGroups {
+		principal := &dataplexpb.DataProduct_Principal{}
+		if ag.GoogleGroup != "" {
+			principal.Type = &dataplexpb.DataProduct_Principal_GoogleGroup{
+				GoogleGroup: ag.GoogleGroup,
+			}
+		}
+		if ag.ServiceAccount != "" {
+			principal.ServiceAccount = &ag.ServiceAccount
+		}
+		agMap[ag.ID] = &dataplexpb.DataProduct_AccessGroup{
+			Id:          ag.ID,
+			DisplayName: ag.DisplayName,
+			Description: ag.Description,
+			Principal:   principal,
+		}
+	}
+
+	req := &dataplexpb.CreateDataProductRequest{
+		Parent:        parent,
+		DataProductId: dataProductId,
+		DataProduct: &dataplexpb.DataProduct{
+			DisplayName:  displayName,
+			Description:  description,
+			OwnerEmails:  ownerEmails,
+			AccessGroups: agMap,
+		},
+	}
+
+	op, err := s.GetDataProductClient().CreateDataProduct(ctx, req)
+	if err != nil {
+		return "", "", err
+	}
+
+	opName := op.Name()
+	parts := strings.Split(opName, "/")
+	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "operations" {
+		return "", "", fmt.Errorf("invalid operation name: %q", opName)
+	}
+	return parts[3], parts[5], nil
 }
 
 func (s *Source) GenerateDataInsights(ctx context.Context, location, resourcePath string, publish bool) (string, error) {
