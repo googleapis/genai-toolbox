@@ -63,13 +63,17 @@ func getArcadeDBVars(t *testing.T) map[string]any {
 		t.Fatal("'ARCADEDB_PASS' not set")
 	}
 
-	return map[string]any{
+	vars := map[string]any{
 		"type":     ArcadeDBSourceType,
 		"uri":      ArcadeDBURI,
 		"database": ArcadeDBDatabase,
 		"user":     ArcadeDBUser,
 		"password": ArcadeDBPass,
 	}
+	if ArcadeDBHTTPURL != "" {
+		vars["httpUri"] = ArcadeDBHTTPURL
+	}
+	return vars
 }
 
 // arcadeHTTPBase returns the HTTP base URL for the configured ArcadeDB
