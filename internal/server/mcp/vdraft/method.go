@@ -51,9 +51,9 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case PROMPTS_GET:
 		return promptsGetHandler(ctx, id, promptset, resourceMgr, body, header)
 	case GROUPS_LIST:
-		return groupsListHandler(ctx, id, resourceMgr, body)
+		return groupsListHandler(ctx, id, resourceMgr, body, header)
 	case GROUPS_GET:
-		return groupsGetHandler(ctx, id, resourceMgr, body)
+		return groupsGetHandler(ctx, id, resourceMgr, body, header)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -607,11 +607,19 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptset prom
 
 // groupsListHandler handles the "groups/list" method. It returns every named
 // group's name and description. The default nameless group is omitted.
-func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	var req ListGroupsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp groups list request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateHeaderErr, err := validateHeader(id, header, GROUPS_LIST, "")
+	if err != nil {
+		return validateHeaderErr, err
+	}
+	validateErr, err := validateMetadata(id, req.Params, header == nil)
+	if err != nil {
+		return validateErr, err
 	}
 
 	groupsMap := resourceMgr.GetGroupsMap()
@@ -639,11 +647,19 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 
 // groupsGetHandler handles the "groups/get" method. It returns the named group's
 // tools and prompts.
-func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	var req GetGroupRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp groups/get request: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+	validateHeaderErr, err := validateHeader(id, header, GROUPS_GET, req.Params.Name)
+	if err != nil {
+		return validateHeaderErr, err
+	}
+	validateErr, err := validateMetadata(id, req.Params.RequestParams, header == nil)
+	if err != nil {
+		return validateErr, err
 	}
 
 	groupName := req.Params.Name

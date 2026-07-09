@@ -427,6 +427,7 @@ type PromptMessage struct {
 // server has.
 type ListGroupsRequest struct {
 	jsonrpc.Request
+	Params RequestParams `json:"params,omitempty"`
 }
 
 // GroupDescription is a single entry in a groups/list response.
@@ -444,9 +445,13 @@ type ListGroupsResult struct {
 // GetGroupRequest is sent from the client to request a single group's contents.
 type GetGroupRequest struct {
 	jsonrpc.Request
-	Params struct {
-		Name string `json:"name"`
-	} `json:"params"`
+	Params GetGroupRequestParams `json:"params"`
+}
+
+// GetGroupRequestParams contains the parameters for a groups/get request.
+type GetGroupRequestParams struct {
+	RequestParams
+	Name string `json:"name"`
 }
 
 // GetGroupResult is the server's response to a groups/get request: the group's

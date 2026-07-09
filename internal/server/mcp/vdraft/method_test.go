@@ -919,10 +919,20 @@ func TestGroupsListHandler(t *testing.T) {
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
 	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
+	validMeta := &RequestMetaObject{
+		ProtocolVersion: PROTOCOL_VERSION,
+		ClientInfo: Implementation{
+			BaseMetadata: BaseMetadata{Name: "TestClient"},
+			Version:      "1.0",
+		},
+		MetaClientCapabilities: &ClientCapabilities{},
+	}
+
 	tests := []struct {
 		name        string
 		rawBody     []byte
 		body        ListGroupsRequest
+		header      http.Header
 		wantErr     bool
 		errContains string
 		wantNames   []string
@@ -937,7 +947,9 @@ func TestGroupsListHandler(t *testing.T) {
 			name: "success excludes default group and sorts",
 			body: ListGroupsRequest{
 				Request: jsonrpc.Request{Method: GROUPS_LIST},
+				Params:  RequestParams{Meta: validMeta},
 			},
+			header:    http.Header{"Mcp-Method": []string{GROUPS_LIST}},
 			wantErr:   false,
 			wantNames: []string{"tool1_only", "tool2_only"},
 		},
@@ -953,7 +965,7 @@ func TestGroupsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling: %v", err)
 				}
 			}
-			got, err := groupsListHandler(context.Background(), dummyID, resourceMgr, body)
+			got, err := groupsListHandler(context.Background(), dummyID, resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -996,10 +1008,20 @@ func TestGroupsGetHandler(t *testing.T) {
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
 	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
+	validMeta := &RequestMetaObject{
+		ProtocolVersion: PROTOCOL_VERSION,
+		ClientInfo: Implementation{
+			BaseMetadata: BaseMetadata{Name: "TestClient"},
+			Version:      "1.0",
+		},
+		MetaClientCapabilities: &ClientCapabilities{},
+	}
+
 	tests := []struct {
 		name        string
 		rawBody     []byte
 		body        GetGroupRequest
+		header      http.Header
 		wantErr     bool
 		errContains string
 		wantName    string
@@ -1014,10 +1036,12 @@ func TestGroupsGetHandler(t *testing.T) {
 			name: "group does not exist",
 			body: GetGroupRequest{
 				Request: jsonrpc.Request{Method: GROUPS_GET},
-				Params: struct {
-					Name string `json:"name"`
-				}{Name: "missing_group"},
+				Params: GetGroupRequestParams{
+					RequestParams: RequestParams{Meta: validMeta},
+					Name:          "missing_group",
+				},
 			},
+			header:      http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"missing_group"}},
 			wantErr:     true,
 			errContains: `group with name "missing_group" does not exist`,
 		},
@@ -1025,10 +1049,12 @@ func TestGroupsGetHandler(t *testing.T) {
 			name: "success",
 			body: GetGroupRequest{
 				Request: jsonrpc.Request{Method: GROUPS_GET},
-				Params: struct {
-					Name string `json:"name"`
-				}{Name: "tool1_only"},
+				Params: GetGroupRequestParams{
+					RequestParams: RequestParams{Meta: validMeta},
+					Name:          "tool1_only",
+				},
 			},
+			header:   http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"tool1_only"}},
 			wantErr:  false,
 			wantName: "tool1_only",
 		},
@@ -1044,7 +1070,7 @@ func TestGroupsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling: %v", err)
 				}
 			}
-			got, err := groupsGetHandler(context.Background(), dummyID, resourceMgr, body)
+			got, err := groupsGetHandler(context.Background(), dummyID, resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
