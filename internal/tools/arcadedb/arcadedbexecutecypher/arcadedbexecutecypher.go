@@ -75,7 +75,7 @@ func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	)
 	dryRunParameter := parameters.NewBooleanParameter(
 		"dry_run",
-		"If set to true, the query will be validated and information about the execution " +
+		"If set to true, the query will be validated and information about the execution "+
 			"will be returned without running the query. Defaults to false.",
 		parameters.WithBooleanDefault(false),
 	)
