@@ -99,6 +99,8 @@ type ServerConfig struct {
 	PollInterval int
 	// HttpMaxRequestBytes caps MCP HTTP request bodies. Zero uses the default.
 	HttpMaxRequestBytes int64
+	// EnableDraftSpecs allow users to opt-in and test upcoming draft MCP specs.
+	EnableDraftSpecs bool
 }
 
 type logFormat string

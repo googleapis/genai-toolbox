@@ -363,3 +363,19 @@ func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
 	}
 	return nil, false
 }
+
+// enableDraftSpecs is the key to check if the server enabled mcp draft specs
+const enableDraftSpecs contextKey = "enableDraftSpecs"
+
+// WithEnableDraftSpecs adds enable draft specs bool into the context as a value
+func WithEnableDraftSpecs(ctx context.Context, enableDraft bool) context.Context {
+	return context.WithValue(ctx, enableDraftSpecs, enableDraft)
+}
+
+// EnableDraftSpecsFromContext retrieves enable draft specs bool from context
+func EnableDraftSpecsFromContext(ctx context.Context) (bool, bool) {
+	if enableDraft, ok := ctx.Value(enableDraftSpecs).(bool); ok {
+		return enableDraft, true
+	}
+	return false, false
+}
