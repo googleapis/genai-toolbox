@@ -89,7 +89,10 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 
 We currently support different versions of the MCP protocol.
 
-- `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20250618`).
+- `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20251125`).
+- `Protocol.MCP_LATEST`: Alias for the latest stable MCP version (currently aliases to `MCP_v20251125`).
+- `Protocol.MCP_DRAFT`: Alias for the upcoming draft MCP version (currently aliases to `MCP_v2026_DRAFT`).
+- `Protocol.MCP_v2026_DRAFT`: Draft version 2026.
 - `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
 - `Protocol.MCP_v20250326`: March 2025 version.
 - `Protocol.MCP_v20250618`: June 2025 version.
