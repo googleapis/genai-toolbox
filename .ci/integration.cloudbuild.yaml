@@ -1425,7 +1425,7 @@ steps:
       - "GOPATH=/gopath"
       - "DATAPROC_PROJECT=$PROJECT_ID"
       - "DATAPROC_REGION=$_REGION"
-      - "DATAPROC_LIST_JOBS_CLUSTER=cluster-36"
+      - "DATAPROC_LIST_JOBS_CLUSTER=$_DATAPROC_CLUSTER"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
@@ -1711,3 +1711,4 @@ substitutions:
   _MARIADB_DATABASE: test_database
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
+  _DATAPROC_CLUSTER: "dataproc-testing-cluster"

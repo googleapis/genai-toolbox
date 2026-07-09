@@ -200,10 +200,46 @@ type PaginatedRequestParams struct {
 }
 
 type PaginatedResult struct {
-	jsonrpc.Result
 	// An opaque token representing the pagination position after the last returned result.
 	// If present, there may be more results available.
 	NextCursor Cursor `json:"nextCursor,omitempty"`
+}
+
+type cacheScope string
+
+const (
+	cacheScopePublic  cacheScope = "public"
+	cacheScopePrivate cacheScope = "private"
+)
+
+// A result that supports a time-to-live (TTL) hint for client-side caching.
+type CacheableResult struct {
+	/**
+	 * A hint from the server indicating how long (in milliseconds) the
+	 * client MAY cache this response before re-fetching. Semantics are
+	 * analogous to HTTP Cache-Control max-age.
+	 *
+	 * - If 0, The response SHOULD be considered immediately stale,
+	 *   The client MAY re-fetch every time the result is needed.
+	 * - If positive, the client SHOULD consider the result fresh for this many
+	 *   milliseconds after receiving the response.
+	 */
+	TtlMs int `json:"ttlMs"`
+	/**
+	 * Indicates the intended scope of the cached response, analogous to HTTP
+	 * `Cache-Control: public` vs `Cache-Control: private`.
+	 *
+	 * - `"public"`: The response does not contain user-specific data. Any
+	 *   client or intermediary (e.g., shared gateway, caching proxy) MAY cache
+	 *   the response and serve it across authorization contexts.
+	 * - `"private"`: The response MAY be cached and reused only within the
+	 *   same authorization context. Caches MUST NOT be shared across
+	 *   authorization contexts (e.g., a different access token requires a
+	 *   different cache).
+	 *
+	 * Toolbox currently default all as public.
+	 */
+	CacheScope cacheScope `json:"cacheScope"`
 }
 
 /* Tools */
@@ -215,7 +251,9 @@ type ListToolsRequest struct {
 
 // The server's response to a tools/list request from the client.
 type ListToolsResult struct {
+	jsonrpc.Result
 	PaginatedResult
+	CacheableResult
 	Tools []Tool `json:"tools"`
 }
 
@@ -369,7 +407,9 @@ type ListPromptsRequest struct {
 
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
+	jsonrpc.Result
 	PaginatedResult
+	CacheableResult
 	Prompts []Prompt `json:"prompts"`
 }
 
