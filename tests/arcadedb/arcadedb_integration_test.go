@@ -145,15 +145,13 @@ func TestArcadeDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	var boltURI, httpURL string
 	var containerCleanup func()
 
 	if ArcadeDBURI != "" {
-		boltURI = ArcadeDBURI
-		httpURL = arcadeHTTPBase(t)
 		containerCleanup = func() {}
 	} else {
-		boltURI, httpURL, containerCleanup = setupArcadeDBContainer(ctx, t)
+		boltURI, httpURL, cleanupFn := setupArcadeDBContainer(ctx, t)
+		containerCleanup = cleanupFn
 		ArcadeDBURI = boltURI
 		ArcadeDBHTTPURL = httpURL
 		ArcadeDBUser = "root"
@@ -577,7 +575,7 @@ func setupArcadeDBContainer(ctx context.Context, t *testing.T) (boltURI string, 
 		Image:        "arcadedata/arcadedb:26.3.2",
 		ExposedPorts: []string{"2480/tcp", "7687/tcp"},
 		Env: map[string]string{
-			"JAVA_OPTS":                        "-Darcadedb.server.rootPassword=playwithdata",
+			"JAVA_OPTS":                        "-Darcadedb.server.rootPassword=playwithdata -Darcadedb.server.plugins=Neo4j:com.arcadedb.server.neo4j.Neo4jServerPlugin",
 			"arcadedb.server.defaultDatabases": "",
 		},
 		WaitingFor: wait.ForHTTP("/api/v1/ready").
