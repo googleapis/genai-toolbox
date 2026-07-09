@@ -23,7 +23,8 @@ on:
       - '.github/workflows/docs*_cf.yaml'
       - '.hugo/**'
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   build-preview:
@@ -43,6 +44,7 @@ jobs:
         with:
           ref: ${{ env.HEAD_SHA }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@2752ce1d29631191ea3f27c23495fa06139a5b78 # v3
@@ -71,7 +73,7 @@ jobs:
         run: |
           mkdir -p ../artifact-payload
           cp -r public ../artifact-payload/public
-          echo ${{ env.PR_NUMBER }} > ../artifact-payload/pr_number.txt
+          echo ${PR_NUMBER} > ../artifact-payload/pr_number.txt
 
       - name: Upload Artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -82,13 +84,15 @@ jobs:
 
       - name: Deployment Link
         run: |
-          DEPLOY_URL="https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/workflows/docs_deploy_cf.yaml"
+          DEPLOY_URL="https://github.com/${{ github.repository_owner }}/${GITHUB_EVENT_REPOSITORY_NAME}/actions/workflows/docs_deploy_cf.yaml"
 
           echo "### Build Complete" >> $GITHUB_STEP_SUMMARY
-          echo "The build for PR #${{ env.PR_NUMBER }} succeeded." >> $GITHUB_STEP_SUMMARY
+          echo "The build for PR #${PR_NUMBER} succeeded." >> $GITHUB_STEP_SUMMARY
           echo "The Cloudflare deployment workflow is now starting." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "#### [Track Deployment Progress]($DEPLOY_URL)" >> $GITHUB_STEP_SUMMARY
+        env:
+          GITHUB_EVENT_REPOSITORY_NAME: ${{ github.event.repository.name }}
 
   remove-label:
     needs: build-preview
