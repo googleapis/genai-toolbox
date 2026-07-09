@@ -252,7 +252,7 @@ func resolveSkillName(name string, prebuiltConfigs []string) (string, error) {
 		return name, nil
 	}
 	if len(prebuiltConfigs) == 1 {
-		return prebuiltConfigs[0], nil
+		return strings.ReplaceAll(prebuiltConfigs[0], "/", "-"), nil
 	}
 	return "", fmt.Errorf("--name is required unless exactly one --prebuilt config is provided")
 }
