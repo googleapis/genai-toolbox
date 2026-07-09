@@ -16,7 +16,9 @@ package vdraft
 
 import (
 	"fmt"
+	"sort"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -145,4 +147,42 @@ func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompt
 		mcpManifest = append(mcpManifest, promptManifest)
 	}
 	return ListPromptsResult{Prompts: mcpManifest}, nil
+}
+
+// GenerateListGroupsResult generates the groups/list result. It omits the
+// default nameless group and returns the remaining groups sorted by name.
+func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult {
+	names := make([]string, 0, len(groupsMap))
+	for name := range groupsMap {
+		if name == "" {
+			continue
+		}
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	groupsList := make([]GroupDescription, 0, len(names))
+	for _, name := range names {
+		g := groupsMap[name]
+		groupsList = append(groupsList, GroupDescription{Name: g.Name, Description: g.Description})
+	}
+	return ListGroupsResult{Groups: groupsList}
+}
+
+// GenerateGetGroupResult generates the groups/get result for a single group's
+// tools and prompts.
+func GenerateGetGroupResult(srcs map[string]sources.Source, g group.Group, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, urlParams map[string]string) (GetGroupResult, error) {
+	listToolsResult, err := GenerateListToolsResult(srcs, g.ToToolset(), toolsMap, urlParams)
+	if err != nil {
+		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
+	}
+	listPromptsResult, err := GenerateListPromptsResult(g.ToPromptset(), promptsMap)
+	if err != nil {
+		return GetGroupResult{}, fmt.Errorf("error generating prompts manifest: %w", err)
+	}
+	return GetGroupResult{
+		Name:    g.Name,
+		Tools:   listToolsResult.Tools,
+		Prompts: listPromptsResult.Prompts,
+	}, nil
 }

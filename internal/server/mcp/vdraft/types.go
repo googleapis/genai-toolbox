@@ -426,8 +426,7 @@ type PromptMessage struct {
 // ListGroupsRequest is sent from the client to request the list of groups the
 // server has.
 type ListGroupsRequest struct {
-	jsonrpc.Request
-	Params RequestParams `json:"params,omitempty"`
+	PaginatedRequest
 }
 
 // GroupDescription is a single entry in a groups/list response.

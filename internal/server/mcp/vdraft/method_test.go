@@ -946,8 +946,12 @@ func TestGroupsListHandler(t *testing.T) {
 		{
 			name: "success excludes default group and sorts",
 			body: ListGroupsRequest{
-				Request: jsonrpc.Request{Method: GROUPS_LIST},
-				Params:  RequestParams{Meta: validMeta},
+				PaginatedRequest: PaginatedRequest{
+					Request: jsonrpc.Request{Method: GROUPS_LIST},
+					Params: PaginatedRequestParams{
+						RequestParams: RequestParams{Meta: validMeta},
+					},
+				},
 			},
 			header:    http.Header{"Mcp-Method": []string{GROUPS_LIST}},
 			wantErr:   false,

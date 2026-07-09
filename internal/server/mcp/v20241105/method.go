@@ -21,8 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sort"
-
 	"time"
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
@@ -530,26 +528,10 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
-	groupsMap := resourceMgr.GetGroupsMap()
-	names := make([]string, 0, len(groupsMap))
-	for name := range groupsMap {
-		if name == "" {
-			continue
-		}
-		names = append(names, name)
-	}
-	sort.Strings(names)
-
-	groupsList := make([]GroupDescription, 0, len(names))
-	for _, name := range names {
-		g := groupsMap[name]
-		groupsList = append(groupsList, GroupDescription{Name: g.Name, Description: g.Description})
-	}
-
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  ListGroupsResult{Groups: groupsList},
+		Result:  GenerateListGroupsResult(resourceMgr.GetGroupsMap()),
 	}, nil
 }
 
@@ -570,24 +552,14 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)
-	listToolsResult, err := GenerateListToolsResult(resourceMgr.GetSourcesMap(), g.ToToolset(), resourceMgr.GetToolsMap(), urlParams)
+	result, err := GenerateGetGroupResult(resourceMgr.GetSourcesMap(), g, resourceMgr.GetToolsMap(), resourceMgr.GetPromptsMap(), urlParams)
 	if err != nil {
-		err = fmt.Errorf("error generating tools manifest: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
-	}
-	listPromptsResult, err := GenerateListPromptsResult(g.ToPromptset(), resourceMgr.GetPromptsMap())
-	if err != nil {
-		err = fmt.Errorf("error generating prompts manifest: %w", err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result: GetGroupResult{
-			Name:    g.Name,
-			Tools:   listToolsResult.Tools,
-			Prompts: listPromptsResult.Prompts,
-		},
+		Result:  result,
 	}, nil
 }

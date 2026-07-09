@@ -572,7 +572,9 @@ func TestGroupsListHandler(t *testing.T) {
 		{
 			name: "success excludes default group and sorts",
 			body: ListGroupsRequest{
-				Request: jsonrpc.Request{Method: GROUPS_LIST},
+				PaginatedRequest: PaginatedRequest{
+					Request: jsonrpc.Request{Method: GROUPS_LIST},
+				},
 			},
 			wantErr:   false,
 			wantNames: []string{"tool1_only", "tool2_only"},
