@@ -56,7 +56,7 @@ description: All tools and prompts available on this server.
 
 At startup, Toolbox validates groups:
 
-- **Unique names.** A named group must have a unique `name` that satisfies the standard name rules (lowercase alphanumeric and hyphens).
+- **Unique names.** A named group must have a unique name that satisfies the standard name rules (alphanumeric characters, underscores, and hyphens).
 - **One default group.** Declaring more than one nameless group is an error.
 - **Default group restrictions.** The default group may set only a `description`; declaring `tools` or `prompts` on it is an error.
 - **Group wins over a same-named toolset.** If a name is defined by both a `kind: toolset` and a `kind: group`, the group takes precedence and Toolbox logs a warning naming the shadowed toolset.
