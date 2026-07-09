@@ -394,7 +394,7 @@ For the full gateway setup and template-binding steps, see
 ### Google Cloud MCP servers
 
 The paths above secure each agent or gateway you configure. If your agents reach
-Google Cloud services through **[Google Cloud MCP servers](https://docs.cloud.google.com/mcp/overview)**, you can instead apply
+Google Cloud services through **Google Cloud MCP servers**, you can instead apply
 one rule across the whole project, using **floor settings**. A floor setting is a
 project-wide baseline: once it's on, Model Armor automatically screens traffic to
 and from every Google Cloud MCP server in the project, so you don't change any
