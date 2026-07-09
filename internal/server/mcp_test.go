@@ -1799,3 +1799,126 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 		})
 	}
 }
+
+func TestMcpInstructionsFromGroupDescription(t *testing.T) {
+	const groupDescription = "Use these tools to manage widgets."
+	toolsMap := map[string]tools.Tool{}
+	promptsMap := map[string]prompts.Prompt{}
+	describedGroup, err := group.GroupConfig{Name: "described", Description: groupDescription}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize described group: %s", err)
+	}
+	plainGroup, err := group.GroupConfig{Name: "plain"}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize plain group: %s", err)
+	}
+	groups := map[string]group.Group{"described": describedGroup, "plain": plainGroup}
+	r, shutdown := setUpServer(t, "mcp", toolsMap, promptsMap, groups, withEnableDraftSpecs())
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	baseResult := func(protocolVersion string) map[string]any {
+		return map[string]any{
+			"protocolVersion": protocolVersion,
+			"capabilities": map[string]any{
+				"tools":   map[string]any{"listChanged": false},
+				"prompts": map[string]any{"listChanged": false},
+			},
+			"serverInfo": map[string]any{"name": serverName, "version": testutils.MockVersionString},
+		}
+	}
+
+	// initialize path: the 4 pre-draft versions.
+	initVersions := []string{protocolVersion20241105, protocolVersion20250326, protocolVersion20250618, protocolVersion20251125}
+	for _, pv := range initVersions {
+		t.Run("initialize "+pv, func(t *testing.T) {
+			// described group surfaces its description as instructions.
+			describedWant := baseResult(pv)
+			describedWant["instructions"] = groupDescription
+			assertInitializeInstructions(t, ts, "/described", pv, map[string]any{"jsonrpc": "2.0", "id": "mcp-initialize", "result": describedWant})
+
+			// group with no description omits the instructions field.
+			assertInitializeInstructions(t, ts, "/plain", pv, map[string]any{"jsonrpc": "2.0", "id": "mcp-initialize", "result": baseResult(pv)})
+		})
+	}
+
+	// serverDiscover path: draft version.
+	t.Run("serverDiscover DRAFT", func(t *testing.T) {
+		discoverBody := map[string]any{
+			"jsonrpc": jsonrpcVersion,
+			"id":      "server-discover",
+			"method":  "server/discover",
+			"params": map[string]any{
+				"_meta": map[string]any{
+					"io.modelcontextprotocol/protocolVersion": protocolVersionDraft,
+					"io.modelcontextprotocol/clientInfo": map[string]any{
+						"version": "client-temp-version",
+						"name":    "client-name",
+					},
+					"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+				},
+			},
+		}
+		reqMarshal, err := json.Marshal(discoverBody)
+		if err != nil {
+			t.Fatalf("unexpected error marshaling body: %s", err)
+		}
+		header := map[string]string{"Mcp-Protocol-Version": protocolVersionDraft, "Mcp-Method": "server/discover"}
+		resp, body, err := runRequest(ts, http.MethodPost, "/described", bytes.NewBuffer(reqMarshal), header)
+		if err != nil {
+			t.Fatalf("unexpected error during request: %s", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+		}
+		var got map[string]any
+		if err := json.Unmarshal(body, &got); err != nil {
+			t.Fatalf("unexpected error unmarshalling body: %s", err)
+		}
+		want := map[string]any{
+			"jsonrpc": "2.0",
+			"id":      "server-discover",
+			"result": map[string]any{
+				"supportedVersions": []any{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25", "DRAFT-2026-v1"},
+				"capabilities": map[string]any{
+					"tools":   map[string]any{"listChanged": false},
+					"prompts": map[string]any{"listChanged": false},
+				},
+				"serverInfo":   map[string]any{"name": serverName, "version": testutils.MockVersionString},
+				"instructions": groupDescription,
+			},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("unexpected response: got %#v, want %#v", got, want)
+		}
+	})
+}
+
+func assertInitializeInstructions(t *testing.T, ts *httptest.Server, url, protocolVersion string, want map[string]any) {
+	t.Helper()
+	reqBody := map[string]any{
+		"jsonrpc": jsonrpcVersion,
+		"id":      "mcp-initialize",
+		"method":  "initialize",
+		"params":  map[string]any{"protocolVersion": protocolVersion},
+	}
+	reqMarshal, err := json.Marshal(reqBody)
+	if err != nil {
+		t.Fatalf("unexpected error marshaling body: %s", err)
+	}
+	resp, body, err := runRequest(ts, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, http.StatusOK)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("unexpected error unmarshalling body: %s", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("unexpected response: got %#v, want %#v", got, want)
+	}
+}

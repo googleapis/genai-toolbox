@@ -37,10 +37,10 @@ import (
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, instructions string, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch method {
 	case SERVER_DISCOVER:
-		return serverDiscoverHandler(ctx, id, body, header)
+		return serverDiscoverHandler(ctx, id, instructions, body, header)
 	case TOOLS_LIST:
 		return toolsListHandler(ctx, id, resourceMgr, toolset, body, header)
 	case TOOLS_CALL:
@@ -117,7 +117,7 @@ func validateHeader(id jsonrpc.RequestId, header http.Header, method, name strin
 	return nil, nil
 }
 
-func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byte, header http.Header) (any, error) {
+func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, instructions string, body []byte, header http.Header) (any, error) {
 	v, err := util.ToolboxVersionFromContext(ctx)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -160,6 +160,7 @@ func serverDiscoverHandler(ctx context.Context, id jsonrpc.RequestId, body []byt
 			},
 			Version: v,
 		},
+		Instructions: instructions,
 	}
 	res := jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,

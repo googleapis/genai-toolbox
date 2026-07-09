@@ -837,7 +837,13 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			version = mcputil.GetLatestSupportedVersion(s.enableDraftSpecs)
 		}
 
-		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
+		// Surface the connected group's description as the server instructions.
+		var instructions string
+		if g, ok := s.ResourceMgr.GetGroup(toolsetName); ok {
+			instructions = g.Description
+		}
+
+		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, instructions, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
@@ -860,7 +866,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g.ToToolset(), g.ToPromptset(), s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g.ToToolset(), g.ToPromptset(), g.Description, s.ResourceMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code

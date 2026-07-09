@@ -378,7 +378,7 @@ func TestServerDiscoverHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := serverDiscoverHandler(tt.context, dummyID, body, tt.header)
+			got, err := serverDiscoverHandler(tt.context, dummyID, "test instructions", body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -392,7 +392,18 @@ func TestServerDiscoverHandler(t *testing.T) {
 					t.Fatalf("unexpected error: %v", err)
 				}
 				if got == nil {
-					t.Errorf("expected valid response, got nil")
+					t.Fatalf("expected valid response, got nil")
+				}
+				res, ok := got.(jsonrpc.JSONRPCResponse)
+				if !ok {
+					t.Fatalf("expected response of type jsonrpc.JSONRPCResponse, got %T", got)
+				}
+				discoverResult, ok := res.Result.(DiscoverResult)
+				if !ok {
+					t.Fatalf("expected result of type DiscoverResult, got %T", res.Result)
+				}
+				if discoverResult.Instructions != "test instructions" {
+					t.Errorf("expected instructions %q, got %q", "test instructions", discoverResult.Instructions)
 				}
 			}
 		})

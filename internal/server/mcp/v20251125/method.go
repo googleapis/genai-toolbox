@@ -38,10 +38,10 @@ import (
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, instructions string, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch method {
 	case INITIALIZE:
-		return initializeHandler(ctx, id, body)
+		return initializeHandler(ctx, id, instructions, body)
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
@@ -61,7 +61,7 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 // InitializeResponse runs capability negotiation and protocol version agreement.
 // This is the Initialization phase of the lifecycle for MCP client-server connections.
 // Always start with the latest protocol version supported.
-func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (any, error) {
+func initializeHandler(ctx context.Context, id jsonrpc.RequestId, instructions string, body []byte) (any, error) {
 	v, err := util.ToolboxVersionFromContext(ctx)
 	if err != nil {
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -91,6 +91,7 @@ func initializeHandler(ctx context.Context, id jsonrpc.RequestId, body []byte) (
 			},
 			Version: v,
 		},
+		Instructions: instructions,
 	}
 	res := jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,

@@ -95,7 +95,7 @@ func TestInitializeHandler(t *testing.T) {
 				}
 			}
 
-			got, err := initializeHandler(tt.context, dummyID, body)
+			got, err := initializeHandler(tt.context, dummyID, "test instructions", body)
 
 			if tt.wantErr {
 				if err == nil {
@@ -129,6 +129,9 @@ func TestInitializeHandler(t *testing.T) {
 				}
 				if initResult.ServerInfo.Version != fakeVersionString {
 					t.Errorf("expected version %q, got %q", fakeVersionString, initResult.ServerInfo.Version)
+				}
+				if initResult.Instructions != "test instructions" {
+					t.Errorf("expected instructions %q, got %q", "test instructions", initResult.Instructions)
 				}
 			}
 		})
