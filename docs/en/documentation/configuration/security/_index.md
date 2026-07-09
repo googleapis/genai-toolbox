@@ -1,7 +1,7 @@
 ---
 title: "Security"
 type: docs
-weight: 6
+weight: 11
 description: >
   Harden your MCP Toolbox agents and tools against prompt injection, jailbreaks,
   and sensitive data leakage.
