@@ -135,7 +135,7 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		}
 		var hasSecureParams bool
 		for _, p := range params {
-			if p.GetSecure() {
+			if p != nil && p.GetSecure() {
 				hasSecureParams = true
 				break
 			}

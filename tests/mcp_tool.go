@@ -590,6 +590,8 @@ func RunMCPSecureToolInvokeTest(t *testing.T) {
 		headers := map[string]string{
 			"Content-Type":         "application/json",
 			"MCP-Protocol-Version": mcpVersion,
+			"Mcp-Method":           "tools/call",
+			"Mcp-Name":             toolName,
 		}
 		for k, v := range header {
 			headers[k] = v
@@ -604,13 +606,22 @@ func RunMCPSecureToolInvokeTest(t *testing.T) {
 		if secureArguments != nil {
 			params["secureArguments"] = secureArguments
 		}
+		meta := map[string]any{
+			"io.modelcontextprotocol/protocolVersion": mcpVersion,
+			"io.modelcontextprotocol/clientInfo": map[string]any{
+				"name":    "TestClient",
+				"version": "1.0",
+			},
+			"io.modelcontextprotocol/clientCapabilities": map[string]any{},
+		}
 		if supportsSecure {
-			params["_meta"] = map[string]any{
-				"capabilities": map[string]any{
-					"toolbox/secure-params": true,
+			meta["io.modelcontextprotocol/clientCapabilities"] = map[string]any{
+				"experimental": map[string]any{
+					"com.google.cloud/secure-params": true,
 				},
 			}
 		}
+		params["_meta"] = meta
 
 		req := map[string]any{
 			"jsonrpc": "2.0",
@@ -652,7 +663,7 @@ func RunMCPSecureToolInvokeTest(t *testing.T) {
 			secureArguments: map[string]any{"name": "Alice"},
 			supportsSecure:  false,
 			wantError:       true,
-			wantErrorMsg:    "requires secure-params extension which is not supported by the client",
+			wantErrorMsg:    "requires com.google.cloud/secure-params extension which is not supported by the client",
 		},
 		{
 			name:            "secure parameter passed in standard arguments",
@@ -687,7 +698,7 @@ func RunMCPSecureToolInvokeTest(t *testing.T) {
 				t.Fatalf("unexpected native error: %s", err)
 			}
 			if statusCode != http.StatusOK {
-				t.Fatalf("expected status 200, got %d", statusCode)
+				t.Fatalf("expected status 200, got %d (error code: %d, msg: %q)", statusCode, mcpResp.Error.Code, mcpResp.Error.Message)
 			}
 
 			if tc.wantError {

@@ -163,9 +163,9 @@ parameters:
 
 ### Secure Parameters
 
-Secure parameters are designed to handle sensitive information (such as API keys, passwords, and credentials) that should not be transmitted in plain text through standard client-server arguments or logs.
+Secure parameters are designed for sensitive runtime context (such as an end-user `customer_id`, tenant identifier, or session token) that **AI agents (LLMs) should not control or see** and that should not be transmitted in plain text through prompt completion requests, model context windows, or standard server logs.
 
-Secure parameters require negotiation of the draft protocol version (`DRAFT-2026-v1`) and the client capability `toolbox/secure-params` to be set to `true`. 
+> **Note:** Secure parameters should be used for client-supplied runtime values (such as `customer_id` or end-user context). Database credentials (such as service account passwords or API keys) should be configured directly in the Data Source configuration rather than passed as per-request tool parameters.
 
 To configure a parameter as secure, set the `secure` field to `true` in your tool's parameter definition:
 
@@ -175,24 +175,37 @@ name: search_secure_data
 type: postgres-sql
 source: my-pg-instance
 statement: |
-  SELECT * FROM sessions WHERE token = $1
+  SELECT * FROM sessions WHERE customer_id = $1
 parameters:
-  - name: sessionToken
+  - name: customer_id
     type: string
-    description: Sensitive session token
+    description: Sensitive customer identifier supplied out-of-band by the calling application
     secure: true
 ```
 
-#### Protocol Constraints
+#### Protocol Constraints & Extension Negotiation
 
-When a parameter is marked as `secure: true`, the following strict rules are enforced at the transport level:
+Enabling secure parameters requires both the **MCP Toolbox Server** (running protocol version `DRAFT-2026-v1`) and a compatible **client SDK** that supports the `com.google.cloud/secure-params` extension.
 
-1. **Capability Requirement**: If a tool has one or more secure parameters, the client **must** negotiate the `"DRAFT-2026-v1"` protocol version during initialization and declare support for `toolbox/secure-params` in its capabilities. Otherwise, invoking the tool will return a `jsonrpc.INVALID_PARAMS` error.
+Clients declare support by enabling `com.google.cloud/secure-params: true` in their client capabilities (`io.modelcontextprotocol/clientCapabilities.experimental`) or per-request metadata (`_meta`).
+
+When a parameter is marked as `secure: true`, the following strict rules are enforced:
+
+1. **Capability Requirement**: If a tool has one or more secure parameters, the client **must** negotiate protocol version `"DRAFT-2026-v1"` and declare support for the `com.google.cloud/secure-params` capability.
 2. **Mutual Exclusion (Configuration)**: A parameter **cannot** have both `secure: true` and `authServices` specified. An error will be thrown during configuration loading.
 3. **Mutual Exclusion (Arguments)**:
-   - Parameters marked as `secure` **must** be passed in the request's `secureArguments` map, and **must not** be passed in the standard `arguments` map.
-   - Parameters **not** marked as `secure` **must** be passed in the standard `arguments` map, and **must not** be passed in the `secureArguments` map.
-   - Any violation of these rules will result in a `jsonrpc.INVALID_PARAMS` error and execution will be blocked.
+   - Parameters marked as `secure: true` **must** be passed in the request's `secureArguments` map, and **must not** be passed in the standard `arguments` map.
+   - Parameters marked as `secure: false` **must** be passed in the standard `arguments` map, and **must not** be passed in the `secureArguments` map.
+   - Because `arguments` and `secureArguments` are strictly disjoint, agent-generated arguments cannot override or collide with host-provided secure arguments. Any violation of these rules returns a `jsonrpc.INVALID_PARAMS` error and blocks execution.
+
+#### Client Compatibility & Unsupported Extension Behavior
+
+- **Automatic Tool Filtering (`tools/list`)**: If a client does not declare support for the `com.google.cloud/secure-params` extension, any tool configured with secure parameters is automatically filtered out from `tools/list` responses so AI agents cannot discover or attempt to call tools they cannot invoke securely.
+- **Invocation Rejection (`tools/call`)**: If a client attempts to call a tool requiring secure parameters without supporting the extension, the server blocks execution and returns a `jsonrpc.INVALID_PARAMS` error:
+  ```
+  tool "<name>" requires com.google.cloud/secure-params extension which is not supported by the client
+  ```
+- **Actionable Guidance**: If callers encounter missing tools or extension errors, ensure that the calling client/SDK is upgraded to a version supporting `com.google.cloud/secure-params`. If a parameter does not require transport-level hiding from the LLM agent, omit `secure: true` so standard clients can access the tool.
 
 ### Authenticated Parameters
 
