@@ -22,7 +22,10 @@ import (
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/group"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
 	"github.com/spf13/cobra"
 )
@@ -350,10 +353,6 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 			name: "missing name",
 			args: []string{"skills-generate", "--config", toolsFilePath, "--description", "test"},
 		},
-		{
-			name: "missing description",
-			args: []string{"skills-generate", "--config", toolsFilePath, "--name", "test"},
-		},
 	}
 
 	for _, tt := range tests {
@@ -363,6 +362,70 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 				t.Fatalf("expected command to fail due to missing arguments, but it succeeded\nOutput: %s", got)
 			}
 		})
+	}
+}
+
+func TestBuildSkillContents_GroupDescriptionPrecedence(t *testing.T) {
+	// len(groupsMap) > 1 (default group plus named groups) triggers group mode.
+	groupsMap := map[string]group.Group{
+		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+		"with-desc": group.NewGroup(
+			group.GroupConfig{Name: "with-desc", Description: "group's own description"},
+			tools.Toolset{}, prompts.Promptset{}),
+		"no-desc": group.NewGroup(
+			group.GroupConfig{Name: "no-desc"},
+			tools.Toolset{}, prompts.Promptset{}),
+	}
+
+	c := &skillsCmd{name: "my-skill", description: "flag fallback"}
+	contents, err := c.buildSkillContents(nil, groupsMap)
+	if err != nil {
+		t.Fatalf("buildSkillContents failed: %v", err)
+	}
+
+	if got := contents["my-skill-with-desc"].description; got != "group's own description" {
+		t.Errorf("group with description: got %q, want %q", got, "group's own description")
+	}
+	if got := contents["my-skill-no-desc"].description; got != "flag fallback" {
+		t.Errorf("group without description: got %q, want %q", got, "flag fallback")
+	}
+	if _, ok := contents["my-skill-"]; ok {
+		t.Errorf("default nameless group should not produce a skill")
+	}
+}
+
+func TestBuildSkillContents_ToolsetModeUsesFlagDescription(t *testing.T) {
+	groupsMap := map[string]group.Group{
+		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+		"my-toolset": group.NewGroup(
+			group.GroupConfig{Name: "my-toolset", Description: "ignored in toolset mode"},
+			tools.Toolset{}, prompts.Promptset{}),
+	}
+
+	c := &skillsCmd{name: "my-skill", description: "flag desc", toolset: "my-toolset"}
+	contents, err := c.buildSkillContents(nil, groupsMap)
+	if err != nil {
+		t.Fatalf("buildSkillContents failed: %v", err)
+	}
+
+	if got := contents["my-skill"].description; got != "flag desc" {
+		t.Errorf("toolset mode: got %q, want %q", got, "flag desc")
+	}
+}
+
+func TestBuildSkillContents_AllToolsModeUsesFlagDescription(t *testing.T) {
+	groupsMap := map[string]group.Group{
+		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+	}
+
+	c := &skillsCmd{name: "my-skill", description: "flag desc"}
+	contents, err := c.buildSkillContents(map[string]tools.Tool{}, groupsMap)
+	if err != nil {
+		t.Fatalf("buildSkillContents failed: %v", err)
+	}
+
+	if got := contents["my-skill"].description; got != "flag desc" {
+		t.Errorf("all-tools mode: got %q, want %q", got, "flag desc")
 	}
 }
 
