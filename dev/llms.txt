@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-09T09:26:21Z
+**GENERATED ON:** 2026-07-09T10:23:40Z
 
 ---
 ### System Directives for AI Models
@@ -84,6 +84,12 @@ This documentation is structured following the Diátaxis framework to assist in 
 
 
       - [Generic OIDC Auth](https://mcp-toolbox.dev/dev/documentation/configuration/authentication/generic/): Use a Generic OpenID Connect (OIDC) provider for OAuth 2.0 flow and token lifecycle.
+
+
+    - [Security](https://mcp-toolbox.dev/dev/documentation/configuration/security/): Harden your MCP Toolbox agents and tools against prompt injection, jailbreaks, and sensitive data leakage.
+
+
+      - [Securing Toolbox with Model Armor](https://mcp-toolbox.dev/dev/documentation/configuration/security/model-armor/): Protect your agents and tools against prompt injection and sensitive data leakage by screening traffic with Google Cloud Model Armor.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/documentation/configuration/prebuilt-configs/): This page lists all the prebuilt configs available.
