@@ -70,8 +70,8 @@ detection settings into a reusable policy. You create a template once, then
 reference its ID on every sanitize call, so you can change the policy in one
 place without touching your agent code.
 
-Create a template that enforces both Sensitive Data Protection (SDP) and prompt
-injection / jailbreak detection:
+Create a template that enforces both [Sensitive Data Protection (SDP)](https://docs.cloud.google.com/model-armor/overview#ma-sensitive-data-prot) and [prompt
+injection / jailbreak detection](https://docs.cloud.google.com/model-armor/overview#ma-prompt-injection):
 
 1. In the Google Cloud console, go to the **Model Armor** page and click
    **Create template**.
