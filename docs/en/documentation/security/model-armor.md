@@ -73,7 +73,7 @@ place without touching your agent code.
 Create a template that enforces both [Sensitive Data Protection (SDP)](https://docs.cloud.google.com/model-armor/overview#ma-sensitive-data-prot) and [prompt
 injection / jailbreak detection](https://docs.cloud.google.com/model-armor/overview#ma-prompt-injection):
 
-1. In the Google Cloud console, go to the **Model Armor** page and click
+1. In the Google Cloud console, go to the [**Model Armor** page](https://console.cloud.google.com/security/modelarmor) and click
    **Create template**.
 2. Set the **Template ID** to `test-template` and the **Region** to
    `us-central1`.
