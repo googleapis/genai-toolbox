@@ -75,7 +75,6 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	flags.StringVar(&cmd.additionalNotes, "additional-notes", "", "Additional notes to add under the Usage section of the generated SKILL.md")
 	flags.StringVar(&cmd.invocationMode, "invocation-mode", "npx", "Invocation mode for the generated scripts: 'binary' or 'npx'")
 	flags.StringVar(&cmd.toolboxVersion, "toolbox-version", opts.VersionNum, "Version of @toolbox-sdk/server to use for npx approach")
-	_ = cmd.MarkFlagRequired("name")
 	cmd.MarkFlagsMutuallyExclusive("group", "toolset")
 	return cmd.Command
 }
@@ -99,6 +98,13 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	if err != nil {
 		return err
 	}
+
+	name, err := resolveSkillName(cmd.name, opts.PrebuiltConfigs)
+	if err != nil {
+		opts.Logger.ErrorContext(ctx, err.Error())
+		return err
+	}
+	cmd.name = name
 
 	if err := os.MkdirAll(cmd.outputDir, 0755); err != nil {
 		errMsg := fmt.Errorf("error creating output directory: %w", err)
@@ -236,6 +242,19 @@ func run(cmd *skillsCmd, opts *internal.ToolboxOptions) error {
 	}
 
 	return nil
+}
+
+// resolveSkillName returns the explicit --name when set. Otherwise it defaults
+// to the prebuilt config name when exactly one --prebuilt config is given, so
+// prebuilt generation needs no naming flag; any other case requires --name.
+func resolveSkillName(name string, prebuiltConfigs []string) (string, error) {
+	if name != "" {
+		return name, nil
+	}
+	if len(prebuiltConfigs) == 1 {
+		return prebuiltConfigs[0], nil
+	}
+	return "", fmt.Errorf("--name is required unless exactly one --prebuilt config is provided")
 }
 
 func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOptions) (map[string]skillContent, error) {

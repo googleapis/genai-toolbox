@@ -563,6 +563,60 @@ func TestBuildSkillContents_AllToolsModeUsesFlagDescription(t *testing.T) {
 	}
 }
 
+func TestResolveSkillName(t *testing.T) {
+	tests := []struct {
+		name            string
+		flagName        string
+		prebuiltConfigs []string
+		want            string
+		wantErr         bool
+	}{
+		{
+			name:     "explicit name wins",
+			flagName: "my-skill",
+			want:     "my-skill",
+		},
+		{
+			name:            "explicit name wins over prebuilt",
+			flagName:        "my-skill",
+			prebuiltConfigs: []string{"alloydb-postgres"},
+			want:            "my-skill",
+		},
+		{
+			name:            "defaults to single prebuilt",
+			prebuiltConfigs: []string{"alloydb-postgres"},
+			want:            "alloydb-postgres",
+		},
+		{
+			name:    "no name and no prebuilt errors",
+			wantErr: true,
+		},
+		{
+			name:            "no name and multiple prebuilts errors",
+			prebuiltConfigs: []string{"alloydb-postgres", "cloud-sql-postgres"},
+			wantErr:         true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resolveSkillName(tt.flagName, tt.prebuiltConfigs)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil (got %q)", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGenerateSkill_FlagValidation(t *testing.T) {
 	tests := []struct {
 		name    string
