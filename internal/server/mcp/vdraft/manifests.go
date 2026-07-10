@@ -112,7 +112,14 @@ func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, to
 		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
-	return ListToolsResult{Tools: mcpManifest}, nil
+	res := ListToolsResult{
+		Tools: mcpManifest,
+		CacheableResult: CacheableResult{
+			TtlMs:      300000, // 5 minutes
+			CacheScope: cacheScopePublic,
+		},
+	}
+	return res, nil
 }
 
 // generatePromptManifest generates a version-specific Prompt manifest for list/prompts
@@ -144,5 +151,12 @@ func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompt
 		promptManifest := generatePromptManifest(promptName, prompt.GetDesc(), prompt.GetArguments())
 		mcpManifest = append(mcpManifest, promptManifest)
 	}
-	return ListPromptsResult{Prompts: mcpManifest}, nil
+	res := ListPromptsResult{
+		Prompts: mcpManifest,
+		CacheableResult: CacheableResult{
+			TtlMs:      300000, // 5 minutes
+			CacheScope: cacheScopePublic,
+		},
+	}
+	return res, nil
 }

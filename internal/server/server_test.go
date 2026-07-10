@@ -252,26 +252,10 @@ func TestUpdateServer(t *testing.T) {
 	newAuth := map[string]auth.AuthService{"example-auth": nil}
 	newEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"example-model": nil}
 	newTools := map[string]tools.Tool{"example-tool": nil}
-	newToolsets := map[string]tools.Toolset{
-		"example-toolset": {
-			ToolsetConfig: tools.ToolsetConfig{
-				Name: "example-toolset",
-			},
-			Tools: []*tools.Tool{},
-		},
-	}
-	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
-	newPromptsets := map[string]prompts.Promptset{
-		"example-promptset": {
-			PromptsetConfig: prompts.PromptsetConfig{
-				Name: "example-promptset",
-			},
-			Prompts: []*prompts.Prompt{},
-		},
-	}
+	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
 	newGroups := map[string]group.Group{
-		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset"}, newToolsets["example-toolset"], prompts.Promptset{}),
-		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset"}, tools.Toolset{}, newPromptsets["example-promptset"]),
+		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
+		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
 	}
 	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
@@ -293,19 +277,25 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
-	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
-		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
+	gotToolset, ok := s.ResourceMgr.GetToolset("example-toolset")
+	if !ok {
+		t.Fatal("expected toolset \"example-toolset\" to exist")
+	}
+	if gotToolset.Name != "example-toolset" || !gotToolset.ContainsTool("example-tool") {
+		t.Errorf("error updating server, toolset = %+v, want name %q containing tool %q", gotToolset, "example-toolset", "example-tool")
 	}
 
-	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
-	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
-		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
+	gotPrompt, ok := s.ResourceMgr.GetPrompt("example-prompt")
+	if !ok || gotPrompt == nil {
+		t.Errorf("error updating server, prompt %q not found", "example-prompt")
 	}
 
-	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
-	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
-		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
+	gotPromptset, ok := s.ResourceMgr.GetPromptset("example-promptset")
+	if !ok {
+		t.Fatal("expected promptset \"example-promptset\" to exist")
+	}
+	if gotPromptset.Name != "example-promptset" || !gotPromptset.ContainsPrompt("example-prompt") {
+		t.Errorf("error updating server, promptset = %+v, want name %q containing prompt %q", gotPromptset, "example-promptset", "example-prompt")
 	}
 }
 

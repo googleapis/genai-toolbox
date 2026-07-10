@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -34,6 +35,26 @@ var (
 	dummyID           jsonrpc.RequestId = 1
 	fakeVersionString                   = "0.0.0"
 )
+
+// mustToolset materializes the default toolset view from the resource manager.
+func mustToolset(t *testing.T, rm *resources.ResourceManager) tools.Toolset {
+	t.Helper()
+	ts, ok := rm.GetToolset("")
+	if !ok {
+		t.Fatal("default toolset not found")
+	}
+	return ts
+}
+
+// mustPromptset materializes the default promptset view from the resource manager.
+func mustPromptset(t *testing.T, rm *resources.ResourceManager) prompts.Promptset {
+	t.Helper()
+	ps, ok := rm.GetPromptset("")
+	if !ok {
+		t.Fatal("default promptset not found")
+	}
+	return ps
+}
 
 func TestInitializeHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -181,7 +202,7 @@ func TestToolsListHandler(t *testing.T) {
 		{
 			name:        "invalid json body",
 			rawBody:     []byte(`{invalid json}`),
-			toolset:     groups[""].ToToolset(),
+			toolset:     mustToolset(t, resourceMgr),
 			wantErr:     true,
 			errContains: "invalid mcp tools list request",
 		},
@@ -194,7 +215,7 @@ func TestToolsListHandler(t *testing.T) {
 					},
 				},
 			},
-			toolset: groups[""].ToToolset(),
+			toolset: mustToolset(t, resourceMgr),
 			wantErr: false,
 		},
 		{
@@ -206,7 +227,7 @@ func TestToolsListHandler(t *testing.T) {
 					},
 				},
 			},
-			toolset: groups[""].ToToolset(),
+			toolset: mustToolset(t, resourceMgr),
 			wantErr: false,
 		},
 	}
@@ -353,7 +374,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, groups[""].ToToolset(), resourceMgr, body, nil)
+			got, err := toolsCallHandler(tt.context, dummyID, mustToolset(t, resourceMgr), resourceMgr, body, nil)
 
 			if tt.wantErr {
 				if err == nil {
@@ -422,7 +443,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, groups[""].ToPromptset(), body)
+			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustPromptset(t, resourceMgr), body)
 
 			if tt.wantErr {
 				if err == nil {
@@ -529,7 +550,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, groups[""].ToPromptset(), resourceMgr, body)
+			got, err := promptsGetHandler(ctx, dummyID, mustPromptset(t, resourceMgr), resourceMgr, body)
 
 			if tt.wantErr {
 				if err == nil {
