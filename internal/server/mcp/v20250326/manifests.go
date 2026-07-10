@@ -26,8 +26,8 @@ import (
 )
 
 // generateToolManifest generates Tool for list tools result
-func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, urlParams map[string]string) Tool {
-	inputSchema, authParams := generateParamManifest(params, urlParams)
+func generateToolManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *tools.ToolAnnotations, inputSchemaConfig *tools.InputSchemaConfig, urlParams map[string]string) Tool {
+	inputSchema, authParams := generateParamManifest(params, inputSchemaConfig, urlParams)
 	var toolAnnotations *ToolAnnotations
 	if annotations != nil {
 		toolAnnotations = &ToolAnnotations{
@@ -57,7 +57,7 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 }
 
 // generateParamManifest generates the input schema and get authParam
-func generateParamManifest(ps parameters.Parameters, urlParams map[string]string) (InputSchema, map[string][]string) {
+func generateParamManifest(ps parameters.Parameters, inputSchemaConfig *tools.InputSchemaConfig, urlParams map[string]string) (InputSchema, map[string][]string) {
 	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)
 	authParam := make(map[string][]string)
@@ -90,11 +90,41 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 			authParam[name] = authParamList
 		}
 	}
+
+	var anyOf []any
+	var oneOf []any
+	var allOf []any
+	if inputSchemaConfig != nil {
+		anyOf = processComposition(inputSchemaConfig.AnyOf)
+		oneOf = processComposition(inputSchemaConfig.OneOf)
+		allOf = processComposition(inputSchemaConfig.AllOf)
+	}
+
 	return InputSchema{
 		Type:       "object",
 		Properties: properties,
 		Required:   required,
+		AnyOf:      anyOf,
+		OneOf:      oneOf,
+		AllOf:      allOf,
 	}, authParam
+}
+
+func processComposition(items []any) []any {
+	if len(items) == 0 {
+		return nil
+	}
+	result := make([]any, 0, len(items))
+	for _, item := range items {
+		if s, ok := item.(string); ok {
+			result = append(result, map[string]any{
+				"required": []string{s},
+			})
+		} else {
+			result = append(result, item)
+		}
+	}
+	return result
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
@@ -117,7 +147,7 @@ func GenerateListToolsResult(pMgr *primitives.PrimitiveManager, g group.Group, u
 		if err != nil {
 			return ListToolsResult{}, fmt.Errorf("error getting parameters for tool %q: %w", toolName, err)
 		}
-		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), urlParams)
+		toolManifest := generateToolManifest(toolName, tool.GetDescription(), tool.GetAuthRequired(), params, tool.GetAnnotations(), tool.GetInputSchema(), urlParams)
 		mcpManifest = append(mcpManifest, toolManifest)
 	}
 	return ListToolsResult{Tools: mcpManifest}, nil
