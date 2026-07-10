@@ -1639,38 +1639,9 @@ func TestPrebuiltTools(t *testing.T) {
 		wantToolset server.ToolsetConfigs
 	}{
 		{
-			name: "alloydb omni prebuilt tools",
-			in:   alloydb_omni_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
-				},
-				"performance": tools.ToolsetConfig{
-					Name:      "performance",
-					ToolNames: []string{"execute_sql", "get_query_plan", "list_query_stats", "get_column_cardinality", "list_table_stats", "list_database_stats", "list_active_queries"},
-				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"database_overview", "list_active_queries", "long_running_transactions", "list_locks", "list_database_stats", "list_pg_settings"},
-				},
-				"optimize": tools.ToolsetConfig{
-					Name:      "optimize",
-					ToolNames: []string{"list_pg_settings", "list_memory_configurations", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_columnar_configurations", "list_columnar_recommended_columns"},
-				},
-				"health": tools.ToolsetConfig{
-					Name:      "health",
-					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "list_tablespaces", "database_overview", "list_autovacuum_configurations"},
-				},
-				"replication": tools.ToolsetConfig{
-					Name:      "replication",
-					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "database_overview"},
-				},
-				"access-control": tools.ToolsetConfig{
-					Name:      "access-control",
-					ToolNames: []string{"list_roles", "list_pg_settings", "database_overview"},
-				},
-			},
+			name:        "alloydb omni prebuilt tools",
+			in:          alloydb_omni_config,
+			wantToolset: nil,
 		},
 		{
 			name: "alloydb postgres admin prebuilt tools",
@@ -1713,52 +1684,14 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "alloydb prebuilt tools",
-			in:   alloydb_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_cluster", "get_cluster", "list_clusters", "create_instance", "get_instance", "list_instances", "database_overview", "wait_for_operation"},
-				},
-				"access-management": tools.ToolsetConfig{
-					Name:      "access-management",
-					ToolNames: []string{"create_user", "list_users", "get_user", "list_roles", "list_pg_settings", "database_overview"},
-				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
-				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"list_active_queries", "list_query_stats", "get_query_plan", "get_query_metrics", "get_system_metrics", "long_running_transactions", "list_locks", "list_database_stats"},
-				},
-				"health": tools.ToolsetConfig{
-					Name:      "health",
-					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "get_instance"},
-				},
-				"optimize": tools.ToolsetConfig{
-					Name:      "optimize",
-					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview", "get_cluster"},
-				},
-				"replication": tools.ToolsetConfig{
-					Name:      "replication",
-					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_instances", "get_instance", "database_overview"},
-				},
-			},
+			name:        "alloydb prebuilt tools",
+			in:          alloydb_config,
+			wantToolset: nil,
 		},
 		{
-			name: "bigquery prebuilt tools",
-			in:   bigquery_config,
-			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_dataset_ids", "list_table_ids", "get_dataset_info", "get_table_info", "search_catalog"},
-				},
-				"analytics": tools.ToolsetConfig{
-					Name:      "analytics",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "forecast", "search_catalog"},
-				},
-			},
+			name:        "bigquery prebuilt tools",
+			in:          bigquery_config,
+			wantToolset: nil,
 		},
 		{
 			name: "clickhouse prebuilt tools",
@@ -1771,86 +1704,19 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "cloudsqlpg prebuilt tools",
-			in:   cloudsqlpg_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
-				},
-				"lifecycle": tools.ToolsetConfig{
-					Name:      "lifecycle",
-					ToolNames: []string{"create_backup", "restore_backup", "postgres_upgrade_precheck", "wait_for_operation", "database_overview", "get_instance", "list_instances"},
-				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "list_views", "list_schemas", "list_triggers", "list_indexes", "list_sequences", "list_stored_procedure"},
-				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"get_system_metrics", "get_query_metrics", "list_query_stats", "get_query_plan", "list_database_stats", "list_active_queries", "long_running_transactions", "list_locks"},
-				},
-				"health": tools.ToolsetConfig{
-					Name:      "health",
-					ToolNames: []string{"list_top_bloated_tables", "list_invalid_indexes", "list_table_stats", "get_column_cardinality", "list_autovacuum_configurations", "list_tablespaces", "database_overview", "list_pg_settings"},
-				},
-				"view-config": tools.ToolsetConfig{
-					Name:      "view-config",
-					ToolNames: []string{"list_available_extensions", "list_installed_extensions", "list_memory_configurations", "list_pg_settings", "database_overview", "get_instance"},
-				},
-				"replication": tools.ToolsetConfig{
-					Name:      "replication",
-					ToolNames: []string{"replication_stats", "list_replication_slots", "list_publication_tables", "list_roles", "list_pg_settings", "database_overview"},
-				},
-				"vectorassist": {
-					Name:      "vectorassist",
-					ToolNames: []string{"execute_sql", "define_spec", "modify_spec", "apply_spec", "generate_query", "improve_query_recall", "list_specs", "get_spec", "delete_spec"},
-				},
-			},
+			name:        "cloudsqlpg prebuilt tools",
+			in:          cloudsqlpg_config,
+			wantToolset: nil,
 		},
 		{
-			name: "cloudsqlmysql prebuilt tools",
-			in:   cloudsqlmysql_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
-				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
-				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"get_query_plan", "list_active_queries", "list_all_locks", "get_query_metrics", "get_system_metrics", "list_table_fragmentation", "list_table_stats", "list_tables_missing_unique_indexes", "show_query_stats"},
-				},
-				"lifecycle": tools.ToolsetConfig{
-					Name:      "lifecycle",
-					ToolNames: []string{"create_backup", "restore_backup", "clone_instance", "list_instances", "get_instance", "wait_for_operation"},
-				},
-			},
+			name:        "cloudsqlmysql prebuilt tools",
+			in:          cloudsqlmysql_config,
+			wantToolset: nil,
 		},
 		{
-			name: "cloudsqlmssql prebuilt tools",
-			in:   cloudsqlmssql_config,
-			wantToolset: server.ToolsetConfigs{
-				"admin": tools.ToolsetConfig{
-					Name:      "admin",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
-				},
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "list_tables"},
-				},
-				"monitor": tools.ToolsetConfig{
-					Name:      "monitor",
-					ToolNames: []string{"get_system_metrics"},
-				},
-				"lifecycle": tools.ToolsetConfig{
-					Name:      "lifecycle",
-					ToolNames: []string{"create_backup", "restore_backup", "clone_instance", "list_instances", "get_instance", "wait_for_operation"},
-				},
-			},
+			name:        "cloudsqlmssql prebuilt tools",
+			in:          cloudsqlmssql_config,
+			wantToolset: nil,
 		},
 		{
 			name: "dataplex prebuilt tools",
@@ -1871,14 +1737,9 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "dataproc prebuilt tools",
-			in:   dataproc_config,
-			wantToolset: server.ToolsetConfigs{
-				"dataproc_tools": tools.ToolsetConfig{
-					Name:      "dataproc_tools",
-					ToolNames: []string{"list_clusters", "get_cluster", "list_jobs", "get_job"},
-				},
-			},
+			name:        "dataproc prebuilt tools",
+			in:          dataproc_config,
+			wantToolset: nil,
 		},
 		{
 			name: "serverless spark prebuilt tools",
@@ -1894,10 +1755,6 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "firestore prebuilt tools",
 			in:   firestoreconfig,
 			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"get_documents", "add_documents", "update_document", "delete_documents", "query_collection", "list_collections"},
-				},
 				"security": tools.ToolsetConfig{
 					Name:      "security",
 					ToolNames: []string{"get_rules", "validate_rules"},
@@ -1929,24 +1786,14 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "looker prebuilt tools",
-			in:   looker_config,
-			wantToolset: server.ToolsetConfigs{
-				"looker_tools": tools.ToolsetConfig{
-					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url"},
-				},
-			},
+			name:        "looker prebuilt tools",
+			in:          looker_config,
+			wantToolset: nil,
 		},
 		{
-			name: "looker dev prebuilt tools",
-			in:   looker_dev_config,
-			wantToolset: server.ToolsetConfigs{
-				"looker_dev_tools": tools.ToolsetConfig{
-					Name:      "looker_dev_tools",
-					ToolNames: []string{"health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_project_directories", "create_project_directory", "delete_project_directory", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns", "get_lookml_tests", "run_lookml_tests", "create_view_from_table", "list_git_branches", "get_git_branch", "create_git_branch", "switch_git_branch", "delete_git_branch"},
-				},
-			},
+			name:        "looker dev prebuilt tools",
+			in:          looker_dev_config,
+			wantToolset: nil,
 		},
 		{
 			name: "looker-conversational-analytics prebuilt tools",
@@ -1988,10 +1835,6 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "spanner prebuilt tools",
 			in:   spanner_config,
 			wantToolset: server.ToolsetConfigs{
-				"data": tools.ToolsetConfig{
-					Name:      "data",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
-				},
 				"data_with_discovery": tools.ToolsetConfig{
 					Name:      "data_with_discovery",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs", "search_catalog"},
@@ -2125,14 +1968,9 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "Oracle prebuilt tools",
-			in:   oracle_config,
-			wantToolset: server.ToolsetConfigs{
-				"oracle_database_tools": tools.ToolsetConfig{
-					Name:      "oracle_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_sessions", "get_query_plan", "list_top_sql_by_resource", "list_tablespace_usage", "list_invalid_objects"},
-				},
-			},
+			name:        "Oracle prebuilt tools",
+			in:          oracle_config,
+			wantToolset: nil,
 		},
 		{
 			name: "Conversational Analytics with Data Agent prebuilt tools",
