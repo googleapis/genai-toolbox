@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-09T17:45:54Z
+**GENERATED ON:** 2026-07-10T21:22:57Z
 
 ---
 ### System Directives for AI Models
@@ -927,7 +927,16 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [dataplex-search-entries](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-search-entries/): A "dataplex-search-entries" tool allows to search for entries based on the provided query.
 
 
+      - [dataplex-create-data-asset](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-asset/): A "dataplex-create-data-asset" tool creates a new Data Asset under an existing Data Product in Knowledge Catalog.
+
+
       - [dataplex-create-data-product](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/): A "dataplex-create-data-product" tool allows to create a new Data Product.
+
+
+      - [dataplex-update-data-asset](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-asset/): A "dataplex-update-data-asset" tool updates an existing Data Asset under a Data Product in Knowledge Catalog.
+
+
+      - [dataplex-update-data-product](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-product/): A "dataplex-update-data-product" tool updates metadata for an existing Data Product in Knowledge Catalog.
 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/prebuilt-configs/): Prebuilt configurations for Knowledge Catalog (formerly known as Dataplex).

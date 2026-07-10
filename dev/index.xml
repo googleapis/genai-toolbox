@@ -8346,7 +8346,7 @@ returned. Otherwise, the selection is not guaranteed.&lt;/p&gt;
 &lt;p&gt;The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
-&lt;h2 id="hahahugoshortcode425s0hbhb"&gt;
+&lt;h2 id="hahahugoshortcode547s0hbhb"&gt;
 
 
 
@@ -15887,8 +15887,125 @@ returned by the Cloud Storage API — fields such as &lt;code&gt;Name&lt;/code&g
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/&gt;
 &lt;/svg&gt;
 
- &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>dataplex-create-data-product</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+ &lt;/span&gt;Note&lt;/p&gt;</description></item><item><title>dataplex-create-data-asset</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-asset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-asset/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-create-data-asset&lt;/code&gt; tool creates a new Data Asset under a Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation&amp;rsquo;s location ID and operation ID.&lt;/p&gt;
+&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-create-data-product</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-create-data-product/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
 &lt;p&gt;A &lt;code&gt;dataplex-create-data-product&lt;/code&gt; tool creates a new Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation&amp;rsquo;s location ID and operation ID.&lt;/p&gt;
+&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-update-data-asset</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-asset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-asset/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-update-data-asset&lt;/code&gt; tool updates an existing Data Asset under a Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation&amp;rsquo;s location ID and operation ID.&lt;/p&gt;
+&lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
+&lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
+
+
+
+
+
+&lt;div class="compatibility-section"&gt;
+ &lt;p&gt;This tool can be used with the following database sources:&lt;/p&gt;
+
+ &lt;table&gt;
+ &lt;thead&gt;
+ &lt;tr&gt;
+ &lt;th&gt;Source Name&lt;/th&gt;
+ &lt;/tr&gt;
+ &lt;/thead&gt;
+ &lt;tbody&gt;
+ 
+ 
+ &lt;tr&gt;
+ &lt;td&gt;&lt;a href="https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/source/"&gt;Knowledge Catalog (formerly known as Dataplex) Source&lt;/a&gt;&lt;/td&gt;
+ &lt;/tr&gt;
+ 
+
+ 
+
+ 
+ 
+ &lt;/tbody&gt;
+ &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id="requirements"&gt;Requirements&lt;/h2&gt;
+&lt;h3 id="iam-permissions"&gt;IAM Permissions&lt;/h3&gt;
+&lt;p&gt;Knowledge Catalog uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control"&gt;Identity and Access Management (IAM)&lt;/a&gt; to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc"&gt;Application Default Credentials (ADC)&lt;/a&gt; to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex"&gt;Knowledge Catalog&lt;/a&gt;.&lt;/p&gt;</description></item><item><title>dataplex-update-data-product</title><link>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-product/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-update-data-product/</guid><description>&lt;h2 id="about"&gt;About&lt;/h2&gt;
+&lt;p&gt;A &lt;code&gt;dataplex-update-data-product&lt;/code&gt; tool updates an existing Data Product in Knowledge Catalog (formerly known as Dataplex). This is a long-running operation, and the tool returns immediately with the operation&amp;rsquo;s location ID and operation ID.&lt;/p&gt;
 &lt;p&gt;View the &lt;a href="https://docs.cloud.google.com/dataplex/docs/data-products-overview"&gt;Data Products guide&lt;/a&gt; for more information.&lt;/p&gt;
 &lt;h2 id="compatible-sources"&gt;Compatible Sources&lt;/h2&gt;
 
@@ -19771,6 +19888,9 @@ entries.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;list_data_assets&lt;/code&gt;: Lists Data Assets under a Data Product.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;get_data_asset&lt;/code&gt;: Retrieves specific metadata regarding a Data Asset.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;create_data_product&lt;/code&gt;: Creates a new Data Product.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;update_data_product&lt;/code&gt;: Updates an existing Data Product.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;create_data_asset&lt;/code&gt;: Creates a new Data Asset under a Data Product.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;update_data_asset&lt;/code&gt;: Updates an existing Data Asset under a Data Product.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;generate_data_insights&lt;/code&gt;: Creates a new Dataplex Data Documentation scan template and triggers the run.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;get_data_insights&lt;/code&gt;: Retrieves the final generated data insights for a completed scan.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;generate_data_profile&lt;/code&gt;: Creates a new Dataplex Data Profile scan template and triggers the run.&lt;/li&gt;
@@ -19786,7 +19906,7 @@ entries.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Toolsets:&lt;/strong&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;discovery&lt;/code&gt;: Metadata discovery and search toolset (&lt;code&gt;search_entries&lt;/code&gt;, &lt;code&gt;lookup_entry&lt;/code&gt;, &lt;code&gt;search_aspect_types&lt;/code&gt;, &lt;code&gt;lookup_context&lt;/code&gt;, &lt;code&gt;search_dq_scans&lt;/code&gt;).&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;data-products&lt;/code&gt;: Data Products and Data Assets curation and management toolset (&lt;code&gt;search_entries&lt;/code&gt;, &lt;code&gt;lookup_entry&lt;/code&gt;, &lt;code&gt;search_aspect_types&lt;/code&gt;, &lt;code&gt;lookup_context&lt;/code&gt;, &lt;code&gt;list_data_products&lt;/code&gt;, &lt;code&gt;get_data_product&lt;/code&gt;, &lt;code&gt;list_data_assets&lt;/code&gt;, &lt;code&gt;get_data_asset&lt;/code&gt;, &lt;code&gt;create_data_product&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;data-products&lt;/code&gt;: Data Products and Data Assets curation and management toolset (&lt;code&gt;search_entries&lt;/code&gt;, &lt;code&gt;lookup_entry&lt;/code&gt;, &lt;code&gt;search_aspect_types&lt;/code&gt;, &lt;code&gt;lookup_context&lt;/code&gt;, &lt;code&gt;list_data_products&lt;/code&gt;, &lt;code&gt;get_data_product&lt;/code&gt;, &lt;code&gt;list_data_assets&lt;/code&gt;, &lt;code&gt;get_data_asset&lt;/code&gt;, &lt;code&gt;create_data_product&lt;/code&gt;, &lt;code&gt;update_data_product&lt;/code&gt;, &lt;code&gt;create_data_asset&lt;/code&gt;, &lt;code&gt;update_data_asset&lt;/code&gt;).&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;enrich&lt;/code&gt;: Metadata enrichment pipeline orchestration and execution toolset (&lt;code&gt;search_entries&lt;/code&gt;, &lt;code&gt;lookup_entry&lt;/code&gt;, &lt;code&gt;lookup_context&lt;/code&gt;, &lt;code&gt;generate_data_insights&lt;/code&gt;, &lt;code&gt;get_data_insights&lt;/code&gt;, &lt;code&gt;generate_data_profile&lt;/code&gt;, &lt;code&gt;get_data_profile&lt;/code&gt;, &lt;code&gt;discover_metadata&lt;/code&gt;, &lt;code&gt;get_discovery_results&lt;/code&gt;, &lt;code&gt;check_data_quality&lt;/code&gt;, &lt;code&gt;get_data_quality_results&lt;/code&gt;, &lt;code&gt;get_operation&lt;/code&gt;, &lt;code&gt;get_run_status&lt;/code&gt;).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
