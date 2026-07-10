@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-10T21:22:57Z
+**GENERATED ON:** 2026-07-10T22:26:04Z
 
 ---
 ### System Directives for AI Models
@@ -16947,6 +16947,194 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
         each database in the AlloyDB instance.
     *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
     *   `list_stored_procedure`: Lists stored procedures.
+
+
+
+
+========================================================================
+## ArcadeDB
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ArcadeDB
+**URL:** https://mcp-toolbox.dev/dev/integrations/arcadedb/
+**Description:** ArcadeDB is a multi-model database with Bolt protocol support.
+
+
+
+
+
+
+========================================================================
+## ArcadeDB Source
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ArcadeDB > ArcadeDB Source
+**URL:** https://mcp-toolbox.dev/dev/integrations/arcadedb/source/
+**Description:** ArcadeDB is a multi-model database with Bolt protocol support.
+
+
+
+## About
+
+[ArcadeDB][arcadedb-docs] is a multi-model database that supports graph (Cypher),
+document (SQL), key-value, and time-series data in one engine. It exposes a
+Bolt protocol endpoint compatible with the Neo4j driver.
+
+[arcadedb-docs]: https://docs.arcadedb.com/
+
+## Available Tools
+
+{{< list-tools >}}
+
+## Requirements
+
+### Database User
+
+This source uses standard authentication. Create an ArcadeDB user (or use the
+`root` user) that can connect over Bolt.
+
+## Example
+
+```yaml
+kind: source
+name: my-arcadedb-source
+type: arcadedb
+uri: bolt://localhost:7687
+user: root
+password: ${PASSWORD}
+database: "mydb"
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                                                      |
+|-------------|:--------:|:------------:|--------------------------------------------------------------------------------------|
+| type        |  string  |     true     | Must be "arcadedb".                                                                  |
+| uri         |  string  |     true     | Bolt URI (e.g. "bolt://localhost:7687").                                             |
+| user        |  string  |     true     | ArcadeDB user (e.g. "root").                                                         |
+| password    |  string  |     true     | Password for the ArcadeDB user.                                                      |
+| database    |  string  |     true     | Database name to connect to.                                                         |
+| httpUri     |  string  |    false     | Optional override for the ArcadeDB HTTP API base URL (e.g. "http://localhost:2480").  |
+| httpScheme  |  string  |    false     | Optional scheme override for the ArcadeDB HTTP API. Defaults to "http".               |
+| httpPort    | integer  |    false     | Optional port override for the ArcadeDB HTTP API. Defaults to 2480.                   |
+
+
+
+
+========================================================================
+## Tools
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ArcadeDB > Tools
+**URL:** https://mcp-toolbox.dev/dev/integrations/arcadedb/tools/
+**Description:** None
+
+
+
+
+
+========================================================================
+## arcadedb-execute-cypher Tool
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ArcadeDB > Tools > arcadedb-execute-cypher Tool
+**URL:** https://mcp-toolbox.dev/dev/integrations/arcadedb/tools/arcadedb-execute-cypher/
+**Description:** Execute Cypher queries against ArcadeDB via Bolt.
+
+
+
+## About
+
+`arcadedb-execute-cypher` executes an arbitrary Cypher query against an
+ArcadeDB source over the Bolt protocol. It supports a `readOnly` mode that
+rejects write statements and a `dry_run` mode that validates queries without
+executing them.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: query_arcadedb
+type: arcadedb-execute-cypher
+source: my-arcadedb-source
+readOnly: true
+description: |
+  Execute Cypher against ArcadeDB in read-only mode.
+  Example:
+  {{
+      "cypher": "MATCH (n) RETURN count(n)"
+  }}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                                                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
+| type        |  string  |     true     | Must be "arcadedb-execute-cypher".                                                                  |
+| source      |  string  |     true     | Name of the ArcadeDB source the Cypher query should execute on.                                      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.                                                   |
+| readOnly    | boolean  |    false     | If set to `true`, the tool will reject any write operations in the Cypher query. Default is `false`. |
+
+
+
+
+========================================================================
+## arcadedb-execute-sql Tool
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > ArcadeDB > Tools > arcadedb-execute-sql Tool
+**URL:** https://mcp-toolbox.dev/dev/integrations/arcadedb/tools/arcadedb-execute-sql/
+**Description:** Execute SQL queries against ArcadeDB.
+
+
+
+## About
+
+`arcadedb-execute-sql` executes an arbitrary ArcadeDB SQL statement against an
+ArcadeDB source. ArcadeDB supports SQL for document and multi-model queries,
+allowing you to query graphs and documents from the same database.
+
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: query_arcadedb_sql
+type: arcadedb-execute-sql
+source: my-arcadedb-source
+description: |
+  Execute SQL against ArcadeDB.
+  Example:
+  {{
+      "sql": "SELECT FROM Person WHERE name = :name LIMIT 5",
+      "params": {
+        "name": "Ada"
+      },
+      "dry_run": false
+  }}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                                                                |
+|-------------|:--------:|:------------:|------------------------------------------------------------------------------------------------|
+| type        |  string  |     true     | Must be "arcadedb-execute-sql".                                                                |
+| source      |  string  |     true     | Name of the ArcadeDB source the SQL should execute on.                                         |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.                                             |
+| readOnly    | boolean  |    false     | If true, the statement is routed to a read-only endpoint, and ArcadeDB blocks write statements. |
 
 
 

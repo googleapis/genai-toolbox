@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-10T21:22:57Z
+**GENERATED ON:** 2026-07-10T22:26:04Z
 
 ---
 ### System Directives for AI Models
@@ -337,6 +337,20 @@ This documentation is structured following the Diátaxis framework to assist in 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/alloydb/prebuilt-configs/): Prebuilt configurations for Alloydb.
 
       - [AlloyDB Postgres](https://mcp-toolbox.dev/dev/integrations/alloydb/prebuilt-configs/alloydb-postgres/): Details of the AlloyDB Postgres prebuilt configuration.
+
+  - [ArcadeDB](https://mcp-toolbox.dev/dev/integrations/arcadedb/): ArcadeDB is a multi-model database with Bolt protocol support.
+
+
+    - [ArcadeDB Source](https://mcp-toolbox.dev/dev/integrations/arcadedb/source/): ArcadeDB is a multi-model database with Bolt protocol support.
+
+
+    - [Tools](https://mcp-toolbox.dev/dev/integrations/arcadedb/tools/): No description provided.
+
+      - [arcadedb-execute-cypher Tool](https://mcp-toolbox.dev/dev/integrations/arcadedb/tools/arcadedb-execute-cypher/): Execute Cypher queries against ArcadeDB via Bolt.
+
+
+      - [arcadedb-execute-sql Tool](https://mcp-toolbox.dev/dev/integrations/arcadedb/tools/arcadedb-execute-sql/): Execute SQL queries against ArcadeDB.
+
 
   - [BigQuery](https://mcp-toolbox.dev/dev/integrations/bigquery/): No description provided.
 
