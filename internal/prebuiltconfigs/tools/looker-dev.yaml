@@ -464,7 +464,37 @@ description: |
   - project_id (required): The unique ID of the LookML project.
   - branch (required): The branch to delete.
 ---
-kind: group
+kind: tool
+name: deploy_to_production
+type: looker-deploy-to-production
+source: looker-source
+description: |
+  This tool deploys the current revision of the dev branch to production.
+
+  Parameters:
+  - project_id (required): The unique ID of the LookML project.
+---
+kind: tool
+name: reset_to_production
+type: looker-reset-to-production
+source: looker-source
+description: |
+  This tool resets the local dev branch to the commit of production.
+
+  Parameters:
+  - project_id (required): The unique ID of the LookML project.
+---
+kind: tool
+name: reset_to_remote
+type: looker-reset-to-remote
+source: looker-source
+description: |
+  This tool resets the current dev branch to the state of the last commit pushed to the remote git server.
+
+  Parameters:
+  - project_id (required): The unique ID of the LookML project.
+---
+kind: toolset
 name: looker_dev_tools
 description: These skills are built for LookML developers, data engineers, and administrators who manage the backbone of Looker.
 tools:
@@ -495,3 +525,6 @@ tools:
 - create_git_branch
 - switch_git_branch
 - delete_git_branch
+- deploy_to_production
+- reset_to_production
+- reset_to_remote
