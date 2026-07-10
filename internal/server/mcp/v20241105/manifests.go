@@ -99,9 +99,9 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
-	mcpManifest := make([]Tool, 0, len(t.ToolNames))
-	for _, toolName := range t.ToolNames {
+func GenerateListToolsResult(srcs map[string]sources.Source, g group.Group, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
+	mcpManifest := make([]Tool, 0, len(g.ToolNames))
+	for _, toolName := range g.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
@@ -135,9 +135,9 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 }
 
 // GenerateListPromptsResult generates the list/prompts result
-func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
-	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
-	for _, promptName := range p.PromptNames {
+func GenerateListPromptsResult(g group.Group, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(g.PromptNames))
+	for _, promptName := range g.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
@@ -171,11 +171,11 @@ func GenerateListGroupsResult(groupsMap map[string]group.Group) ListGroupsResult
 // GenerateGetGroupResult generates the groups/get result for a single group's
 // tools and prompts.
 func GenerateGetGroupResult(srcs map[string]sources.Source, g group.Group, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, urlParams map[string]string) (GetGroupResult, error) {
-	listToolsResult, err := GenerateListToolsResult(srcs, g.ToToolset(), toolsMap, urlParams)
+	listToolsResult, err := GenerateListToolsResult(srcs, g, toolsMap, urlParams)
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating tools manifest: %w", err)
 	}
-	listPromptsResult, err := GenerateListPromptsResult(g.ToPromptset(), promptsMap)
+	listPromptsResult, err := GenerateListPromptsResult(g, promptsMap)
 	if err != nil {
 		return GetGroupResult{}, fmt.Errorf("error generating prompts manifest: %w", err)
 	}

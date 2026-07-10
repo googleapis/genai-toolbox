@@ -89,6 +89,10 @@ func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
 }
 
 // GetToolset returns the toolset view derived from the group of the same name.
+// The group is the source of truth; the toolset is materialized on demand from
+// the group's tool names so callers on the legacy REST path keep a tools.Toolset.
+// The manifest's server version is left empty here and set by the caller that
+// renders it.
 func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -96,7 +100,11 @@ func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
 	if !ok {
 		return tools.Toolset{}, false
 	}
-	return g.ToToolset(), true
+	toolset, err := tools.ToolsetConfig{Name: g.Name, ToolNames: g.ToolNames}.Initialize("", r.tools)
+	if err != nil {
+		return tools.Toolset{}, false
+	}
+	return toolset, true
 }
 
 func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
@@ -106,7 +114,9 @@ func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	return prompt, ok
 }
 
-// GetPromptset returns the promptset view derived from the group of the same name.
+// GetPromptset returns the promptset view derived from the group of the same
+// name. The group is the source of truth; the promptset is materialized on
+// demand from the group's prompt names.
 func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -114,7 +124,11 @@ func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset,
 	if !ok {
 		return prompts.Promptset{}, false
 	}
-	return g.ToPromptset(), true
+	promptset, err := prompts.PromptsetConfig{Name: g.Name, PromptNames: g.PromptNames}.Initialize("", r.prompts)
+	if err != nil {
+		return prompts.Promptset{}, false
+	}
+	return promptset, true
 }
 
 // GetGroup returns the group of the given name.
