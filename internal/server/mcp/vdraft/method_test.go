@@ -22,11 +22,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -35,6 +35,16 @@ var (
 	dummyID           jsonrpc.RequestId = 1
 	fakeVersionString                   = "0.0.0"
 )
+
+// mustGroup fetches the default group from the resource manager.
+func mustGroup(t *testing.T, rm *resources.ResourceManager) group.Group {
+	t.Helper()
+	g, ok := rm.GetGroup("")
+	if !ok {
+		t.Fatal("default group not found")
+	}
+	return g
+}
 
 func TestValidateMetadata(t *testing.T) {
 	var dummyId jsonrpc.RequestId
@@ -410,7 +420,7 @@ func TestToolsListHandler(t *testing.T) {
 		body        ListToolsRequest
 		rawBody     []byte
 		header      http.Header
-		toolset     tools.Toolset
+		g           group.Group
 		wantErr     bool
 		errContains string
 	}{
@@ -418,7 +428,7 @@ func TestToolsListHandler(t *testing.T) {
 			name:        "invalid json body",
 			rawBody:     []byte(`{invalid json}`),
 			header:      nil,
-			toolset:     groups[""].ToToolset(),
+			g:           mustGroup(t, resourceMgr),
 			wantErr:     true,
 			errContains: "invalid mcp tools list request",
 		},
@@ -444,7 +454,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:      http.Header{"Mcp-Method": []string{"WRONG_METHOD"}},
-			toolset:     groups[""].ToToolset(),
+			g:           mustGroup(t, resourceMgr),
 			wantErr:     true,
 			errContains: "does not match body value",
 		},
@@ -470,7 +480,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  nil,
-			toolset: groups[""].ToToolset(),
+			g:       mustGroup(t, resourceMgr),
 			wantErr: false,
 		},
 		{
@@ -495,7 +505,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  http.Header{"Mcp-Method": []string{TOOLS_LIST}},
-			toolset: groups[""].ToToolset(),
+			g:       mustGroup(t, resourceMgr),
 			wantErr: false,
 		},
 	}
@@ -510,7 +520,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.toolset, body, tt.header)
+			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.g, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -676,7 +686,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, groups[""].ToToolset(), resourceMgr, body, tt.header)
+			got, err := toolsCallHandler(tt.context, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -760,7 +770,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, groups[""].ToPromptset(), body, tt.header)
+			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustGroup(t, resourceMgr), body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -893,7 +903,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, groups[""].ToPromptset(), resourceMgr, body, tt.header)
+			got, err := promptsGetHandler(ctx, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
