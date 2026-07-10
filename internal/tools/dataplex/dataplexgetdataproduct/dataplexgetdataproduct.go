@@ -61,8 +61,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the Data Product.")
+	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g., 'us', 'us-central1') where the Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "The unique ID of the Data Product.")
 	params := parameters.Parameters{locationId, dataProductId}
 
 	return Tool{
@@ -98,12 +98,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	paramsMap := params.AsMap()
 	locationID, ok := paramsMap["locationId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'locationId' parameter: %v", paramsMap["locationId"]), nil)
+	if !ok || locationID == "" {
+		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 	dataProductID, ok := paramsMap["dataProductId"].(string)
-	if !ok {
-		return nil, util.NewAgentError(fmt.Sprintf("error casting 'dataProductId' parameter: %v", paramsMap["dataProductId"]), nil)
+	if !ok || dataProductID == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
 	resp, err := source.GetDataProduct(ctx, locationID, dataProductID)

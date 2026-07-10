@@ -26,8 +26,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const serverVersion = "test-version"
-
 func testFixtures() (map[string]tools.Tool, map[string]prompts.Prompt) {
 	toolsMap := map[string]tools.Tool{
 		"tool1": testutils.NewMockTool("tool1", "first tool", []parameters.Parameter{}, false, false),
@@ -69,7 +67,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 				ToolNames: []string{"tool1"},
 			},
 			wantTools:   []string{"tool1"},
-			wantPrompts: []string{},
+			wantPrompts: nil,
 		},
 		{
 			name: "prompts only",
@@ -77,7 +75,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 				Name:        "promptsonly",
 				PromptNames: []string{"prompt1"},
 			},
-			wantTools:   []string{},
+			wantTools:   nil,
 			wantPrompts: []string{"prompt1"},
 		},
 		{
@@ -119,7 +117,7 @@ func TestGroupConfig_Initialize(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			g, err := tc.config.Initialize(serverVersion, toolsMap, promptsMap)
+			g, err := tc.config.Initialize(toolsMap, promptsMap)
 			if tc.wantErr != "" {
 				if err == nil {
 					t.Fatalf("expected error containing %q, got nil", tc.wantErr)
@@ -132,30 +130,27 @@ func TestGroupConfig_Initialize(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			ts := g.ToToolset()
-			if got := toolNames(ts.Tools); !slices.Equal(got, tc.wantTools) {
-				t.Errorf("tools = %v, want %v", got, tc.wantTools)
+			if !slices.Equal(g.ToolNames, tc.wantTools) {
+				t.Errorf("tools = %v, want %v", g.ToolNames, tc.wantTools)
 			}
-			ps := g.ToPromptset()
-			if len(ps.Prompts) != len(tc.wantPrompts) {
-				t.Errorf("got %d prompts, want %d", len(ps.Prompts), len(tc.wantPrompts))
+			if !slices.Equal(g.PromptNames, tc.wantPrompts) {
+				t.Errorf("prompts = %v, want %v", g.PromptNames, tc.wantPrompts)
 			}
-			for _, name := range tc.wantPrompts {
-				if !ps.ContainsPrompt(name) {
-					t.Errorf("derived promptset missing prompt %q", name)
+			for _, name := range tc.wantTools {
+				if !g.ContainsTool(name) {
+					t.Errorf("group missing tool %q", name)
 				}
 			}
-			if ts.Manifest.ServerVersion != serverVersion {
-				t.Errorf("tools manifest server version = %q, want %q", ts.Manifest.ServerVersion, serverVersion)
-			}
-			if ps.Manifest.ServerVersion != serverVersion {
-				t.Errorf("prompts manifest server version = %q, want %q", ps.Manifest.ServerVersion, serverVersion)
+			for _, name := range tc.wantPrompts {
+				if !g.ContainsPrompt(name) {
+					t.Errorf("group missing prompt %q", name)
+				}
 			}
 		})
 	}
 }
 
-func TestGroup_Projections(t *testing.T) {
+func TestGroup_Contains(t *testing.T) {
 	t.Parallel()
 	toolsMap, promptsMap := testFixtures()
 
@@ -164,38 +159,21 @@ func TestGroup_Projections(t *testing.T) {
 		Description: "a group",
 		ToolNames:   []string{"tool1", "tool2"},
 		PromptNames: []string{"prompt1", "prompt2"},
-	}.Initialize(serverVersion, toolsMap, promptsMap)
+	}.Initialize(toolsMap, promptsMap)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	ts := g.ToToolset()
-	if ts.Name != "mygroup" {
-		t.Errorf("toolset name = %q, want %q", ts.Name, "mygroup")
+	if !g.ContainsTool("tool1") || !g.ContainsTool("tool2") {
+		t.Errorf("group missing expected tools")
 	}
-	if !ts.ContainsTool("tool1") || !ts.ContainsTool("tool2") {
-		t.Errorf("derived toolset missing expected tools")
+	if g.ContainsTool("tool3") {
+		t.Errorf("group reports an absent tool")
 	}
-	if ts.ContainsTool("tool3") {
-		t.Errorf("derived toolset reports an absent tool")
+	if !g.ContainsPrompt("prompt1") || !g.ContainsPrompt("prompt2") {
+		t.Errorf("group missing expected prompts")
 	}
-
-	ps := g.ToPromptset()
-	if ps.Name != "mygroup" {
-		t.Errorf("promptset name = %q, want %q", ps.Name, "mygroup")
+	if g.ContainsPrompt("prompt3") {
+		t.Errorf("group reports an absent prompt")
 	}
-	if !ps.ContainsPrompt("prompt1") || !ps.ContainsPrompt("prompt2") {
-		t.Errorf("derived promptset missing expected prompts")
-	}
-	if ps.ContainsPrompt("prompt3") {
-		t.Errorf("derived promptset reports an absent prompt")
-	}
-}
-
-func toolNames(ts []*tools.Tool) []string {
-	names := make([]string, 0, len(ts))
-	for _, t := range ts {
-		names = append(names, (*t).GetName())
-	}
-	return names
 }

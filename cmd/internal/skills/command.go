@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -251,6 +252,16 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 		return toolsetTools
 	}
 
+	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
+		groupTools := make(map[string]tools.Tool)
+		for _, name := range g.ToolNames {
+			if tool, ok := toolsMap[name]; ok {
+				groupTools[name] = tool
+			}
+		}
+		return groupTools
+	}
+
 	if c.toolset != "" {
 		ts, ok := resourceMgr.GetToolset(c.toolset)
 		if !ok {
@@ -273,7 +284,7 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 			continue
 		}
 		skillName := fmt.Sprintf("%s-%s", c.name, gName)
-		skillsToTools[skillName] = getToolsFromToolset(g.ToToolset())
+		skillsToTools[skillName] = getToolsFromGroup(g)
 	}
 
 	return skillsToTools, nil

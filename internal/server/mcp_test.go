@@ -471,13 +471,17 @@ func TestMcpEndpoint(t *testing.T) {
 	defer ts.Close()
 
 	versTestCases := []struct {
-		name           string
-		protocol       string
-		idHeader       bool
-		reqHeader      []string
-		initWant       map[string]any
-		invalidMethods []string
-		meta           map[string]any
+		name                      string
+		protocol                  string
+		idHeader                  bool
+		reqHeader                 []string
+		initWant                  map[string]any
+		invalidMethods            []string
+		meta                      map[string]any
+		wantToolsList             map[string]any
+		wantPromptsList           map[string]any
+		wantToolsListOnTool1      map[string]any
+		wantToolsListWithURLParam map[string]any
 	}{
 		{
 			name:     "version 2024-11-05",
@@ -568,6 +572,115 @@ func TestMcpEndpoint(t *testing.T) {
 				},
 				"io.modelcontextprotocol/clientCapabilities": map[string]any{},
 			},
+			wantToolsList: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list",
+				"result": map[string]any{
+					"tools": []any{
+						map[string]any{
+							"name":        "no_params",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "some_params",
+							"inputSchema": tool2InputSchema,
+						},
+						map[string]any{
+							"name":        "array_param",
+							"description": "some description",
+							"inputSchema": tool3InputSchema,
+						},
+						map[string]any{
+							"name":        "unauthorized_tool",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "require_client_auth_tool",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "url_binding_tool",
+							"description": "A tool for testing URL param binding",
+							"inputSchema": urlBindingToolInputSchema,
+						},
+					},
+					"ttlMs":      300000.0,
+					"cacheScope": "public",
+				},
+			},
+			wantPromptsList: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "prompts-list",
+				"result": map[string]any{
+					"prompts": []any{
+						map[string]any{
+							"name": "prompt1",
+						},
+						map[string]any{
+							"name":      "prompt2",
+							"arguments": prompt2Args,
+						},
+					},
+					"ttlMs":      300000.0,
+					"cacheScope": "public",
+				},
+			},
+			wantToolsListOnTool1: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list-tool1",
+				"result": map[string]any{
+					"tools": []any{
+						map[string]any{
+							"name":        "no_params",
+							"inputSchema": basicInputSchema,
+						},
+					},
+					"ttlMs":      300000.0,
+					"cacheScope": "public",
+				},
+			},
+			wantToolsListWithURLParam: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "tools-list-url-binding",
+				"result": map[string]any{
+					"tools": []any{
+						map[string]any{
+							"name":        "no_params",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "some_params",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "array_param",
+							"description": "some description",
+							"inputSchema": tool3InputSchema,
+						},
+						map[string]any{
+							"name":        "unauthorized_tool",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "require_client_auth_tool",
+							"inputSchema": basicInputSchema,
+						},
+						map[string]any{
+							"name":        "url_binding_tool",
+							"description": "A tool for testing URL param binding",
+							"inputSchema": map[string]any{
+								"type": "object",
+								"properties": map[string]any{
+									"param5": map[string]any{"type": "string", "description": "An unbound string param"},
+								},
+								"required": []any{"param5"},
+							},
+						},
+					},
+					"ttlMs":      300000.0,
+					"cacheScope": "public",
+				},
+			},
 		},
 	}
 	for _, vtc := range versTestCases {
@@ -585,6 +698,7 @@ func TestMcpEndpoint(t *testing.T) {
 				methodName     string
 				wantStatusCode int
 				want           map[string]any
+				wantOverwrite  map[string]any
 			}{
 				{
 					name: "basic notification",
@@ -687,6 +801,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsList,
 				},
 				{
 					name: "prompts/list",
@@ -715,6 +830,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantPromptsList,
 				},
 				{
 					name: "prompts/get",
@@ -774,6 +890,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsListOnTool1,
 				},
 				{
 					name:  "tools/list on invalid tool set",
@@ -1019,6 +1136,7 @@ func TestMcpEndpoint(t *testing.T) {
 							},
 						},
 					},
+					wantOverwrite: vtc.wantToolsListWithURLParam,
 				},
 				{
 					name: "tools/call with URL param binding",
@@ -1138,8 +1256,12 @@ func TestMcpEndpoint(t *testing.T) {
 						t.Errorf("StatusCode mismatch: got %d, want %d", resp.StatusCode, tc.wantStatusCode)
 					}
 
+					want := tc.want
+					if tc.wantOverwrite != nil {
+						want = tc.wantOverwrite
+					}
 					// Notifications don't expect a response.
-					if tc.want != nil {
+					if want != nil {
 						if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
 							t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
 						}
@@ -1148,8 +1270,8 @@ func TestMcpEndpoint(t *testing.T) {
 						if err := json.Unmarshal(body, &got); err != nil {
 							t.Fatalf("unexpected error unmarshalling body: %s", err)
 						}
-						if !reflect.DeepEqual(got, tc.want) {
-							t.Fatalf("unexpected response: got %#v, want %#v", got, tc.want)
+						if !reflect.DeepEqual(got, want) {
+							t.Fatalf("unexpected response: got %#v, want %#v", got, want)
 						}
 					}
 				})
@@ -1194,7 +1316,7 @@ func TestMcpEndpointWithoutEnablingDraftSpecs(t *testing.T) {
 		"jsonrpc": "2.0",
 		"id":      "server-discover",
 		"error": map[string]interface{}{
-			"code": float64(-32004),
+			"code": float64(-32022),
 			"data": map[string]interface{}{
 				"requested": "DRAFT-2026-v1",
 				"supported": []interface{}{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"},
@@ -1744,11 +1866,11 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 		testutils.MockPrompt1.Name: testutils.MockPrompt1,
 		testutils.MockPrompt2.Name: testutils.MockPrompt2,
 	}
-	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(toolsMap, promptsMap)
 	if err != nil {
 		t.Fatalf("unable to initialize group_a: %s", err)
 	}
-	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(toolsMap, promptsMap)
 	if err != nil {
 		t.Fatalf("unable to initialize group_b: %s", err)
 	}
