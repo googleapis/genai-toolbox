@@ -22,12 +22,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -37,24 +36,14 @@ var (
 	fakeVersionString                   = "0.0.0"
 )
 
-// mustToolset materializes the default toolset view from the resource manager.
-func mustToolset(t *testing.T, rm *resources.ResourceManager) tools.Toolset {
+// mustGroup fetches the default group from the resource manager.
+func mustGroup(t *testing.T, rm *resources.ResourceManager) group.Group {
 	t.Helper()
-	ts, ok := rm.GetToolset("")
+	g, ok := rm.GetGroup("")
 	if !ok {
-		t.Fatal("default toolset not found")
+		t.Fatal("default group not found")
 	}
-	return ts
-}
-
-// mustPromptset materializes the default promptset view from the resource manager.
-func mustPromptset(t *testing.T, rm *resources.ResourceManager) prompts.Promptset {
-	t.Helper()
-	ps, ok := rm.GetPromptset("")
-	if !ok {
-		t.Fatal("default promptset not found")
-	}
-	return ps
+	return g
 }
 
 func TestValidateMetadata(t *testing.T) {
@@ -431,7 +420,7 @@ func TestToolsListHandler(t *testing.T) {
 		body        ListToolsRequest
 		rawBody     []byte
 		header      http.Header
-		toolset     tools.Toolset
+		g           group.Group
 		wantErr     bool
 		errContains string
 	}{
@@ -439,7 +428,7 @@ func TestToolsListHandler(t *testing.T) {
 			name:        "invalid json body",
 			rawBody:     []byte(`{invalid json}`),
 			header:      nil,
-			toolset:     mustToolset(t, resourceMgr),
+			g:           mustGroup(t, resourceMgr),
 			wantErr:     true,
 			errContains: "invalid mcp tools list request",
 		},
@@ -465,7 +454,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:      http.Header{"Mcp-Method": []string{"WRONG_METHOD"}},
-			toolset:     mustToolset(t, resourceMgr),
+			g:           mustGroup(t, resourceMgr),
 			wantErr:     true,
 			errContains: "does not match body value",
 		},
@@ -491,7 +480,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  nil,
-			toolset: mustToolset(t, resourceMgr),
+			g:       mustGroup(t, resourceMgr),
 			wantErr: false,
 		},
 		{
@@ -516,7 +505,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  http.Header{"Mcp-Method": []string{TOOLS_LIST}},
-			toolset: mustToolset(t, resourceMgr),
+			g:       mustGroup(t, resourceMgr),
 			wantErr: false,
 		},
 	}
@@ -531,7 +520,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.toolset, body, tt.header)
+			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.g, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -697,7 +686,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, mustToolset(t, resourceMgr), resourceMgr, body, tt.header)
+			got, err := toolsCallHandler(tt.context, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -781,7 +770,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustPromptset(t, resourceMgr), body, tt.header)
+			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustGroup(t, resourceMgr), body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -914,7 +903,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, mustPromptset(t, resourceMgr), resourceMgr, body, tt.header)
+			got, err := promptsGetHandler(ctx, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {

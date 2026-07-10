@@ -1866,11 +1866,11 @@ func TestMcpPromptScopingByGroup(t *testing.T) {
 		testutils.MockPrompt1.Name: testutils.MockPrompt1,
 		testutils.MockPrompt2.Name: testutils.MockPrompt2,
 	}
-	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	groupA, err := group.GroupConfig{Name: "group_a", PromptNames: []string{testutils.MockPrompt1.Name}}.Initialize(toolsMap, promptsMap)
 	if err != nil {
 		t.Fatalf("unable to initialize group_a: %s", err)
 	}
-	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(testutils.MockVersionString, toolsMap, promptsMap)
+	groupB, err := group.GroupConfig{Name: "group_b", PromptNames: []string{testutils.MockPrompt2.Name}}.Initialize(toolsMap, promptsMap)
 	if err != nil {
 		t.Fatalf("unable to initialize group_b: %s", err)
 	}
