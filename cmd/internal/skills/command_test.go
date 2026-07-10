@@ -23,7 +23,6 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/cmd/internal"
 	"github.com/googleapis/mcp-toolbox/internal/group"
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/sqlite/sqlitesql"
@@ -368,13 +367,11 @@ func TestGenerateSkill_MissingArguments(t *testing.T) {
 func TestBuildSkillContents_GroupDescriptionPrecedence(t *testing.T) {
 	// len(groupsMap) > 1 (default group plus named groups) triggers group mode.
 	groupsMap := map[string]group.Group{
-		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+		"": group.NewGroup(group.GroupConfig{Name: ""}),
 		"with-desc": group.NewGroup(
-			group.GroupConfig{Name: "with-desc", Description: "group's own description"},
-			tools.Toolset{}, prompts.Promptset{}),
+			group.GroupConfig{Name: "with-desc", Description: "group's own description"}),
 		"no-desc": group.NewGroup(
-			group.GroupConfig{Name: "no-desc"},
-			tools.Toolset{}, prompts.Promptset{}),
+			group.GroupConfig{Name: "no-desc"}),
 	}
 
 	c := &skillsCmd{name: "my-skill", description: "flag fallback"}
@@ -396,10 +393,9 @@ func TestBuildSkillContents_GroupDescriptionPrecedence(t *testing.T) {
 
 func TestBuildSkillContents_ToolsetModeUsesFlagDescription(t *testing.T) {
 	groupsMap := map[string]group.Group{
-		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+		"": group.NewGroup(group.GroupConfig{Name: ""}),
 		"my-toolset": group.NewGroup(
-			group.GroupConfig{Name: "my-toolset", Description: "ignored in toolset mode"},
-			tools.Toolset{}, prompts.Promptset{}),
+			group.GroupConfig{Name: "my-toolset", Description: "ignored in toolset mode"}),
 	}
 
 	c := &skillsCmd{name: "my-skill", description: "flag desc", toolset: "my-toolset"}
@@ -415,7 +411,7 @@ func TestBuildSkillContents_ToolsetModeUsesFlagDescription(t *testing.T) {
 
 func TestBuildSkillContents_AllToolsModeUsesFlagDescription(t *testing.T) {
 	groupsMap := map[string]group.Group{
-		"": group.NewGroup(group.GroupConfig{Name: ""}, tools.Toolset{}, prompts.Promptset{}),
+		"": group.NewGroup(group.GroupConfig{Name: ""}),
 	}
 
 	c := &skillsCmd{name: "my-skill", description: "flag desc"}

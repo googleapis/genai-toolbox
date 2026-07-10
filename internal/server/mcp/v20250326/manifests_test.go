@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -240,16 +241,12 @@ func TestGenerateListToolsResult(t *testing.T) {
 	toolsMap := make(map[string]tools.Tool)
 	toolsMap[tool1.Name] = tool1
 	toolsMap[tool2.Name] = tool2
-	tc := tools.ToolsetConfig{
+	g := group.NewGroup(group.GroupConfig{
 		Name:      "test-toolset",
 		ToolNames: []string{"no_params", "some_params"},
-	}
-	toolset, err := tc.Initialize("test-version", toolsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize toolset %q: %s", "test-toolset", err)
-	}
+	})
 
-	got, err := GenerateListToolsResult(nil, toolset, toolsMap, nil)
+	got, err := GenerateListToolsResult(nil, g, toolsMap, nil)
 	if err != nil {
 		t.Fatalf("unable to generate list tools result: %s", err)
 	}
@@ -353,16 +350,12 @@ func TestGenerateListPromptsResult(t *testing.T) {
 	promptsMap := make(map[string]prompts.Prompt)
 	promptsMap[prompt1.Name] = prompt1
 	promptsMap[prompt2.Name] = prompt2
-	pc := prompts.PromptsetConfig{
+	g := group.NewGroup(group.GroupConfig{
 		Name:        "test-promptset",
 		PromptNames: []string{"prompt1", "prompt2"},
-	}
-	promptset, err := pc.Initialize("test-version", promptsMap)
-	if err != nil {
-		t.Fatalf("unable to initialize promptset %q: %s", "test-promptset", err)
-	}
+	})
 
-	got, err := GenerateListPromptsResult(promptset, promptsMap)
+	got, err := GenerateListPromptsResult(g, promptsMap)
 	if err != nil {
 		t.Fatalf("unable to generate list prompt result: %s", err)
 	}
