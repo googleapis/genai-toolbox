@@ -831,8 +831,9 @@ description: |
     - For dashboards and looks, use the numeric ID (e.g., "123").
     - For explores, use the format "model_name/explore_name".
 ---
-kind: toolset
+kind: group
 name: looker_tools
+description: These skills are designed for data discovery and business intelligence.
 tools:
 - get_models
 - get_explores
