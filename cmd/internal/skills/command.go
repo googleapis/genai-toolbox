@@ -287,6 +287,16 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		return toolsetTools
 	}
 
+	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
+		groupTools := make(map[string]tools.Tool)
+		for _, name := range g.ToolNames {
+			if tool, ok := toolsMap[name]; ok {
+				groupTools[name] = tool
+			}
+		}
+		return groupTools
+	}
+
 	if c.group != "" {
 		g, ok := resourceMgr.GetGroup(c.group)
 		if !ok {
@@ -297,7 +307,7 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		if g.Description != "" {
 			description = g.Description
 		}
-		skillsToContents[c.name] = skillContent{tools: getToolsFromToolset(g.ToToolset()), description: description}
+		skillsToContents[c.name] = skillContent{tools: getToolsFromGroup(g), description: description}
 		return skillsToContents, nil
 	}
 
@@ -327,7 +337,7 @@ func (c *skillsCmd) buildSkillContents(toolsMap map[string]tools.Tool, groupsMap
 		if g.Description != "" {
 			description = g.Description
 		}
-		skillsToContents[skillName] = skillContent{tools: getToolsFromToolset(g.ToToolset()), description: description}
+		skillsToContents[skillName] = skillContent{tools: getToolsFromGroup(g), description: description}
 	}
 
 	return skillsToContents, nil

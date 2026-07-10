@@ -31,6 +31,7 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplex "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
 	storageapi "cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -40,6 +41,8 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	grpccodes "google.golang.org/grpc/codes"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 var (
@@ -52,6 +55,8 @@ var (
 	DataplexListDataProductsToolType       = "dataplex-list-data-products"
 	DataplexGetDataProductToolType         = "dataplex-get-data-product"
 	DataplexListDataAssetsToolType         = "dataplex-list-data-assets"
+	DataplexGetDataAssetToolType           = "dataplex-get-data-asset"
+	DataplexCreateDataProductToolType      = "dataplex-create-data-product"
 	DataplexGenerateDataProfileToolType    = "dataplex-generate-data-profile"
 	DataplexGetDataProfileToolType         = "dataplex-get-data-profile"
 	DataplexGetOperationToolType           = "dataplex-get-operation"
@@ -275,6 +280,8 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	dataScanId := fmt.Sprintf("param-data-scan-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataProductId1 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataProductId2 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	dataProductId3 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
+	dataProductId4 := fmt.Sprintf("param-data-product-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	dataAssetId := fmt.Sprintf("param-data-asset-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 	bucketName := fmt.Sprintf("temp-toolbox-test-%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
 
@@ -286,11 +293,20 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	teardownDataAsset := setupDataplexDataAsset(t, ctx, dataplexDataProductClient, fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId1), dataAssetId, datasetName, tableName)
 	teardownBucket := setupGcsBucket(t, ctx, DataplexProject, bucketName)
 
+	teardownDataProduct3 := func(t *testing.T) {
+		teardownDataProduct(t, dataplexDataProductClient, dataProductId3)
+	}
+	teardownDataProduct4 := func(t *testing.T) {
+		teardownDataProduct(t, dataplexDataProductClient, dataProductId4)
+	}
+
 	teardowns := []func(*testing.T){
 		teardownTable,
 		teardownAspectType,
 		teardownDataScan,
 		teardownDataProduct2,
+		teardownDataProduct3,
+		teardownDataProduct4,
 		// Sequence asset deletion before its parent data product to avoid API precondition failure
 		func(t *testing.T) {
 			teardownDataAsset(t)
@@ -338,6 +354,8 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	runDataplexListDataProductsToolInvokeTest(t, dataProductId1, dataProductId2)
 	runDataplexGetDataProductToolInvokeTest(t, dataProductId1)
 	runDataplexListDataAssetsToolInvokeTest(t, dataProductId1, dataAssetId)
+	runDataplexGetDataAssetToolInvokeTest(t, dataProductId1, dataAssetId)
+	runDataplexCreateDataProductToolInvokeTest(t, dataplexDataProductClient, dataProductId3, dataProductId4)
 	runDataplexEnrichmentToolInvokeTest(t, tableName, datasetName, bucketName, dataplexDataScanClient)
 }
 
@@ -416,36 +434,7 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 			DisplayName: dataProductId,
 			Description: "Temporary Data Product for MCP Toolbox integration tests",
 			OwnerEmails: []string{ownerEmail},
-			AccessGroups: map[string]*dataplexpb.DataProduct_AccessGroup{
-				"test-group": {
-					Id:          "test-group",
-					DisplayName: "Test Group",
-					Description: "Test Group Description",
-					Principal: &dataplexpb.DataProduct_Principal{
-						Type: &dataplexpb.DataProduct_Principal_GoogleGroup{
-							GoogleGroup: ownerEmail,
-						},
-					},
-				},
-			},
 		},
-	}
-
-	teardown := func(t *testing.T) {
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		defer cleanupCancel()
-		deleteReq := &dataplexpb.DeleteDataProductRequest{
-			Name: fmt.Sprintf("%s/dataProducts/%s", parent, dataProductId),
-		}
-		op, err := client.DeleteDataProduct(cleanupCtx, deleteReq)
-		if err != nil {
-			t.Errorf("Failed to initiate DeleteDataProduct for %s: %v", dataProductId, err)
-			return
-		}
-		err = op.Wait(cleanupCtx)
-		if err != nil {
-			t.Logf("Warning: Failed to wait for DeleteDataProduct for %s: %v", dataProductId, err)
-		}
 	}
 
 	op, err := client.CreateDataProduct(ctx, createReq)
@@ -455,11 +444,13 @@ func setupDataplexDataProduct(t *testing.T, ctx context.Context, client *dataple
 
 	_, err = op.Wait(ctx)
 	if err != nil {
-		teardown(t)
+		teardownDataProduct(t, client, dataProductId)
 		t.Fatalf("Failed to wait for CreateDataProduct for %s: %v", dataProductId, err)
 	}
 
-	return teardown
+	return func(t *testing.T) {
+		teardownDataProduct(t, client, dataProductId)
+	}
 }
 
 func setupDataplexDataAsset(t *testing.T, ctx context.Context, client *dataplex.DataProductClient, parentProductPath string, dataAssetId string, datasetName string, tableName string) func(*testing.T) {
@@ -661,6 +652,28 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 				"description":  "Simple dataplex list data assets tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"my-dataplex-get-data-asset-tool": map[string]any{
+				"type":        DataplexGetDataAssetToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex get data asset tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-get-data-asset-tool": map[string]any{
+				"type":         DataplexGetDataAssetToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex get data asset tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"my-dataplex-create-data-product-tool": map[string]any{
+				"type":        DataplexCreateDataProductToolType,
+				"source":      "my-dataplex-instance",
+				"description": "Simple dataplex create data product tool to test end to end functionality.",
+			},
+			"my-auth-dataplex-create-data-product-tool": map[string]any{
+				"type":         DataplexCreateDataProductToolType,
+				"source":       "my-dataplex-instance",
+				"description":  "Simple dataplex create data product tool to test end to end functionality.",
+				"authRequired": []string{"my-google-auth"},
+			},
 			"my-dataplex-generate-data-profile-tool": map[string]any{
 				"type":        DataplexGenerateDataProfileToolType,
 				"source":      "my-dataplex-instance",
@@ -757,6 +770,16 @@ func runDataplexToolGetTest(t *testing.T) {
 			name:           "get my-dataplex-list-data-assets-tool",
 			toolName:       "my-dataplex-list-data-assets-tool",
 			expectedParams: []string{"locationId", "dataProductId", "filter", "pageSize", "orderBy"},
+		},
+		{
+			name:           "get my-dataplex-get-data-asset-tool",
+			toolName:       "my-dataplex-get-data-asset-tool",
+			expectedParams: []string{"locationId", "dataProductId", "dataAssetId"},
+		},
+		{
+			name:           "get my-dataplex-create-data-product-tool",
+			toolName:       "my-dataplex-create-data-product-tool",
+			expectedParams: []string{"locationId", "dataProductId", "displayName", "description", "ownerEmails", "accessGroups"},
 		},
 		{
 			name:           "get my-dataplex-generate-data-profile-tool",
@@ -1786,27 +1809,6 @@ func runDataplexGetDataProductToolInvokeTest(t *testing.T, dataProductId string)
 			if entry["ownerEmails"] == nil {
 				t.Errorf("ownerEmails should not be nil")
 			}
-			// Assert access groups are mapped correctly
-			accessGroups, ok := entry["accessGroups"].([]interface{})
-			if !ok {
-				t.Fatalf("expected 'accessGroups' to be a slice, got %T", entry["accessGroups"])
-			}
-			if len(accessGroups) != 1 {
-				t.Fatalf("expected 1 access group, got %d", len(accessGroups))
-			}
-			ag, ok := accessGroups[0].(map[string]interface{})
-			if !ok {
-				t.Fatalf("expected access group to be a map, got %T", accessGroups[0])
-			}
-			if ag["id"] != "test-group" {
-				t.Errorf("expected access group id 'test-group', got %q", ag["id"])
-			}
-			if ag["googleGroup"] != tests.ServiceAccountEmail {
-				t.Errorf("expected googleGroup %q, got %q", tests.ServiceAccountEmail, ag["googleGroup"])
-			}
-			if ag["serviceAccount"] != nil {
-				t.Errorf("expected serviceAccount to be nil, got %q", ag["serviceAccount"])
-			}
 		})
 	}
 }
@@ -1826,35 +1828,35 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 		expectResult      bool
 		wantLocationID    string
 		wantDataProductID string
-		wantDataAsset     string
+		wantDataAssetID   string
 	}{
 		{
 			name:              "Success - List Data Assets (Authorized)",
 			api:               "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
 			requestHeader:     map[string]string{"my-google-auth_token": idToken},
-			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
 			wantStatusCode:    200,
 			expectResult:      true,
 			wantLocationID:    "us",
 			wantDataProductID: dataProductId,
-			wantDataAsset:     dataAssetId,
+			wantDataAssetID:   dataAssetId,
 		},
 		{
 			name:              "Success - List Data Assets (Un-authorized)",
 			api:               "http://127.0.0.1:5000/api/tool/my-dataplex-list-data-assets-tool/invoke",
 			requestHeader:     map[string]string{},
-			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
 			wantStatusCode:    200,
 			expectResult:      true,
 			wantLocationID:    "us",
 			wantDataProductID: dataProductId,
-			wantDataAsset:     dataAssetId,
+			wantDataAssetID:   dataAssetId,
 		},
 		{
 			name:           "Failure - Invalid Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
 			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 		},
@@ -1862,7 +1864,7 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 			name:           "Failure - Without Authorization Token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-list-data-assets-tool/invoke",
 			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\"}", dataProductId))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
 			wantStatusCode: 401,
 			expectResult:   false,
 		},
@@ -1923,12 +1925,12 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 			if tc.wantDataProductID != "" && prodID != tc.wantDataProductID {
 				t.Fatalf("expected dataProductId to be %q, got %q", tc.wantDataProductID, prodID)
 			}
-			assetID, ok := entry["dataAsset"].(string)
+			assetID, ok := entry["dataAssetId"].(string)
 			if !ok {
-				t.Fatalf("expected entry to have key 'dataAsset' as string, but it was not found or not a string in %v", entry)
+				t.Fatalf("expected entry to have key 'dataAssetId' as string, but it was not found or not a string in %v", entry)
 			}
-			if tc.wantDataAsset != "" && assetID != tc.wantDataAsset {
-				t.Fatalf("expected dataAsset to be %q, got %q", tc.wantDataAsset, assetID)
+			if tc.wantDataAssetID != "" && assetID != tc.wantDataAssetID {
+				t.Fatalf("expected dataAssetId to be %q, got %q", tc.wantDataAssetID, assetID)
 			}
 
 			// Assert output is cleaned
@@ -1941,6 +1943,280 @@ func runDataplexListDataAssetsToolInvokeTest(t *testing.T, dataProductId string,
 			if _, ok := entry["createTime"]; ok {
 				t.Errorf("expected entry to NOT have 'createTime' field, but it was found")
 			}
+		})
+	}
+}
+
+func runDataplexGetDataAssetToolInvokeTest(t *testing.T, dataProductId string, dataAssetId string) {
+	idToken, err := tests.GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	testCases := []struct {
+		name              string
+		api               string
+		requestHeader     map[string]string
+		requestBody       io.Reader
+		wantStatusCode    int
+		expectResult      bool
+		wantLocationID    string
+		wantDataProductID string
+		wantDataAssetID   string
+	}{
+		{
+			name:              "Success - Get Data Asset (Authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-asset-tool/invoke",
+			requestHeader:     map[string]string{"my-google-auth_token": idToken},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId,
+			wantDataAssetID:   dataAssetId,
+		},
+		{
+			name:              "Success - Get Data Asset (Un-authorized)",
+			api:               "http://127.0.0.1:5000/api/tool/my-dataplex-get-data-asset-tool/invoke",
+			requestHeader:     map[string]string{},
+			requestBody:       bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
+			wantStatusCode:    200,
+			expectResult:      true,
+			wantLocationID:    "us",
+			wantDataProductID: dataProductId,
+			wantDataAssetID:   dataAssetId,
+		},
+		{
+			name:           "Failure - Invalid Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-asset-tool/invoke",
+			requestHeader:  map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:           "Failure - Without Authorization Token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-dataplex-get-data-asset-tool/invoke",
+			requestHeader:  map[string]string{},
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"locationId\":\"us\",\"dataProductId\":\"%s\",\"dataAssetId\":\"%s\"}", dataProductId, dataAssetId))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+			}
+			if !tc.expectResult {
+				return
+			}
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			var entry map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			locID, ok := entry["locationId"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'locationId' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantLocationID != "" && locID != tc.wantLocationID {
+				t.Fatalf("expected locationId to be %q, got %q", tc.wantLocationID, locID)
+			}
+			prodID, ok := entry["dataProductId"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'dataProductId' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantDataProductID != "" && prodID != tc.wantDataProductID {
+				t.Fatalf("expected dataProductId to be %q, got %q", tc.wantDataProductID, prodID)
+			}
+			assetID, ok := entry["dataAssetId"].(string)
+			if !ok {
+				t.Fatalf("expected entry to have key 'dataAssetId' as string, but it was not found or not a string in %v", entry)
+			}
+			if tc.wantDataAssetID != "" && assetID != tc.wantDataAssetID {
+				t.Fatalf("expected dataAssetId to be %q, got %q", tc.wantDataAssetID, assetID)
+			}
+
+			// Assert output is cleaned
+			if _, ok := entry["uid"]; ok {
+				t.Errorf("expected entry to NOT have 'uid' field, but it was found")
+			}
+			if _, ok := entry["etag"]; ok {
+				t.Errorf("expected entry to NOT have 'etag' field, but it was found")
+			}
+			if _, ok := entry["createTime"]; ok {
+				t.Errorf("expected entry to NOT have 'createTime' field, but it was found")
+			}
+		})
+	}
+}
+
+func teardownDataProduct(t *testing.T, client *dataplex.DataProductClient, dataProductId string) {
+	cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cleanupCancel()
+	deleteReq := &dataplexpb.DeleteDataProductRequest{
+		Name: fmt.Sprintf("projects/%s/locations/us/dataProducts/%s", DataplexProject, dataProductId),
+	}
+	op, err := client.DeleteDataProduct(cleanupCtx, deleteReq)
+	if err != nil {
+		if grpcstatus.Code(err) == grpccodes.NotFound {
+			t.Logf("Data Product %s was not found, skipping deletion", dataProductId)
+			return
+		}
+		t.Errorf("Failed to initiate DeleteDataProduct for %s: %v", dataProductId, err)
+		return
+	}
+	err = op.Wait(cleanupCtx)
+	if err != nil {
+		if grpcstatus.Code(err) == grpccodes.NotFound {
+			t.Logf("Data Product %s was not found during wait, skipping deletion", dataProductId)
+			return
+		}
+		t.Logf("Warning: Failed to wait for DeleteDataProduct for %s: %v", dataProductId, err)
+	}
+}
+
+func runDataplexCreateDataProductToolInvokeTest(t *testing.T, client *dataplex.DataProductClient, dataProductIdAuth string, dataProductIdUnauth string) {
+	idToken, err := tests.GetGoogleIdToken(t)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+	testCases := []struct {
+		name           string
+		api            string
+		requestHeader  map[string]string
+		requestBody    io.Reader
+		wantStatusCode int
+		expectResult   bool
+	}{
+		{
+			name:          "Success - Create Data Product (Authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
+				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 200,
+			expectResult:   true,
+		},
+		{
+			name:          "Success - Create Data Product (Un-authorized)",
+			api:           "http://127.0.0.1:5000/api/tool/my-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","description":"Temporary Data Product for create integration test","ownerEmails":["%s"],"accessGroups":[{"id":"test-group","displayName":"Test Group","description":"Test Group Desc","googleGroup":"%s"}]}`,
+				dataProductIdUnauth, dataProductIdUnauth, tests.ServiceAccountEmail, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 200,
+			expectResult:   true,
+		},
+		{
+			name:          "Failure - Without Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","ownerEmails":["%s"]}`,
+				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+		{
+			name:          "Failure - Invalid Authorization Token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-dataplex-create-data-product-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "invalid_token"},
+			requestBody: bytes.NewBuffer([]byte(fmt.Sprintf(
+				`{"locationId":"us","dataProductId":"%s","displayName":"%s","ownerEmails":["%s"]}`,
+				dataProductIdAuth, dataProductIdAuth, tests.ServiceAccountEmail,
+			))),
+			wantStatusCode: 401,
+			expectResult:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("error when sending a request: %s", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not %d. It is %d", tc.wantStatusCode, resp.StatusCode)
+			}
+			if !tc.expectResult {
+				return
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			var invokeResp map[string]interface{}
+			if err := json.Unmarshal([]byte(resultStr), &invokeResp); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			opId, ok := invokeResp["operationId"].(string)
+			if !ok || opId == "" {
+				t.Fatalf("expected 'operationId' in response, got %v", invokeResp)
+			}
+			locId, ok := invokeResp["locationId"].(string)
+			if !ok || locId == "" {
+				t.Fatalf("expected 'locationId' in response, got %v", invokeResp)
+			}
+
+			opName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", DataplexProject, locId, opId)
+
+			// Poll the LRO operation status up to 12 times (every 5 seconds)
+			// to wait for the asynchronous creation to complete (max 1 minute).
+			for i := 0; i < 12; i++ {
+				op, err := client.GetOperation(context.Background(), &longrunningpb.GetOperationRequest{Name: opName})
+				if err == nil && op.GetDone() {
+					if op.GetError() != nil {
+						t.Fatalf("Data Product creation operation failed: %v", op.GetError())
+					}
+					return
+				}
+				time.Sleep(5 * time.Second)
+			}
+			t.Fatalf("Data Product creation operation did not complete in time")
 		})
 	}
 }
