@@ -62,14 +62,14 @@ func validateMetadata(id jsonrpc.RequestId, params RequestParams, stdio bool) (a
 		// check for protocol version metadata
 		v := params.Meta.ProtocolVersion
 		if v == "" {
-			metaErr := fmt.Errorf("missing io.modelcontextprotocol/protocolVersion")
+			metaErr := fmt.Errorf("_meta error: missing io.modelcontextprotocol/protocolVersion")
 			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
 		}
 		// do not have to verify header for stdio; already verified during stdio
 		// message processing
 		if !stdio {
 			if PROTOCOL_VERSION != v {
-				metaErr := fmt.Errorf("header mismatch: MCP-Protocol-Version header value '%s' does not match body value '%s'", PROTOCOL_VERSION, v)
+				metaErr := fmt.Errorf("_meta error: header mismatch: MCP-Protocol-Version header value '%s' does not match body value '%s'", PROTOCOL_VERSION, v)
 				return jsonrpc.NewHeaderMismatchedError(id, metaErr), metaErr
 			}
 		}
@@ -77,18 +77,18 @@ func validateMetadata(id jsonrpc.RequestId, params RequestParams, stdio bool) (a
 		// check for clientInfo
 		clientInfo := params.Meta.ClientInfo
 		if clientInfo.Version == "" || clientInfo.Name == "" {
-			metaErr := fmt.Errorf("missing field from io.modelcontextprotocol/clientInfo")
+			metaErr := fmt.Errorf("_meta error: missing field from io.modelcontextprotocol/clientInfo")
 			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
 		}
 		// check for clientCapabilities
 		clientCapabilities := params.Meta.MetaClientCapabilities
 		if clientCapabilities == nil {
-			metaErr := fmt.Errorf("missing field from io.modelcontextprotocol/clientCapabilities")
+			metaErr := fmt.Errorf("_meta error: missing field from io.modelcontextprotocol/clientCapabilities")
 			return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
 		}
 		// skip checking clientCapabilities since Toolbox do not utilize any of those
 	} else {
-		metaErr := fmt.Errorf("missing required fields in request metadata")
+		metaErr := fmt.Errorf("_meta error: missing required fields in request metadata")
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, metaErr.Error(), nil), metaErr
 	}
 	return nil, nil
