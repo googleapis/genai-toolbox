@@ -30,6 +30,12 @@ import (
 
 const AuthServiceType string = "google"
 
+// validateIDToken validates a Google-issued ID token against the expected
+// audience. It is a package-level indirection over idtoken.Validate so tests
+// can substitute a fake validator and exercise the audience-binding logic
+// without performing live network calls to Google's certificate endpoint.
+var validateIDToken = idtoken.Validate
+
 // validate interface
 var _ auth.AuthServiceConfig = Config{}
 
@@ -59,6 +65,16 @@ func (cfg Config) Initialize() (auth.AuthService, error) {
 			return nil, fmt.Errorf("`audience` or `clientId` is required when `mcpEnabled` is true")
 		}
 	} else {
+		// In non-MCP mode the only audience binding available for ID token
+		// validation in GetClaimsFromHeader is clientId. If it is empty,
+		// idtoken.Validate is called with an empty audience and skips the
+		// audience check entirely, silently accepting any Google-signed ID
+		// token regardless of which OAuth client it was minted for. Fail
+		// closed by requiring clientId, matching the documented behavior
+		// ("Required for validating ID tokens in non-MCP web apps").
+		if cfg.ClientID == "" {
+			return nil, fmt.Errorf("`clientId` is required when `mcpEnabled` is false")
+		}
 		if cfg.Audience != "" {
 			return nil, fmt.Errorf("`audience` is not allowed when `mcpEnabled` is false")
 		}
@@ -123,7 +139,7 @@ func (a AuthService) GetAuthorizationServer() string {
 // Verifies Google ID token and return claims
 func (a AuthService) GetClaimsFromHeader(ctx context.Context, h http.Header) (map[string]any, error) {
 	if token := h.Get(a.Name + "_token"); token != "" {
-		payload, err := idtoken.Validate(ctx, token, a.ClientID)
+		payload, err := validateIDToken(ctx, token, a.ClientID)
 		if err != nil {
 			return nil, fmt.Errorf("google ID token verification failure: %w", err)
 		}
@@ -154,7 +170,7 @@ func (a AuthService) ValidateMCPAuth(ctx context.Context, h http.Header) (map[st
 		if aud == "" {
 			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: "audience or client ID is required for ID token validation", ScopesRequired: a.ScopesRequired}
 		}
-		payload, err := idtoken.Validate(ctx, tokenStr, aud)
+		payload, err := validateIDToken(ctx, tokenStr, aud)
 		if err != nil {
 			return nil, &auth.MCPAuthError{Code: http.StatusUnauthorized, Message: fmt.Sprintf("Google ID token verification failure: %v", err), ScopesRequired: a.ScopesRequired}
 		}

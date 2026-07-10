@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+
+	"google.golang.org/api/idtoken"
 )
 
 func TestInitialize_Validation(t *testing.T) {
@@ -102,13 +104,17 @@ func TestInitialize_Validation(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name: "neither clientID nor audience, mcpEnabled false",
+			// Without clientId in non-MCP mode, GetClaimsFromHeader would
+			// validate ID tokens with an empty audience, which makes
+			// idtoken.Validate skip the audience check and accept any
+			// Google-signed token. Initialize must now reject this config.
+			name: "neither clientID nor audience, mcpEnabled false (disallowed)",
 			config: Config{
 				Name:       "google-auth",
 				Type:       "google",
 				McpEnabled: false,
 			},
-			wantError: false,
+			wantError: true,
 		},
 		{
 			name: "neither clientID nor audience, mcpEnabled true (disallowed)",
@@ -126,6 +132,71 @@ func TestInitialize_Validation(t *testing.T) {
 			_, err := tc.config.Initialize()
 			if (err != nil) != tc.wantError {
 				t.Fatalf("Initialize() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestGetClaimsFromHeader_NoToken(t *testing.T) {
+	a := AuthService{Config: Config{Name: "google-auth", ClientID: "my-client-id"}}
+
+	claims, err := a.GetClaimsFromHeader(context.Background(), make(http.Header))
+	if err != nil {
+		t.Fatalf("GetClaimsFromHeader() with no token returned error: %v", err)
+	}
+	if claims != nil {
+		t.Fatalf("GetClaimsFromHeader() with no token returned claims: %v, want nil", claims)
+	}
+}
+
+func TestGetClaimsFromHeader_AudienceBinding(t *testing.T) {
+	const tokenAud = "111-token.apps.googleusercontent.com"
+
+	// Substitute a fake validator that models idtoken.Validate's audience
+	// check (signature verification is assumed to pass). The real library
+	// performs `if audience != "" && payload.Audience != audience`, so an
+	// empty audience means no audience check is enforced.
+	orig := validateIDToken
+	t.Cleanup(func() { validateIDToken = orig })
+	validateIDToken = func(_ context.Context, _ string, audience string) (*idtoken.Payload, error) {
+		if audience != "" && audience != tokenAud {
+			return nil, fmt.Errorf("idtoken: audience provided does not match aud claim in the JWT")
+		}
+		return &idtoken.Payload{
+			Audience: tokenAud,
+			Claims:   map[string]any{"aud": tokenAud, "email": "user@example.com"},
+		}, nil
+	}
+
+	tests := []struct {
+		name      string
+		clientID  string
+		wantError bool
+	}{
+		{
+			name:      "configured clientId matches token aud",
+			clientID:  tokenAud,
+			wantError: false,
+		},
+		{
+			name:      "configured clientId does not match token aud",
+			clientID:  "999-other.apps.googleusercontent.com",
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			a := AuthService{Config: Config{Name: "google-auth", ClientID: tc.clientID}}
+			header := make(http.Header)
+			header.Set("google-auth_token", "eyJ.fake.token")
+
+			claims, err := a.GetClaimsFromHeader(context.Background(), header)
+			if (err != nil) != tc.wantError {
+				t.Fatalf("GetClaimsFromHeader() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if !tc.wantError && claims["aud"] != tokenAud {
+				t.Fatalf("GetClaimsFromHeader() aud claim = %v, want %q", claims["aud"], tokenAud)
 			}
 		})
 	}
