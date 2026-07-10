@@ -95,6 +95,50 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with embeddedBy parameters",
+			in: `
+			kind: tool
+			name: vector_insert
+			type: clickhouse-sql
+			source: my-instance
+			description: Stores content and its vector embedding.
+			statement: INSERT INTO docs (content, embedding) VALUES (?, ?)
+			parameters:
+			  - name: content
+			    type: string
+			    description: The text content to store.
+			  - name: text_to_embed
+			    type: string
+			    description: The text content used to generate the vector.
+			    embeddedBy: gemini-model
+			    valueFromParam: content
+			`,
+			want: server.ToolConfigs{
+				"vector_insert": Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "vector_insert",
+						Description:  "Stores content and its vector embedding.",
+						AuthRequired: []string{},
+					},
+					Type:      "clickhouse-sql",
+					Source:    "my-instance",
+					Statement: "INSERT INTO docs (content, embedding) VALUES (?, ?)",
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameter("content", "The text content to store."),
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name:           "text_to_embed",
+								Type:           "string",
+								Desc:           "The text content used to generate the vector.",
+								EmbeddedBy:     "gemini-model",
+								ValueFromParam: "content",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

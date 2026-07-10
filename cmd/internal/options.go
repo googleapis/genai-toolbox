@@ -195,6 +195,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		sourcesList := strings.Join(opts.PrebuiltConfigs, ", ")
 		logMsg := fmt.Sprintf("Using prebuilt tool configurations for: %s", sourcesList)
 		logger.InfoContext(ctx, logMsg)
+		logger.WarnContext(ctx, "These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers.")
 
 		for _, configName := range opts.PrebuiltConfigs {
 			if !strings.Contains(configName, "/") {

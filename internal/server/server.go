@@ -355,7 +355,7 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 				trace.WithAttributes(attribute.String("group.name", name)),
 			)
 			defer span.End()
-			g, err := gc.Initialize(cfg.Version, toolsMap, promptsMap)
+			g, err := gc.Initialize(toolsMap, promptsMap)
 			if err != nil {
 				return group.Group{}, fmt.Errorf("unable to initialize group %q: %w", name, err)
 			}
