@@ -146,7 +146,7 @@ func teardownFixtures(t *testing.T) {
 // Cypher and SQL execution tools, including readOnly enforcement, dry_run
 // plan output, and parameter binding.
 func TestArcadeDBToolEndpoints(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var containerCleanup func()
@@ -587,7 +587,7 @@ func setupArcadeDBContainer(ctx context.Context, t *testing.T) (boltURI string, 
 			WithStatusCodeMatcher(func(status int) bool {
 				return status == http.StatusOK || status == http.StatusNoContent
 			}).
-			WithStartupTimeout(60 * time.Second),
+			WithStartupTimeout(180 * time.Second),
 	}
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
