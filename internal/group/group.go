@@ -31,45 +31,52 @@ type GroupConfig struct {
 	PromptNames []string `yaml:"prompts"`
 }
 
-// Group is an initialized group and the source of truth from which the legacy
-// toolset and promptset views are derived (see ToToolset and ToPromptset). It
-// holds the fully-initialized toolset and promptset so the derived views retain
-// their O(1) lookup sets instead of being rebuilt on every projection.
+// Group is an initialized group: the source of truth for a named collection of
+// tools and prompts. It is a self-contained MCP primitive and does not depend on
+// the legacy toolset/promptset types. It keeps O(1) membership sets for its tools
+// and prompts; per-tool and per-prompt manifests are generated on demand by
+// callers from the resolved tools and prompts maps.
 type Group struct {
 	GroupConfig
-	toolset   tools.Toolset
-	promptset prompts.Promptset
+	toolNameSet   map[string]struct{}
+	promptNameSet map[string]struct{}
 }
 
-// Initialize validates the declared tools and prompts against the provided maps
-// and builds the derived toolset and promptset. It delegates to
-// tools.ToolsetConfig.Initialize and prompts.PromptsetConfig.Initialize so that
-// validation and manifest-building stay identical to the legacy types.
-func (gc GroupConfig) Initialize(serverVersion string, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt) (Group, error) {
+// Initialize validates the group name and checks that every declared tool and
+// prompt exists in the provided maps, building the membership sets used by
+// ContainsTool and ContainsPrompt.
+func (gc GroupConfig) Initialize(toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt) (Group, error) {
 	if !tools.IsValidName(gc.Name) {
 		return Group{}, fmt.Errorf("invalid group name: %s", gc.Name)
 	}
 
-	toolset, err := tools.ToolsetConfig{Name: gc.Name, ToolNames: gc.ToolNames}.Initialize(serverVersion, toolsMap)
-	if err != nil {
-		return Group{}, err
-	}
-	promptset, err := prompts.PromptsetConfig{Name: gc.Name, PromptNames: gc.PromptNames}.Initialize(serverVersion, promptsMap)
-	if err != nil {
-		return Group{}, err
+	toolNameSet := make(map[string]struct{}, len(gc.ToolNames))
+	for _, name := range gc.ToolNames {
+		if _, ok := toolsMap[name]; !ok {
+			return Group{}, fmt.Errorf("tool does not exist: %s", name)
+		}
+		toolNameSet[name] = struct{}{}
 	}
 
-	return Group{GroupConfig: gc, toolset: toolset, promptset: promptset}, nil
+	promptNameSet := make(map[string]struct{}, len(gc.PromptNames))
+	for _, name := range gc.PromptNames {
+		if _, ok := promptsMap[name]; !ok {
+			return Group{}, fmt.Errorf("prompt does not exist: %s", name)
+		}
+		promptNameSet[name] = struct{}{}
+	}
+
+	return Group{GroupConfig: gc, toolNameSet: toolNameSet, promptNameSet: promptNameSet}, nil
 }
 
-// ToToolset returns the derived toolset view, keyed by the group's name, so that
-// existing toolset call sites keep working unchanged.
-func (g Group) ToToolset() tools.Toolset {
-	return g.toolset
+// ContainsTool reports whether the group includes a tool with the given name.
+func (g Group) ContainsTool(name string) bool {
+	_, ok := g.toolNameSet[name]
+	return ok
 }
 
-// ToPromptset returns the derived promptset view, keyed by the group's name, so
-// that prompts scope to the connected group.
-func (g Group) ToPromptset() prompts.Promptset {
-	return g.promptset
+// ContainsPrompt reports whether the group includes a prompt with the given name.
+func (g Group) ContainsPrompt(name string) bool {
+	_, ok := g.promptNameSet[name]
+	return ok
 }
