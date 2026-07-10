@@ -147,7 +147,7 @@ func teardownFixtures(t *testing.T) {
 // plan output, and parameter binding.
 func TestArcadeDBToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	var containerCleanup func()
 
@@ -599,7 +599,7 @@ func setupArcadeDBContainer(ctx context.Context, t *testing.T) (boltURI string, 
 	}
 
 	cleanupFn := func() {
-		if err := container.Terminate(ctx); err != nil {
+		if err := container.Terminate(context.Background()); err != nil {
 			t.Fatalf("failed to terminate container: %s", err)
 		}
 	}
