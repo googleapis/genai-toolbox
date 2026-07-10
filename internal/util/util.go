@@ -365,7 +365,7 @@ func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
 	return nil, false
 }
 
-// SnakeFromCamelCase converts a camelCase or PascalCase string to snake_case.
+// SnakeFromCamelCase converts a camelCase string to snake_case.
 func SnakeFromCamelCase(s string) string {
 	var result strings.Builder
 	for i, r := range s {

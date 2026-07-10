@@ -125,39 +125,32 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	var labels map[string]string
 	if rawLabels, ok := paramsMap["labels"].(map[string]any); ok {
-		labels = make(map[string]string)
+		labels = make(map[string]string, len(rawLabels))
 		for k, v := range rawLabels {
-			sVal, ok := v.(string)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid label value type for key %q: expected string, got %T", k, v), nil)
-			}
-			labels[k] = sVal
+			labels[k], _ = v.(string)
 		}
 	}
 
-	accessGroupConfigs := make(map[string][]string)
+	var accessGroupConfigs map[string][]string
 	if rawConfigs, ok := paramsMap["accessGroupConfigs"].(map[string]any); ok {
+		accessGroupConfigs = make(map[string][]string, len(rawConfigs))
 		for k, v := range rawConfigs {
-			rawRoles, ok := v.([]any)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid accessGroupConfigs value type for key %q: expected array, got %T", k, v), nil)
-			}
-			var roles []string
-			for _, r := range rawRoles {
-				sRole, ok := r.(string)
-				if !ok {
-					return nil, util.NewAgentError(fmt.Sprintf("invalid iamRole in group %q: expected string, got %T", k, r), nil)
+			if rawRoles, ok := v.([]any); ok {
+				var roles []string
+				for _, r := range rawRoles {
+					if sRole, _ := r.(string); sRole != "" {
+						roles = append(roles, sRole)
+					}
 				}
-				roles = append(roles, sRole)
+				accessGroupConfigs[k] = roles
 			}
-			accessGroupConfigs[k] = roles
 		}
 	}
 
 	var updateMask []string
 	if rawMask, ok := paramsMap["updateMask"].([]any); ok {
 		for _, v := range rawMask {
-			if s, ok := v.(string); ok {
+			if s, _ := v.(string); s != "" {
 				updateMask = append(updateMask, s)
 			}
 		}

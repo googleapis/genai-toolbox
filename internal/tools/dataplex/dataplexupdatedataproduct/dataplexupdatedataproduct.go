@@ -144,45 +144,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
-	var description string
-	if val, exists := paramsMap["description"]; exists && val != nil {
-		var ok bool
-		description, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("description must be a string", nil)
-		}
-	}
-
-	var displayName string
-	if val, exists := paramsMap["displayName"]; exists && val != nil {
-		var ok bool
-		displayName, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("displayName must be a string", nil)
-		}
-	}
+	description, _ := paramsMap["description"].(string)
+	displayName, _ := paramsMap["displayName"].(string)
 
 	var ownerEmails []string
-	if val, exists := paramsMap["ownerEmails"]; exists && val != nil {
-		rawOwners, ok := val.([]any)
-		if !ok {
-			return nil, util.NewAgentError("ownerEmails must be an array", nil)
-		}
+	if rawOwners, ok := paramsMap["ownerEmails"].([]any); ok {
 		for _, o := range rawOwners {
-			email, ok := o.(string)
-			if !ok || email == "" {
-				return nil, util.NewAgentError("each item in ownerEmails must be a non-empty string", nil)
+			if email, _ := o.(string); email != "" {
+				ownerEmails = append(ownerEmails, email)
 			}
-			ownerEmails = append(ownerEmails, email)
 		}
 	}
 
 	var accessGroups []dataplex.AccessGroup
-	if val, exists := paramsMap["accessGroups"]; exists && val != nil {
-		rawGroups, ok := val.([]any)
-		if !ok {
-			return nil, util.NewAgentError("accessGroups must be an array", nil)
-		}
+	if rawGroups, ok := paramsMap["accessGroups"].([]any); ok {
 		for _, rawG := range rawGroups {
 			gMap, ok := rawG.(map[string]any)
 			if !ok {
@@ -197,32 +172,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				return nil, util.NewAgentError("access group 'displayName' is required and must be a non-empty string", nil)
 			}
 
-			var desc string
-			if dVal, dExists := gMap["description"]; dExists && dVal != nil {
-				var dOk bool
-				desc, dOk = dVal.(string)
-				if !dOk {
-					return nil, util.NewAgentError("access group 'description' must be a string", nil)
-				}
-			}
-
-			var googleGroup string
-			if gVal, gExists := gMap["googleGroup"]; gExists && gVal != nil {
-				var gOk bool
-				googleGroup, gOk = gVal.(string)
-				if !gOk {
-					return nil, util.NewAgentError("access group 'googleGroup' must be a string", nil)
-				}
-			}
-
-			var serviceAccount string
-			if sVal, sExists := gMap["serviceAccount"]; sExists && sVal != nil {
-				var sOk bool
-				serviceAccount, sOk = sVal.(string)
-				if !sOk {
-					return nil, util.NewAgentError("access group 'serviceAccount' must be a string", nil)
-				}
-			}
+			desc, _ := gMap["description"].(string)
+			googleGroup, _ := gMap["googleGroup"].(string)
+			serviceAccount, _ := gMap["serviceAccount"].(string)
 
 			if googleGroup == "" && serviceAccount == "" {
 				return nil, util.NewAgentError("at least one of access group 'googleGroup' or 'serviceAccount' must be a non-empty string", nil)
@@ -239,17 +191,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	var updateMask []string
-	if val, exists := paramsMap["updateMask"]; exists && val != nil {
-		rawMask, ok := val.([]any)
-		if !ok {
-			return nil, util.NewAgentError("updateMask must be an array", nil)
-		}
+	if rawMask, ok := paramsMap["updateMask"].([]any); ok {
 		for _, v := range rawMask {
-			s, ok := v.(string)
-			if !ok || s == "" {
-				return nil, util.NewAgentError("each item in updateMask must be a non-empty string", nil)
+			if s, _ := v.(string); s != "" {
+				updateMask = append(updateMask, s)
 			}
-			updateMask = append(updateMask, s)
 		}
 	}
 
