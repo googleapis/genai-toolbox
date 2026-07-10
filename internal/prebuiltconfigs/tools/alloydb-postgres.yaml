@@ -183,7 +183,9 @@ type: postgres-sql
 source: alloydb-pg-source
 description: Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Use in production safely for plan inspection, regression checks, and query tuning workflows.
 statement: |
+  BEGIN TRANSACTION READ ONLY;
   EXPLAIN (FORMAT JSON) {{.query}};
+  COMMIT ;
 templateParameters:
 - name: query
   type: string

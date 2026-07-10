@@ -185,7 +185,9 @@ type: postgres-sql
 source: cloudsql-pg-source
 description: Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Do not use this tool in production as it is prone to SQL injection risks.
 statement: |
+  BEGIN TRANSACTION READ ONLY;
   EXPLAIN (FORMAT JSON) {{.query}};
+  COMMIT ;
 templateParameters:
 - name: query
   type: string
