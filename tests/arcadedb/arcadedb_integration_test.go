@@ -576,7 +576,7 @@ func setupArcadeDBContainer(ctx context.Context, t *testing.T) (boltURI string, 
 	t.Helper()
 
 	req := testcontainers.ContainerRequest{
-		Image:        "arcadedata/arcadedb:26.3.2",
+		Image:        "arcadedata/arcadedb:26.7.1",
 		ExposedPorts: []string{"2480/tcp", "7687/tcp"},
 		Env: map[string]string{
 			"JAVA_OPTS":                        "-Darcadedb.server.rootPassword=playwithdata -Darcadedb.server.plugins=Bolt:com.arcadedb.bolt.BoltProtocolPlugin",

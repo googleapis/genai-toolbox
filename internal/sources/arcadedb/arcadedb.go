@@ -143,14 +143,7 @@ func (s *Source) RunCypher(ctx context.Context, cypherStr string, params map[str
 		summary := results.Summary
 		plan := summary.Plan()
 		if plan == nil {
-			// Fallback: build a simplified plan since ArcadeDB's Bolt server does not return full plan metadata
-			execPlan := map[string]any{
-				"queryType":     cf.Type.String(),
-				"statementType": summary.QueryType(),
-				"operator":      "EXPLAIN",
-				"info":          "ArcadeDB Cypher dry-run verification completed successfully.",
-			}
-			return []map[string]any{execPlan}, nil
+			return nil, fmt.Errorf("dry-run produced no execution plan")
 		}
 
 		node, incomplete, operatorCount := buildPlanNode(plan)
