@@ -101,3 +101,29 @@ func TestExtractClientIP(t *testing.T) {
 		})
 	}
 }
+
+func TestSnakeFromCamelCase(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{in: "displayName", want: "display_name"},
+		{in: "ownerEmails", want: "owner_emails"},
+		{in: "accessGroups", want: "access_groups"},
+		{in: "description", want: "description"},
+		{in: "display_name", want: "display_name"},
+		{in: "a", want: "a"},
+		{in: "A", want: "a"},
+		{in: "locationId", want: "location_id"},
+		{in: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			got := SnakeFromCamelCase(tt.in)
+			if got != tt.want {
+				t.Errorf("SnakeFromCamelCase(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
