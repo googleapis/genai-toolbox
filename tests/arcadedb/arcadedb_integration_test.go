@@ -164,7 +164,7 @@ func TestArcadeDBToolEndpoints(t *testing.T) {
 
 		createDatabase(t, httpURL, ArcadeDBDatabase)
 	}
-	defer containerCleanup()
+	t.Cleanup(containerCleanup)
 
 	sourceConfig := getArcadeDBVars(t)
 
@@ -204,7 +204,7 @@ func TestArcadeDBToolEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
-	defer cleanup()
+	t.Cleanup(cleanup)
 
 	waitCtx, cancelWait := context.WithTimeout(ctx, 30*time.Second)
 	defer cancelWait()
