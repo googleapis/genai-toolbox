@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
@@ -28,8 +27,10 @@ import (
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
 	v20250618 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250618"
 	v20251125 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20251125"
+	vdraft "github.com/googleapis/mcp-toolbox/internal/server/mcp/vdraft"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 // NotificationHandler process notifications request. It MUST NOT send a response.
@@ -39,25 +40,34 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 	if err := json.Unmarshal(body, &notification); err != nil {
 		return fmt.Errorf("invalid notification request: %w", err)
 	}
+	// Since we do not enforce notifications, we do not need to check the
+	// `Mcp-Method` header here
 	return nil
 }
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
 func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
-	switch mcpVersion {
-	case v20251125.PROTOCOL_VERSION:
-		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
-	case v20250618.PROTOCOL_VERSION:
-		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
-	case v20250326.PROTOCOL_VERSION:
-		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
-	default:
-		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+	enableDraft, ok := util.EnableDraftSpecsFromContext(ctx)
+	if !ok {
+		err := fmt.Errorf("unable to retrieve enableDraftSpecs from context")
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
-}
-
-// VerifyProtocolVersion verifies if the version string is valid.
-func VerifyProtocolVersion(version string) bool {
-	return slices.Contains(mcputil.SUPPORTED_PROTOCOL_VERSIONS, version)
+	switch mcpVersion {
+	case mcputil.VERSION_DRAFT:
+		if enableDraft {
+			return vdraft.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+		}
+		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion, enableDraft)
+	case mcputil.VERSION_20251125:
+		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+	case mcputil.VERSION_20250618:
+		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+	case mcputil.VERSION_20250326:
+		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+	case "", mcputil.VERSION_20241105:
+		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
+	default:
+		return jsonrpc.NewUnsupportedProtocolVersionError(id, mcpVersion, enableDraft)
+	}
 }

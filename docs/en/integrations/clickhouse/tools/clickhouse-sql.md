@@ -71,6 +71,81 @@ parameters:
     description: Maximum number of results
 ```
 
+### Vector Search Example
+
+The `clickhouse-sql` tool can transparently embed string parameters into vectors
+via Toolbox's native [embedding models](../../../documentation/configuration/embedding-models/_index.md).
+The vector is bound to the prepared-statement placeholder as a native
+`Array(Float32)`, so you can write SQL against ClickHouse's vector functions
+(e.g. `cosineDistance`, `L2Distance`) without doing any string parsing yourself.
+
+Assume the following destination table:
+
+```sql
+CREATE TABLE documents (
+  id UUID DEFAULT generateUUIDv4(),
+  content String,
+  embedding Array(Float32)
+) ENGINE = MergeTree ORDER BY tuple();
+```
+
+Define the embedding model:
+
+```yaml
+embeddingModels:
+  gemini-model:
+    kind: gemini
+    model: gemini-embedding-001
+    dimension: 768
+```
+
+Define an ingestion tool that embeds `content` before insert by mirroring it
+into a second parameter (`text_to_embed`) that carries the `embeddedBy` hint:
+
+```yaml
+kind: tool
+name: insert_doc
+type: clickhouse-sql
+source: my-clickhouse-instance
+description: Indexes a new document and its vector embedding.
+statement: |
+  INSERT INTO documents (content, embedding) VALUES (?, ?)
+parameters:
+  - name: content
+    type: string
+    description: The text content to store.
+  - name: text_to_embed
+    type: string
+    description: The text content used to generate the vector.
+    valueFromParam: content
+    embeddedBy: gemini-model
+```
+
+Define a search tool that embeds the LLM-supplied `query` and ranks rows by
+cosine distance:
+
+```yaml
+kind: tool
+name: search_docs
+type: clickhouse-sql
+source: my-clickhouse-instance
+description: Finds the most semantically similar document to a query.
+statement: |
+  SELECT content, cosineDistance(embedding, ?) AS distance
+  FROM documents
+  ORDER BY distance ASC
+  LIMIT 1
+parameters:
+  - name: query
+    type: string
+    description: The search query.
+    embeddedBy: gemini-model
+```
+
+Only `string`-typed parameters may declare `embeddedBy`. The embedding model
+must be defined under the top-level `embeddingModels:` key of the same
+configuration file.
+
 ## Reference
 
 | **field**          |      **type**      | **required** | **description**                                       |

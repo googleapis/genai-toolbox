@@ -87,9 +87,13 @@ The SDK supports multiple transport protocols to communicate with the Toolbox se
 
 ### Available Protocols
 
-We currently support different versions of the MCP protocol.
+We currently support different versions of the MCP protocol. For a complete and up-to-date list, see the [`Protocol` enum definition on GitHub](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/src/toolbox_core/protocol.ts).
 
-- `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20250618`).
+
+- `Protocol.MCP`: The default protocol version (currently aliases to `MCP_v20251125`).
+- `Protocol.MCP_LATEST`: Alias for the latest stable MCP version (currently aliases to `MCP_v20251125`).
+- `Protocol.MCP_DRAFT`: Alias for the upcoming draft MCP version (currently aliases to `MCP_v2026_DRAFT`).
+- `Protocol.MCP_v2026_DRAFT`: Draft version 2026.
 - `Protocol.MCP_v20241105`: Use this for compatibility with older MCP servers (November 2024 version).
 - `Protocol.MCP_v20250326`: March 2025 version.
 - `Protocol.MCP_v20250618`: June 2025 version.
@@ -97,18 +101,35 @@ We currently support different versions of the MCP protocol.
 
 ### Specifying a Protocol
 
-You can explicitly set the protocol by passing the `protocol` argument to the `ToolboxClient` constructor.
+You can explicitly set the preferred starting protocol by passing the `protocol` argument to the `ToolboxClient` constructor (allowing fallback negotiation if the server doesn't support it):
 
 ```javascript
 import { ToolboxClient, Protocol } from '@toolbox-sdk/core';
 
 const URL = 'http://127.0.0.1:5000';
 
-// Initialize with a specific protocol version
+// Initialize with a specific preferred protocol version
 const client = new ToolboxClient(URL, null, null, Protocol.MCP_v20241105);
 
 const tools = await client.loadToolset();
 ```
+
+To restrict negotiation to a specific subset of versions, you can pass an array of supported protocols as the fourth argument:
+
+```javascript
+import { ToolboxClient, Protocol } from '@toolbox-sdk/core';
+
+const URL = 'http://127.0.0.1:5000';
+
+// Restrict negotiation to specific protocol versions
+const client = new ToolboxClient(URL, undefined, undefined, [Protocol.MCP_LATEST, Protocol.MCP_v20250618]);
+
+const tools = await client.loadToolset();
+```
+
+{{< notice tip >}}
+If you want to strictly pin the version and disable protocol fallback, you must pass an array containing just one value: `[Protocol.MCP_DRAFT]`
+{{< /notice >}}
 
 ## Loading Tools
 
