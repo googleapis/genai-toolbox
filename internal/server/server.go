@@ -62,6 +62,7 @@ type Server struct {
 	ResourceMgr         *resources.ResourceManager
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
+	enableDraftSpecs    bool
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -468,6 +469,11 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
+		enableDraftSpecs:    cfg.EnableDraftSpecs,
+	}
+
+	if s.enableDraftSpecs {
+		s.logger.WarnContext(ctx, "Flag --enable-draft-specs is active. Please note that draft specs are subject to breaking changes and will be completely removed (not redirected) once stable MCP specifications are released. Do not use this configuration in production.")
 	}
 
 	// cors
