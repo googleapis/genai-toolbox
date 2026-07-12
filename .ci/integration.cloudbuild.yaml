@@ -1528,6 +1528,28 @@ steps:
           exit 0
         fi
 
+  - id: "odata"
+    name: golang:1
+    waitFor: ["compile-test-binary", "detect-changes"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        PATTERN="odata|internal/server/|tests/common.go|tests/tool.go|.ci/"
+
+        if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
+          echo "Changes detected. Running OData tests..."
+          go test -short ./tests/odata
+        else
+          echo "No relevant changes for OData. Skipping shard."
+          exit 0
+        fi
+
 availableSecrets:
   secretManager:
     # Common secrets

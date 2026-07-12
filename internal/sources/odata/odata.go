@@ -27,13 +27,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
+// SourceType is the type identifier for the OData source.
 const SourceType string = "odata"
 
 func init() {
@@ -42,15 +43,18 @@ func init() {
 	}
 }
 
+// validate interface
+var _ sources.SourceConfig = Config{}
+
 type AuthConfig struct {
-	Type              string `yaml:"type"`              // "basic" or "bearer"
-	Username          string `yaml:"username"`          // For basic
-	Password          string `yaml:"password"`          // For basic
-	Token             string `yaml:"token"`             // For bearer
-	ClientCert        string `yaml:"clientCert"`        // For x509
-	ClientKey         string `yaml:"clientKey"`         // For x509
-	ClientKeyPassword string `yaml:"clientKeyPassword"` // Optional for encrypted keys
-	CACert            string `yaml:"caCert"`            // For x509
+	Type              string `yaml:"type" validate:"omitempty,oneof=basic bearer x509"` // "basic", "bearer", or "x509"
+	Username          string `yaml:"username"`                                          // For basic
+	Password          string `yaml:"password"`                                          // For basic
+	Token             string `yaml:"token"`                                             // For bearer
+	ClientCert        string `yaml:"clientCert"`                                        // For x509
+	ClientKey         string `yaml:"clientKey"`                                         // For x509
+	ClientKeyPassword string `yaml:"clientKeyPassword"`                                 // Optional for encrypted keys
+	CACert            string `yaml:"caCert"`                                            // For x509
 }
 
 type CompatibilityConfig struct {
@@ -78,6 +82,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		return nil, err
 	}
 	return actual, nil
+	
 }
 
 func (c Config) SourceConfigType() string {
@@ -131,15 +136,22 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		c.DefaultHeaders = make(map[string]string)
 	}
 
-	ua, _ := util.UserAgentFromContext(ctx)
+	ua, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user agent from context: %w", err)
+	}
 	if existingUA, ok := c.DefaultHeaders["User-Agent"]; ok {
 		ua = ua + " " + existingUA
 	}
 	c.DefaultHeaders["User-Agent"] = ua
 
-	// Force JSON for OData v2/v4
-	c.DefaultHeaders["Accept"] = "application/json"
-	c.DefaultHeaders["X-Requested-With"] = "XMLHttpRequest"
+	// Set default Accept and X-Requested-With if not explicitly configured
+	if _, ok := c.DefaultHeaders["Accept"]; !ok {
+		c.DefaultHeaders["Accept"] = "application/json"
+	}
+	if _, ok := c.DefaultHeaders["X-Requested-With"]; !ok {
+		c.DefaultHeaders["X-Requested-With"] = "XMLHttpRequest"
+	}
 
 	var primary AuthStrategy
 	switch c.Auth.Type {
@@ -180,16 +192,13 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		AuthTokenHeaderName: headerName,
 	}
 
-	// Fetch metadata (schema) at initialization.
-	// We no longer fetch CSRF globally here, as CSRF is user-specific.
-	if err := source.fetchMetadata(ctx); err != nil {
-		return nil, fmt.Errorf("failed to initialize SAP OData metadata: %v", err)
+	// Attempt initial metadata fetch at startup; if unauthenticated (e.g. user OAuth token required), lazy-load on first request.
+	if err := source.fetchMetadata(ctx, ""); err != nil {
+		fmt.Printf("Notice: SAP OData metadata will be lazily fetched on first user request: %v\n", err)
 	}
 
 	return source, nil
 }
-
-
 
 type Source struct {
 	Config
@@ -233,7 +242,7 @@ func (s *Source) Compatibility() CompatibilityConfig {
 }
 
 // fetchMetadata performs a GET to $metadata to fetch and parse the schema
-func (s *Source) fetchMetadata(ctx context.Context) error {
+func (s *Source) fetchMetadata(ctx context.Context, accessToken tools.AccessToken) error {
 	metaURL := strings.TrimRight(s.BaseURL, "/") + "/$metadata"
 	req, err := http.NewRequestWithContext(ctx, "GET", metaURL, nil)
 	if err != nil {
@@ -245,7 +254,11 @@ func (s *Source) fetchMetadata(ctx context.Context) error {
 	}
 	// Overwrite Accept header for metadata specifically, as OData $metadata is always XML
 	req.Header.Set("Accept", "application/xml")
-	
+
+	if accessToken != "" {
+		req.Header.Set(s.GetAuthTokenHeaderName(), string(accessToken))
+	}
+
 	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
 		return err
 	}
@@ -285,7 +298,14 @@ func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken)
 		req.Header.Set(s.GetAuthTokenHeaderName(), string(accessToken))
 	}
 
-	// 2. Delegate Authentication and Handshake to Strategy
+	// 2. Lazy fetch metadata bypassed for troubleshooting (Backup kept below)
+	// if s.metadata == nil {
+	// 	if err := s.fetchMetadata(ctx, accessToken); err != nil {
+	// 		return nil, fmt.Errorf("lazy metadata fetch failed: %w", err)
+	// 	}
+	// }
+
+	// 3. Delegate Authentication and Handshake to Strategy
 	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
 		return nil, fmt.Errorf("sap authorization failed: %w", err)
 	}

@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/odata"
@@ -81,17 +81,12 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
+	var metadata *odata.ODataMetadata
+	if rawS, ok := srcs[cfg.Source]; ok {
+		if s, ok := rawS.(odataSource); ok {
+			metadata = s.Metadata()
+		}
 	}
-
-	s, ok := rawS.(odataSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source type must be odata", resourceType)
-	}
-
-	metadata := s.Metadata()
 
 	var dynamicParams parameters.Parameters
 	var method string
@@ -249,13 +244,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// 1. Build URL
 	baseURL := strings.TrimRight(source.HttpBaseURL(), "/")
-	var reqURL string
-
-	if strings.ToUpper(t.Operation) == "FUNCTION_IMPORT" {
-		reqURL = fmt.Sprintf("%s/%s", baseURL, t.EntitySet)
-	} else {
-		reqURL = fmt.Sprintf("%s/%s", baseURL, t.EntitySet)
-	}
+	reqURL := fmt.Sprintf("%s/%s", baseURL, t.EntitySet)
 
 	parsedURL, err := url.Parse(reqURL)
 	if err != nil {
@@ -281,13 +270,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		if v, ok := paramsMap["skiptoken"]; ok && v != nil {
 			query.Set("$skiptoken", fmt.Sprintf("%v", v))
-		}
-	} else if strings.ToUpper(t.Operation) == "FUNCTION_IMPORT" {
-		for _, p := range t.QueryParams {
-			if v, ok := paramsMap[p.GetName()]; ok && v != nil {
-				formattedVal := applyODataFormatting(fmt.Sprintf("%v", v), p.GetName(), p.GetType(), version, true, source.Compatibility())
-				query.Set(p.GetName(), formattedVal)
-			}
 		}
 	}
 

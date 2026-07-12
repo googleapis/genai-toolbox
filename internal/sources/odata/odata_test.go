@@ -15,102 +15,111 @@
 package odata
 
 import (
+	"context"
+	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/testutils"
 )
 
-func TestSourceRegistration(t *testing.T) {
-	// Verify it registers okay
-	yamlDef := []byte(`
-name: my_test_sap
-type: odata
-baseUrl: https://example.com/sap/opu/odata
-timeout: 10s
-auth:
-  type: basic
-  username: user
-  password: pwd
-`)
-
-	var c Config
-	if err := yaml.Unmarshal(yamlDef, &c); err != nil {
-		t.Fatalf("Unmarshal failed: %v", err)
+func TestParseFromYamlOData(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want server.SourceConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+				kind: source
+				name: my-instance
+				type: odata
+				baseUrl: https://example.com/sap/opu/odata
+				timeout: 10s
+				auth:
+				  type: basic
+				  username: testuser
+				  password: testpassword
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-instance": Config{
+					Name:    "my-instance",
+					Type:    SourceType,
+					BaseURL: "https://example.com/sap/opu/odata",
+					Timeout: "10s",
+					Auth: AuthConfig{
+						Type:     "basic",
+						Username: "testuser",
+						Password: "testpassword",
+					},
+				},
+			},
+		},
 	}
-
-	if c.Name != "my_test_sap" || c.BaseURL != "https://example.com/sap/opu/odata" {
-		t.Errorf("Config unmarshaled incorrectly: %+v", c)
-	}
-	if c.Auth.Type != "basic" || c.Auth.Username != "user" {
-		t.Errorf("Auth unmarshaled incorrectly: %+v", c.Auth)
-	}
-}
-
-func TestParseMetadata(t *testing.T) {
-	xmlData := []byte(`
-<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
-    <edmx:DataServices m:DataServiceVersion="2.0">
-        <Schema Namespace="API_SALES_ORDER_SRV" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
-            <EntityType Name="A_SalesOrderType" sap:label="Sales Order">
-                <Property Name="SalesOrder" Type="Edm.String" Nullable="false" MaxLength="10" sap:label="Sales Order ID" />
-                <Property Name="TotalNetAmount" Type="Edm.Decimal" Nullable="true" sap:label="Net Amount" />
-                <Property Name="CreationDate" Type="Edm.DateTime" sap:label="Created On" />
-            </EntityType>
-            <EntityContainer Name="API_SALES_ORDER_SRV_Entities" m:IsDefaultEntityContainer="true">
-                <EntitySet Name="A_SalesOrder" EntityType="API_SALES_ORDER_SRV.A_SalesOrderType" />
-                <FunctionImport Name="RejectSalesOrder" ReturnType="API_SALES_ORDER_SRV.A_SalesOrderType" HttpMethod="POST">
-                    <Parameter Name="SalesOrder" Type="Edm.String" Mode="In" />
-                </FunctionImport>
-            </EntityContainer>
-        </Schema>
-    </edmx:DataServices>
-</edmx:Edmx>`)
-
-	meta, err := ParseMetadata(xmlData)
-	if err != nil {
-		t.Fatalf("ParseMetadata failed: %v", err)
-	}
-
-	if meta.Version != "2.0" {
-		t.Errorf("Expected version 2.0, got %s", meta.Version)
-	}
-
-	es, ok := meta.EntitySets["A_SalesOrder"]
-	if !ok {
-		t.Fatalf("EntitySet A_SalesOrder not found")
-	}
-
-	et, err := meta.GetEntityTypeForSet(es.Name)
-	if err != nil {
-		t.Fatalf("GetEntityTypeForSet failed: %v", err)
-	}
-
-	if et.Name != "A_SalesOrderType" {
-		t.Errorf("Expected A_SalesOrderType, got %s", et.Name)
-	}
-
-	if len(et.Properties) != 3 {
-		t.Errorf("Expected 3 properties, got %d", len(et.Properties))
-	}
-
-	// Check specific property
-	if et.Properties[0].Name != "SalesOrder" || et.Properties[0].Type != "Edm.String" || et.Properties[0].SAPLabel != "Sales Order ID" {
-		t.Errorf("Property 0 mapped incorrectly: %+v", et.Properties[0])
-	}
-	if et.Properties[0].Nullable {
-		t.Errorf("Property 0 nullable should be false")
-	}
-
-	fi, ok := meta.FunctionImps["RejectSalesOrder"]
-	if !ok {
-		t.Fatalf("FunctionImport RejectSalesOrder not found")
-	}
-
-	if fi.HttpMethod != "POST" || len(fi.Parameters) != 1 || fi.Parameters[0].Name != "SalesOrder" {
-		t.Errorf("FunctionImport mapped incorrectly: %+v", fi)
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
+			}
+		})
 	}
 }
 
-// ensure Source interface is fully implemented
-var _ sources.Source = &Source{}
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: `
+				kind: source
+				name: my-instance
+				type: odata
+				baseUrl: https://example.com/sap/opu/odata
+				foo: bar
+			`,
+			err: "unknown field \"foo\"",
+		},
+		{
+			desc: "missing required field baseUrl",
+			in: `
+				kind: source
+				name: my-instance
+				type: odata
+			`,
+			err: "failed on the 'required' tag",
+		},
+		{
+			desc: "invalid auth type enum",
+			in: `
+				kind: source
+				name: my-instance
+				type: odata
+				baseUrl: https://example.com/sap/opu/odata
+				auth:
+				  type: invalid_auth
+			`,
+			err: "failed on the 'oneof' tag",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expected error containing %q, got nil", tc.err)
+			}
+			if !strings.Contains(err.Error(), tc.err) {
+				t.Fatalf("expected error containing %q, got %q", tc.err, err.Error())
+			}
+		})
+	}
+}
