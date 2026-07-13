@@ -127,8 +127,8 @@ func TestGetBaseDirFromContext(t *testing.T) {
 	})
 
 	t.Run("NilContext", func(t *testing.T) {
-		//lint:ignore SA1012 intentional nil context test
-		if GetBaseDirFromContext(nil) != "" {
+		var nilCtx context.Context
+		if GetBaseDirFromContext(nilCtx) != "" {
 			t.Errorf("Expected empty string for nil context")
 		}
 	})
