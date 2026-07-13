@@ -42,15 +42,18 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	_ "github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	_ "github.com/googleapis/mcp-toolbox/internal/prompts/custom"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -1351,6 +1354,128 @@ scopesRequired:
 			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestDuplicateResourceConfig(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name string
+		yaml string
+	}{
+		{
+			name: "duplicate source",
+			yaml: `
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+---
+kind: source
+name: my_source
+type: alloydb-postgres
+project: my-project
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my-db
+`,
+		},
+		{
+			name: "duplicate authService",
+			yaml: `
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+---
+kind: authService
+name: my_auth
+type: generic
+audience: my-audience
+authorizationServer: https://example.com
+`,
+		},
+		{
+			name: "duplicate tool",
+			yaml: `
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /a
+method: GET
+---
+kind: tool
+name: my_tool
+type: http
+source: my_source
+path: /b
+method: GET
+`,
+		},
+		{
+			name: "duplicate toolset",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+---
+kind: toolset
+name: my_toolset
+tools:
+  - tool_b
+`,
+		},
+		{
+			name: "duplicate embeddingModel",
+			yaml: `
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+---
+kind: embeddingModel
+name: my_model
+type: gemini
+model: text-embedding-005
+`,
+		},
+		{
+			name: "duplicate prompt",
+			yaml: `
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: hello
+---
+kind: prompt
+name: my_prompt
+messages:
+  - role: user
+    content: world
+`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if err == nil {
+				t.Fatalf("UnmarshalResourceConfig() expected a duplicate error, got nil")
+			}
+			if !strings.Contains(err.Error(), "declared more than once") {
+				t.Fatalf("UnmarshalResourceConfig() error = %v, want it to mention 'declared more than once'", err)
 			}
 		})
 	}
