@@ -153,12 +153,16 @@ name: search-hotels-by-name
 type: postgres-sql
 source: my-pg-source
 description: Search for hotels based on name.
+annotations:
+  readOnlyHint: true
 parameters:
   - name: name
     type: string
     description: The name of the hotel.
 statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 ```
+
+> **Note on Read-Only Mode:** You can add an `annotations: { readOnlyHint: <bool> }` block to your custom tools. If your source is configured in read-only mode, tools explicitly marked as `readOnlyHint: false` will be automatically suppressed to save the agent's context window. If omitted, the tool remains available but emits a startup warning.
 
 For more details on configuring different types of tools, see the
 [Tools](https://mcp-toolbox.dev/documentation/configuration/tools/).

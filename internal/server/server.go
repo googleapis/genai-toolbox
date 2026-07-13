@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -183,7 +184,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
-	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, instrumentation, l)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, err
 	}
@@ -283,7 +284,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 		return nil, nil, fmt.Errorf("failed to get logger from context: %w", err)
 	}
 
-	toolsMap, err := initializeTools(ctx, cfg, instrumentation, l)
+	toolsMap, err := initializeTools(ctx, cfg, nil, instrumentation, l)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -297,7 +298,7 @@ func InitializeOfflineConfigs(ctx context.Context, cfg ServerConfig) (
 }
 
 // initializeTools initializes and validates the tools from the config.
-func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
+func initializeTools(ctx context.Context, cfg ServerConfig, sourcesMap map[string]sources.Source, instrumentation *telemetry.Instrumentation, l log.Logger) (map[string]tools.Tool, error) {
 	toolsMap := make(map[string]tools.Tool)
 	for name, tc := range cfg.ToolConfigs {
 		t, err := func() (tools.Tool, error) {
@@ -316,6 +317,33 @@ func initializeTools(ctx context.Context, cfg ServerConfig, instrumentation *tel
 		}()
 		if err != nil {
 			return nil, err
+		}
+
+		if sourcesMap != nil {
+			v := reflect.ValueOf(tc)
+			if v.Kind() == reflect.Ptr {
+				v = v.Elem()
+			}
+			if v.Kind() == reflect.Struct {
+				sourceField := v.FieldByName("Source")
+				if sourceField.IsValid() && sourceField.Kind() == reflect.String {
+					sourceName := sourceField.String()
+					if sourceName != "" {
+						if src, ok := sourcesMap[sourceName]; ok {
+							if rs, ok := src.(sources.ReadOnlySource); ok && rs.IsReadOnlyMode() {
+								if t.GetAnnotations() != nil && t.GetAnnotations().ReadOnlyHint != nil {
+									if !*t.GetAnnotations().ReadOnlyHint {
+										l.InfoContext(ctx, fmt.Sprintf("Suppressing write-capable tool %q bound to read-only source %q", name, sourceName))
+										continue
+									}
+								} else {
+									l.WarnContext(ctx, fmt.Sprintf("Tool %q bound to read-only source %q lacks ReadOnlyHint annotation; executing this tool may fail if it attempts write operations. If this tool is meant to be read-only, please add 'readOnlyHint: true' to its annotations. Otherwise, add 'readOnlyHint: false' to suppress it in read-only mode and save agent context window.", name, sourceName))
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 		toolsMap[name] = t
 	}

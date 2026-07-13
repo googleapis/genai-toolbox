@@ -57,6 +57,7 @@ type Config struct {
 	Dialect        sources.Dialect `yaml:"dialect" validate:"required"`
 	Database       string          `yaml:"database" validate:"required"`
 	UseClientOAuth bool            `yaml:"useClientOAuth"`
+	ReadOnly       bool            `yaml:"readonly"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -100,6 +101,10 @@ func (s *Source) SourceType() string {
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
+}
+
+func (s *Source) IsReadOnlyMode() bool {
+	return s.ReadOnly
 }
 
 func (s *Source) SpannerClient() *spanner.Client {
@@ -174,7 +179,7 @@ func (s *Source) RunSQL(ctx context.Context, readOnly bool, statement string, pa
 		stmt.Params = params
 	}
 
-	if readOnly {
+	if readOnly || s.ReadOnly {
 		iter := s.SpannerClient().Single().Query(ctx, stmt)
 		results, opErr = processRows(iter)
 	} else {

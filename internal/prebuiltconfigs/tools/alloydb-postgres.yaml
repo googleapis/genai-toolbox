@@ -23,6 +23,7 @@ database: ${ALLOYDB_POSTGRES_DATABASE}
 user: ${ALLOYDB_POSTGRES_USER:}
 password: ${ALLOYDB_POSTGRES_PASSWORD:}
 ipType: ${ALLOYDB_POSTGRES_IP_TYPE:public}
+readonly: ${ALLOYDB_READONLY:false}
 ---
 kind: source
 name: cloud-monitoring-source
@@ -38,6 +39,16 @@ name: execute_sql
 type: postgres-execute-sql
 source: alloydb-pg-source
 description: Use this tool to execute a single SQL statement.
+annotations:
+  readOnlyHint: false
+---
+kind: tool
+name: execute_sql_readonly
+type: postgres-execute-sql
+source: alloydb-pg-source
+description: Use this tool to execute a single read-only SQL statement.
+annotations:
+  readOnlyHint: true
 ---
 kind: tool
 name: list_tables

@@ -68,6 +68,12 @@ type Source interface {
 	ToConfig() SourceConfig
 }
 
+// ReadOnlySource is the interface for a source that supports read-only mode.
+type ReadOnlySource interface {
+	Source
+	IsReadOnlyMode() bool
+}
+
 // InitConnectionSpan adds a span for database pool connection initialization
 func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceType, sourceName string) (context.Context, trace.Span) {
 	ctx, span := tracer.Start(

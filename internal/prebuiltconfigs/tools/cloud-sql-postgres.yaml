@@ -22,6 +22,7 @@ database: ${CLOUD_SQL_POSTGRES_DATABASE}
 user: ${CLOUD_SQL_POSTGRES_USER:}
 password: ${CLOUD_SQL_POSTGRES_PASSWORD:}
 ipType: ${CLOUD_SQL_POSTGRES_IP_TYPE:public}
+readonly: ${CLOUDSQL_PG_READONLY:false}
 ---
 kind: source
 name: cloud-sql-admin-source
@@ -37,6 +38,16 @@ name: execute_sql
 type: postgres-execute-sql
 source: cloudsql-pg-source
 description: Use this tool to execute a single SQL statement.
+annotations:
+  readOnlyHint: false
+---
+kind: tool
+name: execute_sql_readonly
+type: postgres-execute-sql
+source: cloudsql-pg-source
+description: Use this tool to execute a single read-only SQL statement.
+annotations:
+  readOnlyHint: true
 ---
 kind: tool
 name: list_tables

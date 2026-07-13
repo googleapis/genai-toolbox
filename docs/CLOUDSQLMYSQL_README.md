@@ -77,6 +77,7 @@ export CLOUD_SQL_MYSQL_DATABASE="<your-database-name>"
 export CLOUD_SQL_MYSQL_USER="<your-database-user>"  # Optional
 export CLOUD_SQL_MYSQL_PASSWORD="<your-database-password>"  # Optional
 export CLOUD_SQL_MYSQL_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`. Defaults to `PUBLIC`.
+export CLOUDSQL_MYSQL_READONLY="true" # Optional: Restricts tools and executes queries on read-only endpoints.
 ```
 
 Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):

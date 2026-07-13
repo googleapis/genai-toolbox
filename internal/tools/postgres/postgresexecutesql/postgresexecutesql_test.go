@@ -58,6 +58,31 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with annotations",
+			in: `
+            kind: tool
+            name: custom_write_tool
+            type: postgres-execute-sql
+            source: my-instance
+            description: custom write query
+            annotations:
+              readOnlyHint: false
+			`,
+			want: server.ToolConfigs{
+				"custom_write_tool": postgresexecutesql.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:        "custom_write_tool",
+						Description: "custom write query",
+					},
+					Type:   "postgres-execute-sql",
+					Source: "my-instance",
+					Annotations: &tools.ToolAnnotations{
+						ReadOnlyHint: func() *bool { b := false; return &b }(),
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

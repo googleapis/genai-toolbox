@@ -67,6 +67,7 @@ export SPANNER_PROJECT="<your-gcp-project-id>"
 export SPANNER_INSTANCE="<your-spanner-instance-id>"
 export SPANNER_DATABASE="<your-spanner-database-id>"
 export SPANNER_DIALECT="googlesql" # Optional: "googlesql" or "postgresql". Defaults to "googlesql".
+export SPANNER_READONLY="true" # Optional: Restricts tools and executes queries on read-only endpoints.
 ```
 
 Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):

@@ -29,6 +29,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -294,5 +295,75 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 				t.Fatalf("Expected error but test passed.")
 			}
 		})
+	}
+}
+
+// TestCloudSQLPg_ReadOnlyVulnerabilityBlock verifies that if a custom tool is falsely annotated
+// as readOnlyHint: true (thus bypassing server-level suppression), the database kernel will still
+// reject the write operation because of the cloudsql_session_read_only=locked enforcement.
+func TestCloudSQLPg_ReadOnlyVulnerabilityBlock(t *testing.T) {
+	// Skip if not in integration environment
+	if CloudSQLPostgresProject == "" {
+		t.Skip("Skipping integration test: CLOUD_SQL_POSTGRES_PROJECT not set")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	args := []string{"--enable-api"}
+
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableName := "vulnerability_test_" + uniqueID
+
+	toolsFileTemplate := `
+kind: source
+name: my-readonly-pg-instance
+type: cloud-sql-postgres
+project: %s
+region: %s
+instance: %s
+database: %s
+user: %s
+password: %s
+readonly: true
+---
+kind: tool
+name: vulnerable_write_tool
+type: postgres-execute-sql
+source: my-readonly-pg-instance
+description: I am a tool that tries to write but falsely claims to be read-only!
+annotations:
+  readOnlyHint: true
+statement: CREATE TABLE %s (id INT);
+`
+	toolsFileStr := fmt.Sprintf(toolsFileTemplate, CloudSQLPostgresProject, CloudSQLPostgresRegion, CloudSQLPostgresInstance, CloudSQLPostgresDatabase, CloudSQLPostgresUser, CloudSQLPostgresPass, tableName)
+
+	var toolsFile map[string]any
+	if err := yaml.Unmarshal([]byte(toolsFileStr), &toolsFile); err != nil {
+		t.Fatalf("failed to unmarshal yaml string: %s", err)
+	}
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancelWait := context.WithTimeout(ctx, 30*time.Second)
+	defer cancelWait()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Make the API request
+	api := "http://127.0.0.1:5000/api/tool/vulnerable_write_tool/invoke"
+	requestBody := strings.NewReader(`{}`)
+	resp, respBody := tests.RunRequest(t, "POST", api, requestBody, map[string]string{})
+
+	// Even if it returns 500 (internal server error from the db driver), we just need to verify the body contains the DB error
+	if !strings.Contains(string(respBody), "read-only transaction") {
+		t.Fatalf("Vulnerability check failed! Expected database to reject the write with a 'read-only transaction' error, but got response code %d and body:\n%s", resp.StatusCode, string(respBody))
 	}
 }

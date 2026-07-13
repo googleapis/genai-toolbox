@@ -19,12 +19,15 @@ project: ${SPANNER_PROJECT}
 instance: ${SPANNER_INSTANCE}
 database: ${SPANNER_DATABASE}
 dialect: ${SPANNER_DIALECT:googlesql}
+readonly: ${SPANNER_READONLY:false}
 ---
 kind: tool
 name: execute_sql
 type: spanner-execute-sql
 source: spanner-source
 description: Use this tool to execute DML SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
+annotations:
+  readOnlyHint: false
 ---
 kind: tool
 name: execute_sql_dql
@@ -32,6 +35,8 @@ type: spanner-execute-sql
 source: spanner-source
 description: Use this tool to execute DQL SQL. Please use the ${SPANNER_DIALECT:googlesql} interface for Spanner.
 readOnly: true
+annotations:
+  readOnlyHint: true
 ---
 kind: tool
 name: list_tables

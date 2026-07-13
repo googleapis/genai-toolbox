@@ -61,6 +61,7 @@ type Config struct {
 	Password     string         `yaml:"password"`
 	Database     string         `yaml:"database"`
 	SQLCommenter *bool          `yaml:"sqlCommenter"`
+	ReadOnly     bool           `yaml:"readonly"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -68,7 +69,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initCloudSQLMySQLConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
+	pool, err := initCloudSQLMySQLConnectionPool(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database, r.ReadOnly)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -98,6 +99,10 @@ func (s *Source) SourceType() string {
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
+}
+
+func (s *Source) IsReadOnlyMode() bool {
+	return s.ReadOnly
 }
 
 func (s *Source) MySQLPool() *sql.DB {
@@ -205,7 +210,7 @@ func getConnectionConfig(ctx context.Context, user, pass string) (string, string
 	return user, pass, useIAM, nil
 }
 
-func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
+func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string, readOnly bool) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -258,6 +263,10 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			dbname,
 			url.QueryEscape(userAgent),
 		)
+	}
+
+	if readOnly {
+		dsn += "&cloudsql_session_read_only=locked"
 	}
 
 	db, err := sql.Open(
