@@ -56,11 +56,10 @@ type ServerConfig struct {
 	EmbeddingModelConfigs EmbeddingModelConfigs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs ToolConfigs
-	// ToolsetConfigs defines what tools are available.
-	ToolsetConfigs ToolsetConfigs
 	// PromptConfigs defines what prompts are available
 	PromptConfigs PromptConfigs
-	// GroupConfigs defines groups of tools and prompts declared via `kind: group`.
+	// GroupConfigs defines groups of tools and prompts declared via `kind: group`
+	// (legacy `kind: toolset` configs are folded into groups at unmarshal).
 	GroupConfigs GroupConfigs
 	// IgnoreUnknownTools logs warnings and skips unknown/unsupported tool types instead of failing to start.
 	IgnoreUnknownTools bool
@@ -160,24 +159,26 @@ type SourceConfigs map[string]sources.SourceConfig
 type AuthServiceConfigs map[string]auth.AuthServiceConfig
 type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
 type ToolConfigs map[string]tools.ToolConfig
-type ToolsetConfigs map[string]tools.ToolsetConfig
 type PromptConfigs map[string]prompts.PromptConfig
 type GroupConfigs map[string]group.GroupConfig
 
-func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, GroupConfigs, error) {
+func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, PromptConfigs, GroupConfigs, error) {
 	// prepare configs map
 	var sourceConfigs SourceConfigs
 	var authServiceConfigs AuthServiceConfigs
 	var embeddingModelConfigs EmbeddingModelConfigs
 	var toolConfigs ToolConfigs
-	var toolsetConfigs ToolsetConfigs
 	var promptConfigs PromptConfigs
 	var groupConfigs GroupConfigs
+	// Legacy `kind: toolset` configs are collected here as tools-only groups, then
+	// folded into groupConfigs after the loop so explicit `kind: group` definitions
+	// take precedence regardless of document order.
+	var toolsetGroups map[string]group.GroupConfig
 	// promptset configs is not yet supported
 
 	file, err := parser.ParseBytes(raw, 0)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
+		return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to parse YAML: %s", yaml.FormatError(err, false, false))
 	}
 
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
@@ -189,17 +190,17 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		var resource map[string]any
 		if err := decoder.DecodeFromNodeContext(ctx, doc.Body, &resource); err != nil {
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: %s", docIndex, yaml.FormatError(err, false, false))
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %s", yaml.FormatError(err, false, false))
 		}
 		var kind, name string
 		var ok bool
 		if kind, ok = resource["kind"].(string); !ok {
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'kind' field or it is not a string", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body))
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
 		}
 		if name, ok = resource["name"].(string); !ok {
 			// A `kind: group` may omit `name` (or leave it empty) to target the
@@ -214,9 +215,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 				if fallbackToken == nil {
 					fallbackToken = keyToken(doc.Body, "kind")
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s missing 'name' field or it is not a string", formatDocLocation(docIndex, fallbackToken, doc.Body))
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
 		}
 		// remove 'kind' from map for strict unmarshaling
 		delete(resource, "kind")
@@ -226,9 +227,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			c, err := UnmarshalYAMLSourceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if sourceConfigs == nil {
 				sourceConfigs = make(SourceConfigs)
@@ -238,9 +239,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if authServiceConfigs == nil {
 				authServiceConfigs = make(AuthServiceConfigs)
@@ -250,9 +251,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			c, err := UnmarshalYAMLToolConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if c == nil {
 				continue
@@ -265,21 +266,21 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
-			if toolsetConfigs == nil {
-				toolsetConfigs = make(ToolsetConfigs)
+			if toolsetGroups == nil {
+				toolsetGroups = make(map[string]group.GroupConfig)
 			}
-			toolsetConfigs[name] = c
+			toolsetGroups[name] = group.GroupConfig{Name: name, ToolNames: c.ToolNames}
 		case "embeddingModel":
 			c, err := UnmarshalYAMLEmbeddingModelConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if embeddingModelConfigs == nil {
 				embeddingModelConfigs = make(EmbeddingModelConfigs)
@@ -289,9 +290,9 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if promptConfigs == nil {
 				promptConfigs = make(PromptConfigs)
@@ -301,28 +302,46 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			c, err := UnmarshalYAMLGroupConfig(ctx, name, resource)
 			if err != nil {
 				if len(file.Docs) > 1 {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("document %d: error unmarshaling %s %q: %w", docIndex, kind, name, err)
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %w", kind, err)
 			}
 			if groupConfigs == nil {
 				groupConfigs = make(GroupConfigs)
 			}
 			if _, exists := groupConfigs[name]; exists {
 				if name == "" {
-					return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("more than one default (nameless) group declared; only one is allowed")
+					return nil, nil, nil, nil, nil, nil, fmt.Errorf("more than one default (nameless) group declared; only one is allowed")
 				}
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("group %q declared more than once", name)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("group %q declared more than once", name)
 			}
 			groupConfigs[name] = c
 		default:
 			if len(file.Docs) > 1 {
-				return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("%s invalid kind %q", formatDocLocation(docIndex, keyToken(doc.Body, "kind"), doc.Body), kind)
 			}
-			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
 		}
 	}
-	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, toolsetConfigs, promptConfigs, groupConfigs, nil
+	// Fold legacy toolsets into groups. An explicit `kind: group` of the same name
+	// takes precedence over a toolset (matching the prior server-side behavior); warn
+	// when a toolset is shadowed this way.
+	if len(toolsetGroups) > 0 {
+		if groupConfigs == nil {
+			groupConfigs = make(GroupConfigs)
+		}
+		for name, gc := range toolsetGroups {
+			if _, shadowed := groupConfigs[name]; shadowed {
+				if l, err := util.LoggerFromContext(ctx); err == nil {
+					l.WarnContext(ctx, fmt.Sprintf("group %q shadows a toolset of the same name; using the group definition", name))
+				}
+				continue
+			}
+			groupConfigs[name] = gc
+		}
+	}
+
+	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, promptConfigs, groupConfigs, nil
 }
 
 func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]any) (sources.SourceConfig, error) {
