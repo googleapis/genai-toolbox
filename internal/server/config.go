@@ -554,14 +554,22 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 		if uriStr, isString := uriVal.(string); !isString {
 			return nil, fmt.Errorf("invalid 'uri' field for resource %q (must be a string)", name)
 		} else {
-			parsed, err := url.ParseRequestURI(uriStr)
+			parsed, err := url.Parse(uriStr)
 			if err != nil || parsed.Scheme == "" {
-				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant URI with a scheme", name)
+				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", name)
 			}
+			
+			// Normalize scheme to lowercase for consistent comparison and usage
+			parsed.Scheme = strings.ToLower(parsed.Scheme)
+
 			// Scheme whitelisting
-			if resourceType == "file" && strings.ToLower(parsed.Scheme) != "file" {
+			if resourceType == "file" && parsed.Scheme != "file" {
 				return nil, fmt.Errorf("invalid scheme for file resource %q: must be 'file'", name)
 			}
+			
+			// Update the map with the normalized URI so that unmarshaling and 
+			// collision detection see the normalized form (e.g. lowercase scheme)
+			r["uri"] = parsed.String()
 		}
 	} else {
 		return nil, fmt.Errorf("missing required 'uri' field for resource %q", name)
