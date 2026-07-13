@@ -38,6 +38,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
@@ -277,25 +278,48 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := s.ResourceMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
+	}
+
+	var nilTool tools.Tool
+	wantToolset := tools.Toolset{
+		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
+		Tools:         []*tools.Tool{&nilTool},
+	}
 	gotToolset, ok := s.ResourceMgr.GetToolset("example-toolset")
 	if !ok {
 		t.Fatal("expected toolset \"example-toolset\" to exist")
 	}
-	if gotToolset.Name != "example-toolset" || !gotToolset.ContainsTool("example-tool") {
-		t.Errorf("error updating server, toolset = %+v, want name %q containing tool %q", gotToolset, "example-toolset", "example-tool")
+	if diff := cmp.Diff(wantToolset, gotToolset, cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
+		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
-	gotPrompt, ok := s.ResourceMgr.GetPrompt("example-prompt")
-	if !ok || gotPrompt == nil {
-		t.Errorf("error updating server, prompt %q not found", "example-prompt")
+	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
+		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
+	examplePrompt := newPrompts["example-prompt"]
+	wantPromptset := prompts.Promptset{
+		PromptsetConfig: prompts.PromptsetConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}},
+		Prompts:         []*prompts.Prompt{&examplePrompt},
+		Manifest: prompts.PromptsetManifest{
+			PromptsManifest: map[string]prompts.Manifest{"example-prompt": examplePrompt.Manifest()},
+		},
+		PromptNameSet: map[string]struct{}{"example-prompt": {}},
+	}
 	gotPromptset, ok := s.ResourceMgr.GetPromptset("example-promptset")
 	if !ok {
 		t.Fatal("expected promptset \"example-promptset\" to exist")
 	}
-	if gotPromptset.Name != "example-promptset" || !gotPromptset.ContainsPrompt("example-prompt") {
-		t.Errorf("error updating server, promptset = %+v, want name %q containing prompt %q", gotPromptset, "example-promptset", "example-prompt")
+	if diff := cmp.Diff(wantPromptset, gotPromptset, cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
+		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
 
@@ -1232,7 +1256,7 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1324,7 +1348,7 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1338,6 +1362,7 @@ func TestGroupConfigParsing(t *testing.T) {
 	tests := []struct {
 		name      string
 		yaml      string
+		want      group.GroupConfig
 		wantError bool
 	}{
 		{
@@ -1352,7 +1377,12 @@ tools:
 prompts:
   - prompt_a
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "a group of tools and prompts",
+				ToolNames:   []string{"tool_a", "tool_b"},
+				PromptNames: []string{"prompt_a"},
+			},
 		},
 		{
 			name: "named group with only description",
@@ -1361,7 +1391,10 @@ kind: group
 name: my_group
 description: just a description
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "just a description",
+			},
 		},
 		{
 			name: "default group with only description",
@@ -1370,7 +1403,9 @@ kind: group
 name:
 description: default server instruction
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
 		},
 		{
 			name: "default group omitting name field",
@@ -1378,7 +1413,23 @@ description: default server instruction
 kind: group
 description: default server instruction
 `,
-			wantError: false,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "kind toolset folds into a tools-only group",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+  - tool_b
+`,
+			want: group.GroupConfig{
+				Name:      "my_toolset",
+				ToolNames: []string{"tool_a", "tool_b"},
+			},
 		},
 		{
 			name: "default group declaring tools is an error",
@@ -1442,45 +1493,21 @@ tools:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
+			if tc.wantError {
+				return
+			}
+			gc, ok := groups[tc.want.Name]
+			if !ok {
+				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
+			}
+			if diff := cmp.Diff(tc.want, gc); diff != "" {
+				t.Errorf("group mismatch (-want +got):\n%s", diff)
+			}
 		})
-	}
-}
-
-func TestGroupConfigValues(t *testing.T) {
-	ctx := context.Background()
-	yaml := `
-kind: group
-name: my_group
-description: a group
-tools:
-  - tool_a
-  - tool_b
-prompts:
-  - prompt_a
-`
-	_, _, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(yaml))
-	if err != nil {
-		t.Fatalf("UnmarshalResourceConfig() returned unexpected error: %v", err)
-	}
-	gc, ok := groups["my_group"]
-	if !ok {
-		t.Fatalf("expected group %q to be parsed, got: %v", "my_group", groups)
-	}
-	if gc.Name != "my_group" {
-		t.Errorf("group name: got %q, want %q", gc.Name, "my_group")
-	}
-	if gc.Description != "a group" {
-		t.Errorf("group description: got %q, want %q", gc.Description, "a group")
-	}
-	if diff := cmp.Diff([]string{"tool_a", "tool_b"}, gc.ToolNames); diff != "" {
-		t.Errorf("group tools mismatch (-want +got):\n%s", diff)
-	}
-	if diff := cmp.Diff([]string{"prompt_a"}, gc.PromptNames); diff != "" {
-		t.Errorf("group prompts mismatch (-want +got):\n%s", diff)
 	}
 }
 
