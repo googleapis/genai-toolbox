@@ -21,6 +21,7 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -46,9 +47,11 @@ func (m *mockSource) ToConfig() sources.SourceConfig {
 	return nil
 }
 
+var _ sources.ReadOnlySource = (*mockSource)(nil)
+
 type mockToolConfig struct {
 	tools.ConfigBase
-	source string
+	Source string
 }
 
 func (m *mockToolConfig) ToolConfigType() string {
@@ -63,13 +66,13 @@ func (m *mockToolConfig) Initialize(ctx context.Context) (tools.Tool, error) {
 	}
 	return &mockTool{
 		BaseTool: tools.NewBaseTool(m.ConfigBase, annotations, tools.Manifest{}, nil),
-		source:   m.source,
+		Source:   m.Source,
 	}, nil
 }
 
 type mockTool struct {
 	tools.BaseTool[tools.ConfigBase]
-	source string
+	Source string
 }
 
 func (m *mockTool) Invoke(ctx context.Context, sp tools.SourceProvider, pv parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
@@ -91,15 +94,15 @@ func TestInitializeTools_ReadOnlySuppression(t *testing.T) {
 		ToolConfigs: map[string]tools.ToolConfig{
 			"write-tool": &mockToolConfig{
 				ConfigBase: tools.ConfigBase{Name: "write-tool"},
-				source:     "mock-db",
+				Source:     "mock-db",
 			},
 			"readonly-tool": &mockToolConfig{
 				ConfigBase: tools.ConfigBase{Name: "readonly-tool"},
-				source:     "mock-db",
+				Source:     "mock-db",
 			},
 			"unannotated-tool": &mockToolConfig{
 				ConfigBase: tools.ConfigBase{Name: "unannotated-tool"},
-				source:     "mock-db",
+				Source:     "mock-db",
 			},
 		},
 	}
@@ -139,14 +142,15 @@ func TestInitializeTools_WriteModeNoSuppression(t *testing.T) {
 		ToolConfigs: map[string]tools.ToolConfig{
 			"write-tool": &mockToolConfig{
 				ConfigBase: tools.ConfigBase{Name: "write-tool"},
-				source:     "mock-db",
+				Source:     "mock-db",
 			},
 		},
 	}
 
 	testLogger, _ := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	instr, _ := telemetry.CreateTelemetryInstrumentation("test")
 
-	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, telemetry.NewNoopInstrumentation(), testLogger)
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, instr, testLogger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
