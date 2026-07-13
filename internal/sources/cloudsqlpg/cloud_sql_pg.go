@@ -59,7 +59,7 @@ type Config struct {
 	User         string         `yaml:"user"`
 	Password     string         `yaml:"password"`
 	SQLCommenter *bool          `yaml:"sqlCommenter"`
-	ReadOnly       bool           `yaml:"readonly"`
+	ReadOnly     bool           `yaml:"readonly"`
 }
 
 func (r Config) SourceConfigType() string {
