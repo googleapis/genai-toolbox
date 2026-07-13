@@ -539,7 +539,7 @@ func UnmarshalYAMLGroupConfig(ctx context.Context, name string, r map[string]any
 	}
 	gc := group.GroupConfig{Name: name}
 	if err := dec.DecodeContext(ctx, &gc); err != nil {
-		return group.GroupConfig{}, fmt.Errorf("unable to unmarshal group: %s", err)
+		return nil, fmt.Errorf("unable to unmarshal group: %s", err)
 	}
 	// The default (nameless) group always contains all configured tools and
 	// prompts, so it may only set a description.
