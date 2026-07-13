@@ -373,11 +373,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 		// Check for conflicts and merge groups
 		for name, grp := range file.Groups {
 			if _, exists := merged.Groups[name]; exists {
-				if name == "" {
-					conflicts = append(conflicts, fmt.Sprintf("default nameless group (file #%d)", fileIndex+1))
-				} else {
-					conflicts = append(conflicts, fmt.Sprintf("group '%s' (file #%d)", name, fileIndex+1))
-				}
+				conflicts = append(conflicts, fmt.Sprintf("group '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Groups[name] = grp
 			}
