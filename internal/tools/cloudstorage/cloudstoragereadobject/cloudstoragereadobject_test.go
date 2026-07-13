@@ -15,12 +15,16 @@
 package cloudstoragereadobject
 
 import (
+	"context"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
+	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlCloudStorageReadObject(t *testing.T) {
@@ -77,6 +81,29 @@ func TestParseFromYamlCloudStorageReadObject(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_read_object
+			type: cloud-storage-read-object
+			source: prod-gcs
+			description: Read configured object
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_read_object": Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_read_object",
+						Description:  "Read configured object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-read-object",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -89,6 +116,113 @@ func TestParseFromYamlCloudStorageReadObject(t *testing.T) {
 			}
 		})
 	}
+}
+
+func strPtr(s string) *string {
+	return &s
+}
+
+type mockSource struct {
+	sources.Source
+	called    bool
+	gotBucket string
+	gotObject string
+	gotOffset int64
+	gotLength int64
+}
+
+func (m *mockSource) ReadObject(ctx context.Context, bucket, object string, offset, length int64) (map[string]any, error) {
+	m.called = true
+	m.gotBucket = bucket
+	m.gotObject = object
+	m.gotOffset = offset
+	m.gotLength = length
+	return map[string]any{"content": "hello", "contentType": "text/plain", "size": 5}, nil
+}
+
+type mockSourceProvider struct {
+	tools.SourceProvider
+	source *mockSource
+}
+
+func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
+	return m.source, true
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "read_object_tool",
+			Description: "Read object",
+		},
+		Type:   "cloud-storage-read-object",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"object", "range"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "object", Value: "o"},
+		{Name: "range", Value: "bytes=5-9"},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotObject != "o" || src.gotOffset != 5 || src.gotLength != 5 {
+		t.Fatalf("forwarded bucket/object/range = %q/%q/%d/%d, want baked-bucket/o/5/5", src.gotBucket, src.gotObject, src.gotOffset, src.gotLength)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "read_object_tool",
+			Description: "Read object",
+		},
+		Type:   "cloud-storage-read-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "object", "range"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "read_object_tool",
+			Description: "Read object",
+		},
+		Type:   "cloud-storage-read-object",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }
 
 func TestParseRange(t *testing.T) {

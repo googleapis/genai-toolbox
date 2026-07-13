@@ -10,6 +10,10 @@ Prebuilt configs are reusable, pre-packaged toolsets that are designed to extend
 the capabilities of agents. These configs are built to be generic and adaptable,
 allowing developers to interact with and take action on databases.
 
+{{< notice warning >}}
+These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers.
+{{< /notice >}}
+
 See guides, [Connect from your IDE](../../connect-to/ides/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
@@ -24,6 +28,22 @@ You can load a specific toolset from a prebuilt configuration by appending a `/`
 
 See [Usage Examples](../../../reference/cli.md#usage-examples).
 {{< /notice >}}
+
+## Security for dynamic SQL tools
+
+Some prebuilt configs expose dynamic `execute_sql`-style tools where the agent
+supplies raw SQL. Tool annotations and MCP client confirmations are useful UX
+guardrails, but they are not a database security boundary.
+
+Run these tools with a dedicated database identity that only has the privileges
+the agent should exercise. For exploratory agents, this usually means
+`SELECT`-only access to the specific schemas, tables, or views the agent may
+read. Avoid owner, admin, migration, or application-write accounts.
+
+Prefer custom parameterized tools for fixed workflows. Use dynamic SQL tools for
+trusted exploratory read-only access, and rely on database-native permissions or
+read-only session controls where the engine supports them. Do not rely on regex
+keyword blacklists to make an arbitrary SQL endpoint safe.
 
 ## Available Prebuilt Configs
 

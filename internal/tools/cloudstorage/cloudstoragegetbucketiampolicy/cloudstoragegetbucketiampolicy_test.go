@@ -83,6 +83,29 @@ func TestParseFromYamlCloudStorageGetBucketIAMPolicy(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_bucket_iam
+			type: cloud-storage-get-bucket-iam-policy
+			source: prod-gcs
+			description: Get configured bucket IAM policy
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_bucket_iam": cloudstoragegetbucketiampolicy.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_bucket_iam",
+						Description:  "Get configured bucket IAM policy",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-get-bucket-iam-policy",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -95,6 +118,10 @@ func TestParseFromYamlCloudStorageGetBucketIAMPolicy(t *testing.T) {
 			}
 		})
 	}
+}
+
+func strPtr(s string) *string {
+	return &s
 }
 
 type mockSource struct {
@@ -171,4 +198,75 @@ func TestInvokeValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragegetbucketiampolicy.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_iam_tool",
+			Description: "Get bucket IAM policy",
+		},
+		Type:   "cloud-storage-get-bucket-iam-policy",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	if len(gotNames) != 0 {
+		t.Fatalf("manifest parameters = %v, want none", gotNames)
+	}
+
+	src := &mockSource{}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, nil, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" {
+		t.Fatalf("bucket forwarded = %q, want baked-bucket", src.gotBucket)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstoragegetbucketiampolicy.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_iam_tool",
+			Description: "Get bucket IAM policy",
+		},
+		Type:   "cloud-storage-get-bucket-iam-policy",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragegetbucketiampolicy.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "bucket_iam_tool",
+			Description: "Get bucket IAM policy",
+		},
+		Type:   "cloud-storage-get-bucket-iam-policy",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

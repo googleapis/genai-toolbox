@@ -148,15 +148,6 @@ func (opts *ToolboxOptions) GetCustomConfigFiles(ctx context.Context) ([]string,
 
 	// Load Custom Configurations
 	if isCustomConfigured {
-		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
-		if (opts.Config != "" && len(opts.Configs) > 0) ||
-			(opts.Config != "" && opts.ConfigFolder != "") ||
-			(len(opts.Configs) > 0 && opts.ConfigFolder != "") {
-			errMsg := fmt.Errorf("--config/--tools-file, --configs/--tools-files, and --config-folder/--tools-folder flags cannot be used simultaneously")
-			logger.ErrorContext(ctx, errMsg.Error())
-			return nil, isCustomConfigured, errMsg
-		}
-
 		if len(opts.Configs) > 0 {
 			// Use tools-files
 			logger.InfoContext(ctx, fmt.Sprintf("retrieving %d tool configuration files", len(opts.Configs)))
@@ -204,6 +195,7 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 		sourcesList := strings.Join(opts.PrebuiltConfigs, ", ")
 		logMsg := fmt.Sprintf("Using prebuilt tool configurations for: %s", sourcesList)
 		logger.InfoContext(ctx, logMsg)
+		logger.WarnContext(ctx, "These prebuilt configs are intended for 'build-time' use cases, where agents are helping trusted developers build things. They are not secure enough for 'run time' use cases, where the agent will be talking to potentially untrusted developers.")
 
 		for _, configName := range opts.PrebuiltConfigs {
 			if !strings.Contains(configName, "/") {

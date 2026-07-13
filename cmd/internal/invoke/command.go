@@ -42,7 +42,7 @@ Example:
 		},
 	}
 	flags := cmd.Flags()
-	internal.ConfigFileFlags(flags, opts)
+	internal.ConfigFileFlags(cmd, flags, opts)
 	return cmd
 }
 

@@ -143,3 +143,9 @@ func withHTTPMaxRequestBytes(limit int64) func(*Server) {
 		s.httpMaxRequestBytes = limit
 	}
 }
+
+func withEnableDraftSpecs() func(*Server) {
+	return func(s *Server) {
+		s.enableDraftSpecs = true
+	}
+}

@@ -83,6 +83,29 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with configurable bucket",
+			in: `
+			kind: tool
+			name: configured_write
+			type: cloud-storage-write-object
+			source: prod-gcs
+			description: Write configured object
+			bucket: baked-bucket
+			`,
+			want: server.ToolConfigs{
+				"configured_write": cloudstoragewriteobject.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_write",
+						Description:  "Write configured object",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-write-object",
+					Source: "prod-gcs",
+					Bucket: strPtr("baked-bucket"),
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -97,6 +120,10 @@ func TestParseFromYamlCloudStorageWriteObject(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	called         bool
@@ -104,6 +131,83 @@ type mockSource struct {
 	gotObject      string
 	gotContent     string
 	gotContentType string
+}
+
+func TestConfiguredBucketHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragewriteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
+		Bucket: strPtr("baked-bucket"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"object", "content", "content_type"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "object", Value: "o"},
+		{Name: "content", Value: "body"},
+		{Name: "content_type", Value: "text/plain"},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotObject != "o" || src.gotContent != "body" || src.gotContentType != "text/plain" {
+		t.Fatalf("forwarded params = %q/%q/%q/%q, want baked-bucket/o/body/text/plain", src.gotBucket, src.gotObject, src.gotContent, src.gotContentType)
+	}
+}
+
+func TestUnsetBucketRemainsVisible(t *testing.T) {
+	cfg := cloudstoragewriteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "object", "content", "content_type"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragewriteobject.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "write_tool",
+			Description: "Write",
+		},
+		Type:   "cloud-storage-write-object",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }
 
 func (m *mockSource) WriteObject(ctx context.Context, bucket, object, content, contentType string) (map[string]any, error) {

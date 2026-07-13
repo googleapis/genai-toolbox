@@ -12,17 +12,18 @@ description: >
 The `looker-query` tool runs a query using the Looker
 semantic model.
 
-`looker-query` takes nine parameters:
+`looker-query` takes ten parameters:
 
 1. the `model`
 2. the `explore`
 3. the `fields` list
 4. an optional set of `filters`
 5. an optional `filter_expression`
-6. an optional set of `pivots`
-7. an optional set of `sorts`
-8. an optional `limit`
-9. an optional `tz`
+6. an optional `dynamic_fields`
+7. an optional set of `pivots`
+8. an optional set of `sorts`
+9. an optional `limit`
+10. an optional `tz`
 
 Starting in Looker v25.18, these queries can be identified in Looker's
 System Activity. In the History explore, use the field API Client Name
@@ -61,6 +62,13 @@ description: |
       - `${orders.order_date} < add_years(-1, now())`
       - `${activity.email} != ${activity_drive_facts.current_owner_email}`
       - `matches_filter(${order.order_month}, '24 months') AND matches_filter(${order.order_month}, 'before 2024/07/01')`
+  - dynamic_fields: An optional array of dynamic fields (table calculations, custom measures, custom dimensions) defined as JSON objects.
+    - Useful for ad-hoc calculations that are not defined in the LookML model.
+    - Reference fields using `${view.field_name}` syntax.
+    - Examples:
+      - Table Calculation: `[{"table_calculation": "test", "label": "test", "expression": "${order_items.total_sale_price} * 0.8", "_type_hint": "number"}]`
+      - Custom Dimension: `[{"dimension": "days_since_order", "label": "days since order", "expression": "diff_days(${order.order_date}, now())", "_type_hint": "number"}]`
+      - Custom Measure: `[{"measure": "sum_of_revenue", "label": "Sum of Revenue", "based_on": "training.revenue", "type": "sum", "_type_hint": "number"}]`
   - sorts: A list of fields to sort by, optionally including direction (e.g., `["view.field desc"]`).
   - limit: Row limit (default 500). Use "-1" for unlimited.
   - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).

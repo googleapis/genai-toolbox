@@ -173,7 +173,7 @@ kind: tool
 name: get_query_plan
 type: postgres-sql
 source: postgresql-source
-description: Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Use in production safely for plan inspection, regression checks, and query tuning workflows.
+description: Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Do not use this tool in production as it is prone to SQL injection risks.
 statement: |
   EXPLAIN (FORMAT JSON) {{.query}};
 templateParameters:
