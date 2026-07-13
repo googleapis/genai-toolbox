@@ -127,6 +127,7 @@ func main() {
 				Role: llms.ChatMessageTypeTool,
 				Parts: []llms.ContentPart{
 					llms.ToolCallResponse{
+						ToolCallID: tc.ID,
 						Name:    toolName,
 						Content: fmt.Sprintf("%v", toolResult),
 					},
