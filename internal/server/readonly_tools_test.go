@@ -105,8 +105,9 @@ func TestInitializeTools_ReadOnlySuppression(t *testing.T) {
 	}
 
 	testLogger, _ := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	instr, _ := telemetry.CreateTelemetryInstrumentation("test")
 
-	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, nil, testLogger)
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, instr, testLogger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -145,7 +146,7 @@ func TestInitializeTools_WriteModeNoSuppression(t *testing.T) {
 
 	testLogger, _ := log.NewStdLogger(os.Stdout, os.Stderr, "info")
 
-	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, nil, testLogger)
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, telemetry.NewNoopInstrumentation(), testLogger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
