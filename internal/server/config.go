@@ -38,8 +38,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
-var rfc3986Regex = regexp.MustCompile(`^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?$`)
-
 type ServerConfig struct {
 	// Server version
 	Version string
@@ -556,15 +554,12 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 		if uriStr, isString := uriVal.(string); !isString {
 			return nil, fmt.Errorf("invalid 'uri' field for resource %q (must be a string)", name)
 		} else {
-			if !rfc3986Regex.MatchString(uriStr) {
-				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must match RFC 3986 syntax", name)
-			}
 			parsed, err := url.ParseRequestURI(uriStr)
 			if err != nil || parsed.Scheme == "" {
 				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant URI with a scheme", name)
 			}
 			// Scheme whitelisting
-			if resourceType == "file" && parsed.Scheme != "file" {
+			if resourceType == "file" && strings.ToLower(parsed.Scheme) != "file" {
 				return nil, fmt.Errorf("invalid scheme for file resource %q: must be 'file'", name)
 			}
 		}
