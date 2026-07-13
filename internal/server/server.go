@@ -267,6 +267,9 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	// initialize and validate the resources from configs
 	resourcesMap := make(map[string]resources.Resource)
 	for name, rc := range cfg.ResourceConfigs {
+		if rc == nil {
+			return nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("resource config for %q is nil", name)
+		}
 		r, err := func() (resources.Resource, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,

@@ -95,6 +95,9 @@ func Register(resourceType string, factory ResourceConfigFactory) bool {
 // DecodeConfig looks up the registered factory for the given type and uses it
 // to decode the resource configuration.
 func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
+	if decoder == nil {
+		return nil, fmt.Errorf("decoder cannot be nil for resource %q", name)
+	}
 	registryMu.RLock()
 	factory, found := registry[resourceType]
 	registryMu.RUnlock()
@@ -105,6 +108,9 @@ func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.
 	config, err := factory(ctx, name, decoder)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse resource %q as type %q: %w", name, resourceType, err)
+	}
+	if config == nil {
+		return nil, fmt.Errorf("factory returned nil config for resource %q as type %q", name, resourceType)
 	}
 	return config, nil
 }

@@ -51,8 +51,18 @@ func mockFailingFactory(ctx context.Context, name string, decoder *yaml.Decoder)
 	return nil, errors.New("factory error")
 }
 
+func mockNilReturningFactory(ctx context.Context, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
+	return nil, nil
+}
+
 func TestRegister(t *testing.T) {
+	registryMu.Lock()
 	registry = make(map[string]ResourceConfigFactory) // reset registry
+	registryMu.Unlock()
+
+	if Register("nilFactory", nil) {
+		t.Errorf("Expected Register to return false for nil factory")
+	}
 
 	if !Register("mock", mockFactory) {
 		t.Errorf("Expected Register to return true for new type")
@@ -64,9 +74,30 @@ func TestRegister(t *testing.T) {
 }
 
 func TestDecodeConfig(t *testing.T) {
+	registryMu.Lock()
 	registry = make(map[string]ResourceConfigFactory) // reset registry
+	registryMu.Unlock()
 	Register("mock", mockFactory)
 	Register("failing", mockFailingFactory)
+	Register("nilReturn", mockNilReturningFactory)
+
+	t.Run("NilDecoder", func(t *testing.T) {
+		ctx := context.Background()
+		_, err := DecodeConfig(ctx, "mock", "testMock", nil)
+		if err == nil {
+			t.Fatalf("Expected error when decoder is nil, got nil")
+		}
+	})
+
+	t.Run("NilReturningFactory", func(t *testing.T) {
+		yamlBytes := []byte("customProp: value\nuri: mock://test")
+		decoder := yaml.NewDecoder(bytes.NewReader(yamlBytes))
+		ctx := context.Background()
+		_, err := DecodeConfig(ctx, "nilReturn", "testMock", decoder)
+		if err == nil {
+			t.Fatalf("Expected error when factory returns nil config, got nil")
+		}
+	})
 
 	t.Run("Success", func(t *testing.T) {
 		yamlBytes := []byte("customProp: value\nuri: mock://test")
