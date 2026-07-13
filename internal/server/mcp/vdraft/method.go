@@ -608,6 +608,13 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, g group.Group,
 // groupsListHandler handles the "groups/list" method. It returns every named
 // group's name and description. The default nameless group is omitted.
 func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	// retrieve logger from context
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	logger.DebugContext(ctx, "handling groups/list request")
+
 	var req ListGroupsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp groups list request: %w", err)
@@ -622,16 +629,25 @@ func groupsListHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 		return validateErr, err
 	}
 
+	result := GenerateListGroupsResult(resourceMgr.GetGroupsMap())
+	logger.DebugContext(ctx, fmt.Sprintf("returning %d groups", len(result.Groups)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
-		Result:  GenerateListGroupsResult(resourceMgr.GetGroupsMap()),
+		Result:  result,
 	}, nil
 }
 
 // groupsGetHandler handles the "groups/get" method. It returns the named group's
 // tools and prompts.
 func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	// retrieve logger from context
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	logger.DebugContext(ctx, "handling groups/get request")
+
 	var req GetGroupRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp groups/get request: %w", err)
@@ -647,6 +663,7 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 
 	groupName := req.Params.Name
+	logger.DebugContext(ctx, fmt.Sprintf("group name: %s", groupName))
 	g, ok := resourceMgr.GetGroup(groupName)
 	if !ok {
 		err := fmt.Errorf("invalid group name: group with name %q does not exist", groupName)

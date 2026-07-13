@@ -925,6 +925,13 @@ func TestPromptsGetHandler(t *testing.T) {
 }
 
 func TestGroupsListHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
 	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
@@ -979,7 +986,7 @@ func TestGroupsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling: %v", err)
 				}
 			}
-			got, err := groupsListHandler(context.Background(), dummyID, resourceMgr, body, tt.header)
+			got, err := groupsListHandler(ctx, dummyID, resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -1018,6 +1025,13 @@ func TestGroupsListHandler(t *testing.T) {
 }
 
 func TestGroupsGetHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
 	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
 	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
@@ -1084,7 +1098,7 @@ func TestGroupsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling: %v", err)
 				}
 			}
-			got, err := groupsGetHandler(context.Background(), dummyID, resourceMgr, body, tt.header)
+			got, err := groupsGetHandler(ctx, dummyID, resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
