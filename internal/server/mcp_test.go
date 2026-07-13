@@ -1863,10 +1863,7 @@ func TestExtractMeta(t *testing.T) {
 // TestMcpPromptScopingByGroup is an end-to-end HTTP test that a `prompts/list`
 // request sent to a group's MCP endpoint returns only the prompts belonging to
 // that group. It stands up the real server with two groups (each scoped to a
-// different prompt) and asserts each route surfaces just its own prompt. This
-// exercises the full routing + processMcpMessage path, unlike
-// TestGenerateListPromptsResult in mcp/v20251125/manifests_test.go, which unit
-// tests the GenerateListPromptsResult builder for a single group in isolation.
+// different prompt) and asserts each route surfaces just its own prompt.
 func TestMcpPromptScopingByGroup(t *testing.T) {
 	toolsMap := map[string]tools.Tool{}
 	promptsMap := map[string]prompts.Prompt{
