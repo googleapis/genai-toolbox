@@ -213,6 +213,7 @@ type GenAIMetricAttrs struct {
 	OperationName          string
 	ToolName               string
 	PromptName             string
+	GroupName              string
 	NetworkProtocolName    string
 	NetworkProtocolVersion string
 }

@@ -664,10 +664,22 @@ func groupsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 
 	groupName := req.Params.Name
 	logger.DebugContext(ctx, fmt.Sprintf("group name: %s", groupName))
+
+	// Update span name and set gen_ai attributes
+	span := trace.SpanFromContext(ctx)
+	span.SetName(fmt.Sprintf("%s %s", GROUPS_GET, groupName))
+	span.SetAttributes(attribute.String("gen_ai.group.name", groupName))
+
 	g, ok := resourceMgr.GetGroup(groupName)
 	if !ok {
 		err := fmt.Errorf("invalid group name: group with name %q does not exist", groupName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Populate gen_ai attributes for operation duration metric
+	if genAIAttrs := util.GenAIMetricAttrsFromContext(ctx); genAIAttrs != nil {
+		genAIAttrs.OperationName = "get_group"
+		genAIAttrs.GroupName = groupName
 	}
 
 	urlParams, _ := util.UrlParamsFromContext(ctx)

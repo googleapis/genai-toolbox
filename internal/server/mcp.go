@@ -750,6 +750,9 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		if genAIAttrs.PromptName != "" {
 			durationAttrs = append(durationAttrs, attribute.String("gen_ai.prompt.name", genAIAttrs.PromptName))
 		}
+		if genAIAttrs.GroupName != "" {
+			durationAttrs = append(durationAttrs, attribute.String("gen_ai.group.name", genAIAttrs.GroupName))
+		}
 		if metricErrorType != "" {
 			durationAttrs = append(durationAttrs, attribute.String("error.type", metricErrorType))
 		}
