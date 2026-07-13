@@ -16,34 +16,39 @@ package server
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/parameters"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
-	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 type mockSource struct {
 	readOnly bool
 }
 
-func (m *mockSource) SourceType() string {
-	return "mock-source"
+func (m *mockSource) Initialize(ctx context.Context) error {
+	return nil
 }
-
+func (m *mockSource) Cleanup() error {
+	return nil
+}
+func (m *mockSource) IsReadOnlyMode() bool {
+	return m.readOnly
+}
+func (m *mockSource) SourceType() string {
+	return "mock-db"
+}
 func (m *mockSource) ToConfig() sources.SourceConfig {
 	return nil
 }
 
-func (m *mockSource) IsReadOnlyMode() bool {
-	return m.readOnly
-}
-
 type mockToolConfig struct {
+	tools.ConfigBase
 	source string
-	Source string
-	name   string
 }
 
 func (m *mockToolConfig) ToolConfigType() string {
@@ -51,53 +56,35 @@ func (m *mockToolConfig) ToolConfigType() string {
 }
 
 func (m *mockToolConfig) Initialize(ctx context.Context) (tools.Tool, error) {
+	readOnlyHint := false
+	if m.Name == "readonly-tool" {
+		readOnlyHint = true
+	}
+	var annotations *tools.ToolAnnotations
+	if m.Name != "unannotated-tool" {
+		annotations = &tools.ToolAnnotations{ReadOnlyHint: &readOnlyHint}
+	}
 	return &mockTool{
-		source: m.source,
-		name:   m.name,
+		BaseTool: tools.NewBaseTool(m.ConfigBase, annotations, tools.Manifest{}, nil),
+		source:   m.source,
 	}, nil
 }
 
 type mockTool struct {
+	tools.BaseTool[tools.ConfigBase]
 	source string
-	name   string
 }
 
-func (m *mockTool) Name() string {
-	return m.name
-}
-
-func (m *mockTool) Description() string {
-	return "mock tool"
-}
-
-func (m *mockTool) Execute(ctx context.Context, params map[string]any) (*tools.ToolResponse, error) {
+func (m *mockTool) Invoke(ctx context.Context, sp tools.SourceProvider, pv parameters.ParamValues, token tools.AccessToken) (any, util.ToolboxError) {
 	return nil, nil
 }
 
-func (m *mockTool) InputSchema() map[string]any {
+func (m *mockTool) ToConfig() tools.ToolConfig {
 	return nil
-}
-
-func (m *mockTool) GetLinkedSource() sources.Source {
-	return nil
-}
-
-func (m *mockTool) GetAnnotations() *tools.Annotations {
-	if m.name == "unannotated-tool" {
-		return nil
-	}
-	readOnlyHint := false
-	if m.name == "readonly-tool" {
-		readOnlyHint = true
-	}
-	return &tools.Annotations{
-		ReadOnlyHint: &readOnlyHint,
-	}
 }
 
 func TestInitializeTools_ReadOnlySuppression(t *testing.T) {
 	ctx := context.Background()
-	tracer := telemetry.NewNoopInstrumentation()
 
 	sourcesMap := map[string]sources.Source{
 		"mock-db": &mockSource{readOnly: true},
@@ -106,37 +93,68 @@ func TestInitializeTools_ReadOnlySuppression(t *testing.T) {
 	cfg := ServerConfig{
 		ToolConfigs: map[string]tools.ToolConfig{
 			"write-tool": &mockToolConfig{
-				source: "mock-db",
-				Source: "mock-db",
-				name:   "write-tool",
+				ConfigBase: tools.ConfigBase{Name: "write-tool"},
+				source:     "mock-db",
 			},
 			"readonly-tool": &mockToolConfig{
-				source: "mock-db",
-				Source: "mock-db",
-				name:   "readonly-tool",
+				ConfigBase: tools.ConfigBase{Name: "readonly-tool"},
+				source:     "mock-db",
 			},
 			"unannotated-tool": &mockToolConfig{
-				source: "mock-db",
-				Source: "mock-db",
-				name:   "unannotated-tool",
+				ConfigBase: tools.ConfigBase{Name: "unannotated-tool"},
+				source:     "mock-db",
 			},
 		},
 	}
 
-	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, tracer, log.NewLogger(true))
+	testLogger, _ := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, nil, testLogger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if _, ok := toolsMap["write-tool"]; ok {
-		t.Errorf("expected write-tool to be suppressed")
-	}
-
+	// 1. readonly-tool should be present
 	if _, ok := toolsMap["readonly-tool"]; !ok {
-		t.Errorf("expected readonly-tool to be present")
+		t.Errorf("readonly-tool should NOT be suppressed")
 	}
 
+	// 2. write-tool should be suppressed
+	if _, ok := toolsMap["write-tool"]; ok {
+		t.Errorf("write-tool should be suppressed")
+	}
+
+	// 3. unannotated-tool should NOT be suppressed (graceful fallback)
 	if _, ok := toolsMap["unannotated-tool"]; !ok {
-		t.Errorf("expected unannotated-tool to be present (but emit a warning)")
+		t.Errorf("unannotated-tool should NOT be suppressed")
+	}
+}
+
+func TestInitializeTools_WriteModeNoSuppression(t *testing.T) {
+	ctx := context.Background()
+
+	sourcesMap := map[string]sources.Source{
+		"mock-db": &mockSource{readOnly: false}, // Write mode!
+	}
+
+	cfg := ServerConfig{
+		ToolConfigs: map[string]tools.ToolConfig{
+			"write-tool": &mockToolConfig{
+				ConfigBase: tools.ConfigBase{Name: "write-tool"},
+				source:     "mock-db",
+			},
+		},
+	}
+
+	testLogger, _ := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+
+	toolsMap, err := initializeTools(ctx, cfg, sourcesMap, nil, testLogger)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// write-tool should be present because the source is NOT read-only
+	if _, ok := toolsMap["write-tool"]; !ok {
+		t.Errorf("write-tool should NOT be suppressed in write mode")
 	}
 }
