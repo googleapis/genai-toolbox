@@ -20,6 +20,7 @@ import (
 
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/alloydbadmin"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
+	_ "github.com/googleapis/mcp-toolbox/internal/sources/arcadedb"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/bigtable"
 	_ "github.com/googleapis/mcp-toolbox/internal/sources/cassandra"
@@ -76,6 +77,8 @@ import (
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydblistusers"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/alloydbainl"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/arcadedb/arcadedbexecutecypher"
+	_ "github.com/googleapis/mcp-toolbox/internal/tools/arcadedb/arcadedbexecutesql"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
 	_ "github.com/googleapis/mcp-toolbox/internal/tools/bigquery/bigqueryexecutesql"

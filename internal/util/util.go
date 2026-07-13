@@ -177,6 +177,23 @@ func LoggerFromContext(ctx context.Context) (log.Logger, error) {
 	return nil, fmt.Errorf("unable to retrieve logger")
 }
 
+// LogPrimitiveDeprecation is a helper function to mark a primitive as
+// deprecated.
+//
+// kind: kind of primitive. E.g. source / tool / authService / etc.
+// primitiveType: the type of primitive being deprecated. E.g. postgres-sql
+// migrationStep: the migration step for this deprecation. E.g. "Please use
+// [Alternative] instead." / "Please remove this from your configuration file."
+func LogPrimitiveDeprecation(ctx context.Context, kind string, primitiveType string, migrationStep string) error {
+	l, err := LoggerFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	msg := fmt.Sprintf("%s '%s' is deprecated and will be removed in the next major release. %s", kind, primitiveType, migrationStep)
+	l.WarnContext(ctx, msg)
+	return nil
+}
+
 const instrumentationKey contextKey = "instrumentation"
 
 // WithInstrumentation adds an instrumentation into the context as a value
@@ -348,8 +365,7 @@ func UrlParamsFromContext(ctx context.Context) (map[string]string, bool) {
 	return nil, false
 }
 
-// SnakeFromCamelCase converts a camelCase or PascalCase string to snake_case.
-// If the string is already in snake_case, it is returned unchanged.
+// SnakeFromCamelCase converts a camelCase string to snake_case.
 func SnakeFromCamelCase(s string) string {
 	var result strings.Builder
 	for i, r := range s {
@@ -359,4 +375,20 @@ func SnakeFromCamelCase(s string) string {
 		result.WriteRune(unicode.ToLower(r))
 	}
 	return result.String()
+}
+
+// enableDraftSpecs is the key to check if the server enabled mcp draft specs
+const enableDraftSpecs contextKey = "enableDraftSpecs"
+
+// WithEnableDraftSpecs adds enable draft specs bool into the context as a value
+func WithEnableDraftSpecs(ctx context.Context, enableDraft bool) context.Context {
+	return context.WithValue(ctx, enableDraftSpecs, enableDraft)
+}
+
+// EnableDraftSpecsFromContext retrieves enable draft specs bool from context
+func EnableDraftSpecsFromContext(ctx context.Context) (bool, bool) {
+	if enableDraft, ok := ctx.Value(enableDraftSpecs).(bool); ok {
+		return enableDraft, true
+	}
+	return false, false
 }

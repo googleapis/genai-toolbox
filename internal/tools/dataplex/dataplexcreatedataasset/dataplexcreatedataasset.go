@@ -44,10 +44,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	CreateDataAsset(
 		ctx context.Context,
-		locationId string,
-		dataProductId string,
-		dataAssetId string,
-		resourceUri string,
+		locationID string,
+		dataProductID string,
+		dataAssetID string,
+		resourceURI string,
 		labels map[string]string,
 		accessGroupConfigs map[string][]string,
 	) (map[string]string, error)
@@ -66,15 +66,15 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the parent Data Product is located.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
-	dataAssetId := parameters.NewStringParameter("dataAssetId", "Required. The unique ID of the Data Asset to create.")
-	resourceUri := parameters.NewStringParameter("resourceUri", "Required. The URI of the physical resource associated with the Data Asset (e.g. bigquery table or storage bucket).")
-	labels := parameters.NewMapParameterWithRequired("labels", "Optional. The labels associated with the Data Asset.", false, "string")
-	accessGroupConfigs := parameters.NewMapParameterWithRequired("accessGroupConfigs", "Optional. Map of access group configurations to associate with the Data Asset. Each key represents the access group ID, and the value is a list of string IAM role names (e.g. {'test-group': ['roles/bigquery.dataViewer']}). To find the list of supported roles that can be granted on the resource, refer to the IAM Roles documentation or use the roles:queryGrantableRoles API method (https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles).", false, "")
+func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
+	locationID := parameters.NewStringParameter("locationId", "The location ID (e.g. 'us', 'us-central1') where the parent Data Product is located.")
+	dataProductID := parameters.NewStringParameter("dataProductId", "The unique ID of the parent Data Product.")
+	dataAssetID := parameters.NewStringParameter("dataAssetId", "The unique ID of the Data Asset to create.")
+	resourceURI := parameters.NewStringParameter("resourceUri", "The URI of the physical resource associated with the Data Asset (e.g. '//bigquery.googleapis.com/projects/my-project/datasets/my-dataset/tables/my-table').")
+	labels := parameters.NewMapParameter("labels", "Optional. The labels associated with the Data Asset.", "string", parameters.WithMapRequired(false))
+	accessGroupConfigs := parameters.NewMapParameter("accessGroupConfigs", "Optional. Map of access group configurations to associate with the Data Asset. Each key represents the access group ID, and the value is a list of string IAM role names (e.g. {'test-group': ['roles/bigquery.dataViewer']}). To find the list of supported roles that can be granted on the resource, refer to the IAM Roles documentation or use the roles:queryGrantableRoles API method (https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles).", "", parameters.WithMapRequired(false))
 
-	params := parameters.Parameters{locationId, dataProductId, dataAssetId, resourceUri, labels, accessGroupConfigs}
+	params := parameters.Parameters{locationID, dataProductID, dataAssetID, resourceURI, labels, accessGroupConfigs}
 
 	t := Tool{
 		BaseTool: tools.NewBaseTool(
@@ -108,58 +108,51 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	locationId, ok := paramsMap["locationId"].(string)
-	if !ok || locationId == "" {
+	locationID, ok := paramsMap["locationId"].(string)
+	if !ok || locationID == "" {
 		return nil, util.NewAgentError("locationId is required and must be a string", nil)
 	}
 
-	dataProductId, ok := paramsMap["dataProductId"].(string)
-	if !ok || dataProductId == "" {
+	dataProductID, ok := paramsMap["dataProductId"].(string)
+	if !ok || dataProductID == "" {
 		return nil, util.NewAgentError("dataProductId is required and must be a string", nil)
 	}
 
-	dataAssetId, ok := paramsMap["dataAssetId"].(string)
-	if !ok || dataAssetId == "" {
+	dataAssetID, ok := paramsMap["dataAssetId"].(string)
+	if !ok || dataAssetID == "" {
 		return nil, util.NewAgentError("dataAssetId is required and must be a string", nil)
 	}
 
-	resourceUri, ok := paramsMap["resourceUri"].(string)
-	if !ok || resourceUri == "" {
+	resourceURI, ok := paramsMap["resourceUri"].(string)
+	if !ok || resourceURI == "" {
 		return nil, util.NewAgentError("resourceUri is required and must be a string", nil)
 	}
 
 	var labels map[string]string
 	if rawLabels, ok := paramsMap["labels"].(map[string]any); ok {
-		labels = make(map[string]string)
+		labels = make(map[string]string, len(rawLabels))
 		for k, v := range rawLabels {
-			sVal, ok := v.(string)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid label value type for key %q: expected string, got %T", k, v), nil)
-			}
-			labels[k] = sVal
+			labels[k], _ = v.(string)
 		}
 	}
 
-	accessGroupConfigs := make(map[string][]string)
+	var accessGroupConfigs map[string][]string
 	if rawConfigs, ok := paramsMap["accessGroupConfigs"].(map[string]any); ok {
+		accessGroupConfigs = make(map[string][]string, len(rawConfigs))
 		for k, v := range rawConfigs {
-			rawRoles, ok := v.([]any)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid accessGroupConfigs value type for key %q: expected array, got %T", k, v), nil)
-			}
-			var roles []string
-			for _, r := range rawRoles {
-				sRole, ok := r.(string)
-				if !ok {
-					return nil, util.NewAgentError(fmt.Sprintf("invalid iamRole in group %q: expected string, got %T", k, r), nil)
+			if rawRoles, ok := v.([]any); ok {
+				var roles []string
+				for _, r := range rawRoles {
+					if sRole, _ := r.(string); sRole != "" {
+						roles = append(roles, sRole)
+					}
 				}
-				roles = append(roles, sRole)
+				accessGroupConfigs[k] = roles
 			}
-			accessGroupConfigs[k] = roles
 		}
 	}
 
-	resp, err := source.CreateDataAsset(ctx, locationId, dataProductId, dataAssetId, resourceUri, labels, accessGroupConfigs)
+	resp, err := source.CreateDataAsset(ctx, locationID, dataProductID, dataAssetID, resourceURI, labels, accessGroupConfigs)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

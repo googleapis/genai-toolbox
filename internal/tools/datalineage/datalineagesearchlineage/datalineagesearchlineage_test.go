@@ -135,7 +135,7 @@ func TestInvoke(t *testing.T) {
 		Type:   "datalineage-search-lineage",
 		Source: "my-lineage",
 	}
-	tool, err := cfg.Initialize()
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}

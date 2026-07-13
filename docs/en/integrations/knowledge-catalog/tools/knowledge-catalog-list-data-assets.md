@@ -4,8 +4,6 @@ type: docs
 weight: 1
 description: >
   A "dataplex-list-data-assets" tool allows to list Data Assets under a Data Product.
-aliases:
-  - /integrations/dataplex/tools/dataplex-list-data-assets/
 ---
 
 ## About

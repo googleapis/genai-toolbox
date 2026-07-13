@@ -61,18 +61,17 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	cypherParameter := parameters.NewStringParameter("cypher", "The cypher to execute.")
-	dryRunParameter := parameters.NewBooleanParameterWithDefault(
+	dryRunParameter := parameters.NewBooleanParameter(
 		"dry_run",
-		false,
 		"If set to true, the query will be validated and information about the execution "+
-			"will be returned without running the query. Defaults to false.",
-	)
+			"will be returned without running the query. Defaults to false.", parameters.WithBooleanDefault(
+			false))
 	params := parameters.Parameters{cypherParameter, dryRunParameter}
 
 	return Tool{

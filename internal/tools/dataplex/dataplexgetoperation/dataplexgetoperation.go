@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetOperation(ctx context.Context, locationId, operationId string) (map[string]any, error)
+	GetOperation(ctx context.Context, opName string) (map[string]any, error)
 }
 
 type Config struct {
@@ -59,11 +59,10 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID of the operation (e.g. 'us' or 'us-central1'). If you only have a fully-qualified operation name string, this is the part after '/locations/' and before '/operations/' (Format: projects/{project}/locations/{location_id}/operations/{operation_id}).")
-	operationId := parameters.NewStringParameter("operationId", "Required. The operation ID. If you only have a fully-qualified operation name string, this is the last part after '/operations/' (Format: projects/{project}/locations/{location_id}/operations/{operation_id}).")
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	operationName := parameters.NewStringParameter("operationName", "The fully-qualified resource name of the operation returned by generate_data_insights. Format: projects/{projectId}/locations/{locationId}/operations/{operationId}.")
 
-	allParameters := parameters.Parameters{locationId, operationId}
+	allParameters := parameters.Parameters{operationName}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -92,17 +91,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	locationId, _ := paramsMap["locationId"].(string)
-	operationId, _ := paramsMap["operationId"].(string)
+	operationName, _ := paramsMap["operationName"].(string)
 
-	if locationId == "" {
-		return nil, util.NewAgentError("locationId parameter is required", nil)
-	}
-	if operationId == "" {
-		return nil, util.NewAgentError("operationId parameter is required", nil)
+	if operationName == "" {
+		return nil, util.NewAgentError("operationName parameter is required", nil)
 	}
 
-	resp, err := source.GetOperation(ctx, locationId, operationId)
+	resp, err := source.GetOperation(ctx, operationName)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}

@@ -412,7 +412,6 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
-3. Once completed successfully, the created Data Product resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: update_data_product
 ### Request
@@ -422,7 +421,6 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
-3. Once completed successfully, the updated Data Product resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: create_data_asset
 ### Request
@@ -432,7 +430,6 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
-3. Once completed successfully, the created Data Asset resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: update_data_asset
 ### Request
@@ -442,7 +439,6 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ### Response
 1. Present the location ID and operation ID returned immediately by the tool call.
 2. Poll the returned operation using the `get_operation` tool until completion at intervals of ~5 seconds.
-3. Once completed successfully, the updated Data Asset resource details can be found inside the `response` block of the final `get_operation` result.
 
 ## Tool: update_data_product_aspects
 ### Request
@@ -452,7 +448,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
    - `projectId` (string, required): The project ID of the aspect type (use `"dataplex-types"` for system aspects).
    - `locationId` (string, required): The location ID of the aspect type (use `"global"` for system aspects).
    - `aspectTypeId` (string, required): The name of the aspect type (e.g. `"overview"` or `"refresh-cadence"`).
-   - `data` (object, optional): The aspect payload details.
+   - `data` (object, required): The aspect payload details.
      - For `"overview"` (documentation), the `data` object accepts: `content` (string, required, markdown or text), `contentType` (string, optional, `MARKDOWN` or `HTML`), and `links` (array of objects with `url` and `title`).
      - For `"refresh-cadence"` (contract), the `data` object accepts: `frequency` (string, required: `Daily`, `Weekly`, `Monthly`, etc.), `refreshTime` (string, optional, e.g. `"09:00 PST"`), `thresholdInMinutes` (int, optional), and `cronSchedule` (string, optional).
 ### Response
@@ -461,8 +457,8 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 ## Tool: get_operation
 ### Request
 1. Use this tool to retrieve the status of an asynchronous long-running operation (LRO) like scan creation or data product/asset creation/updation.
-2. You must provide `locationId` and `operationId`. If you have a fully-qualified operation name string, extract the `locationId` (the part after '/locations/' and before '/operations/') and `operationId` (the last part after '/operations/').
+2. You must provide `operationName`, a fully-qualified operation name string having format `projects/{projectId}/locations/{locationId}/operations/{operationId}`.
 ### Response
 1. Present whether the operation is done (`done: true` or `done: false`).
-2. Once the operation is completed (`done: true`), the response will contain either the `error` block (if it failed) or the `response` block containing the created or updated resource (like `DataScan`, `DataProduct`, or `DataAsset`).
+2. Once the operation is completed (`done: true`), the response result will contain either an error (if it failed), or the created/updated resource (like `DataScan`, `DataProduct`, or `DataAsset`).
 ```

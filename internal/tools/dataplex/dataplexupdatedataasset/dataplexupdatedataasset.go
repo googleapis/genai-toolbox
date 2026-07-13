@@ -66,13 +66,13 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') where the parent Data Product is located.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the parent Data Product.")
-	dataAssetId := parameters.NewStringParameter("dataAssetId", "Required. The unique ID of the Data Asset to update.")
-	labels := parameters.NewMapParameterWithRequired("labels", "Optional. The labels associated with the Data Asset.", false, "string")
-	accessGroupConfigs := parameters.NewMapParameterWithRequired("accessGroupConfigs", "Optional. Map of access group configurations to associate with the Data Asset. Each key represents the access group ID, and the value is a list of string IAM role names (e.g. {'test-group': ['roles/bigquery.dataViewer']}). To find the list of supported roles that can be granted on the resource, refer to the IAM Roles documentation or use the roles:queryGrantableRoles API method (https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles).", false, "")
-	updateMask := parameters.NewArrayParameter("updateMask", "Optional. The list of fields to update. If not specified, all non-empty fields will be updated.", parameters.NewStringParameter("", ""))
+func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
+	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g. 'us', 'us-central1') where the parent Data Product is located.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "The unique ID of the parent Data Product.")
+	dataAssetId := parameters.NewStringParameter("dataAssetId", "The unique ID of the Data Asset to update.")
+	labels := parameters.NewMapParameter("labels", "Optional. The labels associated with the Data Asset.", "string", parameters.WithMapRequired(false))
+	accessGroupConfigs := parameters.NewMapParameter("accessGroupConfigs", "Optional. Map of access group configurations to associate with the Data Asset. Each key represents the access group ID, and the value is a list of string IAM role names (e.g. {'test-group': ['roles/bigquery.dataViewer']}). To find the list of supported roles that can be granted on the resource, refer to the IAM Roles documentation or use the roles:queryGrantableRoles API method (https://cloud.google.com/iam/docs/reference/rest/v1/roles/queryGrantableRoles).", "", parameters.WithMapRequired(false))
+	updateMask := parameters.NewArrayParameter("updateMask", "Optional. The list of fields to update. If not specified, all non-empty fields will be updated.", parameters.NewStringParameter("", ""), parameters.WithArrayRequired(false))
 
 	params := parameters.Parameters{locationId, dataProductId, dataAssetId, labels, accessGroupConfigs, updateMask}
 
@@ -125,39 +125,32 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	var labels map[string]string
 	if rawLabels, ok := paramsMap["labels"].(map[string]any); ok {
-		labels = make(map[string]string)
+		labels = make(map[string]string, len(rawLabels))
 		for k, v := range rawLabels {
-			sVal, ok := v.(string)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid label value type for key %q: expected string, got %T", k, v), nil)
-			}
-			labels[k] = sVal
+			labels[k], _ = v.(string)
 		}
 	}
 
-	accessGroupConfigs := make(map[string][]string)
+	var accessGroupConfigs map[string][]string
 	if rawConfigs, ok := paramsMap["accessGroupConfigs"].(map[string]any); ok {
+		accessGroupConfigs = make(map[string][]string, len(rawConfigs))
 		for k, v := range rawConfigs {
-			rawRoles, ok := v.([]any)
-			if !ok {
-				return nil, util.NewAgentError(fmt.Sprintf("invalid accessGroupConfigs value type for key %q: expected array, got %T", k, v), nil)
-			}
-			var roles []string
-			for _, r := range rawRoles {
-				sRole, ok := r.(string)
-				if !ok {
-					return nil, util.NewAgentError(fmt.Sprintf("invalid iamRole in group %q: expected string, got %T", k, r), nil)
+			if rawRoles, ok := v.([]any); ok {
+				var roles []string
+				for _, r := range rawRoles {
+					if sRole, _ := r.(string); sRole != "" {
+						roles = append(roles, sRole)
+					}
 				}
-				roles = append(roles, sRole)
+				accessGroupConfigs[k] = roles
 			}
-			accessGroupConfigs[k] = roles
 		}
 	}
 
 	var updateMask []string
 	if rawMask, ok := paramsMap["updateMask"].([]any); ok {
 		for _, v := range rawMask {
-			if s, ok := v.(string); ok {
+			if s, _ := v.(string); s != "" {
 				updateMask = append(updateMask, s)
 			}
 		}

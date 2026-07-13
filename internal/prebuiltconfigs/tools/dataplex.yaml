@@ -99,7 +99,15 @@ kind: tool
 name: update_data_product_aspects
 type: dataplex-update-data-product-aspects
 source: dataplex-source
-description: Updates aspects (e.g. overview, business description) for an existing Data Product Entry.
+description: >-
+  Updates metadata aspects (like overview or contacts) on an existing Data Product Entry.
+  The 'aspects' parameter is an array of aspects where each aspect contains:
+  - 'projectId' (string, required): The project ID of the aspect type (use 'dataplex-types' for system aspects).
+  - 'locationId' (string, required): The location ID of the aspect type (use 'global' for system aspects).
+  - 'aspectTypeId' (string, required): The name of the aspect type (e.g. 'overview' or 'refresh-cadence').
+  - 'data' (object, required): The aspect payload details.
+    - For 'overview' (documentation), the 'data' object accepts: 'content' (string, required, markdown or text), 'contentType' (string, optional, 'MARKDOWN' or 'HTML'), and 'links' (array of objects with 'url' and 'title').
+    - For 'refresh-cadence' (contract), the 'data' object accepts: 'frequency' (string, required: 'Daily', 'Weekly', 'Monthly', etc.), 'refreshTime' (string, optional, e.g. '09:00 PST'), 'thresholdInMinutes' (int, optional), and 'cronSchedule' (string, optional).
 ---
 kind: tool
 name: generate_data_insights

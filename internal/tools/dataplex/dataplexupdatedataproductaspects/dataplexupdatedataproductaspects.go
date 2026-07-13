@@ -67,8 +67,8 @@ func (cfg Config) ToolConfigType() string {
 }
 
 type Aspect struct {
-	ProjectId    string         `json:"projectId" validate:"required"`
-	LocationId   string         `json:"locationId" validate:"required"`
+	ProjectID    string         `json:"projectId" validate:"required"`
+	LocationID   string         `json:"locationId" validate:"required"`
 	AspectTypeId string         `json:"aspectTypeId" validate:"required"`
 	Data         map[string]any `json:"data,omitempty"`
 }
@@ -86,14 +86,22 @@ type UpdateDataProductAspectsResponse struct {
 	Aspects     []Aspect     `json:"aspects"`
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "Required. The location ID (e.g. 'us', 'us-central1') of the Data Product.")
-	dataProductId := parameters.NewStringParameter("dataProductId", "Required. The unique ID of the Data Product.")
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	locationID := parameters.NewStringParameter("locationId", "The location ID (e.g. 'us', 'us-central1') of the Data Product.")
+	dataProductID := parameters.NewStringParameter("dataProductId", "The unique ID of the Data Product.")
 
-	aspectSchema := parameters.NewMapParameter("aspect", "Aspect details containing: projectId (string, required, 'dataplex-types' for system aspects), locationId (string, required, 'global' for system aspects), aspectTypeId (string, required, e.g. 'overview'), and data (object, optional, the aspect details schema mapping).", "")
-	aspects := parameters.NewArrayParameter("aspects", "Required. The list of aspects to update on the Data Product Entry.", aspectSchema)
+	aspectSchema := parameters.NewMapParameter(
+		"aspect",
+		"Aspect details containing: projectId (string, required, 'dataplex-types' for system aspects), locationId (string, required, 'global' for system aspects), aspectTypeId (string, required, e.g. 'overview' or 'refresh-cadence'), and data (object, required, the aspect payload details. For 'overview' (documentation), data accepts: content (string, required, markdown or text), contentType (string, optional, MARKDOWN or HTML), and links (array of objects with url and title). For 'refresh-cadence' (contract), data accepts: frequency (string, required: Daily, Weekly, Monthly, etc.), refreshTime (string, optional, e.g. '09:00 PST'), thresholdInMinutes (int, optional), and cronSchedule (string, optional)).",
+		"",
+	)
+	aspects := parameters.NewArrayParameter(
+		"aspects",
+		"The list of aspects to update on the Data Product Entry.",
+		aspectSchema,
+	)
 
-	allParameters := parameters.Parameters{locationId, dataProductId, aspects}
+	allParameters := parameters.Parameters{locationID, dataProductID, aspects}
 
 	return Tool{
 		BaseTool: tools.NewBaseTool(
@@ -123,14 +131,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	locationId, _ := paramsMap["locationId"].(string)
-	dataProductId, _ := paramsMap["dataProductId"].(string)
 
-	if locationId == "" {
-		return nil, util.NewAgentError("locationId parameter is required", nil)
+	locationID, _ := paramsMap["locationId"].(string)
+	if locationID == "" {
+		return nil, util.NewAgentError("locationId parameter is required and must be a non-empty string", nil)
 	}
-	if dataProductId == "" {
-		return nil, util.NewAgentError("dataProductId parameter is required", nil)
+
+	dataProductID, _ := paramsMap["dataProductId"].(string)
+	if dataProductID == "" {
+		return nil, util.NewAgentError("dataProductId parameter is required and must be a non-empty string", nil)
 	}
 
 	rawAspects, ok := paramsMap["aspects"].([]any)
@@ -138,7 +147,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, util.NewAgentError("aspects parameter is required and must be an array", nil)
 	}
 
-	projectId := source.ProjectID()
+	projectID := source.ProjectID()
 
 	// Convert input array of maps to aspects map
 	aspectsMap := make(map[string]*dataplexpb.Aspect)
@@ -149,8 +158,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, util.NewAgentError(fmt.Sprintf("aspect at index %d is not a map", i), nil)
 		}
 
-		aspectTypeId, _ := aspectMap["aspectTypeId"].(string)
-		if aspectTypeId == "" {
+		aspectTypeID, _ := aspectMap["aspectTypeId"].(string)
+		if aspectTypeID == "" {
 			return nil, util.NewAgentError(fmt.Sprintf("aspectTypeId is required for aspect at index %d", i), nil)
 		}
 
@@ -159,31 +168,31 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, util.NewAgentError(fmt.Sprintf("data is required for aspect at index %d", i), nil)
 		}
 
-		aspectProjId, _ := aspectMap["projectId"].(string)
-		aspectLocId, _ := aspectMap["locationId"].(string)
+		aspectProjID, _ := aspectMap["projectId"].(string)
+		aspectLocID, _ := aspectMap["locationId"].(string)
 
-		if aspectProjId == "" {
-			if aspectTypeId == "overview" || aspectTypeId == "refresh-cadence" {
-				aspectProjId = "dataplex-types"
+		if aspectProjID == "" {
+			if aspectTypeID == "overview" || aspectTypeID == "refresh-cadence" {
+				aspectProjID = "dataplex-types"
 			} else {
-				aspectProjId = projectId
+				aspectProjID = projectID
 			}
 		}
 
-		if aspectLocId == "" {
-			if aspectTypeId == "overview" || aspectTypeId == "refresh-cadence" {
-				aspectLocId = "global"
+		if aspectLocID == "" {
+			if aspectTypeID == "overview" || aspectTypeID == "refresh-cadence" {
+				aspectLocID = "global"
 			} else {
-				aspectLocId = locationId
+				aspectLocID = locationID
 			}
 		}
 
-		aspectType := fmt.Sprintf("projects/%s/locations/%s/aspectTypes/%s", aspectProjId, aspectLocId, aspectTypeId)
-		aspectKey := fmt.Sprintf("%s.%s.%s", aspectProjId, aspectLocId, aspectTypeId)
+		aspectType := fmt.Sprintf("projects/%s/locations/%s/aspectTypes/%s", aspectProjID, aspectLocID, aspectTypeID)
+		aspectKey := fmt.Sprintf("%s.%s.%s", aspectProjID, aspectLocID, aspectTypeID)
 
 		structData, err := structpb.NewStruct(data)
 		if err != nil {
-			return nil, util.NewAgentError(fmt.Sprintf("failed to serialize data for aspect %q: %s", aspectTypeId, err), err)
+			return nil, util.NewAgentError(fmt.Sprintf("failed to serialize data for aspect %q: %s", aspectTypeID, err), err)
 		}
 
 		aspectsMap[aspectKey] = &dataplexpb.Aspect{
@@ -194,7 +203,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	entryName := fmt.Sprintf(
 		"projects/%s/locations/%s/entryGroups/@dataplex/entries/projects/%d/locations/%s/dataProducts/%s",
-		projectId, locationId, source.ProjectNumber(), locationId, dataProductId,
+		projectID, locationID, source.ProjectNumber(), locationID, dataProductID,
 	)
 
 	entry := &dataplexpb.Entry{
@@ -216,15 +225,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if len(parts) < 6 {
 			continue
 		}
-		aspectProjId := parts[1]
-		aspectLocId := parts[3]
+		aspectProjID := parts[1]
+		aspectLocID := parts[3]
 		aspectTypeName := parts[5]
 		data := aspectProto.Data.AsMap()
 		returnedAspects = append(returnedAspects, Aspect{
 			AspectTypeId: aspectTypeName,
 			Data:         data,
-			ProjectId:    aspectProjId,
-			LocationId:   aspectLocId,
+			ProjectID:    aspectProjID,
+			LocationID:   aspectLocID,
 		})
 	}
 

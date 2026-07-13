@@ -1354,7 +1354,7 @@ type offlineToolConfig struct {
 
 func (c offlineToolConfig) ToolConfigType() string { return "offline-test-tool" }
 
-func (c offlineToolConfig) Initialize() (tools.Tool, error) {
+func (c offlineToolConfig) Initialize(context.Context) (tools.Tool, error) {
 	return testutils.NewMockTool(c.name, "offline tool", nil, false, false), nil
 }
 

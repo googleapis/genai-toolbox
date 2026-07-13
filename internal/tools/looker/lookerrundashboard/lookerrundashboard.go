@@ -68,7 +68,7 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize() (tools.Tool, error) {
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
 	if cfg.Description == "" {
 		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
@@ -178,6 +178,34 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 		}
 		if element.BodyText != nil {
 			data["body_text"] = *element.BodyText
+		}
+
+		// Check for SQL query
+		var sqlQueryId string
+		if element.ResultMaker != nil && element.ResultMaker.SqlQueryId != nil && *element.ResultMaker.SqlQueryId != "" {
+			sqlQueryId = *element.ResultMaker.SqlQueryId
+		}
+
+		if sqlQueryId != "" {
+			data["element_type"] = "sql_query"
+			queryResult, err := sdk.RunSqlQuery(sqlQueryId, "json", "", options)
+			if err != nil {
+				data["query_status"] = fmt.Sprintf("error running SQL query %s: %s", sqlQueryId, err)
+				out <- data
+				return
+			}
+
+			var resp []any
+			if err := json.Unmarshal([]byte(queryResult), &resp); err != nil {
+				data["query_status"] = fmt.Sprintf("error unmarshaling SQL query %s result: %s", sqlQueryId, err)
+				out <- data
+				return
+			}
+
+			data["query_status"] = "success"
+			data["query_result"] = resp
+			out <- data
+			return
 		}
 
 		var q v4.Query

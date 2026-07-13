@@ -4,8 +4,6 @@ type: docs
 weight: 3
 description: >
   A "dataplex-update-data-product-aspects" tool updates aspects for an existing Data Product Entry in Knowledge Catalog.
-aliases:
-  - /integrations/dataplex/tools/dataplex-update-data-product-aspects/
 ---
 
 ## About
