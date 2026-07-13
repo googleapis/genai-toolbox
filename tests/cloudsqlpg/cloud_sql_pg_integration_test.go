@@ -310,7 +310,7 @@ func TestCloudSQLPg_ReadOnlyVulnerabilityBlock(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	args := []string{"--enable-api"}
+	args := []string{"--enable-api", "--port", "5002"}
 
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableName := "vulnerability_test_" + uniqueID
@@ -357,7 +357,7 @@ tools:
 	}
 
 	// Make the API request
-	api := "http://127.0.0.1:5000/api/tool/vulnerable_write_tool/invoke"
+	api := "http://127.0.0.1:5002/api/tool/vulnerable_write_tool/invoke"
 	requestBody := strings.NewReader(`{}`)
 	resp, respBody := tests.RunRequest(t, "POST", api, requestBody, map[string]string{})
 
