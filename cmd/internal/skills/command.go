@@ -241,17 +241,6 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 
 	skillsToTools := make(map[string]map[string]tools.Tool)
 
-	getToolsFromToolset := func(ts tools.Toolset) map[string]tools.Tool {
-		toolsetTools := make(map[string]tools.Tool)
-		for _, t := range ts.Tools {
-			if t != nil {
-				tool := *t
-				toolsetTools[tool.GetName()] = tool
-			}
-		}
-		return toolsetTools
-	}
-
 	getToolsFromGroup := func(g group.Group) map[string]tools.Tool {
 		groupTools := make(map[string]tools.Tool)
 		for _, name := range g.ToolNames {
@@ -263,12 +252,12 @@ func (c *skillsCmd) collectTools(ctx context.Context, opts *internal.ToolboxOpti
 	}
 
 	if c.toolset != "" {
-		ts, ok := resourceMgr.GetToolset(c.toolset)
+		g, ok := resourceMgr.GetGroup(c.toolset)
 		if !ok {
 			return nil, fmt.Errorf("toolset %q not found", c.toolset)
 		}
 
-		skillsToTools[c.name] = getToolsFromToolset(ts)
+		skillsToTools[c.name] = getToolsFromGroup(g)
 		return skillsToTools, nil
 	}
 

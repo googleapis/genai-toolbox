@@ -110,28 +110,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	var filter string
-	if val, exists := paramsMap["filter"]; exists && val != nil {
-		var ok bool
-		filter, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("filter must be a string", nil)
-		}
-	}
-
-	pageSize, ok := paramsMap["pageSize"].(int)
-	if !ok {
-		return nil, util.NewAgentError("pageSize must be an integer", nil)
-	}
-
-	var orderBy string
-	if val, exists := paramsMap["orderBy"]; exists && val != nil {
-		var ok bool
-		orderBy, ok = val.(string)
-		if !ok {
-			return nil, util.NewAgentError("orderBy must be a string", nil)
-		}
-	}
+	filter, _ := paramsMap["filter"].(string)
+	pageSize, _ := paramsMap["pageSize"].(int)
+	orderBy, _ := paramsMap["orderBy"].(string)
 
 	resp, err := source.ListDataProducts(ctx, filter, pageSize, orderBy)
 	if err != nil {
