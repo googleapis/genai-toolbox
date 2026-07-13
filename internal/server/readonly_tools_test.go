@@ -20,10 +20,10 @@ import (
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
-	"github.com/googleapis/mcp-toolbox/internal/parameters"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
+	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
 type mockSource struct {
@@ -56,10 +56,7 @@ func (m *mockToolConfig) ToolConfigType() string {
 }
 
 func (m *mockToolConfig) Initialize(ctx context.Context) (tools.Tool, error) {
-	readOnlyHint := false
-	if m.Name == "readonly-tool" {
-		readOnlyHint = true
-	}
+	readOnlyHint := m.Name == "readonly-tool"
 	var annotations *tools.ToolAnnotations
 	if m.Name != "unannotated-tool" {
 		annotations = &tools.ToolAnnotations{ReadOnlyHint: &readOnlyHint}
