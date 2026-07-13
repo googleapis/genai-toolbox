@@ -162,7 +162,8 @@ parameters:
 statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 ```
 
-> **Note on Read-Only Mode:** You can add an `annotations: { readOnlyHint: <bool> }` block to your custom tools. If your source is configured in read-only mode, tools explicitly marked as `readOnlyHint: false` will be automatically suppressed to save the agent's context window. If omitted, the tool remains available but emits a startup warning.
+> [!NOTE]
+> You can add an `annotations: { readOnlyHint: <bool> }` block to your custom tools. If your source is configured in read-only mode, tools explicitly marked as `readOnlyHint: false` will be automatically suppressed to save the agent's context window. If omitted, the tool remains available but emits a startup warning.
 
 For more details on configuring different types of tools, see the
 [Tools](https://mcp-toolbox.dev/documentation/configuration/tools/).
