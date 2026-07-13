@@ -205,7 +205,7 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		if name, ok = resource["name"].(string); !ok {
 			// A `kind: group` may omit `name` (or leave it empty) to target the
 			// default nameless group; every other resource requires a name.
-			if rawName, present := resource["name"]; kind == "group" && (!present || rawName == nil) {
+			if kind == "group" {
 				name, ok = "", true
 			}
 		}
@@ -310,9 +310,6 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 				groupConfigs = make(GroupConfigs)
 			}
 			if _, exists := groupConfigs[name]; exists {
-				if name == "" {
-					return nil, nil, nil, nil, nil, nil, fmt.Errorf("more than one default (nameless) group declared; only one is allowed")
-				}
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("group %q declared more than once", name)
 			}
 			groupConfigs[name] = c
