@@ -533,24 +533,14 @@ func UnmarshalYAMLToolsetConfig(ctx context.Context, name string, r map[string]a
 }
 
 func UnmarshalYAMLGroupConfig(ctx context.Context, name string, r map[string]any) (group.GroupConfig, error) {
-	// `name` is resolved by the caller; strip it so the strict decoder only sees
-	// the group body fields (description, tools, prompts).
-	body := make(map[string]any, len(r))
-	for k, v := range r {
-		if k == "name" {
-			continue
-		}
-		body[k] = v
-	}
-	dec, err := util.NewStrictDecoder(body)
+	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
 		return group.GroupConfig{}, fmt.Errorf("error creating decoder: %s", err)
 	}
-	var gc group.GroupConfig
+	gc := group.GroupConfig{Name: name}
 	if err := dec.DecodeContext(ctx, &gc); err != nil {
 		return group.GroupConfig{}, fmt.Errorf("unable to unmarshal group: %s", err)
 	}
-	gc.Name = name
 	// The default (nameless) group always contains all configured tools and
 	// prompts, so it may only set a description.
 	if name == "" && (len(gc.ToolNames) > 0 || len(gc.PromptNames) > 0) {
