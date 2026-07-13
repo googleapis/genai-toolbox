@@ -20,14 +20,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/auth/google"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/mcp-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
-	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/prompts/custom"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/mcp-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/mcp-toolbox/internal/sources/http"
@@ -36,7 +37,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools/http"
 	"github.com/googleapis/mcp-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
-	"github.com/goccy/go-yaml"
 )
 
 func TestParseEnv(t *testing.T) {

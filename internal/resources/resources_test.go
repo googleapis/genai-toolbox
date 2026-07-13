@@ -20,8 +20,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
 type mockResourceConfig struct {
@@ -127,6 +127,7 @@ func TestGetBaseDirFromContext(t *testing.T) {
 	})
 
 	t.Run("NilContext", func(t *testing.T) {
+		//lint:ignore SA1012 intentional nil context test
 		if GetBaseDirFromContext(nil) != "" {
 			t.Errorf("Expected empty string for nil context")
 		}

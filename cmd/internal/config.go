@@ -387,7 +387,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 				conflicts = append(conflicts, fmt.Sprintf("resource '%s' (file #%d)", name, fileIndex+1))
 				continue
 			}
-			
+
 			// Check for URI collision
 			if resource.GetURI() != "" {
 				if existingName, exists := seenResourceURIs[resource.GetURI()]; exists {
@@ -396,7 +396,7 @@ func mergeConfigs(files ...Config) (Config, error) {
 				}
 				seenResourceURIs[resource.GetURI()] = name
 			}
-			
+
 			merged.Resources[name] = resource
 		}
 	}
