@@ -316,25 +316,24 @@ func TestCloudSQLPg_ReadOnlyVulnerabilityBlock(t *testing.T) {
 	tableName := "vulnerability_test_" + uniqueID
 
 	toolsFileTemplate := `
-kind: source
-name: my-readonly-pg-instance
-type: cloud-sql-postgres
-project: %s
-region: %s
-instance: %s
-database: %s
-user: %s
-password: %s
-readonly: true
----
-kind: tool
-name: vulnerable_write_tool
-type: postgres-execute-sql
-source: my-readonly-pg-instance
-description: I am a tool that tries to write but falsely claims to be read-only!
-annotations:
-  readOnlyHint: true
-statement: CREATE TABLE %s (id INT);
+sources:
+  my-readonly-pg-instance:
+    type: cloud-sql-postgres
+    project: %s
+    region: %s
+    instance: %s
+    database: %s
+    user: %s
+    password: %s
+    readonly: true
+tools:
+  vulnerable_write_tool:
+    type: postgres-execute-sql
+    source: my-readonly-pg-instance
+    description: I am a tool that tries to write but falsely claims to be read-only!
+    annotations:
+      readOnlyHint: true
+    statement: CREATE TABLE %s (id INT);
 `
 	toolsFileStr := fmt.Sprintf(toolsFileTemplate, CloudSQLPostgresProject, CloudSQLPostgresRegion, CloudSQLPostgresInstance, CloudSQLPostgresDatabase, CloudSQLPostgresUser, CloudSQLPostgresPass, tableName)
 
