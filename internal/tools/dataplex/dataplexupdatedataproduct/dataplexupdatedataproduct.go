@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataplexcreatedataproduct
+package dataplexupdatedataproduct
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
 
-const resourceType string = "dataplex-create-data-product"
+const resourceType string = "dataplex-update-data-product"
 
 func init() {
 	if !tools.Register(resourceType, newConfig) {
@@ -43,14 +43,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CreateDataProduct(
+	UpdateDataProduct(
 		ctx context.Context,
 		locationId string,
 		dataProductId string,
-		displayName string,
 		description string,
+		displayName string,
 		ownerEmails []string,
 		accessGroups []dataplex.AccessGroup,
+		updateMask []string,
 	) (map[string]string, error)
 }
 
@@ -68,22 +69,23 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
-	locationId := parameters.NewStringParameter("locationId", "The location ID (e.g. 'us', 'us-central1') where the Data Product should be created.")
-	dataProductId := parameters.NewStringParameter(
-		"dataProductId",
-		"Optional. The unique ID of the Data Product to create. If not specified, the backend will auto-generate an ID.",
-		parameters.WithStringRequired(false),
-	)
-	displayName := parameters.NewStringParameter("displayName", "The display name of the Data Product.")
+	locationId := parameters.NewStringParameter("locationId", "The location to update the data product in.")
+	dataProductId := parameters.NewStringParameter("dataProductId", "The data product ID.")
 	description := parameters.NewStringParameter(
 		"description",
-		"Optional. The description of the Data Product.",
+		"Optional. Description of the data product.",
+		parameters.WithStringRequired(false),
+	)
+	displayName := parameters.NewStringParameter(
+		"displayName",
+		"Optional. Display name of the data product.",
 		parameters.WithStringRequired(false),
 	)
 	ownerEmails := parameters.NewArrayParameter(
 		"ownerEmails",
-		"The list of owner emails for the Data Product.",
+		"Optional. The email addresses of the owners of the data product.",
 		parameters.NewStringParameter("email", "Owner email address"),
+		parameters.WithArrayRequired(false),
 	)
 	accessGroups := parameters.NewArrayParameter(
 		"accessGroups",
@@ -91,8 +93,14 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 		parameters.NewMapParameter("accessGroup", "Access Group details (id, displayName, description, googleGroup, serviceAccount)", ""),
 		parameters.WithArrayRequired(false),
 	)
+	updateMask := parameters.NewArrayParameter(
+		"updateMask",
+		"Optional. The fields to update. If not specified, all fields provided will be updated.",
+		parameters.NewStringParameter("field", "Field path to update"),
+		parameters.WithArrayRequired(false),
+	)
 
-	params := parameters.Parameters{locationId, dataProductId, displayName, description, ownerEmails, accessGroups}
+	params := parameters.Parameters{locationId, dataProductId, description, displayName, ownerEmails, accessGroups, updateMask}
 
 	t := Tool{
 		BaseTool: tools.NewBaseTool(
@@ -126,29 +134,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	prodLocID, ok := paramsMap["locationId"].(string)
-	if !ok || prodLocID == "" {
+	locationId, ok := paramsMap["locationId"].(string)
+	if !ok || locationId == "" {
 		return nil, util.NewAgentError("locationId is required and must be a non-empty string", nil)
 	}
 
-	prodID, _ := paramsMap["dataProductId"].(string)
-
-	displayName, ok := paramsMap["displayName"].(string)
-	if !ok || displayName == "" {
-		return nil, util.NewAgentError("displayName is required and must be a non-empty string", nil)
+	dataProductId, ok := paramsMap["dataProductId"].(string)
+	if !ok || dataProductId == "" {
+		return nil, util.NewAgentError("dataProductId is required and must be a non-empty string", nil)
 	}
 
 	description, _ := paramsMap["description"].(string)
+	displayName, _ := paramsMap["displayName"].(string)
 
-	rawOwners, _ := paramsMap["ownerEmails"].([]any)
 	var ownerEmails []string
-	for _, o := range rawOwners {
-		if email, _ := o.(string); email != "" {
-			ownerEmails = append(ownerEmails, email)
+	if rawOwners, ok := paramsMap["ownerEmails"].([]any); ok {
+		for _, o := range rawOwners {
+			if email, _ := o.(string); email != "" {
+				ownerEmails = append(ownerEmails, email)
+			}
 		}
-	}
-	if len(ownerEmails) == 0 {
-		return nil, util.NewAgentError("ownerEmails is required and must contain at least one non-empty string", nil)
 	}
 
 	var accessGroups []dataplex.AccessGroup
@@ -185,7 +190,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	resp, err := source.CreateDataProduct(ctx, prodLocID, prodID, displayName, description, ownerEmails, accessGroups)
+	var updateMask []string
+	if rawMask, ok := paramsMap["updateMask"].([]any); ok {
+		for _, v := range rawMask {
+			if s, _ := v.(string); s != "" {
+				updateMask = append(updateMask, s)
+			}
+		}
+	}
+
+	resp, err := source.UpdateDataProduct(ctx, locationId, dataProductId, description, displayName, ownerEmails, accessGroups, updateMask)
 	if err != nil {
 		return nil, util.ProcessGcpError(err)
 	}
