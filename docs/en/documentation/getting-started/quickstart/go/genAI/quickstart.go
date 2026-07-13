@@ -107,7 +107,7 @@ func main() {
 		Tools: genAITools,
 		ToolConfig: &genai.ToolConfig{
 			FunctionCallingConfig: &genai.FunctionCallingConfig{
-				Mode: genai.FunctionCallingConfigModeAny,
+				Mode: genai.FunctionCallingConfigModeAuto,
 			},
 		},
 	}
