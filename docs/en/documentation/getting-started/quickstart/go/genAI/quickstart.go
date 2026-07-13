@@ -97,7 +97,7 @@ func main() {
 	}
 
 	// Set up the generative model with the available tool.
-	modelName := "gemini-2.0-flash"
+	modelName := "gemini-3-flash-preview"
 
 	// Create the initial content prompt for the model.
 	messageHistory := []*genai.Content{
