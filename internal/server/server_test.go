@@ -1356,6 +1356,161 @@ scopesRequired:
 	}
 }
 
+func TestGroupConfigParsing(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		want      group.GroupConfig
+		wantError bool
+	}{
+		{
+			name: "valid named group",
+			yaml: `
+kind: group
+name: my_group
+description: a group of tools and prompts
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "a group of tools and prompts",
+				ToolNames:   []string{"tool_a", "tool_b"},
+				PromptNames: []string{"prompt_a"},
+			},
+		},
+		{
+			name: "named group with only description",
+			yaml: `
+kind: group
+name: my_group
+description: just a description
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "just a description",
+			},
+		},
+		{
+			name: "default group with only description",
+			yaml: `
+kind: group
+name:
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "default group omitting name field",
+			yaml: `
+kind: group
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "kind toolset folds into a tools-only group",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+  - tool_b
+`,
+			want: group.GroupConfig{
+				Name:      "my_toolset",
+				ToolNames: []string{"tool_a", "tool_b"},
+			},
+		},
+		{
+			name: "default group declaring tools is an error",
+			yaml: `
+kind: group
+name:
+tools:
+  - tool_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring prompts is an error",
+			yaml: `
+kind: group
+name:
+prompts:
+  - prompt_a
+`,
+			wantError: true,
+		},
+		{
+			name: "unknown field is an error",
+			yaml: `
+kind: group
+name: my_group
+resources:
+  - res_a
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate default group is an error",
+			yaml: `
+kind: group
+name:
+description: first
+---
+kind: group
+name:
+description: second
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate named group is an error",
+			yaml: `
+kind: group
+name: my_group
+tools:
+  - tool_a
+---
+kind: group
+name: my_group
+tools:
+  - tool_b
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError {
+				return
+			}
+			gc, ok := groups[tc.want.Name]
+			if !ok {
+				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
+			}
+			if diff := cmp.Diff(tc.want, gc); diff != "" {
+				t.Errorf("group mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 type offlineSourceConfig struct {
 	initialized *bool
 }

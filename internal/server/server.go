@@ -311,13 +311,21 @@ func initializeGroups(ctx context.Context, cfg ServerConfig, toolsMap map[string
 		allPromptNames = append(allPromptNames, name)
 	}
 
-	// Convert each legacy toolset into a tools-only group config, then seed the
-	// default nameless group with all tools and all prompts.
-	groupConfigs := make(map[string]group.GroupConfig, len(cfg.ToolsetConfigs)+1)
-	for name, tc := range cfg.ToolsetConfigs {
-		groupConfigs[name] = group.GroupConfig{Name: name, ToolNames: tc.ToolNames}
+	// Legacy `kind: toolset` configs are already folded into cfg.GroupConfigs at
+	// unmarshal. Copy them over, then seed the default nameless group with all tools
+	// and all prompts.
+	groupConfigs := make(map[string]group.GroupConfig, len(cfg.GroupConfigs)+1)
+	var defaultDescription string
+	for name, gc := range cfg.GroupConfigs {
+		if name == "" {
+			// The default group's tools and prompts are fixed; only its
+			// description carries over as the default server instruction.
+			defaultDescription = gc.Description
+			continue
+		}
+		groupConfigs[name] = gc
 	}
-	groupConfigs[""] = group.GroupConfig{Name: "", ToolNames: allToolNames, PromptNames: allPromptNames}
+	groupConfigs[""] = group.GroupConfig{Name: "", Description: defaultDescription, ToolNames: allToolNames, PromptNames: allPromptNames}
 
 	groupsMap := make(map[string]group.Group)
 	for name, gc := range groupConfigs {

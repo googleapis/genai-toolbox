@@ -177,8 +177,8 @@ func validateReloadEdits(
 		AuthServiceConfigs:    toolsFile.AuthServices,
 		EmbeddingModelConfigs: toolsFile.EmbeddingModels,
 		ToolConfigs:           toolsFile.Tools,
-		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		GroupConfigs:          toolsFile.Groups,
 		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
