@@ -20,6 +20,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
@@ -34,6 +35,7 @@ type PrimitiveManager struct {
 	toolsets        map[string]tools.Toolset
 	prompts         map[string]prompts.Prompt
 	promptsets      map[string]prompts.Promptset
+	resources       map[string]resources.Resource
 }
 
 func NewPrimitiveManager(
@@ -42,7 +44,7 @@ func NewPrimitiveManager(
 	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
 	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
-
+	resourcesMap map[string]resources.Resource,
 ) *PrimitiveManager {
 	primitiveMgr := &PrimitiveManager{
 		mu:              sync.RWMutex{},
@@ -53,6 +55,7 @@ func NewPrimitiveManager(
 		toolsets:        toolsetsMap,
 		prompts:         promptsMap,
 		promptsets:      promptsetsMap,
+		resources:       resourcesMap,
 	}
 
 	return primitiveMgr
@@ -98,6 +101,25 @@ func (r *PrimitiveManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	defer r.mu.RUnlock()
 	prompt, ok := r.prompts[promptName]
 	return prompt, ok
+}
+
+// GetResourcesMap returns a copy of the resources map.
+func (r *PrimitiveManager) GetResourcesMap() map[string]resources.Resource {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	resourcesMap := make(map[string]resources.Resource, len(r.resources))
+	for k, v := range r.resources {
+		resourcesMap[k] = v
+	}
+	return resourcesMap
+}
+
+// GetResource returns a specific resource by name.
+func (r *PrimitiveManager) GetResource(name string) (resources.Resource, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	resource, ok := r.resources[name]
+	return resource, ok
 }
 
 func (r *PrimitiveManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {

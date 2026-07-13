@@ -1661,7 +1661,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets, nil)
 
 	server := &Server{
 		version:         testutils.MockVersionString,

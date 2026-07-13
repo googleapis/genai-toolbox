@@ -268,7 +268,7 @@ func TestInvoke(t *testing.T) {
 		{Name: "query", Value: query},
 	}
 
-	primMgr := primitives.NewPrimitiveManager(srcs, nil, nil, nil, nil, nil, nil)
+	primMgr := primitives.NewPrimitiveManager(srcs, nil, nil, nil, nil, nil, nil, nil)
 
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 

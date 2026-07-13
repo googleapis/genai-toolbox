@@ -43,6 +43,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
+	"github.com/googleapis/mcp-toolbox/internal/resources"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/alloydbpg"
@@ -51,6 +52,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"github.com/goccy/go-yaml"
 )
 
 // Helper function to create temporary self-signed certs for the test
@@ -1237,7 +1239,7 @@ mcpEnabled: true
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1329,7 +1331,7 @@ scopesRequired:
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
 			}
@@ -1447,5 +1449,157 @@ func TestMCPAuthEnableAPIClash(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "MCP Auth cannot be enabled together with the legacy HTTP API") {
 		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+type mockResourceConfig struct {
+	resources.BaseConfig `yaml:",inline"`
+}
+
+func (m mockResourceConfig) ResourceConfigType() string {
+	return "mock"
+}
+
+func (m mockResourceConfig) Initialize(ctx context.Context) (resources.Resource, error) {
+	return nil, nil
+}
+
+func TestResourceConfigValidation(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		wantError bool
+	}{
+		{
+			name: "unknown field triggers strict decoder error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+invalidRandomField: true
+`,
+			wantError: true,
+		},
+		{
+			name: "valid mock resource parses successfully",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+`,
+			wantError: false,
+		},
+		{
+			name: "missing type field triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+uri: mock://test
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid type field (not string) triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: 123
+uri: mock://test
+`,
+			wantError: true,
+		},
+		{
+			name: "missing uri field triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid uri field (not string) triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: 123
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid RFC URI triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: ://missing.scheme
+`,
+			wantError: true,
+		},
+		{
+			name: "invalid scheme for file resource triggers error",
+			yaml: `
+kind: resource
+name: test-resource
+type: file
+uri: info://test
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate resource names triggers error",
+			yaml: `
+kind: resource
+name: duplicate-resource
+type: mock
+uri: mock://test1
+---
+kind: resource
+name: duplicate-resource
+type: mock
+uri: mock://test2
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate resource URIs triggers error",
+			yaml: `
+kind: resource
+name: resource1
+type: mock
+uri: mock://duplicate
+---
+kind: resource
+name: resource2
+type: mock
+uri: mock://duplicate
+`,
+			wantError: true,
+		},
+	}
+
+	// Register a mock factory for this test package to use
+	resources.Register("mock", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+		var cfg mockResourceConfig
+		cfg.Name = name
+		cfg.Type = "mock"
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return cfg, nil
+	})
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
 	}
 }

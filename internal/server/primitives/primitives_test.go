@@ -56,7 +56,7 @@ func TestUpdateServer(t *testing.T) {
 			Prompts: []*prompts.Prompt{},
 		},
 	}
-	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	primMgr := primitives.NewPrimitiveManager(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets, nil)
 
 	gotSource, _ := primMgr.GetSource("example-source")
 	if diff := cmp.Diff(gotSource, newSources["example-source"]); diff != "" {

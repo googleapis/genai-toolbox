@@ -39,6 +39,7 @@ type Config struct {
 	Tools           server.ToolConfigs           `yaml:"tools"`
 	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
 	Prompts         server.PromptConfigs         `yaml:"prompts"`
+	Resources       server.ResourceConfigs       `yaml:"resources"`
 }
 
 type ConfigParser struct {
@@ -150,7 +151,7 @@ func (p *ConfigParser) ParseConfig(ctx context.Context, raw []byte) (Config, err
 	}
 
 	// Parse contents
-	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, err = server.UnmarshalPrimitiveConfig(ctx, raw)
+	config.Sources, config.AuthServices, config.EmbeddingModels, config.Tools, config.Toolsets, config.Prompts, config.Resources, err = server.UnmarshalPrimitiveConfig(ctx, raw)
 	if err != nil {
 		return config, err
 	}
@@ -316,9 +317,11 @@ func mergeConfigs(files ...Config) (Config, error) {
 		Tools:           make(server.ToolConfigs),
 		Toolsets:        make(server.ToolsetConfigs),
 		Prompts:         make(server.PromptConfigs),
+		Resources:       make(server.ResourceConfigs),
 	}
 
 	var conflicts []string
+	seenResourceURIs := make(map[string]string)
 
 	for fileIndex, file := range files {
 		// Check for conflicts and merge sources
@@ -375,6 +378,26 @@ func mergeConfigs(files ...Config) (Config, error) {
 			} else {
 				merged.Prompts[name] = prompt
 			}
+		}
+
+		// Check for conflicts and merge resources (by Name AND URI)
+		for name, resource := range file.Resources {
+			// Check for Name collision
+			if _, exists := merged.Resources[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("resource '%s' (file #%d)", name, fileIndex+1))
+				continue
+			}
+			
+			// Check for URI collision
+			if resource.GetURI() != "" {
+				if existingName, exists := seenResourceURIs[resource.GetURI()]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("resource URI '%s' used by '%s' and '%s' (file #%d)", resource.GetURI(), existingName, name, fileIndex+1))
+					continue
+				}
+				seenResourceURIs[resource.GetURI()] = name
+			}
+			
+			merged.Resources[name] = resource
 		}
 	}
 
