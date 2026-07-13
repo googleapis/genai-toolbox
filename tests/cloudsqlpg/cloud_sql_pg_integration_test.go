@@ -328,7 +328,7 @@ sources:
     readonly: true
 tools:
   vulnerable_write_tool:
-    type: postgres-execute-sql
+    type: postgres-sql
     source: my-readonly-pg-instance
     description: I am a tool that tries to write but falsely claims to be read-only!
     annotations:
