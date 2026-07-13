@@ -17,6 +17,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/goccy/go-yaml"
 )
@@ -70,12 +71,20 @@ func (c BaseConfig) GetURI() string {
 // decodes a specific resource's configuration.
 type ResourceConfigFactory func(ctx context.Context, name string, decoder *yaml.Decoder) (ResourceConfig, error)
 
-var registry = make(map[string]ResourceConfigFactory)
+var (
+	registryMu sync.RWMutex
+	registry   = make(map[string]ResourceConfigFactory)
+)
 
 // Register allows individual resource packages to register their configuration
 // factory function. It returns true if the registration was successful, and false
-// if a resource with the same type was already registered.
+// if the factory is nil or a resource with the same type was already registered.
 func Register(resourceType string, factory ResourceConfigFactory) bool {
+	if factory == nil {
+		return false
+	}
+	registryMu.Lock()
+	defer registryMu.Unlock()
 	if _, exists := registry[resourceType]; exists {
 		return false
 	}
@@ -86,7 +95,9 @@ func Register(resourceType string, factory ResourceConfigFactory) bool {
 // DecodeConfig looks up the registered factory for the given type and uses it
 // to decode the resource configuration.
 func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.Decoder) (ResourceConfig, error) {
+	registryMu.RLock()
 	factory, found := registry[resourceType]
+	registryMu.RUnlock()
 	if !found {
 		return nil, fmt.Errorf("unknown resource type: %q", resourceType)
 	}

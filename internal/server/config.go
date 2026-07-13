@@ -546,6 +546,7 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 		if !isString {
 			return nil, fmt.Errorf("invalid 'type' field for resource %q (must be a string)", name)
 		}
+		resourceType = strings.ToLower(resourceType)
 	} else {
 		return nil, fmt.Errorf("missing required 'type' field for resource %q", name)
 	}
@@ -559,8 +560,9 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 				return nil, fmt.Errorf("invalid 'uri' field for resource %q: must be a valid RFC-compliant absolute URI with a scheme", name)
 			}
 
-			// Normalize scheme to lowercase for consistent comparison and usage
+			// Normalize scheme and host to lowercase for consistent comparison and usage
 			parsed.Scheme = strings.ToLower(parsed.Scheme)
+			parsed.Host = strings.ToLower(parsed.Host)
 
 			// Scheme whitelisting
 			if resourceType == "file" && parsed.Scheme != "file" {
@@ -568,7 +570,7 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 			}
 
 			// Update the map with the normalized URI so that unmarshaling and
-			// collision detection see the normalized form (e.g. lowercase scheme)
+			// collision detection see the normalized form (e.g. lowercase scheme and host)
 			r["uri"] = parsed.String()
 		}
 	} else {
