@@ -345,7 +345,7 @@ type ListGroupsRequest struct {
 }
 
 // GroupDescription is a single entry in a groups/list response.
-type GroupDescription struct {
+type Group struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 }
