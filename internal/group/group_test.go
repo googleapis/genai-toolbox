@@ -150,6 +150,44 @@ func TestGroupConfig_Initialize(t *testing.T) {
 	}
 }
 
+func TestGroup_ToolsetManifest(t *testing.T) {
+	t.Parallel()
+	toolsMap, _ := testFixtures()
+
+	g := group.NewGroup(group.GroupConfig{
+		Name:      "mygroup",
+		ToolNames: []string{"tool1", "tool2"},
+	})
+
+	manifest, err := g.ToolsetManifest("v1.2.3", toolsMap, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if manifest.ServerVersion != "v1.2.3" {
+		t.Errorf("ServerVersion = %q, want %q", manifest.ServerVersion, "v1.2.3")
+	}
+	wantTools := []string{"tool1", "tool2"}
+	gotTools := make([]string, 0, len(manifest.ToolsManifest))
+	for name := range manifest.ToolsManifest {
+		gotTools = append(gotTools, name)
+	}
+	slices.Sort(gotTools)
+	if !slices.Equal(gotTools, wantTools) {
+		t.Errorf("tools manifest keys = %v, want %v", gotTools, wantTools)
+	}
+	if manifest.ToolsManifest["tool1"].Description != "first tool" {
+		t.Errorf("tool1 description = %q, want %q", manifest.ToolsManifest["tool1"].Description, "first tool")
+	}
+
+	// Missing tool error path.
+	missing := group.NewGroup(group.GroupConfig{Name: "g", ToolNames: []string{"nope"}})
+	if _, err := missing.ToolsetManifest("v1", toolsMap, nil); err == nil {
+		t.Fatal("expected error for missing tool, got nil")
+	} else if !strings.Contains(err.Error(), "tool does not exist: nope") {
+		t.Errorf("error = %q, want it to contain %q", err.Error(), "tool does not exist: nope")
+	}
+}
+
 func TestGroup_Contains(t *testing.T) {
 	t.Parallel()
 	toolsMap, promptsMap := testFixtures()
