@@ -266,7 +266,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	}
 
 	if readOnly {
-		dsn += "&cloudsql_session_read_only=locked"
+		dsn += "&session_variables=cloudsql_session_read_only=locked"
 	}
 
 	db, err := sql.Open(
