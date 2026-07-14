@@ -70,7 +70,7 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 	}
 
 	// Invert at boot by calculating the length of the string array as per design doc
-	size := int64(len([]byte(c.Text)))
+	size := int64(len(c.Text))
 	c.Size = &size
 
 	return &Resource{config: *c}, nil

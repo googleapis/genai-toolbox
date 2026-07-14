@@ -17,6 +17,7 @@ package text
 import (
 	"bytes"
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/goccy/go-yaml"
@@ -126,9 +127,8 @@ func TestTextResourceInitialization(t *testing.T) {
 					t.Fatalf("Initialize() expected error, got nil")
 				}
 				if tc.errContains != "" {
-					expectedErr := "missing required 'text' field for text resource \"test3\""
-					if err.Error() != expectedErr {
-						t.Errorf("Initialize() err = %v, want %v", err, expectedErr)
+					if !strings.Contains(err.Error(), tc.errContains) {
+						t.Errorf("Initialize() err = %v, want to contain %q", err, tc.errContains)
 					}
 				}
 				return
@@ -159,7 +159,7 @@ func TestTextResourceInitialization(t *testing.T) {
 			if cfg.Size == nil {
 				t.Fatalf("Size is nil, expected dynamic calculation")
 			}
-			expectedSize := int64(len([]byte(tc.config.Text)))
+			expectedSize := int64(len(tc.config.Text))
 			if *cfg.Size != expectedSize {
 				t.Errorf("Size = %d, want %d", *cfg.Size, expectedSize)
 			}
