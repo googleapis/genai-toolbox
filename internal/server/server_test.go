@@ -1526,7 +1526,8 @@ type: mock
 			yaml: `
 kind: resource
 name: test-file
-type: mock
+type: file
+path: /test
 `,
 			wantError: false,
 		},
@@ -1565,8 +1566,9 @@ uri: info://test
 			yaml: `
 kind: resource
 name: test-text-custom-uri
-type: mock
+type: text
 uri: https://custom/path
+text: "some text"
 `,
 			wantError: false,
 		},
