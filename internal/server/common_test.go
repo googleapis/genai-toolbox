@@ -59,7 +59,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, tools, toolsets, prompts, promptsets, nil)
+	primitiveManager := primitives.NewPrimitiveManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         testutils.MockVersionString,
