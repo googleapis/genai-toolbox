@@ -17,6 +17,7 @@ package v20241105
 import (
 	"fmt"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -97,9 +98,9 @@ func generateParamManifest(ps parameters.Parameters, urlParams map[string]string
 }
 
 // GenerateListToolsResult generates tools/list method result according to mcp schema
-func GenerateListToolsResult(srcs map[string]sources.Source, t tools.Toolset, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
-	mcpManifest := make([]Tool, 0, len(t.ToolNames))
-	for _, toolName := range t.ToolNames {
+func GenerateListToolsResult(srcs map[string]sources.Source, g group.Group, toolsMap map[string]tools.Tool, urlParams map[string]string) (ListToolsResult, error) {
+	mcpManifest := make([]Tool, 0, len(g.ToolNames))
+	for _, toolName := range g.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
 			return ListToolsResult{}, fmt.Errorf("tool does not exist: %s", toolName)
@@ -133,9 +134,9 @@ func generatePromptManifest(name, desc string, args prompts.Arguments) Prompt {
 }
 
 // GenerateListPromptsResult generates the list/prompts result
-func GenerateListPromptsResult(p prompts.Promptset, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
-	mcpManifest := make([]Prompt, 0, len(p.PromptNames))
-	for _, promptName := range p.PromptNames {
+func GenerateListPromptsResult(g group.Group, promptsMap map[string]prompts.Prompt) (ListPromptsResult, error) {
+	mcpManifest := make([]Prompt, 0, len(g.PromptNames))
+	for _, promptName := range g.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
 			return ListPromptsResult{}, fmt.Errorf("prompt does not exist: %s", promptName)
