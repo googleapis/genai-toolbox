@@ -22,12 +22,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
-	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
-	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 )
 
@@ -37,24 +36,14 @@ var (
 	fakeVersionString                   = "0.0.0"
 )
 
-// mustToolset materializes the default toolset view from the resource manager.
-func mustToolset(t *testing.T, rm *resources.ResourceManager) tools.Toolset {
+// mustGroup fetches the default group from the resource manager.
+func mustGroup(t *testing.T, rm *resources.ResourceManager) group.Group {
 	t.Helper()
-	ts, ok := rm.GetToolset("")
+	g, ok := rm.GetGroup("")
 	if !ok {
-		t.Fatal("default toolset not found")
+		t.Fatal("default group not found")
 	}
-	return ts
-}
-
-// mustPromptset materializes the default promptset view from the resource manager.
-func mustPromptset(t *testing.T, rm *resources.ResourceManager) prompts.Promptset {
-	t.Helper()
-	ps, ok := rm.GetPromptset("")
-	if !ok {
-		t.Fatal("default promptset not found")
-	}
-	return ps
+	return g
 }
 
 func TestValidateMetadata(t *testing.T) {
@@ -431,7 +420,7 @@ func TestToolsListHandler(t *testing.T) {
 		body        ListToolsRequest
 		rawBody     []byte
 		header      http.Header
-		toolset     tools.Toolset
+		g           group.Group
 		wantErr     bool
 		errContains string
 	}{
@@ -439,7 +428,7 @@ func TestToolsListHandler(t *testing.T) {
 			name:        "invalid json body",
 			rawBody:     []byte(`{invalid json}`),
 			header:      nil,
-			toolset:     mustToolset(t, resourceMgr),
+			g:           mustGroup(t, resourceMgr),
 			wantErr:     true,
 			errContains: "invalid mcp tools list request",
 		},
@@ -465,7 +454,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:      http.Header{"Mcp-Method": []string{"WRONG_METHOD"}},
-			toolset:     mustToolset(t, resourceMgr),
+			g:           mustGroup(t, resourceMgr),
 			wantErr:     true,
 			errContains: "does not match body value",
 		},
@@ -491,7 +480,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  nil,
-			toolset: mustToolset(t, resourceMgr),
+			g:       mustGroup(t, resourceMgr),
 			wantErr: false,
 		},
 		{
@@ -516,7 +505,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  http.Header{"Mcp-Method": []string{TOOLS_LIST}},
-			toolset: mustToolset(t, resourceMgr),
+			g:       mustGroup(t, resourceMgr),
 			wantErr: false,
 		},
 	}
@@ -531,7 +520,7 @@ func TestToolsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.toolset, body, tt.header)
+			got, err := toolsListHandler(context.Background(), dummyID, resourceMgr, tt.g, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -697,7 +686,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, mustToolset(t, resourceMgr), resourceMgr, body, tt.header)
+			got, err := toolsCallHandler(tt.context, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -781,7 +770,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustPromptset(t, resourceMgr), body, tt.header)
+			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustGroup(t, resourceMgr), body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -914,7 +903,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, mustPromptset(t, resourceMgr), resourceMgr, body, tt.header)
+			got, err := promptsGetHandler(ctx, dummyID, mustGroup(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -930,6 +919,209 @@ func TestPromptsGetHandler(t *testing.T) {
 				if got == nil {
 					t.Errorf("expected valid response, got nil")
 				}
+			}
+		})
+	}
+}
+
+func TestGroupsListHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+
+	validMeta := &RequestMetaObject{
+		ProtocolVersion: PROTOCOL_VERSION,
+		ClientInfo: Implementation{
+			BaseMetadata: BaseMetadata{Name: "TestClient"},
+			Version:      "1.0",
+		},
+		MetaClientCapabilities: &ClientCapabilities{},
+	}
+
+	tests := []struct {
+		name        string
+		rawBody     []byte
+		body        ListGroupsRequest
+		header      http.Header
+		wantErr     bool
+		errContains string
+		wantNames   []string
+	}{
+		{
+			name:        "invalid json body",
+			rawBody:     []byte(`{invalid json}`),
+			wantErr:     true,
+			errContains: "invalid mcp groups list request",
+		},
+		{
+			name: "success excludes default group and sorts",
+			body: ListGroupsRequest{
+				PaginatedRequest: PaginatedRequest{
+					Request: jsonrpc.Request{Method: GROUPS_LIST},
+					Params: PaginatedRequestParams{
+						RequestParams: RequestParams{Meta: validMeta},
+					},
+				},
+			},
+			header:    http.Header{"Mcp-Method": []string{GROUPS_LIST}},
+			wantErr:   false,
+			wantNames: []string{"tool1_only", "tool2_only"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := tt.rawBody
+			var err error
+			if body == nil {
+				body, err = json.Marshal(tt.body)
+				if err != nil {
+					t.Fatalf("unexpected error during marshaling: %v", err)
+				}
+			}
+			got, err := groupsListHandler(ctx, dummyID, resourceMgr, body, tt.header)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("error = %v, want string containing %q", err, tt.errContains)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			res, ok := got.(jsonrpc.JSONRPCResponse)
+			if !ok {
+				t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+			}
+			result, ok := res.Result.(ListGroupsResult)
+			if !ok {
+				t.Fatalf("expected ListGroupsResult, got %T", res.Result)
+			}
+			gotNames := make([]string, 0, len(result.Groups))
+			for _, g := range result.Groups {
+				gotNames = append(gotNames, g.Name)
+			}
+			if len(gotNames) != len(tt.wantNames) {
+				t.Fatalf("got groups %v, want %v", gotNames, tt.wantNames)
+			}
+			for i, n := range tt.wantNames {
+				if gotNames[i] != n {
+					t.Errorf("group[%d] = %q, want %q", i, gotNames[i], n)
+				}
+			}
+		})
+	}
+}
+
+func TestGroupsGetHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to initialize logger: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
+
+	validMeta := &RequestMetaObject{
+		ProtocolVersion: PROTOCOL_VERSION,
+		ClientInfo: Implementation{
+			BaseMetadata: BaseMetadata{Name: "TestClient"},
+			Version:      "1.0",
+		},
+		MetaClientCapabilities: &ClientCapabilities{},
+	}
+
+	tests := []struct {
+		name        string
+		rawBody     []byte
+		body        GetGroupRequest
+		header      http.Header
+		wantErr     bool
+		errContains string
+		wantName    string
+	}{
+		{
+			name:        "invalid json body",
+			rawBody:     []byte(`{invalid json}`),
+			wantErr:     true,
+			errContains: "invalid mcp groups/get request",
+		},
+		{
+			name: "group does not exist",
+			body: GetGroupRequest{
+				Request: jsonrpc.Request{Method: GROUPS_GET},
+				Params: GetGroupRequestParams{
+					RequestParams: RequestParams{Meta: validMeta},
+					Name:          "missing_group",
+				},
+			},
+			header:      http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"missing_group"}},
+			wantErr:     true,
+			errContains: `group with name "missing_group" does not exist`,
+		},
+		{
+			name: "success",
+			body: GetGroupRequest{
+				Request: jsonrpc.Request{Method: GROUPS_GET},
+				Params: GetGroupRequestParams{
+					RequestParams: RequestParams{Meta: validMeta},
+					Name:          "tool1_only",
+				},
+			},
+			header:   http.Header{"Mcp-Method": []string{GROUPS_GET}, "Mcp-Name": []string{"tool1_only"}},
+			wantErr:  false,
+			wantName: "tool1_only",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := tt.rawBody
+			var err error
+			if body == nil {
+				body, err = json.Marshal(tt.body)
+				if err != nil {
+					t.Fatalf("unexpected error during marshaling: %v", err)
+				}
+			}
+			got, err := groupsGetHandler(ctx, dummyID, resourceMgr, body, tt.header)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil")
+				}
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("error = %v, want string containing %q", err, tt.errContains)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			res, ok := got.(jsonrpc.JSONRPCResponse)
+			if !ok {
+				t.Fatalf("expected jsonrpc.JSONRPCResponse, got %T", got)
+			}
+			result, ok := res.Result.(GetGroupResult)
+			if !ok {
+				t.Fatalf("expected GetGroupResult, got %T", res.Result)
+			}
+			if result.Name != tt.wantName {
+				t.Errorf("result.Name = %q, want %q", result.Name, tt.wantName)
 			}
 		})
 	}
