@@ -1484,6 +1484,17 @@ invalidRandomField: true
 			wantError: true,
 		},
 		{
+			name: "size field is rejected by strict decoder",
+			yaml: `
+kind: resource
+name: test-resource
+type: mock
+uri: mock://test
+size: 123
+`,
+			wantError: true,
+		},
+		{
 			name: "valid mock resource parses successfully",
 			yaml: `
 kind: resource
@@ -1635,6 +1646,160 @@ path: /test2
 			_, _, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, []byte(tc.yaml))
 			if (err != nil) != tc.wantError {
 				t.Fatalf("UnmarshalPrimitiveConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+		})
+	}
+}
+
+func TestResourceAnnotationsParsing(t *testing.T) {
+	ctx := context.Background()
+
+	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+		var cfg mockResourceConfig
+		cfg.Name = name
+		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
+			return nil, err
+		}
+		return cfg, nil
+	}
+	resources.Register("mock", mockFactory)
+
+	// Scenario 1: Valid parsed config (checks case-insensitivity on 'Priority' and 'LastModified')
+	yamlBytes := []byte(`
+kind: resource
+name: test-annotations
+type: mock
+uri: mock://test
+annotations:
+  priority: 0.8
+  audience:
+    - user
+    - assistant
+  lastModified: 2024-01-01T00:00:00Z
+`)
+	_, _, _, _, _, _, resConfigs, err := server.UnmarshalPrimitiveConfig(ctx, yamlBytes)
+	if err != nil {
+		t.Fatalf("unexpected error parsing valid config: %v", err)
+	}
+
+	cfg, ok := resConfigs["test-annotations"]
+	if !ok {
+		t.Fatalf("missing parsed config")
+	}
+
+	mockCfg := cfg.(mockResourceConfig)
+	if mockCfg.Annotations == nil {
+		t.Fatalf("annotations map is nil")
+	}
+
+	if mockCfg.Annotations.Priority != 0.8 {
+		t.Errorf("priority = %v, want 0.8", mockCfg.Annotations.Priority)
+	}
+
+	if len(mockCfg.Annotations.Audience) != 2 || mockCfg.Annotations.Audience[0] != resources.RoleUser {
+		t.Errorf("audience = %v, want [user, assistant]", mockCfg.Annotations.Audience)
+	}
+
+	// Verify the unquoted timestamp parsed correctly into the string field
+	if mockCfg.Annotations.LastModified != "2024-01-01T00:00:00Z" {
+		t.Errorf("lastModified = %v, want 2024-01-01T00:00:00Z", mockCfg.Annotations.LastModified)
+	}
+
+	// Edge Cases & Validation Testing
+	testCases := []struct {
+		name        string
+		yaml        string
+		wantError   bool
+		errContains string
+	}{
+		{
+			name: "unknown field strict error",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  unknownField: "should error"`,
+			wantError:   true,
+			errContains: "unknownField",
+		},
+		{
+			name: "invalid priority type",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  priority: "high"`,
+			wantError:   true,
+			errContains: "cannot unmarshal",
+		},
+		{
+			name: "invalid audience scalar",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  audience: user`,
+			wantError:   true,
+			errContains: "string was used where sequence is expected",
+		},
+		{
+			name: "invalid audience value",
+			yaml: `
+kind: resource
+name: test-invalid
+type: mock
+uri: mock://test
+annotations:
+  audience:
+    - admin`,
+			wantError:   true,
+			errContains: "invalid audience \"admin\"",
+		},
+		{
+			name: "duplicate audience value",
+			yaml: `
+kind: resource
+name: test-duplicate
+type: mock
+uri: mock://test
+annotations:
+  audience:
+    - user
+    - user`,
+			wantError:   true,
+			errContains: "duplicate audience \"user\"",
+		},
+		{
+			name: "empty block safety (no error expected)",
+			yaml: `
+kind: resource
+name: test-empty
+type: mock
+uri: mock://test
+annotations: {}`,
+			wantError: false,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, _, _, _, _, _, err = server.UnmarshalPrimitiveConfig(ctx, []byte(tt.yaml))
+			if tt.wantError {
+				if err == nil {
+					t.Errorf("expected error for %q, got nil", tt.name)
+				} else if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("expected error to contain %q, got: %v", tt.errContains, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error for %q: %v", tt.name, err)
+				}
 			}
 		})
 	}

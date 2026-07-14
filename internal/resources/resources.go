@@ -51,20 +51,62 @@ type Resource interface {
 	ToConfig() ResourceConfig
 }
 
-// BaseConfig holds the shared properties for all resource configurations.
+type ResourceAnnotations struct {
+	Priority     float64        `yaml:"priority,omitempty"`
+	Audience     []AudienceRole `yaml:"audience,omitempty"`
+	LastModified string         `yaml:"lastModified,omitempty"`
+}
+
+// BaseConfig contains the common fields for all resource configurations.
 type BaseConfig struct {
-	Name        string         `yaml:"name"`
-	Type        string         `yaml:"type"`
-	URI         string         `yaml:"uri"`
-	Description string         `yaml:"description"`
-	Title       string         `yaml:"title"`
-	MimeType    string         `yaml:"mimeType"`
-	Annotations map[string]any `yaml:"annotations"`
+	Name        string               `yaml:"name"`
+	Type        string               `yaml:"type"`
+	URI         string               `yaml:"uri,omitempty"`
+	Description string               `yaml:"description,omitempty"`
+	Title       string               `yaml:"title,omitempty"`
+	MimeType    string               `yaml:"mimeType,omitempty"`
+	Annotations *ResourceAnnotations `yaml:"annotations,omitempty"`
+	Size        *int64               `yaml:"-"`
 }
 
 // GetURI returns the URI of the resource configuration.
 func (c BaseConfig) GetURI() string {
 	return c.URI
+}
+
+type AudienceRole string
+
+const (
+	RoleUser      AudienceRole = "user"
+	RoleAssistant AudienceRole = "assistant"
+)
+
+func (r *AudienceRole) UnmarshalYAML(b []byte) error {
+	var s string
+	if err := yaml.Unmarshal(b, &s); err != nil {
+		return err
+	}
+	switch s {
+	case string(RoleUser), string(RoleAssistant):
+		*r = AudienceRole(s)
+		return nil
+	default:
+		return fmt.Errorf("invalid audience %q: must be 'user' or 'assistant'", s)
+	}
+}
+
+// Validate performs base configuration validation, such as checking for duplicate audiences.
+func (c BaseConfig) Validate() error {
+	if c.Annotations != nil && len(c.Annotations.Audience) > 0 {
+		seen := make(map[AudienceRole]bool)
+		for _, aud := range c.Annotations.Audience {
+			if seen[aud] {
+				return fmt.Errorf("duplicate audience %q is not allowed", aud)
+			}
+			seen[aud] = true
+		}
+	}
+	return nil
 }
 
 // ResourceConfigFactory defines the signature for a function that creates and
@@ -112,5 +154,12 @@ func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.
 	if config == nil {
 		return nil, fmt.Errorf("factory returned nil config for resource %q as type %q", name, resourceType)
 	}
+
+	if validatable, ok := config.(interface{ Validate() error }); ok {
+		if err := validatable.Validate(); err != nil {
+			return nil, fmt.Errorf("validation failed for resource %q: %w", name, err)
+		}
+	}
+
 	return config, nil
 }
