@@ -113,6 +113,32 @@ func TestParseFromYamlPostgres(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "example with connect timeout",
+			in: `
+			kind: source
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			connectTimeout: 5s
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-pg-instance": postgres.Config{
+					Name:           "my-pg-instance",
+					Type:           postgres.SourceType,
+					Host:           "my-host",
+					Port:           "my-port",
+					Database:       "my_db",
+					User:           "my_user",
+					Password:       "my_pass",
+					ConnectTimeout: "5s",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
@@ -60,6 +61,10 @@ type Config struct {
 	QueryParams   map[string]string `yaml:"queryParams"`
 	QueryExecMode string            `yaml:"queryExecMode" validate:"omitempty,oneof=cache_statement cache_describe describe_exec exec simple_protocol"`
 	SQLCommenter  *bool             `yaml:"sqlCommenter"`
+	// ConnectTimeout optionally bounds how long a single connection attempt may
+	// take, parsed as a Go duration (e.g. "5s"). When unset, no timeout is
+	// applied and connection behavior is unchanged.
+	ConnectTimeout string `yaml:"connectTimeout"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -67,7 +72,7 @@ func (r Config) SourceConfigType() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams, r.QueryExecMode, r.ConnectTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -131,7 +136,25 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	return out, nil
 }
 
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode string) (*pgxpool.Pool, error) {
+// applyConnectTimeout sets an optional per-attempt connect timeout on the pool
+// config. An empty value leaves the config unchanged, so pgx applies no timeout
+// and existing behavior is preserved.
+func applyConnectTimeout(config *pgxpool.Config, connectTimeout string) error {
+	if connectTimeout == "" {
+		return nil
+	}
+	duration, err := time.ParseDuration(connectTimeout)
+	if err != nil {
+		return fmt.Errorf("unable to parse connectTimeout %q as time.Duration: %w", connectTimeout, err)
+	}
+	if duration <= 0 {
+		return fmt.Errorf("connectTimeout %q must be a positive duration", connectTimeout)
+	}
+	config.ConnConfig.ConnectTimeout = duration
+	return nil
+}
+
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string, queryExecMode, connectTimeout string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
@@ -157,6 +180,10 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 		return nil, err
 	}
 	config.ConnConfig.DefaultQueryExecMode = execMode
+
+	if err := applyConnectTimeout(config, connectTimeout); err != nil {
+		return nil, err
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
