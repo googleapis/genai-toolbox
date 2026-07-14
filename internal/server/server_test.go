@@ -1527,7 +1527,6 @@ type: mock
 kind: resource
 name: test-file
 type: file
-path: /test
 `,
 			wantError: false,
 		},
@@ -1568,7 +1567,6 @@ kind: resource
 name: test-text-custom-uri
 type: text
 uri: https://custom/path
-text: "some text"
 `,
 			wantError: false,
 		},
@@ -1620,15 +1618,17 @@ path: /test2
 	}
 
 	// Register a mock factory for this test package to use
-	resources.Register("mock", func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
+	mockFactory := func(ctx context.Context, name string, decoder *yaml.Decoder) (resources.ResourceConfig, error) {
 		var cfg mockResourceConfig
 		cfg.Name = name
-		cfg.Type = "mock"
 		if err := decoder.DecodeContext(ctx, &cfg); err != nil {
 			return nil, err
 		}
 		return cfg, nil
-	})
+	}
+	resources.Register("mock", mockFactory)
+	resources.Register("file", mockFactory)
+	resources.Register("text", mockFactory)
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
