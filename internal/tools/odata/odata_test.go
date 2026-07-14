@@ -173,15 +173,17 @@ type mockSAPSourceWithResponse struct {
 	response any
 }
 
-func (m *mockSAPSourceWithResponse) SourceType() string { return "odata" }
+func (m *mockSAPSourceWithResponse) SourceType() string             { return "odata" }
 func (m *mockSAPSourceWithResponse) ToConfig() sources.SourceConfig { return nil }
-func (m *mockSAPSourceWithResponse) HttpBaseURL() string { return m.baseURL }
+func (m *mockSAPSourceWithResponse) HttpBaseURL() string            { return m.baseURL }
 func (m *mockSAPSourceWithResponse) RunSAPRequest(req *http.Request, accessToken tools.AccessToken) (any, error) {
 	return m.response, nil
 }
-func (m *mockSAPSourceWithResponse) UseClientAuthorization() bool { return false }
+func (m *mockSAPSourceWithResponse) UseClientAuthorization() bool   { return false }
 func (m *mockSAPSourceWithResponse) Metadata() *odata.ODataMetadata { return m.metadata }
-func (m *mockSAPSourceWithResponse) Compatibility() odata.CompatibilityConfig { return odata.CompatibilityConfig{} }
+func (m *mockSAPSourceWithResponse) Compatibility() odata.CompatibilityConfig {
+	return odata.CompatibilityConfig{}
+}
 
 type mockSourceProvider struct {
 	sources map[string]sources.Source
@@ -236,7 +238,7 @@ func TestToolInvokePaginationV4(t *testing.T) {
 	mockSrc := &mockSAPSourceWithResponse{
 		baseURL: "https://mock.sap/odata",
 		response: map[string]interface{}{
-			"value":            []interface{}{},
+			"value":           []interface{}{},
 			"@odata.nextLink": "https://mock.sap/odata/A_SalesOrder?$skiptoken=123",
 		},
 	}
@@ -271,5 +273,4 @@ func TestToolInvokePaginationV4(t *testing.T) {
 }
 
 // Dummy tests to satisfy the interface completely
-var _ tools.Tool = &Tool{}
 var _ sources.Source = &mockSAPSource{}

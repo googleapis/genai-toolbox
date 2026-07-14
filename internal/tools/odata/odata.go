@@ -47,15 +47,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
-type odataSource interface {
+type compatibleSource interface {
 	HttpBaseURL() string
 	RunSAPRequest(*http.Request, tools.AccessToken) (any, error)
 	Metadata() *odata.ODataMetadata
 	Compatibility() odata.CompatibilityConfig
-}
-
-type odataSourceOauth interface {
-	odataSource
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
 }
@@ -79,53 +75,7 @@ func (cfg Config) ToolConfigType() string {
 }
 
 func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
-	var dynamicParams parameters.Parameters
-	var method string
-
-	switch strings.ToUpper(cfg.Operation) {
-	case "READ":
-		method = "GET"
-		filterParam := parameters.NewStringParameter("filter", "OData $filter string.", parameters.WithStringRequired(false))
-		selectParam := parameters.NewStringParameter("select", "OData $select string.", parameters.WithStringRequired(false))
-		topParam := parameters.NewIntParameter("top", "OData $top integer limit.", parameters.WithIntRequired(false))
-		skipParam := parameters.NewIntParameter("skip", "OData $skip integer offset.", parameters.WithIntRequired(false))
-		skiptokenParam := parameters.NewStringParameter("skiptoken", "OData $skiptoken string for server-side pagination.", parameters.WithStringRequired(false))
-
-		dynamicParams = append(dynamicParams, filterParam, selectParam, topParam, skipParam, skiptokenParam)
-
-	case "CREATE":
-		method = "POST"
-		dynamicParams = append(dynamicParams, cfg.BodyParams...)
-
-	case "UPDATE":
-		method = "PUT" // Default fallback
-		dynamicParams = append(dynamicParams, cfg.BodyParams...)
-
-	case "DELETE":
-		method = "DELETE"
-		// Typically requires passing keys in the URL path, handled via QueryParams currently
-
-	case "FUNCTION_IMPORT":
-		method = "POST" // Default for function imports, but should probably read from metadata
-		dynamicParams = append(dynamicParams, cfg.QueryParams...)
-	}
-
-	// Always allow explicitly defined QueryParams (e.g., custom params or keys)
-	allParameters := append(parameters.Parameters(nil), dynamicParams...)
-	if strings.ToUpper(cfg.Operation) != "FUNCTION_IMPORT" {
-		allParameters = append(allParameters, cfg.QueryParams...)
-	}
-
-	// Remove duplicates
-	err := parameters.CheckDuplicateParameters(allParameters)
-	if err != nil {
-		return Tool{}, err
-	}
-
-	paramManifest := allParameters.Manifest()
-	if paramManifest == nil {
-		paramManifest = make([]parameters.ParameterManifest, 0)
-	}
+	method, params := buildParams(cfg.Operation, cfg.EntitySet, cfg.BodyParams, cfg.QueryParams, nil)
 
 	var defaultAnnotationsFn func() *tools.ToolAnnotations
 	if strings.ToUpper(cfg.Operation) == "READ" {
@@ -139,8 +89,8 @@ func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 		BaseTool: tools.NewBaseTool(
 			cfg,
 			annotations,
-			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-			allParameters,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
 		),
 		Method: method,
 	}, nil
@@ -196,7 +146,7 @@ func applyODataFormatting(value string, paramName string, paramType string, mdVe
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[odataSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, resourceType)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, resourceType)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -304,74 +254,94 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
-	allParams := append(parameters.Parameters(nil), t.StaticParameters...)
-	if strings.ToUpper(t.Cfg.Operation) == "READ" && srcs != nil {
-		if rawS, ok := srcs[t.Cfg.Source]; ok {
-			if s, ok := rawS.(odataSource); ok {
-				if metadata := s.Metadata(); metadata != nil {
-					if et, err := metadata.GetEntityTypeForSet(t.Cfg.EntitySet); err == nil {
-						var props []string
-						for _, p := range et.Properties {
-							props = append(props, fmt.Sprintf("%s (%s)", p.Name, p.Type))
-						}
-						filterDesc := fmt.Sprintf("OData $filter string. Available properties: %s", strings.Join(props, ", "))
-						selectDesc := fmt.Sprintf("OData $select string. Available properties: %s", strings.Join(props, ", "))
-						for i, p := range allParams {
-							if sp, ok := p.(*parameters.StringParameter); ok {
-								if sp.Name == "filter" {
-									allParams[i] = parameters.NewStringParameter("filter", filterDesc, parameters.WithStringRequired(false))
-								} else if sp.Name == "select" {
-									allParams[i] = parameters.NewStringParameter("select", selectDesc, parameters.WithStringRequired(false))
-								}
-							}
-						}
-					}
+// buildParams builds the tool's parameters from the source's metadata configuration.
+func buildParams(operation, entitySet string, bodyParams, queryParams parameters.Parameters, metadata *odata.ODataMetadata) (string, parameters.Parameters) {
+	var dynamicParams parameters.Parameters
+	var method string
+
+	switch strings.ToUpper(operation) {
+	case "READ":
+		method = "GET"
+		filterDesc := "OData $filter string."
+		selectDesc := "OData $select string."
+
+		if metadata != nil {
+			if et, err := metadata.GetEntityTypeForSet(entitySet); err == nil {
+				var props []string
+				for _, p := range et.Properties {
+					props = append(props, fmt.Sprintf("%s (%s)", p.Name, p.Type))
 				}
+				filterDesc = fmt.Sprintf("OData $filter string. Available properties: %s", strings.Join(props, ", "))
+				selectDesc = fmt.Sprintf("OData $select string. Available properties: %s", strings.Join(props, ", "))
 			}
 		}
+		filterParam := parameters.NewStringParameter("filter", filterDesc, parameters.WithStringRequired(false))
+		selectParam := parameters.NewStringParameter("select", selectDesc, parameters.WithStringRequired(false))
+		topParam := parameters.NewIntParameter("top", "OData $top integer limit.", parameters.WithIntRequired(false))
+		skipParam := parameters.NewIntParameter("skip", "OData $skip integer offset.", parameters.WithIntRequired(false))
+		skiptokenParam := parameters.NewStringParameter("skiptoken", "OData $skiptoken string for server-side pagination.", parameters.WithStringRequired(false))
+		dynamicParams = append(dynamicParams, filterParam, selectParam, topParam, skipParam, skiptokenParam)
+
+	case "CREATE":
+		method = "POST"
+		dynamicParams = append(dynamicParams, bodyParams...)
+
+	case "UPDATE":
+		method = "PUT" // Default fallback
+		dynamicParams = append(dynamicParams, bodyParams...)
+
+	case "DELETE":
+		method = "DELETE"
+		// Typically requires passing keys in the URL path, handled via QueryParams currently
+
+	case "FUNCTION_IMPORT":
+		method = "POST" // Default for function imports, but should probably read from metadata
 	}
-	return allParams, nil
+
+	// Always allow explicitly defined QueryParams (e.g., custom params or keys)
+	allParameters := append(dynamicParams, queryParams...)
+	return method, allParameters
+}
+
+// resolveParams builds the tool's parameters using the source's metadata configuration.
+func (t Tool) resolveParams(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	s, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return nil, err
+	}
+	_, params := buildParams(t.Cfg.Operation, t.Cfg.EntitySet, t.Cfg.BodyParams, t.Cfg.QueryParams, s.Metadata())
+	return params, nil
+}
+
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	return t.resolveParams(srcs)
 }
 
 func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
-	params, err := t.GetParameters(srcs)
+	allParameters, err := t.resolveParams(srcs)
 	if err != nil {
 		return tools.Manifest{}, err
 	}
-	paramManifest := params.Manifest()
-	if paramManifest == nil {
-		paramManifest = make([]parameters.ParameterManifest, 0)
-	}
 	return tools.Manifest{
 		Description:  t.GetDescription(),
-		Parameters:   paramManifest,
+		Parameters:   allParameters.Manifest(),
 		AuthRequired: t.GetAuthRequired(),
 	}, nil
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	s, ok := resourceMgr.GetSource(t.Cfg.Source)
-	if !ok {
-		return false, fmt.Errorf("unable to retrieve source %q", t.Cfg.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return false, err
 	}
-
-	if oauthSource, ok := s.(odataSourceOauth); ok {
-		return oauthSource.UseClientAuthorization(), nil
-	}
-	return false, nil
+	return source.UseClientAuthorization(), nil
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	s, ok := resourceMgr.GetSource(t.Cfg.Source)
-	if !ok {
-		return "Authorization", fmt.Errorf("unable to retrieve source %q", t.Cfg.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	if err != nil {
+		return "", err
 	}
 
-	if oauthSource, ok := s.(odataSourceOauth); ok {
-		if oauthSource.UseClientAuthorization() {
-			return oauthSource.GetAuthTokenHeaderName(), nil
-		}
-	}
-	return "Authorization", nil
+	return source.GetAuthTokenHeaderName(), nil
 }
