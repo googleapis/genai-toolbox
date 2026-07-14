@@ -69,7 +69,7 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		c.Annotations.Priority = &p
 	}
 
-	// Invert at boot by calculating the length of the string array as per design doc
+	// Initialize size at boot by calculating the byte length of the text string
 	size := int64(len(c.Text))
 	c.Size = &size
 
