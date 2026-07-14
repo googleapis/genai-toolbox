@@ -52,7 +52,7 @@ type Resource interface {
 }
 
 type ResourceAnnotations struct {
-	Priority     float64        `yaml:"priority,omitempty"`
+	Priority     *float64       `yaml:"priority,omitempty"`
 	Audience     []AudienceRole `yaml:"audience,omitempty"`
 	LastModified string         `yaml:"lastModified,omitempty"`
 }

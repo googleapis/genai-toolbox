@@ -188,7 +188,7 @@ description: A test description
 title: A Test Title
 mimeType: text/plain
 annotations:
-  key1: value1
+  priority: 0.5
 `
 	var cfg BaseConfig
 	if err := yaml.Unmarshal([]byte(yamlStr), &cfg); err != nil {
@@ -213,8 +213,8 @@ annotations:
 	if cfg.MimeType != "text/plain" {
 		t.Errorf("Expected MimeType 'text/plain', got %q", cfg.MimeType)
 	}
-	if val, ok := cfg.Annotations["key1"].(string); !ok || val != "value1" {
-		t.Errorf("Expected annotation key1=value1, got %v", cfg.Annotations["key1"])
+	if cfg.Annotations == nil || cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != 0.5 {
+		t.Errorf("Expected annotation priority=0.5, got %v", cfg.Annotations)
 	}
 }
 

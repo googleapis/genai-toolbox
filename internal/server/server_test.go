@@ -1692,7 +1692,7 @@ annotations:
 		t.Fatalf("annotations map is nil")
 	}
 
-	if mockCfg.Annotations.Priority != 0.8 {
+	if mockCfg.Annotations.Priority == nil || *mockCfg.Annotations.Priority != 0.8 {
 		t.Errorf("priority = %v, want 0.8", mockCfg.Annotations.Priority)
 	}
 
