@@ -38,9 +38,11 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -251,24 +253,12 @@ func TestUpdateServer(t *testing.T) {
 	newAuth := map[string]auth.AuthService{"example-auth": nil}
 	newEmbeddingModels := map[string]embeddingmodels.EmbeddingModel{"example-model": nil}
 	newTools := map[string]tools.Tool{"example-tool": nil}
-	newToolsets := map[string]tools.Toolset{
-		"example-toolset": {
-			ToolsetConfig: tools.ToolsetConfig{
-				Name: "example-toolset",
-			},
-			Tools: []*tools.Tool{},
-		},
+	newPrompts := map[string]prompts.Prompt{"example-prompt": testutils.NewMockPrompt("example-prompt", "", prompts.Arguments{})}
+	newGroups := map[string]group.Group{
+		"example-toolset":   group.NewGroup(group.GroupConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}}),
+		"example-promptset": group.NewGroup(group.GroupConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}}),
 	}
-	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
-	newPromptsets := map[string]prompts.Promptset{
-		"example-promptset": {
-			PromptsetConfig: prompts.PromptsetConfig{
-				Name: "example-promptset",
-			},
-			Prompts: []*prompts.Prompt{},
-		},
-	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newToolsets, newPrompts, newPromptsets)
+	s.ResourceMgr.SetResources(newSources, newAuth, newEmbeddingModels, newTools, newPrompts, newGroups)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -288,18 +278,47 @@ func TestUpdateServer(t *testing.T) {
 		t.Errorf("error updating server, tools (-want +got):\n%s", diff)
 	}
 
-	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
-	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"], cmp.AllowUnexported(tools.Toolset{})); diff != "" {
+	wantGroup := newGroups["example-toolset"]
+	gotGroup, ok := s.ResourceMgr.GetGroup("example-toolset")
+	if !ok {
+		t.Fatal("expected group \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantGroup, gotGroup, cmp.AllowUnexported(group.Group{})); diff != "" {
+		t.Errorf("error updating server, group (-want +got):\n%s", diff)
+	}
+
+	var nilTool tools.Tool
+	wantToolset := tools.Toolset{
+		ToolsetConfig: tools.ToolsetConfig{Name: "example-toolset", ToolNames: []string{"example-tool"}},
+		Tools:         []*tools.Tool{&nilTool},
+	}
+	gotToolset, ok := s.ResourceMgr.GetToolset("example-toolset")
+	if !ok {
+		t.Fatal("expected toolset \"example-toolset\" to exist")
+	}
+	if diff := cmp.Diff(wantToolset, gotToolset, cmpopts.IgnoreUnexported(tools.Toolset{})); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
 	}
 
 	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
-	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"], cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
 	}
 
-	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
-	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"], cmp.AllowUnexported(prompts.Promptset{})); diff != "" {
+	examplePrompt := newPrompts["example-prompt"]
+	wantPromptset := prompts.Promptset{
+		PromptsetConfig: prompts.PromptsetConfig{Name: "example-promptset", PromptNames: []string{"example-prompt"}},
+		Prompts:         []*prompts.Prompt{&examplePrompt},
+		Manifest: prompts.PromptsetManifest{
+			PromptsManifest: map[string]prompts.Manifest{"example-prompt": examplePrompt.Manifest()},
+		},
+		PromptNameSet: map[string]struct{}{"example-prompt": {}},
+	}
+	gotPromptset, ok := s.ResourceMgr.GetPromptset("example-promptset")
+	if !ok {
+		t.Fatal("expected promptset \"example-promptset\" to exist")
+	}
+	if diff := cmp.Diff(wantPromptset, gotPromptset, cmp.AllowUnexported(testutils.MockPrompt{})); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }
@@ -1337,6 +1356,161 @@ scopesRequired:
 	}
 }
 
+func TestGroupConfigParsing(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name      string
+		yaml      string
+		want      group.GroupConfig
+		wantError bool
+	}{
+		{
+			name: "valid named group",
+			yaml: `
+kind: group
+name: my_group
+description: a group of tools and prompts
+tools:
+  - tool_a
+  - tool_b
+prompts:
+  - prompt_a
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "a group of tools and prompts",
+				ToolNames:   []string{"tool_a", "tool_b"},
+				PromptNames: []string{"prompt_a"},
+			},
+		},
+		{
+			name: "named group with only description",
+			yaml: `
+kind: group
+name: my_group
+description: just a description
+`,
+			want: group.GroupConfig{
+				Name:        "my_group",
+				Description: "just a description",
+			},
+		},
+		{
+			name: "default group with only description",
+			yaml: `
+kind: group
+name:
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "default group omitting name field",
+			yaml: `
+kind: group
+description: default server instruction
+`,
+			want: group.GroupConfig{
+				Description: "default server instruction",
+			},
+		},
+		{
+			name: "kind toolset folds into a tools-only group",
+			yaml: `
+kind: toolset
+name: my_toolset
+tools:
+  - tool_a
+  - tool_b
+`,
+			want: group.GroupConfig{
+				Name:      "my_toolset",
+				ToolNames: []string{"tool_a", "tool_b"},
+			},
+		},
+		{
+			name: "default group declaring tools is an error",
+			yaml: `
+kind: group
+name:
+tools:
+  - tool_a
+`,
+			wantError: true,
+		},
+		{
+			name: "default group declaring prompts is an error",
+			yaml: `
+kind: group
+name:
+prompts:
+  - prompt_a
+`,
+			wantError: true,
+		},
+		{
+			name: "unknown field is an error",
+			yaml: `
+kind: group
+name: my_group
+resources:
+  - res_a
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate default group is an error",
+			yaml: `
+kind: group
+name:
+description: first
+---
+kind: group
+name:
+description: second
+`,
+			wantError: true,
+		},
+		{
+			name: "duplicate named group is an error",
+			yaml: `
+kind: group
+name: my_group
+tools:
+  - tool_a
+---
+kind: group
+name: my_group
+tools:
+  - tool_b
+`,
+			wantError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, _, _, _, groups, err := server.UnmarshalResourceConfig(ctx, []byte(tc.yaml))
+			if (err != nil) != tc.wantError {
+				t.Fatalf("UnmarshalResourceConfig() returned error: %v, wantError: %v", err, tc.wantError)
+			}
+			if tc.wantError {
+				return
+			}
+			gc, ok := groups[tc.want.Name]
+			if !ok {
+				t.Fatalf("expected group %q to be parsed, got: %v", tc.want.Name, groups)
+			}
+			if diff := cmp.Diff(tc.want, gc); diff != "" {
+				t.Errorf("group mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 type offlineSourceConfig struct {
 	initialized *bool
 }
@@ -1380,7 +1554,7 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 		},
 	}
 
-	toolsMap, toolsetsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
+	toolsMap, groupsMap, err := server.InitializeOfflineConfigs(ctx, cfg)
 	if err != nil {
 		t.Fatalf("InitializeOfflineConfigs returned error: %s", err)
 	}
@@ -1390,9 +1564,9 @@ func TestInitializeOfflineConfigs(t *testing.T) {
 	if _, ok := toolsMap["my-tool"]; !ok {
 		t.Errorf("expected tool %q in toolsMap, got %v", "my-tool", toolsMap)
 	}
-	// The implicit default ("") toolset should always be present.
-	if _, ok := toolsetsMap[""]; !ok {
-		t.Error("expected default toolset to be present")
+	// The implicit default ("") group should always be present.
+	if _, ok := groupsMap[""]; !ok {
+		t.Error("expected default group to be present")
 	}
 }
 

@@ -19,29 +19,32 @@ import (
 
 	"github.com/googleapis/mcp-toolbox/internal/auth"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 )
 
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
+// groups is the source of truth for named collections; the toolset and promptset
+// views are derived from it (see GetToolset and GetPromptset).
 type ResourceManager struct {
 	mu              sync.RWMutex
 	sources         map[string]sources.Source
 	authServices    map[string]auth.AuthService
 	embeddingModels map[string]embeddingmodels.EmbeddingModel
 	tools           map[string]tools.Tool
-	toolsets        map[string]tools.Toolset
 	prompts         map[string]prompts.Prompt
-	promptsets      map[string]prompts.Promptset
+	groups          map[string]group.Group
 }
 
 func NewResourceManager(
 	sourcesMap map[string]sources.Source,
 	authServicesMap map[string]auth.AuthService,
 	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
-	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
-	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
+	toolsMap map[string]tools.Tool,
+	promptsMap map[string]prompts.Prompt,
+	groupsMap map[string]group.Group,
 
 ) *ResourceManager {
 	resourceMgr := &ResourceManager{
@@ -50,9 +53,8 @@ func NewResourceManager(
 		authServices:    authServicesMap,
 		embeddingModels: embeddingModelsMap,
 		tools:           toolsMap,
-		toolsets:        toolsetsMap,
 		prompts:         promptsMap,
-		promptsets:      promptsetsMap,
+		groups:          groupsMap,
 	}
 
 	return resourceMgr
@@ -86,11 +88,23 @@ func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
 	return tool, ok
 }
 
+// GetToolset returns the toolset view derived from the group of the same name.
+// The group is the source of truth; the toolset is materialized on demand from
+// the group's tool names so callers on the legacy REST path keep a tools.Toolset.
+// The manifest's server version is left empty here and set by the caller that
+// renders it.
 func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	toolset, ok := r.toolsets[toolsetName]
-	return toolset, ok
+	g, ok := r.groups[toolsetName]
+	if !ok {
+		return tools.Toolset{}, false
+	}
+	toolset, err := tools.ToolsetConfig{Name: g.Name, ToolNames: g.ToolNames}.Initialize("", r.tools)
+	if err != nil {
+		return tools.Toolset{}, false
+	}
+	return toolset, true
 }
 
 func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
@@ -100,23 +114,40 @@ func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	return prompt, ok
 }
 
+// GetPromptset returns the promptset view derived from the group of the same
+// name. The group is the source of truth; the promptset is materialized on
+// demand from the group's prompt names.
 func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	promptset, ok := r.promptsets[promptsetName]
-	return promptset, ok
+	g, ok := r.groups[promptsetName]
+	if !ok {
+		return prompts.Promptset{}, false
+	}
+	promptset, err := prompts.PromptsetConfig{Name: g.Name, PromptNames: g.PromptNames}.Initialize("", r.prompts)
+	if err != nil {
+		return prompts.Promptset{}, false
+	}
+	return promptset, true
 }
 
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
+// GetGroup returns the group of the given name.
+func (r *ResourceManager) GetGroup(groupName string) (group.Group, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	g, ok := r.groups[groupName]
+	return g, ok
+}
+
+func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, promptsMap map[string]prompts.Prompt, groupsMap map[string]group.Group) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
 	r.authServices = authServicesMap
 	r.embeddingModels = embeddingModelsMap
 	r.tools = toolsMap
-	r.toolsets = toolsetsMap
 	r.prompts = promptsMap
-	r.promptsets = promptsetsMap
+	r.groups = groupsMap
 }
 
 func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {
@@ -164,6 +195,16 @@ func (r *ResourceManager) GetPromptsMap() map[string]prompts.Prompt {
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
 	for k, v := range r.prompts {
+		copiedMap[k] = v
+	}
+	return copiedMap
+}
+
+func (r *ResourceManager) GetGroupsMap() map[string]group.Group {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	copiedMap := make(map[string]group.Group, len(r.groups))
+	for k, v := range r.groups {
 		copiedMap[k] = v
 	}
 	return copiedMap

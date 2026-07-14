@@ -228,10 +228,15 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 			}
 
 			if toolsetName != "" {
-				targetToolset, exists := parsed.Toolsets[toolsetName]
+				// Legacy toolsets are folded into groups at unmarshal, so the named
+				// toolset resolves as a group.
+				targetGroup, exists := parsed.Groups[toolsetName]
 				if !exists {
 					var available []string
-					for k := range parsed.Toolsets {
+					for k := range parsed.Groups {
+						if k == "" {
+							continue
+						}
 						available = append(available, k)
 					}
 					slices.Sort(available)
@@ -240,19 +245,19 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 					return isCustomConfigured, errMsg
 				}
 
-				// Filter tools to only include those in the target toolset
+				// Filter tools to only include those in the target group
 				filteredTools := make(server.ToolConfigs)
-				for _, tName := range targetToolset.ToolNames {
+				for _, tName := range targetGroup.ToolNames {
 					if tCfg, tExists := parsed.Tools[tName]; tExists {
 						filteredTools[tName] = tCfg
 					}
 				}
 				parsed.Tools = filteredTools
 
-				// Filter toolsets to only include the target toolset
-				filteredToolsets := make(server.ToolsetConfigs)
-				filteredToolsets[toolsetName] = targetToolset
-				parsed.Toolsets = filteredToolsets
+				// Filter groups to only include the target group
+				filteredGroups := make(server.GroupConfigs)
+				filteredGroups[toolsetName] = targetGroup
+				parsed.Groups = filteredGroups
 			}
 
 			allConfigs = append(allConfigs, parsed)
@@ -294,8 +299,8 @@ func (opts *ToolboxOptions) LoadConfig(ctx context.Context, parser *ConfigParser
 	opts.Cfg.AuthServiceConfigs = finalConfig.AuthServices
 	opts.Cfg.EmbeddingModelConfigs = finalConfig.EmbeddingModels
 	opts.Cfg.ToolConfigs = finalConfig.Tools
-	opts.Cfg.ToolsetConfigs = finalConfig.Toolsets
 	opts.Cfg.PromptConfigs = finalConfig.Prompts
+	opts.Cfg.GroupConfigs = finalConfig.Groups
 
 	return isCustomConfigured, nil
 }

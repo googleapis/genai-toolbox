@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/googleapis/mcp-toolbox/internal/log"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/mcp-toolbox/internal/server/resources"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
@@ -35,6 +36,26 @@ var (
 	dummyID           jsonrpc.RequestId = 1
 	fakeVersionString                   = "0.0.0"
 )
+
+// mustToolset materializes the default toolset view from the resource manager.
+func mustToolset(t *testing.T, rm *resources.ResourceManager) tools.Toolset {
+	t.Helper()
+	ts, ok := rm.GetToolset("")
+	if !ok {
+		t.Fatal("default toolset not found")
+	}
+	return ts
+}
+
+// mustPromptset materializes the default promptset view from the resource manager.
+func mustPromptset(t *testing.T, rm *resources.ResourceManager) prompts.Promptset {
+	t.Helper()
+	ps, ok := rm.GetPromptset("")
+	if !ok {
+		t.Fatal("default promptset not found")
+	}
+	return ps
+}
 
 func TestValidateMetadata(t *testing.T) {
 	var dummyId jsonrpc.RequestId
@@ -402,8 +423,8 @@ func TestServerDiscoverHandler(t *testing.T) {
 func TestToolsListHandler(t *testing.T) {
 	// Initialize tools using provided testutils mock instances
 	mockTools := []testutils.MockTool{testutils.MockTool1, testutils.MockTool2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
 		name        string
@@ -418,7 +439,7 @@ func TestToolsListHandler(t *testing.T) {
 			name:        "invalid json body",
 			rawBody:     []byte(`{invalid json}`),
 			header:      nil,
-			toolset:     toolsets[""],
+			toolset:     mustToolset(t, resourceMgr),
 			wantErr:     true,
 			errContains: "invalid mcp tools list request",
 		},
@@ -444,7 +465,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:      http.Header{"Mcp-Method": []string{"WRONG_METHOD"}},
-			toolset:     toolsets[""],
+			toolset:     mustToolset(t, resourceMgr),
 			wantErr:     true,
 			errContains: "does not match body value",
 		},
@@ -470,7 +491,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  nil,
-			toolset: toolsets[""],
+			toolset: mustToolset(t, resourceMgr),
 			wantErr: false,
 		},
 		{
@@ -495,7 +516,7 @@ func TestToolsListHandler(t *testing.T) {
 				},
 			},
 			header:  http.Header{"Mcp-Method": []string{TOOLS_LIST}},
-			toolset: toolsets[""],
+			toolset: mustToolset(t, resourceMgr),
 			wantErr: false,
 		},
 	}
@@ -545,8 +566,8 @@ func TestToolsCallHandler(t *testing.T) {
 		testutils.MockTool4,
 		testutils.MockTool5,
 	}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, mockTools, nil)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, mockTools, nil)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 
 	tests := []struct {
 		name        string
@@ -676,7 +697,7 @@ func TestToolsCallHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := toolsCallHandler(tt.context, dummyID, toolsets[""], resourceMgr, body, tt.header)
+			got, err := toolsCallHandler(tt.context, dummyID, mustToolset(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -707,8 +728,8 @@ func TestPromptsListHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string
 		body        ListPromptsRequest
@@ -760,7 +781,7 @@ func TestPromptsListHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsListHandler(ctx, dummyID, resourceMgr, promptsets[""], body, tt.header)
+			got, err := promptsListHandler(ctx, dummyID, resourceMgr, mustPromptset(t, resourceMgr), body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {
@@ -791,8 +812,8 @@ func TestPromptsGetHandler(t *testing.T) {
 	ctx = util.WithLogger(ctx, testLogger)
 	// Initialize prompts
 	mockPrompts := []testutils.MockPrompt{testutils.MockPrompt1, testutils.MockPrompt2}
-	toolsMap, toolsets, promptsMap, promptsets := testutils.SetUpResources(t, nil, mockPrompts)
-	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	toolsMap, promptsMap, groups := testutils.SetUpResources(t, nil, mockPrompts)
+	resourceMgr := resources.NewResourceManager(nil, nil, nil, toolsMap, promptsMap, groups)
 	tests := []struct {
 		name        string
 		body        GetPromptRequest
@@ -893,7 +914,7 @@ func TestPromptsGetHandler(t *testing.T) {
 					t.Fatalf("unexpected error during marshaling")
 				}
 			}
-			got, err := promptsGetHandler(ctx, dummyID, promptsets[""], resourceMgr, body, tt.header)
+			got, err := promptsGetHandler(ctx, dummyID, mustPromptset(t, resourceMgr), resourceMgr, body, tt.header)
 
 			if tt.wantErr {
 				if err == nil {

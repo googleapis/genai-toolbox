@@ -69,6 +69,22 @@ func (gc GroupConfig) Initialize(toolsMap map[string]tools.Tool, promptsMap map[
 	return Group{GroupConfig: gc, toolNameSet: toolNameSet, promptNameSet: promptNameSet}, nil
 }
 
+// NewGroup builds a Group directly from its config, deriving the membership sets
+// from the declared tool and prompt names. It skips the existence checks
+// performed by GroupConfig.Initialize and is intended for tests and callers that
+// have already validated the names.
+func NewGroup(config GroupConfig) Group {
+	toolNameSet := make(map[string]struct{}, len(config.ToolNames))
+	for _, name := range config.ToolNames {
+		toolNameSet[name] = struct{}{}
+	}
+	promptNameSet := make(map[string]struct{}, len(config.PromptNames))
+	for _, name := range config.PromptNames {
+		promptNameSet[name] = struct{}{}
+	}
+	return Group{GroupConfig: config, toolNameSet: toolNameSet, promptNameSet: promptNameSet}
+}
+
 // ContainsTool reports whether the group includes a tool with the given name.
 func (g Group) ContainsTool(name string) bool {
 	_, ok := g.toolNameSet[name]

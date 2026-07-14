@@ -24,6 +24,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/mcp-toolbox/internal/group"
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -161,8 +162,11 @@ var MockPrompt2 = NewMockPrompt("prompt2", "", prompts.Arguments{
 	{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
 })
 
-// SetUpResources setups resources to test against
-func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
+// SetUpResources setups resources to test against. The returned groups map is the
+// source of truth used by ResourceManager; assert group membership via
+// groups[name].ContainsTool / ContainsPrompt, or the derived views via
+// ResourceManager.GetToolset / GetPromptset.
+func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]prompts.Prompt, map[string]group.Group) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -203,5 +207,22 @@ func SetUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 		promptsets[""] = ps
 	}
 
-	return toolsMap, toolsets, promptsMap, promptsets
+	// Build the authoritative groups map from the union of toolset and promptset
+	// names so the derived toolset/promptset views match the legacy maps.
+	groupNames := make(map[string]struct{})
+	for name := range toolsets {
+		groupNames[name] = struct{}{}
+	}
+	for name := range promptsets {
+		groupNames[name] = struct{}{}
+	}
+	groups := make(map[string]group.Group)
+	for name := range groupNames {
+		ts := toolsets[name]
+		ps := promptsets[name]
+		gc := group.GroupConfig{Name: name, ToolNames: ts.ToolNames, PromptNames: ps.PromptNames}
+		groups[name] = group.NewGroup(gc)
+	}
+
+	return toolsMap, promptsMap, groups
 }
