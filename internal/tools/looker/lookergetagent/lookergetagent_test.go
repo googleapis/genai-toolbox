@@ -64,7 +64,7 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -100,7 +100,7 @@ func TestFailParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -161,7 +161,7 @@ func TestInvokeValidation(t *testing.T) {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	resourceMgr := MockSourceProvider{source: MockSource{}}
+	primitiveMgr := MockSourceProvider{source: MockSource{}}
 
 	tcs := []struct {
 		desc    string
@@ -177,7 +177,7 @@ func TestInvokeValidation(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, err := tool.Invoke(ctx, resourceMgr, tc.params, "")
+			_, err := tool.Invoke(ctx, primitiveMgr, tc.params, "")
 			if err == nil {
 				t.Fatalf("expect error, got nil")
 			}
