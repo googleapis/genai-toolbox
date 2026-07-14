@@ -54,12 +54,18 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1",
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 			},
 			"my-tool": map[string]any{
 				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   paramToolStatement,
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
@@ -78,6 +84,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   idParamToolStmt,
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 				"parameters": []any{
 					map[string]any{
 						"name":        "id",
@@ -91,6 +100,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   nameParamToolStmt,
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 				"parameters": []any{
 					map[string]any{
 						"name":        "name",
@@ -105,6 +117,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
 				"statement":   arrayToolStatement,
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 				"parameters": []any{
 					map[string]any{
 						"name":        "idArray",
@@ -134,6 +149,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
 				"statement": authToolStatement,
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 				"parameters": []map[string]any{
 					{
 						"name":        "email",
@@ -153,6 +171,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"statement":   "SELECT 1",
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 				"authRequired": []string{
 					"my-google-auth",
 				},
@@ -162,6 +183,9 @@ func GetToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, i
 				"source":      "my-instance",
 				"description": "Tool to test statement with incorrect syntax.",
 				"statement":   "SELEC 1;",
+				"annotations": map[string]any{
+					"readOnlyHint": true,
+				},
 			},
 		},
 	}
