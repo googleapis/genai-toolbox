@@ -1540,11 +1540,14 @@ steps:
     args:
       - -c
       - |
-        PATTERN="odata|internal/server/|tests/common.go|tests/tool.go|.ci/"
+        PATTERN="(^|/)odata/|$$(cat .ci/core_pattern.txt)"
 
         if grep -qE "$$PATTERN" /workspace/changed_files.txt; then
           echo "Changes detected. Running OData tests..."
-          go test -short ./tests/odata
+          .ci/test_with_coverage.sh \
+            "OData" \
+            odata \
+            odata
         else
           echo "No relevant changes for OData. Skipping shard."
           exit 0

@@ -106,7 +106,7 @@ description: Reads sales orders
 		t.Fatalf("Failed to decode struct: %v", err)
 	}
 
-	tool, err := config.Initialize(srcs)
+	tool, err := config.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("Failed to initialize tool: %v", err)
 	}
@@ -117,7 +117,10 @@ description: Reads sales orders
 	}
 
 	// Verify dynamic parameters
-	params := sapTool.GetParameters()
+	params, err := sapTool.GetParameters(srcs)
+	if err != nil {
+		t.Fatalf("Failed to get parameters: %v", err)
+	}
 	var filterParam parameters.Parameter
 	var skipParam parameters.Parameter
 	for _, p := range params {
@@ -203,13 +206,14 @@ func TestToolInvokePaginationV2(t *testing.T) {
 	srcs := map[string]sources.Source{"my_mock_sap": mockSrc}
 	sp := &mockSourceProvider{sources: srcs}
 
+	cfg := Config{
+		Source:    "my_mock_sap",
+		EntitySet: "A_SalesOrder",
+		Operation: "READ",
+	}
 	tool := Tool{
-		Config: Config{
-			Source:    "my_mock_sap",
-			EntitySet: "A_SalesOrder",
-			Operation: "READ",
-		},
-		Method: "GET",
+		BaseTool: tools.NewBaseTool(cfg, tools.NewReadOnlyAnnotations(), tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired}, cfg.QueryParams),
+		Method:   "GET",
 	}
 
 	resp, err := tool.Invoke(context.Background(), sp, parameters.ParamValues{}, "")
@@ -240,13 +244,14 @@ func TestToolInvokePaginationV4(t *testing.T) {
 	srcs := map[string]sources.Source{"my_mock_sap": mockSrc}
 	sp := &mockSourceProvider{sources: srcs}
 
+	cfg := Config{
+		Source:    "my_mock_sap",
+		EntitySet: "A_SalesOrder",
+		Operation: "READ",
+	}
 	tool := Tool{
-		Config: Config{
-			Source:    "my_mock_sap",
-			EntitySet: "A_SalesOrder",
-			Operation: "READ",
-		},
-		Method: "GET",
+		BaseTool: tools.NewBaseTool(cfg, tools.NewReadOnlyAnnotations(), tools.Manifest{Description: cfg.Description, AuthRequired: cfg.AuthRequired}, cfg.QueryParams),
+		Method:   "GET",
 	}
 
 	resp, err := tool.Invoke(context.Background(), sp, parameters.ParamValues{}, "")

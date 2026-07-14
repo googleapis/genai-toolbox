@@ -298,14 +298,7 @@ func (s *Source) RunSAPRequest(req *http.Request, accessToken tools.AccessToken)
 		req.Header.Set(s.GetAuthTokenHeaderName(), string(accessToken))
 	}
 
-	// 2. Lazy fetch metadata bypassed for troubleshooting (Backup kept below)
-	// if s.metadata == nil {
-	// 	if err := s.fetchMetadata(ctx, accessToken); err != nil {
-	// 		return nil, fmt.Errorf("lazy metadata fetch failed: %w", err)
-	// 	}
-	// }
-
-	// 3. Delegate Authentication and Handshake to Strategy
+	// 2. Delegate Authentication and Handshake to Strategy
 	if err := s.authStrategy.Authorize(ctx, req, s.client); err != nil {
 		return nil, fmt.Errorf("sap authorization failed: %w", err)
 	}

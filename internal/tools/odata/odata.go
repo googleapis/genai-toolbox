@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/sources/odata"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -41,7 +40,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -62,16 +61,15 @@ type odataSourceOauth interface {
 }
 
 type Config struct {
-	Name         string                `yaml:"name" validate:"required"`
-	Type         string                `yaml:"type" validate:"required"`
-	Source       string                `yaml:"source" validate:"required"`
-	Description  string                `yaml:"description" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired"`
-	EntitySet    string                `yaml:"entitySet" validate:"required"`
-	Operation    string                `yaml:"operation" validate:"required"` // READ, CREATE, UPDATE, DELETE, FUNCTION_IMPORT
-	ContentType  string                `yaml:"contentType"`                   // Override default application/json
-	QueryParams  parameters.Parameters `yaml:"queryParams"`
-	BodyParams   parameters.Parameters `yaml:"bodyParams"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string                 `yaml:"type" validate:"required"`
+	Source           string                 `yaml:"source" validate:"required"`
+	EntitySet        string                 `yaml:"entitySet" validate:"required"`
+	Operation        string                 `yaml:"operation" validate:"required"` // READ, CREATE, UPDATE, DELETE, FUNCTION_IMPORT
+	ContentType      string                 `yaml:"contentType"`                   // Override default application/json
+	QueryParams      parameters.Parameters  `yaml:"queryParams"`
+	BodyParams       parameters.Parameters  `yaml:"bodyParams"`
+	Annotations      *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -80,40 +78,18 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	var metadata *odata.ODataMetadata
-	if rawS, ok := srcs[cfg.Source]; ok {
-		if s, ok := rawS.(odataSource); ok {
-			metadata = s.Metadata()
-		}
-	}
-
+func (cfg Config) Initialize(ctx context.Context) (tools.Tool, error) {
 	var dynamicParams parameters.Parameters
 	var method string
 
 	switch strings.ToUpper(cfg.Operation) {
 	case "READ":
 		method = "GET"
-		// Dynmaically build OData parameters for the EntitySet using parsed metadata
-		filterDesc := "OData $filter string."
-		selectDesc := "OData $select string."
-
-		if metadata != nil {
-			if et, err := metadata.GetEntityTypeForSet(cfg.EntitySet); err == nil {
-				var props []string
-				for _, p := range et.Properties {
-					props = append(props, fmt.Sprintf("%s (%s)", p.Name, p.Type))
-				}
-				filterDesc = fmt.Sprintf("OData $filter string. Available properties: %s", strings.Join(props, ", "))
-				selectDesc = fmt.Sprintf("OData $select string. Available properties: %s", strings.Join(props, ", "))
-			}
-		}
-
-		filterParam := parameters.NewStringParameterWithRequired("filter", filterDesc, false)
-		selectParam := parameters.NewStringParameterWithRequired("select", selectDesc, false)
-		topParam := parameters.NewIntParameterWithRequired("top", "OData $top integer limit.", false)
-		skipParam := parameters.NewIntParameterWithRequired("skip", "OData $skip integer offset.", false)
-		skiptokenParam := parameters.NewStringParameterWithRequired("skiptoken", "OData $skiptoken string for server-side pagination.", false)
+		filterParam := parameters.NewStringParameter("filter", "OData $filter string.", parameters.WithStringRequired(false))
+		selectParam := parameters.NewStringParameter("select", "OData $select string.", parameters.WithStringRequired(false))
+		topParam := parameters.NewIntParameter("top", "OData $top integer limit.", parameters.WithIntRequired(false))
+		skipParam := parameters.NewIntParameter("skip", "OData $skip integer offset.", parameters.WithIntRequired(false))
+		skiptokenParam := parameters.NewStringParameter("skiptoken", "OData $skiptoken string for server-side pagination.", parameters.WithStringRequired(false))
 
 		dynamicParams = append(dynamicParams, filterParam, selectParam, topParam, skipParam, skiptokenParam)
 
@@ -123,13 +99,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	case "UPDATE":
 		method = "PUT" // Default fallback
-		if metadata != nil {
-			if metadata.Version == "4.0" {
-				method = "PATCH"
-			} else if metadata.Version == "2.0" {
-				method = "MERGE"
-			}
-		}
 		dynamicParams = append(dynamicParams, cfg.BodyParams...)
 
 	case "DELETE":
@@ -138,14 +107,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	case "FUNCTION_IMPORT":
 		method = "POST" // Default for function imports, but should probably read from metadata
-		if metadata != nil {
-			if fi, ok := metadata.FunctionImps[cfg.EntitySet]; ok {
-				if fi.HttpMethod != "" {
-					method = fi.HttpMethod
-				}
-			}
-		}
-		// Uses QueryParams mostly for args
 		dynamicParams = append(dynamicParams, cfg.QueryParams...)
 	}
 
@@ -158,7 +119,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Remove duplicates
 	err := parameters.CheckDuplicateParameters(allParameters)
 	if err != nil {
-		return nil, err
+		return Tool{}, err
 	}
 
 	paramManifest := allParameters.Manifest()
@@ -166,29 +127,34 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	var defaultAnnotationsFn func() *tools.ToolAnnotations
+	if strings.ToUpper(cfg.Operation) == "READ" {
+		defaultAnnotationsFn = tools.NewReadOnlyAnnotations
+	} else {
+		defaultAnnotationsFn = tools.NewDestructiveAnnotations
+	}
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, defaultAnnotationsFn)
 
 	return Tool{
-		Config:      cfg,
-		Method:      method,
-		AllParams:   allParameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest: mcpManifest,
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			annotations,
+			tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+			allParameters,
+		),
+		Method: method,
 	}, nil
 }
 
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Method      string
-	AllParams   parameters.Parameters
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	tools.BaseTool[Config]
+	Method string
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
 // applyODataFormatting automatically applies OData syntax transformations to values, incorporating SAP-specific compatibility flags.
@@ -230,7 +196,7 @@ func applyODataFormatting(value string, paramName string, paramType string, mdVe
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[odataSource](resourceMgr, t.Source, t.Name, resourceType)
+	source, err := tools.GetCompatibleSource[odataSource](resourceMgr, t.Cfg.Source, t.Cfg.Name, resourceType)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
@@ -244,7 +210,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// 1. Build URL
 	baseURL := strings.TrimRight(source.HttpBaseURL(), "/")
-	reqURL := fmt.Sprintf("%s/%s", baseURL, t.EntitySet)
+	reqURL := fmt.Sprintf("%s/%s", baseURL, t.Cfg.EntitySet)
 
 	parsedURL, err := url.Parse(reqURL)
 	if err != nil {
@@ -254,7 +220,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	query := parsedURL.Query()
 
 	// 2. Map Query Parameters
-	if strings.ToUpper(t.Operation) == "READ" {
+	if strings.ToUpper(t.Cfg.Operation) == "READ" {
 		query.Set("$format", "json")
 		if v, ok := paramsMap["filter"]; ok && v != nil {
 			query.Set("$filter", fmt.Sprintf("%v", v))
@@ -274,7 +240,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Map generic explicitly defined query params
-	for _, p := range t.QueryParams {
+	for _, p := range t.Cfg.QueryParams {
 		if v, ok := paramsMap[p.GetName()]; ok && v != nil {
 			formattedVal := applyODataFormatting(fmt.Sprintf("%v", v), p.GetName(), p.GetType(), version, true, source.Compatibility())
 			query.Set(p.GetName(), formattedVal)
@@ -285,9 +251,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// 3. Map Body Parameters for CREATE/UPDATE
 	var bodyBytes []byte
-	if (strings.ToUpper(t.Operation) == "CREATE" || strings.ToUpper(t.Operation) == "UPDATE") && len(t.BodyParams) > 0 {
+	if (strings.ToUpper(t.Cfg.Operation) == "CREATE" || strings.ToUpper(t.Cfg.Operation) == "UPDATE") && len(t.Cfg.BodyParams) > 0 {
 		payloadMap := make(map[string]interface{})
-		for _, p := range t.BodyParams {
+		for _, p := range t.Cfg.BodyParams {
 			if v, ok := paramsMap[p.GetName()]; ok && v != nil {
 				// We don't do complex URL string formatting here, just map directly.
 				// Go's JSON parser will serialize nested arrays seamlessly for Deep Inserts.
@@ -310,8 +276,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	req.Header.Set("Accept", "application/json")
 	if len(bodyBytes) > 0 {
 		cType := "application/json"
-		if t.ContentType != "" {
-			cType = t.ContentType
+		if t.Cfg.ContentType != "" {
+			cType = t.Cfg.ContentType
 		}
 		req.Header.Set("Content-Type", cType)
 	}
@@ -338,26 +304,56 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return resp, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return paramValues, nil
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	allParams := append(parameters.Parameters(nil), t.StaticParameters...)
+	if strings.ToUpper(t.Cfg.Operation) == "READ" && srcs != nil {
+		if rawS, ok := srcs[t.Cfg.Source]; ok {
+			if s, ok := rawS.(odataSource); ok {
+				if metadata := s.Metadata(); metadata != nil {
+					if et, err := metadata.GetEntityTypeForSet(t.Cfg.EntitySet); err == nil {
+						var props []string
+						for _, p := range et.Properties {
+							props = append(props, fmt.Sprintf("%s (%s)", p.Name, p.Type))
+						}
+						filterDesc := fmt.Sprintf("OData $filter string. Available properties: %s", strings.Join(props, ", "))
+						selectDesc := fmt.Sprintf("OData $select string. Available properties: %s", strings.Join(props, ", "))
+						for i, p := range allParams {
+							if sp, ok := p.(*parameters.StringParameter); ok {
+								if sp.Name == "filter" {
+									allParams[i] = parameters.NewStringParameter("filter", filterDesc, parameters.WithStringRequired(false))
+								} else if sp.Name == "select" {
+									allParams[i] = parameters.NewStringParameter("select", selectDesc, parameters.WithStringRequired(false))
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return allParams, nil
 }
 
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) McpManifest() tools.McpManifest {
-	return t.mcpManifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	params, err := t.GetParameters(srcs)
+	if err != nil {
+		return tools.Manifest{}, err
+	}
+	paramManifest := params.Manifest()
+	if paramManifest == nil {
+		paramManifest = make([]parameters.ParameterManifest, 0)
+	}
+	return tools.Manifest{
+		Description:  t.GetDescription(),
+		Parameters:   paramManifest,
+		AuthRequired: t.GetAuthRequired(),
+	}, nil
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	s, ok := resourceMgr.GetSource(t.Config.Source)
+	s, ok := resourceMgr.GetSource(t.Cfg.Source)
 	if !ok {
-		return false, fmt.Errorf("unable to retrieve source %q", t.Config.Source)
+		return false, fmt.Errorf("unable to retrieve source %q", t.Cfg.Source)
 	}
 
 	if oauthSource, ok := s.(odataSourceOauth); ok {
@@ -367,9 +363,9 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	s, ok := resourceMgr.GetSource(t.Config.Source)
+	s, ok := resourceMgr.GetSource(t.Cfg.Source)
 	if !ok {
-		return "Authorization", fmt.Errorf("unable to retrieve source %q", t.Config.Source)
+		return "Authorization", fmt.Errorf("unable to retrieve source %q", t.Cfg.Source)
 	}
 
 	if oauthSource, ok := s.(odataSourceOauth); ok {
@@ -378,8 +374,4 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		}
 	}
 	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.AllParams
 }
