@@ -72,8 +72,8 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"custom_write_tool": postgresexecutesql.Config{
 					ConfigBase: tools.ConfigBase{
-						Name:        "custom_write_tool",
-						Description: "custom write query",
+						Name:         "custom_write_tool",
+						Description:  "custom write query",
 						AuthRequired: []string{},
 					},
 					Type:   "postgres-execute-sql",
