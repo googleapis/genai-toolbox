@@ -39,7 +39,7 @@ import (
 	"github.com/googleapis/mcp-toolbox/internal/log"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
-	"github.com/googleapis/mcp-toolbox/internal/server/resources"
+	"github.com/googleapis/mcp-toolbox/internal/server/primitives"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/telemetry"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
@@ -59,7 +59,7 @@ type Server struct {
 	logger              log.Logger
 	instrumentation     *telemetry.Instrumentation
 	sseManager          *sseManager
-	ResourceMgr         *resources.ResourceManager
+	PrimitiveMgr        *primitives.PrimitiveManager
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
 	enableDraftSpecs    bool
@@ -450,7 +450,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	primitiveManager := primitives.NewPrimitiveManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	limit := cfg.HttpMaxRequestBytes
 	if limit <= 0 {
@@ -465,7 +465,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:              l,
 		instrumentation:     instrumentation,
 		sseManager:          sseManager,
-		ResourceMgr:         resourceManager,
+		PrimitiveMgr:        primitiveManager,
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,
@@ -505,7 +505,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// Host OAuth Protected Resource Metadata endpoint
 	mcpAuthEnabled := false
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			mcpAuthEnabled = true
 			break
@@ -583,7 +583,7 @@ func mcpAuthMiddleware(s *Server) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Find McpEnabled auth service
 			var mcpSvc auth.MCPAuthService
-			for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+			for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 				if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 					mcpSvc = mSvc
 					break
