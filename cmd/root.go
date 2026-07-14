@@ -37,7 +37,6 @@ import (
 	"github.com/googleapis/mcp-toolbox/cmd/internal/serve"
 	"github.com/googleapis/mcp-toolbox/cmd/internal/skills"
 	"github.com/googleapis/mcp-toolbox/internal/auth"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
 	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server"
@@ -116,9 +115,10 @@ func NewCommand(opts *internal.ToolboxOptions) *cobra.Command {
 	// setup flags that are common across all commands
 	internal.PersistentFlags(cmd, opts)
 	flags := cmd.Flags()
-	internal.ConfigFileFlags(flags, opts)
+	internal.ConfigFileFlags(cmd, flags, opts)
 	internal.ServeFlags(flags, opts)
 	flags.BoolVar(&opts.Cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
+	flags.BoolVar(&opts.Cfg.IgnoreUnknownTools, "ignore-unknown-tools", false, "Log warnings and skip unknown/unsupported tool types instead of failing to start.")
 	flags.IntVar(&opts.Cfg.PollInterval, "poll-interval", 0, "Specifies the polling frequency (seconds) for configuration file updates.")
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd, opts) }
@@ -145,7 +145,7 @@ func handleDynamicReload(ctx context.Context, toolsFile internal.Config, s *serv
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	s.PrimitiveMgr.SetPrimitives(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }
@@ -178,6 +178,7 @@ func validateReloadEdits(
 		ToolConfigs:           toolsFile.Tools,
 		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
+		IgnoreUnknownTools:    util.IgnoreUnknownToolsFromContext(ctx),
 	}
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
@@ -454,17 +455,27 @@ func run(cmd *cobra.Command, opts *internal.ToolboxOptions) error {
 	}
 
 	// Validate ToolboxUrl if MCP Auth is enabled
+	var mcpAuthEnabled bool
 	for _, authSvc := range opts.Cfg.AuthServiceConfigs {
-		if genCfg, ok := authSvc.(generic.Config); ok && genCfg.McpEnabled {
-			if opts.Cfg.ToolboxUrl == "" {
-				opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
-			}
-			if opts.Cfg.ToolboxUrl == "" {
-				errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
-				opts.Logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
+		if authSvc.IsMCPEnabled() {
+			mcpAuthEnabled = true
 			break
+		}
+	}
+
+	if mcpAuthEnabled {
+		if opts.Cfg.EnableAPI {
+			errMsg := fmt.Errorf("MCP Auth cannot be enabled together with the legacy HTTP API (--enable-api)")
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+		if opts.Cfg.ToolboxUrl == "" {
+			opts.Cfg.ToolboxUrl = os.Getenv("TOOLBOX_URL")
+		}
+		if opts.Cfg.ToolboxUrl == "" {
+			errMsg := fmt.Errorf("MCP Auth is enabled but Toolbox URL is missing. Please provide it via --toolbox-url flag or TOOLBOX_URL environment variable")
+			opts.Logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
 		}
 	}
 

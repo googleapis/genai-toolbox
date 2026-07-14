@@ -9,8 +9,8 @@ description: >
 MCP Toolbox for Databases is an open source Model Context Protocol (MCP) server that connects your AI agents, IDEs, and applications directly to your enterprise databases.
 
 It serves a **dual purpose**:
-1. **Ready-to-use MCP Server (aka ['Build-Time'](/getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
-2. **Custom Tools Framework (aka ['Run-Time'](/getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
+1. **Ready-to-use MCP Server (aka ['Build-Time'](../getting-started/#build-time)):** Instantly connect Gemini CLI, Google Antigravity, Claude Code, Codex, or other MCP clients to your databases using our *prebuilt generic tools*. Talk to your data, explore schemas, and generate code without writing boilerplate.
+2. **Custom Tools Framework (aka ['Run-Time'](../getting-started/#runtime)):** A robust framework to build specialized, highly secure AI tools for your production agents. Define structured queries, semantic search, and NL2SQL capabilities safely and easily.
 
 {{< notice tip >}}
 **Repository Name Update:** The GitHub repository for this project has been officially renamed from `genai-toolbox` to `mcp-toolbox`. We recommend updating your local Git remote URL for consistency:
@@ -110,7 +110,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.2.0
+export VERSION=1.6.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -121,7 +121,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.2.0
+export VERSION=1.6.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -132,7 +132,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.2.0
+export VERSION=1.6.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -143,7 +143,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.2.0
+set VERSION=1.6.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -153,8 +153,28 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.2.0"
+$VERSION = "1.6.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (Command Prompt)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (Command Prompt):
+
+```cmd
+:: see releases page for other versions
+set VERSION=1.6.0
+curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows ARM64 (PowerShell)" lang="en" %}}
+To install Toolbox as a binary on Windows ARM64 (PowerShell):
+
+```powershell
+# see releases page for other versions
+$VERSION = "1.6.0"
+curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -165,7 +185,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.2.0
+export VERSION=1.6.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -184,7 +204,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.2.0
+go install github.com/googleapis/mcp-toolbox@v1.6.0
 ```
 
 {{% /tab %}}
@@ -742,3 +762,46 @@ For more detailed instructions on using the Toolbox Go SDK, see the
 [README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
 For more details, see the [Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
+
+## Supported MCP Version
+
+Toolbox is fully compatible with the Model Context Protocol (MCP) and maintains support for multiple protocol revisions to ensure seamless integration with most MCP clients.
+
+### Stable Releases
+The following official MCP specification versions are currently supported for production use:
+
+* `2025-11-25`
+* `2025-06-18`
+* `2025-03-26`
+* `2024-11-05`
+
+{{< notice note >}}
+If no protocol version is negotiated or provided, the Toolbox server defaults to
+the legacy custom transport protocol established on `2024-11-05`, which does not
+require initialization.
+{{< /notice >}}
+
+### Draft Specifications
+We actively develop against upcoming protocol specifications. You can opt-in to
+test these forthcoming revisions before their official release using the
+`--enable-draft-specs` flag during server startup.
+
+To test these draft specifications, enable the startup flag and use this version
+string during negotiation:
+* `DRAFT-2026-v1`
+
+Description: Enables experimental support for upcoming draft MCP specifications,
+allowing you to test new schema standards and transport adjustments before they
+become stable.
+
+{{< notice note >}}
+Once the draft specification is finalized and released as a stable version, the
+draft implementation will be permanently removed. The flag itself will not be
+removed, but its functionality will remain dormant (having no effect on the
+server) until a new draft specification becomes available.
+
+There will be no automatic redirects or backwards compatibility from the draft
+spec to the stable release. Developers must manually migrate their clients to
+the stable version once it is available. Do not use this flag in production
+environments.
+{{< /notice >}}

@@ -49,12 +49,14 @@ func Register(resourceType string, factory ToolConfigFactory) bool {
 	return true
 }
 
+var ErrUnknownToolType = fmt.Errorf("unknown tool type")
+
 // DecodeConfig looks up the registered factory for the given type and uses it
 // to decode the tool configuration.
 func DecodeConfig(ctx context.Context, resourceType string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
 	factory, found := toolRegistry[resourceType]
 	if !found {
-		return nil, fmt.Errorf("unknown tool type: %q", resourceType)
+		return nil, fmt.Errorf("%w: %q", ErrUnknownToolType, resourceType)
 	}
 	toolConfig, err := factory(ctx, name, decoder)
 	if err != nil {
@@ -65,7 +67,7 @@ func DecodeConfig(ctx context.Context, resourceType string, name string, decoder
 
 type ToolConfig interface {
 	ToolConfigType() string
-	Initialize(map[string]sources.Source) (Tool, error)
+	Initialize(context.Context) (Tool, error)
 }
 
 // https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations
@@ -94,6 +96,13 @@ func NewDestructiveAnnotations() *ToolAnnotations {
 	}
 }
 
+// NewWriteAnnotations creates default annotations for a non-destructive write
+// tool: ReadOnlyHint is false, DestructiveHint is left unset.
+func NewWriteAnnotations() *ToolAnnotations {
+	readOnly := false
+	return &ToolAnnotations{ReadOnlyHint: &readOnly}
+}
+
 // GetAnnotationsOrDefault returns the provided annotations if non-nil,
 // otherwise returns the result of calling defaultFn.
 func GetAnnotationsOrDefault(annotations *ToolAnnotations, defaultFn func() *ToolAnnotations) *ToolAnnotations {
@@ -120,16 +129,17 @@ type Tool interface {
 	GetAnnotations() *ToolAnnotations
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, util.ToolboxError)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
-	Manifest() Manifest
+	Manifest(map[string]sources.Source) (Manifest, error)
+	StaticManifest() Manifest
 	Authorized([]string) bool
 	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName(SourceProvider) (string, error)
-	GetParameters() parameters.Parameters
+	GetParameters(map[string]sources.Source) (parameters.Parameters, error)
 	GetScopesRequired() []string
 }
 
-// SourceProvider defines the minimal view of the server.ResourceManager
+// SourceProvider defines the minimal view of the primitives.PrimitiveManager
 // that the Tool package needs.
 // This is implemented to prevent import cycles.
 type SourceProvider interface {
@@ -157,9 +167,9 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 	return false
 }
 
-func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
+func GetCompatibleSource[T any](primitiveMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
 	var zero T
-	s, ok := resourceMgr.GetSource(sourceName)
+	s, ok := primitiveMgr.GetSource(sourceName)
 	if !ok {
 		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
 	}
@@ -168,4 +178,110 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolType, sourceName)
 	}
 	return source, nil
+}
+
+// GetCompatibleSourceFromMap looks up a source by name from a sources map and
+// asserts it to the requested type. It mirrors GetCompatibleSource for callers
+// that hold the sources map directly (Manifest/GetParameters) rather than a
+// SourceProvider.
+func GetCompatibleSourceFromMap[T any](srcs map[string]sources.Source, sourceName, toolName, toolType string) (T, error) {
+	var zero T
+	s, ok := srcs[sourceName]
+	if !ok {
+		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
+	}
+	source, ok := s.(T)
+	if !ok {
+		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolType, sourceName)
+	}
+	return source, nil
+}
+
+// ToolMeta is the read-only view BaseTool needs of any tool's Config. Tools
+// satisfy it for free by embedding ConfigBase.
+type ToolMeta interface {
+	GetName() string
+	GetDescription() string
+	GetAuthRequired() []string
+	GetScopesRequired() []string
+}
+
+// ConfigBase owns the YAML fields that every tool's Config shares and that
+// BaseTool reads through.
+// Description is eagerly defaulted by the tool's Initialize (many prebuilt
+// configs omit description: and rely on a canned per-tool string), so
+// post-Initialize ConfigBase.Description holds the resolved value.
+type ConfigBase struct {
+	Name           string   `yaml:"name"           validate:"required"`
+	Description    string   `yaml:"description"`
+	AuthRequired   []string `yaml:"authRequired"`
+	ScopesRequired []string `yaml:"scopesRequired"`
+}
+
+func (c ConfigBase) GetName() string             { return c.Name }
+func (c ConfigBase) GetDescription() string      { return c.Description }
+func (c ConfigBase) GetAuthRequired() []string   { return c.AuthRequired }
+func (c ConfigBase) GetScopesRequired() []string { return c.ScopesRequired }
+
+// BaseTool provides default implementations of various methods on the Tool
+// interface. Tools embed BaseTool to drop their boilerplate and override
+// only methods that need custom behavior.
+type BaseTool[T ToolMeta] struct {
+	Cfg              T
+	annotations      *ToolAnnotations
+	metadata         Manifest
+	StaticParameters parameters.Parameters
+}
+
+// NewBaseTool constructs a BaseTool from a resolved Config (typically the
+// per-tool Config after Initialize has filled in defaults), the resolved
+// annotations, the precomputed Manifest, and the tool's static parameters.
+func NewBaseTool[T ToolMeta](cfg T, annotations *ToolAnnotations, metadata Manifest, staticParameters parameters.Parameters) BaseTool[T] {
+	return BaseTool[T]{
+		Cfg:              cfg,
+		annotations:      annotations,
+		metadata:         metadata,
+		StaticParameters: staticParameters,
+	}
+}
+
+func (b BaseTool[T]) GetName() string                  { return b.Cfg.GetName() }
+func (b BaseTool[T]) GetDescription() string           { return b.Cfg.GetDescription() }
+func (b BaseTool[T]) GetAuthRequired() []string        { return b.Cfg.GetAuthRequired() }
+func (b BaseTool[T]) GetScopesRequired() []string      { return b.Cfg.GetScopesRequired() }
+func (b BaseTool[T]) GetAnnotations() *ToolAnnotations { return b.annotations }
+
+// Manifest returns the precomputed metadata. It and GetParameters stay trivial
+// and never call each other: embedded methods have no virtual dispatch, so a
+// BaseTool method calling another would miss a concrete tool's override.
+func (b BaseTool[T]) Manifest(_ map[string]sources.Source) (Manifest, error) {
+	return b.metadata, nil
+}
+
+// StaticManifest returns the manifest baked at Initialize, with no source
+// resolution. Dynamic tools override Manifest/GetParameters to refine params
+// against a live source, but not this method, so it always reaches the baked
+// skeleton — used for offline generation (e.g. skills) where no source exists.
+func (b BaseTool[T]) StaticManifest() Manifest {
+	return b.metadata
+}
+
+func (b BaseTool[T]) GetParameters(_ map[string]sources.Source) (parameters.Parameters, error) {
+	return b.StaticParameters, nil
+}
+
+func (b BaseTool[T]) Authorized(verifiedAuthServices []string) bool {
+	return IsAuthorized(b.Cfg.GetAuthRequired(), verifiedAuthServices)
+}
+
+func (b BaseTool[T]) RequiresClientAuthorization(_ SourceProvider) (bool, error) {
+	return false, nil
+}
+
+func (b BaseTool[T]) GetAuthTokenHeaderName(_ SourceProvider) (string, error) {
+	return "Authorization", nil
+}
+
+func (b BaseTool[T]) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, b.StaticParameters, paramValues, embeddingModelsMap, nil)
 }

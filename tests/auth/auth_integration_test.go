@@ -74,6 +74,7 @@ func TestMcpAuth(t *testing.T) {
 				"scope":  "read:files execute:sql",
 				"aud":    "test-audience",
 				"exp":    time.Now().Add(time.Hour).Unix(),
+				"iss":    "https://example.com",
 			})
 			return
 		}
@@ -103,10 +104,11 @@ func TestMcpAuth(t *testing.T) {
 				"source":         "my-sqlite",
 				"description":    "Execute SQL on SQLite",
 				"scopesRequired": []string{"execute:sql"},
+				"authRequired":   []string{"my-generic-auth"},
 			},
 		},
 	}
-	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5000"}
+	args := []string{"--toolbox-url=http://127.0.0.1:5000"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -126,6 +128,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate invalid token (wrong scopes)
 	invalidToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "wrong:scope",
 		"sub":   "test-user",
@@ -136,6 +139,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate valid token
 	validToken := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "read:files",
 		"sub":   "test-user",
@@ -146,6 +150,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate token with only read:files scope
 	tokenOnlyRead := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "read:files",
 		"sub":   "test-user",
@@ -156,6 +161,7 @@ func TestMcpAuth(t *testing.T) {
 
 	// Generate token with BOTH scopes
 	tokenBoth := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
+		"iss":   "https://example.com",
 		"aud":   "test-audience",
 		"scope": "read:files execute:sql",
 		"sub":   "test-user",
@@ -201,6 +207,11 @@ func TestMcpAuth(t *testing.T) {
 		{
 			name:           "200 OK with valid opaque token",
 			token:          "this-is-an-opaque-token",
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "200 OK with valid opaque token containing two dots",
+			token:          "this.is.opaque",
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -262,39 +273,55 @@ func TestMcpAuth(t *testing.T) {
 			if url == "" {
 				url = apiSSE
 			}
-			var body io.Reader
-			if tc.body != nil {
-				body = bytes.NewBuffer(tc.body)
+
+			runTest := func(t *testing.T, protocolVersion string) {
+				var body io.Reader
+				if tc.body != nil {
+					body = bytes.NewBuffer(tc.body)
+				}
+				req, _ := http.NewRequest(method, url, body)
+				if tc.token != "" {
+					req.Header.Add("Authorization", "Bearer "+tc.token)
+				}
+				if method == http.MethodPost {
+					req.Header.Set("Content-Type", "application/json")
+					if protocolVersion != "" {
+						req.Header.Set("MCP-Protocol-Version", protocolVersion)
+					}
+				}
+				resp, err := http.DefaultClient.Do(req)
+				if err != nil {
+					t.Fatalf("unable to send request: %s", err)
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != tc.wantStatusCode {
+					bodyBytes, _ := io.ReadAll(resp.Body)
+					t.Fatalf("expected %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+				}
+
+				if tc.checkWWWAuth != nil {
+					authHeader := resp.Header.Get("WWW-Authenticate")
+					tc.checkWWWAuth(t, authHeader)
+				}
 			}
-			req, _ := http.NewRequest(method, url, body)
-			if tc.token != "" {
-				req.Header.Add("Authorization", "Bearer "+tc.token)
-			}
+
 			if method == http.MethodPost {
-				req.Header.Set("Content-Type", "application/json")
-				req.Header.Set("MCP-Protocol-Version", "2025-11-25")
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("expected %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
-			}
-
-			if tc.checkWWWAuth != nil {
-				authHeader := resp.Header.Get("WWW-Authenticate")
-				tc.checkWWWAuth(t, authHeader)
+				versions := []string{"2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"}
+				for _, v := range versions {
+					t.Run("version_"+v, func(t *testing.T) {
+						runTest(t, v)
+					})
+				}
+			} else {
+				runTest(t, "")
 			}
 		})
 	}
 }
 
-// TestGoogleTokenValidation tests validation of Google access token
-func TestGoogleTokenValidation(t *testing.T) {
+// TestGoogleOAuthValidation tests validation of Google access token using type: google
+func TestGoogleOAuthValidation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -332,19 +359,15 @@ func TestGoogleTokenValidation(t *testing.T) {
 		"sources": map[string]any{},
 		"authServices": map[string]any{
 			"google-auth": map[string]any{
-				"type":                   "generic",
-				"audience":               aud,
-				"authorizationServer":    "https://accounts.google.com",
-				"introspectionEndpoint":  "https://www.googleapis.com/oauth2/v3/tokeninfo",
-				"introspectionMethod":    "GET",
-				"introspectionParamName": "access_token",
-				"mcpEnabled":             true,
+				"type":       "google",
+				"audience":   aud,
+				"mcpEnabled": true,
 			},
 		},
 		"tools": map[string]any{},
 	}
 
-	args := []string{"--enable-api", "--toolbox-url=http://127.0.0.1:5005", "--port=5005"}
+	args := []string{"--toolbox-url=http://127.0.0.1:5006", "--port=5006"}
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -359,7 +382,7 @@ func TestGoogleTokenValidation(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	api := "http://127.0.0.1:5005/mcp/sse"
+	api := "http://127.0.0.1:5006/mcp/sse"
 
 	req, _ := http.NewRequest(http.MethodGet, api, nil)
 	req.Header.Add("Authorization", "Bearer "+accessToken)
@@ -373,5 +396,38 @@ func TestGoogleTokenValidation(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+}
+
+// TestGoogleOAuthValidationNoClientIDOrAudienceFails tests that initialization fails when neither clientId nor audience is configured with mcpEnabled: true.
+func TestGoogleOAuthValidationNoClientIDOrAudienceFails(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	toolsFile := map[string]any{
+		"sources": map[string]any{},
+		"authServices": map[string]any{
+			"google-auth": map[string]any{
+				"type":       "google",
+				"mcpEnabled": true,
+			},
+		},
+		"tools": map[string]any{},
+	}
+
+	args := []string{"--toolbox-url=http://127.0.0.1:5007", "--port=5007"}
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	expectedErrPattern := regexp.MustCompile(`audience.*or.*clientId.*is required when.*mcpEnabled.*is true`)
+	out, err := testutils.WaitForString(waitCtx, expectedErrPattern, cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("expected toolbox to fail with validation error, but it did not: %s", err)
 	}
 }

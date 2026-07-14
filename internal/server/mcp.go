@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -31,12 +32,14 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
-	"github.com/googleapis/mcp-toolbox/internal/auth/generic"
+	"github.com/googleapis/mcp-toolbox/internal/auth"
+	"github.com/googleapis/mcp-toolbox/internal/prompts"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp"
 	"github.com/googleapis/mcp-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/mcp-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/mcp-toolbox/internal/server/mcp/v20250326"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -148,19 +151,20 @@ func (c traceContextCarrier) Keys() []string {
 
 // extractMeta parses params._meta from the request body in a single pass,
 // extracting both W3C Trace Context and client telemetry attributes.
-func extractMeta(ctx context.Context, body []byte) context.Context {
+func extractMeta(ctx context.Context, body []byte) (string, context.Context) {
 	var req struct {
 		Params struct {
 			Meta struct {
-				Traceparent    string            `json:"traceparent,omitempty"`
-				Tracestate     string            `json:"tracestate,omitempty"`
-				TelemetryAttrs map[string]string `json:"dev.mcp-toolbox/telemetry,omitempty"`
+				Traceparent     string            `json:"traceparent,omitempty"`
+				Tracestate      string            `json:"tracestate,omitempty"`
+				TelemetryAttrs  map[string]string `json:"dev.mcp-toolbox/telemetry,omitempty"`
+				ProtocolVersion string            `json:"io.modelcontextprotocol/protocolVersion"`
 			} `json:"_meta,omitempty"`
 		} `json:"params,omitempty"`
 	}
 
 	if err := json.Unmarshal(body, &req); err != nil {
-		return ctx
+		return "", ctx
 	}
 
 	// Extract W3C Trace Context
@@ -186,7 +190,7 @@ func extractMeta(ctx context.Context, body []byte) context.Context {
 		ctx = util.WithTelemetryAttributes(ctx, ta)
 	}
 
-	return ctx
+	return req.Params.Meta.ProtocolVersion, ctx
 }
 
 func NewStdioSession(s *Server, stdin io.Reader, stdout io.Writer) *stdioSession {
@@ -254,7 +258,7 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 
 		if err := func() error {
 			// This ensures the transport span becomes a child of the client span
-			msgCtx := extractMeta(ctx, []byte(line))
+			metaProtocolVersion, msgCtx := extractMeta(ctx, []byte(line))
 
 			// Create span for STDIO transport
 			msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
@@ -262,9 +266,17 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			)
 			defer span.End()
 
+			protocol := s.protocol
+			// if protocol version was found in meta, it takes precedence
+			// the metaProtocolVersion does not replace existing protocol
+			// version if initialize method took place
+			if protocol == "" && metaProtocolVersion != "" {
+				protocol = metaProtocolVersion
+			}
+
 			var v string
 			var res any
-			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
+			v, res, err = processMcpMessage(msgCtx, []byte(line), s.server, protocol, "", "", nil, "")
 			if err != nil {
 				// errors during the processing of message will generate a valid MCP Error response.
 				// server can continue to run.
@@ -451,7 +463,10 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if toolsetName != "" {
 		toolsetURL = fmt.Sprintf("/%s", toolsetName)
 	}
-	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s?sessionId=%s", proto, r.Host, toolsetURL, sessionId)
+	// attach url query params to message endpoint
+	q := r.URL.Query()
+	q.Set("sessionId", sessionId)
+	messageEndpoint := fmt.Sprintf("%s://%s/mcp%s?%s", proto, r.Host, toolsetURL, q.Encode())
 	s.logger.DebugContext(ctx, fmt.Sprintf("sending endpoint event: %s", messageEndpoint))
 	fmt.Fprintf(w, "event: endpoint\ndata: %s\n\n", messageEndpoint)
 	flusher.Flush()
@@ -489,18 +504,41 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx = util.WithUserAgent(ctx, s.version)
 	ctx = util.WithSQLCommenterEnabled(ctx, s.sqlCommenterEnabled)
 
+	queryParams := r.URL.Query()
+	urlParams := make(map[string]string)
+	for k, v := range queryParams {
+		if k == "sessionId" {
+			continue
+		}
+		if len(v) > 0 {
+			urlParams[k] = v[0]
+		}
+	}
+	if len(urlParams) > 0 {
+		ctx = util.WithUrlParams(ctx, urlParams)
+	}
+
+	limit := s.httpMaxRequestBytes
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
+
 	// Read body first so we can extract trace context
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		// The id cannot be determined from an unreadable body. Per JSON-RPC 2.0,
+		// the response id MUST be null in that case.
+		// See https://www.jsonrpc.org/specification#response_object
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			err = fmt.Errorf("request body exceeds %d bytes", limit)
+		}
 		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
+		render.JSON(w, r, jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil))
 		return
 	}
 
 	// This ensures the transport span becomes a child of the client span
-	ctx = extractMeta(ctx, body)
+	// _meta.ProtocolVersion is not checked here for http transport.
+	_, ctx = extractMeta(ctx, body)
 
 	// Create span for HTTP transport
 	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/http",
@@ -536,13 +574,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// check if client have `MCP-Protocol-Version` header
 	// Only supported for v2025-06-18+.
-	headerProtocolVersion := r.Header.Get("MCP-Protocol-Version")
+	headerProtocolVersion := r.Header.Get("Mcp-Protocol-Version")
 	if headerProtocolVersion != "" {
-		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
-			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
-			return
-		}
 		protocolVersion = headerProtocolVersion
 	}
 
@@ -596,26 +629,34 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		switch code {
 		case jsonrpc.INTERNAL_ERROR:
 			// Map Internal RPC Error (-32603) to HTTP 500
-			w.WriteHeader(http.StatusInternalServerError)
+			render.Status(r, http.StatusInternalServerError)
 		case jsonrpc.INVALID_REQUEST:
 			var clientServerErr *util.ClientServerError
 			if errors.As(err, &clientServerErr) {
-				w.WriteHeader(clientServerErr.Code)
+				render.Status(r, clientServerErr.Code)
 			}
-			var mcpErr *generic.MCPAuthError
+			var mcpErr *auth.MCPAuthError
 			if errors.As(err, &mcpErr) {
 				switch mcpErr.Code {
 				case http.StatusForbidden:
 					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer error="insufficient_scope", scope="%s", resource_metadata="%s", error_description="%s"`, strings.Join(mcpErr.ScopesRequired, " "), s.toolboxUrl+"/.well-known/oauth-protected-resource", mcpErr.Message))
-					w.WriteHeader(http.StatusForbidden)
+					render.Status(r, http.StatusForbidden)
 				case http.StatusUnauthorized:
 					scopesArg := ""
 					if len(mcpErr.ScopesRequired) > 0 {
 						scopesArg = fmt.Sprintf(`, scope="%s"`, strings.Join(mcpErr.ScopesRequired, " "))
 					}
 					w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Bearer resource_metadata="%s"%s`, s.toolboxUrl+"/.well-known/oauth-protected-resource", scopesArg))
-					w.WriteHeader(http.StatusUnauthorized)
+					render.Status(r, http.StatusUnauthorized)
 				}
+			}
+		case jsonrpc.METHOD_NOT_FOUND:
+			render.Status(r, http.StatusNotFound)
+		case jsonrpc.HEADER_MISMATCH, jsonrpc.UNSUPPORTED_PROTOCOL_VERSION:
+			render.Status(r, http.StatusBadRequest)
+		case jsonrpc.INVALID_PARAMS:
+			if strings.Contains(rpcResponse.Error.Message, "_meta error") {
+				render.Status(r, http.StatusBadRequest)
 			}
 		}
 	}
@@ -636,18 +677,19 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage jsonrpc.BaseMessage
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
+		// The id cannot be determined from an undecodable body (batch or parse
+		// error). Per JSON-RPC 2.0, the response id MUST be null in that case.
+		// See https://www.jsonrpc.org/specification#response_object
 
 		// check if user is sending a batch request
 		var a []any
 		unmarshalErr := json.Unmarshal(body, &a)
 		if unmarshalErr == nil {
 			err = fmt.Errorf("not supporting batch requests")
-			return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", jsonrpc.NewError(nil, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 
-		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+		return "", jsonrpc.NewError(nil, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
 	// Check if method is present
@@ -774,13 +816,33 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		return "", nil, err
 	}
 
-	// Add instrumentation to context for use in method handlers
+	// Add instrumentation and toolbox version to context for use in method handlers
 	ctx = util.WithInstrumentation(ctx, s.instrumentation)
-
+	ctx = util.WithToolboxVersionKey(ctx, s.version)
+	ctx = util.WithEnableDraftSpecs(ctx, s.enableDraftSpecs)
 	// Process the method
 	switch baseMessage.Method {
-	case mcputil.INITIALIZE:
-		result, version, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+	// This is only used for <v2026
+	case "initialize":
+		var initReq struct {
+			Params struct {
+				ProtocolVersion string `json:"protocolVersion"`
+			} `json:"params,omitempty"`
+		}
+		if err := json.Unmarshal(body, &initReq); err != nil {
+			err = fmt.Errorf("fail to parse protocolVersion from initialize request")
+			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		}
+
+		var version string
+		v := initReq.Params.ProtocolVersion
+		if slices.Contains(mcputil.GetSupportedVersions(s.enableDraftSpecs), v) {
+			version = v
+		} else {
+			version = mcputil.GetLatestSupportedVersion(s.enableDraftSpecs)
+		}
+
+		result, err := mcp.ProcessMethod(ctx, version, baseMessage.Id, baseMessage.Method, tools.Toolset{}, prompts.Promptset{}, nil, body, nil)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
@@ -792,7 +854,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		span.SetAttributes(attribute.String("mcp.protocol.version", version))
 		return version, result, err
 	default:
-		toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
+		toolset, ok := s.PrimitiveMgr.GetToolset(toolsetName)
 		if !ok {
 			err := fmt.Errorf("toolset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
@@ -801,7 +863,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		promptset, ok := s.ResourceMgr.GetPromptset(promptsetName)
+		promptset, ok := s.PrimitiveMgr.GetPromptset(promptsetName)
 		if !ok {
 			err := fmt.Errorf("promptset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
@@ -810,7 +872,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.PrimitiveMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code
@@ -835,16 +897,11 @@ type prmResponse struct {
 func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
-		cfg := authSvc.ToConfig()
-		if genCfg, ok := cfg.(generic.Config); ok {
-			if genCfg.McpEnabled {
-				server = genCfg.AuthorizationServer
-				if genCfg.ScopesRequired != nil {
-					scopes = genCfg.ScopesRequired
-				}
-				break
-			}
+	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
+		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
+			server = mSvc.GetAuthorizationServer()
+			scopes = mSvc.GetScopesRequired()
+			break
 		}
 	}
 

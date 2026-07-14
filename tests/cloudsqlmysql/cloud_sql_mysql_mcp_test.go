@@ -155,6 +155,33 @@ func TestCloudSQLMySQLMCPListTools(t *testing.T) {
 				"required": []any{"sql_statement"},
 			},
 		},
+		{
+			Name:        "show_query_stats",
+			Description: "Lists query statistics in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"connected_schema": map[string]any{"description": "(Optional) The database user is connected to, the value is set from env variable CLOUD_SQL_MYSQL_DATABASE or MYSQL_DATABASE", "type": "string"},
+					"limit":            map[string]any{"default": float64(10), "description": "(Optional) Max rows to return, default is 10", "type": "integer"},
+					"table_schema":     map[string]any{"default": "", "description": "(Optional) The database where query statistics is to be executed. Check all queries visible to the current user if not specified", "type": "string"},
+				},
+				"required": []any{},
+			},
+		},
+		{
+			Name:        "list_all_locks",
+			Description: "Lists all table, row locks in the database.",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"connected_schema": map[string]any{"description": "(Optional) The database user is connected to, the value is set from env variable CLOUD_SQL_MYSQL_DATABASE or MYSQL_DATABASE", "type": "string"},
+					"limit":            map[string]any{"default": float64(10), "description": "(Optional) Max rows to return, default is 10", "type": "integer"},
+					"table_name":       map[string]any{"default": "", "description": "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified.", "type": "string"},
+					"table_schema":     map[string]any{"default": "", "description": "(Optional) The database where locked object is detected. Check all databases if not specified.", "type": "string"},
+				},
+				"required": []any{},
+			},
+		},
 	}...)
 
 	t.Run("verify tools/list registry returns complete manifest", func(t *testing.T) {

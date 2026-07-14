@@ -15,6 +15,7 @@ package lookercommon
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -116,23 +117,37 @@ func GetQueryParameters() parameters.Parameters {
 		"The fields to be retrieved.",
 		parameters.NewStringParameter("field", "A field to be returned in the query"),
 	)
-	filtersParameter := parameters.NewMapParameterWithDefault("filters",
-		map[string]any{},
-		"The filters for the query",
+	filtersParameter := parameters.NewMapParameter(
+		"filters",
+		"The filters for the query. Keys are fully-qualified field names "+
+			"(e.g. \"view.field\") and values are filter expressions or "+
+			"parameter values. Pass values bare — do not wrap them in extra "+
+			"quote characters. For LookML `parameter` fields, use the raw "+
+			"allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 		"",
+		parameters.WithMapDefault(map[string]any{}),
 	)
-	pivotsParameter := parameters.NewArrayParameterWithDefault("pivots",
-		[]any{},
+	pivotsParameter := parameters.NewArrayParameter(
+		"pivots",
 		"The query pivots (must be included in fields as well).",
 		parameters.NewStringParameter("pivot_field", "A field to be used as a pivot in the query"),
+		parameters.WithArrayDefault([]any{}),
 	)
-	sortsParameter := parameters.NewArrayParameterWithDefault("sorts",
-		[]any{},
+	sortsParameter := parameters.NewArrayParameter(
+		"sorts",
 		"The sorts like \"field.id desc 0\".",
 		parameters.NewStringParameter("sort_field", "A field to be used as a sort in the query"),
+		parameters.WithArrayDefault([]any{}),
 	)
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 500, "The row limit.")
-	tzParameter := parameters.NewStringParameterWithRequired("tz", "The query timezone.", false)
+	limitParameter := parameters.NewIntParameter("limit", "The row limit.", parameters.WithIntDefault(500))
+	tzParameter := parameters.NewStringParameter("tz", "The query timezone.", parameters.WithStringRequired(false))
+	filterExpressionParameter := parameters.NewStringParameter("filter_expression", "An optional filter expression string.", parameters.WithStringRequired(false))
+	dynamicFieldsParameter := parameters.NewArrayParameter(
+		"dynamic_fields",
+		"An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+		parameters.NewMapParameter("dynamic_field", "A dynamic field definition", ""),
+		parameters.WithArrayDefault([]any{}),
+	)
 
 	return parameters.Parameters{
 		modelParameter,
@@ -143,6 +158,8 @@ func GetQueryParameters() parameters.Parameters {
 		sortsParameter,
 		limitParameter,
 		tzParameter,
+		filterExpressionParameter,
+		dynamicFieldsParameter,
 	}
 }
 
@@ -157,6 +174,114 @@ func ProcessFieldArgs(ctx context.Context, params parameters.ParamValues) (*stri
 		return nil, nil, fmt.Errorf("'explore' must be a string, got %T", mapParams["explore"])
 	}
 	return &model, &explore, nil
+}
+
+// escapeUnquotedParameterValue escapes Looker filter-expression metacharacters
+// so the value reaches a type: unquoted parameter without being interpreted as
+// a wildcard pattern. Looker treats `_` as a single-character wildcard and `%`
+// as a multi-character wildcard, and rejects either inside unquoted-parameter
+// values; `,` is the filter-expression value separator; `^` is the escape
+// character itself. Already-escaped sequences (`^_`, `^%`, `^,`, `^^`) pass
+// through unchanged, which keeps the function idempotent for callers that pass
+// pre-escaped forms (e.g. round-tripping `default_filter_value` from the
+// explore metadata). Lone metacharacters get a `^` prefix; lone `^` is doubled
+// to `^^`. Walking rune-by-rune (not whole-string scanning) means a value with
+// both an already-escaped sequence and an unescaped metacharacter gets each
+// half handled correctly — e.g. `first^_touch_v2` becomes `first^_touch^_v2`.
+func escapeUnquotedParameterValue(value string) string {
+	var sb strings.Builder
+	sb.Grow(len(value))
+	runes := []rune(value)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+		if r == '^' {
+			if i+1 < len(runes) {
+				next := runes[i+1]
+				if next == '_' || next == '%' || next == ',' || next == '^' {
+					sb.WriteRune('^')
+					sb.WriteRune(next)
+					i++
+					continue
+				}
+			}
+			sb.WriteString("^^")
+			continue
+		}
+		if r == '_' || r == '%' || r == ',' {
+			sb.WriteRune('^')
+		}
+		sb.WriteRune(r)
+	}
+	return sb.String()
+}
+
+// EscapeFiltersForUnquotedParameters mutates wq.Filters so every string value
+// keyed to a fully-qualified parameter name listed in unquotedNames is escaped
+// per Looker filter-expression syntax. Non-string values and filters targeting
+// other fields are left untouched.
+func EscapeFiltersForUnquotedParameters(wq *v4.WriteQuery, unquotedNames map[string]bool) {
+	if wq == nil || wq.Filters == nil || len(unquotedNames) == 0 {
+		return
+	}
+	for k, v := range *wq.Filters {
+		if !unquotedNames[k] {
+			continue
+		}
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		(*wq.Filters)[k] = escapeUnquotedParameterValue(s)
+	}
+}
+
+// resolveUnquotedParameterNames fetches the parameter metadata for the explore
+// targeted by wq and returns the set of fully-qualified parameter names whose
+// LookML type is `unquoted`. Returns an empty map (and no error) when the
+// WriteQuery has no model/view set or no filters at all — the caller has
+// nothing to escape in either case.
+func resolveUnquotedParameterNames(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, opts *rtl.ApiSettings) (map[string]bool, error) {
+	if wq == nil || wq.Filters == nil || len(*wq.Filters) == 0 || wq.Model == "" || wq.View == "" {
+		return map[string]bool{}, nil
+	}
+	fields := ParametersFields
+	req := v4.RequestLookmlModelExplore{
+		LookmlModelName: wq.Model,
+		ExploreName:     wq.View,
+		Fields:          &fields,
+	}
+	resp, err := sdk.LookmlModelExplore(req, opts)
+	if err != nil {
+		return nil, err
+	}
+	out := map[string]bool{}
+	if resp.Fields == nil || resp.Fields.Parameters == nil {
+		return out, nil
+	}
+	for _, p := range *resp.Fields.Parameters {
+		if p.Name != nil && p.Type != nil && *p.Type == "unquoted" {
+			out[*p.Name] = true
+		}
+	}
+	return out, nil
+}
+
+// EscapeUnquotedParameterFilters looks up the explore's parameter metadata and
+// escapes filter-expression metacharacters in any filter value that targets a
+// type: unquoted parameter. Looker's filter parser interprets `_` and `%` as
+// wildcards and rejects them for unquoted parameters, so an unescaped value
+// like `first_touch` is parsed as `first<single-char-wildcard>touch` and 400s
+// with "The filter \"first_touch\" is not allowed." This is a no-op when no
+// filters target unquoted parameters. Metadata-lookup failures are returned to
+// the caller, which should log and proceed: callers without explore-read
+// permission still need their non-parameter queries to succeed.
+func EscapeUnquotedParameterFilters(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, opts *rtl.ApiSettings) error {
+	unquoted, err := resolveUnquotedParameterNames(ctx, sdk, wq, opts)
+	if err != nil {
+		return err
+	}
+	EscapeFiltersForUnquotedParameters(wq, unquoted)
+	return nil
 }
 
 func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.WriteQuery, error) {
@@ -174,13 +299,25 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 	}
 	fields := f.([]string)
 	filters := paramsMap["filters"].(map[string]any)
-	// Sometimes filters come as "'field.id'": "expression" so strip extra ''
+	// Strip a single layer of wrapping quotes from keys and string values.
+	// Values matter for LookML `type: unquoted` parameters, where Looker
+	// substitutes the value bare into SQL via {% parameter %}. Build a new map
+	// rather than mutating during iteration, and avoid comparing `any` values
+	// directly (non-comparable dynamic types like slices would panic).
+	processedFilters := make(map[string]any, len(filters))
 	for k, v := range filters {
-		if len(k) > 0 && k[0] == '\'' && k[len(k)-1] == '\'' {
-			delete(filters, k)
-			filters[k[1:len(k)-1]] = v
+		newKey := k
+		if len(k) >= 2 && (k[0] == '\'' || k[0] == '"') && k[0] == k[len(k)-1] {
+			newKey = k[1 : len(k)-1]
 		}
+		newVal := v
+		if s, ok := v.(string); ok && len(s) >= 2 &&
+			(s[0] == '\'' || s[0] == '"') && s[0] == s[len(s)-1] {
+			newVal = s[1 : len(s)-1]
+		}
+		processedFilters[newKey] = newVal
 	}
+	filters = processedFilters
 	p, err := parameters.ConvertAnySliceToTyped(paramsMap["pivots"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert pivots to array of strings: %s", err)
@@ -205,15 +342,38 @@ func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.W
 		tz = tzname
 	}
 
+	var filterExpressionPtr *string
+	if val, ok := paramsMap["filter_expression"]; ok && val != nil {
+		if strVal, ok := val.(string); ok {
+			filterExpressionPtr = &strVal
+		} else {
+			return nil, fmt.Errorf("'filter_expression' must be a string, got %T", val)
+		}
+	}
+
+	var dynamicFieldsPtr *string
+	if val, ok := paramsMap["dynamic_fields"]; ok && val != nil {
+		if sliceVal, ok := val.([]any); ok && len(sliceVal) > 0 {
+			jsonBytes, err := json.Marshal(sliceVal)
+			if err != nil {
+				return nil, fmt.Errorf("error marshaling dynamic_fields: %w", err)
+			}
+			jsonStr := string(jsonBytes)
+			dynamicFieldsPtr = &jsonStr
+		}
+	}
+
 	wq := v4.WriteQuery{
-		Model:         paramsMap["model"].(string),
-		View:          paramsMap["explore"].(string),
-		Fields:        &fields,
-		Pivots:        &pivots,
-		Filters:       &filters,
-		Sorts:         &sorts,
-		QueryTimezone: &tz,
-		Limit:         &limit,
+		Model:            paramsMap["model"].(string),
+		View:             paramsMap["explore"].(string),
+		Fields:           &fields,
+		Pivots:           &pivots,
+		Filters:          &filters,
+		Sorts:            &sorts,
+		QueryTimezone:    &tz,
+		Limit:            &limit,
+		FilterExpression: filterExpressionPtr,
+		DynamicFields:    dynamicFieldsPtr,
 	}
 	return &wq, nil
 }
@@ -363,10 +523,8 @@ func CreateViewsFromTables(ctx context.Context, l *v4.LookerSDK, projectId strin
 		"folder_name":            queryParams.FolderName,
 	}
 
-	// Pass the Tables slice directly as the body, not the wrapped struct.
-	// The API spec defines `tables` as `body_param ... array: true`,
-	// which means the body itself should be the array.
-	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody.Tables, options)
+	// The API expects a JSON object with a `tables` property containing the array.
+	err := l.AuthSession.Do(nil, "POST", "/4.0", path, query, reqBody, options)
 
 	logger, _ := util.LoggerFromContext(ctx)
 	logger.DebugContext(ctx, fmt.Sprintf("generating views with request: query=%v body=%v error=%v", query, reqBody.Tables, err))

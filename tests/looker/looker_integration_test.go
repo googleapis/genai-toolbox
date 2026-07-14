@@ -153,6 +153,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"run_dashboard": map[string]any{
+				"type":        "looker-run-dashboard",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"make_dashboard": map[string]any{
 				"type":        "looker-make-dashboard",
 				"source":      "my-instance",
@@ -514,7 +519,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -564,6 +569,29 @@ func TestLooker(t *testing.T) {
 						"name":         "tz",
 						"required":     false,
 						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional filter expression string.",
+						"name":         "filter_expression",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
 					},
 				},
 			},
@@ -606,7 +634,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -656,6 +684,29 @@ func TestLooker(t *testing.T) {
 						"name":         "tz",
 						"required":     false,
 						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional filter expression string.",
+						"name":         "filter_expression",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
 					},
 				},
 			},
@@ -698,7 +749,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -748,6 +799,29 @@ func TestLooker(t *testing.T) {
 						"name":         "tz",
 						"required":     false,
 						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional filter expression string.",
+						"name":         "filter_expression",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
 					},
 					map[string]any{
 						"additionalProperties": true,
@@ -950,7 +1024,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -1000,6 +1074,29 @@ func TestLooker(t *testing.T) {
 						"name":         "tz",
 						"required":     false,
 						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional filter expression string.",
+						"name":         "filter_expression",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
 					},
 					map[string]any{
 						"authServices": []any{},
@@ -1074,6 +1171,23 @@ func TestLooker(t *testing.T) {
 						"required":     false,
 						"type":         "integer",
 						"default":      float64(0),
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "run_dashboard",
+		map[string]any{
+			"run_dashboard": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authServices": []any{},
+						"description":  "The id of the dashboard to run.",
+						"name":         "dashboard_id",
+						"required":     true,
+						"type":         "string",
 					},
 				},
 			},
@@ -1232,7 +1346,7 @@ func TestLooker(t *testing.T) {
 					map[string]any{
 						"additionalProperties": true,
 						"authServices":         []any{},
-						"description":          "The filters for the query",
+						"description":          "The filters for the query. Keys are fully-qualified field names (e.g. \"view.field\") and values are filter expressions or parameter values. Pass values bare — do not wrap them in extra quote characters. For LookML `parameter` fields, use the raw allowed_value (e.g. `first_touch`), not `\"first_touch\"`.",
 						"name":                 "filters",
 						"required":             false,
 						"default":              map[string]any{},
@@ -1282,6 +1396,29 @@ func TestLooker(t *testing.T) {
 						"name":         "tz",
 						"required":     false,
 						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"description":  "An optional filter expression string.",
+						"name":         "filter_expression",
+						"required":     false,
+						"type":         "string",
+					},
+					map[string]any{
+						"authServices": []any{},
+						"default":      []any{},
+						"description":  "An optional array of dynamic fields (table calculations, custom measures, custom dimensions).",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authServices":         []any{},
+							"description":          "A dynamic field definition",
+							"name":                 "dynamic_field",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dynamic_fields",
+						"required": false,
+						"type":     "array",
 					},
 					map[string]any{
 						"authServices": []any{},
@@ -2031,6 +2168,8 @@ func TestLooker(t *testing.T) {
 	defer deleteDashboard()
 	testAddDashboardFilter(t, dashboardId)
 	testAddDashboardElement(t, dashboardId)
+	testAddDashboardSqlElement(t, dashboardId)
+	testRunDashboard(t, dashboardId)
 
 	wantResult = "\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
@@ -2211,6 +2350,77 @@ func testAddDashboardElement(t *testing.T, dashboardId string) {
 	})
 }
 
+func testAddDashboardSqlElement(t *testing.T, dashboardId string) {
+	t.Run("TestAddDashboardSqlElement", func(t *testing.T) {
+		sdk := newLookerTestSDK(t)
+
+		connections, err := sdk.AllConnections("name", nil)
+		if err != nil || len(connections) == 0 {
+			t.Fatalf("Failed to retrieve connections: %v", err)
+		}
+		connName := *connections[0].Name
+
+		// Create a SQL query
+		sqlQuery, err := sdk.CreateSqlQuery(v4.SqlQueryCreate{
+			ConnectionName: stringPtr(connName),
+			Sql:            stringPtr("SELECT 100 AS test_number"),
+		}, nil)
+		if err != nil {
+			t.Fatalf("Failed to create SQL query: %v", err)
+		}
+
+		// Create dashboard element with SQL query
+		reqBody := v4.WriteDashboardElement{
+			DashboardId:   stringPtr(dashboardId),
+			Type:          stringPtr("vis"),
+			ResultMakerId: sqlQuery.ResultMakerId,
+			Title:         stringPtr("SQL Runner - Nil Query"),
+		}
+
+		_, err = sdk.CreateDashboardElement(v4.RequestCreateDashboardElement{
+			Body: reqBody,
+		}, nil)
+		if err != nil {
+			t.Fatalf("Failed to create SQL dashboard element: %v", err)
+		}
+		t.Log("Successfully added SQL query element to dashboard")
+	})
+}
+
+func testRunDashboard(t *testing.T, dashboardId string) {
+	t.Run("TestRunDashboardSqlRunnerVerification", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s"}`, dashboardId))
+		url := "http://127.0.0.1:5000/api/tool/run_dashboard/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		var respBody map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		gotResult, ok := respBody["result"].(string)
+		if !ok {
+			t.Fatalf("unable to find result in response body")
+		}
+
+		expectedSubstrings := []string{
+			"TestDashboardElement",
+			"SQL Runner - Nil Query",
+			`"element_type":"sql_query"`,
+			`"query_status":"success"`,
+			"test_number",
+		}
+		for _, substr := range expectedSubstrings {
+			if !strings.Contains(gotResult, substr) {
+				t.Errorf("expected result to contain %q, but got:\n%s", substr, gotResult)
+			}
+		}
+	})
+}
+
 func testMakeDashboard(t *testing.T, randstr string) (string, func()) {
 	var id string
 	t.Run("TestMakeDashboard", func(t *testing.T) {
@@ -2247,4 +2457,8 @@ func testMakeDashboard(t *testing.T, randstr string) (string, func()) {
 		}
 		t.Logf("deleted Dashboard %s", id)
 	}
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

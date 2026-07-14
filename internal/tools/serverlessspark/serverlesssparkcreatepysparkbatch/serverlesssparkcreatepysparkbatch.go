@@ -20,7 +20,6 @@ import (
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/sources"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/serverlessspark/createbatch"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
@@ -57,17 +56,17 @@ func (cfg Config) ToolConfigType() string {
 }
 
 // Initialize creates a new Tool instance.
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	return createbatch.NewTool(cfg.Config, cfg, srcs, &PySparkBatchBuilder{})
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	return createbatch.NewTool(cfg.Config, cfg, &PySparkBatchBuilder{})
 }
 
 type PySparkBatchBuilder struct{}
 
 func (b *PySparkBatchBuilder) Parameters() parameters.Parameters {
 	return parameters.Parameters{
-		parameters.NewStringParameterWithRequired("mainFile", "The path to the main Python file, as a gs://... URI.", true),
-		parameters.NewArrayParameterWithRequired("args", "Optional. A list of arguments passed to the main file.", false, parameters.NewStringParameter("arg", "An argument.")),
-		parameters.NewStringParameterWithRequired("version", "Optional. The Serverless runtime version to execute with.", false),
+		parameters.NewStringParameter("mainFile", "The path to the main Python file, as a gs://... URI.", parameters.WithStringRequired(true)),
+		parameters.NewArrayParameter("args", "Optional. A list of arguments passed to the main file.", parameters.NewStringParameter("arg", "An argument."), parameters.WithArrayRequired(false)),
+		parameters.NewStringParameter("version", "Optional. The Serverless runtime version to execute with.", parameters.WithStringRequired(false)),
 	}
 }
 

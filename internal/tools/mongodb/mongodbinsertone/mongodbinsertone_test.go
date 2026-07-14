@@ -49,14 +49,16 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbinsertone.Config{
-					Name:         "example_tool",
-					Type:         "mongodb-insert-one",
-					Source:       "my-instance",
-					AuthRequired: []string{},
-					Database:     "test_db",
-					Collection:   "test_coll",
-					Canonical:    false,
-					Description:  "some description",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
+					Type:       "mongodb-insert-one",
+					Source:     "my-instance",
+					Database:   "test_db",
+					Collection: "test_coll",
+					Canonical:  false,
 				},
 			},
 		},
@@ -74,14 +76,16 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbinsertone.Config{
-					Name:         "example_tool",
-					Type:         "mongodb-insert-one",
-					Source:       "my-instance",
-					AuthRequired: []string{},
-					Database:     "test_db",
-					Collection:   "test_coll",
-					Canonical:    true,
-					Description:  "some description",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
+					Type:       "mongodb-insert-one",
+					Source:     "my-instance",
+					Database:   "test_db",
+					Collection: "test_coll",
+					Canonical:  true,
 				},
 			},
 		},
@@ -99,21 +103,23 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbinsertone.Config{
-					Name:         "example_tool",
-					Type:         "mongodb-insert-one",
-					Source:       "my-instance",
-					AuthRequired: []string{},
-					Database:     "test_db",
-					Collection:   "test_coll",
-					Canonical:    false,
-					Description:  "some description",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
+					Type:       "mongodb-insert-one",
+					Source:     "my-instance",
+					Database:   "test_db",
+					Collection: "test_coll",
+					Canonical:  false,
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -177,7 +183,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

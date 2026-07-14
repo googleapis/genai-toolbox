@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cockroachdb/cockroachdbexecutesql"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlCockroachDBExecuteSQL(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"execute_sql_tool": cockroachdbexecutesql.Config{
-					Name:         "execute_sql_tool",
-					Type:         "cockroachdb-execute-sql",
-					Source:       "my-crdb-instance",
-					Description:  "Execute SQL on CockroachDB",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "execute_sql_tool",
+						Description:  "Execute SQL on CockroachDB",
+						AuthRequired: []string{},
+					},
+					Type:   "cockroachdb-execute-sql",
+					Source: "my-crdb-instance",
 				},
 			},
 		},
@@ -56,7 +59,7 @@ func TestParseFromYamlCockroachDBExecuteSQL(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -69,10 +72,12 @@ func TestParseFromYamlCockroachDBExecuteSQL(t *testing.T) {
 
 func TestCockroachDBExecuteSQLToolConfigType(t *testing.T) {
 	cfg := cockroachdbexecutesql.Config{
-		Name:        "test-tool",
-		Type:        "cockroachdb-execute-sql",
-		Source:      "test-source",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-tool",
+			Description: "test description",
+		},
+		Type:   "cockroachdb-execute-sql",
+		Source: "test-source",
 	}
 
 	if cfg.ToolConfigType() != "cockroachdb-execute-sql" {

@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_objects_tool": cloudstoragelistobjects.Config{
-					Name:         "list_objects_tool",
-					Type:         "cloud-storage-list-objects",
-					Source:       "my-gcs",
-					Description:  "List objects in a Cloud Storage bucket",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_objects_tool",
+						Description:  "List objects in a Cloud Storage bucket",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-list-objects",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -72,18 +74,47 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_list_objects": cloudstoragelistobjects.Config{
-					Name:         "secure_list_objects",
-					Type:         "cloud-storage-list-objects",
-					Source:       "prod-gcs",
-					Description:  "List objects with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_list_objects",
+						Description:  "List objects with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "cloud-storage-list-objects",
+					Source: "prod-gcs",
+				},
+			},
+		},
+		{
+			desc: "with configurable parameters",
+			in: `
+			kind: tool
+			name: configured_list_objects
+			type: cloud-storage-list-objects
+			source: prod-gcs
+			description: List configured objects
+			bucket: baked-bucket
+			prefix: logs/
+			delimiter: /
+			`,
+			want: server.ToolConfigs{
+				"configured_list_objects": cloudstoragelistobjects.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_list_objects",
+						Description:  "List configured objects",
+						AuthRequired: []string{},
+					},
+					Type:      "cloud-storage-list-objects",
+					Source:    "prod-gcs",
+					Bucket:    strPtr("baked-bucket"),
+					Prefix:    strPtr("logs/"),
+					Delimiter: strPtr("/"),
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -94,13 +125,23 @@ func TestParseFromYamlCloudStorageListObjects(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
-	listCalled bool
+	listCalled   bool
+	gotBucket    string
+	gotPrefix    string
+	gotDelimiter string
 }
 
 func (m *mockSource) ListObjects(ctx context.Context, bucket, prefix, delimiter string, maxResults int, pageToken string) (map[string]any, error) {
 	m.listCalled = true
+	m.gotBucket = bucket
+	m.gotPrefix = prefix
+	m.gotDelimiter = delimiter
 	return map[string]any{"objects": []any{}, "prefixes": []string{}, "nextPageToken": ""}, nil
 }
 
@@ -125,18 +166,20 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			cfg := cloudstoragelistobjects.Config{
-				Name:        "list_objects_tool",
-				Type:        "cloud-storage-list-objects",
-				Source:      "my-gcs",
-				Description: "List objects",
+				ConfigBase: tools.ConfigBase{
+					Name:        "list_objects_tool",
+					Description: "List objects",
+				},
+				Type:   "cloud-storage-list-objects",
+				Source: "my-gcs",
 			}
-			tool, err := cfg.Initialize(nil)
+			tool, err := cfg.Initialize(context.Background())
 			if err != nil {
 				t.Fatalf("failed to initialize tool: %v", err)
 			}
 
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
 				{Name: "bucket", Value: "my-bucket"},
@@ -146,7 +189,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 				{Name: "page_token", Value: ""},
 			}
 
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if toolErr == nil {
 				t.Fatalf("expected error for max_results=%d, got nil", tc.maxResults)
 			}
@@ -163,4 +206,82 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfiguredParametersHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragelistobjects.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_objects_tool",
+			Description: "List objects",
+		},
+		Type:      "cloud-storage-list-objects",
+		Source:    "my-gcs",
+		Bucket:    strPtr("baked-bucket"),
+		Prefix:    strPtr("logs/"),
+		Delimiter: strPtr("/"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"max_results", "page_token"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "max_results", Value: 0},
+		{Name: "page_token", Value: ""},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotBucket != "baked-bucket" || src.gotPrefix != "logs/" || src.gotDelimiter != "/" {
+		t.Fatalf("forwarded bucket/prefix/delimiter = %q/%q/%q, want baked-bucket/logs//", src.gotBucket, src.gotPrefix, src.gotDelimiter)
+	}
+}
+
+func TestUnsetParametersRemainVisible(t *testing.T) {
+	cfg := cloudstoragelistobjects.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_objects_tool",
+			Description: "List objects",
+		},
+		Type:   "cloud-storage-list-objects",
+		Source: "my-gcs",
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"bucket", "prefix", "delimiter", "max_results", "page_token"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredBucketRejected(t *testing.T) {
+	cfg := cloudstoragelistobjects.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_objects_tool",
+			Description: "List objects",
+		},
+		Type:   "cloud-storage-list-objects",
+		Source: "my-gcs",
+		Bucket: strPtr(""),
+	}
+	if _, err := cfg.Initialize(context.Background()); err == nil || !strings.Contains(err.Error(), "bucket") {
+		t.Fatalf("Initialize() error = %v, want bucket error", err)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestoregetrules"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"get_rules_tool": firestoregetrules.Config{
-					Name:         "get_rules_tool",
-					Type:         "firestore-get-rules",
-					Source:       "my-firestore-instance",
-					Description:  "Retrieves the active Firestore security rules for the current project",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "get_rules_tool",
+						Description:  "Retrieves the active Firestore security rules for the current project",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-get-rules",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,18 +69,20 @@ func TestParseFromYamlFirestoreGetRules(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_get_rules": firestoregetrules.Config{
-					Name:         "secure_get_rules",
-					Type:         "firestore-get-rules",
-					Source:       "prod-firestore",
-					Description:  "Get Firestore security rules with authentication",
-					AuthRequired: []string{"google-auth-service", "admin-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_get_rules",
+						Description:  "Get Firestore security rules with authentication",
+						AuthRequired: []string{"google-auth-service", "admin-service"},
+					},
+					Type:   "firestore-get-rules",
+					Source: "prod-firestore",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -119,29 +124,35 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"get_dev_rules": firestoregetrules.Config{
-			Name:         "get_dev_rules",
-			Type:         "firestore-get-rules",
-			Source:       "dev-firestore",
-			Description:  "Get development Firestore rules",
-			AuthRequired: []string{"dev-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "get_dev_rules",
+				Description:  "Get development Firestore rules",
+				AuthRequired: []string{"dev-auth"},
+			},
+			Type:   "firestore-get-rules",
+			Source: "dev-firestore",
 		},
 		"get_staging_rules": firestoregetrules.Config{
-			Name:         "get_staging_rules",
-			Type:         "firestore-get-rules",
-			Source:       "staging-firestore",
-			Description:  "Get staging Firestore rules",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "get_staging_rules",
+				Description:  "Get staging Firestore rules",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-get-rules",
+			Source: "staging-firestore",
 		},
 		"get_prod_rules": firestoregetrules.Config{
-			Name:         "get_prod_rules",
-			Type:         "firestore-get-rules",
-			Source:       "prod-firestore",
-			Description:  "Get production Firestore rules",
-			AuthRequired: []string{"prod-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "get_prod_rules",
+				Description:  "Get production Firestore rules",
+				AuthRequired: []string{"prod-auth", "admin-auth"},
+			},
+			Type:   "firestore-get-rules",
+			Source: "prod-firestore",
 		},
 	}
 
-	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
+	_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}

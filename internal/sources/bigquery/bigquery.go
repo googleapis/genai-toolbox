@@ -28,6 +28,7 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
+	"github.com/googleapis/mcp-toolbox/internal/sources/dataplex/searchcatalog"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/orderedmap"
@@ -575,7 +576,7 @@ func (s *Source) RetrieveClientAndService(accessToken tools.AccessToken) (*bigqu
 	return bqClient, restService, nil
 }
 
-func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, statement, statementType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, statement, statementType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, labels map[string]string) (any, error) {
 	query := bqClient.Query(statement)
 	query.Location = bqClient.Location
 	if params != nil {
@@ -583,6 +584,9 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	}
 	if connProps != nil {
 		query.ConnectionProperties = connProps
+	}
+	if labels != nil {
+		query.Labels = labels
 	}
 	if s.MaximumBytesBilled > 0 {
 		query.MaxBytesBilled = s.MaximumBytesBilled
@@ -600,7 +604,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
 		var val []bigqueryapi.Value
 		err = it.Next(&val)
@@ -924,4 +928,35 @@ func newDataplexClientCreator(
 	return func(tokenString string) (*dataplexapi.CatalogClient, error) {
 		return initDataplexConnectionWithOAuthToken(ctx, project, userAgent, tokenString)
 	}
+}
+
+func (s *Source) InvokeSearchCatalog(ctx context.Context, params map[string]any, tokenStr string) ([]searchcatalog.DataplexSearchResponse, error) {
+	typeMap := map[string]string{
+		"bigquery-connection":  "CONNECTION",
+		"bigquery-data-policy": "POLICY",
+		"bigquery-dataset":     "DATASET",
+		"bigquery-model":       "MODEL",
+		"bigquery-routine":     "ROUTINE",
+		"bigquery-table":       "TABLE",
+		"bigquery-view":        "VIEW",
+	}
+	catalogClient, dataplexClientCreator, err := s.MakeDataplexCatalogClient()()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dataplex client: %w", err)
+	}
+	return searchcatalog.InvokeSearchCatalog(
+		ctx,
+		params,
+		tokenStr,
+		"bigquery",
+		"datasetIds",
+		typeMap,
+		s.BigQueryProject(),
+		func(ctx context.Context, token string) (*dataplexapi.CatalogClient, error) {
+			if token != "" {
+				return dataplexClientCreator(token)
+			}
+			return catalogClient, nil
+		},
+	)
 }

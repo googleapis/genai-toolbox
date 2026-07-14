@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cockroachdb/cockroachdblistschemas"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_schemas_tool": cockroachdblistschemas.Config{
-					Name:         "list_schemas_tool",
-					Type:         "cockroachdb-list-schemas",
-					Source:       "my-crdb-instance",
-					Description:  "List schemas in CockroachDB",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_schemas_tool",
+						Description:  "List schemas in CockroachDB",
+						AuthRequired: []string{},
+					},
+					Type:   "cockroachdb-list-schemas",
+					Source: "my-crdb-instance",
 				},
 			},
 		},
@@ -56,7 +59,7 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -69,10 +72,12 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 
 func TestCockroachDBListSchemasToolConfigType(t *testing.T) {
 	cfg := cockroachdblistschemas.Config{
-		Name:        "test-tool",
-		Type:        "cockroachdb-list-schemas",
-		Source:      "test-source",
-		Description: "test description",
+		ConfigBase: tools.ConfigBase{
+			Name:        "test-tool",
+			Description: "test description",
+		},
+		Type:   "cockroachdb-list-schemas",
+		Source: "test-source",
 	}
 
 	if cfg.ToolConfigType() != "cockroachdb-list-schemas" {

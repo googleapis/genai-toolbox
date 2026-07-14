@@ -50,11 +50,13 @@ func TestParseFromYamlCloudStorageListBuckets(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_buckets_tool": cloudstoragelistbuckets.Config{
-					Name:         "list_buckets_tool",
-					Type:         "cloud-storage-list-buckets",
-					Source:       "my-gcs",
-					Description:  "List Cloud Storage buckets",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_buckets_tool",
+						Description:  "List Cloud Storage buckets",
+						AuthRequired: []string{},
+					},
+					Type:   "cloud-storage-list-buckets",
+					Source: "my-gcs",
 				},
 			},
 		},
@@ -71,18 +73,45 @@ func TestParseFromYamlCloudStorageListBuckets(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_list_buckets": cloudstoragelistbuckets.Config{
-					Name:         "secure_list_buckets",
-					Type:         "cloud-storage-list-buckets",
-					Source:       "prod-gcs",
-					Description:  "List buckets with authentication",
-					AuthRequired: []string{"google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_list_buckets",
+						Description:  "List buckets with authentication",
+						AuthRequired: []string{"google-auth-service"},
+					},
+					Type:   "cloud-storage-list-buckets",
+					Source: "prod-gcs",
+				},
+			},
+		},
+		{
+			desc: "with configurable parameters",
+			in: `
+			kind: tool
+			name: configured_list_buckets
+			type: cloud-storage-list-buckets
+			source: prod-gcs
+			description: List configured buckets
+			project: baked-project
+			prefix: logs-
+			`,
+			want: server.ToolConfigs{
+				"configured_list_buckets": cloudstoragelistbuckets.Config{
+					ConfigBase: tools.ConfigBase{
+						Name:         "configured_list_buckets",
+						Description:  "List configured buckets",
+						AuthRequired: []string{},
+					},
+					Type:    "cloud-storage-list-buckets",
+					Source:  "prod-gcs",
+					Project: strPtr("baked-project"),
+					Prefix:  strPtr("logs-"),
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -93,15 +122,21 @@ func TestParseFromYamlCloudStorageListBuckets(t *testing.T) {
 	}
 }
 
+func strPtr(s string) *string {
+	return &s
+}
+
 type mockSource struct {
 	sources.Source
 	gotProject string
+	gotPrefix  string
 	listCalled bool
 }
 
 func (m *mockSource) ListBuckets(ctx context.Context, project, prefix string, maxResults int, pageToken string) (map[string]any, error) {
 	m.listCalled = true
 	m.gotProject = project
+	m.gotPrefix = prefix
 	return map[string]any{"buckets": []any{}, "nextPageToken": ""}, nil
 }
 
@@ -117,12 +152,14 @@ func (m *mockSourceProvider) GetSource(name string) (sources.Source, bool) {
 func initTool(t *testing.T) tools.Tool {
 	t.Helper()
 	cfg := cloudstoragelistbuckets.Config{
-		Name:        "list_buckets_tool",
-		Type:        "cloud-storage-list-buckets",
-		Source:      "my-gcs",
-		Description: "List buckets",
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_buckets_tool",
+			Description: "List buckets",
+		},
+		Type:   "cloud-storage-list-buckets",
+		Source: "my-gcs",
 	}
-	tool, err := cfg.Initialize(nil)
+	tool, err := cfg.Initialize(context.Background())
 	if err != nil {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
@@ -142,7 +179,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			tool := initTool(t)
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 
 			params := parameters.ParamValues{
 				{Name: "project", Value: ""},
@@ -151,7 +188,7 @@ func TestInvokeMaxResultsValidation(t *testing.T) {
 				{Name: "page_token", Value: ""},
 			}
 
-			_, toolErr := tool.Invoke(context.Background(), resourceMgr, params, "")
+			_, toolErr := tool.Invoke(context.Background(), primitiveMgr, params, "")
 			if toolErr == nil {
 				t.Fatalf("expected error for max_results=%d, got nil", tc.maxResults)
 			}
@@ -184,14 +221,14 @@ func TestInvokeProjectPassthrough(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			src := &mockSource{}
-			resourceMgr := &mockSourceProvider{source: src}
+			primitiveMgr := &mockSourceProvider{source: src}
 			params := parameters.ParamValues{
 				{Name: "project", Value: tc.project},
 				{Name: "prefix", Value: ""},
 				{Name: "max_results", Value: 0},
 				{Name: "page_token", Value: ""},
 			}
-			if _, err := tool.Invoke(context.Background(), resourceMgr, params, ""); err != nil {
+			if _, err := tool.Invoke(context.Background(), primitiveMgr, params, ""); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			if !src.listCalled {
@@ -202,4 +239,90 @@ func TestInvokeProjectPassthrough(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConfiguredParametersHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragelistbuckets.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_buckets_tool",
+			Description: "List buckets",
+		},
+		Type:    "cloud-storage-list-buckets",
+		Source:  "my-gcs",
+		Project: strPtr("baked-project"),
+		Prefix:  strPtr("logs-"),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"max_results", "page_token"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "max_results", Value: 0},
+		{Name: "page_token", Value: ""},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotProject != "baked-project" || src.gotPrefix != "logs-" {
+		t.Fatalf("forwarded project/prefix = %q/%q, want baked-project/logs-", src.gotProject, src.gotPrefix)
+	}
+}
+
+func TestUnsetParametersRemainVisible(t *testing.T) {
+	tool := initTool(t)
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"project", "prefix", "max_results", "page_token"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+}
+
+func TestEmptyConfiguredProjectHiddenAndForwarded(t *testing.T) {
+	cfg := cloudstoragelistbuckets.Config{
+		ConfigBase: tools.ConfigBase{
+			Name:        "list_buckets_tool",
+			Description: "List buckets",
+		},
+		Type:    "cloud-storage-list-buckets",
+		Source:  "my-gcs",
+		Project: strPtr(""),
+	}
+	tool, err := cfg.Initialize(context.Background())
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %v", err)
+	}
+	gotNames := manifestParamNames(tool.StaticManifest().Parameters)
+	wantNames := []string{"prefix", "max_results", "page_token"}
+	if diff := cmp.Diff(wantNames, gotNames); diff != "" {
+		t.Fatalf("manifest parameters mismatch (-want +got):\n%s", diff)
+	}
+
+	src := &mockSource{}
+	params := parameters.ParamValues{
+		{Name: "prefix", Value: ""},
+		{Name: "max_results", Value: 0},
+		{Name: "page_token", Value: ""},
+	}
+	if _, err := tool.Invoke(context.Background(), &mockSourceProvider{source: src}, params, ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if src.gotProject != "" {
+		t.Fatalf("project forwarded = %q, want empty source fallback marker", src.gotProject)
+	}
+}
+
+func manifestParamNames(params []parameters.ParameterManifest) []string {
+	names := make([]string, 0, len(params))
+	for _, p := range params {
+		names = append(names, p.Name)
+	}
+	return names
 }

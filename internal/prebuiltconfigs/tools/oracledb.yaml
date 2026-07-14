@@ -33,9 +33,20 @@ type: oracle-sql
 source: oracle-source
 description: Lists all user tables in the connected schema, including segment size, row count, and last analyzed date. Filters by a comma-separated list of names. If names are omitted, lists all tables in the current user's schema.
 statement: |
-  SELECT 
-        table_name 
-  FROM  user_tables;
+  SELECT
+        t.table_name,
+        NVL(SUM(s.bytes), 0) AS segment_size_bytes,
+        t.num_rows,
+        t.last_analyzed
+  FROM  user_tables t
+  LEFT JOIN user_segments s ON t.table_name = s.segment_name AND s.segment_type IN ('TABLE', 'TABLE PARTITION', 'TABLE SUBPARTITION')
+  WHERE (:1 IS NULL OR INSTR(',' || :1 || ',', ',' || t.table_name || ',') > 0)
+  GROUP BY t.table_name, t.num_rows, t.last_analyzed
+parameters:
+- name: table_names_csv
+  type: string
+  description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+  default: ""
 ---
 kind: tool
 name: list_active_sessions
@@ -61,7 +72,7 @@ statement: |
          AND s.sql_id = sql.sql_id (+)
          AND s.audsid != userenv('sessionid') -- Exclude current session
      ORDER BY s.last_call_et DESC
-     FETCH FIRST 50 ROWS ONLY;
+     FETCH FIRST 50 ROWS ONLY
 ---
 kind: tool
 name: get_query_plan
@@ -99,8 +110,22 @@ statement: |
   FROM
       v$sql
   ORDER BY
-      elapsed_time DESC
-  FETCH FIRST 5 ROWS ONLY;
+      CASE UPPER(:1)
+        WHEN 'CPU_TIME' THEN cpu_time
+        WHEN 'DISK_READS' THEN disk_reads
+        WHEN 'BUFFER_GETS' THEN buffer_gets
+        ELSE elapsed_time
+      END DESC
+  FETCH FIRST :2 ROWS ONLY
+parameters:
+- name: metric
+  type: string
+  description: "Optional: The resource metric to sort by. Supported values: 'elapsed_time' (default), 'cpu_time', 'disk_reads', 'buffer_gets'."
+  default: "elapsed_time"
+- name: limit
+  type: integer
+  description: "Optional: The maximum number of rows to return (default 5)."
+  default: 5
 ---
 kind: tool
 name: list_tablespace_usage
@@ -121,7 +146,7 @@ statement: |
   GROUP BY
       t.tablespace_name, t.total_bytes
   ORDER BY
-      used_pct DESC;
+      used_pct DESC
 ---
 kind: tool
 name: list_invalid_objects
@@ -129,18 +154,18 @@ type: oracle-sql
 source: oracle-source
 description: Lists all database objects that are in an invalid state, requiring recompilation (e.g., procedures, functions, views).
 statement: |
-  SELECT  
-      owner,  
-      object_type,  
-      object_name,  
-      status  
-  FROM  
-      dba_objects  
-  WHERE  
-      status = 'INVALID'  
-      AND owner NOT IN ('SYS', 'SYSTEM') -- Exclude system schemas for clarity  
-  ORDER BY  
-      owner, object_type, object_name; 
+  SELECT
+      owner,
+      object_type,
+      object_name,
+      status
+  FROM
+      dba_objects
+  WHERE
+      status = 'INVALID'
+      AND owner NOT IN ('SYS', 'SYSTEM') -- Exclude system schemas for clarity
+  ORDER BY
+      owner, object_type, object_name
 ---
 kind: toolset
 name: oracle_database_tools

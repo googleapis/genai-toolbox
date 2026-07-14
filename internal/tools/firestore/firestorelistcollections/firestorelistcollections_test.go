@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/firestore/firestorelistcollections"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list_collections_tool": firestorelistcollections.Config{
-					Name:         "list_collections_tool",
-					Type:         "firestore-list-collections",
-					Source:       "my-firestore-instance",
-					Description:  "List collections in Firestore",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list_collections_tool",
+						Description:  "List collections in Firestore",
+						AuthRequired: []string{},
+					},
+					Type:   "firestore-list-collections",
+					Source: "my-firestore-instance",
 				},
 			},
 		},
@@ -66,18 +69,20 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"secure_list_collections": firestorelistcollections.Config{
-					Name:         "secure_list_collections",
-					Type:         "firestore-list-collections",
-					Source:       "prod-firestore",
-					Description:  "List collections with authentication",
-					AuthRequired: []string{"google-auth-service", "api-key-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "secure_list_collections",
+						Description:  "List collections with authentication",
+						AuthRequired: []string{"google-auth-service", "api-key-service"},
+					},
+					Type:   "firestore-list-collections",
+					Source: "prod-firestore",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -119,29 +124,35 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	`
 	want := server.ToolConfigs{
 		"list_user_collections": firestorelistcollections.Config{
-			Name:         "list_user_collections",
-			Type:         "firestore-list-collections",
-			Source:       "users-firestore",
-			Description:  "List user-related collections",
-			AuthRequired: []string{"user-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "list_user_collections",
+				Description:  "List user-related collections",
+				AuthRequired: []string{"user-auth"},
+			},
+			Type:   "firestore-list-collections",
+			Source: "users-firestore",
 		},
 		"list_product_collections": firestorelistcollections.Config{
-			Name:         "list_product_collections",
-			Type:         "firestore-list-collections",
-			Source:       "products-firestore",
-			Description:  "List product-related collections",
-			AuthRequired: []string{},
+			ConfigBase: tools.ConfigBase{
+				Name:         "list_product_collections",
+				Description:  "List product-related collections",
+				AuthRequired: []string{},
+			},
+			Type:   "firestore-list-collections",
+			Source: "products-firestore",
 		},
 		"list_admin_collections": firestorelistcollections.Config{
-			Name:         "list_admin_collections",
-			Type:         "firestore-list-collections",
-			Source:       "admin-firestore",
-			Description:  "List administrative collections",
-			AuthRequired: []string{"user-auth", "admin-auth"},
+			ConfigBase: tools.ConfigBase{
+				Name:         "list_admin_collections",
+				Description:  "List administrative collections",
+				AuthRequired: []string{"user-auth", "admin-auth"},
+			},
+			Type:   "firestore-list-collections",
+			Source: "admin-firestore",
 		},
 	}
 
-	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
+	_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}

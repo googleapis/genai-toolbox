@@ -21,15 +21,16 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/mcp-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/mcp-toolbox/internal/sources"
 	cloudgdads "github.com/googleapis/mcp-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/util"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/option"
 )
 
 const resourceType string = "conversational-analytics-get-data-agent-info"
@@ -41,7 +42,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
-	actual := Config{Name: name}
+	actual := Config{ConfigBase: tools.ConfigBase{Name: name}}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -57,17 +58,11 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudgdads.Source{}
 
-var compatibleSources = [...]string{cloudgdads.SourceType}
-
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"type" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	Location     string   `yaml:"location"`
-	AuthRequired []string `yaml:"authRequired"`
-
-	ScopesRequired []string `yaml:"scopesRequired"`
+	tools.ConfigBase `yaml:",inline"`
+	Type             string `yaml:"type" validate:"required"`
+	Source           string `yaml:"source" validate:"required"`
+	Location         string `yaml:"location"`
 }
 
 // validate interface
@@ -77,17 +72,9 @@ func (cfg Config) ToolConfigType() string {
 	return resourceType
 }
 
-func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	_, ok = rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", resourceType, compatibleSources)
+func (cfg Config) Initialize(context.Context) (tools.Tool, error) {
+	if cfg.Description == "" {
+		return nil, fmt.Errorf("description is required for tool %q", cfg.Name)
 	}
 
 	if cfg.Location == "" {
@@ -98,50 +85,53 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{dataAgentIdParameter}
 
 	// finish tool setup
-	t := Tool{
-		Config:     cfg,
-		Parameters: params,
-		manifest:   tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-	}
-	return t, nil
+	return Tool{
+		BaseTool: tools.NewBaseTool(
+			cfg,
+			nil,
+			tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+			params,
+		),
+	}, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-	manifest   tools.Manifest
-}
-
-func (t Tool) GetName() string {
-	return t.Name
-}
-
-func (t Tool) GetDescription() string {
-	return t.Description
-}
-
-func (t Tool) GetAuthRequired() []string {
-	return t.AuthRequired
-}
-
-func (t Tool) GetAnnotations() *tools.ToolAnnotations {
-	return nil
+	tools.BaseTool[Config]
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
+	return t.Cfg
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+func (t Tool) validate(srcs map[string]sources.Source) error {
+	_, err := tools.GetCompatibleSourceFromMap[compatibleSource](srcs, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
+	return err
+}
+
+func (t Tool) GetParameters(srcs map[string]sources.Source) (parameters.Parameters, error) {
+	if err := t.validate(srcs); err != nil {
+		return nil, err
+	}
+	return t.BaseTool.GetParameters(srcs)
+}
+
+func (t Tool) Manifest(srcs map[string]sources.Source) (tools.Manifest, error) {
+	if err := t.validate(srcs); err != nil {
+		return tools.Manifest{}, err
+	}
+	return t.BaseTool.Manifest(srcs)
+}
+
+func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
-	var tokenStr string
+	var tokenSource oauth2.TokenSource
 
 	// Get credentials for the API call
 	if source.UseClientAuthorization() {
@@ -149,13 +139,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if accessToken == "" {
 			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
 		}
-		tokenStr, err = accessToken.ParseBearerToken()
+		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, util.NewClientServerError("error parsing access token", http.StatusUnauthorized, err)
 		}
+		tokenSource = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
 	} else {
 		// Get a token source for the Gemini Data Analytics API.
-		tokenSource, err := source.GoogleCloudTokenSourceWithScope(ctx, "")
+		tokenSource, err = source.GoogleCloudTokenSourceWithScope(ctx, "")
 		if err != nil {
 			return nil, util.NewClientServerError("failed to get token source", http.StatusInternalServerError, err)
 		}
@@ -164,11 +155,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if tokenSource == nil {
 			return nil, util.NewClientServerError("cloud-platform token source is missing", http.StatusInternalServerError, nil)
 		}
-		token, err := tokenSource.Token()
-		if err != nil {
-			return nil, util.NewClientServerError("failed to get token from cloud-platform token source", http.StatusInternalServerError, err)
-		}
-		tokenStr = token.AccessToken
 	}
 
 	// Extract parameters from the map
@@ -177,16 +163,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// Construct URL
 	projectID := source.GetProjectID()
-	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s/dataAgents/%s", projectID, t.Location, url.PathEscape(dataAgentId))
+	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s/dataAgents/%s", util.GetGDAEndpoint(), projectID, t.Cfg.Location, url.PathEscape(dataAgentId))
 
 	req, err := http.NewRequest("GET", caURL, nil)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to create request", http.StatusInternalServerError, err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenStr))
 	req.Header.Set("X-Goog-API-Client", util.GDAClientID)
 
-	client := &http.Client{}
+	client, err := util.NewGDAClient(ctx, option.WithTokenSource(tokenSource))
+	if err != nil {
+		return nil, util.NewClientServerError("failed to create GDA client", http.StatusInternalServerError, err)
+	}
+	client.Timeout = 30 * time.Second
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, util.NewClientServerError("failed to send request", http.StatusInternalServerError, err)
@@ -206,34 +195,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return result, nil
 }
 
-func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
-}
-
-func (t Tool) Manifest() tools.Manifest {
-	return t.manifest
-}
-
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
-}
-
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
+func (t Tool) RequiresClientAuthorization(primitiveMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](primitiveMgr, t.Cfg.Source, t.Cfg.Name, t.Cfg.Type)
 	if err != nil {
 		return false, err
 	}
 	return source.UseClientAuthorization(), nil
-}
-
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	return "Authorization", nil
-}
-
-func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
-}
-
-func (t Tool) GetScopesRequired() []string {
-	return t.ScopesRequired
 }

@@ -13,7 +13,8 @@
 # limitations under the License.
 
 name: conformance
-on:
+# zizmor flags pull_request_target, but it is safely gated by the 'tests: run' label manually applied by maintainers.
+on: # zizmor: ignore[dangerous-triggers]
   pull_request:
   pull_request_target:
     types: [labeled]
@@ -35,7 +36,7 @@ jobs:
     steps:
       - name: Remove PR Label
         if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -51,16 +52,17 @@ jobs:
             }
             
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
           
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.23'
+          go-version-file: 'go.mod'
           
       - name: Start MCP Toolbox Server
         run: |
@@ -69,7 +71,7 @@ jobs:
           sleep 5 # Give the server a moment to bind to port 5000
 
       - name: Run Conformance Tests
-        uses: modelcontextprotocol/conformance@v0.1.16
+        uses: modelcontextprotocol/conformance@21a9a2febd7100d7c17ac1021ee7f2ed9f66a1e0 # v0.1.16
         with:
           mode: server
           url: 'http://localhost:5000/mcp'

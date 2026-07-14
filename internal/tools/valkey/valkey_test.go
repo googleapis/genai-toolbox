@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/valkey"
 	"github.com/googleapis/mcp-toolbox/internal/util/parameters"
 )
@@ -52,12 +53,14 @@ func TestParseFromYamlvalkey(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"valkey_tool": valkey.Config{
-					Name:         "valkey_tool",
-					Type:         "valkey",
-					Source:       "my-valkey-instance",
-					Description:  "some description",
-					AuthRequired: []string{},
-					Commands:     [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
+					ConfigBase: tools.ConfigBase{
+						Name:         "valkey_tool",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:     "valkey",
+					Source:   "my-valkey-instance",
+					Commands: [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
 					Parameters: []parameters.Parameter{
 						parameters.NewStringParameter("name", "user name"),
 					},
@@ -67,7 +70,7 @@ func TestParseFromYamlvalkey(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

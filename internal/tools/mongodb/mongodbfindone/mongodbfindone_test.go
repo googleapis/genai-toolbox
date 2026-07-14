@@ -59,13 +59,15 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbfindone.Config{
-					Name:          "example_tool",
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						AuthRequired: []string{},
+						Description:  "some description",
+					},
 					Type:          "mongodb-find-one",
 					Source:        "my-instance",
-					AuthRequired:  []string{},
 					Database:      "test_db",
 					Collection:    "test_coll",
-					Description:   "some description",
 					FilterPayload: "{ name: {{json .name}} }\n",
 					FilterParams: parameters.Parameters{
 						&parameters.StringParameter{
@@ -84,7 +86,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -146,7 +148,7 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

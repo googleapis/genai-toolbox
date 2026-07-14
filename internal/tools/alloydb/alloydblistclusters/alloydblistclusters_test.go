@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	alloydblistclusters "github.com/googleapis/mcp-toolbox/internal/tools/alloydb/alloydblistclusters"
 )
 
@@ -44,11 +45,13 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"list-my-clusters": alloydblistclusters.Config{
-					Name:         "list-my-clusters",
-					Type:         "alloydb-list-clusters",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list-my-clusters",
+						Description:  "some description",
+						AuthRequired: []string{},
+					},
+					Type:   "alloydb-list-clusters",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
@@ -66,11 +69,13 @@ func TestParseFromYaml(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"list-my-clusters-auth": alloydblistclusters.Config{
-					Name:         "list-my-clusters-auth",
-					Type:         "alloydb-list-clusters",
-					Source:       "my-alloydb-admin-source",
-					Description:  "some description",
-					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "list-my-clusters-auth",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+					},
+					Type:   "alloydb-list-clusters",
+					Source: "my-alloydb-admin-source",
 				},
 			},
 		},
@@ -78,7 +83,7 @@ func TestParseFromYaml(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			// Parse contents
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}

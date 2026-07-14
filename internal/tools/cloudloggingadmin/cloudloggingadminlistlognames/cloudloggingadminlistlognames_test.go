@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistlognames"
 )
 
@@ -43,18 +44,20 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudloggingadminlistlognames.Config{
-					Name:         "example_tool",
-					Type:         "cloud-logging-admin-list-log-names",
-					Source:       "my-logging-admin-source",
-					Description:  "list log names",
-					AuthRequired: []string{"my-google-auth-service"},
+					ConfigBase: tools.ConfigBase{
+						Name:         "example_tool",
+						Description:  "list log names",
+						AuthRequired: []string{"my-google-auth-service"},
+					},
+					Type:   "cloud-logging-admin-list-log-names",
+					Source: "my-logging-admin-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
@@ -96,20 +99,10 @@ func TestFailParseFromYaml(t *testing.T) {
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
 		},
-		{
-			desc: "missing description",
-			in: `
-			kind: tool
-			name: example_tool
-			type: cloud-logging-admin-list-log-names
-			source: my-instance
-			`,
-			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
-		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, _, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

@@ -20,6 +20,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/mcp-toolbox/internal/server"
 	"github.com/googleapis/mcp-toolbox/internal/testutils"
+	"github.com/googleapis/mcp-toolbox/internal/tools"
 	"github.com/googleapis/mcp-toolbox/internal/tools/cloudsqlpg/vectorassistapplyspec"
 )
 
@@ -44,18 +45,20 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"apply-spec-tool": vectorassistapplyspec.Config{
-					Name:         "apply-spec-tool",
-					Type:         "vector-assist-apply-spec",
-					Source:       "a-source",
-					Description:  "a test description",
-					AuthRequired: []string{},
+					ConfigBase: tools.ConfigBase{
+						Name:         "apply-spec-tool",
+						Description:  "a test description",
+						AuthRequired: []string{},
+					},
+					Type:   "vector-assist-apply-spec",
+					Source: "a-source",
 				},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
+			_, _, _, got, _, _, err := server.UnmarshalPrimitiveConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
