@@ -101,7 +101,6 @@ type Options struct {
 }
 type InlineContext struct {
 	DatasourceReferences DatasourceReferences `json:"datasourceReferences"`
-	Options              Options              `json:"options"`
 }
 
 type CAPayload struct {
@@ -224,7 +223,6 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 			DatasourceReferences: DatasourceReferences{
 				BQ: BQDatasource{TableReferences: tableRefs},
 			},
-			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
 		ClientIdEnum: util.GDAClientID,
 	}
