@@ -56,7 +56,7 @@ func generateToolManifest(name, desc string, authInvoke []string, params paramet
 		Annotations:     toolAnnotations,
 	}
 	if len(secureParams) > 0 {
-		secureInputSchema, _ := generateParamManifest(secureParams, nil)
+		secureInputSchema, _ := generateParamManifest(secureParams, urlParams)
 		mcpManifest.SecureInputSchema = &secureInputSchema
 	}
 	metadata := make(map[string]any)
