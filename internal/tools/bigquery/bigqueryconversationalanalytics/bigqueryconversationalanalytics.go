@@ -37,7 +37,7 @@ import (
 const resourceType string = "bigquery-conversational-analytics"
 
 func getGDAURLFormat() string {
-	return util.GetGDAEndpoint() + "/v1beta/projects/%s/locations/%s:chat"
+	return util.GetGDAEndpoint() + "/v1/projects/%s/locations/%s:chat"
 }
 
 const instructions = `**INSTRUCTIONS - FOLLOW THESE RULES:**
@@ -105,7 +105,6 @@ type InlineContext struct {
 }
 
 type CAPayload struct {
-	Project       string        `json:"project"`
 	Messages      []Message     `json:"messages"`
 	InlineContext InlineContext `json:"inlineContext"`
 	ClientIdEnum  string        `json:"clientIdEnum"`
@@ -220,7 +219,6 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	}
 
 	payload := CAPayload{
-		Project:  fmt.Sprintf("projects/%s", projectID),
 		Messages: []Message{{UserMessage: UserMessage{Text: finalQueryText}}},
 		InlineContext: InlineContext{
 			DatasourceReferences: DatasourceReferences{

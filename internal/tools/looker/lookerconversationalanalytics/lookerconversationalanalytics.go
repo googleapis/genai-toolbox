@@ -257,7 +257,7 @@ func (t Tool) Invoke(ctx context.Context, primitiveMgr tools.SourceProvider, par
 	// Construct URL, headers, and payload
 	projectID := source.GoogleCloudProject()
 	location := source.GoogleCloudLocation()
-	caURL := fmt.Sprintf("%s/v1beta/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
+	caURL := fmt.Sprintf("%s/v1/projects/%s/locations/%s:chat", util.GetGDAEndpoint(), url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
 		"Content-Type":      "application/json",
