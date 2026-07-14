@@ -1522,6 +1522,15 @@ type: mock
 			wantError: true,
 		},
 		{
+			name: "omitted uri field on file type defaults to file://name without error",
+			yaml: `
+kind: resource
+name: test-file
+type: mock
+`,
+			wantError: false,
+		},
+		{
 			name: "invalid uri field (not string) triggers error",
 			yaml: `
 kind: resource
@@ -1552,6 +1561,16 @@ uri: info://test
 			wantError: true,
 		},
 		{
+			name: "custom scheme for text resource allowed without error",
+			yaml: `
+kind: resource
+name: test-text-custom-uri
+type: mock
+uri: https://custom/path
+`,
+			wantError: false,
+		},
+		{
 			name: "duplicate resource names triggers error",
 			yaml: `
 kind: resource
@@ -1578,6 +1597,21 @@ kind: resource
 name: resource2
 type: mock
 uri: mock://duplicate
+`,
+			wantError: true,
+		},
+		{
+			name: "omitted uri field defaults prevent duplicate name collisions",
+			yaml: `
+kind: resource
+name: same-name
+type: file
+path: /test1
+---
+kind: resource
+name: same-name
+type: file
+path: /test2
 `,
 			wantError: true,
 		},

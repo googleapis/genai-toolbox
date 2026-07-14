@@ -574,7 +574,13 @@ func UnmarshalYAMLResourceConfig(ctx context.Context, name string, r map[string]
 			r["uri"] = parsed.String()
 		}
 	} else {
-		return nil, fmt.Errorf("missing required 'uri' field for resource %q", name)
+		if resourceType == "file" {
+			r["uri"] = fmt.Sprintf("file://%s", name)
+		} else if resourceType == "text" {
+			r["uri"] = fmt.Sprintf("info://%s", name)
+		} else {
+			return nil, fmt.Errorf("missing required 'uri' field for resource %q", name)
+		}
 	}
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
