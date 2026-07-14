@@ -200,7 +200,7 @@ text: |
 		if cfg.Text != "Line 1\nLine 2\n" {
 			t.Errorf("unexpected text payload: %q", cfg.Text)
 		}
-		
+
 		if cfg.Annotations == nil || cfg.Annotations.Priority == nil || *cfg.Annotations.Priority != 0.9 {
 			t.Errorf("unexpected priority: %v", cfg.Annotations)
 		}
