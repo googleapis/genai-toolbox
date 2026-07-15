@@ -393,10 +393,10 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	r = r.WithContext(ctx)
 
 	sessionId := uuid.New().String()
-	toolsetName := chi.URLParam(r, "toolsetName")
-	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
+	groupName := chi.URLParam(r, "toolsetName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", groupName))
 	span.SetAttributes(attribute.String("mcp.session.id", sessionId))
-	span.SetAttributes(attribute.String("toolset.name", toolsetName))
+	span.SetAttributes(attribute.String("toolset.name", groupName))
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -409,7 +409,7 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		attribute.String("network.protocol.name", "http"),
 		attribute.String("network.protocol.version", networkProtocolVersion),
 		attribute.String("mcp.protocol.version", "2024-11-05"),
-		attribute.String("toolset.name", toolsetName),
+		attribute.String("toolset.name", groupName),
 	}
 
 	// Increment active sessions counter
@@ -459,8 +459,8 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// send initial endpoint event
 	toolsetURL := ""
-	if toolsetName != "" {
-		toolsetURL = fmt.Sprintf("/%s", toolsetName)
+	if groupName != "" {
+		toolsetURL = fmt.Sprintf("/%s", groupName)
 	}
 	// attach url query params to message endpoint
 	q := r.URL.Query()
@@ -578,9 +578,9 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		protocolVersion = headerProtocolVersion
 	}
 
-	toolsetName := chi.URLParam(r, "toolsetName")
-	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
-	span.SetAttributes(attribute.String("toolset.name", toolsetName))
+	groupName := chi.URLParam(r, "toolsetName")
+	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", groupName))
+	span.SetAttributes(attribute.String("toolset.name", groupName))
 
 	defer func() {
 		if err != nil {
@@ -591,7 +591,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
 
-	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, r.Header, networkProtocolVersion)
+	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, groupName, r.Header, networkProtocolVersion)
 	if err != nil {
 		s.logger.DebugContext(ctx, fmt.Errorf("error processing message: %w", err).Error())
 	}
@@ -664,7 +664,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 // processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, groupName string, header http.Header, networkProtocolVersion string) (string, any, error) {
 	operationStart := time.Now()
 
 	logger, err := util.LoggerFromContext(ctx)
@@ -732,7 +732,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			attribute.String("mcp.method.name", baseMessage.Method),
 			attribute.String("network.transport", networkTransport),
 			attribute.String("network.protocol.name", networkProtocolName),
-			attribute.String("toolset.name", toolsetName),
+			attribute.String("toolset.name", groupName),
 		}
 		if protocolVersion != "" {
 			durationAttrs = append(durationAttrs, attribute.String("mcp.protocol.version", protocolVersion))
@@ -803,7 +803,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	}
 
 	// Set toolset name
-	span.SetAttributes(attribute.String("toolset.name", toolsetName))
+	span.SetAttributes(attribute.String("toolset.name", groupName))
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
@@ -854,7 +854,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	default:
 		// The URL segment names a group; its derived toolset and promptset views
 		// share that name, so prompts scope to the connected group.
-		g, ok := s.ResourceMgr.GetGroup(toolsetName)
+		g, ok := s.PrimitiveMgr.GetGroup(groupName)
 		if !ok {
 			err := fmt.Errorf("toolset does not exist")
 			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
@@ -863,7 +863,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			span.SetAttributes(attribute.String("error.type", metricErrorType))
 			return "", rpcErr, err
 		}
-		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g, s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, g, s.PrimitiveMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code
@@ -888,7 +888,7 @@ type prmResponse struct {
 func prmHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	var server string
 	scopes := []string{}
-	for _, authSvc := range s.ResourceMgr.GetAuthServiceMap() {
+	for _, authSvc := range s.PrimitiveMgr.GetAuthServiceMap() {
 		if mSvc, ok := authSvc.(auth.MCPAuthService); ok && mSvc.IsMCPEnabled() {
 			server = mSvc.GetAuthorizationServer()
 			scopes = mSvc.GetScopesRequired()
