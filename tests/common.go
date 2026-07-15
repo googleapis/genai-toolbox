@@ -883,6 +883,25 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolType string) map
 					},
 				},
 			},
+			"my-secure-tool": map[string]any{
+				"type":        toolType,
+				"source":      "my-instance",
+				"description": "Tool to test secure parameters.",
+				"commands":    [][]string{{"HGETALL", "row1"}, {"HGETALL", "row3"}},
+				"parameters": []any{
+					map[string]any{
+						"name":        "id",
+						"type":        "integer",
+						"description": "user ID",
+					},
+					map[string]any{
+						"name":        "name",
+						"type":        "string",
+						"description": "user name",
+						"secure":      true,
+					},
+				},
+			},
 			"my-auth-required-tool": map[string]any{
 				"type":        toolType,
 				"source":      "my-instance",
