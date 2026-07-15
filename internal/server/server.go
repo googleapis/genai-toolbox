@@ -60,7 +60,7 @@ type Server struct {
 	logger              log.Logger
 	instrumentation     *telemetry.Instrumentation
 	sseManager          *sseManager
-	PrimitiveMgr         *primitives.PrimitiveManager
+	PrimitiveMgr        *primitives.PrimitiveManager
 	mcpPrmFile          string
 	httpMaxRequestBytes int64
 	enableDraftSpecs    bool
@@ -451,7 +451,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		logger:              l,
 		instrumentation:     instrumentation,
 		sseManager:          sseManager,
-		PrimitiveMgr:         primitiveManager,
+		PrimitiveMgr:        primitiveManager,
 		toolboxUrl:          cfg.ToolboxUrl,
 		mcpPrmFile:          cfg.McpPrmFile,
 		httpMaxRequestBytes: limit,

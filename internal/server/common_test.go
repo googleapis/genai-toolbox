@@ -67,7 +67,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, promp
 		logger:          testLogger,
 		instrumentation: instrumentation,
 		sseManager:      sseManager,
-		PrimitiveMgr:     primitiveManager,
+		PrimitiveMgr:    primitiveManager,
 	}
 	for _, opt := range opts {
 		opt(&server)
