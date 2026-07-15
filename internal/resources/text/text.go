@@ -60,13 +60,8 @@ func (c *Config) Initialize(ctx context.Context) (resources.Resource, error) {
 		c.MimeType = "text/plain"
 	}
 
-	// Default annotations.priority to 1.0 (critical) if unset
 	if c.Annotations == nil {
 		c.Annotations = &resources.ResourceAnnotations{}
-	}
-	if c.Annotations.Priority == nil {
-		p := 1.0
-		c.Annotations.Priority = &p
 	}
 
 	// Initialize size at boot by calculating the byte length of the text string
