@@ -466,8 +466,23 @@ func TestFileResource_DynamicMetadata(t *testing.T) {
 // directory, it defaults to the current working directory and successfully
 // blocks any relative traversals or local symlink escapes.
 func TestFileResource_NoBaseDirContext(t *testing.T) {
-	tmpDir := t.TempDir()
-	secretFile := filepath.Join(tmpDir, "secret.txt")
+	baseDirTmp := t.TempDir()
+	outsideTmp := t.TempDir()
+
+	oldWD, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chdir(baseDirTmp); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Chdir(oldWD); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	secretFile := filepath.Join(outsideTmp, "secret.txt")
 	if err := os.WriteFile(secretFile, []byte("secret"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -477,7 +492,6 @@ func TestFileResource_NoBaseDirContext(t *testing.T) {
 	if err := os.Symlink(secretFile, symlinkPath); err != nil {
 		t.Fatalf("failed to create symlink: %v", err)
 	}
-	defer os.Remove(symlinkPath)
 
 	yamlStr := fmt.Sprintf("type: file\npath: %s", symlinkPath)
 	ctx := context.Background()
